@@ -18,8 +18,10 @@ secrets or lab credentials.
    `pciPassthru.64bitMMIOSizeGB`. That is product-level evidence that the
    default EFI VM config is not equivalent to "passthrough 64-bit MMIO enabled".
 4. A fresh ESXi 8.0U3b nested Workstation VM was installed unattended and
-   verified by Host Client and `govc`. This gives a usable local ESXi API target
-   for follow-up VMX/log checks.
+   verified by Host Client and `govc`. On that host, a new default EFI guest VM
+   was created and inspected. Its VMX file and VMX power-on configuration
+   dictionary contain no `pciPassthru.use64bitMMIO`,
+   `pciPassthru.64bitMMIOSizeGB`, `64bitMMIO`, or PCI hole override keys.
 
 ## QEMU local validation
 
@@ -158,6 +160,89 @@ Workflow note: in this local ESXi 8.0U3b run, a kickstart using
 `rootpw --iscrypted` installed successfully but did not authenticate with the
 expected secret afterward. Rebuilding the kickstart with plain `rootpw` worked
 and was verified with `govc`.
+
+## VMware default EFI guest proof
+
+The fresh ESXi 8.0U3b host was given a VMFS datastore and a default EFI test VM
+was created through the ESXi API:
+
+```text
+Datastore: pci-mmio-ds
+VM:        pci-mmio-efi-default
+Firmware:  efi
+Guest OS:  other-64
+vHW:       21
+Memory:    512 MB
+Disk:      1 GB
+```
+
+The VM was created without any extra PCI/MMIO settings. The resulting VMX
+configuration contains ordinary PCI bridge/root-port entries, but no 64-bit MMIO
+passthrough enablement:
+
+```text
+virtualHW.version = "21"
+firmware = "efi"
+guestOS = "other-64"
+pciBridge0.present = "TRUE"
+pciBridge4.present = "TRUE"
+pciBridge4.virtualDev = "pcieRootPort"
+pciBridge4.functions = "8"
+pciBridge5.present = "TRUE"
+pciBridge5.virtualDev = "pcieRootPort"
+pciBridge5.functions = "8"
+pciBridge6.present = "TRUE"
+pciBridge6.virtualDev = "pcieRootPort"
+pciBridge6.functions = "8"
+pciBridge7.present = "TRUE"
+pciBridge7.virtualDev = "pcieRootPort"
+pciBridge7.functions = "8"
+```
+
+Negative check on the VMX and power-on log:
+
+```text
+No pciPassthru.use64bitMMIO
+No pciPassthru.64bitMMIOSizeGB
+No 64bitMMIO
+No pciHole / pci.*hole override
+```
+
+The power-on attempt failed because the Workstation host did not expose
+virtualized Intel VT-x/EPT to the nested ESXi VM, but the VMX process had already
+logged the configuration dictionary it was using:
+
+```text
+DICT --- CONFIGURATION .../pci-mmio-efi-default.vmx
+DICT         virtualHW.version = "21"
+DICT        pciBridge0.present = "TRUE"
+DICT        pciBridge4.present = "TRUE"
+DICT     pciBridge4.virtualDev = "pcieRootPort"
+DICT      pciBridge4.functions = "8"
+DICT        pciBridge5.present = "TRUE"
+DICT     pciBridge5.virtualDev = "pcieRootPort"
+DICT      pciBridge5.functions = "8"
+DICT        pciBridge6.present = "TRUE"
+DICT     pciBridge6.virtualDev = "pcieRootPort"
+DICT      pciBridge6.functions = "8"
+DICT        pciBridge7.present = "TRUE"
+DICT     pciBridge7.virtualDev = "pcieRootPort"
+DICT      pciBridge7.functions = "8"
+DICT                  firmware = "efi"
+DICT                   guestOS = "other-64"
+
+Module 'MonitorMode' power on failed.
+This host does not support Intel VT-x.
+This host appears to be running in a virtual machine with VHV disabled.
+```
+
+This is configuration proof, not a guest-runtime BAR map. It proves that a
+default ESXi 8 EFI VM does not silently add the documented passthrough 64-bit
+MMIO knobs. Combined with the Broadcom KBs below, the VMware-side statement is:
+64-bit MMIO for passthrough is opt-in through `pciPassthru.use64bitMMIO` and
+`pciPassthru.64bitMMIOSizeGB`; the default EFI VM config is the below-4G PCI-hole
+model plus ordinary PCIe root ports, not an implicit large 64-bit passthrough
+window.
 
 ## VMware official evidence
 
