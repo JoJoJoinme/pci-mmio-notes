@@ -244,6 +244,90 @@ MMIO knobs. Combined with the Broadcom KBs below, the VMware-side statement is:
 model plus ordinary PCIe root ports, not an implicit large 64-bit passthrough
 window.
 
+## Hyper-V nested ESXi low-version proof
+
+As a second local VMware-side check, an existing Hyper-V Gen1 ESXi VM was used.
+The VM name suggested ESXi 6.5, but DCUI and API reported the actual host as:
+
+```text
+VMware ESXi 6.0.0 build-5050593
+Manufacturer: Microsoft Corporation
+Processor: 13th Gen Intel(R) Core(TM) i5-13500H
+Memory: 8 GiB
+Hyper-V VM: Gen1, Legacy Network Adapter, ExposeVirtualizationExtensions=True
+```
+
+Networking note: the host obtained IPv4 addresses from the Hyper-V/VMware
+virtual switches, but IPv4 TCP from the Windows host did not respond in this
+topology. The ESXi HostAgent API was reachable over IPv6 link-local with the
+Windows interface scope.
+
+A default EFI guest VM was created on this ESXi host:
+
+```text
+VM:        pci-mmio-hv-esxi60-efi-default
+Firmware:  efi
+Guest OS:  other-64
+vHW:       11
+Memory:    512 MB
+Disk:      1 GB
+Power:     poweredOn successfully
+```
+
+This proves the Hyper-V -> ESXi -> guest path can actually power on a second
+level VM on this machine. The `vmware.log` confirms hardware virtualization was
+used:
+
+```text
+Log for VMware ESX pid=... version=6.0.0 build=build-5050593
+DICT --- CONFIGURATION .../pci-mmio-hv-esxi60-efi-default.vmx
+DICT         virtualHW.version = "11"
+DICT        pciBridge0.present = "TRUE"
+DICT        pciBridge4.present = "TRUE"
+DICT     pciBridge4.virtualDev = "pcieRootPort"
+DICT      pciBridge4.functions = "8"
+DICT                  firmware = "efi"
+DICT                   guestOS = "other-64"
+MONITOR MODE: allowed modes          : BT32 HV HWMMU
+MONITOR MODE: filtered list          : HWMMU BT32 HV
+HV Settings: virtual exec = 'hardware'; virtual mmu = 'hardware'
+Monitor64_PowerOn()
+```
+
+The default VMX again contains ordinary PCI bridges/root ports, but no
+passthrough 64-bit MMIO enablement:
+
+```text
+virtualHW.version = "11"
+firmware = "efi"
+guestOS = "other-64"
+pciBridge0.present = "TRUE"
+pciBridge4.present = "TRUE"
+pciBridge4.virtualDev = "pcieRootPort"
+pciBridge4.functions = "8"
+pciBridge5.present = "TRUE"
+pciBridge5.virtualDev = "pcieRootPort"
+pciBridge5.functions = "8"
+pciBridge6.present = "TRUE"
+pciBridge6.virtualDev = "pcieRootPort"
+pciBridge6.functions = "8"
+pciBridge7.present = "TRUE"
+pciBridge7.virtualDev = "pcieRootPort"
+pciBridge7.functions = "8"
+```
+
+Negative check on VMX and power-on log:
+
+```text
+No pciPassthru.use64bitMMIO
+No pciPassthru.64bitMMIOSizeGB
+No 64bitMMIO
+No pciHole / pci.*hole override
+```
+
+The log contains a generic line `MMIO Honors PAT == 0`; that is not a 64-bit
+passthrough MMIO window setting and does not change the negative check above.
+
 ## VMware official evidence
 
 Broadcom KB 312208 documents 64-bit MMIO for VMDirectPath I/O and Dynamic
