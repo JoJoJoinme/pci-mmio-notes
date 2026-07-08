@@ -1,0 +1,14 @@
+_vmware_tmp/
+*.vmdk
+*.vmem
+*.vmsn
+*.lck/
+*.log
+*.tgz
+*.tar
+*.gz
+*.iso
+deploy.json
+*.secret
+*.key
+*.crt
