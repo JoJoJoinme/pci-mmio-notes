@@ -184,6 +184,101 @@ ACPI. Turning off only one side is not VMware-equivalent:
 This mirrors the VMware distinction: UEFI firmware is necessary but not
 sufficient. The product-level passthrough MMIO setting is separate.
 
+## Non-BAR VMDirectPath details and QEMU alignment
+
+KB 312208 is not only about BAR size. Most of its VMDirectPath rules are about
+which layer owns isolation, reset, interrupts, topology, and lifecycle. QEMU can
+match some of these with command-line options, but several are host/VFIO
+preconditions rather than QEMU flags.
+
+### Baseline QEMU/VFIO shape
+
+For PCIe devices, prefer q35 and explicit root ports. That is closer to an ESXi
+EFI VM with PCIe root ports than i440fx.
+
+```bash
+qemu-system-x86_64 \
+  -machine q35,accel=kvm \
+  -cpu host \
+  -m 16G \
+  -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
+  -drive if=pflash,format=raw,file=OVMF_VARS.fd \
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0 \
+  -global q35-pcihost.pci-hole64-size=0 \
+  -device pcie-root-port,id=rp1,chassis=1,slot=1 \
+  -device vfio-pci,host=0000:65:00.0,bus=rp1,addr=00.0,rombar=0
+```
+
+Use the MMIO pair above for VMware-default-style passthrough policy. Replace it
+with `X-PciMmio64Mb=N*1024` and `pci-hole64-size=NG` only when modeling an
+explicit VMware 64-bit MMIO aperture.
+
+### Alignment matrix
+
+| KB / VMware detail | QEMU/VFIO alignment | Principle | Verification |
+| --- | --- | --- | --- |
+| Host IOMMU / DMA isolation | Enable VT-d/AMD-Vi on the host, bind the device to `vfio-pci`, launch with `-device vfio-pci,host=BDF`. Do not confuse this with guest vIOMMU. | ESXi and VFIO both program the host IOMMU so the physical device DMA targets VM memory, not arbitrary host memory. | Host: `dmesg | grep -Ei 'DMAR|IOMMU|AMD-Vi'`; `readlink /sys/bus/pci/devices/0000:BB:DD.F/iommu_group`; guest: device works without host driver owning it. |
+| Guest-visible vIOMMU | Usually leave absent for ordinary DirectPath equivalence. Add `-device intel-iommu,intremap=on,caching-mode=on` only when matching a VMware VM with virtual IOMMU exposed. | Host IOMMU is required for passthrough safety; guest vIOMMU is a separate virtual feature. | Guest: `dmesg | grep -Ei 'DMAR|IOMMU'`; ACPI tables show DMAR only when intentionally exposed. |
+| ACS / isolation groups | Use real hardware with proper ACS so VFIO groups are isolated. Do not use Linux `pcie_acs_override` for a supported-equivalent proof. | VMware's ACS rule and Linux VFIO groups are both approximations of "can this device DMA outside the assignment boundary?" | Host: every assigned function's `/iommu_group/devices` contains only functions intended for the VM. |
+| Relaxed P2P DMA | No generic QEMU equivalent to VMware's relaxed ACS/P2P policy. Use real topology that supports P2P and device-specific support; for NVIDIA GPUDirect, QEMU has `x-nv-gpudirect-clique`, but that is not a general ACS bypass. | P2P is governed by physical switches, ACS forwarding, IOMMU behavior, and device drivers. | Benchmark or driver proof of P2P; inspect IOMMU groups and PCIe switch ACS capabilities. |
+| PCIe topology | Use q35 plus `pcie-root-port`; optionally set `x-speed=` and `x-width=` on the root port if guest-visible link characteristics matter. | VMware EFI guests expose PCIe root ports; q35 is the QEMU PCIe machine. | Guest: `lspci -tv` and `lspci -vv` LinkCap/LinkSta. |
+| Multifunction devices | Assign all dependent functions. Preserve multifunction layout with `multifunction=on` and same slot when needed. | Reset, power management, and driver binding often operate at device/package scope, not one isolated function. | Host IOMMU group contains all functions assigned; guest sees functions under same slot if required. |
+| Reset semantics | Prefer devices with FLR. If only bus reset works, all devices affected by that reset must be safe to reset and usually must be assigned together. Tune host reset choice via `/sys/bus/pci/devices/BDF/reset_method` when available, not via a portable QEMU flag. | VMware and VFIO both need a way to put the device in a clean state before/after VM ownership. | Host: check `/sys/bus/pci/devices/BDF/reset` and `reset_method`; QEMU/vfio logs; repeated VM start/stop without wedging. |
+| Legacy PCI bridges | Avoid if possible. If a device is behind a conventional bridge and the IOMMU group includes the bridge/other devices, assign the whole group or do not treat it as supported-equivalent. | Legacy bridges often lack requester isolation, so the assignable unit is larger than a single endpoint. | Host: IOMMU group membership; guest: `lspci -tv` if bridge topology is intentionally reproduced. |
+| RCiEP / root-complex devices | VFIO can pass some root-complex integrated endpoints if isolation and reset are acceptable, but QEMU will not perfectly reproduce every RCiEP topology detail. Treat as device-specific. | RCiEPs are not ordinary downstream-port endpoints; reset/isolation rules are platform-specific. | Host group/reset proof plus guest driver proof. |
+| SR-IOV | Prefer passing VFs for SR-IOV-style sharing. Do not assume a passthrough PF can create/manage VFs inside the guest. | VMware and VFIO both treat VFs as the intended assignable unit for sharing one physical adapter. | Host creates VFs; bind selected VF BDFs to vfio-pci; guest sees VF, not PF-managed SR-IOV control plane. |
+| RMRR / reserved regions | Avoid RMRR-constrained devices for clean equivalence. QEMU has no generic command-line switch that makes a host RMRR-safe device safe. | RMRR is a host firmware/IOMMU identity-mapping requirement, not a guest BAR size issue. | Host `dmesg` RMRR/DMAR lines; VFIO attach succeeds without unsafe patches or override parameters. |
+| MSI / MSI-X / INTx | Leave QEMU VFIO interrupt acceleration defaults on. Use `x-no-kvm-intx`, `x-no-kvm-msi`, `x-no-kvm-msix` only for debugging, not normal VMware equivalence. Ensure host interrupt remapping is available; do not use unsafe interrupt mode for proof. | Interrupt delivery has both security and performance semantics. MSI/MSI-X is the normal modern path. | Host dmesg: interrupt remapping enabled; guest `lspci -vv` MSI/MSI-X enabled; `/proc/interrupts`. |
+| Expansion ROM / option ROM | VMware default is best modeled with `rombar=0` on `vfio-pci`. To model an explicitly enabled option ROM, use `rombar=1,romfile=/path/to.rom` and verify OVMF can execute that ROM type. | Exposing an option ROM is a separate firmware-boot behavior, not a BAR aperture behavior. | Guest `lspci -vv` ROM BAR; OVMF boot log / device boot behavior. |
+| PCIe native hotplug / PME / `_OSC` | QEMU q35/root ports expose PCIe/ACPI control surfaces. Root-port options such as `hotplug=`, `x-native-hotplug=`, `power_controller_present=` can change guest-visible behavior, but VMware's ESXi-owned PME policy is not a simple one-flag match. | Power event ownership is ACPI/root-port policy, separate from passthrough MMIO. | Guest ACPI `_OSC` behavior, hotplug tests, `dmesg` PCIe service messages. |
+| AER / PCI error handling | Do not assume physical PCI errors are fully delivered to the guest. Treat AER as host/device-specific for VFIO, similar to VMware host-mediated error handling. | Error containment is usually owned by the host/root complex, not the guest. | Host `dmesg` AER/vfio lines; guest AER only if deliberately exposed and tested. |
+| Memory reservation / pinned memory | For deterministic VFIO, use preallocated/hugepage-backed memory and set host memlock limits. | ESXi reserves VM memory for DirectPath because device DMA must target stable machine pages; VFIO also pins mapped pages. | Host memlock/hugepage accounting; QEMU starts without VFIO map failures under load. |
+| NUMA locality | Bind vCPUs and memory to the NUMA node near the PCI device. | DMA path and latency depend on socket locality. VMware DRS/NUMA placement and QEMU CPU/memory pinning solve the same class of problem. | Host: `cat /sys/bus/pci/devices/BDF/numa_node`; QEMU launched with `numactl` or memory-backend `host-nodes=`. |
+| Lifecycle: suspend, snapshot, live migration | Treat ordinary VFIO passthrough as non-migratable/non-snapshot-friendly, matching classic DirectPath limitations. Use device-specific migration only when proven. | Physical device state is not generally serializable. | QEMU monitor/savevm/migration attempt is disabled or fails; device docs prove otherwise. |
+
+### Useful QEMU/VFIO command fragments
+
+Guest-visible virtual IOMMU, only if deliberately matching that VMware setting:
+
+```bash
+-machine q35,kernel_irqchip=split
+-device intel-iommu,intremap=on,caching-mode=on
+```
+
+Multifunction assignment preserving one slot:
+
+```bash
+-device pcie-root-port,id=rp1,chassis=1,slot=1
+-device vfio-pci,host=0000:65:00.0,bus=rp1,addr=00.0,multifunction=on,rombar=0
+-device vfio-pci,host=0000:65:00.1,bus=rp1,addr=00.1,rombar=0
+```
+
+Preallocated NUMA-local memory:
+
+```bash
+-object memory-backend-file,id=ram0,size=16G,mem-path=/dev/hugepages,prealloc=on,host-nodes=0,policy=bind
+-numa node,nodeid=0,memdev=ram0
+```
+
+PCIe link presentation:
+
+```bash
+-device pcie-root-port,id=rp1,chassis=1,slot=1,x-speed=16,x-width=16
+```
+
+### What not to use as "equivalence proof"
+
+- Do not use `pcie_acs_override` and then claim VMware-supported ACS
+  equivalence. That is useful for experiments, not proof.
+- Do not use `vfio_iommu_type1.allow_unsafe_interrupts=1` for a supported
+  DirectPath-equivalent proof.
+- Do not rely on `pci=realloc` to create VMware-like MMIO policy. It changes
+  Linux allocation behavior after firmware/ACPI policy already exists.
+- Do not treat a successful QEMU start as proof of reset safety. Repeated
+  start/stop and host log checks are required.
+- Do not expose `rombar=1` by accident if matching VMware's default option-ROM
+  behavior; set `rombar=0` unless the ROM is part of the scenario.
+
 ## References
 
 - Broadcom KB 312208, vSphere VMDirectPath I/O and Dynamic DirectPath I/O:
