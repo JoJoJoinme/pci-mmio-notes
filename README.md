@@ -10,6 +10,9 @@ For the fuller Chinese write-up based on real OVMF/SeaBIOS boot with an Ubuntu
 cloud image, see `qemu-vmware-mmio-comparison.md`. The corresponding runner is
 `qemu-ovmf-real-linux-validate.sh`.
 
+For the follow-up VMDirectPath/passthrough-specific validation matrix based on
+Broadcom KB 312208, see `vmware-passthrough-mmio-validation.md`.
+
 ## Short conclusion
 
 1. VMware documentation says VMDirectPath/Dynamic DirectPath 64-bit MMIO needs
