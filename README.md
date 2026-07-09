@@ -8,66 +8,120 @@ secrets or lab credentials.
 
 ## Short conclusion
 
-1. `-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0` only constrains the OVMF
-   firmware-stage 64-bit PCI MMIO aperture. It is not a global "never assign a
-   64-bit BAR above 4G" switch.
-2. In the local QEMU 6.2 test, Linux still assigned a 1G 64-bit BAR at
-   `0x140000000`, even when `i440FX-pcihost.pci-hole64-size=0` was added.
-3. VMware documentation says VMDirectPath/Dynamic DirectPath 64-bit MMIO needs
+1. VMware documentation says VMDirectPath/Dynamic DirectPath 64-bit MMIO needs
    explicit `pciPassthru.use64bitMMIO = "TRUE"` plus
-   `pciPassthru.64bitMMIOSizeGB`. That is product-level evidence that the
-   default EFI VM config is not equivalent to "passthrough 64-bit MMIO enabled".
-4. A fresh ESXi 8.0U3b nested Workstation VM was installed unattended and
-   verified by Host Client and `govc`. On that host, a new default EFI guest VM
-   was created and inspected. Its VMX file and VMX power-on configuration
-   dictionary contain no `pciPassthru.use64bitMMIO`,
+   `pciPassthru.64bitMMIOSizeGB`. A default EFI VM is not silently configured as
+   "passthrough 64-bit MMIO enabled".
+2. Local VMware checks agree with that product model. A fresh ESXi 8.0U3b EFI
+   guest VM and an ESXi 6.0 EFI guest VM that actually powered on both contain
+   ordinary PCI/PCIe bridge entries, but no `pciPassthru.use64bitMMIO`,
    `pciPassthru.64bitMMIOSizeGB`, `64bitMMIO`, or PCI hole override keys.
-
-## QEMU local validation
-
-The script `qemu-mmio-validate.sh` creates pressure below 4G and adds a device
-with a 1G 64-bit BAR:
-
-- machine: `pc-i440fx-jammy`
-- memory: `3584M`
-- device: `ivshmem-plain` with a 1G BAR
-
-Two cases were tested:
+3. QEMU/OVMF has two separate 64-bit MMIO controls: OVMF's firmware aperture
+   (`opt/ovmf/X-PciMmio64Mb`) and QEMU's host-bridge/root-window resource
+   (`pci-hole64-size`). Turning off only one side is not equivalent to VMware's
+   default "no explicit 64-bit passthrough MMIO window" case.
+4. The QEMU arguments that match the VMware default condition are:
 
 ```text
-CASE: fwcfg_only
-QEMU args include:
+q35:
   -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
+  -global q35-pcihost.pci-hole64-size=0
 
-CASE: fwcfg_and_hole64_zero
-QEMU args include:
+i440fx:
   -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
   -global i440FX-pcihost.pci-hole64-size=0
 ```
 
-Both cases assigned the 64-bit BAR above 4G:
+This does not claim QEMU's allocator is byte-for-byte VMware. It models the
+important condition being tested: no firmware 64-bit PCI aperture and no ACPI
+root-bridge 64-bit PCI window. Under below-4G pressure, small 64-bit BARs can
+still fit below 4G; a 1G 64-bit BAR is left unassigned instead of being placed
+above 4G.
+
+## QEMU OVMF local validation
+
+`qemu-ovmf-initrd-mmio-check.sh` is the main QEMU proof. It boots through OVMF
+pflash, passes a Linux kernel and a tiny busybox initrd, prints PCI resources
+from `/sys` and `/proc/iomem`, then powers off. It does not wait for networking,
+DHCP, cloud-init, systemd, or a disk image.
+
+The test creates below-4G pressure with `3584M` of RAM and adds an
+`ivshmem-plain` device whose BAR can be varied:
 
 ```text
-CASE: fwcfg_only
-BAR/resource2 0x0000000140000000 0x000000017fffffff
-
-CASE: fwcfg_and_hole64_zero
-BAR/resource2 0x0000000140000000 0x000000017fffffff
+machine:  pc-i440fx-jammy or pc-q35-jammy
+memory:   3584M
+device:   ivshmem-plain
+BARs:     256M, 512M, 1G
 ```
+
+Cases:
+
+```text
+ovmf_default:
+  no extra MMIO argument
+
+ovmf_fwcfg_zero:
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
+
+ovmf_host_zero:
+  -global <host-bridge>.pci-hole64-size=0
+
+ovmf_both_zero:
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
+  -global <host-bridge>.pci-hole64-size=0
+```
+
+Result summary, showing the start address of BAR/resource2:
+
+| Machine | Case | 256M BAR | 512M BAR | 1G BAR | 64-bit PCI root window |
+| --- | --- | --- | --- | --- | --- |
+| i440fx | `ovmf_default` | `0x800000000` | `0x800000000` | `0x800000000` | yes |
+| i440fx | `ovmf_fwcfg_zero` | `0xc0000000` | `0xc0000000` | `0x140000000` | yes |
+| i440fx | `ovmf_host_zero` | `0x800000000` | `0x800000000` | `0x800000000` | yes |
+| i440fx | `ovmf_both_zero` | `0xc0000000` | `0xc0000000` | unassigned | no |
+| q35 | `ovmf_default` | `0x800000000` | `0x800000000` | `0x800000000` | yes |
+| q35 | `ovmf_fwcfg_zero` | `0xc0000000` | `0xc0000000` | `0x180000000` | yes |
+| q35 | `ovmf_host_zero` | `0x800000000` | `0x800000000` | `0x800000000` | yes |
+| q35 | `ovmf_both_zero` | `0xc0000000` | `0xc0000000` | unassigned | no |
+
+Key 1G proof snippets:
+
+```text
+i440fx ovmf_fwcfg_zero:
+  BAR/resource2  0x0000000140000000 0x000000017fffffff
+  140000000-1bfffffff : PCI Bus 0000:00
+
+q35 ovmf_fwcfg_zero:
+  BAR/resource2  0x0000000180000000 0x00000001bfffffff
+  180000000-97fffffff : PCI Bus 0000:00
+
+i440fx ovmf_both_zero:
+  no BAR/resource2 for the 1G device
+  no 64-bit PCI Bus 0000:00 window in /proc/iomem
+
+q35 ovmf_both_zero:
+  no BAR/resource2 for the 1G device
+  no 64-bit PCI Bus 0000:00 window in /proc/iomem
+```
+
+The `ovmf_both_zero` 1G case was also tested with `pci=realloc`; BAR/resource2
+remained unassigned on both i440fx and q35. That matters because it proves the
+guest kernel allocator cannot resurrect a 4G+ BAR placement once both the OVMF
+firmware aperture and the QEMU root-bridge 64-bit window are absent.
 
 Interpretation:
 
-- OVMF's `X-PciMmio64Mb=0` controls whether OVMF itself creates/uses a 64-bit
-  PCI host aperture during firmware enumeration.
-- Linux can later re-enumerate PCI and assign 64-bit BARs from the resources
-  exposed by QEMU/ACPI/root bridge descriptions.
-- Therefore, `fw_cfg=0` by itself is not equivalent to VMware's default
-  passthrough behavior.
+- `-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0` alone is not enough. With a 1G
+  BAR, Linux still assigns above 4G by using QEMU's ACPI/root-bridge 64-bit
+  window.
+- `-global <host-bridge>.pci-hole64-size=0` alone is not enough. OVMF can still
+  create/use its own 64-bit aperture, and the BAR lands above 4G.
+- Both switches are required to model "no explicit 64-bit MMIO window".
 
-`qemu-ovmf-hmp-check.sh` is an auxiliary firmware-stage check. In the tested
-no-boot OVMF/HMP case, the BAR stayed unassigned at firmware time. That is
-consistent with the Linux result: firmware did not assign it, but the OS later
-could.
+`qemu-mmio-validate.sh` is kept as a negative control. It uses direct kernel
+boot and therefore bypasses the OVMF part of the question. `qemu-ovmf-hmp-check.sh`
+is a firmware-stage auxiliary check.
 
 ## VMware local validation
 
@@ -356,31 +410,77 @@ Relevant QEMU/OVMF source areas:
 - OVMF PCI MMIO sizing: `OvmfPkg/Library/PlatformInitLib/MemDetect.c`
 
 The important distinction is that OVMF's fw_cfg knob affects firmware aperture
-selection, while QEMU's machine/root bridge resources and the guest OS allocator
-can still lead to 4G+ BAR placement.
+selection, while QEMU's machine/root bridge resources are a separate source of
+guest-visible 64-bit PCI MMIO space:
+
+- OVMF documents `opt/ovmf/X-PciMmio64Mb` as the knob for changing the 64-bit PCI
+  MMIO window size. In the MemDetect code path, a parsed size of `0` disables
+  the OVMF 64-bit host aperture.
+- QEMU i440fx and q35 expose a host-bridge property named `pci-hole64-size`.
+  In the tested QEMU 6.2 build, the default property value is 32G for both
+  i440fx and q35.
+- QEMU ACPI generation publishes a 64-bit root-bridge memory resource when the
+  host bridge has a non-empty `pci-hole64-start`/`pci-hole64-end` range.
+
+So the commonly confused knobs are not the same thing:
+
+```text
+OVMF:
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
+  controls firmware 64-bit PCI aperture sizing
+
+QEMU host bridge:
+  -global q35-pcihost.pci-hole64-size=0
+  -global i440FX-pcihost.pci-hole64-size=0
+  controls the QEMU/ACPI 64-bit PCI host-window resource
+```
+
+The below-4G PCI hole is a different topic. In this validation, the relevant
+QEMU property is `pci-hole64-size`, not a below-4G `pci-hole-size`.
 
 ## Equivalence statement
 
 Do not model "VMware EFI VM default without `pciPassthru.use64bitMMIO`" as only:
 
 ```text
-QEMU: -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
+QEMU:
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
 ```
 
 That QEMU argument disables the OVMF firmware-stage 64-bit aperture, but it does
-not prevent Linux from later assigning 64-bit BARs above 4G.
+not prevent Linux from later assigning 64-bit BARs above 4G from QEMU's
+ACPI/root-bridge resource.
 
-A more accurate statement is:
+Do not model it as only:
+
+```text
+QEMU:
+  -global q35-pcihost.pci-hole64-size=0
+```
+
+That removes QEMU's host-bridge 64-bit window, but OVMF can still create/use a
+firmware 64-bit aperture.
+
+The closest QEMU/OVMF model for the VMware default condition is:
 
 ```text
 VMware default without pciPassthru.use64bitMMIO:
-  No explicit product-level 64-bit MMIO passthrough window is configured.
-  Large BAR passthrough requires the documented explicit settings.
+  no explicit product-level 64-bit MMIO passthrough window
+  large BAR passthrough requires documented opt-in settings
 
-QEMU fw_cfg X-PciMmio64Mb=0:
-  Disable OVMF's firmware-stage 64-bit PCI aperture.
-  This does not, by itself, prevent guest OS 4G+ BAR assignment.
+QEMU q35 equivalent condition:
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
+  -global q35-pcihost.pci-hole64-size=0
+
+QEMU i440fx equivalent condition:
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
+  -global i440FX-pcihost.pci-hole64-size=0
 ```
+
+Observed consequence: with both QEMU/OVMF knobs disabled and 3584M RAM creating
+below-4G pressure, a 256M or 512M 64-bit BAR can still be placed below 4G, but a
+1G 64-bit BAR is not assigned above 4G on either i440fx or q35, even with
+`pci=realloc`.
 
 ## References
 
