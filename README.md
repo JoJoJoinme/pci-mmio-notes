@@ -6,6 +6,10 @@ This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
 secrets or lab credentials.
 
+For the fuller Chinese write-up based on real OVMF/SeaBIOS boot with an Ubuntu
+cloud image, see `qemu-vmware-mmio-comparison.md`. The corresponding runner is
+`qemu-ovmf-real-linux-validate.sh`.
+
 ## Short conclusion
 
 1. VMware documentation says VMDirectPath/Dynamic DirectPath 64-bit MMIO needs
@@ -122,6 +126,44 @@ Interpretation:
 `qemu-mmio-validate.sh` is kept as a negative control. It uses direct kernel
 boot and therefore bypasses the OVMF part of the question. `qemu-ovmf-hmp-check.sh`
 is a firmware-stage auxiliary check.
+
+## Real Linux firmware-boot validation
+
+`qemu-ovmf-real-linux-validate.sh` is the real guest validation path. It boots:
+
+```text
+QEMU -> OVMF pflash or SeaBIOS -> Ubuntu cloud image -> Linux guest
+```
+
+This is slower than the initrd smoke test, but it exercises firmware PCI
+allocation and Linux's final ACPI/root-bridge resource view. The main artifact
+summary is in `qemu-vmware-mmio-comparison.md`.
+
+Key real-boot checks reproduced locally:
+
+```text
+OVMF + i440fx + host_4g only:
+  -global i440FX-pcihost.pci-hole64-size=4G
+  Linux high window: 0x800000000-0x8ffffffff
+  ivshmem BAR2:      0x800000000-0x83fffffff
+
+OVMF + i440fx + both_4g:
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=4096
+  -global i440FX-pcihost.pci-hole64-size=4G
+  Linux high window: 0x200000000-0x2ffffffff
+  ivshmem BAR2:      0x200000000-0x23fffffff
+
+OVMF + i440fx + both_zero, no ivshmem probe:
+  -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
+  -global i440FX-pcihost.pci-hole64-size=0
+  Linux high window: none
+```
+
+The no-ivshmem case matters because `pci-hole64-size=0` is not an absolute ban
+on every above-4G BAR. If firmware has already assigned a 64-bit BAR above 4G,
+QEMU/ACPI can still report the minimal root-window range required to cover that
+real BAR. Running without the BAR probe separates "default high aperture exists"
+from "a real BAR forced a minimal high window".
 
 ## VMware local validation
 
@@ -417,8 +459,8 @@ guest-visible 64-bit PCI MMIO space:
   MMIO window size. In the MemDetect code path, a parsed size of `0` disables
   the OVMF 64-bit host aperture.
 - QEMU i440fx and q35 expose a host-bridge property named `pci-hole64-size`.
-  In the tested QEMU 6.2 build, the default property value is 32G for both
-  i440fx and q35.
+  In the tested QEMU 6.2 build and local source tree, i440fx defaults to 2G
+  (`1ULL << 31`) and q35 defaults to 32G (`1ULL << 35`).
 - QEMU ACPI generation publishes a 64-bit root-bridge memory resource when the
   host bridge has a non-empty `pci-hole64-start`/`pci-hole64-end` range.
 
