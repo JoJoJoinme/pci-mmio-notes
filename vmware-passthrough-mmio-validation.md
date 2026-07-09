@@ -5,6 +5,11 @@ Date: 2026-07-10
 This note narrows the question from "default EFI VM" to "EFI VM with a real PCI
 passthrough device". The main VMware reference is Broadcom KB 312208.
 
+The local QEMU-side non-BAR checks that could actually be executed on this host
+are recorded in `qemu-vmdirectpath-nonbar-local-validation.md`. That companion
+note separates verified QEMU behavior from items that still require real ESXi or
+bare-metal Linux/VFIO passthrough hardware.
+
 ## What KB 312208 gives us
 
 KB 312208 makes three useful claims for validation:

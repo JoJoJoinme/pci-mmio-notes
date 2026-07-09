@@ -13,6 +13,11 @@ cloud image, see `qemu-vmware-mmio-comparison.md`. The corresponding runner is
 For the follow-up VMDirectPath/passthrough-specific validation matrix based on
 Broadcom KB 312208, see `vmware-passthrough-mmio-validation.md`.
 
+For the locally executed QEMU non-BAR / VMDirectPath-adjacent validation, see
+`qemu-vmdirectpath-nonbar-local-validation.md`. It records which parts were
+proved on this WSL2/QEMU host and which still require real physical VFIO or ESXi
+passthrough hardware.
+
 ## Short conclusion
 
 1. VMware documentation says VMDirectPath/Dynamic DirectPath 64-bit MMIO needs
