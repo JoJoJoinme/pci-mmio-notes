@@ -18,6 +18,10 @@ For the locally executed QEMU non-BAR / VMDirectPath-adjacent validation, see
 proved on this WSL2/QEMU host and which still require real physical VFIO or ESXi
 passthrough hardware.
 
+For the executable VMware implementation acceptance goals, evidence grades,
+test matrix, artifact contract, and QEMU equivalence checklist, see
+`vmware-directpath-acceptance-test-plan.md`.
+
 ## Short conclusion
 
 1. VMware documentation says VMDirectPath/Dynamic DirectPath 64-bit MMIO needs

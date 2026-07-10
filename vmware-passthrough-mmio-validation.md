@@ -10,6 +10,11 @@ are recorded in `qemu-vmdirectpath-nonbar-local-validation.md`. That companion
 note separates verified QEMU behavior from items that still require real ESXi or
 bare-metal Linux/VFIO passthrough hardware.
 
+The acceptance criteria and executable VMware/QEMU test matrix are maintained in
+`vmware-directpath-acceptance-test-plan.md`. That document defines the evidence
+grade, per-case artifacts, pass/fail rules, and the boundary between nested tests
+and mandatory bare-metal confirmation.
+
 ## What KB 312208 gives us
 
 KB 312208 makes three useful claims for validation:
