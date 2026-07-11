@@ -1,6 +1,6 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-09
+Record date: 2026-07-11
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
@@ -22,21 +22,22 @@ For the executable VMware implementation acceptance goals, evidence grades,
 test matrix, artifact contract, and QEMU equivalence checklist, see
 `vmware-directpath-acceptance-test-plan.md`.
 
+For the completed QEMU -> ESXi 8 -> EFI Linux DirectPath black-box run, including
+MMIO boundary results, VT-d traces, topology negatives, lifecycle faults, and
+Dynamic DirectPath `assignedId` transitions, see
+`vmware-esxi8-directpath-local-results.md`.
+
 ## Short conclusion
 
-1. VMware documentation says VMDirectPath/Dynamic DirectPath 64-bit MMIO needs
-   explicit `pciPassthru.use64bitMMIO = "TRUE"` plus
-   `pciPassthru.64bitMMIOSizeGB`. A default EFI VM is not silently configured as
-   "passthrough 64-bit MMIO enabled".
-2. Local VMware checks agree with that product model. A fresh ESXi 8.0U3b EFI
-   guest VM and an ESXi 6.0 EFI guest VM that actually powered on both contain
-   ordinary PCI/PCIe bridge entries, but no `pciPassthru.use64bitMMIO`,
-   `pciPassthru.64bitMMIOSizeGB`, `64bitMMIO`, or PCI hole override keys.
-3. QEMU/OVMF has two separate 64-bit MMIO controls: OVMF's firmware aperture
-   (`opt/ovmf/X-PciMmio64Mb`) and QEMU's host-bridge/root-window resource
-   (`pci-hole64-size`). Turning off only one side is not equivalent to VMware's
-   default "no explicit 64-bit passthrough MMIO window" case.
-4. The QEMU arguments that match the VMware default condition are:
+1. An ordinary EFI VMX still contains no implicit `use64bitMMIO` setting, but
+   active DirectPath runtime behavior is demand-driven on ESXi 8.0 U3.
+2. A 1GB 64-bit prefetchable BAR was mapped below 4G with no high root window.
+   A 2GB BAR automatically received a 2GB high window even when
+   `pciPassthru.use64bitMMIO = "FALSE"`.
+3. Absent, false, true, true+Size4, and Size4-only VMX variants produced the
+   same placement for the tested 1GB and 2GB devices.
+4. No single fixed stock QEMU/OVMF profile matches both VMware outcomes.
+   `both_zero` is only the below-4G profile:
 
 ```text
 q35:
@@ -48,11 +49,10 @@ i440fx:
   -global i440FX-pcihost.pci-hole64-size=0
 ```
 
-This does not claim QEMU's allocator is byte-for-byte VMware. It models the
-important condition being tested: no firmware 64-bit PCI aperture and no ACPI
-root-bridge 64-bit PCI window. Under below-4G pressure, small 64-bit BARs can
-still fit below 4G; a 1G 64-bit BAR is left unassigned instead of being placed
-above 4G.
+When the aggregate BAR envelope cannot fit below 4G, a launcher must instead
+set both knobs to the required high-aperture size.  For the tested 2GB BAR this
+was `X-PciMmio64Mb=2048` plus `pci-hole64-size=2G`.  It matched high/low
+classification and size, but not VMware's exact high base address.
 
 ## QEMU OVMF local validation
 
@@ -515,26 +515,23 @@ QEMU:
 That removes QEMU's host-bridge 64-bit window, but OVMF can still create/use a
 firmware 64-bit aperture.
 
-The closest QEMU/OVMF model for the VMware default condition is:
+The QEMU/OVMF below-4G-only profile is:
 
 ```text
-VMware default without pciPassthru.use64bitMMIO:
-  no explicit product-level 64-bit MMIO passthrough window
-  large BAR passthrough requires documented opt-in settings
-
-QEMU q35 equivalent condition:
+QEMU q35 below-4G profile:
   -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
   -global q35-pcihost.pci-hole64-size=0
 
-QEMU i440fx equivalent condition:
+QEMU i440fx below-4G profile:
   -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
   -global i440FX-pcihost.pci-hole64-size=0
 ```
 
-Observed consequence: with both QEMU/OVMF knobs disabled and 3584M RAM creating
-below-4G pressure, a 256M or 512M 64-bit BAR can still be placed below 4G, but a
-1G 64-bit BAR is not assigned above 4G on either i440fx or q35, even with
-`pci=realloc`.
+Observed consequence: with both QEMU/OVMF knobs disabled and sufficient
+below-4G pressure, a large BAR is left unassigned.  This is not the complete
+ESXi 8 U3 default behavior: VMware automatically created a minimal high window
+for the tested 2GB BAR even when `use64bitMMIO` was absent or false.  QEMU
+therefore needs a launcher-selected high profile for that case.
 
 ## References
 

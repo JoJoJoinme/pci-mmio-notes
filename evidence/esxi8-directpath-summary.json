@@ -1,0 +1,58 @@
+{
+  "date": "2026-07-11",
+  "esxi": "VMware ESXi 8.0.3 build-24280767",
+  "virtualHardware": 20,
+  "qemu": "6.2.0 (Debian/Ubuntu build)",
+  "outerCpuDelta": "-vmx-tsc-scaling",
+  "mmio": {
+    "bar1GiB": {
+      "placement": "0x80000000-0xbfffffff",
+      "highRootWindow": false,
+      "sameFor": ["absent", "false", "true", "true+size4", "size4-only"]
+    },
+    "bar2GiB": {
+      "placement": "0x1fff80000000-0x1fffffffffff",
+      "highRootWindow": true,
+      "sameFor": ["absent", "false", "true", "true+size4", "size4-only"]
+    },
+    "qemu2GiB": {
+      "default": "32GiB high window; BAR at 0x800000000",
+      "bothZero": "BAR2 unassigned; no high window",
+      "both2GiB": "2GiB window and BAR at 0x180000000-0x1ffffffff"
+    }
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass"
+  },
+  "runtime": {
+    "dmaRequester": "0000:01:00.0",
+    "iommuDomain": 2,
+    "dmaTranslationObserved": true,
+    "msixInterruptRemappingObserved": true,
+    "qdevResetObserved": false,
+    "snapshot": "vim.fault.InvalidState",
+    "suspend": "vim.fault.InvalidState",
+    "forcedOffRestart": "pass",
+    "stressCyclesPassed": 10
+  },
+  "dynamicDirectPath": {
+    "configured": true,
+    "poweredOffAssignedId": [null, null, null],
+    "poweredOnAssignedId": ["0000:01:00.1", "0000:01:00.0", "0000:01:01.0"],
+    "poweredOffAgainAssignedId": [null, null, null]
+  },
+  "platformBlocked": [
+    "enabled option ROM execution",
+    "controlled PME injection",
+    "PCI error ownership with ESXi error reporting enabled",
+    "peer-to-peer DMA",
+    "RMRR",
+    "SR-IOV PF/VF",
+    "vMotion",
+    "bare-metal electrical reset and isolation"
+  ]
+}

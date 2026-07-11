@@ -322,7 +322,40 @@ qemu-system-x86_64 \
 5. 最终 QEMU profile 通过与 VMware profile 相同的 guest resource 和 lifecycle 检查。
 6. 所有脚本、规范化结果、非敏感日志和结论表都能从仓库复现。
 
-## 11. 参考资料
+## 11. 2026-07-11 本地执行状态
+
+详细输出和推理见 `vmware-esxi8-directpath-local-results.md`。本轮使用 ESXi
+8.0.3 build 24280767、vHW 20 EFI L3、QEMU 6.2 和 virtual VT-d。
+
+| 范围 | 状态 | 结论 |
+| --- | --- | --- |
+| G0-G4 | pass | L3 枚举、真实 e1000e I/O、三次以上干净运行和十次 start/stop 均完成 |
+| A00/A02/A03 | pass | PCIe baseline 与 multifunction function 独立 owner 行为已记录 |
+| A01 | nested-platform-only | 无 ACS 时 ESXi 明确记录 bypass；本机 `enableACSCheckForRP=FALSE`，不能外推生产安全性 |
+| A04 | pass | root-complex 直挂设备为 `Reset=None`、`Capable=false` |
+| A05 | pass | legacy bridge 后所有 endpoint 共用 bridge dependency，启用一个会自动启用全部 |
+| A06 | pass | L1 2.5GT/s x1 被 VMware 在 L2 重建成 5GT/s x32 |
+| M00-M03/M05/M06 | pass | 1GB 默认低置；2GB 在 absent/false/true/Size 变体下均自动高置 |
+| M04/M07 | blocked-by-endpoint | 未构造 32GB+ 或异构多 BAR aggregate endpoint |
+| D00/I00 | pass | requester `01:00.0` 的 VT-d translation 和 MSI-X interrupt remap 已关联 |
+| D01 | partial | power cycle 有 domain IOTLB invalidation；完整 context teardown 未直接导出 |
+| I01/I02 | blocked-by-endpoint | 本轮未实现 MSI-only/INTx-only driver 强制模式 |
+| R00 | partial | 可重复启动和 IOTLB invalidation 已见；未看到 QEMU qdev reset 事件 |
+| R01 | not-run | 未制作 guest reboot 循环镜像 |
+| R02/R03 | pass | DMA 后 forced-off 可重启；十次快速 start/stop 全通过 |
+| R04 | pass | legacy bridge requester-ID dependency 被 ESXi 自动集体启用 |
+| S00 | pass | outer e1000e 有 ROM BAR，DirectPath guest 默认不见该 ROM BAR |
+| S01/S02 | blocked-by-endpoint | 缺少已验证 OPROM 重启链和可控 PME 注入 |
+| S03 | blocked-by-platform | QEMU AER 可注入，但此 ESXi 启动关闭 PCI error reporting |
+| S04/S05 | blocked-by-endpoint | 无 peer-DMA endpoint 和可控 RMRR |
+| X00 | pass | 相同 allowed ID 获得不同 `assignedId`，关机后自动清空 |
+| X01/X02 | blocked-by-endpoint | 未构造异构包络候选和候选运行时失效注入 |
+| L00/L01 | pass | snapshot 与 suspend 均按产品限制返回 `vim.fault.InvalidState` |
+| L02 | blocked-by-platform | 单 standalone host，无 vMotion 目标 |
+| L03/L05 | pass | host 重启和 `--apply-now` owner 切换状态已记录 |
+| L04 | not-run | 未在 L3 运行时强制杀死整个 ESXi host |
+
+## 12. 参考资料
 
 - Broadcom KB 312208，VMDirectPath/Dynamic DirectPath requirements：
   https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html

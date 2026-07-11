@@ -5,6 +5,11 @@ Date: 2026-07-10
 This note narrows the question from "default EFI VM" to "EFI VM with a real PCI
 passthrough device". The main VMware reference is Broadcom KB 312208.
 
+Runtime update (2026-07-11): the matrix was executed on nested ESXi 8.0 U3 with
+active DirectPath devices. The allocator was demand-driven, so the fixed P0
+mapping originally proposed here is superseded by
+`vmware-esxi8-directpath-local-results.md`.
+
 The local QEMU-side non-BAR checks that could actually be executed on this host
 are recorded in `qemu-vmdirectpath-nonbar-local-validation.md`. That companion
 note separates verified QEMU behavior from items that still require real ESXi or
@@ -150,11 +155,11 @@ the behavior between firmware and the host bridge/ACPI resource.
 
 | VMware case | QEMU/OVMF mapping | Why |
 | --- | --- | --- |
-| P0 default passthrough, no 64-bit MMIO aperture | `-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0` plus `-global <host-bridge>.pci-hole64-size=0` | Disable OVMF's firmware 64-bit aperture and QEMU's ACPI/root 64-bit window. |
-| P1 use64 only, if VMware proves 32G | `X-PciMmio64Mb=32768` plus `pci-hole64-size=32G` | Match a measured 32G high aperture. Do not use unless P1 proves it. |
-| P2 explicit 4G | `X-PciMmio64Mb=4096` plus `pci-hole64-size=4G` | Match explicit 4GB firmware and OS-visible high MMIO. |
-| P3 explicit N GB | `X-PciMmio64Mb=N*1024` plus `pci-hole64-size=NG` | Match VMware's configured N-GB VM-level aperture. |
-| P4 SizeGB without use64 | no mapping until measured | If VMware ignores SizeGB without use64, map as P0. If it enables/changes a window, document the observed behavior. |
+| P0 default, layout fits below 4G | `X-PciMmio64Mb=0` plus `pci-hole64-size=0` | Match the measured 1GB low-placement result. |
+| P0 default, layout requires high space | launcher computes N; use `X-PciMmio64Mb=N*1024` plus `pci-hole64-size=NG` | ESXi automatically high-placed the tested 2GB BAR without either VMX key. |
+| P1 use64 only | same BAR-envelope policy as P0 on tested ESXi 8 U3 | TRUE did not create a 32GB aperture or change placement. |
+| P2/P3 explicit SizeGB | measure the target ESXi/device; do not assume N is the emitted aperture | Size4 was accepted but tested windows still followed actual BAR size. |
+| P4 SizeGB without use64 | same BAR-envelope policy on tested ESXi 8 U3 | Size4 alone did not change placement. |
 
 Host bridge names:
 
@@ -166,7 +171,7 @@ q35:    q35-pcihost
 Examples:
 
 ```bash
-# OVMF + q35, VMware default-style passthrough MMIO policy
+# OVMF + q35, below-4G profile selected by the launcher
 -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
 -global q35-pcihost.pci-hole64-size=0
 
@@ -219,9 +224,11 @@ qemu-system-x86_64 \
   -device vfio-pci,host=0000:65:00.0,bus=rp1,addr=00.0,rombar=0
 ```
 
-Use the MMIO pair above for VMware-default-style passthrough policy. Replace it
-with `X-PciMmio64Mb=N*1024` and `pci-hole64-size=NG` only when modeling an
-explicit VMware 64-bit MMIO aperture.
+Use the zero/zero pair only after the launcher proves the complete BAR layout
+fits below 4G. Otherwise compute the aligned high BAR envelope and set both
+knobs. For the measured 2GB VMware default case, the QEMU size match was
+`X-PciMmio64Mb=2048` plus `pci-hole64-size=2G`; stock QEMU did not match
+VMware's exact high base address.
 
 ### Alignment matrix
 

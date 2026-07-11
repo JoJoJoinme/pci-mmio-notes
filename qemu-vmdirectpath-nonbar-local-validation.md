@@ -2,6 +2,12 @@
 
 Date: 2026-07-10
 
+Runtime update (2026-07-11): the later nested ESXi 8 experiment booted an EFI
+guest with active DirectPath devices.  It supersedes this note's fixed
+`both_zero` VMware-default MMIO recommendation.  See
+`vmware-esxi8-directpath-local-results.md`.  The QEMU topology, ACS-presentation,
+link, and vIOMMU observations below remain valid.
+
 This note records what was locally verified for mapping Broadcom KB 312208
 VMDirectPath behavior to QEMU/VFIO, beyond BAR sizing. It separates:
 
@@ -277,7 +283,7 @@ passthrough device.
 
 ## QEMU alignment for KB 312208 non-BAR details
 
-The practical QEMU baseline for VMware default-style DirectPath is:
+The practical QEMU below-4G-only profile is:
 
 ```bash
 qemu-system-x86_64 \
@@ -292,8 +298,9 @@ qemu-system-x86_64 \
   -device vfio-pci,host=0000:65:00.0,bus=rp1,addr=00.0,rombar=0
 ```
 
-Use this unless the VMware case explicitly enables 64-bit passthrough MMIO. For
-an explicit VMware `pciPassthru.64bitMMIOSizeGB=N` case, change both QEMU knobs:
+Use this only when the complete BAR layout fits below 4G.  When a high window is
+required, a launcher must calculate the aligned BAR envelope and change both
+QEMU knobs together:
 
 ```bash
 -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=$((N * 1024))
@@ -328,10 +335,10 @@ Mapping summary:
 
 ## Bottom line
 
-For the VMware default DirectPath scenario described by KB 312208, QEMU should
-not be modeled as "OVMF only". Use q35/OVMF plus both MMIO controls set to zero,
-explicit PCIe root ports, and no guest vIOMMU unless that VMware VM setting is
-also present.
+For the VMware default DirectPath scenario, QEMU should not be modeled as one
+fixed command line.  Use q35/OVMF, explicit PCIe root ports, and a launcher that
+chooses zero/zero or a calculated high aperture from the actual BAR envelope.
+Do not add a guest vIOMMU unless the VMware comparison target exposes one.
 
 The local machine verifies the QEMU side of this mapping for firmware/root-window
 MMIO, PCIe topology, root-port ACS presentation, link presentation, and guest

@@ -2,9 +2,16 @@
 
 日期：2026-07-09
 
+> 2026-07-11 运行时更新：本文最初把普通 EFI VMX 中“没有显式
+> `use64bitMMIO`”推导成了 DirectPath guest 默认不自动建立高窗。新的
+> ESXi 8.0 U3 active-passthrough 实验推翻了这个推导：1GB 64-bit BAR 默认
+> 低置，2GB BAR 即使显式 `use64bitMMIO=FALSE` 也会自动获得 2GB 高窗。
+> 完整证据见 `vmware-esxi8-directpath-local-results.md`。下文的 QEMU knob
+> 单项行为仍有效，但固定的 `both_zero = VMware default` 映射已被取代。
+
 本文记录本目录中围绕 QEMU、OVMF、SeaBIOS 与 VMware EFI 默认 PCI MMIO 行为的对比测试。重点不是证明某个单独 BAR 是否能启动，而是确定：如果要模拟 VMware EFI 默认 VM 的 PCI MMIO 语义，QEMU 参数应该如何设置。
 
-## 最终结论
+## 原始结论与修正
 
 ### 1. VMware EFI 默认行为的目标语义
 
@@ -37,7 +44,7 @@ pciPassthru.64bitMMIOSizeGB = "..."
 
 ### 2. OVMF 推荐参数
 
-如果固件是 OVMF，并且目标是模拟 VMware EFI 默认 VM，不显式打开 64-bit passthrough MMIO aperture：
+如果固件是 OVMF，并且目标仅是“强制不发布 high aperture”的 QEMU profile：
 
 ```bash
 # i440fx
@@ -61,7 +68,7 @@ pciPassthru.64bitMMIOSizeGB = "..."
 - 只配 `X-PciMmio64Mb=0`，QEMU ACPI 仍可能暴露默认 high window。
 - 只配 `pci-hole64-size=0`，OVMF 仍可能在 firmware 阶段把小 64-bit BAR 放到 4G 以上，QEMU ACPI 会报告覆盖实际 BAR 的最小 high window。
 
-如果目标改成模拟 VMware 显式配置了 4GB 64-bit passthrough MMIO，例如 `pciPassthru.64bitMMIOSizeGB = 4`，才应使用：
+如果目标是显式配置 4GB 64-bit aperture，可以使用：
 
 ```bash
 # i440fx + OVMF, explicit 4GB high MMIO aperture
@@ -523,4 +530,8 @@ SeaBIOS + q35：
 
 ## 一句话版本
 
-如果目标是 VMware EFI 默认 VM，QEMU/OVMF 应该配 `X-PciMmio64Mb=0` 加 `pci-hole64-size=0`；SeaBIOS 只配 `pci-hole64-size=0`。如果目标是显式 4GB above-4G MMIO aperture，才配 `4096` 加 `4G`。
+`X-PciMmio64Mb=0` 加 `pci-hole64-size=0` 只表示 QEMU 的 below-4G-only
+profile，不再代表完整 VMware 默认策略。对标 ESXi 8 U3 默认 DirectPath
+需要启动器先计算 BAR 包络：能低置时使用 zero/zero，不能低置时同时给
+OVMF 和 host bridge 设置所需高窗；精确复刻 VMware 高窗基址还需要修改
+allocator。
