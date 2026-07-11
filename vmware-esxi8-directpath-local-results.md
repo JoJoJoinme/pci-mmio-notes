@@ -315,7 +315,7 @@ guest serial 和最终 power state。失败用例也保留，不能只归档成�
 | --- | --- | --- | --- |
 | S01 Option ROM enabled | 只验证了默认不暴露 ROM；没有安全、可识别的目标 ROM | 给 outer endpoint 挂已知 UEFI option ROM；设置 ESXi `pcipSaveOPROM=1` 并重启；VMX 设置 `pciPassthruN.opromEnabled=TRUE` | guest ROM BAR、OVMF 执行签名、restart 后可重复执行 |
 | S02 PME | stock endpoint 没有受控 PME 注入命令 | 实现 endpoint PM capability 和“设置 PMCSR PME_Status + 发 PME message”的 monitor/QMP 命令；对比默认 `_OSC` 与 `acpi.osc.pcie` | host/guest PMCSR、guest 是否收到通知、ESXi 是否明确忽略 |
-| S03 AER | QEMU 可注入，但本机 ESXi 启动关闭 PCI error reporting | 在可回滚 ESXi 副本上启用 `enablePCIErrors`，关闭 `pcipDisablePciErrReporting`，重启；先注入 correctable，再谨慎做 uncorrectable | QEMU injection、`vmkernel.log`、guest dmesg 三方对照；不可恢复错误需隔离运行 |
+| S03 AER | **pass（Correctable + Non-Fatal）** | boot-only 启用 `enablePCIErrors`、关闭 `pcipDisablePciErrReporting`；QEMU 分别注入 Receiver Error 与 Unsupported Request | VMware 隐藏 guest AER header/ownership，但保留 raw status body；两类事件均为 status-only，详见 `vmware-aer-blackbox-results.md` |
 | S04 P2P | 没有两个能做真实 peer DMA 的 endpoint | 实现两个可编程 DMA endpoint，让一端 DMA 到另一端 BAR；对比默认、`allowP2P`、`relaxACSforP2P` | peer BAR 内容、VT-d/ACS trace、host/guest 错误和性能计数 |
 | S05 RMRR | QEMU 6.2 没有任意 RMRR command-line 注入 | 修改 QEMU DMAR table builder，为指定 SID 生成 RMRR，并保留对应 E820/UEFI range；endpoint 对该区域 DMA | ESXi memory map 调整、identity map 或精确 overlap fault；Dynamic candidate 包络 |
 

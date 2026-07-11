@@ -27,6 +27,10 @@ QEMU -> ESXi 8 -> EFI Linux DirectPath 黑盒验证的中文结果报告，包�
 变化，见 `vmware-esxi8-directpath-local-results.md`；逐项复现命令和 Case
 索引见 `vmware-esxi8-lab/README.md`。
 
+PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU 对标结论，
+见 `vmware-aer-blackbox-results.md`；QEMU OVMF/SeaBIOS surface A/B 入口为
+`qemu-aer-surface-validate.sh`。
+
 ## Short conclusion
 
 1. An ordinary EFI VMX still contains no implicit `use64bitMMIO` setting, but

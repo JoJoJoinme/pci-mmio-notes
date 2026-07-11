@@ -53,6 +53,7 @@ wsl -d Ubuntu-22.04 -- bash /mnt/e/Code/PCI/_artifacts/start-qemu-esxi8-mf.sh
 | A05 | 传统桥依赖组 | 外层 `TOPOLOGY=legacy` | 依赖设备、批量 enable 行为 |
 | A06 | 物理链路与虚拟链路呈现 | link speed/width 变量 | L1/L2 两侧 `LnkSta` |
 | D00/I00 | DMA 翻译、requester 与中断重映射 | trace 模式和流量脚本 | QEMU trace、guest workload |
+| C00-C03 | Correctable/Non-Fatal AER ownership | `Invoke-EsxiAerCase.ps1` | QEMU HMP、ESXi config/log、guest raw config/dmesg |
 | R00/R01 | reset 行为 | trace + 重启/关机 | reset trace、设备状态计数器 |
 | L00-L03 | 电源与生命周期 | `Test-EsxiDirectPathLifecycle.ps1` | API 错误、重启后 BAR、串口 |
 | T00 | 重复启动稳定性 | `Test-EsxiDirectPathStress.ps1` | 每轮结果与失败日志 |
@@ -244,6 +245,6 @@ case-id/
 4. D00/I00 trace 流量。
 5. L00-L03 和 T00 生命周期。
 6. X00 Dynamic DirectPath 单机绑定。
-7. 最后再做 AER、宿主崩溃、真实复位、vMotion 等破坏性或多主机测试。
+7. AER 已由受保护 runner 完成；宿主崩溃、真实复位、vMotion 仍放在最后执行。
 
 不可逆或高风险 Case 应始终在可回滚 ESXi 副本上运行，并把“环境被破坏”与“产品行为失败”分开记录。

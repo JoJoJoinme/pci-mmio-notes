@@ -225,16 +225,16 @@ device reset trace；裸机使用 `/reset_method`、设备日志和外部行为�
 | S00 | 默认 passthrough device 带 Expansion ROM | 分别判断 ROM BAR 是否可见、firmware 是否执行 |
 | S01 | `pcipSaveOPROM=TRUE` 加 `<device>.opromEnabled=TRUE` | OVMF 执行目标 ROM，restart 可重复 |
 | S02 | Guest 启用 PME，endpoint 发出 PME | 判断 ESXi 是否忽略，以及是否要改 guest `_OSC` policy |
-| S03 | 注入 correctable/uncorrectable AER | 确认 host 处理，以及错误是否进入 L2 |
+| S03 | 注入 Correctable Receiver Error 与 Non-Fatal Unsupported Request | 已执行；确认 guest AER header/ACPI ownership 被过滤，raw status body 保留，host/guest 日志均静默 |
 | S04 | 两 endpoint 执行真实 peer DMA | 对比默认、`allowP2P`、`relaxACSforP2P`；只看 ACS bit 不算通过 |
 | S05 | Endpoint 带关联 RMRR | 观察 memory-map 自动调整或精确 overlap failure |
 | X00 | 两个相同 ID 的 Dynamic DirectPath candidate | 记录 allowed list、`assignedId` 和关机解绑 |
 | X01 | Allowed candidate 有不同 BAR/RMRR 包络 | 判断 admission 为选中设备还是所有候选预留 |
 | X02 | 开机时某 candidate 不可用 | 记录 selection fallback 和 task fault |
 
-Stock QEMU 6.2 足以做第一批 ACS、topology、BAR、VT-d、interrupt 和基本 reset
-实验。PME/AER/RMRR/P2P 可能需要更新 QEMU、instrumented endpoint、DMAR table
-patch 或真实硬件。不能从相邻用例推断这些未执行项目。
+Stock QEMU 6.2 足以做第一批 ACS、topology、BAR、VT-d、interrupt、基本 reset 和
+AER 注入。AER 已证明 stock QEMU 的 guest surface 不等价，完整过滤仍需 QEMU patch；
+PME/RMRR/P2P 可能需要 instrumented endpoint、DMAR table patch 或真实硬件。
 
 ### 7.5 生命周期与产品限制
 
@@ -269,7 +269,7 @@ patch 或真实硬件。不能从相邻用例推断这些未执行项目。
 | Resizable BAR | 固定 host BAR size，不依赖 guest 改 ReBAR | 记录 guest capability 和 effective BAR size |
 | Expansion ROM | 暂以 `rombar=0` 为候选，等待 S00/S01 定案 | 分别匹配 ROM BAR visibility 和 firmware execution |
 | PME/`_OSC` | Root-port hotplug 参数不等于 `acpi.osc.pcie` | 比较反编译 ACPI grant 和实际 PME 注入结果 |
-| AER | 不假设 VFIO 自动等价 | 注入错误后比较 host/guest ownership |
+| AER | stock QEMU 无完整等价参数；`vfio-pci` 需过滤 `PCI_EXT_CAP_ID_ERR`，Root Port 需 `aer=off` 类开关 | guest header/body、ACPI `_OSC`、host/guest log 三方比较 |
 | P2P | 没有通用 QEMU 开关等价于 VMware policy | 实际 peer DMA 成功或按预期阻断 |
 | RMRR | 优先使用无 host reserved-memory dependency 的设备 | 无 unsafe patch，attach 和 identity map 无异常 |
 | Memory pinning | Prealloc/hugepage memory + 足够 memlock | 负载下无 VFIO mapping failure |
@@ -307,7 +307,7 @@ qemu-system-x86_64 \
 4. 使用 256M 和 1G BAR 执行 M00-M03，以最少用例回答主 MMIO 问题。
 5. 打开 QEMU `vtd_*` 和 device trace，执行 D00、I00、R00-R03。
 6. 扩展到 M04-M07、A04-A06 和 Dynamic DirectPath。
-7. 只针对仍未回答的 reset/PME/AER/RMRR 问题实现 instrumented endpoint。
+7. 只针对仍未回答的 reset/PME/RMRR 问题实现 instrumented endpoint；AER 转为实现并验证 config-space filter。
 8. 在裸机 ESXi 上用至少一个真实 NIC/NVMe 重放已通过用例；只有 large BAR/P2P
    场景再引入 GPU/FPGA。
 
@@ -346,7 +346,7 @@ qemu-system-x86_64 \
 | R04 | pass | legacy bridge requester-ID dependency 被 ESXi 自动集体启用 |
 | S00 | pass | outer e1000e 有 ROM BAR，DirectPath guest 默认不见该 ROM BAR |
 | S01/S02 | blocked-by-endpoint | 缺少已验证 OPROM 重启链和可控 PME 注入 |
-| S03 | blocked-by-platform | QEMU AER 可注入，但此 ESXi 启动关闭 PCI error reporting |
+| S03 | pass | boot-only 开启 ESXi PCI error reporting 后，Correctable 与 Non-Fatal 均完成 host/guest/config/log 三方采集 |
 | S04/S05 | blocked-by-endpoint | 无 peer-DMA endpoint 和可控 RMRR |
 | X00 | pass | 相同 allowed ID 获得不同 `assignedId`，关机后自动清空 |
 | X01/X02 | blocked-by-endpoint | 未构造异构包络候选和候选运行时失效注入 |

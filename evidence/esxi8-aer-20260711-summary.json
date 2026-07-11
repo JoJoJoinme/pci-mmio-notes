@@ -1,0 +1,42 @@
+{
+  "scope": "Authorized black-box DirectPath AER observation",
+  "esxi": "8.0.3-24280767",
+  "qemu": "6.2.0 (Debian 1:6.2+dfsg-2ubuntu6.30)",
+  "runtime": {
+    "enablePCIErrors": true,
+    "pcipDisablePciErrReporting": false
+  },
+  "target": {
+    "qemuId": "test_fn1",
+    "esxiBdf": "0000:01:00.1",
+    "guestBdf": "0000:02:00.1"
+  },
+  "correctable": {
+    "hmp": "pcie_aer_inject_error -c test_fn1 0x00000001",
+    "qemuResult": "OK",
+    "hostAerHeader": "0x14020001",
+    "guestAerHeader": "0x00000000",
+    "hostCorrectableStatusBefore": "0x00000000",
+    "hostCorrectableStatusAfter": "0x00000001",
+    "guestCorrectableStatusBefore": "0x00000000",
+    "guestCorrectableStatusAfter": "0x00000001",
+    "hostLogEvent": false,
+    "guestLogEvent": false,
+    "rootPortChanged": false
+  },
+  "nonFatal": {
+    "hmp": "pcie_aer_inject_error test_fn1 0x00100000 0 0 0 0",
+    "qemuResult": "OK",
+    "hostAerHeader": "0x14020001",
+    "guestAerHeader": "0x00000000",
+    "hostUncorrectableStatusBefore": "0x00000000",
+    "hostUncorrectableStatusAfter": "0x00100000",
+    "guestUncorrectableStatusBefore": "0x00000000",
+    "guestUncorrectableStatusAfter": "0x00100000",
+    "hostLogEvent": false,
+    "guestLogEvent": false,
+    "rootPortChanged": false
+  },
+  "guestAcpi": "PNP0A03 _OSC platform does not support AER LTR DPC",
+  "aerIsoSha256": "23b08887b5496c755356fa12b43ae0801fbe03a8048c4216b49ff3b8604cbb13"
+}
