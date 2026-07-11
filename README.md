@@ -22,10 +22,10 @@ For the executable VMware implementation acceptance goals, evidence grades,
 test matrix, artifact contract, and QEMU equivalence checklist, see
 `vmware-directpath-acceptance-test-plan.md`.
 
-For the completed QEMU -> ESXi 8 -> EFI Linux DirectPath black-box run, including
-MMIO boundary results, VT-d traces, topology negatives, lifecycle faults, and
-Dynamic DirectPath `assignedId` transitions, see
-`vmware-esxi8-directpath-local-results.md`.
+QEMU -> ESXi 8 -> EFI Linux DirectPath 黑盒验证的中文结果报告，包括 MMIO
+边界、VT-d trace、拓扑负例、生命周期和 Dynamic DirectPath `assignedId`
+变化，见 `vmware-esxi8-directpath-local-results.md`；逐项复现命令和 Case
+索引见 `vmware-esxi8-lab/README.md`。
 
 ## Short conclusion
 
