@@ -1,5 +1,5 @@
 {
-  "date": "2026-07-11",
+  "date": "2026-07-12",
   "esxi": "VMware ESXi 8.0.3 build-24280767",
   "virtualHardware": 20,
   "qemu": "6.2.0 (Debian/Ubuntu build)",
@@ -15,10 +15,27 @@
       "highRootWindow": true,
       "sameFor": ["absent", "false", "true", "true+size4", "size4-only"]
     },
-    "qemu2GiB": {
-      "default": "32GiB high window; BAR at 0x800000000",
-      "bothZero": "BAR2 unassigned; no high window",
-      "both2GiB": "2GiB window and BAR at 0x180000000-0x1ffffffff"
+    "bar4GiB": {
+      "absent": "expected power-on failure: 1048577 mapping pages exceed the 917504-page default limit",
+      "size4Only": "same expected failure",
+      "trueOnly": "pass; BAR/root window 0x1fff00000000-0x1fffffffffff",
+      "truePlusSize4": "pass; same BAR/root window"
+    },
+    "bar8GiB": {
+      "absent": "expected power-on failure: 2097153 mapping pages exceed the 917504-page default limit",
+      "trueOnly": "VMX mapping and EFI runtime pass, but no guest heartbeat within 600 seconds",
+      "truePlusSize8": "VMX mapping pass; nested platform stalls before guest evidence completes"
+    },
+    "aggregate": {
+      "two1GiB": "both below 4G at 0x40000000-0x7fffffff and 0x80000000-0xbfffffff",
+      "one2GiB": "above 4G at 0x1fff80000000-0x1fffffffffff",
+      "one1GiBPlusOne2GiB": "contiguous 3GiB DirectPath high range plus a 1GiB main-root high range"
+    },
+    "qemuParity": {
+      "i440fx1GiBBelow4G": "X-PciMmio64Mb=0 plus hole64=0: exact BAR 0x80000000-0xbfffffff and guest heartbeat",
+      "i440fx2GiBHigh": "X-PciMmio64Mb=2048 plus hole64=2G: BAR/root window 0x100000000-0x17fffffff and guest heartbeat",
+      "q35ZeroNegative": "1GiB BAR remains unassigned and firmware probe does not boot",
+      "conclusion": "machine type and resource packing are part of equivalence; no fixed stock QEMU profile reproduces the demand-driven VMware policy"
     }
   },
   "gates": {
@@ -43,16 +60,33 @@
     "configured": true,
     "poweredOffAssignedId": [null, null, null],
     "poweredOnAssignedId": ["0000:01:00.1", "0000:01:00.0", "0000:01:01.0"],
-    "poweredOffAgainAssignedId": [null, null, null]
+    "poweredOffAgainAssignedId": [null, null, null],
+    "heterogeneousBarCandidate": "pass: select candidate first, then construct its MMIO envelope",
+    "candidateExhaustion": "pass: NoCompatibleHost with missing pciPassthru1; retry succeeds after release",
+    "poweredOffRelocate": "pass: target host resolves a fresh assignedId"
   },
+  "mobility": {
+    "ordinaryLiveVmotion": "pass",
+    "classicDirectPathLiveVmotion": "expected reject: assignHwNotAvailable",
+    "dynamicDirectPathLiveVmotion": "expected reject: assignHwNotAvailable",
+    "dynamicPoweredOffRelocate": "pass"
+  },
+  "hostCrashRecovery": "pass: connected -> notResponding -> connected, shared datastore and passthrough owners recover, same VM starts and performs traffic again",
+  "guestReboot": "pass: UEFI-variable phase marker and traffic before/after reboot, then poweredOff with assignedId cleared",
+  "interruptModes": {
+    "msix": "pass with DMA and interrupt-remap trace",
+    "intxNestedDirectPath": "functional fail: legacy IO-APIC route present but 11 samples remain irq=0 and tx=0",
+    "intxQemuDirectControl": "pass: IRQ count 13->54 and tx 9->22 with the same pci=nomsi ISO",
+    "msiOnly": "requires an endpoint capability mask that hides MSI-X"
+  },
+  "labTransport": "QEMU TAP vnet_hdr and bridge offloads are disabled; NFS export is restored idempotently to prevent corrupt RPC record streams",
   "platformBlocked": [
     "enabled option ROM execution",
     "controlled PME injection",
-    "PCI error ownership with ESXi error reporting enabled",
     "peer-to-peer DMA",
     "RMRR",
     "SR-IOV PF/VF",
-    "vMotion",
+    "32G+ guest-boot validation after the 8G nested execution saturation boundary",
     "bare-metal electrical reset and isolation"
   ]
 }

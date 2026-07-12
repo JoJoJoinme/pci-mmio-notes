@@ -15,32 +15,30 @@
 
 ### 1. VMware EFI 默认行为的目标语义
 
-本次讨论里的“像 VMware EFI 默认 VM”应理解为：
+active DirectPath 实测后，“像 VMware EFI 默认 VM”应理解为按需求分支，而不是固定
+关闭或固定打开高窗：
 
 ```text
-默认不显式启用 above-4G 64-bit passthrough MMIO aperture。
-大 BAR / passthrough 64-bit MMIO 需要额外显式配置。
+1GB BAR：缺省 key，低置到 0x80000000-0xbfffffff，无高窗。
+2GB BAR：缺省或 FALSE，自动得到最小 2GB 高窗。
+4GB BAR：缺省与 Size4-only 因默认 mapping-page limit 失败；TRUE-only 即通过。
 ```
 
-它不应该被理解为：
+所以它既不应被理解为：
 
 ```text
-默认给 guest 暴露一个 size=4G 的 above-4G 64-bit PCI MMIO window。
+缺省固定给 guest 一个 4GB above-4G window。
 ```
 
-本目录已有 VMware 侧证据见 `github-export/README.md`：
-
-- 默认 EFI VMX 中没有 `pciPassthru.use64bitMMIO`。
-- 默认 EFI VMX 中没有 `pciPassthru.64bitMMIOSizeGB`。
-- 默认 EFI VMX 中没有 `64bitMMIO` 或 PCI hole override。
-- Broadcom 文档把 VMDirectPath / Dynamic DirectPath 的 64-bit MMIO 描述为显式开启项：
+也不应被理解为：
 
 ```text
-pciPassthru.use64bitMMIO = "TRUE"
-pciPassthru.64bitMMIOSizeGB = "..."
+缺省绝不允许 above-4G BAR。
 ```
 
-因此，模拟 VMware EFI 默认 VM 时，目标是“不预留产品级 above-4G 64-bit passthrough MMIO aperture”，不是“默认 high MMIO aperture = 4G”。
+默认 EFI VMX 确实没有两个 64-bit MMIO key，但“配置缺省”不能推出“运行时无高窗”。
+QEMU 对标必须先选 candidate、按每个 BAR 的自然对齐和 bridge packing 试算低端布局，
+再选择 below-4G 或计算后的 high profile。`both_zero` 只代表第一条分支。
 
 ### 2. OVMF 推荐参数
 
@@ -216,7 +214,7 @@ _artifacts/mmio-tests/i440fx-1g-core/
 
 | Case | QEMU/OVMF 参数 | Linux high window | ivshmem BAR2 | 结论 |
 |---|---|---:|---:|---|
-| default | 无额外 MMIO 参数 | `0x800000000-0x87fffffff`，2G | `0x800000000-0x83fffffff` | QEMU i440fx 默认会暴露 2G high window，不像 VMware 默认 |
+| default | 无额外 MMIO 参数 | `0x800000000-0x87fffffff`，2G | `0x800000000-0x83fffffff` | QEMU i440fx 默认会暴露 2G high window，不像 VMware 的 1GB 低置分支 |
 | fwcfg_4g only | `X-PciMmio64Mb=4096` | `0x200000000-0x27fffffff`，2G | `0x200000000-0x23fffffff` | OVMF 位置变化，但 OS-visible size 仍是 QEMU 默认 2G |
 | host_4g only | `i440FX-pcihost.pci-hole64-size=4G` | `0x800000000-0x8ffffffff`，4G | `0x800000000-0x83fffffff` | OS-visible window 变 4G，但 OVMF firmware aperture 未同步 |
 | both_4g | `X-PciMmio64Mb=4096` + `pci-hole64-size=4G` | `0x200000000-0x2ffffffff`，4G | `0x200000000-0x23fffffff` | firmware 与 OS-visible window 同步为 4G |
@@ -227,7 +225,7 @@ _artifacts/mmio-tests/i440fx-1g-core/
 - `X-PciMmio64Mb=4096` 单独不能让 Linux high window 变成 4G；它影响 OVMF 固件阶段的 aperture 选择和 BAR 放置位置。
 - `pci-hole64-size=4G` 单独能让 Linux 看到 4G high window；它影响 QEMU host bridge / ACPI 暴露给 OS 的 window size。
 - 如果要模拟“显式 4G high MMIO aperture”，两个都要配。
-- 如果要模拟 VMware EFI 默认“不显式启用 high aperture”，则应配 `0/0`，而不是 `4096/4G`。
+- 如果要构造 VMware 1GB 样本对应的 below-4G 分支，应从 `0/0` profile 开始做完整布局冷启动验证，而不是使用 `4096/4G`。
 
 ### OVMF + i440fx + 无 BAR 探针
 
@@ -242,7 +240,7 @@ _artifacts/mmio-tests/i440fx-zero-no-ivshmem/
 | default | 无额外 MMIO 参数 | `0x800000000-0x87fffffff`，2G | QEMU 默认仍预留 high aperture |
 | fwcfg_zero only | `X-PciMmio64Mb=0` | `0x140000000-0x1bfffffff`，2G | 只关 OVMF 不够，QEMU ACPI 仍扩出默认 2G |
 | host_zero only | `pci-hole64-size=0` | `0x800000000-0x80000bfff`，最小实际范围 | OVMF 仍可能分配小 64-bit BAR，ACPI 覆盖实际范围 |
-| both_zero | `X-PciMmio64Mb=0` + `pci-hole64-size=0` | 无 above-4G window | 这才是 OVMF 下模拟 VMware 默认“不预留 high aperture”的组合 |
+| both_zero | `X-PciMmio64Mb=0` + `pci-hole64-size=0` | 无 above-4G window | OVMF 下“不预留 high aperture”的隔离控制，不代表完整 VMware 默认策略 |
 
 `both_zero` 下 Linux 只看到低地址 PCI windows：
 
@@ -472,7 +470,15 @@ SeaBIOS 下要控制 OS-visible high window，只能通过 QEMU host bridge prop
 
 ## 最终建议落地
 
-### 模拟 VMware EFI 默认 VM
+### 实现 VMware 默认策略的 below-4G 分支
+
+先说明边界：下列是强制不发布 high aperture 的 QEMU profile，不是完整 VMware
+默认策略。当前一键实测中，i440fx + 1GB RAM + 1GB BAR 成功得到与 VMware 相同的
+`0x80000000-0xbfffffff`；q35 同参数的 BAR 未分配，是负例。入口为：
+
+```bash
+./qemu-vmware-default-profile-validate.sh
+```
 
 OVMF + i440fx：
 
@@ -500,7 +506,21 @@ SeaBIOS + q35：
 -global q35-pcihost.pci-hole64-size=0
 ```
 
-### 模拟显式开启 4GB 64-bit MMIO passthrough aperture
+SeaBIOS 四组命令仅用于 allocator/ACPI 边界控制，不能作为 VMware EFI 等价配置。
+
+### 实现计算后的 high 分支
+
+如果实际 BAR 不能低置，N 必须来自逐 BAR 对齐和 bridge packing，而不是简单总和：
+
+```bash
+-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=$((N * 1024))
+-global i440FX-pcihost.pci-hole64-size=${N}G
+```
+
+本轮 i440fx 2GB 档已用 `N=2` 启动并得到 2GB high window；高/低分类和大小与 VMware
+相符，基址不同。若只是显式测试 4GB QEMU aperture，可使用下面的固定控制组。
+
+### 显式 4GB QEMU 控制组
 
 OVMF + i440fx：
 
@@ -532,6 +552,6 @@ SeaBIOS + q35：
 
 `X-PciMmio64Mb=0` 加 `pci-hole64-size=0` 只表示 QEMU 的 below-4G-only
 profile，不再代表完整 VMware 默认策略。对标 ESXi 8 U3 默认 DirectPath
-需要启动器先计算 BAR 包络：能低置时使用 zero/zero，不能低置时同时给
-OVMF 和 host bridge 设置所需高窗；精确复刻 VMware 高窗基址还需要修改
-allocator。
+需要启动器先选择 Dynamic candidate，再按每个 BAR 对齐/packing 计算包络：能低置时
+使用通过冷启动验证的 zero/zero machine profile，不能低置时同时给 OVMF 和 host
+bridge 设置所需高窗；精确复刻 VMware 高窗基址还需要修改 allocator。

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-12",
+  "scope": "nested-lab transport integrity, not VMware product behavior",
+  "failure": {
+    "symptoms": [
+      "ESXi reported qemu-shared as Mounted=true but Accessible=false",
+      "datastore access returned Input/output error",
+      "Linux nfsd repeatedly logged RPC fragment too large"
+    ],
+    "preFix": {
+      "qemuTapVnetHeader": true,
+      "tapGsoGro": false,
+      "bridgeGro": true,
+      "nfsExportWasRuntimeOnly": true
+    }
+  },
+  "fix": [
+    "Set vnet_hdr=off on the QEMU management TAP netdev.",
+    "Disable checksum, TSO, GSO, GRO, VLAN and GRO-list offloads independently on both TAP and bridge.",
+    "Re-export the shared directory idempotently whenever an ESXi QEMU instance starts.",
+    "Restart the NFS server and remount the datastore to discard corrupt TCP record streams."
+  ],
+  "verification": {
+    "datastoreAccessible": true,
+    "datastoreMounted": true,
+    "writes": 5,
+    "bytesPerWrite": 65536,
+    "md5": "fcd6bcb56c1689fcef28b57c22475bad",
+    "newRpcFragmentTooLargeMessages": 0
+  },
+  "implementedIn": "vmware-esxi8-lab/start-qemu-esxi8-mf.sh"
+}

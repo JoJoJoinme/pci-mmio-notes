@@ -324,8 +324,8 @@ qemu-system-x86_64 \
 
 ## 11. 2026-07-11 本地执行状态
 
-详细输出和推理见 `vmware-esxi8-directpath-local-results.md`。本轮使用 ESXi
-8.0.3 build 24280767、vHW 20 EFI L3、QEMU 6.2 和 virtual VT-d。
+详细输出和推理见 `vmware-esxi8-directpath-local-results.md`。本轮使用两台 ESXi
+8.0.3 build 24280767、VCSA 8.0.3、vHW 20 EFI L3、QEMU 6.2、virtual VT-d 与共享 NFS。
 
 | 范围 | 状态 | 结论 |
 | --- | --- | --- |
@@ -336,12 +336,15 @@ qemu-system-x86_64 \
 | A05 | pass | legacy bridge 后所有 endpoint 共用 bridge dependency，启用一个会自动启用全部 |
 | A06 | pass | L1 2.5GT/s x1 被 VMware 在 L2 重建成 5GT/s x32 |
 | M00-M03/M05/M06 | pass | 1GB 默认低置；2GB 在 absent/false/true/Size 变体下均自动高置 |
-| M04/M07 | blocked-by-endpoint | 未构造 32GB+ 或异构多 BAR aggregate endpoint |
+| M04 4GB | pass | absent/Size4-only 超过 917504-page limit；TRUE-only 与 TRUE+Size4 均通过 |
+| M04 8GB/32GB+ | partial/platform-boundary | sparse 8GB mapping 可建立，但 EFI guest 无 heartbeat；32GB+ 未在同一饱和路径盲跑 |
+| M07 aggregate | pass | 2x1GB 低置；单 2GB 高置；1GB+2GB 形成 3GB DirectPath 高 range |
 | D00/I00 | pass | requester `01:00.0` 的 VT-d translation 和 MSI-X interrupt remap 已关联 |
 | D01 | partial | power cycle 有 domain IOTLB invalidation；完整 context teardown 未直接导出 |
-| I01/I02 | blocked-by-endpoint | 本轮未实现 MSI-only/INTx-only driver 强制模式 |
+| I01 | nested-functional-fail | `pci=nomsi` 得到 legacy IO-APIC，但 11 个样本 IRQ/tx 均为 0；同 ISO QEMU direct pass |
+| I02 | blocked-by-endpoint | MSI-only 需要隐藏 MSI-X capability 的 endpoint mask |
 | R00 | partial | 可重复启动和 IOTLB invalidation 已见；未看到 QEMU qdev reset 事件 |
-| R01 | not-run | 未制作 guest reboot 循环镜像 |
+| R01 | pass | efivar phase marker 证明 reboot 前后各完成一次 e1000e I/O，最终正常解绑 |
 | R02/R03 | pass | DMA 后 forced-off 可重启；十次快速 start/stop 全通过 |
 | R04 | pass | legacy bridge requester-ID dependency 被 ESXi 自动集体启用 |
 | S00 | pass | outer e1000e 有 ROM BAR，DirectPath guest 默认不见该 ROM BAR |
@@ -349,11 +352,14 @@ qemu-system-x86_64 \
 | S03 | pass | boot-only 开启 ESXi PCI error reporting 后，Correctable 与 Non-Fatal 均完成 host/guest/config/log 三方采集 |
 | S04/S05 | blocked-by-endpoint | 无 peer-DMA endpoint 和可控 RMRR |
 | X00 | pass | 相同 allowed ID 获得不同 `assignedId`，关机后自动清空 |
-| X01/X02 | blocked-by-endpoint | 未构造异构包络候选和候选运行时失效注入 |
+| X01 | pass | 相同 VID:DID 的 1GB/2GB candidate 先选择再按实际 BAR 建 envelope |
+| X02 | pass | candidate 耗尽得到 `NoCompatibleHost`；释放后同配置重试成功 |
+| X03 | pass | powered-off relocate 后目标 host 重新解析 `assignedId` |
 | L00/L01 | pass | snapshot 与 suspend 均按产品限制返回 `vim.fault.InvalidState` |
-| L02 | blocked-by-platform | 单 standalone host，无 vMotion 目标 |
+| L02 | pass | 普通 VM live vMotion 成功；Classic/Dynamic DirectPath live vMotion 按预期拒绝 |
 | L03/L05 | pass | host 重启和 `--apply-now` owner 切换状态已记录 |
-| L04 | not-run | 未在 L3 运行时强制杀死整个 ESXi host |
+| L04 | pass | DMA/heartbeat 时 SIGKILL outer QEMU；host/datastore/owner 恢复且同 VM 再次 I/O 成功 |
+| SeaBIOS boundary | pass | fw_cfg 被忽略；host hole64 控制默认窗，但 present BAR 可迫使最小高窗 |
 
 ## 12. 参考资料
 

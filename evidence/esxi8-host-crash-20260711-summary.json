@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260711-host-crash",
+  "case": "L04-outer-QEMU-SIGKILL-while-DirectPath-guest-running",
+  "verdict": "pass",
+  "beforeCrash": {
+    "host": "172.31.91.11",
+    "vmPowerState": "poweredOn",
+    "assignedId": "0000:01:00.1",
+    "guestHeartbeat": true,
+    "dmaTraffic": { "interface": "eth0", "rxPackets": 7, "txPackets": 10 }
+  },
+  "crash": {
+    "outerQemuSignal": "SIGKILL",
+    "vcenterTransitions": ["connected", "notResponding", "connected"]
+  },
+  "afterHostReconnect": {
+    "vmPowerState": "poweredOff",
+    "assignedId": null,
+    "sharedDatastoreMounted": true,
+    "passthroughActive": [
+      "0000:01:00.0",
+      "0000:01:00.1",
+      "0000:01:01.0",
+      "0000:02:00.0"
+    ]
+  },
+  "afterRecoveryPowerOn": {
+    "assignedId": "0000:01:00.1",
+    "guestHeartbeat": true,
+    "dmaTraffic": { "interface": "eth0", "rxPackets": 7, "txPackets": 10 }
+  },
+  "final": { "vmPowerState": "poweredOff", "assignedId": null },
+  "reproduceWith": "vmware-esxi8-lab/test_esxi_host_crash_recovery.py",
+  "rawEvidenceLocal": "_artifacts/vmware-directpath-runs/20260711-host-crash/result.json"
+}

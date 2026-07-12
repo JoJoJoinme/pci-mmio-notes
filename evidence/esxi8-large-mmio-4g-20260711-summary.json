@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-11",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "virtualHardware": 20,
+    "firmware": "efi",
+    "endpoint": "QEMU ivshmem-plain 1af4:1110 with one 4G 64-bit prefetchable BAR",
+    "hostBar": "0x800000000-0x8ffffffff"
+  },
+  "cases": {
+    "keys-absent": {
+      "runId": "20260711-single-4g",
+      "persistentMmioKeys": [],
+      "verdict": "expected-fail",
+      "fault": "Module DevicePowerOn power on failed",
+      "vmxLog": "total number of pages needed (1048577) exceeds limit (917504), failing"
+    },
+    "size4-only": {
+      "runId": "20260711-single-4g-size4-only",
+      "persistentMmioKeys": [
+        "pciPassthru.64bitMMIOSizeGB=4"
+      ],
+      "verdict": "expected-fail",
+      "fault": "Module DevicePowerOn power on failed",
+      "vmxLog": "total number of pages needed (1048577) exceeds limit (917504), failing"
+    },
+    "use64bit-true-only": {
+      "runId": "20260711-single-4g-true-only",
+      "persistentMmioKeys": [
+        "pciPassthru.use64bitMMIO=TRUE"
+      ],
+      "verdict": "pass",
+      "assignedId": "0000:01:01.0",
+      "guestBar": "0x1fff00000000-0x1fffffffffff",
+      "guestRootWindow": "0x1fff00000000-0x1fffffffffff",
+      "guestHeartbeat": true
+    },
+    "use64bit-true-plus-size4": {
+      "runId": "20260711-single-4g-true-size4",
+      "persistentMmioKeys": [
+        "pciPassthru.use64bitMMIO=TRUE",
+        "pciPassthru.64bitMMIOSizeGB=4"
+      ],
+      "verdict": "pass",
+      "assignedId": "0000:01:01.0",
+      "guestBar": "0x1fff00000000-0x1fffffffffff",
+      "guestRootWindow": "0x1fff00000000-0x1fffffffffff",
+      "guestHeartbeat": true
+    }
+  },
+  "inference": [
+    "On this ESXi build and endpoint, use64bitMMIO is the gate that moves a 4G DirectPath mapping onto the large-MMIO path.",
+    "64bitMMIOSizeGB=4 cannot enable that path by itself.",
+    "For this exact 4G case, use64bitMMIO=TRUE alone is sufficient and SizeGB does not change the resulting guest BAR or root window.",
+    "The observed default mapping-page limit is 917504 4K pages (3.5 GiB); the 4G BAR plus metadata requires 1048577 pages. This is an observed implementation boundary, not a general formula for every ESXi version or device."
+  ],
+  "reproduceWith": "vmware-esxi8-lab/test_esxi_dynamic_bar_aggregate.py",
+  "rawEvidenceLocal": [
+    "_artifacts/vmware-directpath-runs/20260711-single-4g/result.json",
+    "_artifacts/vmware-directpath-runs/20260711-single-4g-size4-only/result.json",
+    "_artifacts/vmware-directpath-runs/20260711-single-4g-true-only/result.json",
+    "_artifacts/vmware-directpath-runs/20260711-single-4g-true-size4/result.json",
+    "qemu-shared/dynamic-aggregate/20260711-single-4g*/vmware.log"
+  ]
+}

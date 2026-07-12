@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-12",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "virtualHardware": 20,
+    "firmware": "efi",
+    "endpoint": "QEMU e1000e 8086:10d3 behind a PCIe root port"
+  },
+  "guestReboot": {
+    "runId": "20260712-r01-guest-reboot-efivar-v2",
+    "verdict": "pass",
+    "assignedIdWhileRunning": "0000:01:00.1",
+    "firstPhase": {"tx": 1, "marker": "R01-REBOOTING"},
+    "phasePersistence": "UEFI variable in the VMware VM NVRAM",
+    "secondPhase": {"tx": 1, "marker": "R01-REBOOT-COMPLETE"},
+    "finalPowerState": "poweredOff",
+    "finalAssignedId": null
+  },
+  "intx": {
+    "esxiDirectPath": {
+      "runId": "20260712-i01-intx-v2",
+      "verdict": "functional-fail",
+      "cmdline": "pci=nomsi",
+      "msixEnabled": false,
+      "msiEnabled": false,
+      "irq": "IO-APIC 17-fasteoi eth0",
+      "samples": 11,
+      "irqCount": 0,
+      "maxTx": 0
+    },
+    "qemuDirectControl": {
+      "artifact": "_artifacts/mmio-tests/qemu-intx-direct-20260712/result.json",
+      "verdict": "pass",
+      "sameProbeIso": true,
+      "irq": "IO-APIC 21-fasteoi eth0",
+      "irqCountFirst": 13,
+      "irqCountLast": 54,
+      "txFirst": 9,
+      "txLast": 22,
+      "heartbeat": true
+    }
+  },
+  "inference": [
+    "Guest reboot with real traffic before and after the reboot is supported in this nested DirectPath profile.",
+    "ESXi exposed a legacy INTx route and the guest driver selected it, but this nested DirectPath endpoint did not deliver functional traffic or interrupts.",
+    "The same QEMU e1000e and pci=nomsi probe works when booted directly under QEMU, so the failure is scoped to the nested DirectPath path, not to the probe or the base e1000e INTx model.",
+    "Do not generalize this nested failure to physical ESXi hardware; keep MSI-X/MSI as the parity baseline and require E4 hardware evidence before claiming INTx compatibility."
+  ],
+  "reproduceWith": [
+    "vmware-esxi8-lab/test_esxi_guest_reboot.py",
+    "vmware-esxi8-lab/test_esxi_intx_mode.py",
+    "qemu-intx-direct-validate.sh"
+  ],
+  "rawEvidenceLocal": [
+    "_artifacts/vmware-directpath-runs/20260712-r01-guest-reboot-efivar-v2/result.json",
+    "_artifacts/vmware-directpath-runs/20260712-i01-intx-v2/result.json",
+    "_artifacts/mmio-tests/qemu-intx-direct-20260712/result.json"
+  ]
+}
