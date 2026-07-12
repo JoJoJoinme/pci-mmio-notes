@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-12",
+  "environment": {
+    "qemu": "QEMU 6.2.0",
+    "machine": "q35/KVM",
+    "firmware": "OVMF",
+    "guestKernel": "5.15.0-185-generic",
+    "endpoint": "QEMU EDU 1234:11e8"
+  },
+  "runId": "qemu-edu-direct-20260712-v3",
+  "probeIsoSha256": "09ba07c533babd05de0d9be942f4e39ed65c0d409330e8d8f93b3545fdce14c0",
+  "verdict": "pass",
+  "checks": {
+    "bootPhases": ["first", "second"],
+    "probePasses": 2,
+    "msiPasses": 2,
+    "dmaRoundTrips": 2,
+    "interruptsPerPhase": 3,
+    "firstBootSentinel": "reset",
+    "warmRebootSentinel": "persisted",
+    "qdevResetObjects": ["kvm-apic"]
+  },
+  "inference": [
+    "The guest driver forced one MSI vector and completed one software-raised IRQ plus two DMA-completion IRQs per boot.",
+    "Each DMA test copied 256 bytes RAM-to-EDU and EDU-to-RAM and compared the returned pattern.",
+    "On this QEMU build, a Linux warm reboot did not clear the EDU liveness register and the generic reset trace did not name the EDU endpoint.",
+    "This direct result is the control model for the same ISO and driver under ESXi DirectPath."
+  ],
+  "reproduceWith": "qemu-edu-direct-validate.sh",
+  "rawEvidenceLocal": [
+    "_artifacts/mmio-tests/qemu-edu-direct-20260712-v3/result.json",
+    "_artifacts/mmio-tests/qemu-edu-direct-20260712-v3/serial.log",
+    "_artifacts/mmio-tests/qemu-edu-direct-20260712-v3/qemu-trace.log"
+  ]
+}

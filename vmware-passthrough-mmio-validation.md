@@ -64,9 +64,11 @@ VMDirectPath runtime MMIO behavior. Real VMDirectPath validation needs a bare
 metal ESXi host or vCenter-managed host with a PCI device that can be marked for
 passthrough.
 
-Nested Workstation/Hyper-V ESXi does not expose a real assignable PCI device in
-the way VMDirectPath requires. Treat any nested result here as configuration
-evidence only, not passthrough runtime evidence.
+The earlier Workstation/Hyper-V ESXi paths did not expose an assignable device in
+the way VMDirectPath requires. The current QEMU/KVM L0 does expose controlled PCI
+endpoints through a virtual Intel IOMMU, and ESXi marks them passthru-capable/active;
+those runs provide nested E2/E3 runtime evidence. They still do not replace E4
+electrical, vendor-state, or production-support evidence from physical hardware.
 
 ## VMware validation matrix
 
@@ -76,16 +78,16 @@ Capture VMX, vmware.log, and guest resource output for every case.
 | Case | VMware VMX knobs | Expected question answered |
 | --- | --- | --- |
 | P0 default passthrough | passthrough device present, no global `pciPassthru.use64bitMMIO`, no `pciPassthru.64bitMMIOSizeGB` | Does VMware reserve any above-4G passthrough aperture by default? |
-| P1 use64 only | `pciPassthru.use64bitMMIO="TRUE"`, no SizeGB | Does VMware default to a legacy 32G high aperture when use64 is enabled? This must be measured. |
+| P1 use64 only | `pciPassthru.use64bitMMIO="TRUE"`, no SizeGB | Measured: placement remains demand-driven, while the large-MMIO mapping budget gains an observable 32G component. |
 | P2 explicit 4G | `pciPassthru.use64bitMMIO="TRUE"`, `pciPassthru.64bitMMIOSizeGB="4"` | Does a 4G aperture appear, and where does the guest place BARs? |
 | P3 explicit N | `pciPassthru.use64bitMMIO="TRUE"`, `pciPassthru.64bitMMIOSizeGB="N"` | Does guest-visible high MMIO track the configured N? |
 | P4 SizeGB without use64 | SizeGB set, `use64bitMMIO` absent/false | Is SizeGB ignored or rejected unless use64 is true? |
 
-P1 is intentionally marked as a measurement, not a conclusion. KB 312208 says
-that sizes above 32G require `pciPassthru.64bitMMIOSizeGB`, which suggests that
-`use64bitMMIO=TRUE` without SizeGB may have a 32G historical/default region. Do
-not encode that as a fact until vmware.log and guest resources confirm it on the
-target ESXi version.
+KB 312208 says sizes above 32G require `pciPassthru.64bitMMIOSizeGB`. The local
+ESXi 8.0 U3 matrix now confirms the corresponding admission boundary: TRUE-only
+maps 32G, but a 64G BAR exceeds the 9,306,112-page limit until SizeGB=64 is set.
+This is build-bound black-box evidence, not a cross-version internal contract; see
+`evidence/esxi8-large-mmio-32g-64g-20260712-summary.json`.
 
 ## VMware evidence to collect
 
@@ -157,9 +159,14 @@ the behavior between firmware and the host bridge/ACPI resource.
 | --- | --- | --- |
 | P0 default, layout fits below 4G | `X-PciMmio64Mb=0` plus `pci-hole64-size=0` | Match the measured 1GB low-placement result. |
 | P0 default, layout requires high space | launcher computes N; use `X-PciMmio64Mb=N*1024` plus `pci-hole64-size=NG` | ESXi automatically high-placed the tested 2GB BAR without either VMX key. |
-| P1 use64 only | same BAR-envelope policy as P0 on tested ESXi 8 U3 | TRUE did not create a 32GB aperture or change placement. |
-| P2/P3 explicit SizeGB | measure the target ESXi/device; do not assume N is the emitted aperture | Size4 was accepted but tested windows still followed actual BAR size. |
-| P4 SizeGB without use64 | same BAR-envelope policy on tested ESXi 8 U3 | Size4 alone did not change placement. |
+| P1 use64 only | keep demand-driven placement, but admit against the observed default 32GB large-MMIO budget | TRUE did not inflate the emitted window for 1/2/4GB, yet it let a 32GB BAR map and rejected 64GB at a 9,306,112-page limit. |
+| P2/P3 explicit SizeGB | launcher applies VMware's gate/budget first, then sizes both QEMU controls to the accepted BAR envelope | Size4 did not inflate a small emitted window; Size64 was required for the 64GB mapping case. |
+| P4 SizeGB without use64 | same placement and base admission budget as P0 | SizeGB alone neither changed 1/2GB placement nor raised the 917,504-page limit for 32/64GB. |
+
+The QEMU arguments above reproduce firmware/root-window resources after admission. They do not
+implement VMware's admission policy by themselves. For the tested 32/64GB failures, the launcher
+must separately enforce `917504 + effectiveSizeGB * 262144` pages, where effective SizeGB is zero
+when the gate is absent/FALSE, 32 for TRUE-only, or the explicit power-of-two SizeGB value.
 
 Host bridge names:
 

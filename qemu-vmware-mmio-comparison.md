@@ -470,6 +470,53 @@ SeaBIOS 下要控制 OS-visible high window，只能通过 QEMU host bridge prop
 
 ## 最终建议落地
 
+### 先在 launcher 对齐 VMware large-MMIO admission
+
+32/64GB no-backing `pci-testdev` 实验补齐了此前 8GB 之后的空白。ESXi 8.0 U3 的
+外部可观察规则不是“默认永远低于 4G”，也不是“默认总有 32GB high aperture”：
+
+```text
+requiredPages = BAR bytes / 4096 + 1
+baseLimitPages = 917504
+
+use64bitMMIO absent/FALSE:
+  effectiveSizeGB = 0        # SizeGB 单独存在也被忽略
+
+use64bitMMIO TRUE, SizeGB absent:
+  effectiveSizeGB = 32
+
+use64bitMMIO TRUE, SizeGB=N:
+  effectiveSizeGB = N        # KB 要求 N 为 GiB 的 2 次幂
+
+observedLimitPages = baseLimitPages + effectiveSizeGB * 262144
+```
+
+这解释了同一 build 下 32GB `TRUE-only` mapping 成功、64GB `TRUE-only` 失败、
+64GB `TRUE+Size64` 成功，以及 `TRUE+Size32` 仍失败。QEMU/VFIO 没有一个 stock CLI
+属性能同时表达这套 VMware admission policy；对标 launcher 应在创建 VM 前按该规则
+接受或拒绝，再为已接受的 high envelope 同时设置两层控制：
+
+```bash
+# 32GB high envelope
+-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=32768
+-global q35-pcihost.pci-hole64-size=32G
+
+# 64GB high envelope
+-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=65536
+-global q35-pcihost.pci-hole64-size=64G
+```
+
+本地 QEMU direct control 已用 OVMF/Linux 精确枚举 32GB 和 64GB BAR。64GB 外层
+ESXi 首次只增加 endpoint、仍保留 q35 默认 32GB hole 时，Guest 连显示初始化都未
+完成；同时扩大 q35 hole64 与 OVMF aperture 后 ESXi 正常启动。故只设 fw_cfg、只设
+host property 或保留默认 32GB hole 都不能作为 64GB 对标配置。
+
+若目标是复现 VMware 的“参数 absent 且 64GB BAR 被 admission 拒绝”，应由 launcher
+按 VMware budget 明确返回可审计错误；不要故意给 QEMU 一个装不下的 PCI window，
+因为那是 firmware/host-bridge allocation failure，不是 VMware 的 DirectPath mapping
+limit 语义。证据摘要见
+[`evidence/esxi8-large-mmio-32g-64g-20260712-summary.json`](evidence/esxi8-large-mmio-32g-64g-20260712-summary.json)。
+
 ### 实现 VMware 默认策略的 below-4G 分支
 
 先说明边界：下列是强制不发布 high aperture 的 QEMU profile，不是完整 VMware

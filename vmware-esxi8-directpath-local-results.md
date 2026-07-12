@@ -60,7 +60,31 @@ candidate，再按选中设备建立 guest MMIO envelope；它没有因为 allow
 该结论只绑定当前 ESXi build、vHW 和受控 endpoint，不能直接外推到所有旧版 ESXi、
 GPU、ReBAR 或超大 aggregate BAR。
 
-### 1.2 QEMU 没有一组固定参数能完整复制 VMware 默认策略
+### 1.2 32/64GB BAR 实锤了 large-MMIO gate 与预算边界
+
+`pci-testdev` 不需要为 BAR 建立等量 backing，因而可以把“宿主内存/稀疏文件容量不足”
+从解释中排除。QEMU direct + OVMF 已分别启动 32GB、64GB BAR 并精确枚举；同一设备
+交给 ESXi 后得到：
+
+| BAR | absent/FALSE/Size-only | TRUE-only | TRUE + 足额 SizeGB | TRUE + 半额 SizeGB |
+| --- | --- | --- | --- | --- |
+| 32GB | 失败，limit=917504 pages | IOMMU mapping 成功 | IOMMU mapping 成功 | 失败，limit=5111808 pages |
+| 64GB | 失败，limit=917504 pages | 失败，limit=9306112 pages | IOMMU mapping 成功 | 失败，limit=9306112 pages |
+
+所需页数分别为 `8388609` 和 `16777217`。所有失败样本符合可观察预算模型：
+
+```text
+limitPages = 917504 + effectiveSizeGB * 262144
+```
+
+`SizeGB` 在 gate absent/FALSE 时不增加预算；`TRUE` 且 SizeGB absent 时的默认
+`effectiveSizeGB` 为 32；显式 SizeGB 会替换这部分。故 32GB `TRUE-only` 能映射，
+64GB `TRUE-only` 不能，而 `TRUE+Size64` 能映射。这是 VMX admission/IOMMU mapping
+结论；成功映射后的嵌套 EFI 没有到达 Linux heartbeat，不能写成 32/64GB guest
+运行支持。规范化证据见
+[`evidence/esxi8-large-mmio-32g-64g-20260712-summary.json`](evidence/esxi8-large-mmio-32g-64g-20260712-summary.json)。
+
+### 1.3 QEMU 没有一组固定参数能完整复制 VMware 默认策略
 
 新增的一键对照入口为：
 
@@ -221,9 +245,10 @@ ivshmem BAR2: 0x1fff80000000-0x1fffffffffff 64bit pref
   并令当前嵌套 ESXi 的 outer QEMU 长时间占满四个 vCPU。
 
 所以 8GB 已证明“VMX mapping gate 能打开”，但没有形成 E2 guest-boot 通过证据。
-32GB/64GB 没有继续盲跑；要验证 KB 的 `>32GB` SizeGB 规则，应改用 power-on-only
-探针或不触发完整 guest enumeration 的定制 endpoint。仍未覆盖 ReBAR、32GB+、不同
-vHW/ESXi 历史版本。
+随后使用不分配等量 backing 的 `pci-testdev` 完成 32/64GB power-on-only 矩阵：32GB
+TRUE-only/TRUE+Size32 映射成功；64GB 只有 TRUE+Size64 映射成功，TRUE-only 和
+TRUE+Size32 都在 `9306112` 页预算处失败。两种成功 mapping 均未形成 E2 guest
+heartbeat，故仍未覆盖 32/64GB guest runtime、ReBAR 和不同 vHW/ESXi 历史版本。
 
 ### 4.5 SeaBIOS 的定位
 
@@ -274,15 +299,15 @@ vtd_ir_remap_msi ... -> ...
 这形成了 requester `01:00.0`、DMA translation、e1000e MSI-X 和 interrupt
 remapping 的 E3 闭环。power cycle 还产生了 domain 2 的整域 IOTLB invalidation。
 
-reset 证据较弱：
+e1000e reset 证据较弱：
 
 - ESXi API 报告 `Bridge reset`。
 - 正常关机、forced-off 和下一次启动都成功。
 - 十次快速 start/forced-stop 全部通过。
 - 但即使启用 `qdev_reset*` 和 e1000e reset trace，也没有看到对应 QEMU qdev reset。
 
-因此当前只能证明“设备可重复使用和 IOMMU invalidation”，不能声称 ESXi 每次都真实
-执行了 Secondary Bus Reset。该项状态为 partial。
+因此该 endpoint 只能证明“设备可重复使用和 IOMMU invalidation”，不能声称 ESXi
+每次都真实执行了 Secondary Bus Reset。
 
 R01 已用 UEFI variable 做跨重启 phase marker，避免额外磁盘改变 EFI 启动链。第一次
 内核完成 e1000e I/O 后写 marker 并执行 `reboot -f`；第二次内核读取 marker、再次完成
@@ -300,7 +325,25 @@ I01 使用同一 EFI 探针加 `pci=nomsi`：
 这说明 ESXi 向 guest 暴露了 legacy INTx route，但当前嵌套 DirectPath/e1000e 组合没有
 功能 I/O。相同 QEMU endpoint 直接启动时通过，故失败范围收敛在嵌套 DirectPath 路径；
 不能外推为物理 ESXi 不支持 INTx。QEMU 对标基线仍应使用已通过的 MSI-X/MSI，INTx
-必须保留此负例并补 E4；MSI-only 仍需隐藏 MSI-X capability 的定制 endpoint。
+必须保留此负例并补 E4。
+
+I02 的 MSI-only 缺口已用 QEMU EDU `1234:11e8` 补齐。该 endpoint 只有 INTx 和
+MSI，没有 MSI-X；同一内核模块在 QEMU direct 和 ESXi DirectPath 下均强制申请一个
+MSI vector，每阶段完成一次软件触发 IRQ 和两次 DMA-completion IRQ。ESXi 样本中：
+
+- Guest 两阶段均为 `MSI: Enable+`，每阶段 IRQ count=3，256-byte 双向 DMA 比对通过。
+- `vmware.log` 为该物理 function 记录 `physical MSI = Enabled (vmmInt = Enabled)`。
+- 外层 VT-d 对 `dev 01:01.00` 记录四次 DMA translation；两个 Guest DMA IOVA 都落在
+  `0x2a00000-0x2bfffff` 的 2MB translation range 内，且四次 DMA 后均紧邻同一
+  IRTE 的 MSI remap；DMAR fault=0。
+
+reset sentinel 给出了更严格的语义边界。QEMU direct 的冷启动值为 reset，warm reboot
+后为 persisted；ESXi 在 warm reboot 明确打印 `PCIPassthru: Resetting Device`，但第二
+阶段 sentinel 仍为 persisted。故该日志证明 VMware 发起了 reset 流程，不证明没有
+reset callback 的 EDU 内部状态已清零，也不能替代真实硬件 E4。复现入口为
+`qemu-edu-direct-validate.sh` 与 `vmware-esxi8-lab/test_esxi_edu.py`。
+KB 312208 要求合格设备在 reset 后不保留前一使用者的软件可读状态；因此该 EDU
+结果应解释为“成功暴露了测试端点缺少 reset 语义”，不能把 EDU 标成生产兼容设备。
 
 ## 7. 生命周期
 
@@ -381,6 +424,10 @@ launcher/orchestrator：
 | 2x1GB 与 1GB+2GB aggregate | `_artifacts/vmware-directpath-runs/20260711-dynamic-aggregate*/` |
 | 4GB large-MMIO gate | `_artifacts/vmware-directpath-runs/20260711-single-4g*/` |
 | 8GB sparse BAR 边界 | `_artifacts/vmware-directpath-runs/20260711-single-8g*/` |
+| 32/64GB no-backing BAR gate | `_artifacts/vmware-directpath-runs/20260712-pci-testdev-*/` |
+| QEMU direct 32/64GB control | `_artifacts/mmio-tests/qemu-pci-testdev-largebar-20260712/` |
+| QEMU direct EDU MSI/DMA/reset | `_artifacts/mmio-tests/qemu-edu-direct-20260712-v2/` |
+| ESXi EDU MSI/DMA/reset | `_artifacts/vmware-directpath-runs/20260712-esxi8-edu-msi-dma-reset-v4/` |
 | ESXi host crash/recovery L04 | `_artifacts/vmware-directpath-runs/20260711-host-crash/` |
 | guest reboot R01 | `_artifacts/vmware-directpath-runs/20260712-r01-guest-reboot-efivar-v2/` |
 | ESXi INTx I01 | `_artifacts/vmware-directpath-runs/20260712-i01-intx-v2/` |
@@ -399,6 +446,9 @@ Git 内可审计摘要：
 - [`evidence/esxi8-bar-aggregate-20260711-summary.json`](evidence/esxi8-bar-aggregate-20260711-summary.json)
 - [`evidence/esxi8-large-mmio-4g-20260711-summary.json`](evidence/esxi8-large-mmio-4g-20260711-summary.json)
 - [`evidence/esxi8-large-mmio-8g-20260712-summary.json`](evidence/esxi8-large-mmio-8g-20260712-summary.json)
+- [`evidence/esxi8-large-mmio-32g-64g-20260712-summary.json`](evidence/esxi8-large-mmio-32g-64g-20260712-summary.json)
+- [`evidence/qemu-edu-direct-20260712-summary.json`](evidence/qemu-edu-direct-20260712-summary.json)
+- [`evidence/esxi8-edu-msi-dma-reset-20260712-summary.json`](evidence/esxi8-edu-msi-dma-reset-20260712-summary.json)
 - [`evidence/esxi8-host-crash-20260711-summary.json`](evidence/esxi8-host-crash-20260711-summary.json)
 - [`evidence/esxi8-reboot-intx-20260712-summary.json`](evidence/esxi8-reboot-intx-20260712-summary.json)
 - [`evidence/qemu-vmware-default-profile-20260711-summary.json`](evidence/qemu-vmware-default-profile-20260711-summary.json)
@@ -413,12 +463,11 @@ Git 内可审计摘要：
 
 | ID | 当前阻塞 | 怎么做 | 验收证据 |
 | --- | --- | --- | --- |
-| M04 32GB+ | sparse backing 已解决容量问题，但 8GB guest enumeration 已令当前 nested VMX/KVM 饱和 | 增加 power-on-only 模式，在 EFI/Linux 枚举前采集 VMX mapping；或实现只报告 BAR、不访问全部 range 的 endpoint，再测 32/64GB TRUE-only 与 TRUE+Size | power-on task、VMX mapping pages、guest `_CRS`（若可启动）、自动恢复 |
-| R00 | ESXi 报 Bridge reset，但 QEMU 没有 qdev reset 事件 | 给 root port 和 endpoint reset callback 加定向 trace；endpoint 增加 generation counter；分别测 power-on/reboot/forced-off | reset 类型、顺序、影响的 function 集合、generation 变化 |
-| I02 MSI-only | stock e1000e 总是优先 MSI-X，guest 参数不能表达“只隐藏 MSI-X、保留 MSI” | 给 endpoint 增加 capability mask，或用已知 MSI-only 设备模型 | `MSI-X` 不可见、`MSI Enable+`、流量与 interrupt-remap trace |
+| R00 精确 reset 类型 | EDU sentinel 已证明 warm-reboot reset 流程未清除该无 callback endpoint 的状态；仍不能区分物理 FLR/SBR/D3 | 使用实现定向 FLR/bus-reset generation counter 的 endpoint；分别测 power-on/reboot/forced-off | reset 类型、顺序、影响的 function 集合、generation 变化 |
 
-X01/X02、R01、L02、L04 已完成，不再列为 blocked。I01 也不是“未运行”：它是可重复的
-nested functional fail，并已有 QEMU direct pass 对照；下一步是 E4，不是继续换文字参数。
+M04 32/64GB 和 I02 MSI-only 已由 no-backing `pci-testdev` 与 EDU 完成，不再列为
+blocked。X01/X02、R01、L02、L04 也已完成。I01 不是“未运行”：它是可重复的 nested
+functional fail，并已有 QEMU direct pass 对照；下一步是 E4，不是继续换文字参数。
 
 ### 10.2 P1：需要定制 QEMU endpoint 或危险注入
 
@@ -460,16 +509,17 @@ OVMF build/hash 和完整命令行。
 1. **实现 BAR-aware QEMU launcher。** 当前只有策略和手工参数，还没有可复用程序。
    应读取 sysfs/VFIO resource，展开 dependency，计算 below-4G 和 high aperture，并输出
    manifest 与最终 QEMU 参数。
-2. **做 32GB+ power-on-only 探针。** 4GB gate、8GB mapping 与 aggregate packing 已有
-   证据；剩余重点是隔离 guest enumeration，验证 KB 的 `>32GB` SizeGB 阈值。
+2. **把 32/64GB mapping 扩展到 guest runtime。** power-on-only gate、SizeGB 阈值和
+   page budget 已完成；剩余重点是解决 nested EFI 枚举停滞并取得 `_CRS`/Linux BAR。
 3. **直接保存 ACPI `_CRS`。** 当前主要使用 Linux `root bus resource` 和 sysfs；应在
    L3 initrd 中加入 `acpidump`，保存并反编译 DSDT/SSDT。
 4. **改善 trace 隔离。** 当前文本 trace 没有可靠时间戳，ESXi 管理网卡流量会混入。
    应在 L3 操作前后通过 QMP 动态开关事件，加入 case marker，并按 requester ID 分流。
 5. **加强 reset 观测。** 增加 endpoint generation register 和 root-port callback trace，
    不能只依据 ESXi 的 `Reset Method` 字段。
-6. **实现 MSI-only/PME/P2P/RMRR endpoint 控制。** 这些不是继续换 QEMU 参数就能得到的
-   状态，需要 capability filter、QMP 注入或 DMAR builder patch。
+6. **实现 PME/P2P/RMRR/启用型 OPROM endpoint 控制。** MSI-only 已由 EDU 完成；其余
+   状态不是继续换 QEMU 参数就能得到的，需要 QMP 注入、peer-DMA workload、已知 ROM
+   或 DMAR builder patch。
 7. **做 ESXi 跨版本矩阵。** 至少比较 6.5/7.0/8.0 U2/U3，确认历史
    `use64bitMMIO`/SizeGB 语义何时发生变化。
 8. **做真实硬件 E4。** 所有安全性、复位彻底性、P2P、RMRR 和 vendor driver 结论最终
@@ -503,12 +553,12 @@ q35 的 zero/zero + 1GB BAR 是已验证负例，不能只把上面 property 名
 
 | VMware 外部语义 | QEMU/VFIO 对齐办法 | 当前状态 |
 | --- | --- | --- |
-| UEFI 与 64-bit MMIO | OVMF 同时控制 fw_cfg aperture 与 host bridge hole64；launcher 按选中 BAR 计算 | 1/2/4GB、aggregate 已验证；8GB mapping-only |
-| IOMMU isolation | 真实部署使用 host IOMMU + `vfio-pci`；nested 模型给 ESXi `intel-iommu,intremap=on` | VT-d DMA/MSI-X trace pass；禁止 no-IOMMU |
+| UEFI 与 64-bit MMIO | OVMF 同时控制 fw_cfg aperture 与 host bridge hole64；launcher 按选中 BAR 计算 | 1/2/4GB、aggregate 已验证；8/32/64GB mapping-only，32/64GB gate/预算已定量 |
+| IOMMU isolation | 真实部署使用 host IOMMU + `vfio-pci`；nested 模型给 ESXi `intel-iommu,intremap=on` | e1000e MSI-X 与 EDU MSI/DMA 的 VT-d trace pass；禁止 no-IOMMU |
 | ACS 与 dependency | 每组设备挂独立 `pcie-root-port`；按 host IOMMU group/reset dependency 原子租用 | PCIe/legacy/root/no-ACS 矩阵已跑 |
-| reset 方法与总线依赖 | 让 VFIO 执行 FLR/bus reset；同 dependency 整组分配；endpoint generation register 记录回调 | 功能复用 pass，具体 reset 类型仍 partial |
+| reset 方法与总线依赖 | 让 VFIO 执行 FLR/bus reset；同 dependency 整组分配；endpoint generation register 记录回调 | 功能复用 pass；EDU 证明“日志称 reset”不等于状态清零，具体类型仍 partial |
 | Dynamic candidate | orchestrator 按 allowed class 选 BDF，记录运行时 lease，关机释放；目标 host 重新选择 | X00-X03 pass；不能持久化固定 BDF |
-| MSI-X/MSI/INTx | 保留 capability，启用 host interrupt remapping；禁止 unsafe interrupts | MSI-X E3 pass；INTx nested fail/direct pass；MSI-only 待 endpoint mask |
+| MSI-X/MSI/INTx | 保留 capability，启用 host interrupt remapping；禁止 unsafe interrupts | MSI-X E3 pass；EDU MSI-only E3 pass；INTx nested fail/direct pass，待 E4 |
 | PCIe AER ownership | host 侧注入/记录；guest config-space proxy 过滤 AER header/ownership，按目标策略镜像 status | Correctable/Non-Fatal surface 已验证；stock VFIO 不自动等价 |
 | Option ROM | 默认 `rombar=0`；显式启用时固定 ROM hash，并分别验证 host 保存与 guest 执行 | 默认隐藏 pass；enabled 待安全 ROM |
 | PME 与 `_OSC` | endpoint 提供可控 PME_Status/message，ACPI 层决定 native PME；host policy 可过滤 | 需要定制 endpoint/QMP |
@@ -526,5 +576,6 @@ machine patch。把缺失语义硬塞成一个 `-global` 参数，会得到表�
 - [Broadcom KB 312208：VMDirectPath/Dynamic DirectPath 平台与设备要求](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
 - [vSphere API：VirtualPCIPassthrough DynamicBackingInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html)
 - [vSphere API：Host AssignableHardwareManager](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareManager.html)
+- [QEMU EDU 公开设备协议](https://www.qemu.org/docs/master/specs/edu.html)
 - [`vmware-directpath-acceptance-test-plan.md`](vmware-directpath-acceptance-test-plan.md)
 - [`qemu-vmware-mmio-comparison.md`](qemu-vmware-mmio-comparison.md)
