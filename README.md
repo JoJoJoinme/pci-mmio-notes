@@ -1,6 +1,6 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-11
+Record date: 2026-07-12
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
@@ -23,8 +23,8 @@ test matrix, artifact contract, and QEMU equivalence checklist, see
 `vmware-directpath-acceptance-test-plan.md`.
 
 QEMU -> ESXi 8 -> EFI Linux DirectPath 黑盒验证的中文结果报告，包括 MMIO
-边界、VT-d trace、拓扑负例、双主机 vMotion、host crash、guest reboot、INTx 和
-Dynamic DirectPath `assignedId`
+边界、32/64GB no-backing BAR、VT-d trace、MSI-only EDU、拓扑负例、双主机
+vMotion、host crash、guest reboot、INTx 和 Dynamic DirectPath `assignedId`
 变化，见 `vmware-esxi8-directpath-local-results.md`；逐项复现命令和 Case
 索引见 `vmware-esxi8-lab/README.md`。
 
@@ -51,7 +51,15 @@ PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU �
    rejection, host-crash recovery, and traffic before/after guest reboot were
    all exercised. INTx was exposed but non-functional in the nested DirectPath
    path; the same ISO passed under direct QEMU.
-7. No single fixed stock QEMU/OVMF profile matches both VMware outcomes.
+7. A no-backing `pci-testdev` closed the 32/64GB admission boundary. SizeGB was
+   ignored unless `use64bitMMIO=TRUE`; TRUE-only used the observable 32GB
+   default budget, so 32GB mapped and 64GB failed until SizeGB=64 was set.
+8. QEMU EDU closed the MSI-only/DMA gap under both direct QEMU and ESXi
+   DirectPath. Four endpoint DMA translations were range-correlated with guest
+   IOVAs and completion MSI remaps, with no DMAR fault. ESXi logged a reset
+   attempt on guest reboot, but the EDU sentinel persisted, so a reset log is
+   not proof that endpoint state was cleared.
+9. No single fixed stock QEMU/OVMF profile matches both VMware outcomes.
    `both_zero` is only the below-4G profile:
 
 ```text

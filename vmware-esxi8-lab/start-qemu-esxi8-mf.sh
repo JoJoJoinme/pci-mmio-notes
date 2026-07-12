@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 instance="${QEMU_ESXI_INSTANCE:-mf}"
 vm_dir="${QEMU_ESXI_VM_DIR:-/root/vm/esxi8-$instance}"
 qemu_name="${QEMU_ESXI_NAME:-esxi8-$instance}"
@@ -9,7 +10,7 @@ log_file="$vm_dir/qemu.log"
 bridge="${QEMU_ESXI_BRIDGE:-br-esxi8}"
 default_tap="tap-esxi8-$instance"
 if [[ "$instance" == "mf" ]]; then
-  default_tap=tap-esxi8
+  default_tap="tap-esxi8"
 fi
 tap="${QEMU_ESXI_TAP:-$default_tap}"
 mgmt_mac="${QEMU_ESXI_MGMT_MAC:-00:0c:29:ab:af:6d}"
@@ -102,6 +103,10 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     )
     ivshmem_bus=test_rp
     ivshmem_addr=0x01.0
+    largebar_bus=test_rp
+    largebar_addr=0x01.0
+    edu_bus=test_rp
+    edu_addr=0x01.0
     if [[ "${QEMU_ESXI_IVSHMEM_ALT_SHARED_ROOT_PORT:-0}" == "1" ]]; then
       ivshmem_alt_bus=test_rp
       ivshmem_alt_addr=0x02.0
@@ -117,6 +122,10 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     )
     ivshmem_bus=pcie.0
     ivshmem_addr=0x09.0
+    largebar_bus=pcie.0
+    largebar_addr=0x09.0
+    edu_bus=pcie.0
+    edu_addr=0x09.0
     ivshmem_alt_bus=pcie.0
     ivshmem_alt_addr=0x0a.0
     ;;
@@ -129,6 +138,10 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     )
     ivshmem_bus=test_legacy
     ivshmem_addr=0x02.0
+    largebar_bus=test_legacy
+    largebar_addr=0x02.0
+    edu_bus=test_legacy
+    edu_addr=0x02.0
     ivshmem_alt_bus=test_legacy
     ivshmem_alt_addr=0x03.0
     ;;
@@ -138,12 +151,61 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     ;;
 esac
 
+largebar_size="${QEMU_ESXI_PCI_TESTDEV_MEMBAR_SIZE:-0}"
+edu_present="${QEMU_ESXI_EDU:-0}"
+if [[ "$edu_present" != "0" && "$edu_present" != "1" ]]; then
+  echo "QEMU_ESXI_EDU must be 0 or 1" >&2
+  exit 2
+fi
+primary_endpoint_count=0
+[[ "$largebar_size" != "0" ]] && primary_endpoint_count=$((primary_endpoint_count + 1))
+[[ "${QEMU_ESXI_IVSHMEM_SIZE:-0}" != "0" ]] && primary_endpoint_count=$((primary_endpoint_count + 1))
+[[ "$edu_present" == "1" ]] && primary_endpoint_count=$((primary_endpoint_count + 1))
+if (( primary_endpoint_count > 1 )); then
+  echo "QEMU_ESXI_IVSHMEM_SIZE, QEMU_ESXI_PCI_TESTDEV_MEMBAR_SIZE, and QEMU_ESXI_EDU share one slot" >&2
+  exit 2
+fi
+
+platform_mmio_options=()
+host_hole64_size="${QEMU_ESXI_HOST_HOLE64_SIZE:-}"
+ovmf_mmio64_mb="${QEMU_ESXI_OVMF_MMIO64_MB:-}"
+if [[ "$largebar_size" =~ ^([0-9]+)G$ ]] && (( BASH_REMATCH[1] > 32 )); then
+  host_hole64_size="${host_hole64_size:-$largebar_size}"
+  ovmf_mmio64_mb="${ovmf_mmio64_mb:-$((BASH_REMATCH[1] * 1024))}"
+fi
+if [[ -n "$host_hole64_size" ]]; then
+  platform_mmio_options+=(
+    -global "q35-pcihost.pci-hole64-size=$host_hole64_size"
+  )
+fi
+if [[ -n "$ovmf_mmio64_mb" ]]; then
+  platform_mmio_options+=(
+    -fw_cfg "name=opt/ovmf/X-PciMmio64Mb,string=$ovmf_mmio64_mb"
+  )
+fi
+
 if [[ "${QEMU_ESXI_IVSHMEM_SIZE:-0}" != "0" ]]; then
   ivshmem_mem_path="${QEMU_ESXI_IVSHMEM_MEM_PATH:-/dev/shm}"
   prepare_memory_backend_path "$QEMU_ESXI_IVSHMEM_SIZE" "$ivshmem_mem_path"
   test_devices+=(
     -object "memory-backend-file,id=ivmem,size=${QEMU_ESXI_IVSHMEM_SIZE},mem-path=$ivshmem_mem_path,share=on"
     -device "ivshmem-plain,id=test_ivshmem,memdev=ivmem,bus=$ivshmem_bus,addr=$ivshmem_addr,rombar=0"
+  )
+fi
+
+if [[ "$largebar_size" != "0" ]]; then
+  test_devices+=(
+    -device "pci-testdev,id=test_largebar,membar=$largebar_size,bus=$largebar_bus,addr=$largebar_addr,rombar=0"
+  )
+fi
+
+if [[ "$edu_present" == "1" ]]; then
+  edu_options="edu,id=test_edu,bus=$edu_bus,addr=$edu_addr,rombar=0"
+  if [[ -n "${QEMU_ESXI_EDU_DMA_MASK:-}" ]]; then
+    edu_options+=",dma_mask=${QEMU_ESXI_EDU_DMA_MASK}"
+  fi
+  test_devices+=(
+    -device "$edu_options"
   )
 fi
 
@@ -163,8 +225,9 @@ fi
 
 trace_options=()
 if [[ "${QEMU_ESXI_TRACE:-0}" == "1" ]]; then
+  trace_events="${QEMU_ESXI_TRACE_EVENTS:-$script_dir/qemu-esxi8-trace-events}"
   trace_options+=(
-    -trace "events=/mnt/e/Code/PCI/_artifacts/qemu-esxi8-trace-events,file=$vm_dir/qemu-trace.log"
+    -trace "events=$trace_events,file=$vm_dir/qemu-trace.log"
   )
 fi
 
@@ -236,6 +299,7 @@ exec qemu-system-x86_64 \
   "${memory_options[@]}" \
   "${identity_options[@]}" \
   -device intel-iommu,intremap=on,caching-mode=on,device-iotlb=on \
+  "${platform_mmio_options[@]}" \
   -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
   -drive if=pflash,format=raw,file="$ovmf_vars" \
   -drive if=none,id=system,file="$system_disk",format=qcow2,cache=writeback,discard=unmap \

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-12",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "virtualHardware": 20,
+    "firmware": "efi",
+    "outerVmm": "QEMU 6.2.0 q35/KVM with virtual Intel IOMMU and interrupt remapping",
+    "endpoint": "QEMU EDU 1234:11e8",
+    "physicalBdf": "0000:01:01.0",
+    "guestBdf": "0000:02:00.0",
+    "probeIsoSha256": "09ba07c533babd05de0d9be942f4e39ed65c0d409330e8d8f93b3545fdce14c0"
+  },
+  "canonicalRun": {
+    "runId": "20260712-esxi8-edu-msi-dma-reset-v4",
+    "verdict": "pass",
+    "mappingCreated": true,
+    "guest": {
+      "bootPhases": ["first", "second"],
+      "probePasses": 2,
+      "msiPasses": 2,
+      "dmaRoundTrips": 2,
+      "interruptsPerPhase": 3,
+      "msiCapability": "Enable+ Count=1/1; no MSI-X capability",
+      "dmaIovas": ["0x2afe000", "0x2afc000"],
+      "resetStates": ["persisted", "persisted"]
+    },
+    "vmware": {
+      "physicalMsi": "Enabled",
+      "vmmInterrupt": "Enabled",
+      "mappingLog": "PCIPassthru: successfully created the IOMMU mappings",
+      "warmRebootLog": "PCIPassthru: Resetting Device at 0000:01:01.0"
+    },
+    "outerQemu": {
+      "requester": "01:01.00",
+      "deviceDmaTranslations": 4,
+      "translationRange": "0x2a00000-0x2bfffff",
+      "guestDmaIovasMatched": 2,
+      "dmaCompletionMsiCorrelations": 4,
+      "dmaCompletionIrteIndex": 21,
+      "dmarFaults": 0
+    }
+  },
+  "coldStateRun": {
+    "runId": "20260712-esxi8-edu-msi-dma-reset",
+    "analysisVerdict": "functional-pass; original runner verdict failed only because it compared a 4 KiB guest IOVA to a 2 MiB VT-d page base for exact equality",
+    "firstBootSentinel": "reset",
+    "warmRebootSentinel": "persisted",
+    "correctedBy": "range-based IOVA correlation in test_esxi_edu.py and canonical v2/v3 reruns"
+  },
+  "comparisonToDirectQemu": {
+    "directRun": "qemu-edu-direct-20260712-v3",
+    "sameIsoAndDriver": true,
+    "directMsiDma": "pass",
+    "directWarmRebootSentinel": "persisted",
+    "esxiWarmRebootSentinel": "persisted",
+    "observableDifference": "ESXi vmware.log explicitly reports a DirectPath reset attempt; neither path clears the EDU liveness state on warm reboot"
+  },
+  "inference": [
+    "MSI-only DirectPath is functional in this nested profile: the guest selected MSI, VMware enabled physical MSI/vmm interrupt handling, and each programmed EDU DMA completion was followed by an outer interrupt-remapping event.",
+    "The guest DMA addresses are inside the outer VT-d 2 MiB translation range for requester 01:01.0; exact string equality to the range base is not a valid correlation rule.",
+    "The reset log is evidence that VMware entered its reset path, not evidence that endpoint-internal state was cleared.",
+    "QEMU EDU has no observed endpoint reset callback in this build, so persisted state cannot identify VMware's physical reset type or predict a real NIC/NVMe/GPU reset outcome.",
+    "A production parity test still needs an endpoint with a reset generation register wired to FLR/SBR/D3 callbacks, or E4 real-hardware evidence."
+  ],
+  "reproduceWith": [
+    "qemu-edu-direct-validate.sh",
+    "vmware-esxi8-lab/build-esxi-l3-probe-iso.sh with PROFILE=edu",
+    "vmware-esxi8-lab/test_esxi_edu.py"
+  ],
+  "rawEvidenceLocal": [
+    "_artifacts/mmio-tests/qemu-edu-direct-20260712-v3/result.json",
+    "_artifacts/vmware-directpath-runs/20260712-esxi8-edu-msi-dma-reset/result.json",
+    "_artifacts/vmware-directpath-runs/20260712-esxi8-edu-msi-dma-reset-v4/result.json",
+    "_artifacts/vmware-directpath-runs/20260712-esxi8-edu-msi-dma-reset-v4/guest-serial.log",
+    "_artifacts/vmware-directpath-runs/20260712-esxi8-edu-msi-dma-reset-v4/vmware.log",
+    "_artifacts/vmware-directpath-runs/20260712-esxi8-edu-msi-dma-reset-v4/outer-qemu-trace-selected.log"
+  ]
+}

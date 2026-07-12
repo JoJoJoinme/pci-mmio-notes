@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-12",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "virtualHardware": 20,
+    "firmware": "efi",
+    "outerVmm": "QEMU 6.2.0 q35/KVM with virtual Intel IOMMU",
+    "endpoint": "QEMU pci-testdev 1b36:0005 with a no-backing 64-bit prefetchable BAR",
+    "physicalBdf": "0000:01:01.0"
+  },
+  "qemuDirectControl": {
+    "artifact": "_artifacts/mmio-tests/qemu-pci-testdev-largebar-20260712/result.json",
+    "verdict": "pass",
+    "backingStorage": false,
+    "cases": [
+      {"sizeGb": 32, "barSizeBytes": 34359738368, "heartbeat": true},
+      {"sizeGb": 64, "barSizeBytes": 68719476736, "heartbeat": true}
+    ]
+  },
+  "esxi32Gb": {
+    "requiredPages": 8388609,
+    "cases": {
+      "keys-absent": {"outcome": "power-on-fail", "limitPages": 917504},
+      "use64bit-false": {"outcome": "power-on-fail", "limitPages": 917504},
+      "size32-only": {"outcome": "power-on-fail", "limitPages": 917504},
+      "false-plus-size32": {"outcome": "power-on-fail", "limitPages": 917504},
+      "true-only": {"outcome": "mapping-pass-guest-timeout", "mappingCreated": true},
+      "true-plus-size32": {"outcome": "mapping-pass-guest-timeout", "mappingCreated": true},
+      "true-plus-size16": {"outcome": "power-on-fail", "limitPages": 5111808}
+    }
+  },
+  "esxi64Gb": {
+    "requiredPages": 16777217,
+    "cases": {
+      "keys-absent": {"outcome": "power-on-fail", "limitPages": 917504},
+      "use64bit-false": {"outcome": "power-on-fail", "limitPages": 917504},
+      "size64-only": {"outcome": "power-on-fail", "limitPages": 917504},
+      "false-plus-size64": {"outcome": "power-on-fail", "limitPages": 917504},
+      "true-only": {"outcome": "power-on-fail", "limitPages": 9306112},
+      "true-plus-size64": {"outcome": "mapping-pass-guest-timeout", "mappingCreated": true},
+      "true-plus-size32": {"outcome": "power-on-fail", "limitPages": 9306112}
+    }
+  },
+  "observedBudgetModel": {
+    "basePages": 917504,
+    "pagesPerGiB": 262144,
+    "enabledDefaultSizeGb": 32,
+    "formulaForObservedFailures": "limitPages = 917504 + effectiveSizeGb * 262144",
+    "requiredPagesFormula": "BAR bytes / 4096 + one additional page",
+    "notes": [
+      "pciPassthru.64bitMMIOSizeGB is ignored when pciPassthru.use64bitMMIO is absent or FALSE.",
+      "TRUE opens the large-MMIO path and uses an observable 32 GiB default budget when SizeGB is absent.",
+      "An explicitly undersized SizeGB replaces that 32 GiB component; it is not rounded up to fit the BAR."
+    ]
+  },
+  "inference": [
+    "A 32 GiB no-backing BAR fits the TRUE-only default mapping budget, while a 64 GiB BAR does not.",
+    "A 64 GiB BAR maps only when both the TRUE gate and SizeGB=64 are present in this build.",
+    "The test removes sparse-file or shared-memory capacity as an explanation because pci-testdev reports the BAR without allocating equal-sized backing storage.",
+    "The nested EFI guest did not reach its heartbeat after successful 32/64 GiB mappings, so these are admission and IOMMU-mapping conclusions, not guest-runtime support claims.",
+    "The outer QEMU platform also needed both a 64 GiB q35 hole64 and a matching OVMF aperture before ESXi itself could boot with the 64 GiB endpoint."
+  ],
+  "reproduceWith": [
+    "qemu-pci-testdev-largebar-validate.sh",
+    "vmware-esxi8-lab/test_esxi_largebar_matrix.py"
+  ],
+  "rawEvidenceLocal": [
+    "_artifacts/mmio-tests/qemu-pci-testdev-largebar-20260712/result.json",
+    "_artifacts/vmware-directpath-runs/20260712-pci-testdev-32g-matrix/result.json",
+    "_artifacts/vmware-directpath-runs/20260712-pci-testdev-32g-mapping-confirm/result.json",
+    "_artifacts/vmware-directpath-runs/20260712-pci-testdev-64g-matrix-v2/result.json"
+  ]
+}

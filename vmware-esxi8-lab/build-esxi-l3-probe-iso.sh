@@ -15,6 +15,12 @@ case "$profile" in
   vmotion)
     output="$workspace/_artifacts/esxi-l3-vmotion-probe.iso"
     ;;
+  largebar)
+    output="$workspace/_artifacts/esxi-l3-largebar-probe.iso"
+    ;;
+  edu)
+    output="$workspace/_artifacts/esxi-l3-edu-probe.iso"
+    ;;
   reboot)
     output="$workspace/_artifacts/esxi-l3-reboot-probe.iso"
     ;;
@@ -30,6 +36,7 @@ kernel_release=5.15.0-185-generic
 
 original_init=
 original_grub=
+module_build_dir=
 cleanup() {
   if [[ -n "$original_init" ]]; then
     cp "$original_init" "$root/init"
@@ -38,6 +45,12 @@ cleanup() {
   if [[ -n "$original_grub" ]]; then
     cp "$original_grub" "$iso_root/boot/grub/grub.cfg"
     rm -f "$original_grub"
+  fi
+  if [[ -n "$module_build_dir" ]]; then
+    rm -rf "$module_build_dir"
+  fi
+  if [[ "$profile" == edu ]]; then
+    rm -f "$root/lib/modules/edu_probe.ko"
   fi
 }
 
@@ -49,6 +62,8 @@ if [[ "$profile" != probe ]]; then
     cp "$workspace/_artifacts/esxi-l3-aer-init.sh" "$root/init"
   elif [[ "$profile" == reboot ]]; then
     cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-reboot-init.sh" "$root/init"
+  elif [[ "$profile" == edu ]]; then
+    cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-edu-init.sh" "$root/init"
   else
     cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-vmotion-init.sh" "$root/init"
   fi
@@ -65,6 +80,21 @@ fi
 mkdir -p "$root/lib/modules"
 cp "/lib/modules/$kernel_release/kernel/drivers/net/ethernet/intel/e1000e/e1000e.ko" \
   "$root/lib/modules/e1000e.ko"
+
+if [[ "$profile" == edu ]]; then
+  headers="/lib/modules/$kernel_release/build"
+  if [[ ! -d "$headers" ]]; then
+    echo "missing kernel headers: $headers" >&2
+    echo "install linux-headers-$kernel_release" >&2
+    exit 2
+  fi
+  module_build_dir=$(mktemp -d)
+  cp "$workspace/github-export/vmware-esxi8-lab/edu-probe/Makefile" \
+    "$workspace/github-export/vmware-esxi8-lab/edu-probe/edu_probe.c" \
+    "$module_build_dir/"
+  make -s -C "$headers" M="$module_build_dir" modules
+  cp "$module_build_dir/edu_probe.ko" "$root/lib/modules/edu_probe.ko"
+fi
 
 for app in dd insmod ip ping poweroff reboot sync; do
   ln -sf busybox "$root/bin/$app"

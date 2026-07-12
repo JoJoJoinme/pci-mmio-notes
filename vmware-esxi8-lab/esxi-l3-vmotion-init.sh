@@ -34,7 +34,7 @@ for device_path in /sys/bus/pci/devices/*; do
   vendor=$(cat "$device_path/vendor")
   device=$(cat "$device_path/device")
   case "$vendor:$device" in
-    0x8086:0x10d3|0x1af4:0x1110)
+    0x8086:0x10d3|0x1af4:0x1110|0x1b36:0x0005|0x1234:0x11e8)
       bdf=${device_path##*/}
       printf '\n--- DirectPath target %s vendor=%s device=%s ---\n' "$bdf" "$vendor" "$device"
       lspci -s "$bdf" -vv || true

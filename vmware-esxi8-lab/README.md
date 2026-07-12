@@ -40,6 +40,11 @@ wsl -d Ubuntu-22.04 -- bash /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/start
 | 变量 | 示例 | 用途 |
 |---|---:|---|
 | `QEMU_ESXI_IVSHMEM_SIZE` | `1G`、`2G` | 改变透传设备的 64-bit BAR 大小 |
+| `QEMU_ESXI_PCI_TESTDEV_MEMBAR_SIZE` | `32G`、`64G` | 无等量 backing 的超大 64-bit BAR；与主 ivshmem/EDU 互斥 |
+| `QEMU_ESXI_HOST_HOLE64_SIZE` | `64G` | 外层 q35 high-MMIO window；大于 32G 的 testdev 会自动补齐 |
+| `QEMU_ESXI_OVMF_MMIO64_MB` | `65536` | 外层 OVMF high-MMIO aperture，单位 MiB |
+| `QEMU_ESXI_EDU` | `1` | 增加 MSI-only、可编程 DMA 的 QEMU EDU endpoint |
+| `QEMU_ESXI_EDU_DMA_MASK` | `0xfffffff` | 可选覆盖 EDU DMA mask |
 | `QEMU_ESXI_IVSHMEM_MEM_PATH` | `/root/vm/esxi8-b/ivmem.bin` | 用稀疏 regular file 承载大于 `/dev/shm` 的 BAR |
 | `QEMU_ESXI_IVSHMEM_ALT_SIZE` | `1G`、`2G` | 在独立 root port 增加同 VID:DID candidate |
 | `QEMU_ESXI_TOPOLOGY` | `pcie`、`root`、`legacy` | PCIe Root Port、根端点、传统 PCI 桥拓扑 |
@@ -79,6 +84,7 @@ wsl -d Ubuntu-22.04 -- dmesg
 | G0/G1 | ESXi 识别设备并成功启动 L3 EFI VM | 基础启动脚本 | `lspci`、串口、`vmware.log` |
 | M00-M05 | 1G/2G BAR 与 `use64bitMMIO` 组合 | `Run-EsxiDirectPathMmioCase.ps1` | Guest BAR 地址、root window、effective VMX |
 | M04/M07 | 4G/8G gate 与 aggregate packing | `test_esxi_dynamic_bar_aggregate.py` | page limit、BAR/root window、heartbeat |
+| M04 32/64G | no-backing large-BAR gate/预算 | `test_esxi_largebar_matrix.py` | page limit、IOMMU mapping、outer QEMU argv/HMP |
 | Q00-Q02 | QEMU/OVMF 对照 | `qemu-ovmf-initrd-mmio-check.sh` | OVMF resource map、BAR 是否分配 |
 | A01 | 无 ACS 路径 | 外层 `DISABLE_ACS=1` | `vmkernel.log`、claim/owner |
 | A04 | 根端点 reset 能力 | 外层 `TOPOLOGY=root` | ESXi passthru inventory |
@@ -91,6 +97,7 @@ wsl -d Ubuntu-22.04 -- dmesg
 | T00 | 重复启动稳定性 | `Test-EsxiDirectPathStress.ps1` | 每轮结果与失败日志 |
 | X00-X03 | Dynamic DirectPath | Python 动态分配/vMotion 脚本 | `assignedId`、耗尽、relocate |
 | I01 | INTx 与 QEMU direct control | `test_esxi_intx_mode.py`、`qemu-intx-direct-validate.sh` | IRQ 计数、流量 |
+| I02/D00/R00 | EDU MSI-only、DMA、reset sentinel | `test_esxi_edu.py`、`qemu-edu-direct-validate.sh` | Guest IRQ/DMA、VT-d/IR trace、VMware reset log |
 | L02/L04 | vMotion 与 host crash | `test_esxi_vmotion_matrix.py`、`test_esxi_host_crash_recovery.py` | task fault、恢复状态 |
 
 ## 4. MMIO Case：VMware 默认与高级参数
@@ -136,7 +143,8 @@ wsl -d Ubuntu-22.04 -- python3 /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/te
 
 4G 要分别跑 absent、`--size-gb 4` only、TRUE-only、TRUE+Size4。预期只有含
 `use64bitMMIO=TRUE` 的两组通过。8G 同样使用 sparse backing，但当前 nested 平台只
-通过 VMX/IOMMU mapping，未得到 guest heartbeat；不要直接扩到 32G/64G。
+通过 VMX/IOMMU mapping，未得到 guest heartbeat。32/64G 使用下一节的 no-backing
+endpoint，不能继续扩大 ivshmem backing。
 
 aggregate 需要两个独立 root port：
 
@@ -161,6 +169,26 @@ IOMMU/reset dependency 不能拆分而失败。
 - 对应 `vmware.log`；
 - ESXi PCI owner/claim 信息；
 - 可定位本次外层 QEMU 命令的记录。
+
+### 4.4 32/64G no-backing BAR gate
+
+先做 QEMU direct control：
+
+```powershell
+wsl -d Ubuntu-22.04 -- bash /mnt/e/Code/PCI/github-export/qemu-pci-testdev-largebar-validate.sh
+```
+
+正常关闭 ESXi 后，以 32G 或 64G `pci-testdev` 重启外层 A。64G 会自动设置 matching
+q35 hole64 与 OVMF aperture：
+
+```powershell
+wsl -d Ubuntu-22.04 -- env QEMU_ESXI_IVSHMEM_SIZE=0 QEMU_ESXI_PCI_TESTDEV_MEMBAR_SIZE=64G bash /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/start-qemu-esxi8-host-a.sh
+wsl -d Ubuntu-22.04 -- python3 /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_largebar_matrix.py --bar-size-gb 64 --serial-timeout 30 --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID
+```
+
+验收不要求 nested EFI heartbeat；`mapping-pass-guest-timeout` 是 mapping case 的有效
+结果。必须同时保存失败 case 的 `required pages/limit`，并确认 TRUE+足额 SizeGB
+映射成功、gate absent/FALSE/Size-only 和 undersized case 按预期失败。
 
 ## 5. QEMU/OVMF 对照矩阵
 
@@ -264,6 +292,23 @@ wsl -d Ubuntu-22.04 -- env WORKDIR=/mnt/e/Code/PCI/_artifacts/mmio-tests/qemu-in
 
 当前 ESXi nested path 为可重复 functional fail，QEMU direct control 为 pass。必须保留
 两边同 ISO 的结果，不能只凭 guest 出现 IO-APIC 行就判 INTx 通过。
+
+EDU MSI-only/DMA/reset A/B：
+
+```powershell
+wsl -d Ubuntu-22.04 -- bash /mnt/e/Code/PCI/github-export/qemu-edu-direct-validate.sh /mnt/e/Code/PCI/_artifacts/mmio-tests/qemu-edu-direct-REPLAY
+
+# 正常关闭 ESXi，再用 EDU + trace 重启外层 A
+wsl -d Ubuntu-22.04 -- env QEMU_ESXI_IVSHMEM_SIZE=0 QEMU_ESXI_EDU=1 QEMU_ESXI_TRACE=1 bash /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/start-qemu-esxi8-host-a.sh
+wsl -d Ubuntu-22.04 -- env PROFILE=edu bash /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/build-esxi-l3-probe-iso.sh
+wsl -d Ubuntu-22.04 -- python3 /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_edu.py --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID
+```
+
+`PROFILE=edu` 需要与 Guest kernel 完全匹配的 headers；当前为
+`linux-headers-5.15.0-185-generic`。通过条件包括两阶段各一次 MSI self-IRQ、两次
+DMA-completion IRQ、双向 DMA 比对、Guest IOVA 被 requester `01:01.0` 的 VT-d range
+覆盖、四次 DMA 后均有 MSI remap，且无 DMAR fault。reset sentinel 是观察值：必须明确
+为 `reset` 或 `persisted`，不能把 `vmware.log` 的 reset 行自动解释成状态已清零。
 
 ## 8. 生命周期与压力测试
 

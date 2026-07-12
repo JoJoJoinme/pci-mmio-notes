@@ -1,0 +1,5 @@
+qdev_reset
+qdev_reset_all
+qdev_reset_tree
+pci_update_mappings_del
+pci_update_mappings_add

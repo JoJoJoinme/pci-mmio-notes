@@ -162,7 +162,7 @@ Gate 失败本身是有效结论，不是丢弃日志的理由。
 | --- | --- | --- |
 | QEMU e1000e | Multifunction、MSI/MSI-X、真实流量、DMA/interrupt trace | ESXi 资格和实际 reset capability |
 | QEMU NVMe | PCIe endpoint、MSI-X、storage I/O 和 reset cycle | QEMU model 是否暴露 ESXi 要求的 reset |
-| QEMU `edu` | 简单可控 DMA source | L2 driver 和 PCI capability 可能需要补齐 |
+| QEMU `edu` | MSI-only、双向 DMA、reset sentinel | 本地驱动和 direct/ESXi 两层验收已补齐；无 MSI-X、无可观测 reset callback |
 | `ivshmem-plain` | 制造指定大小的 64-bit prefetchable BAR | ESXi eligibility 和 PCIe capability 必须实测 |
 | Instrumented QEMU endpoint | 精确控制 FLR、D3hot、PME、AER、BAR、ROM | 需要单独维护 patch 和 build hash |
 | 真实 NIC/NVMe/GPU/FPGA | E4 最终复核 | 需要裸机 ESXi 和安全的 device ownership |
@@ -207,8 +207,8 @@ Gate 失败本身是有效结论，不是丢弃日志的理由。
 | D00 | L2 driver load 并持续 DMA | ESXi 启用 VT-d，为 endpoint requester ID 建立 context/domain，并发生 translation |
 | D01 | 停止并关闭 L2 | Device 回到 host ownership 前，IOMMU translation 已撤销 |
 | I00 | MSI-X 流量 | L2 vector 与 QEMU `vtd_ir_*`、device MSI-X trace 可以关联 |
-| I01 | 设备/driver 支持时强制 MSI-only | MSI 保持 remapped 且功能正常 |
-| I02 | 支持时强制 INTx-only | 记录 shared-line 行为、延迟和 VMware warning |
+| I01 | 支持时强制 INTx-only | 记录 shared-line 行为、延迟和 VMware warning |
+| I02 | 设备/driver 支持时强制 MSI-only | MSI 保持 remapped 且功能正常 |
 | R00 | 正常 L2 power-on/power-off | 记录 reset 类型和顺序 |
 | R01 | L2 guest reboot | 判断是否 reset，以及 ROM/driver 能否再次初始化 |
 | R02 | 强制 VM power-off 或 guest crash | Device quiescent，下一次开机成功 |
@@ -337,13 +337,14 @@ qemu-system-x86_64 \
 | A06 | pass | L1 2.5GT/s x1 被 VMware 在 L2 重建成 5GT/s x32 |
 | M00-M03/M05/M06 | pass | 1GB 默认低置；2GB 在 absent/false/true/Size 变体下均自动高置 |
 | M04 4GB | pass | absent/Size4-only 超过 917504-page limit；TRUE-only 与 TRUE+Size4 均通过 |
-| M04 8GB/32GB+ | partial/platform-boundary | sparse 8GB mapping 可建立，但 EFI guest 无 heartbeat；32GB+ 未在同一饱和路径盲跑 |
+| M04 8GB | partial/platform-boundary | sparse 8GB mapping 可建立，但 EFI guest 无 heartbeat |
+| M04 32/64GB | pass-mapping | no-backing `pci-testdev` 验证 gate/SizeGB/page budget；成功映射后 EFI guest 仍无 heartbeat，故不声称 runtime pass |
 | M07 aggregate | pass | 2x1GB 低置；单 2GB 高置；1GB+2GB 形成 3GB DirectPath 高 range |
 | D00/I00 | pass | requester `01:00.0` 的 VT-d translation 和 MSI-X interrupt remap 已关联 |
 | D01 | partial | power cycle 有 domain IOTLB invalidation；完整 context teardown 未直接导出 |
 | I01 | nested-functional-fail | `pci=nomsi` 得到 legacy IO-APIC，但 11 个样本 IRQ/tx 均为 0；同 ISO QEMU direct pass |
-| I02 | blocked-by-endpoint | MSI-only 需要隐藏 MSI-X capability 的 endpoint mask |
-| R00 | partial | 可重复启动和 IOTLB invalidation 已见；未看到 QEMU qdev reset 事件 |
+| I02 | pass | MSI-only EDU 两阶段各完成 1 个软件 IRQ、2 个 DMA completion IRQ；Guest IOVA、物理 MSI 和 VT-d/IR trace 已关联 |
+| R00 | partial-observed | EDU sentinel 证明 ESXi 打印 reset 流程但 warm reboot 后端点状态 persisted；精确 FLR/SBR/D3 类型仍需有 reset callback 的 endpoint 或 E4 |
 | R01 | pass | efivar phase marker 证明 reboot 前后各完成一次 e1000e I/O，最终正常解绑 |
 | R02/R03 | pass | DMA 后 forced-off 可重启；十次快速 start/stop 全通过 |
 | R04 | pass | legacy bridge requester-ID dependency 被 ESXi 自动集体启用 |
@@ -373,5 +374,7 @@ qemu-system-x86_64 \
   https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html
 - QEMU tracing documentation：
   https://www.qemu.org/docs/master/devel/tracing.html
+- QEMU EDU device specification：
+  https://www.qemu.org/docs/master/specs/edu.html
 - 本地已执行 QEMU 证据：`qemu-vmdirectpath-nonbar-local-validation.md`
 - 现有 VMware MMIO/QEMU 映射说明：`vmware-passthrough-mmio-validation.md`
