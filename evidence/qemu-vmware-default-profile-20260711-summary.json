@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-11",
+  "qemu": "QEMU emulator version 6.2.0 (Debian 1:6.2+dfsg-2ubuntu6.30)",
+  "firmware": "OVMF",
+  "overall": "pass",
+  "cases": {
+    "i440fx-low-1g": {
+      "machine": "pc-i440fx-jammy",
+      "ram": "1G",
+      "barSize": "1G",
+      "arguments": [
+        "-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0",
+        "-global i440FX-pcihost.pci-hole64-size=0"
+      ],
+      "bar": "0x80000000-0xbfffffff",
+      "above4GRootWindow": false,
+      "guestHeartbeat": true,
+      "verdict": "pass"
+    },
+    "i440fx-high-2g": {
+      "machine": "pc-i440fx-jammy",
+      "ram": "1G",
+      "barSize": "2G",
+      "arguments": [
+        "-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=2048",
+        "-global i440FX-pcihost.pci-hole64-size=2G"
+      ],
+      "bar": "0x100000000-0x17fffffff",
+      "rootWindow": "0x100000000-0x17fffffff",
+      "guestHeartbeat": true,
+      "verdict": "pass",
+      "differenceFromVmware": "Aperture size and high placement class match; the base address does not."
+    },
+    "q35-low-1g-negative": {
+      "machine": "pc-q35-jammy",
+      "ram": "1G",
+      "barSize": "1G",
+      "arguments": [
+        "-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0",
+        "-global q35-pcihost.pci-hole64-size=0"
+      ],
+      "bar": "unassigned",
+      "hmp": "BAR2 address 0xffffffffffffffff, size mask 0x3ffffffe",
+      "guestHeartbeat": false,
+      "verdict": "pass-negative-control"
+    }
+  },
+  "topologyControl": {
+    "machine": "pc-i440fx-jammy with pxb",
+    "result": "Independent ACPI root bus and exact 1G low BAR, but an extra visible PCI bridge remained.",
+    "conclusion": "Stock QEMU can approximate but not exactly reproduce VMware's synthetic DirectPath root-bus topology."
+  },
+  "reproduceWith": "qemu-vmware-default-profile-validate.sh",
+  "rawEvidenceLocal": "_artifacts/mmio-tests/qemu-vmware-default-profile-20260711"
+}

@@ -8,6 +8,9 @@ param(
 
   [Nullable[int]]$SizeGb,
 
+  [ValidateSet('Efi', 'Bios')]
+  [string]$Firmware = 'Efi',
+
   [string]$RunId = (Get-Date -Format 'yyyyMMdd-HHmmss')
 )
 
@@ -49,6 +52,10 @@ $lines = $lines | ForEach-Object {
     "displayName = `"$CaseId`""
   } elseif ($_ -match '^serial0\.fileName\s*=') {
     "serial0.fileName = `"$serialName`""
+  } elseif ($_ -match '^firmware\s*=') {
+    "firmware = `"$($Firmware.ToLowerInvariant())`""
+  } elseif ($Firmware -eq 'Bios' -and $_ -match '^chipset\.motherboardLayout\s*=') {
+    $null
   } else {
     $_
   }
@@ -75,6 +82,7 @@ $metadata = [ordered]@{
   runId = $RunId
   use64BitMmio = $Use64BitMmio
   sizeGb = $SizeGb
+  firmware = $Firmware.ToLowerInvariant()
   esxi = '8.0.3-24280767'
   qemuCpuDelta = '-vmx-tsc-scaling'
   verdict = 'running'

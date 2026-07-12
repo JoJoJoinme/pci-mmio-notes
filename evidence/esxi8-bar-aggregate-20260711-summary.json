@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-11",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "virtualHardware": 20,
+    "firmware": "efi",
+    "persistentMmioKeys": []
+  },
+  "cases": {
+    "single-1g": {
+      "bars": ["1G"],
+      "placement": ["0x80000000-0xbfffffff"],
+      "rootWindow": "0x80000000-0xbfffffff",
+      "above4G": false
+    },
+    "two-1g": {
+      "runId": "20260711-dynamic-aggregate-2x1g",
+      "bars": ["1G", "1G"],
+      "placement": [
+        "0x40000000-0x7fffffff",
+        "0x80000000-0xbfffffff"
+      ],
+      "rootWindow": "0x40000000-0xbfffffff",
+      "above4G": false,
+      "guestHeartbeat": true
+    },
+    "single-2g": {
+      "bars": ["2G"],
+      "placement": ["0x1fff80000000-0x1fffffffffff"],
+      "rootWindow": "0x1fff80000000-0x1fffffffffff",
+      "above4G": true
+    },
+    "one-1g-plus-one-2g": {
+      "runId": "20260711-dynamic-aggregate",
+      "bars": ["1G", "2G"],
+      "placement": [
+        "0x1fff80000000-0x1fffbfffffff",
+        "0x1fff00000000-0x1fff7fffffff"
+      ],
+      "directPathPrefetchWindow": "0x1fff00000000-0x1fffbfffffff",
+      "additionalMainRootWindow": "0x1fffc0000000-0x1fffffffffff",
+      "above4G": true,
+      "guestHeartbeat": true
+    }
+  },
+  "inference": [
+    "Equal aggregate size does not imply equal placement: two 1G BARs fit below 4G while one 2G BAR does not.",
+    "A QEMU parity launcher must model each BAR's natural alignment and packing, not only sum BAR sizes.",
+    "When the mixed 1G+2G set could not be packed below 4G, ESXi placed both BARs in one contiguous 3G high range and exposed an additional 1G high root range."
+  ],
+  "reproduceWith": "vmware-esxi8-lab/test_esxi_dynamic_bar_aggregate.py",
+  "rawEvidenceLocal": [
+    "_artifacts/vmware-directpath-runs/20260711-dynamic-aggregate/result.json",
+    "_artifacts/vmware-directpath-runs/20260711-dynamic-aggregate-2x1g/result.json"
+  ]
+}

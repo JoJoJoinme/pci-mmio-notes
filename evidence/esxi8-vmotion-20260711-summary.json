@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260711-vmotion",
+  "overall": "pass",
+  "environment": {
+    "vcenter": "VMware vCenter Server 8.0.3 build-24674346",
+    "esxiA": "VMware ESXi 8.0.3 build-24280767 at 172.31.91.10",
+    "esxiB": "VMware ESXi 8.0.3 build-24280767 at 172.31.91.11",
+    "cluster": "PCI-DirectPath-Lab",
+    "sharedDatastore": "qemu-shared"
+  },
+  "cases": {
+    "L02-baseline-live-vmotion": {
+      "verdict": "pass",
+      "before": "poweredOn on ESXi A",
+      "after": "poweredOn on ESXi B"
+    },
+    "L02-classic-live-vmotion": {
+      "verdict": "pass-rejected",
+      "fault": "vim.fault.InsufficientResourcesFault",
+      "messageKey": "com.vmware.vim.vpxd.vmcheck.assignHwNotAvailable",
+      "missing": "pciPassthru0",
+      "observation": "A matching VID:DID and BDF on ESXi B did not make the Classic static backing portable."
+    },
+    "L02-dynamic-live-vmotion": {
+      "verdict": "pass-rejected",
+      "sourceAssignedId": "0000:01:00.1",
+      "fault": "vim.fault.InsufficientResourcesFault",
+      "messageKey": "com.vmware.vim.vpxd.vmcheck.assignHwNotAvailable",
+      "missing": "pciPassthru0"
+    },
+    "X03-dynamic-powered-off-relocate": {
+      "verdict": "pass",
+      "poweredOffOnA": { "assignedId": null },
+      "poweredOffOnB": { "assignedId": null },
+      "poweredOnOnB": { "assignedId": "0000:01:00.1", "guestHeartbeat": true },
+      "poweredOffAgain": { "assignedId": null }
+    },
+    "X02-dynamic-candidate-exhaustion": {
+      "verdict": "pass-rejected-then-recovered",
+      "blockerAssignedId": "0000:01:00.1",
+      "faultWhileBlocked": "vim.fault.NoCompatibleHost",
+      "nestedMissing": "pciPassthru1",
+      "assignedAfterRelease": ["0000:01:00.1", "0000:01:00.0"],
+      "guestHeartbeatAfterRelease": true
+    }
+  },
+  "reproduceWith": "vmware-esxi8-lab/test_esxi_vmotion_matrix.py",
+  "rawEvidenceLocal": "_artifacts/vmware-directpath-runs/20260711-vmotion/result.json"
+}

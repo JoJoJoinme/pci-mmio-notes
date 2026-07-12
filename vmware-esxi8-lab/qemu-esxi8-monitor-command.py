@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+import os
 import socket
 import sys
 import time
 
-sock_path = "/root/vm/esxi8-mf/monitor.sock"
+sock_path = os.environ.get("QEMU_ESXI_MONITOR", "/root/vm/esxi8-mf/monitor.sock")
 commands = sys.argv[1:]
 if not commands:
     raise SystemExit("usage: qemu-esxi8-monitor-command.py COMMAND [COMMAND ...]")

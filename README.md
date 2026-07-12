@@ -23,9 +23,14 @@ test matrix, artifact contract, and QEMU equivalence checklist, see
 `vmware-directpath-acceptance-test-plan.md`.
 
 QEMU -> ESXi 8 -> EFI Linux DirectPath 黑盒验证的中文结果报告，包括 MMIO
-边界、VT-d trace、拓扑负例、生命周期和 Dynamic DirectPath `assignedId`
+边界、VT-d trace、拓扑负例、双主机 vMotion、host crash、guest reboot、INTx 和
+Dynamic DirectPath `assignedId`
 变化，见 `vmware-esxi8-directpath-local-results.md`；逐项复现命令和 Case
 索引见 `vmware-esxi8-lab/README.md`。
+
+PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU 对标结论，
+见 `vmware-aer-blackbox-results.md`；QEMU OVMF/SeaBIOS surface A/B 入口为
+`qemu-aer-surface-validate.sh`。
 
 ## Short conclusion
 
@@ -36,7 +41,17 @@ QEMU -> ESXi 8 -> EFI Linux DirectPath 黑盒验证的中文结果报告，包�
    `pciPassthru.use64bitMMIO = "FALSE"`.
 3. Absent, false, true, true+Size4, and Size4-only VMX variants produced the
    same placement for the tested 1GB and 2GB devices.
-4. No single fixed stock QEMU/OVMF profile matches both VMware outcomes.
+4. A 4GB BAR failed with absent keys or Size4-only because 1,048,577 mapping
+   pages exceeded the 917,504-page default limit. `use64bitMMIO=TRUE` alone was
+   sufficient; TRUE+Size4 produced the same 4GB guest window.
+5. Equal aggregate size did not imply equal placement: two 1GB BARs fit below
+   4G, while one 2GB BAR was placed above 4G. Per-BAR alignment and bridge
+   packing are mandatory inputs to a parity launcher.
+6. Dynamic selection/exhaustion, powered-off relocation, expected live-vMotion
+   rejection, host-crash recovery, and traffic before/after guest reboot were
+   all exercised. INTx was exposed but non-functional in the nested DirectPath
+   path; the same ISO passed under direct QEMU.
+7. No single fixed stock QEMU/OVMF profile matches both VMware outcomes.
    `both_zero` is only the below-4G profile:
 
 ```text
@@ -48,6 +63,10 @@ i440fx:
   -fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=0
   -global i440FX-pcihost.pci-hole64-size=0
 ```
+
+The current cold-boot parity runner proves the i440fx 1GB case; q35 zero/zero
+with the same 1GB BAR is a negative control because the BAR remains unassigned.
+Machine type and the full below-4G layout are part of the profile.
 
 When the aggregate BAR envelope cannot fit below 4G, a launcher must instead
 set both knobs to the required high-aperture size.  For the tested 2GB BAR this

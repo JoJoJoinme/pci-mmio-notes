@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-12",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "virtualHardware": 20,
+    "firmware": "efi",
+    "endpoint": "QEMU ivshmem-plain 1af4:1110 with one 8G 64-bit prefetchable BAR",
+    "hostBar": "0x800000000-0x9ffffffff",
+    "backing": "8G sparse regular file; zero allocated blocks before guest access"
+  },
+  "cases": {
+    "keys-absent": {
+      "runId": "20260711-single-8g-absent",
+      "verdict": "expected-power-on-fail",
+      "vmxLog": "total number of pages needed (2097153) exceeds limit (917504), failing"
+    },
+    "use64bit-true-only": {
+      "runId": "20260711-single-8g-true-only",
+      "verdict": "vmx-mapping-pass-guest-boot-timeout",
+      "observed": [
+        "8G BAR accepted",
+        "IOMMU mappings created",
+        "EFI boot selected the probe ISO",
+        "firmware transitioned to runtime",
+        "guest serial remained empty and no heartbeat arrived within 600 seconds"
+      ]
+    },
+    "use64bit-true-plus-size8": {
+      "runId": "20260711-single-8g-true-size8",
+      "verdict": "vmx-mapping-pass-nested-platform-stall",
+      "observed": [
+        "both VMX keys were present",
+        "8G BAR accepted",
+        "IOMMU mappings created",
+        "EFI eventually selected the probe ISO",
+        "outer ESXi QEMU remained near four-vCPU saturation after the L3 was forcibly terminated"
+      ]
+    }
+  },
+  "inference": [
+    "Sparse backing removes the previous /dev/shm capacity objection: stock QEMU can expose the 8G BAR without physically allocating 8G first.",
+    "The current nested platform can prove the ESXi large-MMIO mapping gate at 8G, but cannot complete an EFI Linux boot with that BAR.",
+    "This is not evidence that bare-metal ESXi rejects an 8G BAR. It is a nested execution/firmware observability boundary, so 32G and 64G were not run blindly on the same platform.",
+    "A power-on-only probe or a custom endpoint that does not force full guest enumeration is the next safe way to test the greater-than-32G SizeGB threshold."
+  ],
+  "reproduceWith": "vmware-esxi8-lab/test_esxi_dynamic_bar_aggregate.py plus QEMU_ESXI_IVSHMEM_MEM_PATH",
+  "rawEvidenceLocal": [
+    "_artifacts/vmware-directpath-runs/20260711-single-8g-absent/result.json",
+    "_artifacts/vmware-directpath-runs/20260711-single-8g-true-only/result.json",
+    "_artifacts/vmware-directpath-runs/20260711-single-8g-true-size8/effective.vmx",
+    "_artifacts/vmware-directpath-runs/20260711-single-8g-true-size8/vmware.log"
+  ]
+}

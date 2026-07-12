@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260711-dynamic-envelope-isolated",
+  "verdict": "pass",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "virtualHardware": 20,
+    "firmware": "efi",
+    "vmxMmioPolicy": "pciPassthru.use64bitMMIO and pciPassthru.64bitMMIOSizeGB both absent"
+  },
+  "outerCandidates": [
+    {
+      "hostBdf": "0000:01:01.0",
+      "barSize": "1G",
+      "outerBar": "0x880000000-0x8bfffffff",
+      "rootPort": "0000:00:08.0"
+    },
+    {
+      "hostBdf": "0000:02:00.0",
+      "barSize": "2G",
+      "outerBar": "0x800000000-0x87fffffff",
+      "rootPort": "0000:00:09.0"
+    }
+  ],
+  "cases": {
+    "target-alone": {
+      "assignedId": "0000:01:01.0",
+      "guestBar": "0x80000000-0xbfffffff",
+      "guestRootWindow": "0x80000000-0xbfffffff pref",
+      "above4GRootWindow": false,
+      "guestHeartbeat": true
+    },
+    "blocker": {
+      "assignedId": "0000:01:01.0"
+    },
+    "target-with-blocker": {
+      "assignedId": "0000:02:00.0",
+      "guestBar": "0x1fff80000000-0x1fffffffffff",
+      "guestRootWindow": "0x1fff80000000-0x1fffffffffff pref",
+      "above4GRootWindow": true,
+      "guestHeartbeat": true
+    }
+  },
+  "inference": [
+    "Dynamic DirectPath selected a concrete candidate before sizing the guest MMIO window.",
+    "The 2G candidate did not force a maximum-candidate high window while the 1G candidate was selected.",
+    "After candidate contention changed the selected BDF, ESXi changed the guest MMIO envelope without any persistent MMIO-key change."
+  ],
+  "negativeControl": {
+    "runId": "20260711-dynamic-envelope",
+    "topology": "both candidates behind the same outer PCIe root port",
+    "result": "second VM rejected at DevicePowerOn",
+    "vmwareLog": "AH Failed to find a suitable device for pciPassthru0",
+    "meaning": "Candidates used by different VMs must be in independently assignable IOMMU/reset dependency groups."
+  },
+  "reproduceWith": "vmware-esxi8-lab/test_esxi_dynamic_bar_envelope.py",
+  "rawEvidenceLocal": "_artifacts/vmware-directpath-runs/20260711-dynamic-envelope-isolated/result.json"
+}
