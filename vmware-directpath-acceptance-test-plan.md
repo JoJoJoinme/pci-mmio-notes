@@ -333,11 +333,11 @@ virtual VT-d 与共享 NFS。
 | --- | --- | --- |
 | G0-G4 | pass | L3 枚举、真实 e1000e I/O、三次以上干净运行和十次 start/stop 均完成 |
 | A00/A02/A03 | pass | PCIe baseline 与 multifunction function 独立 owner 行为已记录 |
-| A01 | nested-platform-only | 无 ACS 时 ESXi 明确记录 bypass；本机 `enableACSCheckForRP=FALSE`，不能外推生产安全性 |
+| A01 | nested-platform-only | 无 ACS 时 ESXi 明确记录 bypass；严格检查会拒绝，公开 `disableACSCheck=TRUE` 可再次 bypass；均不能外推硬件隔离安全性 |
 | A04 | pass | root-complex 直挂设备为 `Reset=None`、`Capable=false` |
 | A05 | pass | legacy bridge 后所有 endpoint 共用 bridge dependency，启用一个会自动启用全部 |
 | A06 | pass | L1 2.5GT/s x1 被 VMware 在 L2 重建成 5GT/s x32 |
-| `passthruCapable` 15-case | pass | IOMMU、reset boundary、ACS policy 三个 gate 与 AH dependency 层已分离；restore pass |
+| `passthruCapable` 累计 23-case | pass | 15 项基础矩阵、全局 ACS bypass、6 项 class 和真实 Type-1 bridge 已分离各 gate；restore pass |
 | M00-M03/M05/M06 | pass | 1GB 默认低置；2GB 在 absent/false/true/Size 变体下均自动高置 |
 | M04 4GB | pass | absent/Size4-only 超过 917504-page limit；TRUE-only 与 TRUE+Size4 均通过 |
 | M04 8GB | pass-runtime | 独占 Root Port + no-backing `pci-testdev` 七项矩阵通过；TRUE-only/TRUE+Size8 均有 heartbeat、目标枚举与 mapping |

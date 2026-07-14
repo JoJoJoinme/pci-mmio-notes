@@ -28,7 +28,7 @@ vMotion、host crash、guest reboot、INTx 和 Dynamic DirectPath `assignedId`
 变化，见 `vmware-esxi8-directpath-local-results.md`；逐项复现命令和 Case
 索引见 `vmware-esxi8-lab/README.md`。
 
-ESXi `passthruCapable` 的 22 项 IOMMU/reset/ACS/topology/class/真实 bridge-FLR
+ESXi `passthruCapable` 的累计 23 项 IOMMU/reset/ACS policy/topology/class/真实 bridge-FLR
 矩阵、运行时 AH dependency 反例，以及基于 Linux VFIO Type-0/reset-device-set/
 hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设计，见
 `vmware-esxi8-passthru-capable-observed-model.md`。2026-07-14 增量的机器可读索引为
@@ -66,10 +66,12 @@ PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU �
    IOVAs and completion MSI remaps, with no DMAR fault. ESXi logged a reset
    attempt on guest reboot, but the EDU sentinel persisted, so a reset log is
    not proof that endpoint state was cleared.
-9. A 22-case capability matrix separated host IOMMU, accepted reset boundary,
+9. An aggregate 23-case capability matrix separated host IOMMU, accepted reset boundary,
    ACS policy, PCI class metadata, and structural bridge role from runtime
    assignability. Six class-only Type-0 variants all remained capable, while a
-   real Type-1 X3130 bridge remained incapable despite recognized FLR. A shared
+   real Type-1 X3130 bridge remained incapable despite recognized FLR. The
+   documented `disableACSCheck` workaround also restored capability under an
+   otherwise strict no-ACS Root Port check without changing the hardware surface. A shared
    reset dependency failed AH selection even with Capable/Enabled/Active=true;
    a dedicated Root Port made the same 32GB device boot.
 10. Controlled PME, P2P and RMRR paths are now exercised. SR-IOV remains an

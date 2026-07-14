@@ -1,0 +1,83 @@
+{
+  "date": "2026-07-14",
+  "scope": "Publicly observable ESXi DirectPath ACS admission behavior in an authorized nested lab",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "outerQemu": "QEMU 6.2.0 with the repository's lab instrumentation",
+    "outerQemuSha256": "7d1e85a29e09c49f6a1c60a18713d80a72ef3b8932c4183cc100bce3a01fa64e",
+    "topology": "Type-0 virtio-net endpoint below a QEMU PCIe Root Port with ACS capability hidden",
+    "endpoint": "0000:01:01.0 1af4:1041",
+    "resetBoundary": "Bridge reset"
+  },
+  "publicSource": {
+    "title": "Broadcom KB 391460 - PCIe devices are reported as non-pass-through capable or SR-IOV fails to enable",
+    "url": "https://knowledge.broadcom.com/external/article?articleNumber=391460",
+    "documentedOption": "VMkernel.Boot.disableACSCheck=TRUE",
+    "documentedMeaning": "Skip the overly strict ACS sanity check; ACS itself remains enabled",
+    "settingsCatalog": {
+      "title": "Broadcom KB 424082 - ESXi Advanced System Settings mapping to vSphere Configuration Profiles configurations",
+      "url": "https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html",
+      "entries": {
+        "VMkernel.Boot.disableACSCheck": "Bypass ACS capability checks on all PCIE devices",
+        "VMkernel.Boot.enableACSCheckForRP": "Enable ACS capability checks for Root Port",
+        "VMkernel.Boot.enableACSDTP2P": "Enable/Disable ACS Direct translated P2P"
+      },
+      "scopeNote": "The catalog documents the option names and meanings; the controlled ESXi 8.0.3 experiment below validates the first two options on the tested build"
+    }
+  },
+  "controlledCases": [
+    {
+      "case": "baseline-with-no-explicit-acs-boot-option",
+      "run": "20260714-esxi8-passthru-capability-matrix-v4/pcie-virtio-no-acs",
+      "inputMode": "No ACS-related boot option was passed by the runner; the tested build logged both values below",
+      "bootOptions": {
+        "disableACSCheck": false,
+        "enableACSCheckForRP": false
+      },
+      "observed": {
+        "passthruCapable": true,
+        "resetMethod": "Bridge reset",
+        "log": "Bypassing non-ACS capable device in hierarchy"
+      }
+    },
+    {
+      "case": "strict-root-port-check",
+      "run": "20260714-esxi8-passthru-capability-matrix-v4/pcie-virtio-no-acs-strict",
+      "bootOptions": {
+        "disableACSCheck": false,
+        "enableACSCheckForRP": true
+      },
+      "observed": {
+        "passthruCapable": false,
+        "resetMethod": "Bridge reset"
+      }
+    },
+    {
+      "case": "global-check-bypass-overrides-strict-root-port-check",
+      "run": "20260714-esxi8-no-acs-global-bypass-v1/pcie-virtio-no-acs-global-bypass",
+      "bootOptions": {
+        "disableACSCheck": true,
+        "enableACSCheckForRP": true
+      },
+      "observed": {
+        "passthruCapable": true,
+        "resetMethod": "Bridge reset",
+        "parent": "0000:00:08.0",
+        "dependent": "0000:01:01.0",
+        "log": "Bypassing non-ACS capable device in hierarchy"
+      },
+      "verdict": "pass",
+      "restoreVerdict": "pass",
+      "artifactSha256": {
+        "caseResultJson": "1e8feed084dd9b4aafc1abf53b36aa65e844207ea1eef6585ab8987c0fdf3666",
+        "matrixResultJson": "45ed27e52e38ecb19e4e0eb1f6739f5f68891c369c1a0e9293746bbeab3c276c"
+      }
+    }
+  ],
+  "inference": {
+    "observedPrecedence": "For the tested ESXi build and Root Port path, disableACSCheck=TRUE bypasses ACS admission even when enableACSCheckForRP=TRUE",
+    "baselineScope": "With no explicit ACS boot option, this ESXi 8.0.3 build logged disableACSCheck=FALSE and enableACSCheckForRP=FALSE; this is a build-and-path observation, not a cross-version default guarantee",
+    "notProved": "The option does not synthesize hardware ACS, create a physical isolation boundary, or make peer DMA traverse the IOMMU",
+    "qemuPolicy": "Treat an ESXi ACS-check bypass and a Linux ACS-override-dependent split as degraded isolation provenance; compute and lease the physical isolation domain independently"
+  }
+}

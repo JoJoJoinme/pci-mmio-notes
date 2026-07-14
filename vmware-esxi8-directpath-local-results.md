@@ -303,7 +303,20 @@ Bypassing non-ACS capable device in hierarchy
 因此它只能证明 VMware 存在 bypass 分支，不能作为生产安全配置。生产 VFIO/ESXi
 对标仍应要求真实 ACS、正确 IOMMU group，禁止把 `pcie_acs_override` 当成通过条件。
 
-扩展后的 22 项 `passthruCapable` 单变量/对照矩阵进一步把资格判断收敛为外部可观察模型：
+公开 [Broadcom KB 391460](https://knowledge.broadcom.com/external/article?articleNumber=391460)
+还提供 `VMkernel.Boot.disableACSCheck=TRUE`，其语义是跳过 ESXi 8.0.3 过严的 ACS sanity
+check，而不是关闭 ACS。本地将 `enableACSCheckForRP=TRUE` 保持开启，同时设置该全局
+bypass 后，同一个无 ACS endpoint 从 `Capable=false` 恢复为 `Bridge reset`、
+`Capable=true`；日志确认两个 boot option 均生效并打印 bypass，restore pass。
+[Broadcom KB 424082](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)
+还明确列出 `disableACSCheck`（绕过所有 PCIe ACS capability check）、
+`enableACSCheckForRP`（启用 Root Port 检查）和 `enableACSDTP2P`（控制 ACS Direct
+Translated P2P）。最后一项是独立的 P2P 策略开关，本轮没有把它冒充 ACS 检查绕过。
+未显式传入 ACS boot option 的 baseline 在本 build 上记录为
+`disableACSCheck=FALSE`、`enableACSCheckForRP=FALSE`；这是本环境观察值，不是跨版本
+默认值承诺。
+
+扩展后的累计 23 项 `passthruCapable` 单变量/对照矩阵进一步把资格判断收敛为外部可观察模型：
 
 - 没有 IOMMU 时，即使 ESXi 能报告 `Bridge reset`，`passthruCapable=false`。
 - Root Complex 直挂 endpoint 只有公开 FLR 时通过；PM-only、D3hot 状态位或 PME/D3
@@ -311,7 +324,7 @@ Bypassing non-ACS capable device in hierarchy
 - Endpoint 自身没有 FLR/PM 时，只要位于可整体复位的 PCIe Root Port 或 legacy bridge
   后，仍可得到 `Bridge reset` 和 `passthruCapable=true`。
 - Root Port 无 ACS 且当前 bypass policy 打开时仍 capable；开启严格 ACS 检查后，同一
-  设备变为 incapable。
+  设备变为 incapable；再开启公开全局 `disableACSCheck` 后恢复 capable。
 - 同一个 `1af4:1041` Type-0 FLR endpoint 只切换 class code 为 `0200/0500/0b02/0b40/
   0600/0604` 时，六轮均为 `Function reset`、`passthruCapable=true`；不存在这些 base
   class 的 blanket blacklist。
@@ -320,7 +333,7 @@ Bypassing non-ACS capable device in hierarchy
 - `passthruCapable` 只回答静态资格，不保证运行时可分配。共享 dependency 的大 BAR
   设备即使 `Capable/Enabled/Active=true`，仍可能被 AH 拒绝；独占 Root Port 后通过。
 
-完整 22/22 矩阵、白名单/quirk 边界、推理限制和 QEMU 核对表见
+累计 23 项证据、白名单/quirk 边界、推理限制和 QEMU 核对表见
 [`vmware-esxi8-passthru-capable-observed-model.md`](vmware-esxi8-passthru-capable-observed-model.md)。
 
 ## 6. DMA、中断与 reset
@@ -564,6 +577,7 @@ NVM/firmware/driver contract 的设备模型。
 | QEMU i440fx 低/高档与 q35 负例 | `_artifacts/mmio-tests/qemu-vmware-default-profile-20260711/` |
 | SeaBIOS i440fx/q35 | `_artifacts/mmio-tests/seabios-i440fx-1g-core/`、`seabios-q35-1g-core/` |
 | `passthruCapable` 15 项矩阵 | `_artifacts/vmware-directpath-runs/20260714-esxi8-passthru-capability-matrix-v4/` |
+| ESXi ACS 全局 bypass 增量项 | `_artifacts/vmware-directpath-runs/20260714-esxi8-no-acs-global-bypass-v1/` |
 | 虚拟 FLR callback | `_artifacts/vmware-directpath-runs/20260713-esxi8-flr-vm-power-v1/` |
 | PME `_OSC`/status 注入 | `_artifacts/vmware-directpath-runs/20260714-esxi8-pme-v3/` |
 | P2P ACS/no-ACS policy | `_artifacts/vmware-directpath-runs/20260714-esxi8-p2p-*/` |

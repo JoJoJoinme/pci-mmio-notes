@@ -111,7 +111,7 @@ D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server �
 | I01 | INTx 与 QEMU direct control | `test_esxi_intx_mode.py`、`qemu-intx-direct-validate.sh` | IRQ 计数、流量 |
 | I02/D00/R00 | EDU MSI-only、DMA、reset sentinel | `test_esxi_edu.py`、`qemu-edu-direct-validate.sh` | Guest IRQ/DMA、VT-d/IR trace、VMware reset log |
 | L02/L04 | vMotion 与 host crash | `test_esxi_vmotion_matrix.py`、`test_esxi_host_crash_recovery.py` | task fault、恢复状态 |
-| CAP00-CAP21 | `passthruCapable` 资格判定 | `test_esxi_passthru_capability_matrix.py` | IOMMU、FLR/bridge reset、ACS、class code、真实 Type-1 bridge、dependency、restore |
+| CAP00-CAP22 | `passthruCapable` 资格判定 | `test_esxi_passthru_capability_matrix.py` | IOMMU、FLR/bridge reset、ACS policy、class code、真实 Type-1 bridge、dependency、restore |
 | S01-S05 | Option ROM、PME、AER、P2P、RMRR | `test_esxi_optionrom.py`、`test_esxi_pme.py`、AER runner、`test_esxi_p2p_matrix.py`、`test_esxi_rmrr_matrix.py` | guest/config/log/QEMU trace 三方结果 |
 | SRIOV | PF/VF 公开 surface | `test_esxi_sriov.py`、`collect_esxi_sriov_driver_surface.py` | raw capability、driver state、VF inventory |
 
@@ -255,7 +255,11 @@ wsl -d Ubuntu-22.04 -- env QEMU_ESXI_IVSHMEM_SIZE=1G QEMU_ESXI_DISABLE_ACS=1 bas
 .\vmware-esxi8-lab\Enable-EsxiTestPassthru.ps1
 ```
 
-收集 `vmkernel.log` 中 ACS 检查、claim 和 owner 记录。当前环境出现 `enableACSCheckForRP=FALSE`，因此只能证明此嵌套环境绕过了检查，不能推出生产 ESXi 的隔离安全性。
+收集 `vmkernel.log` 中 ACS 检查、claim 和 owner 记录。当前环境出现
+`enableACSCheckForRP=FALSE`，因此只能证明此嵌套环境绕过了检查，不能推出生产 ESXi 的
+隔离安全性。runner 另含 `pcie-virtio-no-acs-strict` 和
+`pcie-virtio-no-acs-global-bypass`，分别验证严格 Root Port 检查与 Broadcom KB 391460
+公开 `disableACSCheck=TRUE` workaround 的优先关系。
 
 ### A04：根端点
 
@@ -354,7 +358,7 @@ wsl -d Ubuntu-22.04 -- python3 /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/te
 SID/IOVA 不再解析到旧 backing，并被分类为 fault、context absent 或 host-domain
 rebound。当前 v5 实测是 domain 2 切到 domain 1 的 host identity rebound。
 
-`passthruCapable` 22 项矩阵：
+`passthruCapable` 累计 23 项矩阵：
 
 ```powershell
 wsl -d Ubuntu-22.04 -- python3 `
@@ -378,6 +382,16 @@ wsl -d Ubuntu-22.04 -- python3 `
     root-virtio-class-pentium root-virtio-class-coprocessor `
     root-virtio-class-host-bridge root-virtio-class-pci-bridge `
     pcie-x3130-upstream-flr
+```
+
+只复现 ACS policy 三段式 A/B/C：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID `
+  --cases pcie-virtio-no-acs pcie-virtio-no-acs-strict `
+    pcie-virtio-no-acs-global-bypass
 ```
 
 PME/P2P/RMRR/Option ROM 当前入口：

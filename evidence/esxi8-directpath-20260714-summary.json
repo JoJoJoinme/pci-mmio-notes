@@ -23,13 +23,15 @@
   "passthruCapability": {
     "run": "20260714-esxi8-passthru-capability-matrix-v4",
     "cases": 15,
+    "aggregateCasesWithIncrementalEvidence": 23,
+    "qemuVersion": "All 23 capability cases recorded QEMU 6.2.0; system and instrumented 6.2.0 builds were used across submatrices",
     "verdict": "pass",
     "restoreVerdict": "pass",
     "observedModel": {
       "hostIommuRequired": true,
       "rootComplexEndpoint": "FLR produced Function reset and capable=true; PM-only and tested D3hot advertisements remained Reset=None/capable=false",
       "bridgeEndpoint": "An upstream reset boundary produced Bridge reset/capable=true even when the endpoint lacked FLR and PM",
-      "acs": "No-ACS was capable only under the observed bypass policy; strict ACS checking made the same endpoint incapable",
+      "acs": "No-ACS was capable under the observed bypass policy; strict root-port ACS checking made the same endpoint incapable; the documented global disableACSCheck workaround restored capability even while the strict root-port option remained enabled",
       "identity": "Capability flipped while VID:DID stayed fixed, so a VID:DID-only model is disproven for these cases"
     },
     "classAndBridgeRole": {
@@ -39,6 +41,13 @@
       "type1BridgeRun": "20260714-esxi8-real-bridge-flr-v2",
       "type1BridgeVerdict": "pass: a native-FLR X3130 Type-1 bridge reported Function reset but remained incapable",
       "conclusion": "Class code is not a blanket gate; an assignable-payload or structural-fabric-role gate is independent of accepted reset capability"
+    },
+    "acsCheckBypass": {
+      "evidence": "esxi8-acs-check-bypass-20260714-summary.json",
+      "incrementalRun": "20260714-esxi8-no-acs-global-bypass-v1",
+      "verdict": "pass",
+      "restoreVerdict": "pass",
+      "conclusion": "disableACSCheck=TRUE bypassed ACS admission with enableACSCheckForRP=TRUE; this changed capability policy, not the emulated hardware ACS surface"
     }
   },
   "dependencyAndAssignableHardware": {

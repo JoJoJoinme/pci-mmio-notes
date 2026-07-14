@@ -78,8 +78,9 @@
     "virtualFlr": "pass: Function reset selected for a root-complex virtio endpoint and outer qdev reset callbacks observed on VM power-on/off"
   },
   "passthruCapability": {
-    "matrix": "15/15 pass with restore pass",
-    "model": "IOMMU plus an accepted endpoint/upstream reset boundary plus ACS policy; runtime AH also requires exclusive dependency leasing",
+    "matrix": "15/15 base matrix plus 8/8 class, bridge-role, and ACS-bypass incremental controls; every run restored successfully",
+    "model": "IOMMU plus an accepted endpoint/upstream reset boundary plus ACS policy; disableACSCheck can bypass admission but does not prove physical isolation; runtime AH also requires exclusive dependency leasing",
+    "acsBypassEvidence": "esxi8-acs-check-bypass-20260714-summary.json",
     "report": "vmware-esxi8-passthru-capable-observed-model.md"
   },
   "nonBar20260714": {

@@ -6,8 +6,9 @@
 
 ## 1. 结论
 
-本地原 15 项 IOMMU/reset/ACS/topology 矩阵，加上 6 项 class-code A/B 和 1 项真实
-Type-1 bridge FLR 对照表明，`HostPciPassthruInfo.passthruCapable` 不是“设备 ID 或 class
+本地原 15 项 IOMMU/reset/ACS/topology 矩阵，加上 1 项公开 ACS bypass 组合、6 项
+class-code A/B 和 1 项真实 Type-1 bridge FLR 对照表明，
+`HostPciPassthruInfo.passthruCapable` 不是“设备 ID 或 class
 在白名单”的同义词，也不是“当前 VM 一定能分配该设备”。对本轮受控设备，最小外部
 模型是：
 
@@ -28,10 +29,10 @@ assignableNow = staticCapable
 
 `functionIsAssignablePayload` 表示该 function 不是维持宿主 PCI fabric 的 Type-1 bridge
 等结构节点；它描述外部现象，不声称 VMware 内部字段或检查顺序。以上判别式由实验
-归纳，不是 VMware 内部实现声明。22 个资格样本全部符合；
+归纳，不是 VMware 内部实现声明。累计 23 个资格样本全部符合；
 共享 dependency 的大 BAR 负例又证明第二个判别式不能省略。
 
-## 2. 15 项资格矩阵
+## 2. 16 项基础资格/ACS 矩阵
 
 | Case | 唯一变量 | ESXi 观察 | 结果 |
 | --- | --- | --- | --- |
@@ -49,6 +50,7 @@ assignableNow = staticCapable
 | `pcie-virtio-no-flr-no-pm` | 同设备移到 Root Port 后 | `Bridge reset`、`Capable=true` | pass |
 | `pcie-virtio-no-acs` | Root Port 隐藏 ACS，ESXi bypass policy | `Bridge reset`、`Capable=true` | pass |
 | `pcie-virtio-no-acs-strict` | 同拓扑，只开启严格 ACS 检查 | `Bridge reset` 仍可见，但 `Capable=false` | pass |
+| `pcie-virtio-no-acs-global-bypass` | 严格 Root Port 检查保持开启，同时设置公开 `disableACSCheck=TRUE` | `Bridge reset`、`Capable=true` | pass |
 | `legacy-virtio-no-flr-no-pm` | 同设备移到 conventional bridge 后 | `Bridge reset`、`Capable=true` | pass |
 
 原始结果：
@@ -56,10 +58,14 @@ assignableNow = staticCapable
 ```text
 _artifacts/vmware-directpath-runs/
   20260714-esxi8-passthru-capability-matrix-v4/matrix-result.json
+  20260714-esxi8-no-acs-global-bypass-v1/matrix-result.json
 ```
 
-矩阵 verdict 为 `pass`，restore verdict 为 `pass`。QEMU 11.0.2 lab binary SHA256：
-`021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393`。
+原 15 项矩阵和新增 ACS bypass 单项的 verdict/restore verdict 均为 `pass`。累计 23 个
+capability 案例的 `result.json` 均记录 QEMU 6.2.0；各子矩阵使用 system build 或带实验
+扩展的 6.2.0 build。新增 bypass 单项的 system binary SHA256 为
+`7d1e85a29e09c49f6a1c60a18713d80a72ef3b8932c4183cc100bce3a01fa64e`。聚合报告中的
+QEMU 11.0.2 用于大 BAR 等其他运行，不代表本资格矩阵。
 
 ### 2.1 六项 class-code 单变量矩阵
 
@@ -126,6 +132,33 @@ verdict 均为 `pass`。X3130 负例最关键：ESXi 已接受其 FLR 并报告 
 后，同一设备仍能报告 `Bridge reset`，但 capability 变为 false。由此可见 reset path
 成立并不足以绕过 ACS policy。生产实现应默认要求真实 ACS/干净 IOMMU group，不应把
 实验 bypass 或 Linux `pcie_acs_override` 当成隔离证明。
+
+VMware 也有公开的检查绕过选项。[Broadcom KB 391460](https://knowledge.broadcom.com/external/article?articleNumber=391460)
+针对 ESXi 8.0.3 ACS hardware configuration sanity check 过严的问题，给出的 workaround 是
+`VMkernel.Boot.disableACSCheck=TRUE`，并明确说明 ACS 本身仍保持启用，只跳过过严检查。
+[Broadcom 高级设置目录 KB 424082](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)
+又公开区分了三个选项：`disableACSCheck` 是绕过所有 PCIe 设备的 ACS capability check，
+`enableACSCheckForRP` 是启用 Root Port 的 ACS capability check，`enableACSDTP2P` 则是控制
+ACS Direct Translated P2P。第三项属于 P2P 路由策略，不是 capable 检查绕过，也不是给硬件
+伪造 ACS capability。
+第一项没有显式传入 ACS boot option；测试 build 的启动日志观察到
+`disableACSCheck=FALSE`、`enableACSCheckForRP=FALSE`。这只是 ESXi 8.0.3 build-24280767
+和本 Root Port 路径的 baseline，不外推为所有 ESXi 版本、平台或升级后的固定默认值。
+本地同拓扑三项 A/B/C 为：
+
+| `disableACSCheck` | `enableACSCheckForRP` | 无 ACS endpoint |
+| --- | --- | --- |
+| `FALSE` | `FALSE` | bypass，`Capable=true` |
+| `FALSE` | `TRUE` | `Capable=false` |
+| `TRUE` | `TRUE` | bypass，`Capable=true` |
+
+第三项日志同时确认两个 boot option 均为 `TRUE`，并打印
+`Bypassing non-ACS capable device in hierarchy`；结果为 `Bridge reset`、
+`Capable=true`，restore pass。证据索引为
+[`evidence/esxi8-acs-check-bypass-20260714-summary.json`](evidence/esxi8-acs-check-bypass-20260714-summary.json)。
+因此在本 build/路径上，全局 `disableACSCheck` 的 bypass 优先于 Root Port 严格检查。
+这证明的是 admission policy，不证明 ESXi 伪造 ACS capability、改变硬件 P2P 路由或创建
+了新的物理隔离边界。
 
 ### 3.4 `Capable/Enabled/Active` 仍不等于 AH 可分配
 
@@ -285,6 +318,12 @@ P2P、绕过 root-port/IOMMU。[Linux VFIO 文档](https://docs.kernel.org/drive
 进一步说明 switch 内路由能否绕过 root port 取决于 ACS 设置。因此启用补丁后，
 `/sys/.../iommu_group` 只能作为 VFIO 的操作分组，不能单独作为安全边界。
 
+VMware 的 `disableACSCheck=TRUE` 与 Linux override 不是完全相同的机制：公开 KB 将前者
+定义为跳过 ESXi admission sanity check，Linux 补丁则会影响内核 ACS 判定和 IOMMU group
+构造。VMware 的 `enableACSDTP2P` 又是单独的 Direct Translated P2P 开关，不能当作两者中
+任何一个的同义词。但对平台 capable 模型，所有依赖软件绕过的路径都只能提供 `bypass`
+provenance，不能替代真实 ACS 证据；调度器都必须按独立重建的物理隔离域租用设备。
+
 平台 inventory 必须同时保留：
 
 ```text
@@ -379,6 +418,16 @@ wsl -d Ubuntu-22.04 -- python3 `
     root-virtio-class-pentium root-virtio-class-coprocessor `
     root-virtio-class-host-bridge root-virtio-class-pci-bridge `
     pcie-x3130-upstream-flr
+```
+
+只复现 ACS policy 与公开 global bypass：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID `
+  --cases pcie-virtio-no-acs pcie-virtio-no-acs-strict `
+    pcie-virtio-no-acs-global-bypass
 ```
 
 大 BAR dependency A/B 复现见

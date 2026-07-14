@@ -344,6 +344,22 @@ CASES: dict[str, dict[str, Any]] = {
             "root-port ACS admission check"
         ),
     },
+    "pcie-virtio-no-acs-global-bypass": {
+        "env": {
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_FLR": "off",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_DISABLE_ACS": "1",
+        },
+        "bootOptions": " enableACSCheckForRP=TRUE disableACSCheck=TRUE",
+        "targets": ["0000:01:01.0", "0000:00:08.0"],
+        "subject": "0000:01:01.0",
+        "expected": {"capable": True, "reset": "Bridge reset"},
+        "variable": (
+            "Keep the root-port ACS admission check enabled while applying "
+            "Broadcom KB 391460's global disableACSCheck workaround"
+        ),
+    },
     "legacy-virtio-no-flr-no-pm": {
         "env": {
             "QEMU_ESXI_TOPOLOGY": "legacy",
