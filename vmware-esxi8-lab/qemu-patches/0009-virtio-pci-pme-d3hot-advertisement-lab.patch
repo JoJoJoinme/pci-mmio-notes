@@ -1,0 +1,78 @@
+From: PCI compatibility lab <lab@example.invalid>
+Subject: [PATCH] virtio-pci: add opt-in D3hot PME advertisement
+
+Keep the existing virtio-pci defaults unchanged, but allow the lab to
+advertise PME support from D3hot independently from the implementation of a
+D3hot-to-D0 soft reset.  This separates the guest-visible PCI PM contract from
+the device-model behavior for passthrough capability experiments.
+
+The PMCSR masks match QEMU's e1000e PM capability implementation.  The new
+property is disabled by default.
+---
+ hw/virtio/virtio-pci.c | 18 ++++++++++++++++--
+ hw/virtio/virtio-pci.h |  1 +
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/hw/virtio/virtio-pci.h b/hw/virtio/virtio-pci.h
+--- a/hw/virtio/virtio-pci.h
++++ b/hw/virtio/virtio-pci.h
+@@ -147,6 +147,7 @@ struct VirtIOPCIProxy {
+     bool ignore_backend_features;
+     bool pcie_root_cap_init;
+     bool pcie_d3hot_reset;
++    bool pcie_pme_d3hot;
+     OnOffAuto disable_legacy;
+     uint32_t class_code;
+     uint32_t nvectors;
+diff --git a/hw/virtio/virtio-pci.c b/hw/virtio/virtio-pci.c
+--- a/hw/virtio/virtio-pci.c
++++ b/hw/virtio/virtio-pci.c
+@@ -615,7 +615,8 @@ static void virtio_write_config(PCIDevice *pci_dev, uint32_t address,
+     struct virtio_pci_cfg_cap *cfg;
+     uint16_t old_pmcsr = 0;
+     bool pmcsr_write =
+-        proxy->pcie_d3hot_reset && pci_dev->exp.pm_cap &&
++        (proxy->pcie_d3hot_reset || proxy->pcie_pme_d3hot) &&
++        pci_dev->exp.pm_cap &&
+         ranges_overlap(address, len,
+                        pci_dev->exp.pm_cap + PCI_PM_CTRL, 2);
+ 
+@@ -632,7 +633,8 @@ static void virtio_write_config(PCIDevice *pci_dev, uint32_t address,
+             pci_dev->config + pci_dev->exp.pm_cap + PCI_PM_CTRL);
+ 
+         trace_virtio_pci_pmcsr_write(pci_dev, old_pmcsr, new_pmcsr);
+-        if ((old_pmcsr & PCI_PM_CTRL_STATE_MASK) == 3 &&
++        if (proxy->pcie_d3hot_reset &&
++            (old_pmcsr & PCI_PM_CTRL_STATE_MASK) == 3 &&
+             (new_pmcsr & PCI_PM_CTRL_STATE_MASK) == 0 &&
+             !(new_pmcsr & PCI_PM_CTRL_NO_SOFT_RESET)) {
+             trace_virtio_pci_d3hot_reset(pci_dev);
+@@ -1898,6 +1898,17 @@ static void virtio_pci_realize(PCIDevice *pci_dev, Error **errp)
+          */
+         pci_set_word(pci_dev->config + pos + PCI_PM_PMC, 0x3);
+ 
++        if (proxy->pcie_pme_d3hot) {
++            pci_set_word(pci_dev->config + pos + PCI_PM_PMC,
++                         pci_get_word(pci_dev->config + pos + PCI_PM_PMC) |
++                         PCI_PM_CAP_PME_D3hot);
++            pci_set_word(pci_dev->wmask + pos + PCI_PM_CTRL,
++                         pci_get_word(pci_dev->wmask + pos + PCI_PM_CTRL) |
++                         PCI_PM_CTRL_PME_ENABLE);
++            pci_set_word(pci_dev->w1cmask + pos + PCI_PM_CTRL,
++                         PCI_PM_CTRL_PME_STATUS);
++        }
++
+         if (proxy->flags & VIRTIO_PCI_FLAG_AER) {
+             pcie_aer_init(pci_dev, PCI_ERR_VER, last_pcie_cap_offset,
+                           PCI_ERR_SIZEOF, NULL);
+@@ -2003,6 +2014,8 @@ static Property virtio_pci_properties[] = {
+                      pcie_root_cap_init, false),
+     DEFINE_PROP_BOOL("x-pcie-d3hot-reset", VirtIOPCIProxy,
+                      pcie_d3hot_reset, false),
++    DEFINE_PROP_BOOL("x-pcie-pme-d3hot", VirtIOPCIProxy,
++                     pcie_pme_d3hot, false),
+     DEFINE_PROP_BIT("ats", VirtIOPCIProxy, flags,
+                     VIRTIO_PCI_FLAG_ATS_BIT, false),
+     DEFINE_PROP_BIT("x-ats-page-aligned", VirtIOPCIProxy, flags,
+-- 
+2.34.1

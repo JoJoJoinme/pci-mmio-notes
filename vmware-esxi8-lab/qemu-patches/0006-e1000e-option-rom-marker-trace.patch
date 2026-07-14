@@ -1,0 +1,48 @@
+From: PCI compatibility lab <lab@example.invalid>
+Subject: [PATCH] e1000e: trace a lab-only option ROM marker write
+
+Consume a fixed magic write to a reserved BAR0 offset and emit a trace event.
+No ordinary register access is changed; the synthetic marker itself has no
+device side effect.  This gives the black-box lab an unambiguous host
+observation when the EFI option ROM is dispatched through DirectPath.
+---
+ hw/net/e1000e.c    | 8 ++++++++
+ hw/net/trace-events | 1 +
+ 2 files changed, 9 insertions(+)
+
+diff --git a/hw/net/e1000e.c b/hw/net/e1000e.c
+--- a/hw/net/e1000e.c
++++ b/hw/net/e1000e.c
+@@ -93,6 +93,8 @@ struct E1000EState {
+ #define E1000E_MSIX_IDX     3
+ 
+ #define E1000E_MMIO_SIZE    (128 * KiB)
++#define E1000E_OPROM_MARKER_OFFSET 0x1fff0
++#define E1000E_OPROM_MARKER_VALUE  0x4f50524d
+ #define E1000E_FLASH_SIZE   (128 * KiB)
+ #define E1000E_IO_SIZE      (32)
+ #define E1000E_MSIX_SIZE    (16 * KiB)
+@@ -112,5 +114,11 @@ e1000e_mmio_write(void *opaque, hwaddr addr,
+                    uint64_t val, unsigned size)
+ {
+     E1000EState *s = opaque;
++
++    if (addr == E1000E_OPROM_MARKER_OFFSET && size == sizeof(uint32_t) &&
++        val == E1000E_OPROM_MARKER_VALUE) {
++        trace_e1000e_option_rom_marker(addr, val, size);
++        return;
++    }
+     e1000e_core_write(&s->core, addr, val, size);
+ }
+diff --git a/hw/net/trace-events b/hw/net/trace-events
+--- a/hw/net/trace-events
++++ b/hw/net/trace-events
+@@ -254,5 +254,6 @@ e1000e_cb_pci_realize(void) "E1000E PCI realize entry"
+ e1000e_cb_pci_uninit(void) "E1000E PCI unit entry"
+ e1000e_cb_qdev_reset(void) "E1000E qdev reset entry"
+ e1000e_pme_inject(uint16_t requester, bool function_enabled, bool root_enabled, uint32_t root_status) "requester 0x%04x function_enabled %d root_enabled %d root_status 0x%08x"
++e1000e_option_rom_marker(uint64_t addr, uint64_t value, unsigned size) "BAR0 marker addr 0x%"PRIx64" value 0x%"PRIx64" size %u"
+ e1000e_cb_pre_save(void) "E1000E pre save entry"
+ e1000e_cb_post_load(void) "E1000E post load entry"
+-- 
+2.34.1

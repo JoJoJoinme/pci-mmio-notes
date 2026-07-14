@@ -1,0 +1,34 @@
+From: PCI compatibility lab <lab@example.invalid>
+Subject: [PATCH] ivshmem: optionally expand BAR0 to one page
+
+ESXi requires sub-page passthrough BARs to occupy an otherwise empty aligned
+page.  Add a default-off laboratory property that expands the ivshmem register
+BAR from 256 bytes to 4KB without changing the implemented register range.
+---
+ hw/misc/ivshmem.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/hw/misc/ivshmem.c b/hw/misc/ivshmem.c
+--- a/hw/misc/ivshmem.c
++++ b/hw/misc/ivshmem.c
+@@ -78,3 +78,4 @@ struct IVShmemState {
+ 
+     uint32_t features;
++    bool page_aligned_bar0;
+ 
+@@ -847,4 +848,5 @@ static void ivshmem_common_realize(PCIDevice *dev, Error **errp)
+ 
+     memory_region_init_io(&s->ivshmem_mmio, OBJECT(s), &ivshmem_mmio_ops, s,
+-                          "ivshmem-mmio", IVSHMEM_REG_BAR_SIZE);
++                          "ivshmem-mmio", s->page_aligned_bar0 ?
++                          4096 : IVSHMEM_REG_BAR_SIZE);
+ 
+@@ -1027,5 +1029,6 @@ static Property ivshmem_plain_properties[] = {
+     DEFINE_PROP_ON_OFF_AUTO("master", IVShmemState, master, ON_OFF_AUTO_OFF),
+     DEFINE_PROP_LINK("memdev", IVShmemState, hostmem, TYPE_MEMORY_BACKEND,
+                      HostMemoryBackend *),
++    DEFINE_PROP_BOOL("x-page-aligned-bar0", IVShmemState, page_aligned_bar0, false),
+     DEFINE_PROP_END_OF_LIST(),
+ };
+-- 
+2.34.1

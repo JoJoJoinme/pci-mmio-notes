@@ -1,0 +1,38 @@
+From: PCI compatibility lab <lab@example.invalid>
+Subject: [PATCH] e1000e: expose the option ROM marker count through QOM
+
+Keep a live counter for the lab-only marker.  The simple trace backend may
+buffer a single record until QEMU exits, while QOM can be queried without
+stopping the outer ESXi VM.
+---
+ hw/net/e1000e.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/hw/net/e1000e.c b/hw/net/e1000e.c
+--- a/hw/net/e1000e.c
++++ b/hw/net/e1000e.c
+@@ -84,6 +84,7 @@ struct E1000EState {
+     E1000ECore core;
+     bool init_vet;
+     bool hide_aer;
++    uint64_t oprom_marker_count;
+ };
+ 
+ #define E1000E_PM_CAP_OFFSET 0x0c8
+@@ -117,6 +118,7 @@ e1000e_mmio_write(void *opaque, hwaddr addr,
+ 
+     if (addr == E1000E_OPROM_MARKER_OFFSET && size == sizeof(uint32_t) &&
+         val == E1000E_OPROM_MARKER_VALUE) {
++        s->oprom_marker_count++;
+         trace_e1000e_option_rom_marker(addr, val, size);
+         return;
+     }
+@@ -689,5 +691,6 @@ static Property e1000e_properties[] = {
+                         e1000e_prop_subsys, uint16_t),
+     DEFINE_PROP_BOOL("init-vet", E1000EState, init_vet, true),
+     DEFINE_PROP_BOOL("x-hide-aer", E1000EState, hide_aer, false),
++    DEFINE_PROP_UINT64("option-rom-marker-count", E1000EState, oprom_marker_count, 0),
+     DEFINE_PROP_END_OF_LIST(),
+ };
+-- 
+2.34.1

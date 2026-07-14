@@ -1,0 +1,67 @@
+From: PCI DirectPath Lab <lab@example.invalid>
+Subject: [PATCH] igb: keep experimental PCI IDs consistent with EEPROM
+
+Pass the default-off experimental PF device ID into EEPROM preparation and
+put the matching VF device ID in the template before the standard 0xBABA
+checksum is calculated.  Stock IDs and behavior remain unchanged.
+---
+ hw/net/igb.c      | 8 +++++++-
+ hw/net/igb_core.c | 3 ++-
+ hw/net/igb_core.h | 1 +
+ 3 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/hw/net/igb.c b/hw/net/igb.c
+--- a/hw/net/igb.c
++++ b/hw/net/igb.c
+@@ -263,4 +263,6 @@ static NetClientInfo net_igb_info = {
+  * EEPROM (NVM) contents documented in section 6.1, table 6-1:
+  * and in 6.10 Software accessed words.
+  */
++#define IGB_EEPROM_VF_DEVICE_ID_WORD 0x26
++
+ static const uint16_t igb_eeprom_template[] = {
+@@ -389,4 +391,5 @@ static void igb_pci_realize(PCIDevice *pci_dev, Error **errp)
+ {
+     IGBState *s = IGB(pci_dev);
+     uint8_t *macaddr;
++    uint16_t eeprom_template[ARRAY_SIZE(igb_eeprom_template)];
+     int ret;
+@@ -479,8 +482,11 @@ static void igb_pci_realize(PCIDevice *pci_dev, Error **errp)
+     /* Initialize core */
+     igb_core_realize(s);
+ 
++    memcpy(eeprom_template, igb_eeprom_template, sizeof(eeprom_template));
++    eeprom_template[IGB_EEPROM_VF_DEVICE_ID_WORD] = s->vf_device_id;
+     igb_core_pci_realize(&s->core,
+-                         igb_eeprom_template,
+-                         sizeof(igb_eeprom_template),
++                         eeprom_template,
++                         sizeof(eeprom_template),
++                         s->device_id,
+                          macaddr);
+ }
+diff --git a/hw/net/igb_core.c b/hw/net/igb_core.c
+--- a/hw/net/igb_core.c
++++ b/hw/net/igb_core.c
+@@ -4287,3 +4287,4 @@ igb_core_pci_realize(IGBCore        *core,
+                      const uint16_t *eeprom_templ,
+                      uint32_t        eeprom_size,
++                     uint16_t        device_id,
+                      const uint8_t  *macaddr)
+@@ -4303,5 +4304,5 @@ igb_core_pci_realize(IGBCore        *core,
+     e1000x_core_prepare_eeprom(core->eeprom,
+                                eeprom_templ,
+                                eeprom_size,
+-                               PCI_DEVICE_GET_CLASS(core->owner)->device_id,
++                               device_id,
+                                macaddr);
+diff --git a/hw/net/igb_core.h b/hw/net/igb_core.h
+--- a/hw/net/igb_core.h
++++ b/hw/net/igb_core.h
+@@ -112,3 +112,4 @@ igb_core_pci_realize(IGBCore        *regs,
+                      const uint16_t *eeprom_templ,
+                      uint32_t        eeprom_size,
++                     uint16_t        device_id,
+                      const uint8_t  *macaddr);
+-- 
+2.43.0

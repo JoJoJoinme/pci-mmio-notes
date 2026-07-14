@@ -1,0 +1,112 @@
+{
+  "date": "2026-07-14",
+  "scope": "Publicly observable ESXi DirectPath DMA lifecycle in an authorized nested QEMU lab",
+  "run": "20260714-esxi8-edu-dma-teardown-v5",
+  "verdict": "pass",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "qemu": "11.0.2 capability-lab build",
+    "qemuBinarySha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393",
+    "outerMachine": "q35,accel=kvm,kernel-irqchip=split",
+    "iommu": "intel-iommu,intremap=on,caching-mode=on,device-iotlb=on",
+    "storage": "ESXi local VMFS pci-mmio-local",
+    "endpoint": "QEMU EDU 1234:11e8 behind a dedicated PCIe Root Port",
+    "outerBdf": "0000:02:00.0",
+    "requesterSid": "0x200"
+  },
+  "guest": {
+    "firmware": "EFI",
+    "phases": [
+      "first",
+      "second"
+    ],
+    "probePassCount": 2,
+    "msiPassCount": 2,
+    "dmaPassCount": 2,
+    "dmaIovas": [
+      "0x2aff000",
+      "0x2b00000"
+    ],
+    "complete": true,
+    "failureMarker": false
+  },
+  "probe": {
+    "method": "After the guest reported its second DMA IOVA, L0 QTest programmed only the public EDU DMA registers before and after VM power-off",
+    "iova": "0x2b00000",
+    "bar0": "0xc1000000",
+    "postPowerOffPciCommandBefore": "0x0406",
+    "postPowerOffPciCommandAfter": "0x0406",
+    "externalRearmWriteNeeded": false
+  },
+  "live": {
+    "domain": "0x2",
+    "iovaBase": "0x2a00000",
+    "gpaBase": "0x1c9000000",
+    "mask": "0x1fffff",
+    "resolvedGpa": "0x1c9100000",
+    "fault": false
+  },
+  "powerOffTransition": {
+    "trace": [
+      "vtd_inv_desc_cc_global context invalidate globally",
+      "vtd_inv_desc_iotlb_global iotlb invalidate global"
+    ]
+  },
+  "postPowerOff": {
+    "domain": "0x1",
+    "iovaBase": "0x2b00000",
+    "gpaBase": "0x2b00000",
+    "mask": "0xfff",
+    "resolvedGpa": "0x2b00000",
+    "identityMapping": true,
+    "fault": false
+  },
+  "conclusion": {
+    "guestTranslationRemoved": true,
+    "contextDisposition": "guest-domain-to-host-identity-domain",
+    "statement": "The same requester and IOVA no longer reached the guest backing after power-off. ESXi globally invalidated context/IOTLB state and rebound the requester to its host identity domain rather than leaving the requester without a context.",
+    "boundary": "This is an external QEMU VT-d/PCI/EDU observation. It does not infer VMware private code or replace physical-device electrical and stale-DMA testing."
+  },
+  "checks": {
+    "mappingCreated": true,
+    "twoBootPhases": true,
+    "guestDmaIovaCorrelated": true,
+    "liveExternalDmaTranslated": true,
+    "powerOffTransitionInvalidatedIommu": true,
+    "dmaContextChangedAcrossPowerOff": true,
+    "postPowerOffIdentityMappingObserved": true,
+    "postPowerOffProbeReady": true
+  },
+  "localArtifacts": [
+    {
+      "path": "_artifacts/vmware-directpath-runs/20260714-esxi8-edu-dma-teardown-v5/result.json",
+      "bytes": 29628,
+      "sha256": "ede717dd9ff669fa6e8143aaf7aea04acb176e7b0daa879fb4fb8c9f52c1cf29"
+    },
+    {
+      "path": "_artifacts/vmware-directpath-runs/20260714-esxi8-edu-dma-teardown-v5/dma-live-trace.log",
+      "bytes": 174,
+      "sha256": "7329b7d5dda96986c663d701318afd095bfbbc97ea754bf6196cfea315504a4b"
+    },
+    {
+      "path": "_artifacts/vmware-directpath-runs/20260714-esxi8-edu-dma-teardown-v5/dma-poweroff-transition-trace.log",
+      "bytes": 101,
+      "sha256": "161d9fd0c35f4f76f4f1dc2f12b3afe5eee72ebfe097575218dc045de1340219"
+    },
+    {
+      "path": "_artifacts/vmware-directpath-runs/20260714-esxi8-edu-dma-teardown-v5/dma-post-poweroff-trace.log",
+      "bytes": 167,
+      "sha256": "dfce991be1f6628b68e3a90e2050465c28aa528d0ec82ec19007b391debaba47"
+    },
+    {
+      "path": "_artifacts/vmware-directpath-runs/20260714-esxi8-edu-dma-teardown-v5/guest-serial.log",
+      "bytes": 7226,
+      "sha256": "40bda0190ddd1437cc088feb4d0d25055db65fbac327737d3db0451eff156524"
+    },
+    {
+      "path": "_artifacts/vmware-directpath-runs/20260714-esxi8-edu-dma-teardown-v5/vmware.log",
+      "bytes": 113924,
+      "sha256": "82427ca6af19b563e6944f3b59b54bfe705ecb5145cb105720170636d8fc88fa"
+    }
+  ]
+}

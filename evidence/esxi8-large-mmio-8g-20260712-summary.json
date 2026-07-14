@@ -1,6 +1,9 @@
 {
   "schemaVersion": 1,
   "date": "2026-07-12",
+  "historical": true,
+  "supersededBy": "evidence/esxi8-directpath-20260714-summary.json",
+  "supersessionNote": "The old shared/sparse endpoint timed out after mapping. A no-backing endpoint on a dedicated Root Port later completed the full 8G EFI guest-runtime matrix.",
   "environment": {
     "esxi": "VMware ESXi 8.0.3 build-24280767",
     "virtualHardware": 20,

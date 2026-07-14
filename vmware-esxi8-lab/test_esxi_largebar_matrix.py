@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import atexit
+import hashlib
 import json
 import os
 import re
@@ -27,6 +28,14 @@ DEFAULT_CASES = (
     "true-size",
     "true-undersized",
 )
+
+
+def bounded_vm_name(name, limit=64):
+    """Keep vCenter's display name below its database field limit."""
+    if len(name) <= limit:
+        return name
+    digest = hashlib.sha256(name.encode("utf-8")).hexdigest()[:12]
+    return f"{name[: limit - len(digest) - 1]}-{digest}"
 
 
 def utc_now():
@@ -105,7 +114,7 @@ def main():
     parser.add_argument("--qemu-name", default="esxi8-a")
     parser.add_argument("--qemu-monitor", default="/root/vm/esxi8-mf/monitor.sock")
     parser.add_argument("--bdf", default="0000:01:01.0")
-    parser.add_argument("--bar-size-gb", type=int, required=True, choices=(32, 64))
+    parser.add_argument("--bar-size-gb", type=int, required=True, choices=(8, 32, 64))
     parser.add_argument("--cases", nargs="+", default=list(DEFAULT_CASES))
     parser.add_argument("--power-timeout", type=int, default=300)
     parser.add_argument("--serial-timeout", type=int, default=120)
@@ -229,7 +238,15 @@ def main():
         case_dir = output_dir / case_name
         case_dir.mkdir(parents=True, exist_ok=True)
         relative_root = f"largebar/{output_dir.name}/{case_name}"
-        vm_name = f"largebar-{args.bar_size_gb}g-{output_dir.name}-{case_name}"
+        logical_vm_name = (
+            f"largebar-{args.bar_size_gb}g-{output_dir.name}-{case_name}"
+        )
+        vm_name = bounded_vm_name(logical_vm_name)
+        case_result["vmName"] = {
+            "logical": logical_vm_name,
+            "registered": vm_name,
+            "truncated": vm_name != logical_vm_name,
+        }
         vm_root = Path(args.nfs_root) / relative_root / vm_name
         serial_path = vm_root / "guest-serial.log"
         vmware_log = vm_root / "vmware.log"

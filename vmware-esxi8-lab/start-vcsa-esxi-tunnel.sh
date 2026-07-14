@@ -12,6 +12,36 @@ esxi_bridge="${ESXI_BRIDGE:-br-esxi8}"
 tunnel_port="${VCSA_TUNNEL_PORT:-2222}"
 pid_file="${VCSA_TUNNEL_PID_FILE:-/run/vcsa-esxi-tunnel.pid}"
 log_file="${VCSA_TUNNEL_LOG_FILE:-/tmp/vcsa-esxi-tunnel.log}"
+verify_hosts="${VCSA_TUNNEL_VERIFY_HOSTS:-172.31.91.10}"
+
+ensure_snat_rule() {
+  local source=$1
+  local output_interface=$2
+  local translated_source=$3
+  local rule_comment=$4
+
+  if iptables -t nat -C POSTROUTING -s "$source" -o "$output_interface" \
+      -j SNAT --to-source "$translated_source" >/dev/null 2>&1; then
+    return
+  fi
+  if iptables -t nat -I POSTROUTING -s "$source" -o "$output_interface" \
+      -j SNAT --to-source "$translated_source" >/dev/null 2>&1; then
+    return
+  fi
+  if ! command -v nft >/dev/null 2>&1; then
+    echo "Neither iptables SNAT nor nft is available." >&2
+    exit 1
+  fi
+  nft list table ip nat >/dev/null 2>&1 || nft add table ip nat
+  nft list chain ip nat POSTROUTING >/dev/null 2>&1 || \
+    nft 'add chain ip nat POSTROUTING { type nat hook postrouting priority srcnat; policy accept; }'
+  if nft list chain ip nat POSTROUTING | grep -Fq "comment \"$rule_comment\""; then
+    return
+  fi
+  nft add rule ip nat POSTROUTING \
+    ip saddr "$source" oifname "$output_interface" \
+    snat to "$translated_source" comment "$rule_comment"
+}
 
 if [[ $EUID -ne 0 ]]; then
   echo "Run this script as root; creating TUN devices requires CAP_NET_ADMIN." >&2
@@ -84,10 +114,9 @@ iptables -C FORWARD -i "$tun_name" -o "$esxi_bridge" -j ACCEPT 2>/dev/null || \
   iptables -I FORWARD 1 -i "$tun_name" -o "$esxi_bridge" -j ACCEPT
 iptables -C FORWARD -i "$esxi_bridge" -o "$tun_name" -j ACCEPT 2>/dev/null || \
   iptables -I FORWARD 1 -i "$esxi_bridge" -o "$tun_name" -j ACCEPT
-iptables -t nat -C POSTROUTING -s "${remote_tun_address}/32" -o "$esxi_bridge" \
-  -j SNAT --to-source 172.31.91.1 2>/dev/null || \
-  iptables -t nat -I POSTROUTING 1 -s "${remote_tun_address}/32" -o "$esxi_bridge" \
-    -j SNAT --to-source 172.31.91.1
+ensure_snat_rule \
+  "${remote_tun_address}/32" "$esxi_bridge" 172.31.91.1 \
+  pci-lab-vcsa-to-esxi
 
 vcsa_route=$(ip -4 route get "$vcsa_address")
 vcsa_egress=$(awk '{for (i = 1; i <= NF; i++) if ($i == "dev") print $(i + 1)}' <<<"$vcsa_route")
@@ -96,11 +125,17 @@ if [[ -z "$vcsa_egress" || -z "$vcsa_source" ]]; then
   echo "Unable to resolve the WSL route to VCSA $vcsa_address." >&2
   exit 1
 fi
-iptables -t nat -C POSTROUTING -s "$esxi_subnet" -d "${vcsa_address}/32" \
-  -o "$vcsa_egress" -j SNAT --to-source "$vcsa_source" 2>/dev/null || \
-  iptables -t nat -I POSTROUTING 1 -s "$esxi_subnet" -d "${vcsa_address}/32" \
-    -o "$vcsa_egress" -j SNAT --to-source "$vcsa_source"
+ensure_snat_rule \
+  "$esxi_subnet" "$vcsa_egress" "$vcsa_source" \
+  pci-lab-esxi-to-vcsa
 
-"${ssh_common[@]}" "root@${vcsa_address}" \
-  "ip route get ${esxi_subnet%/*}; ping -c 2 -W 2 172.31.91.10; ping -c 2 -W 2 172.31.91.11"
-echo "VCSA-to-ESXi tunnel verified on $tun_name."
+remote_verify="ip route get ${esxi_subnet%/*}"
+for verify_host in ${verify_hosts//,/ }; do
+  if [[ ! "$verify_host" =~ ^[0-9A-Fa-f:.]+$ ]]; then
+    echo "Invalid VCSA_TUNNEL_VERIFY_HOSTS entry: $verify_host" >&2
+    exit 1
+  fi
+  remote_verify+="; ping -c 2 -W 2 ${verify_host}"
+done
+"${ssh_common[@]}" "root@${vcsa_address}" "$remote_verify"
+echo "VCSA-to-ESXi tunnel verified on $tun_name for: $verify_hosts"

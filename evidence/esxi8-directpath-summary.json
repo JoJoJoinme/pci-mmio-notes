@@ -1,8 +1,10 @@
 {
-  "date": "2026-07-12",
+  "date": "2026-07-14",
   "esxi": "VMware ESXi 8.0.3 build-24280767",
   "virtualHardware": 20,
-  "qemu": "6.2.0 (Debian/Ubuntu build)",
+  "qemu": "6.2.0 A/B plus patched 11.0.2 runtime build",
+  "wslKernel": "6.6.123.2-microsoft-standard-WSL2+",
+  "currentDeltaSummary": "evidence/esxi8-directpath-20260714-summary.json",
   "outerCpuDelta": "-vmx-tsc-scaling",
   "mmio": {
     "bar1GiB": {
@@ -23,21 +25,23 @@
     },
     "bar8GiB": {
       "absent": "expected power-on failure: 2097153 mapping pages exceed the 917504-page default limit",
-      "trueOnly": "VMX mapping and EFI runtime pass, but no guest heartbeat within 600 seconds",
-      "truePlusSize8": "VMX mapping pass; nested platform stalls before guest evidence completes"
+      "trueOnly": "guest runtime pass on a dedicated Root Port; BAR 0x1ffe00000000-0x1fffffffffff",
+      "truePlusSize8": "guest runtime pass with heartbeat, target enumeration and IOMMU mapping",
+      "truePlusSize4": "expected power-on failure: 2097153 pages exceed the 1966080-page limit"
     },
     "bar32GiB": {
       "endpoint": "no-backing pci-testdev",
       "absentFalseOrSizeOnly": "expected power-on failure: 8388609 pages exceed the 917504-page base limit",
-      "trueOnly": "IOMMU mapping pass using the observable default 32GiB large-MMIO budget; nested EFI guest timeout",
-      "truePlusSize32": "IOMMU mapping pass; nested EFI guest timeout",
-      "truePlusSize16": "expected power-on failure: 8388609 pages exceed the 5111808-page limit"
+      "trueOnly": "guest runtime pass using the observable default 32GiB budget",
+      "truePlusSize32": "guest runtime pass; BAR 0x1ff800000000-0x1fffffffffff",
+      "truePlusSize16": "expected power-on failure: 8388609 pages exceed the 5111808-page limit",
+      "dependencyBoundary": "shared Root Port fails AH selection even when Capable/Enabled/Active=true; dedicated Root Port passes"
     },
     "bar64GiB": {
       "endpoint": "no-backing pci-testdev",
       "absentFalseOrSizeOnly": "expected power-on failure: 16777217 pages exceed the 917504-page base limit",
       "trueOnly": "expected power-on failure: 16777217 pages exceed the 9306112-page default-enabled limit",
-      "truePlusSize64": "IOMMU mapping pass; nested EFI guest timeout",
+      "truePlusSize64": "guest runtime pass; BAR 0x1ff000000000-0x1fffffffffff",
       "truePlusSize32": "expected power-on failure: 16777217 pages exceed the 9306112-page limit"
     },
     "aggregate": {
@@ -70,7 +74,21 @@
     "snapshot": "vim.fault.InvalidState",
     "suspend": "vim.fault.InvalidState",
     "forcedOffRestart": "pass",
-    "stressCyclesPassed": 10
+    "stressCyclesPassed": 10,
+    "virtualFlr": "pass: Function reset selected for a root-complex virtio endpoint and outer qdev reset callbacks observed on VM power-on/off"
+  },
+  "passthruCapability": {
+    "matrix": "15/15 pass with restore pass",
+    "model": "IOMMU plus an accepted endpoint/upstream reset boundary plus ACS policy; runtime AH also requires exclusive dependency leasing",
+    "report": "vmware-esxi8-passthru-capable-observed-model.md"
+  },
+  "nonBar20260714": {
+    "dmaLifecycle": "pass: same SID/IOVA changed from guest domain 2 and non-identity guest backing to host domain 1 identity mapping after global context/IOTLB invalidation",
+    "pme": "pass with controlled endpoint/root PME status and three ACPI _OSC masks; no native PME IRQ, matching the tested ignored-PME model",
+    "p2p": "pass: default and relax-only fault; allowP2P enables peer DMA in ACS and no-ACS matrices",
+    "rmrr": "pass: automatic PCI-hole adjustment and guest boot; low-RAM overlap rejects ESXi host boot",
+    "optionRom": "default hidden pass; QEMU positive control pass; ESXi enabled sample tested negative with entry-not-observed",
+    "sriov": "partial: raw capability/VFE visible but no functional ESXi VF; igb I350 model stops at Invalid NVM Checksum"
   },
   "dynamicDirectPath": {
     "configured": true,
@@ -97,13 +115,10 @@
   },
   "labTransport": "QEMU TAP vnet_hdr and bridge offloads are disabled; NFS export is restored idempotently to prevent corrupt RPC record streams",
   "platformBlocked": [
-    "enabled option ROM execution",
-    "controlled PME injection",
-    "peer-to-peer DMA",
-    "RMRR",
-    "SR-IOV PF/VF",
-    "32G+ guest-runtime validation after mapping succeeds but nested EFI does not reach the Linux heartbeat",
-    "exact FLR/SBR/D3 reset callback and state-clear classification",
+    "positive ESXi-supported option ROM execution on a known supported physical adapter",
+    "functional SR-IOV PF/VF using an ESXi-supported PF or a fuller PF/NVM model",
+    "physical SBR/D3 and vendor sensitive-state clearing",
+    "physical INTx and ACS/requester-ID alias behavior",
     "bare-metal electrical reset and isolation"
   ]
 }

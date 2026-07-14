@@ -1,6 +1,9 @@
 {
   "schemaVersion": 1,
   "date": "2026-07-12",
+  "historical": true,
+  "supersededBy": "evidence/esxi8-directpath-20260714-summary.json",
+  "supersessionNote": "The admission/page-budget observations remain valid. Dedicated Root Port runs later completed 32G and 64G EFI guest runtime.",
   "environment": {
     "esxi": "VMware ESXi 8.0.3 build-24280767",
     "virtualHardware": 20,

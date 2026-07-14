@@ -1,0 +1,95 @@
+From: PCI compatibility lab <lab@example.invalid>
+Subject: [PATCH] virtio-pci: add opt-in D3hot reset instrumentation
+
+The existing x-pcie-pm-init property only makes the PMCSR power-state bits
+writable.  It does not model the soft reset associated with a D3hot-to-D0
+transition when No_Soft_Reset is clear.  Add an opt-in lab property that
+performs the standard PCI device reset on that transition and traces both
+PMCSR writes and reset callbacks.
+
+The property is disabled by default and is intended only for externally
+observable passthrough-capability experiments.
+---
+ hw/virtio/trace-events |  4 ++++
+ hw/virtio/virtio-pci.c | 26 ++++++++++++++++++++++++++
+ hw/virtio/virtio-pci.h |  1 +
+ 3 files changed, 31 insertions(+)
+
+diff --git a/hw/virtio/virtio-pci.h b/hw/virtio/virtio-pci.h
+--- a/hw/virtio/virtio-pci.h
++++ b/hw/virtio/virtio-pci.h
+@@ -146,6 +146,7 @@ struct VirtIOPCIProxy {
+     bool disable_modern;
+     bool ignore_backend_features;
+     bool pcie_root_cap_init;
++    bool pcie_d3hot_reset;
+     OnOffAuto disable_legacy;
+     uint32_t class_code;
+     uint32_t nvectors;
+diff --git a/hw/virtio/virtio-pci.c b/hw/virtio/virtio-pci.c
+--- a/hw/virtio/virtio-pci.c
++++ b/hw/virtio/virtio-pci.c
+@@ -35,5 +35,6 @@
+ #include "qapi/visitor.h"
+ #include "sysemu/replay.h"
++#include "trace.h"
+ 
+ #define VIRTIO_PCI_REGION_SIZE(dev)     VIRTIO_PCI_CONFIG_OFF(msix_present(dev))
+ 
+@@ -611,9 +612,32 @@ static void virtio_write_config(PCIDevice *pci_dev, uint32_t address,
+     VirtIOPCIProxy *proxy = VIRTIO_PCI(pci_dev);
+     VirtIODevice *vdev = virtio_bus_get_device(&proxy->bus);
+     struct virtio_pci_cfg_cap *cfg;
++    uint16_t old_pmcsr = 0;
++    bool pmcsr_write =
++        proxy->pcie_d3hot_reset && pci_dev->exp.pm_cap &&
++        ranges_overlap(address, len,
++                       pci_dev->exp.pm_cap + PCI_PM_CTRL, 2);
++
++    if (pmcsr_write) {
++        old_pmcsr = pci_get_word(pci_dev->config + pci_dev->exp.pm_cap +
++                                 PCI_PM_CTRL);
++    }
+ 
+     pci_default_write_config(pci_dev, address, val, len);
+ 
++    if (pmcsr_write) {
++        uint16_t new_pmcsr = pci_get_word(
++            pci_dev->config + pci_dev->exp.pm_cap + PCI_PM_CTRL);
++
++        trace_virtio_pci_pmcsr_write(pci_dev, old_pmcsr, new_pmcsr);
++        if ((old_pmcsr & PCI_PM_CTRL_STATE_MASK) == 3 &&
++            (new_pmcsr & PCI_PM_CTRL_STATE_MASK) == 0 &&
++            !(new_pmcsr & PCI_PM_CTRL_NO_SOFT_RESET)) {
++            trace_virtio_pci_d3hot_reset(pci_dev);
++            pci_device_reset(pci_dev);
++        }
++    }
++
+     if (proxy->flags & VIRTIO_PCI_FLAG_INIT_FLR) {
+         pcie_cap_flr_write_config(pci_dev, address, val, len);
+     }
+@@ -1979,6 +2001,8 @@ static Property virtio_pci_properties[] = {
+                      ignore_backend_features, false),
+     DEFINE_PROP_BOOL("x-pcie-root-cap-init", VirtIOPCIProxy,
+                      pcie_root_cap_init, false),
++    DEFINE_PROP_BOOL("x-pcie-d3hot-reset", VirtIOPCIProxy,
++                     pcie_d3hot_reset, false),
+     DEFINE_PROP_BIT("ats", VirtIOPCIProxy, flags,
+                     VIRTIO_PCI_FLAG_ATS_BIT, false),
+     DEFINE_PROP_BIT("x-ats-page-aligned", VirtIOPCIProxy, flags,
+diff --git a/hw/virtio/trace-events b/hw/virtio/trace-events
+--- a/hw/virtio/trace-events
++++ b/hw/virtio/trace-events
+@@ -1,5 +1,9 @@
+ # See docs/devel/tracing.rst for syntax documentation.
+ 
++# virtio-pci.c
++virtio_pci_pmcsr_write(void *dev, uint16_t old_pmcsr, uint16_t new_pmcsr) "dev %p old 0x%04x new 0x%04x"
++virtio_pci_d3hot_reset(void *dev) "dev %p"
++
+ # vhost.c
+ vhost_commit(bool started, bool changed) "Started: %d Changed: %d"
+ vhost_region_add_section(const char *name, uint64_t gpa, uint64_t size, uint64_t host) "%s: 0x%"PRIx64"+0x%"PRIx64" @ 0x%"PRIx64
+-- 
+2.34.1

@@ -1,0 +1,102 @@
+From: PCI DirectPath laboratory <lab@example.invalid>
+Subject: [PATCH] intel-iommu: add default-off laboratory RMRR injection
+
+Expose an opt-in VT-d property set that publishes one endpoint-scoped
+Reserved Memory Region Reporting (RMRR) structure in DMAR.  The machine's
+existing firmware memory map deliberately remains independent, allowing tests
+to compare a genuinely reserved range with a range that overlaps System RAM.
+This is a test-only mechanism for observing ESXi's public RMRR handling; all
+properties default to zero and therefore leave normal QEMU behaviour unchanged.
+---
+ include/hw/i386/intel_iommu.h |  5 +++++
+ hw/i386/intel_iommu.c         | 14 ++++++++++++++
+ hw/i386/acpi-build.c          | 22 ++++++++++++++++++++++
+ 3 files changed, 41 insertions(+)
+
+diff --git a/include/hw/i386/intel_iommu.h b/include/hw/i386/intel_iommu.h
+--- a/include/hw/i386/intel_iommu.h
++++ b/include/hw/i386/intel_iommu.h
+@@ -267,6 +267,11 @@ struct IntelIOMMUState {
+     uint8_t aw_bits;                /* Host/IOVA address width (in bits) */
+     bool dma_drain;                 /* Whether DMA r/w draining enabled */
+ 
++    /* Default-off laboratory RMRR published through DMAR. */
++    uint64_t rmrr_base;
++    uint64_t rmrr_limit;
++    uint16_t rmrr_sid;
++
+     /*
+      * Protects IOMMU states in general.  Currently it protects the
+      * per-IOMMU IOTLB cache, and context entry cache in VTDAddressSpace.
+diff --git a/hw/i386/intel_iommu.c b/hw/i386/intel_iommu.c
+--- a/hw/i386/intel_iommu.c
++++ b/hw/i386/intel_iommu.c
+@@ -3100,6 +3101,9 @@ static Property vtd_properties[] = {
+     DEFINE_PROP_BOOL("caching-mode", IntelIOMMUState, caching_mode, FALSE),
+     DEFINE_PROP_BOOL("x-scalable-mode", IntelIOMMUState, scalable_mode, FALSE),
+     DEFINE_PROP_BOOL("dma-drain", IntelIOMMUState, dma_drain, true),
++    DEFINE_PROP_UINT64("x-rmrr-base", IntelIOMMUState, rmrr_base, 0),
++    DEFINE_PROP_UINT64("x-rmrr-limit", IntelIOMMUState, rmrr_limit, 0),
++    DEFINE_PROP_UINT16("x-rmrr-sid", IntelIOMMUState, rmrr_sid, 0),
+     DEFINE_PROP_END_OF_LIST(),
+ };
+ 
+@@ -3817,6 +3820,17 @@ static void vtd_realize(DeviceState *dev, Error **errp)
+         return;
+     }
+ 
++    if (s->rmrr_base || s->rmrr_limit) {
++        if (!s->rmrr_base || s->rmrr_limit == UINT64_MAX ||
++            s->rmrr_limit < s->rmrr_base || (s->rmrr_base & 0xfff) ||
++            ((s->rmrr_limit + 1) & 0xfff)) {
++            error_setg(errp,
++                       "x-rmrr-base/limit must describe an aligned, "
++                       "non-empty inclusive page range");
++            return;
++        }
++    }
++
+     QLIST_INIT(&s->vtd_as_with_notifiers);
+     qemu_mutex_init(&s->iommu_lock);
+     memset(s->vtd_as_by_bus_num, 0, sizeof(s->vtd_as_by_bus_num));
+diff --git a/hw/i386/acpi-build.c b/hw/i386/acpi-build.c
+--- a/hw/i386/acpi-build.c
++++ b/hw/i386/acpi-build.c
+@@ -2159,6 +2159,7 @@ build_dmar_q35(GArray *table_data, BIOSLinker *linker, const char *oem_id,
+     /* Root complex IOAPIC uses one path only */
+     const size_t ioapic_scope_size = 6 /* device scope structure */ +
+                                      2 /* 1 path entry */;
++    const size_t rmrr_scope_size = 8;
+     X86IOMMUState *iommu = x86_iommu_get_default();
+     IntelIOMMUState *intel_iommu = INTEL_IOMMU_DEVICE(iommu);
+     GArray *scope_blob = g_array_new(false, true, 1);
+@@ -2215,6 +2216,27 @@ build_dmar_q35(GArray *table_data, BIOSLinker *linker, const char *oem_id,
+     g_array_append_vals(table_data, scope_blob->data, scope_blob->len);
+     g_array_free(scope_blob, true);
+ 
++    if (intel_iommu->rmrr_base) {
++        uint8_t bus = intel_iommu->rmrr_sid >> 8;
++        uint8_t devfn = intel_iommu->rmrr_sid & 0xff;
++
++        /* 8.4 Reserved Memory Region Reporting structure. */
++        build_append_int_noprefix(table_data, 1, 2); /* Type: RMRR */
++        build_append_int_noprefix(table_data, 24 + rmrr_scope_size, 2);
++        build_append_int_noprefix(table_data, 0, 2); /* Reserved */
++        build_append_int_noprefix(table_data, 0, 2); /* Segment */
++        build_append_int_noprefix(table_data, intel_iommu->rmrr_base, 8);
++        build_append_int_noprefix(table_data, intel_iommu->rmrr_limit, 8);
++
++        build_append_int_noprefix(table_data, 1, 1); /* PCI endpoint */
++        build_append_int_noprefix(table_data, rmrr_scope_size, 1);
++        build_append_int_noprefix(table_data, 0, 2); /* Reserved */
++        build_append_int_noprefix(table_data, 0, 1); /* Enumeration ID */
++        build_append_int_noprefix(table_data, bus, 1);
++        build_append_int_noprefix(table_data, PCI_SLOT(devfn), 1);
++        build_append_int_noprefix(table_data, PCI_FUNC(devfn), 1);
++    }
++
+     if (iommu->dt_supported) {
+         /* 8.5 Root Port ATS Capability Reporting Structure */
+         build_append_int_noprefix(table_data, 2, 2); /* Type */
+-- 
+2.34.1

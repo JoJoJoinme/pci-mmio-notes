@@ -1,0 +1,6 @@
+#ifndef CONFIG_LOCAL_CONSOLE_H
+#define CONFIG_LOCAL_CONSOLE_H
+
+#define CONSOLE_SERIAL
+
+#endif

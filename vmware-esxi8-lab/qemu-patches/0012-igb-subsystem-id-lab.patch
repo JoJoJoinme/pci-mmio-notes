@@ -1,0 +1,40 @@
+From: PCI DirectPath Lab <lab@example.invalid>
+Subject: [PATCH] igb: add lab-only subsystem ID overrides
+
+Keep QEMU's Red Hat subsystem IDs as defaults, but allow an isolated
+black-box compatibility test to present Intel subsystem IDs together with the
+experimental PF/VF device ID overrides.
+---
+ hw/net/igb.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/hw/net/igb.c b/hw/net/igb.c
+--- a/hw/net/igb.c
++++ b/hw/net/igb.c
+@@ -81,4 +81,6 @@ struct IGBState {
+     bool has_flr;
+     uint16_t device_id;
+     uint16_t vf_device_id;
++    uint16_t subsystem_vendor_id;
++    uint16_t subsystem_id;
+ };
+@@ -392,4 +394,8 @@ static void igb_pci_realize(PCIDevice *pci_dev, Error **errp)
+ 
+     pci_config_set_device_id(pci_dev->config, s->device_id);
++    pci_set_word(pci_dev->config + PCI_SUBSYSTEM_VENDOR_ID,
++                 s->subsystem_vendor_id);
++    pci_set_word(pci_dev->config + PCI_SUBSYSTEM_ID,
++                 s->subsystem_id);
+ 
+     pci_dev->config[PCI_CACHE_LINE_SIZE] = 0x10;
+@@ -604,4 +610,8 @@ static const Property igb_properties[] = {
+                        E1000_DEV_ID_82576),
+     DEFINE_PROP_UINT16("x-pci-vf-device-id", IGBState, vf_device_id,
+                        IGB_82576_VF_DEV_ID),
++    DEFINE_PROP_UINT16("x-pci-subsystem-vendor-id", IGBState,
++                       subsystem_vendor_id, PCI_SUBVENDOR_ID_REDHAT_QUMRANET),
++    DEFINE_PROP_UINT16("x-pci-subsystem-id", IGBState, subsystem_id,
++                       PCI_SUBDEVICE_ID_QEMU),
+ };
+-- 
+2.43.0

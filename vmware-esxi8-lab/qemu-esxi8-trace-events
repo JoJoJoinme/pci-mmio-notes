@@ -26,7 +26,11 @@ e1000e_rx_written_to_guest
 e1000e_irq_msi_notify
 e1000e_irq_legacy_notify
 e1000e_irq_msix_notify_vec
+e1000e_pme_inject
+e1000e_option_rom_marker
 e1000e_cb_qdev_reset
 qdev_reset
 qdev_reset_all
 qdev_reset_tree
+virtio_pci_pmcsr_write
+virtio_pci_d3hot_reset

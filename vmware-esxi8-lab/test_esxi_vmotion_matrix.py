@@ -7,6 +7,7 @@ import re
 import ssl
 import subprocess
 import time
+import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -55,6 +56,9 @@ def fault_snapshot(error):
         "module": type(error).__module__,
         "message": str(error),
     }
+    formatted_traceback = traceback.format_exc()
+    if formatted_traceback.strip() != "NoneType: None":
+        result["traceback"] = formatted_traceback
     for name in ("msg", "localizedMessage"):
         value = getattr(error, name, None)
         if value:
@@ -71,9 +75,37 @@ def fault_snapshot(error):
     return result
 
 
-def dynamic_backing_snapshot(vm):
+def wait_vm_config(vm, timeout=60):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        vm.Reload()
+        config = vm.config
+        if config is not None and config.hardware is not None:
+            return config
+        time.sleep(1)
+    readiness = {}
+    for name, getter in (
+        ("name", lambda: vm.name),
+        ("configStatus", lambda: str(vm.configStatus)),
+        ("overallStatus", lambda: str(vm.overallStatus)),
+        ("connectionState", lambda: str(vm.runtime.connectionState)),
+        ("powerState", lambda: str(vm.runtime.powerState)),
+        ("vmPathName", lambda: vm.summary.config.vmPathName),
+    ):
+        try:
+            readiness[name] = getter()
+        except Exception as error:
+            readiness[name] = f"unavailable: {type(error).__name__}: {error}"
+    raise TimeoutError(
+        "VM configuration did not become available: "
+        + json.dumps(readiness, ensure_ascii=False, sort_keys=True)
+    )
+
+
+def dynamic_backing_snapshot(vm, config=None):
+    config = config or wait_vm_config(vm)
     result = []
-    for device in vm.config.hardware.device:
+    for device in config.hardware.device:
         if not isinstance(device, vim.vm.device.VirtualPCIPassthrough):
             continue
         backing = device.backing
@@ -102,14 +134,14 @@ def dynamic_backing_snapshot(vm):
 
 
 def vm_snapshot(vm):
-    vm.Reload()
+    config = wait_vm_config(vm)
     host = vm.runtime.host
     return {
         "name": vm.name,
         "powerState": str(vm.runtime.powerState),
         "host": host.name if host else None,
         "connectionState": str(vm.runtime.connectionState),
-        "devices": dynamic_backing_snapshot(vm),
+        "devices": dynamic_backing_snapshot(vm, config=config),
     }
 
 
@@ -225,22 +257,53 @@ def vmx_pci_id(bdf: str) -> str:
     return f"{domain:05x}:{bus:03x}:{slot:02x}.{function:x}"
 
 
-def static_pci_lines(host, bdf="0000:01:00.0"):
-    matches = [item for item in host.hardware.pciDevice if item.id == bdf]
+def static_pci_lines(host, bdf="0000:01:00.0", index=0, slot_number=None):
+    host = wait_host_hardware(host, bdf)
+    hardware = host.hardware
+    matches = [item for item in hardware.pciDevice if item.id == bdf]
     if len(matches) != 1:
         raise RuntimeError(f"Expected one PCI device {bdf} on {host.name}, found {len(matches)}")
     device = matches[0]
+    slot_number = 32 + index if slot_number is None else slot_number
+    prefix = f"pciPassthru{index}"
     return [
-        f'pciPassthru0.id = "{vmx_pci_id(device.id)}"',
-        f'pciPassthru0.deviceId = "0x{device.deviceId & 0xffff:04x}"',
-        f'pciPassthru0.vendorId = "0x{device.vendorId & 0xffff:04x}"',
-        f'pciPassthru0.systemId = "{host.hardware.systemInfo.uuid}"',
-        'pciPassthru0.present = "TRUE"',
-        'pciPassthru0.pciSlotNumber = "32"',
+        f'{prefix}.id = "{vmx_pci_id(device.id)}"',
+        f'{prefix}.deviceId = "0x{device.deviceId & 0xffff:04x}"',
+        f'{prefix}.vendorId = "0x{device.vendorId & 0xffff:04x}"',
+        f'{prefix}.systemId = "{hardware.systemInfo.uuid}"',
+        f'{prefix}.present = "TRUE"',
+        f'{prefix}.pciSlotNumber = "{slot_number}"',
     ]
 
 
-def write_vmx(vm_dir: Path, name: str, iso_path: str, extra_lines=None):
+def wait_host_hardware(host, bdf=None, timeout=240):
+    """Wait until vCenter has repopulated hardware inventory after host reboot."""
+    deadline = time.time() + timeout
+    last_state = None
+    while time.time() < deadline:
+        host.Reload()
+        hardware = host.hardware
+        devices = hardware.pciDevice if hardware is not None else None
+        last_state = {
+            "connection": str(host.runtime.connectionState),
+            "hardware": hardware is not None,
+            "pciDeviceCount": len(devices or []),
+        }
+        if hardware is not None and hardware.systemInfo is not None and devices:
+            if bdf is None or any(device.id == bdf for device in devices):
+                return host
+        time.sleep(3)
+    raise TimeoutError(f"Host hardware inventory did not populate: {last_state}")
+
+
+def write_vmx(
+    vm_dir: Path,
+    name: str,
+    iso_path: str,
+    extra_lines=None,
+    memory_mb: int = 1024,
+    firmware: str = "efi",
+):
     vm_dir.mkdir(parents=True, exist_ok=True)
     lines = [
         '.encoding = "UTF-8"',
@@ -248,8 +311,8 @@ def write_vmx(vm_dir: Path, name: str, iso_path: str, extra_lines=None):
         'virtualHW.version = "20"',
         f'displayName = "{name}"',
         'guestOS = "other5xlinux-64"',
-        'firmware = "efi"',
-        'memSize = "1024"',
+        f'firmware = "{firmware}"',
+        f'memSize = "{memory_mb}"',
         'numvcpus = "1"',
         'svga.present = "FALSE"',
         'vmci0.present = "TRUE"',
@@ -271,8 +334,8 @@ def write_vmx(vm_dir: Path, name: str, iso_path: str, extra_lines=None):
         'serial0.fileName = "guest-serial.log"',
         'serial0.yieldOnMsrRead = "TRUE"',
         'bios.bootOrder = "cdrom"',
-        'sched.mem.min = "1024"',
-        'sched.mem.minSize = "1024"',
+        f'sched.mem.min = "{memory_mb}"',
+        f'sched.mem.minSize = "{memory_mb}"',
         'sched.mem.pin = "TRUE"',
     ]
     lines.extend(extra_lines or [])

@@ -1,0 +1,69 @@
+From: PCI DirectPath Lab <lab@example.invalid>
+Subject: [PATCH] nvme: optionally expose concrete config IDs for auto-created VFs
+
+QEMU's generic SR-IOV core deliberately leaves the Vendor ID and Device ID
+of auto-created VF config objects at 0xffff.  Linux discovers those VFs from
+the PF's SR-IOV capability and supplies the advertised IDs, but firmware or
+hypervisors that probe the VF function directly can treat it as absent.
+
+Add a default-off NVMe lab property that writes the PF Vendor ID and
+advertised VF Device ID into each enabled VF config object.  This is only a
+black-box compatibility test aid; it does not claim to model every aspect of
+a physical VF.
+---
+ hw/nvme/ctrl.c | 19 ++++++++++++++++++-
+ hw/nvme/nvme.h |  1 +
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/hw/nvme/ctrl.c b/hw/nvme/ctrl.c
+--- a/hw/nvme/ctrl.c
++++ b/hw/nvme/ctrl.c
+@@ -9398,6 +9398,8 @@ static const Property nvme_props[] = {
+                        params.sriov_max_vi_per_vf, 0),
+     DEFINE_PROP_UINT32("sriov_max_vq_per_vf", NvmeCtrl,
+                        params.sriov_max_vq_per_vf, 0),
++    DEFINE_PROP_BOOL("x-sriov-vf-config-ids", NvmeCtrl,
++                     params.sriov_vf_config_ids, false),
+     DEFINE_PROP_BOOL("msix-exclusive-bar", NvmeCtrl, params.msix_exclusive_bar,
+                      false),
+     DEFINE_PROP_UINT16("mqes", NvmeCtrl, params.mqes, 0x7ff),
+@@ -9467,10 +9469,25 @@ static void nvme_pci_reset(DeviceState *qdev)
+ static void nvme_sriov_post_write_config(PCIDevice *dev, uint16_t old_num_vfs)
+ {
+     NvmeCtrl *n = NVME(dev);
++    uint16_t num_vfs = pcie_sriov_num_vfs(dev);
+     NvmeSecCtrlEntry *sctrl;
+     int i;
+ 
+-    for (i = pcie_sriov_num_vfs(dev); i < old_num_vfs; i++) {
++    if (n->params.sriov_vf_config_ids) {
++        uint16_t sriov_cap = dev->exp.sriov_cap;
++        uint16_t vendor_id = pci_get_word(dev->config + PCI_VENDOR_ID);
++        uint16_t vf_device_id = pci_get_word(dev->config + sriov_cap +
++                                             PCI_SRIOV_VF_DID);
++
++        for (i = 0; i < num_vfs; i++) {
++            PCIDevice *vf = pcie_sriov_get_vf_at_index(dev, i);
++
++            pci_config_set_vendor_id(vf->config, vendor_id);
++            pci_config_set_device_id(vf->config, vf_device_id);
++        }
++    }
++
++    for (i = num_vfs; i < old_num_vfs; i++) {
+         sctrl = &n->sec_ctrl_list[i];
+         nvme_virt_set_state(n, le16_to_cpu(sctrl->scid), false);
+     }
+diff --git a/hw/nvme/nvme.h b/hw/nvme/nvme.h
+--- a/hw/nvme/nvme.h
++++ b/hw/nvme/nvme.h
+@@ -562,6 +562,7 @@ typedef struct NvmeParams {
+     uint32_t  sriov_max_vq_per_vf;
+     uint32_t  sriov_max_vi_per_vf;
+     bool     msix_exclusive_bar;
++    bool     sriov_vf_config_ids;
+     bool     ocp;
+ 
+     struct {
+-- 
+2.43.0

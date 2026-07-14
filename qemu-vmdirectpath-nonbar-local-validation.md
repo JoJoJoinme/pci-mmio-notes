@@ -8,6 +8,16 @@ guest with active DirectPath devices.  It supersedes this note's fixed
 `vmware-esxi8-directpath-local-results.md`.  The QEMU topology, ACS-presentation,
 link, and vIOMMU observations below remain valid.
 
+Runtime update (2026-07-14): patched QEMU endpoints and nested ESXi have now
+exercised virtual FLR, controlled PME, peer DMA policy, RMRR, AER, Option-ROM
+controls, 8/32/64GiB guest runtime, a 15-case `passthruCapable` matrix, and a
+same-SID/same-IOVA DMA power-off A/B. The latter observed a guest domain being
+replaced by the ESXi host identity domain after context/IOTLB invalidation.
+See `vmware-esxi8-passthru-capable-observed-model.md` and
+`evidence/esxi8-directpath-20260714-summary.json`. The final section below is
+now only a list of claims requiring physical VFIO/bare-metal hardware, not a
+list of unexecuted software tests.
+
 This note records what was locally verified for mapping Broadcom KB 312208
 VMDirectPath behavior to QEMU/VFIO, beyond BAR sizing. It separates:
 
@@ -46,9 +56,9 @@ The visible host PCI devices are only Hyper-V / virtio synthetic devices:
 5582:00:00.0 vendor=0x1af4 device=0x1043 class=0x010000
 ```
 
-Therefore this host can validate QEMU guest-visible PCIe, OVMF, ACPI, and
-vIOMMU behavior, but it cannot validate real physical `vfio-pci,host=BDF`
-assignment.
+Therefore this host can validate QEMU guest-visible PCIe, OVMF, ACPI, vIOMMU,
+and nested ESXi policy behavior, but it cannot validate real physical
+`vfio-pci,host=BDF` assignment or electrical device behavior.
 
 ## Commands added for reproducibility
 
@@ -261,7 +271,7 @@ intel-iommu:
 This establishes that the proposed QEMU mapping uses actual local QEMU
 properties, not invented flags.
 
-## Not locally verifiable on this host
+## Not physically verifiable on this host
 
 The current WSL2 host has no real IOMMU groups and no assignable physical PCI
 device. These remain unverified locally:

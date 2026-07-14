@@ -1,0 +1,175 @@
+{
+  "date": "2026-07-14",
+  "scope": "Publicly observable ESXi DirectPath behavior in an authorized nested lab; no private implementation inference",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "vcenter": "VCSA 8.0.3 build-24674346",
+    "virtualHardware": 20,
+    "guestFirmware": "EFI",
+    "guestKernel": "Linux 5.15.0-185",
+    "wslKernel": {
+      "release": "6.6.123.2-microsoft-standard-WSL2+",
+      "sourceCommit": "a07f9ea8a99139913acbcc1c160b132cb2a49c81",
+      "bzImageSha256": "fff6379f6b4c41238c3d0196fee31549b5fceacc65156b489709cd2b44f4e115",
+      "devKvmPresent": true,
+      "nestedVmx": true
+    },
+    "qemuLab": {
+      "version": "11.0.2",
+      "binarySha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393",
+      "baselineAB": "QEMU 6.2.0"
+    }
+  },
+  "passthruCapability": {
+    "run": "20260714-esxi8-passthru-capability-matrix-v4",
+    "cases": 15,
+    "verdict": "pass",
+    "restoreVerdict": "pass",
+    "observedModel": {
+      "hostIommuRequired": true,
+      "rootComplexEndpoint": "FLR produced Function reset and capable=true; PM-only and tested D3hot advertisements remained Reset=None/capable=false",
+      "bridgeEndpoint": "An upstream reset boundary produced Bridge reset/capable=true even when the endpoint lacked FLR and PM",
+      "acs": "No-ACS was capable only under the observed bypass policy; strict ACS checking made the same endpoint incapable",
+      "identity": "Capability flipped while VID:DID stayed fixed, so a VID:DID-only model is disproven for these cases"
+    }
+  },
+  "dependencyAndAssignableHardware": {
+    "sharedRootPort": {
+      "qemu62Run": "20260714-lb32-qemu62-kvm-vcsa-v12",
+      "qemu11Run": "20260714-esxi8-largebar-32g-kvm-runtime-v9-vcsa-after-reconnect",
+      "apiState": "passthruCapable=true, passthruEnabled=true, passthruActive=true",
+      "vmxState": "static BDF and ah.deviceHints present",
+      "result": "AH Failed to find a suitable device before BAR/IOMMU mapping"
+    },
+    "dedicatedRootPort": {
+      "beforeEnable": "20260714-esxi8-largebar-32g-dedicated-before-enable",
+      "afterEnable": "20260714-esxi8-largebar-32g-dedicated-after-enable",
+      "dependency": "0000:00:0a.0",
+      "result": "Only 0000:02:00.0 changed owner; the VM then mapped and booted",
+      "conclusion": "Static capability and owner state are necessary but not sufficient; the whole reset/IOMMU dependency must be exclusively assignable"
+    }
+  },
+  "largeBarRuntime": {
+    "endpoint": "QEMU pci-testdev 1b36:0005 with no equal-size backing allocation",
+    "outerTopology": "Dedicated PCIe Root Port",
+    "bar8GiB": {
+      "run": "20260714-lb8-dedicated-full-v18",
+      "matrixVerdict": "pass",
+      "trueOnly": "guest-pass",
+      "truePlusSize8": "guest-pass",
+      "truePlusSize4": "expected power-on failure: 2097153 pages exceed 1966080",
+      "guestBar": "0x1ffe00000000-0x1fffffffffff"
+    },
+    "bar32GiB": {
+      "runs": [
+        "20260714-lb32-dedicated-qemu11-kvm-v13",
+        "20260714-lb32-dedicated-full-minus-true-size-v14",
+        "20260714-lb32-dedicated-true-undersized-v15"
+      ],
+      "trueOnly": "guest-pass",
+      "truePlusSize32": "guest-pass",
+      "truePlusSize16": "expected power-on failure: 8388609 pages exceed 5111808",
+      "guestBar": "0x1ff800000000-0x1fffffffffff",
+      "runnerNote": "The final v14 case hit the ESXi display-name length limit; v15 reran it after stable hash truncation and passed the expected negative assertion"
+    },
+    "bar64GiB": {
+      "run": "20260714-lb64-dedicated-full-v17",
+      "matrixVerdict": "pass",
+      "trueOnly": "expected power-on failure: 16777217 pages exceed 9306112",
+      "truePlusSize64": "guest-pass",
+      "truePlusSize32": "expected power-on failure: 16777217 pages exceed 9306112",
+      "guestBar": "0x1ff000000000-0x1fffffffffff"
+    },
+    "checksRequiredForGuestPass": [
+      "EFI Linux heartbeat",
+      "guest target VID:DID visible",
+      "vmware.log reports successful IOMMU mappings",
+      "outer QEMU argv and HMP report the requested physical BAR"
+    ]
+  },
+  "reset": {
+    "flrRun": "20260713-esxi8-flr-vm-power-v1",
+    "verdict": "pass",
+    "observed": "Root-complex virtio endpoint with FLR was capable with Reset Method=Function reset; outer qdev reset callbacks were recorded on VM power-on and power-off",
+    "boundary": "This does not prove electrical SBR/D3 behavior or sensitive-state clearing on a physical vendor device"
+  },
+  "dmaLifecycle": {
+    "run": "20260714-esxi8-edu-dma-teardown-v5",
+    "verdict": "pass",
+    "requesterSid": "0x200",
+    "iova": "0x2b00000",
+    "live": {
+      "domain": "0x2",
+      "resolvedGpa": "0x1c9100000",
+      "fault": false
+    },
+    "powerOffTransition": {
+      "contextCacheGlobalInvalidation": true,
+      "iotlbGlobalInvalidation": true
+    },
+    "postPowerOff": {
+      "domain": "0x1",
+      "resolvedGpa": "0x2b00000",
+      "identityMapping": true,
+      "fault": false
+    },
+    "observedModel": "Power-off invalidated the guest translation and rebound the requester from guest domain 2 to the ESXi host identity domain 1; teardown did not produce a DMAR fault",
+    "evidence": "esxi8-edu-dma-teardown-20260714-summary.json"
+  },
+  "nonBar": {
+    "aer": {
+      "verdict": "pass",
+      "summary": "Correctable and Non-Fatal status bodies remained raw-readable while the guest AER header/ownership and host/guest AER logging were suppressed",
+      "report": "vmware-aer-blackbox-results.md"
+    },
+    "pme": {
+      "run": "20260714-esxi8-pme-v3",
+      "verdict": "pass",
+      "summary": "Default, explicit 0x1f, and deny-PME 0x1b _OSC masks matched requested ownership; endpoint/root PME status was injected and guest-readable without a native PME IRQ, matching the tested KB ignored-PME model"
+    },
+    "p2p": {
+      "runs": [
+        "20260714-esxi8-p2p-acs-v7",
+        "20260714-esxi8-p2p-noacs-v2",
+        "20260714-esxi8-p2p-noacs-strict-v2"
+      ],
+      "verdict": "pass",
+      "summary": "Default and relaxACSforP2P-only were rejected by an IOMMU fault; allowP2P=true allowed peer DMA with or without relaxACSforP2P in the non-strict matrices"
+    },
+    "rmrr": {
+      "automaticHoleRun": "20260713-esxi8-rmrr-auto-v9-flr",
+      "automaticHoleVerdict": "pass",
+      "unsupportedLowRamRun": "20260713-esxi8-rmrr-unsupported-v9-flr",
+      "unsupportedLowRamVerdict": "pass",
+      "summary": "ESXi recognized the endpoint RMRR, automatically adjusted the PCI hole and booted when non-overlapping; an RMRR overlapping low System RAM prevented ESXi from becoming host-ready"
+    },
+    "optionRom": {
+      "qemuPositiveControl": "20260713-qemu-optionrom-minimal-compressed-padded-v33",
+      "qemuPositiveControlVerdict": "pass",
+      "esxiDefaultDisabled": "20260714-esxi8-optionrom-default-disabled-v1",
+      "esxiDefaultDisabledVerdict": "pass",
+      "esxiEnabledObservation": "20260713-esxi8-optionrom-minimal-compressed-padded-v4",
+      "esxiEnabledTestVerdict": "fail",
+      "classification": "entry-not-observed after pcipSaveOPROM=TRUE and pciPassthru0.opromEnabled=TRUE; this is a tested negative for the selected build/endpoint, not an unexecuted case"
+    }
+  },
+  "sriov": {
+    "pfControlRun": "20260714-esxi8-sriov-pf-control-v2",
+    "vfVisibleRun": "20260714-esxi8-sriov-vf-visible-v3",
+    "status": "partial/platform-endpoint-boundary",
+    "observed": [
+      "Raw SR-IOV extended capability and VFE/ARI state can be constructed",
+      "ESXi exposes functional Total/Initial VFs as zero or omits the raw VF",
+      "QEMU igb with I350 identity reaches the ESXi igbn driver but fails public initialization with Invalid NVM Checksum"
+    ],
+    "unlock": "Use an ESXi-supported physical PF or a substantially fuller PF/NVM/firmware device model"
+  },
+  "remainingRealHardware": [
+    "SR-IOV functional PF/VF assignment and VF reset",
+    "physical FLR/SBR/D3 sensitive-state clearing",
+    "physical ACS and requester-ID aliasing",
+    "physical INTx delivery",
+    "positive ESXi-supported option-ROM execution sample",
+    "vendor driver and HCL policy"
+  ]
+}

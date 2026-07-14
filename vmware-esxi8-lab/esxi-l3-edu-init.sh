@@ -85,5 +85,6 @@ fi
 rm -f "$marker_file" 2>/dev/null || true
 sync
 printf 'EDU-TEST-COMPLETE reset_state=%s\n' "${reset_state:-missing}"
-sleep 3
+# Leave a deterministic observation window for the L0 DMA teardown probe.
+sleep 15
 poweroff -f

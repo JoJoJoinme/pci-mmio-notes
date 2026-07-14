@@ -26,6 +26,9 @@
 #define EDU_INTERNAL_BUFFER       0x40000
 #define EDU_DMA_BYTES             256
 #define EDU_SENTINEL              0x45445531U
+#define IVSHMEM_VENDOR_ID         0x1af4
+#define IVSHMEM_DEVICE_ID         0x1110
+#define IVSHMEM_MEMORY_BAR        2
 
 struct edu_probe_data {
 	struct pci_dev *pdev;
@@ -141,6 +144,95 @@ static int edu_probe_dma(struct edu_probe_data *data)
 	return 0;
 }
 
+static void edu_probe_p2p(struct edu_probe_data *source)
+{
+	struct pci_dev *peer;
+	void __iomem *peer_bar;
+	resource_size_t peer_bus;
+	u8 *buffer = source->dma_cpu;
+	int mismatch = -1;
+	int i;
+	int ret;
+
+	peer = pci_get_device(IVSHMEM_VENDOR_ID, IVSHMEM_DEVICE_ID, NULL);
+	if (!peer) {
+		dev_info(&source->pdev->dev,
+			 "EDU-P2P-UNAVAILABLE reason=ivshmem-not-found\n");
+		return;
+	}
+
+	ret = pci_enable_device_mem(peer);
+	if (ret)
+		goto fail_enable;
+	ret = pci_request_region(peer, IVSHMEM_MEMORY_BAR,
+				 KBUILD_MODNAME "-p2p-peer");
+	if (ret)
+		goto fail_region;
+	peer_bar = pci_iomap(peer, IVSHMEM_MEMORY_BAR, EDU_DMA_BYTES);
+	if (!peer_bar) {
+		ret = -ENOMEM;
+		goto fail_iomap;
+	}
+
+	peer_bus = pci_bus_address(peer, IVSHMEM_MEMORY_BAR);
+	memset_io(peer_bar, 0, EDU_DMA_BYTES);
+	for (i = 0; i < EDU_DMA_BYTES; i++)
+		buffer[i] = (u8)(i ^ 0x6d);
+
+	edu_probe_arm_irq(source, EDU_DMA_IRQ_STATUS);
+	edu_probe_program_dma(source, source->dma_addr, EDU_INTERNAL_BUFFER,
+			      EDU_DMA_BYTES, EDU_DMA_RUN | EDU_DMA_IRQ);
+	ret = edu_probe_wait_irq(source, EDU_DMA_IRQ_STATUS);
+	if (ret)
+		goto fail_transfer;
+
+	edu_probe_arm_irq(source, EDU_DMA_IRQ_STATUS);
+	edu_probe_program_dma(source, EDU_INTERNAL_BUFFER, peer_bus,
+			      EDU_DMA_BYTES,
+			      EDU_DMA_RUN | EDU_DMA_FROM_DEVICE | EDU_DMA_IRQ);
+	ret = edu_probe_wait_irq(source, EDU_DMA_IRQ_STATUS);
+	if (ret)
+		goto fail_transfer;
+
+	mb();
+	for (i = 0; i < EDU_DMA_BYTES; i++) {
+		if (ioread8(peer_bar + i) != (u8)(i ^ 0x6d)) {
+			mismatch = i;
+			break;
+		}
+	}
+	if (mismatch < 0) {
+		dev_info(&source->pdev->dev,
+			 "EDU-P2P-PASS source=%s peer=%s peer_bus=0x%llx bytes=%u\n",
+			 pci_name(source->pdev), pci_name(peer),
+			 (unsigned long long)peer_bus, EDU_DMA_BYTES);
+	} else {
+		dev_info(&source->pdev->dev,
+			 "EDU-P2P-FAIL source=%s peer=%s peer_bus=0x%llx mismatch=%d got=0x%02x expected=0x%02x\n",
+			 pci_name(source->pdev), pci_name(peer),
+			 (unsigned long long)peer_bus, mismatch,
+			 ioread8(peer_bar + mismatch), (u8)(mismatch ^ 0x6d));
+	}
+
+	pci_iounmap(peer, peer_bar);
+	pci_release_region(peer, IVSHMEM_MEMORY_BAR);
+	pci_disable_device(peer);
+	pci_dev_put(peer);
+	return;
+
+fail_transfer:
+	pci_iounmap(peer, peer_bar);
+fail_iomap:
+	pci_release_region(peer, IVSHMEM_MEMORY_BAR);
+fail_region:
+	pci_disable_device(peer);
+fail_enable:
+	dev_info(&source->pdev->dev,
+		 "EDU-P2P-FAIL source=%s peer=%s stage=setup-or-transfer error=%d\n",
+		 pci_name(source->pdev), pci_name(peer), ret);
+	pci_dev_put(peer);
+}
+
 static int edu_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 {
 	struct edu_probe_data *data;
@@ -227,6 +319,8 @@ static int edu_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	ret = edu_probe_dma(data);
 	if (ret)
 		goto err_irq;
+
+	edu_probe_p2p(data);
 
 	dev_info(&pdev->dev,
 		 "EDU-PROBE-PASS id=0x%08x irq_mode=msi dma=roundtrip reset=%s\n",

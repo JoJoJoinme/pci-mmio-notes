@@ -1,6 +1,6 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-12
+Record date: 2026-07-14
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
@@ -28,6 +28,11 @@ vMotion、host crash、guest reboot、INTx 和 Dynamic DirectPath `assignedId`
 变化，见 `vmware-esxi8-directpath-local-results.md`；逐项复现命令和 Case
 索引见 `vmware-esxi8-lab/README.md`。
 
+ESXi `passthruCapable` 的 15 项 IOMMU/reset/ACS/topology 单变量矩阵、运行时 AH
+dependency 反例和 QEMU/VFIO 核对表，见
+`vmware-esxi8-passthru-capable-observed-model.md`。2026-07-14 增量的机器可读索引为
+`evidence/esxi8-directpath-20260714-summary.json`。
+
 PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU 对标结论，
 见 `vmware-aer-blackbox-results.md`；QEMU OVMF/SeaBIOS surface A/B 入口为
 `qemu-aer-surface-validate.sh`。
@@ -51,16 +56,30 @@ PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU �
    rejection, host-crash recovery, and traffic before/after guest reboot were
    all exercised. INTx was exposed but non-functional in the nested DirectPath
    path; the same ISO passed under direct QEMU.
-7. A no-backing `pci-testdev` closed the 32/64GB admission boundary. SizeGB was
-   ignored unless `use64bitMMIO=TRUE`; TRUE-only used the observable 32GB
-   default budget, so 32GB mapped and 64GB failed until SizeGB=64 was set.
+7. A no-backing `pci-testdev` closed 8/32/64GB admission and EFI runtime.
+   SizeGB was ignored unless `use64bitMMIO=TRUE`; TRUE-only used the observable
+   32GB default budget, so 8/32GB booted and 64GB failed until SizeGB=64.
+   Successful guests enumerated the full BAR and produced heartbeats.
 8. QEMU EDU closed the MSI-only/DMA gap under both direct QEMU and ESXi
    DirectPath. Four endpoint DMA translations were range-correlated with guest
    IOVAs and completion MSI remaps, with no DMAR fault. ESXi logged a reset
    attempt on guest reboot, but the EDU sentinel persisted, so a reset log is
    not proof that endpoint state was cleared.
-9. No single fixed stock QEMU/OVMF profile matches both VMware outcomes.
-   `both_zero` is only the below-4G profile:
+9. A 15-case capability matrix separated host IOMMU, accepted reset boundary,
+   and ACS policy from runtime assignability. A shared reset dependency failed
+   AH selection even with Capable/Enabled/Active=true; a dedicated Root Port
+   made the same 32GB device boot.
+10. Controlled PME, P2P and RMRR paths are now exercised. SR-IOV remains an
+    endpoint/driver boundary: raw capability state can be built, but a
+    functional ESXi-supported PF/VF still needs real hardware or a fuller model.
+11. A same-SID/same-IOVA DMA A/B now proves the power-off transition. While the
+    VM was running, SID `0x200` used domain 2 and translated `0x2b00000` to the
+    guest backing GPA `0x1c9100000`. After global context/IOTLB invalidation at
+    power-off, the same request used host domain 1 and identity-translated to
+    `0x2b00000`. ESXi replaced the guest mapping with its host identity context;
+    a post-power-off DMAR fault is therefore not the observed teardown model.
+12. No single fixed stock QEMU/OVMF profile matches both VMware outcomes.
+    `both_zero` is only the below-4G profile:
 
 ```text
 q35:

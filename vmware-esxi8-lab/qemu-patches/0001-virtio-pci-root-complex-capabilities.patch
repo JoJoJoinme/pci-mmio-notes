@@ -1,0 +1,53 @@
+From: PCI compatibility lab <lab@example.invalid>
+Subject: [PATCH] virtio-pci: optionally expose PCIe caps on the root bus
+
+QEMU normally exposes virtio-pci as a PCIe endpoint only below a PCIe
+port.  Add an experimental property that lets a controlled test endpoint
+become a Root Complex Integrated Endpoint.  The existing PCIe helper already
+selects that device/port type for a root bus.  The property is off by default,
+so normal QEMU behavior is unchanged.
+
+This is test instrumentation for externally observable reset-capability
+experiments; it is not a proposed production default.
+---
+ hw/virtio/virtio-pci.c | 4 +++-
+ hw/virtio/virtio-pci.h | 1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/hw/virtio/virtio-pci.c b/hw/virtio/virtio-pci.c
+index 433060ac02..df0b842236 100644
+--- a/hw/virtio/virtio-pci.c
++++ b/hw/virtio/virtio-pci.c
+@@ -1791,7 +1791,8 @@ static void virtio_pci_realize(PCIDevice *pci_dev, Error **errp)
+     VirtIOPCIProxy *proxy = VIRTIO_PCI(pci_dev);
+     VirtioPCIClass *k = VIRTIO_PCI_GET_CLASS(pci_dev);
+     bool pcie_port = pci_bus_is_express(pci_get_bus(pci_dev)) &&
+-                     !pci_bus_is_root(pci_get_bus(pci_dev));
++                     (!pci_bus_is_root(pci_get_bus(pci_dev)) ||
++                      proxy->pcie_root_cap_init);
+ 
+     if (kvm_enabled() && !kvm_has_many_ioeventfds()) {
+         proxy->flags &= ~VIRTIO_PCI_FLAG_USE_IOEVENTFD;
+@@ -1975,6 +1977,8 @@ static Property virtio_pci_properties[] = {
+                     VIRTIO_PCI_FLAG_PAGE_PER_VQ_BIT, false),
+     DEFINE_PROP_BOOL("x-ignore-backend-features", VirtIOPCIProxy,
+                      ignore_backend_features, false),
++    DEFINE_PROP_BOOL("x-pcie-root-cap-init", VirtIOPCIProxy,
++                     pcie_root_cap_init, false),
+     DEFINE_PROP_BIT("ats", VirtIOPCIProxy, flags,
+                     VIRTIO_PCI_FLAG_ATS_BIT, false),
+     DEFINE_PROP_BIT("x-ats-page-aligned", VirtIOPCIProxy, flags,
+diff --git a/hw/virtio/virtio-pci.h b/hw/virtio/virtio-pci.h
+index 2446dcd9ae..027b0c6850 100644
+--- a/hw/virtio/virtio-pci.h
++++ b/hw/virtio/virtio-pci.h
+@@ -145,6 +145,7 @@ struct VirtIOPCIProxy {
+     uint32_t flags;
+     bool disable_modern;
+     bool ignore_backend_features;
++    bool pcie_root_cap_init;
+     OnOffAuto disable_legacy;
+     uint32_t class_code;
+     uint32_t nvectors;
+-- 
+2.34.1

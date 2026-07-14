@@ -1,0 +1,3 @@
+sriov_register_vfs
+sriov_unregister_vfs
+sriov_config_write

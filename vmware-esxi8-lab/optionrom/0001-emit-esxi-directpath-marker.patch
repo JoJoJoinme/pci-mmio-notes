@@ -1,0 +1,127 @@
+diff --git a/src/interface/efi/efidrvprefix.c b/src/interface/efi/efidrvprefix.c
+--- a/src/interface/efi/efidrvprefix.c
++++ b/src/interface/efi/efidrvprefix.c
+@@ -20,39 +20,84 @@
+ FILE_LICENCE ( GPL2_OR_LATER );
+ 
+ #include <stdlib.h>
+ #include <ipxe/init.h>
+ #include <ipxe/device.h>
++#include <ipxe/io.h>
+ #include <ipxe/efi/efi.h>
+ #include <ipxe/efi/efi_driver.h>
++#include <ipxe/efi/Protocol/PciIo.h>
+ 
++#define OPROM_MARKER_OFFSET 0x1fff0
++#define OPROM_MARKER_VALUE 0x4f50524d
++#define OPROM_STAGE_MAGIC 0x53544147
++
++static EFI_GUID oprom_stage_guid = {
++	0x7f0b5e31, 0x4381, 0x4c45,
++	{ 0x9a, 0x7e, 0x52, 0x11, 0x9f, 0x62, 0x84, 0x31 }
++};
++static EFI_GUID reboot_phase_guid = {
++	0x12345678, 0x1234, 0x1234,
++	{ 0x12, 0x34, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc }
++};
++static CHAR16 oprom_stage_name[] = L"PciOpromStage";
++static CHAR16 reboot_phase_name[] = L"R01Phase";
++
++struct oprom_stage {
++	uint32_t magic;
++	uint32_t phase;
++};
++
++/** Record entry independently of PCI protocol and BAR access. */
++static void oprom_emit_stage ( void ) {
++	EFI_RUNTIME_SERVICES *rs = efi_systab->RuntimeServices;
++	uint8_t reboot_phase_data[32];
++	UINTN reboot_phase_size = sizeof ( reboot_phase_data );
++	UINT32 reboot_phase_attrs = 0;
++	struct oprom_stage stage = { OPROM_STAGE_MAGIC, 1 };
++	EFI_STATUS efirc;
++
++	efirc = rs->GetVariable ( reboot_phase_name, &reboot_phase_guid,
++				  &reboot_phase_attrs, &reboot_phase_size,
++				  reboot_phase_data );
++	if ( efirc == EFI_SUCCESS )
++		stage.phase = 2;
++
++	rs->SetVariable ( oprom_stage_name, &oprom_stage_guid,
++			  ( EFI_VARIABLE_BOOTSERVICE_ACCESS |
++			    EFI_VARIABLE_RUNTIME_ACCESS ),
++			  sizeof ( stage ), &stage );
++}
++
++/** Write an unambiguous marker through the target device's PCI BAR0. */
++static EFI_STATUS oprom_emit_marker ( void ) {
++	EFI_BOOT_SERVICES *bs = efi_systab->BootServices;
++	EFI_PCI_IO_PROTOCOL *pci_io;
++	uint32_t pci_id;
++	uint32_t bar0;
++	uint32_t marker = OPROM_MARKER_VALUE;
++	unsigned long mmio;
++	EFI_STATUS efirc;
++
++	efirc = bs->HandleProtocol ( efi_loaded_image->DeviceHandle,
++				     &efi_pci_io_protocol_guid,
++				     ( VOID ** ) &pci_io );
++	if ( efirc != EFI_SUCCESS )
++		return efirc;
++
++	efirc = pci_io->Pci.Read ( pci_io, EfiPciIoWidthUint32,
++				     0, 1, &pci_id );
++	if ( ( efirc != EFI_SUCCESS ) || ( pci_id != 0x10d38086 ) )
++		return EFI_UNSUPPORTED;
++	efirc = pci_io->Pci.Read ( pci_io, EfiPciIoWidthUint32,
++				     0x10, 1, &bar0 );
++	if ( efirc != EFI_SUCCESS )
++		return efirc;
++	efirc = pci_io->Attributes ( pci_io,
++				     EfiPciIoAttributeOperationEnable,
++				     EFI_PCI_IO_ATTRIBUTE_MEMORY, NULL );
++	if ( efirc != EFI_SUCCESS )
++		return efirc;
++
++	mmio = ( bar0 & ~0x0fUL );
++	if ( ( bar0 & 1 ) || ! mmio )
++		return EFI_UNSUPPORTED;
++	writel ( marker, ( void * ) ( mmio + OPROM_MARKER_OFFSET ) );
++	return EFI_SUCCESS;
++}
++
+ /**
+  * EFI entry point
+  *
+  * @v image_handle	Image handle
+  * @v systab		System table
+  * @ret efirc		EFI return status code
+  */
+ EFI_STATUS EFIAPI _efidrv_start ( EFI_HANDLE image_handle,
+ 				  EFI_SYSTEM_TABLE *systab ) {
+-	static struct efi_saved_tpl tpl; /* avoid triggering stack protector */
+ 	EFI_STATUS efirc;
+ 
+ 	/* Initialise stack cookie */
+ 	efi_init_stack_guard ( image_handle );
+ 
+ 	/* Initialise EFI environment */
+ 	if ( ( efirc = efi_init ( image_handle, systab ) ) != 0 )
+ 		return efirc;
++
++	/* Prove entry, then return without starting the iPXE driver stack. */
++	oprom_emit_stage();
++	oprom_emit_marker();
+ 
+-	/* Raise TPL */
+-	efi_raise_tpl ( &tpl );
+-
+-	/* Initialise iPXE environment */
+-	initialise();
+-	startup();
+-
+-	/* Restore TPL */
+-	efi_restore_tpl ( &tpl );
+ 
+ 	return 0;
+ }

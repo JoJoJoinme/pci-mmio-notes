@@ -1,0 +1,294 @@
+From: PCI compatibility lab <lab@example.invalid>
+Subject: [PATCH] pcie: add a controlled PME injection surface
+
+QEMU 6.2 exposes the endpoint PM capability but does not emulate PCIe
+Root Port PME delivery.  Add a write-only e1000e QOM trigger and the minimum
+Root Status/interrupt plumbing needed for an externally observable ESXi
+DirectPath PME experiment.  Normal behavior is unchanged unless the live
+QOM property is written.
+---
+ hw/net/e1000e.c             | 74 +++++++++++++++++++++++++++++++++++++-
+ hw/net/trace-events         |  1 +
+ hw/pci-bridge/pcie_root_port.c |  6 ++++
+ hw/pci/pcie.c               | 68 +++++++++++++++++++++++++++++++++--
+ include/hw/pci/pcie.h       |  4 +++
+ 5 files changed, 149 insertions(+), 4 deletions(-)
+
+diff --git a/include/hw/pci/pcie.h b/include/hw/pci/pcie.h
+--- a/include/hw/pci/pcie.h
++++ b/include/hw/pci/pcie.h
+@@ -55,6 +55,8 @@ struct PCIExpressDevice {
+                          Software Notification of Hot-Plug Events, an interrupt
+                          is sent whenever the logical and of these conditions
+                          transitions from false to true. */
++    bool pme_notified;
++
+ 
+     /* AER */
+     uint16_t aer_cap;
+@@ -115,6 +117,8 @@ void pcie_cap_slot_push_attention_button(PCIDevice *dev);
+ 
+ void pcie_cap_root_init(PCIDevice *dev);
+ void pcie_cap_root_reset(PCIDevice *dev);
++void pcie_cap_root_write_config(PCIDevice *dev, uint32_t addr, int len);
++void pcie_cap_root_pme_inject(PCIDevice *dev, uint16_t requester_id);
+ 
+ void pcie_cap_flr_init(PCIDevice *dev);
+ void pcie_cap_flr_write_config(PCIDevice *dev,
+diff --git a/hw/pci/pcie.c b/hw/pci/pcie.c
+--- a/hw/pci/pcie.c
++++ b/hw/pci/pcie.c
+@@ -355,6 +355,6 @@ static void hotplug_event_notify(PCIDevice *dev)
+         msi_notify(dev, pcie_cap_flags_get_vector(dev));
+     } else {
+-        pci_set_irq(dev, dev->exp.hpev_notified);
++        pci_set_irq(dev, dev->exp.hpev_notified || dev->exp.pme_notified);
+     }
+ }
+ 
+@@ -363,6 +363,7 @@ static void hotplug_event_clear(PCIDevice *dev)
+ {
+     hotplug_event_update_event_status(dev);
+-    if (!msix_enabled(dev) && !msi_enabled(dev) && !dev->exp.hpev_notified) {
++    if (!msix_enabled(dev) && !msi_enabled(dev) &&
++        !dev->exp.hpev_notified && !dev->exp.pme_notified) {
+         pci_irq_deassert(dev);
+     }
+ }
+@@ -794,17 +795,73 @@ void pcie_cap_slot_push_attention_button(PCIDevice *dev)
+     pcie_cap_slot_event(dev, PCI_EXP_HP_EV_ABP);
+ }
+ 
+-/* root control/capabilities/status. PME isn't emulated for now */
++static void pcie_cap_root_event_notify(PCIDevice *dev)
++{
++    uint8_t *exp_cap = dev->config + dev->exp.exp_cap;
++    uint16_t root_control = pci_get_word(exp_cap + PCI_EXP_RTCTL);
++    uint32_t root_status = pci_get_long(exp_cap + PCI_EXP_RTSTA);
++    bool previous = dev->exp.pme_notified;
++
++    dev->exp.pme_notified =
++        (root_control & PCI_EXP_RTCTL_PMEIE) &&
++        (root_status & PCI_EXP_RTSTA_PME);
++    if (previous == dev->exp.pme_notified) {
++        return;
++    }
++
++    if (dev->exp.pme_notified) {
++        if (msix_enabled(dev)) {
++            msix_notify(dev, pcie_cap_flags_get_vector(dev));
++        } else if (msi_enabled(dev)) {
++            msi_notify(dev, pcie_cap_flags_get_vector(dev));
++        } else {
++            pci_set_irq(dev, true);
++        }
++    } else if (!msix_enabled(dev) && !msi_enabled(dev)) {
++        pci_set_irq(dev, dev->exp.hpev_notified);
++    }
++}
++
++/* Root Control/Status support needed by the controlled PME lab. */
+ void pcie_cap_root_init(PCIDevice *dev)
+ {
+     pci_set_word(dev->wmask + dev->exp.exp_cap + PCI_EXP_RTCTL,
+                  PCI_EXP_RTCTL_SECEE | PCI_EXP_RTCTL_SENFEE |
+-                 PCI_EXP_RTCTL_SEFEE);
++                 PCI_EXP_RTCTL_SEFEE | PCI_EXP_RTCTL_PMEIE);
++    pci_set_long(dev->w1cmask + dev->exp.exp_cap + PCI_EXP_RTSTA,
++                 PCI_EXP_RTSTA_PME);
+ }
+ 
+ void pcie_cap_root_reset(PCIDevice *dev)
+ {
+     pci_set_word(dev->config + dev->exp.exp_cap + PCI_EXP_RTCTL, 0);
++    pci_set_long(dev->config + dev->exp.exp_cap + PCI_EXP_RTSTA, 0);
++    dev->exp.pme_notified = false;
++}
++
++void pcie_cap_root_write_config(PCIDevice *dev, uint32_t addr, int len)
++{
++    uint32_t pos = dev->exp.exp_cap;
++
++    if (ranges_overlap(addr, len, pos + PCI_EXP_RTCTL, 2) ||
++        ranges_overlap(addr, len, pos + PCI_EXP_RTSTA, 4)) {
++        pcie_cap_root_event_notify(dev);
++    }
++}
++
++void pcie_cap_root_pme_inject(PCIDevice *dev, uint16_t requester_id)
++{
++    uint8_t *root_status = dev->config + dev->exp.exp_cap + PCI_EXP_RTSTA;
++    uint32_t status = pci_get_long(root_status);
++
++    if (status & PCI_EXP_RTSTA_PME) {
++        status |= PCI_EXP_RTSTA_PENDING;
++    } else {
++        status &= ~0xffffU;
++        status |= requester_id | PCI_EXP_RTSTA_PME;
++    }
++    pci_set_long(root_status, status);
++    pcie_cap_root_event_notify(dev);
+ }
+ 
+ /* function level reset(FLR) */
+diff --git a/hw/pci-bridge/pcie_root_port.c b/hw/pci-bridge/pcie_root_port.c
+--- a/hw/pci-bridge/pcie_root_port.c
++++ b/hw/pci-bridge/pcie_root_port.c
+@@ -27,7 +27,10 @@ static void rp_write_config(PCIDevice *d, uint32_t address,
+     uint32_t root_cmd =
+         pci_get_long(d->config + d->exp.aer_cap + PCI_ERR_ROOT_COMMAND);
+     uint16_t slt_ctl, slt_sta;
++    uint32_t root_pos = d->exp.exp_cap;
++    uint32_t old_root_status;
+ 
+     pcie_cap_slot_get(d, &slt_ctl, &slt_sta);
++    old_root_status = pci_get_long(d->config + root_pos + PCI_EXP_RTSTA);
+ 
+     pci_bridge_write_config(d, address, val, len);
+@@ -34,4 +37,10 @@ static void rp_write_config(PCIDevice *d, uint32_t address,
+     pcie_cap_slot_write_config(d, slt_ctl, slt_sta, address, val, len);
++    if ((old_root_status & PCI_EXP_RTSTA_PME) &&
++        !(pci_get_long(d->config + root_pos + PCI_EXP_RTSTA) & PCI_EXP_RTSTA_PME)) {
++        pci_long_test_and_clear_mask(d->config + root_pos + PCI_EXP_RTSTA,
++                                     PCI_EXP_RTSTA_PENDING);
++    }
++    pcie_cap_root_write_config(d, address, len);
+     pcie_aer_write_config(d, address, val, len);
+     pcie_aer_root_write_config(d, address, val, len, root_cmd);
+ }
+diff --git a/hw/net/e1000e.c b/hw/net/e1000e.c
+--- a/hw/net/e1000e.c
++++ b/hw/net/e1000e.c
+@@ -43,6 +43,8 @@
+ #include "hw/hw.h"
+ #include "hw/pci/msi.h"
+ #include "hw/pci/msix.h"
++#include "hw/pci/pci_bus.h"
++#include "hw/pci/pcie.h"
+ #include "hw/qdev-properties.h"
+ #include "migration/vmstate.h"
+ 
+@@ -83,5 +84,6 @@ struct E1000EState {
+ };
+ 
++#define E1000E_PM_CAP_OFFSET 0x0c8
+ #define E1000E_MMIO_IDX     0
+ #define E1000E_FLASH_IDX    1
+ #define E1000E_IO_IDX       2
+@@ -426,5 +428,4 @@ static void e1000e_pci_realize(PCIDevice *pci_dev, Error **errp)
+ {
+-    static const uint16_t e1000e_pmrb_offset = 0x0C8;
+     static const uint16_t e1000e_pcie_offset = 0x0E0;
+     static const uint16_t e1000e_aer_offset =  0x100;
+     static const uint16_t e1000e_dsn_offset =  0x140;
+@@ -483,1 +484,1 @@ static void e1000e_pci_realize(PCIDevice *pci_dev, Error **errp)
+-    if (e1000e_add_pm_capability(pci_dev, e1000e_pmrb_offset,
++    if (e1000e_add_pm_capability(pci_dev, E1000E_PM_CAP_OFFSET,
+@@ -697,6 +698,80 @@ static void e1000e_class_init(ObjectClass *class, void *data)
+     set_bit(DEVICE_CATEGORY_NETWORK, dc->categories);
+ }
+ 
++static PCIDevice *e1000e_upstream_port(E1000EState *s)
++{
++    PCIBus *bus = pci_get_bus(&s->parent_obj);
++
++    return bus ? bus->parent_dev : NULL;
++}
++
++static bool e1000e_get_pme_enabled(Object *obj, Error **errp)
++{
++    PCIDevice *pdev = PCI_DEVICE(obj);
++    uint16_t pmcsr = pci_get_word(pdev->config + E1000E_PM_CAP_OFFSET +
++                                  PCI_PM_CTRL);
++
++    return pmcsr & PCI_PM_CTRL_PME_ENABLE;
++}
++
++static bool e1000e_get_pme_status(Object *obj, Error **errp)
++{
++    PCIDevice *pdev = PCI_DEVICE(obj);
++    uint16_t pmcsr = pci_get_word(pdev->config + E1000E_PM_CAP_OFFSET +
++                                  PCI_PM_CTRL);
++
++    return pmcsr & PCI_PM_CTRL_PME_STATUS;
++}
++
++static bool e1000e_get_upstream_pme_enabled(Object *obj, Error **errp)
++{
++    E1000EState *s = E1000E(obj);
++    PCIDevice *root = e1000e_upstream_port(s);
++
++    if (!root || !root->exp.exp_cap) {
++        return false;
++    }
++    return pci_get_word(root->config + root->exp.exp_cap + PCI_EXP_RTCTL) &
++           PCI_EXP_RTCTL_PMEIE;
++}
++
++static bool e1000e_get_upstream_pme_status(Object *obj, Error **errp)
++{
++    E1000EState *s = E1000E(obj);
++    PCIDevice *root = e1000e_upstream_port(s);
++
++    if (!root || !root->exp.exp_cap) {
++        return false;
++    }
++    return pci_get_long(root->config + root->exp.exp_cap + PCI_EXP_RTSTA) &
++           PCI_EXP_RTSTA_PME;
++}
++
++static void e1000e_set_pme_inject(Object *obj, bool value, Error **errp)
++{
++    E1000EState *s = E1000E(obj);
++    PCIDevice *pdev = &s->parent_obj;
++    PCIDevice *root = e1000e_upstream_port(s);
++    uint16_t pmcsr;
++
++    if (!value) {
++        return;
++    }
++    if (!root || !root->exp.exp_cap) {
++        error_setg(errp, "e1000e has no PCIe upstream port for PME");
++        return;
++    }
++
++    pmcsr = pci_get_word(pdev->config + E1000E_PM_CAP_OFFSET + PCI_PM_CTRL);
++    pci_word_test_and_set_mask(pdev->config + E1000E_PM_CAP_OFFSET +
++                               PCI_PM_CTRL, PCI_PM_CTRL_PME_STATUS);
++    pcie_cap_root_pme_inject(root, pci_requester_id(pdev));
++    trace_e1000e_pme_inject(
++        pci_requester_id(pdev), !!(pmcsr & PCI_PM_CTRL_PME_ENABLE),
++        e1000e_get_upstream_pme_enabled(obj, NULL),
++        pci_get_long(root->config + root->exp.exp_cap + PCI_EXP_RTSTA));
++}
++
+ static void e1000e_instance_init(Object *obj)
+ {
+     E1000EState *s = E1000E(obj);
+@@ -704,6 +779,13 @@ static void e1000e_instance_init(Object *obj)
+     device_add_bootindex_property(obj, &s->conf.bootindex,
+                                   "bootindex", "/ethernet-phy@0",
+                                   DEVICE(obj));
++    object_property_add_bool(obj, "x-pme-enabled", e1000e_get_pme_enabled, NULL);
++    object_property_add_bool(obj, "x-pme-status", e1000e_get_pme_status, NULL);
++    object_property_add_bool(obj, "x-upstream-pme-enabled",
++                             e1000e_get_upstream_pme_enabled, NULL);
++    object_property_add_bool(obj, "x-upstream-pme-status",
++                             e1000e_get_upstream_pme_status, NULL);
++    object_property_add_bool(obj, "x-pme-inject", NULL, e1000e_set_pme_inject);
+ }
+ 
+ static const TypeInfo e1000e_info = {
+diff --git a/hw/net/trace-events b/hw/net/trace-events
+--- a/hw/net/trace-events
++++ b/hw/net/trace-events
+@@ -252,6 +252,7 @@ e1000e_vm_state_stopped(void) "VM state is stopped"
+ # e1000e.c
+ e1000e_cb_pci_realize(void) "E1000E PCI realize entry"
+ e1000e_cb_pci_uninit(void) "E1000E PCI unit entry"
+ e1000e_cb_qdev_reset(void) "E1000E qdev reset entry"
++e1000e_pme_inject(uint16_t requester, bool function_enabled, bool root_enabled, uint32_t root_status) "requester 0x%04x function_enabled %d root_enabled %d root_status 0x%08x"
+ e1000e_cb_pre_save(void) "E1000E pre save entry"
+ e1000e_cb_post_load(void) "E1000E post load entry"
+-- 
+2.34.1

@@ -1,0 +1,141 @@
+From: PCI compatibility lab <lab@example.invalid>
+Subject: [PATCH] pcie: add an opt-in VMware AER visibility profile
+
+Keep normal QEMU behavior unchanged.  The lab-only controls make AER
+undiscoverable while retaining its backing register body, and let Q35 ACPI
+deny native AER ownership through _OSC.  This reproduces the public surface
+observed in an ESXi DirectPath guest without changing host-side error policy.
+---
+ hw/i386/acpi-build.c            | 12 ++++++++----
+ hw/i386/pc.c                    | 18 ++++++++++++++++++
+ hw/net/e1000e.c                 |  7 +++++++
+ hw/pci-bridge/pcie_root_port.c  |  6 ++++++
+ include/hw/i386/pc.h            |  2 ++
+ include/hw/pci/pcie_port.h      |  3 +++
+ 6 files changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/include/hw/i386/pc.h b/include/hw/i386/pc.h
+--- a/include/hw/i386/pc.h
++++ b/include/hw/i386/pc.h
+@@ -45,3 +45,4 @@ typedef struct PCMachineState {
+     bool hpet_enabled;
+     bool default_bus_bypass_iommu;
++    bool vmware_deny_pcie_aer;
+     uint64_t max_fw_size;
+@@ -56,3 +57,4 @@ typedef struct PCMachineState {
+ #define PC_MACHINE_SATA             "sata"
+ #define PC_MACHINE_PIT              "pit"
++#define PC_MACHINE_VMWARE_DENY_PCIE_AER "x-vmware-deny-pcie-aer"
+ #define PC_MACHINE_MAX_FW_SIZE      "max-fw-size"
+diff --git a/hw/i386/pc.c b/hw/i386/pc.c
+--- a/hw/i386/pc.c
++++ b/hw/i386/pc.c
+@@ -1528,6 +1528,21 @@ static void pc_machine_set_default_bus_bypass_iommu(Object *obj, bool value,
+     pcms->default_bus_bypass_iommu = value;
+ }
+ 
++static bool pc_machine_get_vmware_deny_pcie_aer(Object *obj, Error **errp)
++{
++    PCMachineState *pcms = PC_MACHINE(obj);
++
++    return pcms->vmware_deny_pcie_aer;
++}
++
++static void pc_machine_set_vmware_deny_pcie_aer(Object *obj, bool value,
++                                                 Error **errp)
++{
++    PCMachineState *pcms = PC_MACHINE(obj);
++
++    pcms->vmware_deny_pcie_aer = value;
++}
++
+ static void pc_machine_get_max_ram_below_4g(Object *obj, Visitor *v,
+                                             const char *name, void *opaque,
+                                             Error **errp)
+@@ -1749,5 +1763,9 @@ static void pc_machine_class_init(ObjectClass *oc, void *data)
+         pc_machine_get_default_bus_bypass_iommu,
+         pc_machine_set_default_bus_bypass_iommu);
+ 
++    object_class_property_add_bool(oc, PC_MACHINE_VMWARE_DENY_PCIE_AER,
++        pc_machine_get_vmware_deny_pcie_aer,
++        pc_machine_set_vmware_deny_pcie_aer);
++
+     object_class_property_add(oc, PC_MACHINE_MAX_FW_SIZE, "size",
+         pc_machine_get_max_fw_size, pc_machine_set_max_fw_size,
+diff --git a/hw/i386/acpi-build.c b/hw/i386/acpi-build.c
+--- a/hw/i386/acpi-build.c
++++ b/hw/i386/acpi-build.c
+@@ -1340,2 +1340,3 @@
+-static Aml *build_q35_osc_method(bool enable_native_pcie_hotplug)
++static Aml *build_q35_osc_method(bool enable_native_pcie_hotplug,
++                                 bool deny_native_aer)
+ {
+@@ -1365,1 +1366,3 @@
+-        aml_int(0x1E | (enable_native_pcie_hotplug ? 0x1 : 0x0)), a_ctrl));
++        aml_int((deny_native_aer ? 0x16 : 0x1E) |
++                (enable_native_pcie_hotplug ? 0x1 : 0x0)),
++        a_ctrl));
+@@ -1451,3 +1454,4 @@ build_dsdt(GArray *table_data, BIOSLinker *linker,
+         aml_append(dev, aml_name_decl("_ADR", aml_int(0)));
+         aml_append(dev, aml_name_decl("_UID", aml_int(pcmc->pci_root_uid)));
+-        aml_append(dev, build_q35_osc_method(!pm->pcihp_bridge_en));
++        aml_append(dev, build_q35_osc_method(!pm->pcihp_bridge_en,
++                                             pcms->vmware_deny_pcie_aer));
+@@ -1573,1 +1577,1 @@
+-                aml_append(dev, build_q35_osc_method(true));
++                aml_append(dev, build_q35_osc_method(true, pcms->vmware_deny_pcie_aer));
+diff --git a/include/hw/pci/pcie_port.h b/include/hw/pci/pcie_port.h
+--- a/include/hw/pci/pcie_port.h
++++ b/include/hw/pci/pcie_port.h
+@@ -55,4 +55,7 @@ struct PCIESlot {
+     /* Disable ACS (really for a pcie_root_port) */
+     bool        disable_acs;
+ 
++    /* Keep the AER body but hide its extended capability header. */
++    bool        hide_aer;
++
+     /* Indicates whether any type of hot-plug is allowed on the slot */
+diff --git a/hw/pci-bridge/pcie_root_port.c b/hw/pci-bridge/pcie_root_port.c
+--- a/hw/pci-bridge/pcie_root_port.c
++++ b/hw/pci-bridge/pcie_root_port.c
+@@ -124,4 +124,8 @@ static void rp_realize(PCIDevice *d, Error **errp)
+     if (rpc->acs_offset && !s->disable_acs) {
+         pcie_acs_init(d, rpc->acs_offset);
+     }
++    if (s->hide_aer) {
++        pci_set_long(d->config + rpc->aer_offset, 0);
++        pci_set_long(d->cmask + rpc->aer_offset, 0);
++    }
+     return;
+@@ -154,4 +158,5 @@ static Property rp_props[] = {
+                     QEMU_PCIE_SLTCAP_PCP_BITNR, true),
+     DEFINE_PROP_BOOL("disable-acs", PCIESlot, disable_acs, false),
++    DEFINE_PROP_BOOL("x-hide-aer", PCIESlot, hide_aer, false),
+     DEFINE_PROP_END_OF_LIST()
+ };
+diff --git a/hw/net/e1000e.c b/hw/net/e1000e.c
+--- a/hw/net/e1000e.c
++++ b/hw/net/e1000e.c
+@@ -80,3 +80,4 @@ struct E1000EState {
+     E1000ECore core;
+     bool init_vet;
++    bool hide_aer;
+ };
+@@ -497,4 +498,9 @@ static void e1000e_pci_realize(PCIDevice *pci_dev, Error **errp)
+     pcie_dev_ser_num_init(pci_dev, e1000e_dsn_offset,
+                           e1000e_gen_dsn(macaddr));
+ 
++    if (s->hide_aer) {
++        pci_set_long(pci_dev->config + e1000e_aer_offset, 0);
++        pci_set_long(pci_dev->cmask + e1000e_aer_offset, 0);
++    }
++
+     e1000e_init_net_peer(s, pci_dev, macaddr);
+@@ -675,4 +681,5 @@ static Property e1000e_properties[] = {
+                         e1000e_prop_subsys, uint16_t),
+     DEFINE_PROP_BOOL("init-vet", E1000EState, init_vet, true),
++    DEFINE_PROP_BOOL("x-hide-aer", E1000EState, hide_aer, false),
+     DEFINE_PROP_END_OF_LIST(),
+ };
+-- 
+2.34.1

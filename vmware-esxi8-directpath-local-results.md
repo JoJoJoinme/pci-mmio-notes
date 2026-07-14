@@ -1,8 +1,9 @@
 # ESXi 8 VMDirectPath 本地黑盒验证结果报告
 
-日期：2026-07-11 至 2026-07-12
+日期：2026-07-11 至 2026-07-14
 目标版本：VMware ESXi 8.0.3 build 24280767
-外层平台：WSL2 + QEMU 6.2 + KVM，两台嵌套 ESXi + VCSA 8.0.3
+外层平台：WSL2 + QEMU 6.2/11.0.2 + KVM，两台嵌套 ESXi + VCSA 8.0.3
+最新运行态：WSL 6.6.123.2 自编译 KVM 内核，QEMU 11.0.2 capability-lab build
 L3：vHW 20、EFI、Linux 5.15.0-185
 
 本文是本仓库当前的 VMware DirectPath 主结果报告。它取代了早期仅根据普通 EFI VMX
@@ -12,7 +13,10 @@ L3：vHW 20、EFI、Linux 5.15.0-185
 8.0.3 build 24674346、共享 NFS datastore 和两台同 build ESXi。
 
 复现命令和 Case ID 索引见 [`vmware-esxi8-lab/README.md`](vmware-esxi8-lab/README.md)。
-机器可读摘要见 [`evidence/esxi8-directpath-summary.json`](evidence/esxi8-directpath-summary.json)。
+机器可读摘要见 [`evidence/esxi8-directpath-summary.json`](evidence/esxi8-directpath-summary.json)
+和 [`evidence/esxi8-directpath-20260714-summary.json`](evidence/esxi8-directpath-20260714-summary.json)。
+`passthruCapable` 专题模型见
+[`vmware-esxi8-passthru-capable-observed-model.md`](vmware-esxi8-passthru-capable-observed-model.md)。
 
 ## 1. 结论摘要
 
@@ -60,7 +64,7 @@ candidate，再按选中设备建立 guest MMIO envelope；它没有因为 allow
 该结论只绑定当前 ESXi build、vHW 和受控 endpoint，不能直接外推到所有旧版 ESXi、
 GPU、ReBAR 或超大 aggregate BAR。
 
-### 1.2 32/64GB BAR 实锤了 large-MMIO gate 与预算边界
+### 1.2 8/32/64GB BAR 已闭环 gate、预算、IOMMU 与 guest runtime
 
 `pci-testdev` 不需要为 BAR 建立等量 backing，因而可以把“宿主内存/稀疏文件容量不足”
 从解释中排除。QEMU direct + OVMF 已分别启动 32GB、64GB BAR 并精确枚举；同一设备
@@ -68,8 +72,9 @@ GPU、ReBAR 或超大 aggregate BAR。
 
 | BAR | absent/FALSE/Size-only | TRUE-only | TRUE + 足额 SizeGB | TRUE + 半额 SizeGB |
 | --- | --- | --- | --- | --- |
-| 32GB | 失败，limit=917504 pages | IOMMU mapping 成功 | IOMMU mapping 成功 | 失败，limit=5111808 pages |
-| 64GB | 失败，limit=917504 pages | 失败，limit=9306112 pages | IOMMU mapping 成功 | 失败，limit=9306112 pages |
+| 8GB | 失败，limit=917504 pages | guest pass | guest pass | 失败，limit=1966080 pages |
+| 32GB | 失败，limit=917504 pages | guest pass | guest pass | 失败，limit=5111808 pages |
+| 64GB | 失败，limit=917504 pages | 失败，limit=9306112 pages | guest pass | 失败，limit=9306112 pages |
 
 所需页数分别为 `8388609` 和 `16777217`。所有失败样本符合可观察预算模型：
 
@@ -78,11 +83,21 @@ limitPages = 917504 + effectiveSizeGB * 262144
 ```
 
 `SizeGB` 在 gate absent/FALSE 时不增加预算；`TRUE` 且 SizeGB absent 时的默认
-`effectiveSizeGB` 为 32；显式 SizeGB 会替换这部分。故 32GB `TRUE-only` 能映射，
-64GB `TRUE-only` 不能，而 `TRUE+Size64` 能映射。这是 VMX admission/IOMMU mapping
-结论；成功映射后的嵌套 EFI 没有到达 Linux heartbeat，不能写成 32/64GB guest
-运行支持。规范化证据见
-[`evidence/esxi8-large-mmio-32g-64g-20260712-summary.json`](evidence/esxi8-large-mmio-32g-64g-20260712-summary.json)。
+`effectiveSizeGB` 为 32；显式 SizeGB 会替换这部分。故 32GB `TRUE-only` 能启动，
+64GB `TRUE-only` 不能，而 `TRUE+Size64` 能启动。三种足额样本都完成 EFI Linux
+heartbeat、目标 `1b36:0005` 枚举和 IOMMU mapping。Guest BAR 分别为：
+
+```text
+8GB:  0x1ffe00000000-0x1fffffffffff
+32GB: 0x1ff800000000-0x1fffffffffff
+64GB: 0x1ff000000000-0x1fffffffffff
+```
+
+运行态闭环还暴露了一个独立条件：大 BAR endpoint 与 e1000e 共用 Root Port 时，设备
+虽为 `Capable/Enabled/Active=true`，VMX 仍报 `AH Failed to find a suitable device`；
+把 endpoint 放到独占 Root Port 后，同一设备和 VMX 立即通过。QEMU 6.2/11.0.2 A/B
+都复现共享组失败，因此根因是 dependency 无法独占，不是 QEMU 版本。规范化证据见
+[`evidence/esxi8-directpath-20260714-summary.json`](evidence/esxi8-directpath-20260714-summary.json)。
 
 ### 1.3 QEMU 没有一组固定参数能完整复制 VMware 默认策略
 
@@ -149,8 +164,9 @@ Windows / WSL2
 | E3 | 外层 QEMU VT-d、DMA、中断和 reset trace |
 | E4 | 裸机 ESXi + 真实 PCIe device；本轮没有 |
 
-本报告可以对 VMware 黑盒决策和嵌套 IOMMU 行为给出 E2/E3 结论，但真实电气复位、
-硬件 ACS、RMRR/P2P 和 vendor device 安全性仍需要 E4。
+本报告可以对 VMware 黑盒决策和嵌套 IOMMU 行为给出 E2/E3 结论。RMRR 与 P2P 的
+虚拟策略路径已验证；真实电气复位、硬件 ACS、vendor device 状态清除和真实 peer DMA
+安全性仍需要 E4。
 
 ## 3. L3 启动阻塞与修复
 
@@ -160,7 +176,8 @@ Windows / WSL2
 VM-entry failed; VMCS valid (error code 7)
 ```
 
-不需要升级 WSL 内核或 QEMU。只屏蔽外层 VMX TSC scaling 后即可稳定启动：
+对早期 1/2/4GB 基线，不需要升级 WSL 内核或 QEMU；只屏蔽外层 VMX TSC scaling
+即可稳定启动：
 
 ```bash
 -cpu host,+vmx,-vmx-tsc-scaling
@@ -170,8 +187,11 @@ VM-entry failed; VMCS valid (error code 7)
 `01:00.0/.1` 在 guest 中为 `02:00.0/.1`，证明 guest 看到的是真正同 slot
 multifunction，而不是只从 VMware `pciSlotNumber` 推算。
 
-较新的 WSL 6.x 内核和 QEMU 仍有价值，但用途变成补齐 endpoint/event injection 和
-新 tracing 能力，不再是“让 L3 能启动”的必要条件。
+随后为 SR-IOV、PME、RMRR、FLR 和超大 BAR 编译了 WSL
+`6.6.123.2-microsoft-standard-WSL2+` 与 QEMU 11.0.2。该组合已让 8/32/64GB 的
+EFI guest runtime 全部通过；但本轮同时改变了 KVM 内核和 endpoint 拓扑，不能把
+heartbeat 修复单独归因于新内核。可确定的单变量结论是：共享 dependency 在旧/新
+QEMU 上都会触发 AH 拒绝，独占 Root Port 在新内核/QEMU 上通过。
 
 ## 4. MMIO 与 BAR 详细结果
 
@@ -221,7 +241,7 @@ ivshmem BAR2: 0x1fff80000000-0x1fffffffffff 64bit pref
 用例中两个 BAR 位于连续 3GB DirectPath range，额外 1GB root range 使最终高端布局
 按 4GB 边界收敛。
 
-### 4.4 4GB gate 与 8GB 嵌套边界
+### 4.4 4/8/32/64GB gate 与运行态边界
 
 单 4GB BAR 的单变量矩阵：
 
@@ -236,19 +256,18 @@ ivshmem BAR2: 0x1fff80000000-0x1fffffffffff 64bit pref
 `SizeGB` 不能单独开启该路径，且对恰好 4GB 的用例不是必要项。`917504` 个 4K page
 等于 3.5GiB，是本 build 的外部可观察默认映射上限，不应外推成跨版本公式。
 
-8GB 使用稀疏 regular-file backing，逻辑 8GB、初始实际占用 0，排除了 `/dev/shm`
-容量不足：
+旧 8GB 稀疏 ivshmem 样本虽创建 mapping，却在共享 dependency 拓扑中没有 heartbeat。
+2026-07-14 使用 no-backing `pci-testdev`、独占 Root Port 与同一 EFI 探针重跑 8GB
+完整七项矩阵：TRUE-only 与 TRUE+Size8 均为 `guest-pass`，BAR 为
+`0x1ffe00000000-0x1fffffffffff`；TRUE+Size4 按预期以
+`2097153 > 1966080` pages 失败。
 
-- key 缺省时按预期失败：`2097153 > 917504` pages。
-- TRUE-only 与 TRUE+Size8 均接受 8GB BAR并创建 IOMMU mapping。
-- TRUE-only 进入 EFI runtime 后 600 秒无 guest serial；TRUE+Size8 也未得到 heartbeat，
-  并令当前嵌套 ESXi 的 outer QEMU 长时间占满四个 vCPU。
-
-所以 8GB 已证明“VMX mapping gate 能打开”，但没有形成 E2 guest-boot 通过证据。
-随后使用不分配等量 backing 的 `pci-testdev` 完成 32/64GB power-on-only 矩阵：32GB
-TRUE-only/TRUE+Size32 映射成功；64GB 只有 TRUE+Size64 映射成功，TRUE-only 和
-TRUE+Size32 都在 `9306112` 页预算处失败。两种成功 mapping 均未形成 E2 guest
-heartbeat，故仍未覆盖 32/64GB guest runtime、ReBAR 和不同 vHW/ESXi 历史版本。
+相同方法完成 32/64GB：32GB TRUE-only/TRUE+Size32 和 64GB TRUE+Size64 均形成
+guest heartbeat、目标枚举及 IOMMU mapping；64GB TRUE-only 与 TRUE+Size32 均在
+`9306112` 页上限处失败。8/32/64GB 的成功样本都使用与 BAR 同大小的 outer QEMU
+hole64/OVMF aperture，外层 HMP、ESXi `vmware.log` 和 guest resource 三层地址均已保存。
+尚未覆盖的是可变 ReBAR、不同 vHW/ESXi 历史版本和真实设备 pin/memlock 成本，而不是
+这些固定大小 BAR 的 EFI runtime。
 
 ### 4.5 SeaBIOS 的定位
 
@@ -284,6 +303,21 @@ Bypassing non-ACS capable device in hierarchy
 因此它只能证明 VMware 存在 bypass 分支，不能作为生产安全配置。生产 VFIO/ESXi
 对标仍应要求真实 ACS、正确 IOMMU group，禁止把 `pcie_acs_override` 当成通过条件。
 
+15 项 `passthruCapable` 单变量矩阵进一步把资格判断收敛为外部可观察模型：
+
+- 没有 IOMMU 时，即使 ESXi 能报告 `Bridge reset`，`passthruCapable=false`。
+- Root Complex 直挂 endpoint 只有公开 FLR 时通过；PM-only、D3hot 状态位或 PME/D3
+  广告都没有被本 build 接受为可用 reset 方法。
+- Endpoint 自身没有 FLR/PM 时，只要位于可整体复位的 PCIe Root Port 或 legacy bridge
+  后，仍可得到 `Bridge reset` 和 `passthruCapable=true`。
+- Root Port 无 ACS 且当前 bypass policy 打开时仍 capable；开启严格 ACS 检查后，同一
+  设备变为 incapable。
+- `passthruCapable` 只回答静态资格，不保证运行时可分配。共享 dependency 的大 BAR
+  设备即使 `Capable/Enabled/Active=true`，仍可能被 AH 拒绝；独占 Root Port 后通过。
+
+完整 15/15 矩阵、推理边界和 QEMU 核对表见
+[`vmware-esxi8-passthru-capable-observed-model.md`](vmware-esxi8-passthru-capable-observed-model.md)。
+
 ## 6. DMA、中断与 reset
 
 L3 initrd 加载 e1000e 后实际发送和接收报文，并看到三个 PCI-MSI vector。相同运行
@@ -308,6 +342,13 @@ e1000e reset 证据较弱：
 
 因此该 endpoint 只能证明“设备可重复使用和 IOMMU invalidation”，不能声称 ESXi
 每次都真实执行了 Secondary Bus Reset。
+
+R00 的 Function Reset 路径已由 patched virtio endpoint 补齐。设备直挂 Root Complex、
+公开 FLR 后，ESXi 报告 `Reset Method=Function reset` 和 `passthruCapable=true`；VM
+power-on/power-off 两侧的 outer QEMU trace 都捕获到目标 `virtio-net-pci` 的
+`qdev_reset_all/qdev_reset_tree/qdev_reset`，guest 同时启动成功。该结果证明本虚拟
+端点的 FLR 回调链，不替代真实设备内部敏感状态清除的 E4，也没有把 SBR/D3 路径混写
+成 FLR。
 
 R01 已用 UEFI variable 做跨重启 phase marker，避免额外磁盘改变 EFI 启动链。第一次
 内核完成 e1000e I/O 后写 marker 并执行 `reboot -f`；第二次内核读取 marker、再次完成
@@ -336,6 +377,24 @@ MSI vector，每阶段完成一次软件触发 IRQ 和两次 DMA-completion IRQ�
 - 外层 VT-d 对 `dev 01:01.00` 记录四次 DMA translation；两个 Guest DMA IOVA 都落在
   `0x2a00000-0x2bfffff` 的 2MB translation range 内，且四次 DMA 后均紧邻同一
   IRTE 的 MSI remap；DMAR fault=0。
+
+D01 的 teardown 已用 EDU 做同 requester、同 IOVA 的外层主动 DMA A/B。运行
+`20260714-esxi8-edu-dma-teardown-v5` 在 L3 完成两阶段 DMA 后，读取第二阶段 IOVA
+`0x2b00000`，再由 L0 QTest 只写公开 EDU DMA 寄存器：
+
+- VM 运行中，SID `0x200` 使用 VT-d domain 2；`0x2b00000` 落在 2MB translation
+  内，解析到 guest backing GPA `0x1c9100000`。
+- VM 关机时，外层记录 `vtd_inv_desc_cc_global` 和
+  `vtd_inv_desc_iotlb_global`。
+- VM 显示 powered-off 后，同一 function 的 PCI Command/BAR 仍为
+  `0x0406/0xc1000000`。再次发起同一 IOVA，SID `0x200` 已使用 domain 1，并恒等
+  解析到 `0x2b00000`；没有继续命中旧 guest backing，也没有 DMAR fault。
+
+所以本样本的“撤销 guest DMA translation”不是删除 context 后必然 fault，而是全局
+失效后把 device 从 guest domain 2 切回 ESXi host identity domain 1。D01 的正确验收
+条件是旧 guest backing 不再可达，并对删除、fault 或 host-domain rebound 分类；只找
+IOTLB invalidation 或只等 fault 都会得出不完整结论。该探针只使用 QEMU 公开 trace、
+PCI config 和 EDU 寄存器，不检查 VMware 私有实现。
 
 reset sentinel 给出了更严格的语义边界。QEMU direct 的冷启动值为 reset，warm reboot
 后为 persisted；ESXi 在 warm reboot 明确打印 `PCIPassthru: Resetting Device`，但第二
@@ -404,6 +463,67 @@ launcher/orchestrator：
 5. 运行中记录等价于 `assignedId` 的租约；停止后释放，不把 BDF 写入持久 VM 定义。
 6. live migration 默认拒绝；关机 relocate 后在目标 host 重新运行 1-5。
 
+## 非 BAR 策略增量（2026-07-14）
+
+### Option ROM
+
+已知 UEFI ROM 先在 QEMU/OVMF 正控中通过：firmware 执行 marker、live counter、boot
+target 和 Linux continuation 全部成立。ESXi 默认 DirectPath 样本按预期隐藏 ROM。
+随后开启 host boot option `pcipSaveOPROM=TRUE`，并在有效 VMX 写入
+`pciPassthru0.opromEnabled=TRUE`；guest 两个启动阶段和一次 restart 都成功，但 ROM
+BAR、EFI variable/marker 和 outer counter delta 均为 0。结论是该 build/endpoint 的
+enabled 路径“已测但未执行”，不是尚未运行，也不外推到所有受支持物理 adapter。
+
+### PME
+
+Patched e1000e endpoint 提供 PMCSR PME_Status 和 upstream PME status 注入。默认、
+`acpi.osc.pcie=0x1f` 与拒绝 PME 的 `0x1b` 三项都完成。授予 native PME 的样本中，
+guest 先将物理 function PME_Enable 置 1；注入后 endpoint/root status 均置位，guest raw
+PMCSR 看到 `0x8100`，但没有 native PME IRQ delta。三种 `_OSC` grant 均与请求 mask
+一致，结果符合 KB 描述的 tested ignored-PME 模型：status 可观察，不把物理 PME
+无条件变成 guest native service。
+
+### Correctable/Non-Fatal AER
+
+Correctable Receiver Error 和 Non-Fatal Unsupported Request 均已做 host/guest/config/log
+三方采集。ESXi guest 中 endpoint AER Extended Capability header 被置 0，ACPI `_OSC`
+不授予 AER；raw capability body 的 CES/UES 仍跟随物理 endpoint 置位，而 guest PCIe
+Device Status、上游 Root Error Status、guest `dmesg` 和 ESXi `vmkernel/vobd` 都没有
+对应事件。该现象支持“隐藏发现/ownership、保留部分 raw status”的外部模型。Stock
+QEMU 的 Root Port/e1000e/VFIO 默认公开 AER，`x-pcie-extcap-init=off` 也不够；对标需
+显式 config-space chain filter 与 Root Port AER disable。完整寄存器值见
+[`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md)。
+
+### P2P
+
+两个独立 Root Port 下的 EDU DMA source 与 ivshmem peer 执行真实 peer-BAR DMA：
+
+| VMX policy | 结果 |
+| --- | --- |
+| 默认 | IOMMU fault type 5，地址 `0xff000000`，VM 被策略关闭 |
+| 仅 `relaxACSforP2P=TRUE` | 与默认相同，不能单独放行 |
+| 仅 `allowP2P=TRUE` | guest `P2P-PASS`，peer backing 匹配 DMA pattern |
+| `allowP2P+relaxACSforP2P` | guest `P2P-PASS` |
+
+有 ACS 和 no-ACS bypass 两组得到相同 policy 分叉；严格 ACS 检查则在更早的资格层拒绝。
+因此 QEMU 对标必须把“设备可组成隔离组”和“VM 被允许 peer DMA”分成两个 gate。
+
+### RMRR
+
+QEMU DMAR patch 为指定 SID 发布 RMRR。`0x40000000-0x401fffff` 样本被 ESXi 识别为
+一个 RMRR，`vmware.log` 明确记录 `Automatically adjusting PCI hole to 1024 MB`，
+IOMMU mapping 与 guest boot 均成功，且该范围不与 guest System RAM 重叠。将 RMRR
+移到 `0x01000000-0x011fffff` 的低 RAM overlap 后，outer QEMU 仍存活且有 ESXi boot
+serial，但 ESXi 管理面在超时内不再 ready；该样本作为 host-boot-stage reject 通过。
+
+### SR-IOV
+
+QEMU NVMe/igb 可让 raw SR-IOV capability、VFE 和 ARI 状态出现，但 ESXi 的功能视图
+把 PF Total/Initial VFs 置 0 或不枚举 raw VF。进一步把 igb 伪装为 I350 后，ESXi
+`igbn` 已进入共享初始化代码，却以公开日志 `Invalid NVM Checksum` 停止。继续只改
+VID:DID、subsystem 或 VF config ID 已不再是有效验证；需要受支持真实 PF，或实现完整
+NVM/firmware/driver contract 的设备模型。
+
 ## 9. Case 与证据索引
 
 所有复现入口见 [`vmware-esxi8-lab/README.md`](vmware-esxi8-lab/README.md)。关键
@@ -423,11 +543,14 @@ launcher/orchestrator：
 | Dynamic 同 IOMMU 组负例 | `_artifacts/vmware-directpath-runs/20260711-dynamic-envelope/` |
 | 2x1GB 与 1GB+2GB aggregate | `_artifacts/vmware-directpath-runs/20260711-dynamic-aggregate*/` |
 | 4GB large-MMIO gate | `_artifacts/vmware-directpath-runs/20260711-single-4g*/` |
-| 8GB sparse BAR 边界 | `_artifacts/vmware-directpath-runs/20260711-single-8g*/` |
-| 32/64GB no-backing BAR gate | `_artifacts/vmware-directpath-runs/20260712-pci-testdev-*/` |
+| 8GB sparse BAR 旧边界 | `_artifacts/vmware-directpath-runs/20260711-single-8g*/` |
+| 8GB no-backing guest runtime | `_artifacts/vmware-directpath-runs/20260714-lb8-dedicated-full-v18/` |
+| 32GB no-backing guest runtime/dependency A/B | `_artifacts/vmware-directpath-runs/20260714-lb32-*`、`20260714-esxi8-largebar-32g-dedicated-*` |
+| 64GB no-backing guest runtime | `_artifacts/vmware-directpath-runs/20260714-lb64-dedicated-full-v17/` |
 | QEMU direct 32/64GB control | `_artifacts/mmio-tests/qemu-pci-testdev-largebar-20260712/` |
 | QEMU direct EDU MSI/DMA/reset | `_artifacts/mmio-tests/qemu-edu-direct-20260712-v2/` |
 | ESXi EDU MSI/DMA/reset | `_artifacts/vmware-directpath-runs/20260712-esxi8-edu-msi-dma-reset-v4/` |
+| ESXi EDU DMA power-off context A/B | `_artifacts/vmware-directpath-runs/20260714-esxi8-edu-dma-teardown-v5/` |
 | ESXi host crash/recovery L04 | `_artifacts/vmware-directpath-runs/20260711-host-crash/` |
 | guest reboot R01 | `_artifacts/vmware-directpath-runs/20260712-r01-guest-reboot-efivar-v2/` |
 | ESXi INTx I01 | `_artifacts/vmware-directpath-runs/20260712-i01-intx-v2/` |
@@ -435,6 +558,13 @@ launcher/orchestrator：
 | QEMU 2GB profile 对照 | `_artifacts/mmio-tests/vmware-default-2g-q35.log` |
 | QEMU i440fx 低/高档与 q35 负例 | `_artifacts/mmio-tests/qemu-vmware-default-profile-20260711/` |
 | SeaBIOS i440fx/q35 | `_artifacts/mmio-tests/seabios-i440fx-1g-core/`、`seabios-q35-1g-core/` |
+| `passthruCapable` 15 项矩阵 | `_artifacts/vmware-directpath-runs/20260714-esxi8-passthru-capability-matrix-v4/` |
+| 虚拟 FLR callback | `_artifacts/vmware-directpath-runs/20260713-esxi8-flr-vm-power-v1/` |
+| PME `_OSC`/status 注入 | `_artifacts/vmware-directpath-runs/20260714-esxi8-pme-v3/` |
+| P2P ACS/no-ACS policy | `_artifacts/vmware-directpath-runs/20260714-esxi8-p2p-*/` |
+| RMRR 自动 hole/低 RAM 拒绝 | `_artifacts/vmware-directpath-runs/20260713-esxi8-rmrr-auto-v9-flr/`、`20260713-esxi8-rmrr-unsupported-v9-flr/` |
+| Option ROM 正控与 ESXi 负例 | `_artifacts/vmware-directpath-runs/20260713-qemu-optionrom-minimal-compressed-padded-v33/`、`20260713-esxi8-optionrom-minimal-compressed-padded-v4/` |
+| SR-IOV PF/VF surface | `_artifacts/vmware-directpath-runs/20260714-esxi8-sriov-*/` |
 
 每个 MMIO case 至少保留：`case.json`、生效 VMX、ESXi PCI owner、`vmware.log`、
 guest serial 和最终 power state。失败用例也保留，不能只归档成功样本。
@@ -453,81 +583,61 @@ Git 内可审计摘要：
 - [`evidence/esxi8-reboot-intx-20260712-summary.json`](evidence/esxi8-reboot-intx-20260712-summary.json)
 - [`evidence/qemu-vmware-default-profile-20260711-summary.json`](evidence/qemu-vmware-default-profile-20260711-summary.json)
 - [`evidence/qemu-esxi-nfs-offload-20260712-summary.json`](evidence/qemu-esxi-nfs-offload-20260712-summary.json)
+- [`evidence/esxi8-directpath-20260714-summary.json`](evidence/esxi8-directpath-20260714-summary.json)
+- [`evidence/esxi8-edu-dma-teardown-20260714-summary.json`](evidence/esxi8-edu-dma-teardown-20260714-summary.json)
 
-## 10. Blocked 项：原因与解锁方法
+## 10. 剩余边界与解锁方法
 
-`blocked` 不等于 VMware 不支持，也不等于 QEMU 无法实现。它表示当前平台、endpoint
-或观测点不足以对该问题给出有效结论。
+`blocked` 只用于当前观测点确实不足的项目。2026-07-14 后，M04 8/32/64GB、R00
+虚拟 FLR、D01 DMA teardown、S02 PME、S04 P2P 和 S05 RMRR 都已有可执行结果，不再
+列为软件阻塞。
 
-### 10.1 P0：建议优先补齐
+### 10.1 已完成但结果为负或有明确边界
 
-| ID | 当前阻塞 | 怎么做 | 验收证据 |
-| --- | --- | --- | --- |
-| R00 精确 reset 类型 | EDU sentinel 已证明 warm-reboot reset 流程未清除该无 callback endpoint 的状态；仍不能区分物理 FLR/SBR/D3 | 使用实现定向 FLR/bus-reset generation counter 的 endpoint；分别测 power-on/reboot/forced-off | reset 类型、顺序、影响的 function 集合、generation 变化 |
+| ID | 当前结论 | 证据边界 |
+| --- | --- | --- |
+| S01 Option ROM | 默认隐藏为 pass；已知 UEFI ROM 在 outer QEMU/OVMF 可重复执行，但 ESXi 设置 `pcipSaveOPROM=TRUE` 与 `opromEnabled=TRUE` 后仍未在 guest 执行 | 这是当前 build/endpoint 的可重复负结论，不等于所有支持设备都不能执行 ROM |
+| I01 INTx | ESXi guest 有 legacy route 但无功能 IRQ/流量；同 ISO QEMU direct pass | 下一步是裸机 E4，不是继续改 VMX 文本参数 |
+| R00 reset | 虚拟 FLR callback 在 VM power-on/off 可见；EDU 无 callback 时状态跨 warm reboot 保留 | SBR/D3 和真实设备内部状态清除仍未被 FLR 样本覆盖 |
+| S05 RMRR | 自动 PCI-hole 范围被 ESXi 识别、调整并启动；低 RAM overlap 在 ESXi host boot 阶段拒绝 | 不把 guest 未公开 DMAR 当成 host 未处理 RMRR |
 
-M04 32/64GB 和 I02 MSI-only 已由 no-backing `pci-testdev` 与 EDU 完成，不再列为
-blocked。X01/X02、R01、L02、L04 也已完成。I01 不是“未运行”：它是可重复的 nested
-functional fail，并已有 QEMU direct pass 对照；下一步是 E4，不是继续换文字参数。
+### 10.2 仍需更完整 endpoint 或真实硬件
 
-### 10.2 P1：需要定制 QEMU endpoint 或危险注入
+| ID | 当前阻塞 | 怎么解锁 |
+| --- | --- | --- |
+| SR-IOV 功能 VF | QEMU NVMe/igb 的 raw SR-IOV capability/VFE 可构造，但 ESXi 将 PF Total/Initial VFs 视为 0 或不枚举 VF；igbn 在 I350 identity 下因 NVM checksum 拒绝 | 使用 ESXi HCL 支持的真实 PF，或实现足以让对应 ESXi driver 完成 NVM/firmware 初始化的完整模型 |
+| 真实 reset/ACS/INTx | 虚拟 callback 不能证明电气行为、vendor state 清除或物理中断路由 | 裸机 ESXi + 同设备 Linux/VFIO A/B，记录 FLR/SBR、IOMMU group、IRQ 和敏感状态 |
+| Option ROM 正向样本 | 当前仅得到 ESXi enabled-but-not-executed 负例 | 使用已知受支持且能被 ESXi 保存的物理 adapter ROM，再用同一 marker 协议复核 |
+| 跨版本语义 | 当前主结论绑定 ESXi 8.0 U3；ESXi 6.5 仅作旁证 | 自动跑 6.5/7.0/8.0 U2/U3 同一 matrix，不跨版本外推默认 MMIO/资格规则 |
 
-| ID | 当前阻塞 | 怎么做 | 验收证据 |
-| --- | --- | --- | --- |
-| S01 Option ROM enabled | 只验证了默认不暴露 ROM；没有安全、可识别的目标 ROM | 给 outer endpoint 挂已知 UEFI option ROM；设置 ESXi `pcipSaveOPROM=1` 并重启；VMX 设置 `pciPassthruN.opromEnabled=TRUE` | guest ROM BAR、OVMF 执行签名、restart 后可重复执行 |
-| S02 PME | stock endpoint 没有受控 PME 注入命令 | 实现 endpoint PM capability 和“设置 PMCSR PME_Status + 发 PME message”的 monitor/QMP 命令；对比默认 `_OSC` 与 `acpi.osc.pcie` | host/guest PMCSR、guest 是否收到通知、ESXi 是否明确忽略 |
-| S04 P2P | 没有两个能做真实 peer DMA 的 endpoint | 实现两个可编程 DMA endpoint，让一端 DMA 到另一端 BAR；对比默认、`allowP2P`、`relaxACSforP2P` | peer BAR 内容、VT-d/ACS trace、host/guest 错误和性能计数 |
-| S05 RMRR | QEMU 6.2 没有任意 RMRR command-line 注入 | 修改 QEMU DMAR table builder，为指定 SID 生成 RMRR，并保留对应 E820/UEFI range；endpoint 对该区域 DMA | ESXi memory map 调整、identity map 或精确 overlap fault；Dynamic candidate 包络 |
+### 10.3 自定义 WSL 内核/QEMU 的定位
 
-S03 AER Correctable/Non-Fatal 已通过三方采集，详见
-[`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md)。
-
-### 10.3 P2：真正需要真实硬件
-
-| ID | 当前阻塞 | 怎么做 | 验收证据 |
-| --- | --- | --- | --- |
-| E4 真实 reset/ACS/INTx | QEMU endpoint 不能证明电气行为、vendor state 清除或物理 INTx 路由 | 裸机 ESXi + 支持的 NIC/NVMe/GPU，外加同设备裸机 Linux/VFIO 对照 | FLR/bus reset、IOMMU group、MSI-X/MSI/INTx、十次以上压力和敏感状态清除 |
-| SR-IOV | 当前没有 PF/VF endpoint | 使用真实 SR-IOV NIC，或升级/定制 QEMU endpoint 生成 PF/VF | ESXi PF/VF eligibility、VF 独立 assignment、PF capability 是否进入 guest |
-
-### 10.4 升级 WSL 内核/QEMU 的定位
-
-升级不再用于修复普通 1/2/4GB 基线的 L3 VM-entry。建议在以下情况才做：
-
-- 需要更新的 QEMU device model、QMP/AER/PME trace 或自定义 endpoint 基线。
-- 需要更完整的 nested KVM/VMX tracepoint。
-- QEMU 6.2 的 ACPI/DMAR builder 难以维护目标 patch。
-- 需要判断 8GB BAR 下的四 vCPU 饱和是否为旧 KVM/QEMU nested regression，而不是
-  规避普通基线中已经找到的 TSC scaling 原因。
-
-推荐先在独立目录编译新版 QEMU，保留 6.2 作为 A/B 基线；只有新版明确需要新 KVM
-能力时，再编译自定义 WSL 6.x 内核。每次结果必须记录 QEMU commit、kernel config、
-OVMF build/hash 和完整命令行。
+当前 WSL 内核为 `6.6.123.2-microsoft-standard-WSL2+`，`/dev/kvm` 可用且 nested=Y；
+QEMU 11.0.2 lab binary SHA256 为
+`021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393`。
+它用于 endpoint patch、新 trace 和大 BAR runtime。QEMU 6.2 仍保留为 A/B；共享
+dependency 的 AH 失败在两版都复现，因此不能把拓扑问题归咎于新版 QEMU。
 
 ## 11. 还需要加强的地方
 
 按优先级排序：
 
-1. **实现 BAR-aware QEMU launcher。** 当前只有策略和手工参数，还没有可复用程序。
-   应读取 sysfs/VFIO resource，展开 dependency，计算 below-4G 和 high aperture，并输出
-   manifest 与最终 QEMU 参数。
-2. **把 32/64GB mapping 扩展到 guest runtime。** power-on-only gate、SizeGB 阈值和
-   page budget 已完成；剩余重点是解决 nested EFI 枚举停滞并取得 `_CRS`/Linux BAR。
-3. **直接保存 ACPI `_CRS`。** 当前主要使用 Linux `root bus resource` 和 sysfs；应在
-   L3 initrd 中加入 `acpidump`，保存并反编译 DSDT/SSDT。
-4. **改善 trace 隔离。** 当前文本 trace 没有可靠时间戳，ESXi 管理网卡流量会混入。
-   应在 L3 操作前后通过 QMP 动态开关事件，加入 case marker，并按 requester ID 分流。
-5. **加强 reset 观测。** 增加 endpoint generation register 和 root-port callback trace，
-   不能只依据 ESXi 的 `Reset Method` 字段。
-6. **实现 PME/P2P/RMRR/启用型 OPROM endpoint 控制。** MSI-only 已由 EDU 完成；其余
-   状态不是继续换 QEMU 参数就能得到的，需要 QMP 注入、peer-DMA workload、已知 ROM
-   或 DMAR builder patch。
-7. **做 ESXi 跨版本矩阵。** 至少比较 6.5/7.0/8.0 U2/U3，确认历史
-   `use64bitMMIO`/SizeGB 语义何时发生变化。
-8. **做真实硬件 E4。** 所有安全性、复位彻底性、P2P、RMRR 和 vendor driver 结论最终
-   都必须回到裸机。
-9. **规范化产物。** 每个 case 应生成固定 schema 的 `result.json`、输入 manifest、
-   SHA256、版本信息和 pass/fail/blocked 原因，避免依赖人工 grep。
-10. **增加破坏性用例保护。** AER uncorrectable、host crash、ROM 和 RMRR 测试必须使用
-    disposable qcow2 snapshot、单独 run ID 和自动恢复步骤。
+1. **实现 BAR/dependency-aware QEMU launcher。** 从 sysfs/VFIO resource 和 IOMMU
+   group 生成 lease manifest，先原子占用 dependency，再计算 hole64/OVMF aperture。
+2. **补真实硬件 E4。** 优先 SR-IOV PF/VF、INTx、FLR/SBR 状态清除和支持型 Option ROM；
+   这些是当前无法用更换 QEMU 参数诚实替代的项目。
+3. **直接保存 ACPI `_CRS`。** 当前已有 Linux root-bus resource 与 sysfs BAR；应在
+   L3 initrd 中加入 `acpidump` 并保存反编译后的 DSDT/SSDT。
+4. **改善 trace 隔离。** 在 L3 操作前后通过 QMP 开关事件，加入 case marker，并按
+   requester ID 分流，减少管理网流量和旧 trace 混入。
+5. **扩展 reset generation。** FLR callback 已通过；继续给 root-port SBR、D3hot 和
+   multifunction dependency 增加 generation register，分清复位类型与影响集合。
+6. **做 ESXi 跨版本矩阵。** 至少比较 6.5/7.0/8.0 U2/U3，确认
+   `use64bitMMIO`、SizeGB、ACS 与 reset 判定何时变化。
+7. **统一结果 schema。** 新脚本已有 `result.json`/`matrix-result.json`；仍需统一字段、
+   SHA256、版本和 `pass|fail|partial|blocked` 原因，便于自动 diff。
+8. **保留破坏性保护。** AER uncorrectable、host crash、P2P fault、ROM 和 RMRR 必须用
+   disposable qcow2、独立 run ID 与自动 restore。
 
 ## 12. 当前可接受的 QEMU 对标基线
 
@@ -553,17 +663,17 @@ q35 的 zero/zero + 1GB BAR 是已验证负例，不能只把上面 property 名
 
 | VMware 外部语义 | QEMU/VFIO 对齐办法 | 当前状态 |
 | --- | --- | --- |
-| UEFI 与 64-bit MMIO | OVMF 同时控制 fw_cfg aperture 与 host bridge hole64；launcher 按选中 BAR 计算 | 1/2/4GB、aggregate 已验证；8/32/64GB mapping-only，32/64GB gate/预算已定量 |
-| IOMMU isolation | 真实部署使用 host IOMMU + `vfio-pci`；nested 模型给 ESXi `intel-iommu,intremap=on` | e1000e MSI-X 与 EDU MSI/DMA 的 VT-d trace pass；禁止 no-IOMMU |
+| UEFI 与 64-bit MMIO | OVMF 同时控制 fw_cfg aperture 与 host bridge hole64；launcher 按选中 BAR 计算 | 1/2/4GB、aggregate 和 8/32/64GB guest runtime 已验证；大 BAR 必须独占 dependency |
+| IOMMU isolation | 真实部署使用 host IOMMU + `vfio-pci`；nested 模型给 ESXi `intel-iommu,intremap=on` | e1000e MSI-X 与 EDU MSI/DMA 的 VT-d trace pass；D01 已证明关机从 guest domain 切回 host identity domain；禁止 no-IOMMU |
 | ACS 与 dependency | 每组设备挂独立 `pcie-root-port`；按 host IOMMU group/reset dependency 原子租用 | PCIe/legacy/root/no-ACS 矩阵已跑 |
-| reset 方法与总线依赖 | 让 VFIO 执行 FLR/bus reset；同 dependency 整组分配；endpoint generation register 记录回调 | 功能复用 pass；EDU 证明“日志称 reset”不等于状态清零，具体类型仍 partial |
+| reset 方法与总线依赖 | 让 VFIO 执行 FLR/bus reset；同 dependency 整组分配；endpoint generation register 记录回调 | 虚拟 FLR power-on/off callback pass；bridge dependency pass；SBR/D3 与真实状态清除待 E4 |
 | Dynamic candidate | orchestrator 按 allowed class 选 BDF，记录运行时 lease，关机释放；目标 host 重新选择 | X00-X03 pass；不能持久化固定 BDF |
 | MSI-X/MSI/INTx | 保留 capability，启用 host interrupt remapping；禁止 unsafe interrupts | MSI-X E3 pass；EDU MSI-only E3 pass；INTx nested fail/direct pass，待 E4 |
 | PCIe AER ownership | host 侧注入/记录；guest config-space proxy 过滤 AER header/ownership，按目标策略镜像 status | Correctable/Non-Fatal surface 已验证；stock VFIO 不自动等价 |
-| Option ROM | 默认 `rombar=0`；显式启用时固定 ROM hash，并分别验证 host 保存与 guest 执行 | 默认隐藏 pass；enabled 待安全 ROM |
-| PME 与 `_OSC` | endpoint 提供可控 PME_Status/message，ACPI 层决定 native PME；host policy 可过滤 | 需要定制 endpoint/QMP |
-| P2P 与 ACS relaxation | 两个真实 peer-DMA endpoint + ACS/IOMMU policy；不能把单个开关当成功 | 需要定制 peer DMA endpoint |
-| RMRR | 修改 QEMU DMAR builder 发布 RMRR，并保留相同 guest physical range/identity map | stock QEMU 6.2 无通用 CLI |
+| Option ROM | 默认 `rombar=0`；显式启用时固定 ROM hash，并分别验证 host 保存与 guest 执行 | 默认隐藏 pass；QEMU ROM 正控 pass；ESXi enabled 样本为可重复“不执行”负例 |
+| PME 与 `_OSC` | endpoint 提供可控 PME_Status/message，ACPI 层决定 native PME；host policy 可过滤 | patched endpoint 三种 `_OSC` mask pass；PME status 可见但无 native PME IRQ，符合 KB ignored 模型 |
+| P2P 与 ACS relaxation | 两个 peer-DMA endpoint + ACS/IOMMU policy；不能把单个开关当成功 | 默认/relax-only 被 IOMMU fault 阻断；`allowP2P=TRUE` 才成功，ACS/no-ACS A/B 已跑 |
+| RMRR | 修改 QEMU DMAR builder 发布 RMRR，并保留相同 guest physical range/identity map | patched QEMU：自动 PCI-hole 调整 pass；低 RAM overlap 在 ESXi host boot 拒绝 |
 | lifecycle/migration | 默认拒绝 save/snapshot/suspend/live migration；powered-off relocate 后重新选卡 | snapshot/suspend/vMotion/relocate/host-crash 已验证 |
 | LinkCap/拓扑呈现 | 明确选择 synthetic guest topology，不把物理 speed/width 原样当合同 | 已观察 VMware 重建 LinkCap |
 

@@ -12,6 +12,9 @@ case "$profile" in
   aer)
     output="$workspace/_artifacts/esxi-l3-aer-probe.iso"
     ;;
+  aer-surface)
+    output="$workspace/_artifacts/esxi-l3-aer-surface-probe.iso"
+    ;;
   vmotion)
     output="$workspace/_artifacts/esxi-l3-vmotion-probe.iso"
     ;;
@@ -26,6 +29,18 @@ case "$profile" in
     ;;
   intx)
     output="$workspace/_artifacts/esxi-l3-intx-probe.iso"
+    ;;
+  p2p)
+    output="$workspace/_artifacts/esxi-l3-p2p-probe.iso"
+    ;;
+  rmrr)
+    output="$workspace/_artifacts/esxi-l3-rmrr-probe.iso"
+    ;;
+  pme)
+    output="$workspace/_artifacts/esxi-l3-pme-probe.iso"
+    ;;
+  sriov)
+    output="$workspace/_artifacts/esxi-l3-sriov-probe.iso"
     ;;
   *)
     echo "unsupported PROFILE: $profile" >&2
@@ -49,8 +64,24 @@ cleanup() {
   if [[ -n "$module_build_dir" ]]; then
     rm -rf "$module_build_dir"
   fi
-  if [[ "$profile" == edu ]]; then
+  if [[ "$profile" == edu || "$profile" == p2p ]]; then
     rm -f "$root/lib/modules/edu_probe.ko"
+  fi
+  if [[ "$profile" == sriov ]]; then
+    rm -f \
+      "$root/lib/modules/nvme-core.ko" \
+      "$root/lib/modules/nvme.ko" \
+      "$root/lib/modules/dca.ko" \
+      "$root/lib/modules/i2c-algo-bit.ko" \
+      "$root/lib/modules/igb.ko" \
+      "$root/lib/modules/igbvf.ko"
+  fi
+}
+
+save_grub() {
+  if [[ -z "$original_grub" ]]; then
+    original_grub=$(mktemp)
+    cp "$iso_root/boot/grub/grub.cfg" "$original_grub"
   fi
 }
 
@@ -60,10 +91,20 @@ if [[ "$profile" != probe ]]; then
   trap cleanup EXIT
   if [[ "$profile" == aer ]]; then
     cp "$workspace/_artifacts/esxi-l3-aer-init.sh" "$root/init"
+  elif [[ "$profile" == aer-surface ]]; then
+    cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-aer-surface-init.sh" "$root/init"
   elif [[ "$profile" == reboot ]]; then
     cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-reboot-init.sh" "$root/init"
   elif [[ "$profile" == edu ]]; then
     cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-edu-init.sh" "$root/init"
+  elif [[ "$profile" == p2p ]]; then
+    cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-p2p-init.sh" "$root/init"
+  elif [[ "$profile" == rmrr ]]; then
+    cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-rmrr-init.sh" "$root/init"
+  elif [[ "$profile" == pme ]]; then
+    cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-pme-init.sh" "$root/init"
+  elif [[ "$profile" == sriov ]]; then
+    cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-sriov-init.sh" "$root/init"
   else
     cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-vmotion-init.sh" "$root/init"
   fi
@@ -71,9 +112,15 @@ if [[ "$profile" != probe ]]; then
 fi
 
 if [[ "$profile" == intx ]]; then
-  original_grub=$(mktemp)
-  cp "$iso_root/boot/grub/grub.cfg" "$original_grub"
+  save_grub
   sed -i 's/ rdinit=\/init quiet/ rdinit=\/init quiet pci=nomsi/' \
+    "$iso_root/boot/grub/grub.cfg"
+fi
+
+if [[ "${KERNEL_DEBUG:-0}" == 1 ]]; then
+  save_grub
+  sed -i \
+    's/ rdinit=\/init quiet/ rdinit=\/init ignore_loglevel loglevel=8 earlyprintk=serial,ttyS0,115200/' \
     "$iso_root/boot/grub/grub.cfg"
 fi
 
@@ -81,7 +128,22 @@ mkdir -p "$root/lib/modules"
 cp "/lib/modules/$kernel_release/kernel/drivers/net/ethernet/intel/e1000e/e1000e.ko" \
   "$root/lib/modules/e1000e.ko"
 
-if [[ "$profile" == edu ]]; then
+if [[ "$profile" == sriov ]]; then
+  cp "/lib/modules/$kernel_release/kernel/drivers/nvme/host/nvme-core.ko" \
+    "$root/lib/modules/nvme-core.ko"
+  cp "/lib/modules/$kernel_release/kernel/drivers/nvme/host/nvme.ko" \
+    "$root/lib/modules/nvme.ko"
+  cp "/lib/modules/$kernel_release/kernel/drivers/dca/dca.ko" \
+    "$root/lib/modules/dca.ko"
+  cp "/lib/modules/$kernel_release/kernel/drivers/i2c/algos/i2c-algo-bit.ko" \
+    "$root/lib/modules/i2c-algo-bit.ko"
+  cp "/lib/modules/$kernel_release/kernel/drivers/net/ethernet/intel/igb/igb.ko" \
+    "$root/lib/modules/igb.ko"
+  cp "/lib/modules/$kernel_release/kernel/drivers/net/ethernet/intel/igbvf/igbvf.ko" \
+    "$root/lib/modules/igbvf.ko"
+fi
+
+if [[ "$profile" == edu || "$profile" == p2p ]]; then
   headers="/lib/modules/$kernel_release/build"
   if [[ ! -d "$headers" ]]; then
     echo "missing kernel headers: $headers" >&2
