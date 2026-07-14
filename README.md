@@ -30,7 +30,7 @@ vMotion、host crash、guest reboot、INTx 和 Dynamic DirectPath `assignedId`
 
 ESXi `passthruCapable` 的 22 项 IOMMU/reset/ACS/topology/class/真实 bridge-FLR
 矩阵、运行时 AH dependency 反例，以及基于 Linux VFIO Type-0/reset-device-set/
-hot-reset ownership 公开源码的 QEMU 参考设计，见
+hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设计，见
 `vmware-esxi8-passthru-capable-observed-model.md`。2026-07-14 增量的机器可读索引为
 `evidence/esxi8-directpath-20260714-summary.json`。
 

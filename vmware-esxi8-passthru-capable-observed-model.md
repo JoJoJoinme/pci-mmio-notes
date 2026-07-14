@@ -195,6 +195,20 @@ Type-1 bridge 则会生成下游总线并成为其他 requester 的 parent/reset
 IOMMU、reset、ACS 和平台保留条件。当前证据不能证明 ESXi 的内部检查顺序，但已经排除
 class-only 和 FLR-only 两种模型。
 
+Type 是 PCI configuration header 在 offset `0x0e` 的 `Header Type` 低 7 位；bit 7 仅表示
+multifunction。它与 offset `0x09..0x0b` 的 programming-interface/subclass/base-class
+相互独立：
+
+| Header type | 结构意义 | 关键配置字段 | 作为 VFIO payload |
+| --- | --- | --- | --- |
+| Type-0 (`0x00`) | 普通 function/endpoint 的配置头 | 6 个 BAR、Subsystem ID、ROM BAR | 只是候选形状，仍需 isolation/reset/platform gate |
+| Type-1 (`0x01`) | PCI-to-PCI/PCIe bridge 的配置头 | primary/secondary/subordinate bus、桥窗口、Bridge Control/SBR | fabric node，不作为普通 `vfio-pci` payload |
+| Type-2 (`0x02`) | CardBus bridge | CardBus bus/window 字段 | 非本项目目标 |
+
+因此 `Header Type=0x80` 仍是 multifunction Type-0，`0x81` 才是 multifunction Type-1。
+真实 host bridge 也可能使用 Type-0 header，所以“Type-0”只是必要的结构候选，不等于
+充分条件；平台保留、IOMMU group 和 reset gate 仍会排除宿主 root-complex 资源。
+
 这个外部现象与 Linux VFIO 的公开实现高度同构：
 
 - [`vfio_pci_core_register_device()`](https://github.com/torvalds/linux/blob/master/drivers/vfio/pci/vfio_pci_core.c)
@@ -260,6 +274,69 @@ bridge 等整个 class 当 denylist。
 dependency BDF 列表、所选 reset method/affected set，以及稳定 reason code。这样既不会
 把“硬件原则上可直通”和“此刻可租用”混在一起，也能准确解释 MMIO、RMRR、迁移或同组
 占用造成的晚期失败。
+
+### 4.3 启用 ACS override 时的 capable 模型
+
+`pcie_acs_override` 一类补丁只让 Linux 的 ACS 判定/IOMMU group 构造相信设备之间可以
+隔离；它不会给硬件增加 ACS redirect，也不能阻止 TLP 在无 ACS 的 switch/bridge 内做
+P2P、绕过 root-port/IOMMU。[Linux VFIO 文档](https://docs.kernel.org/driver-api/vfio.html)
+也明确把“无 ACS bridge 允许重定向而不经过 IOMMU”和 multifunction 内部 backdoor
+列为 group 粒度变粗的原因；[PCI P2P 文档](https://docs.kernel.org/driver-api/pci/p2pdma.html)
+进一步说明 switch 内路由能否绕过 root port 取决于 ACS 设置。因此启用补丁后，
+`/sys/.../iommu_group` 只能作为 VFIO 的操作分组，不能单独作为安全边界。
+
+平台 inventory 必须同时保留：
+
+```text
+kernelIommuGroup       # 当前 patched kernel 暴露的组，供 VFIO open/bind 使用
+physicalIsolationDomain # 忽略 override 后，按真实 ACS、拓扑、RID alias 得到的隔离域
+resetDomain            # FLR/slot reset/SBR/hot reset 实际影响的 function 集合
+
+leaseDomain = closure(
+    physicalIsolationDomain
+  U resetDomain
+  U multifunctionAndRequesterAliasSet
+  U platformDependencies
+)
+```
+
+`physicalIsolationDomain` 的首选证据是在同一硬件上用未启用 override 的 qualification
+kernel 启动一次并保存原始 IOMMU group/topology；在线重建则必须读取真实 PCI config 中
+每一级 port 的 ACS capability/control 和拓扑，不能调用已被 override 改写的
+`pci_acs_enabled()` 结果。还应记录 `/proc/cmdline`、启动期 ACS override warning、kernel
+build/source hash 和 override 匹配范围。仅仅“内核编入补丁但本次未激活”不应降级设备。
+
+推荐按目标信任域给 verdict，而不是全局一个 capable：
+
+| Policy | ACS override-dependent split | Verdict |
+| --- | --- | --- |
+| `untrusted-vm` | 不允许把同一 `physicalIsolationDomain` 拆给 VM/host/其他 VM | 拆分即 `false`；整域原子租给同一 VM 才可继续 |
+| `trusted-dpdk` | 可以按显式风险策略运行，但不能宣称硬件隔离等价 | 默认 `conditional`；整域租给同一 DPDK trust domain 可提升为 `true` |
+| `lab` | 可用于功能实验 | `unsafe-override`，不得进入生产 capability 数据 |
+
+DPDK 与 VM 对 VFIO 来说都是能直接驱动 DMA 的 userspace owner，安全区别来自 trust
+domain，而不是“DPDK”这个名字。如果 DPDK 使用 `uio_pci_generic/igb_uio` 而非
+`vfio-pci`，则没有 VFIO/IOMMU 安全强制，生产 `untrusted-vm` 模型应直接判
+`NO_IOMMU_ENFORCEMENT`。
+
+建议输出至少包含以下 reason/provenance：
+
+```json
+{
+  "headerType": "type0",
+  "kernelIommuGroup": ["0000:41:00.0"],
+  "physicalIsolationDomain": ["0000:41:00.0", "0000:42:00.0"],
+  "isolationProvenance": "acs-override",
+  "resetDomain": ["0000:41:00.0", "0000:42:00.0"],
+  "requiredLease": ["0000:41:00.0", "0000:42:00.0"],
+  "verdict": "conditional",
+  "reason": "ACS_OVERRIDE_REQUIRES_WHOLE_PHYSICAL_DOMAIN"
+}
+```
+
+这里最重要的规则是：ACS override 可以改变“内核允许怎样打开设备”，不能缩小平台
+自己的安全 lease。即使 patched group 已是 singleton，调度器仍必须用
+`physicalIsolationDomain` 和 `resetDomain` 的并集加锁。
 
 | VMware 可观察层 | QEMU/VFIO 实现要求 | 验收值 |
 | --- | --- | --- |
