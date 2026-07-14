@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pci-resource-model"
+version = "0.1.0"
+description = "Executable PCI BAR allocation and passthrough capability reference model"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+pci-resource-model = "pci_resource_model.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pci_resource_model*"]

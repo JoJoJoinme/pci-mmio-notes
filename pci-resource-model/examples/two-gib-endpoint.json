@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "host": {
+    "iommuPresent": true,
+    "interruptRemapping": true,
+    "noIommuMode": false,
+    "acsOverrideActive": false,
+    "source": "controlled-example",
+    "metadata": {
+      "description": "Type-0 endpoint with one 2 GiB 64-bit prefetchable BAR"
+    }
+  },
+  "leases": {},
+  "devices": [
+    {
+      "bdf": "0000:65:00.0",
+      "vendorId": 6966,
+      "deviceId": 5,
+      "classCode": 131072,
+      "headerType": 0,
+      "functionRole": "endpoint",
+      "bars": [
+        {
+          "bdf": "0000:65:00.0",
+          "index": 2,
+          "size": 2147483648,
+          "space": "memory",
+          "address": 0,
+          "is64": true,
+          "prefetchable": true,
+          "below1M": false,
+          "source": "controlled-example"
+        }
+      ],
+      "kernelIommuGroup": ["0000:65:00.0"],
+      "physicalIsolationDomain": ["0000:65:00.0"],
+      "resetMethods": ["flr"],
+      "resetDomain": ["0000:65:00.0"],
+      "resetDomainSource": "pci-config-flr",
+      "multifunctionAliases": ["0000:65:00.0"],
+      "platformDependencies": [],
+      "isolationProvenance": "kernel-group",
+      "platformReserved": false,
+      "errataDenied": false,
+      "rmrrConflict": false,
+      "driver": "vfio-pci",
+      "parent": "0000:64:00.0",
+      "acs": null,
+      "metadata": {}
+    }
+  ]
+}

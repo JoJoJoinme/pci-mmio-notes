@@ -34,6 +34,11 @@ hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设�
 `vmware-esxi8-passthru-capable-observed-model.md`。2026-07-14 增量的机器可读索引为
 `evidence/esxi8-directpath-20260714-summary.json`。
 
+上述设计已有可运行实现，见 [`pci-resource-model/`](pci-resource-model/README.md)：包括
+事务式 32/64 位 BAR sizing、Linux sysfs 只读 inventory、below/above-4G allocator、
+OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable evaluator。机器可读
+验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。
+
 PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU 对标结论，
 见 `vmware-aer-blackbox-results.md`；QEMU OVMF/SeaBIOS surface A/B 入口为
 `qemu-aer-surface-validate.sh`。

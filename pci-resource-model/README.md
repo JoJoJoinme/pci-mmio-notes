@@ -1,0 +1,152 @@
+# PCI BAR/MMIO 与 passthrough capable 参考实现
+
+这个目录把本仓库的 VMware/QEMU 黑盒结论实现为可执行的 host-side reference model：
+
+```text
+config/sysfs inventory
+        |
+        +--> BAR size/type requirements --> transactional MMIO allocator
+        |
+        +--> IOMMU/ACS/reset/topology --> eligible
+                    + dependency owners --> available
+                    + MMIO/RMRR admission --> attachable
+```
+
+实现只依赖 Python 3.10+ 标准库。它适合放在 libvirt 上层、自有 host service 或
+launcher preflight 中；不是 Linux PCI core、OVMF 或 QEMU firmware allocator 的替代品。
+
+## 1. BAR 探测
+
+[`bar_probe.py`](pci_resource_model/bar_probe.py) 实现标准 Type-0/Type-1 BAR sizing：
+
+1. 读取 Header Type；Type-0 探测 6 个 slot，Type-1 探测 2 个 slot。
+2. 保存全部 BAR dword 和 `PCI_COMMAND`。
+3. 临时清除 I/O decode、memory decode 和 bus master。
+4. 对 BAR 写全 1并读回 mask；64 位 BAR原子处理低/高两个 dword。
+5. 使用 mask 最低有效位计算 power-of-two decode size。
+6. 在所有成功/异常路径恢复全部 BAR和原始 `PCI_COMMAND`；恢复失败单独报
+   `CONFIG_RESTORE_FAILED`。
+
+`probe_standard_bars()` 使用抽象 `ConfigSpace` protocol，便于接到 hypervisor 配置空间
+后端。它会改写配置空间，只能在调用方已独占、解绑并 quiesce 设备后使用。
+`LinuxSysfsConfigSpace` 和 `probe_unbound_linux_device()` 提供实际 Linux `pread/pwrite`
+后端；后者要求 `acknowledge_live_writes=True`、root 且设备没有绑定 driver，并且故意不
+暴露为普通 CLI 子命令。调用方仍必须持有防止 driver/VM 并发 claim 的外部 device lease。
+
+日常 inventory 不走危险写探测。[`linux_sysfs.py`](pci_resource_model/linux_sysfs.py)
+只读 Linux 已探测好的 `/sys/bus/pci/devices/*/{config,resource}`，同时收集 driver、
+IOMMU group、reset method、父拓扑和原始 ACS capability/control。
+
+## 2. MMIO allocator
+
+[`allocator.py`](pci_resource_model/allocator.py) 接受半开区间 `START:END`：
+
+- 所有 BAR按自身 size 对齐。
+- 32 位和 below-1M BAR先分配，保护不可替代的低地址空间。
+- 64 位 BAR默认 demand-driven：低窗能放则低置，否则进入高窗。
+- `--prefer-high` 或 `--force-high` 可以改变 64 位 BAR策略。
+- reserved range 会先从 free list 中扣除。
+- 任一 BAR失败时返回空 allocation set，不暴露半提交布局。
+- high BAR必须能由一个连续 root aperture 覆盖。
+- high aperture 默认按最大 BAR对齐并向上取 power-of-two。
+
+成功结果同时生成：
+
+```text
+-fw_cfg name=opt/ovmf/X-PciMmio64Mb,string=N_MB
+-global q35-pcihost.pci-hole64-size=NG
+```
+
+没有 high BAR时两项均为 0。SeaBIOS 模式只生成 host bridge 属性，因为 SeaBIOS 不读取
+OVMF fw_cfg。
+
+## 3. capable 模型
+
+[`capability.py`](pci_resource_model/capability.py) 不返回含糊的单一布尔值：
+
+```text
+eligible   = IOMMU/interrupt-remap + assignable Type-0 role
+           + accepted reset path + trustworthy isolation
+           + no platform reservation/errata deny
+
+available  = eligible + complete dependency lease is present and free
+
+attachable = available + BAR allocation + RMRR admission
+```
+
+关键策略：
+
+- PCI class code 只作为元数据，不做 CPU/memory/bridge class blanket blacklist。
+- Type-1 或实际承载 subordinate bus 的 function 是 fabric node，不作为 payload。
+- FLR 是 function reset；bus reset 必须携带完整 affected set。
+- sysfs 父拓扑只能估算 bus reset domain，默认报 `RESET_DOMAIN_UNVERIFIED`。生产路径应接
+  `VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` 或资格测试保存的 affected set。
+- 未启用 ACS override 时，平台原子租用完整 stock-kernel IOMMU group。
+- 启用 override 后，kernel group 不再是物理隔离证明。默认拒绝；即使显式允许，也必须
+  提供独立重建的 `physicalIsolationDomain` 并整域租用。
+- dependency 中任何 BDF 未进入 inventory 时，报 `DEPENDENCY_NOT_IN_INVENTORY`，不会
+  默认为空闲。
+- BAR/MMIO 失败只让 `attachable=false`，不会篡改前面的静态 `eligible` 结论。
+
+## 4. CLI
+
+只读扫描当前 Linux host：
+
+```bash
+PYTHONPATH=pci-resource-model \
+python3 -m pci_resource_model scan \
+  --interrupt-remapping true \
+  --output inventory.json
+```
+
+对样例中的 2 GiB BAR做 demand-driven placement：
+
+```bash
+PYTHONPATH=pci-resource-model \
+python3 -m pci_resource_model allocate \
+  --inventory pci-resource-model/examples/two-gib-endpoint.json \
+  --device 0000:65:00.0 \
+  --mmio32 0x80000000:0xc0000000 \
+  --mmio64 0x100000000:0x200000000
+```
+
+1 GiB 低窗放不下 2 GiB BAR，因此结果为 high placement，并生成
+`X-PciMmio64Mb=2048` 与 `pci-hole64-size=2G`。
+
+运行完整 capable preflight：
+
+```bash
+PYTHONPATH=pci-resource-model \
+python3 -m pci_resource_model capable \
+  --inventory pci-resource-model/examples/two-gib-endpoint.json \
+  --target 0000:65:00.0 \
+  --mmio32 0x80000000:0xc0000000 \
+  --mmio64 0x100000000:0x200000000
+```
+
+所有地址范围的 `END` 都是 exclusive。对真实 QEMU VM，应从 machine/firmware 已保留的
+PCI root windows 构造这些输入，而不是把示例地址硬编码进生产。
+
+## 5. 测试
+
+```bash
+PYTHONPATH=pci-resource-model \
+python3 -m unittest discover -v -s pci-resource-model/tests
+```
+
+测试覆盖：
+
+- 32/64 位 BAR mask、Type-1 slot 数、I/O BAR、异常恢复。
+- low/high placement、32 位优先、reserved range、对齐和事务失败。
+- Type-0 class A/B、Type-1+FLR 负例、IOMMU/reset/ACS override/dependency。
+- `eligible=true` 但 dependency busy 或 MMIO admission 失败的分层结果。
+- Linux resource 与 ACS extended capability 解析。
+
+## 6. 当前边界
+
+- 直接探测只覆盖 standard BAR0-BAR5，不含 ROM、SR-IOV VF BAR和 Resizable BAR支持集合。
+- sysfs scanner 不执行 VFIO hot-reset ioctl，也不猜测 override 前的真实物理隔离域。
+- allocator 计算 root-level aperture demand，不复刻 OVMF 的完整多级 bridge window算法。
+- QEMU 参数是启动前需求；启动后仍必须核对 guest BAR、ACPI `_CRS`、IOMMU map 和中断。
+- 本环境只有 WSL synthetic PCI，可验证只读扫描和算法，不能替代真实设备写全 1 sizing、
+  电气 reset 或物理 ACS 验收。

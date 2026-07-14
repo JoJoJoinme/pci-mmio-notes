@@ -1,0 +1,96 @@
+{
+  "date": "2026-07-14",
+  "scope": "Executable PCI BAR sizing, guest MMIO allocation, and passthrough capability reference model",
+  "implementation": {
+    "path": "pci-resource-model",
+    "language": "Python 3.10+ standard library",
+    "components": [
+      "abstract transactional Type-0/Type-1 BAR write-all-ones probe with a guarded Linux sysfs backend",
+      "read-only Linux sysfs inventory",
+      "transactional below/above-4G MMIO allocator",
+      "linked OVMF X-PciMmio64Mb and QEMU pci-hole64-size output",
+      "eligible/available/attachable passthrough evaluator"
+    ]
+  },
+  "validation": {
+    "unitTests": {
+      "commands": [
+        "python3 -m unittest discover -v (WSL, from pci-resource-model)",
+        "python -m unittest discover -v (Windows, from pci-resource-model)"
+      ],
+      "verdict": "pass",
+      "cases": 38
+    },
+    "lint": {
+      "command": "ruff check pci-resource-model && ruff format --check pci-resource-model",
+      "version": "0.15.21",
+      "verdict": "pass"
+    },
+    "wheelInstall": {
+      "command": "pip install --force-reinstall ./pci-resource-model",
+      "artifact": "pci_resource_model-0.1.0-py3-none-any.whl",
+      "consoleSmoke": "installed pci-resource-model allocate command reproduced the 2 GiB result",
+      "verdict": "pass"
+    },
+    "twoGiBEndToEnd": {
+      "input": "pci-resource-model/examples/two-gib-endpoint.json",
+      "lowWindow": "0x80000000:0xc0000000",
+      "highWindow": "0x100000000:0x200000000",
+      "placement": "mmio64 at 0x100000000",
+      "highApertureBytes": 2147483648,
+      "qemuArguments": [
+        "-fw_cfg",
+        "name=opt/ovmf/X-PciMmio64Mb,string=2048",
+        "-global",
+        "q35-pcihost.pci-hole64-size=2G"
+      ],
+      "capability": {
+        "eligible": true,
+        "available": true,
+        "attachable": true,
+        "selectedReset": "flr",
+        "requiredLease": [
+          "0000:65:00.0"
+        ]
+      },
+      "verdict": "pass"
+    },
+    "wslReadOnlyScan": {
+      "command": "python3 -m pci_resource_model scan --interrupt-remapping unknown",
+      "source": "linux-sysfs-read-only",
+      "devices": 3,
+      "bars": 6,
+      "largestObservedBarBytes": 8589934592,
+      "hostIommuPresent": false,
+      "acsOverrideActive": false,
+      "verdict": "pass"
+    },
+    "wslFailClosed": {
+      "command": "python3 -m pci_resource_model capable --inventory /tmp/pci-resource-model-wsl-inventory.json --target 5582:00:00.0 --mmio32 0x80000000:0xf0000000 --mmio64 0x100000000:0x1000000000",
+      "target": "5582:00:00.0",
+      "eligible": false,
+      "available": false,
+      "attachable": false,
+      "reasonCodes": [
+        "HOST_IOMMU_MISSING",
+        "INTERRUPT_REMAP_UNKNOWN",
+        "ACS_OR_TOPOLOGY_ISOLATION_MISSING",
+        "NO_ACCEPTED_RESET"
+      ],
+      "verdict": "pass"
+    }
+  },
+  "safetyBoundaries": [
+    "Linux scan consumes kernel-probed sysfs resources and never writes live BARs",
+    "Direct BAR sizing requires an explicit ConfigSpace backend and a quiesced exclusively owned function",
+    "ACS override never reuses the patched kernel group as physical-isolation proof",
+    "Estimated bus-reset domains and missing dependency inventory fail closed by default",
+    "MMIO admission is separate from static capability"
+  ],
+  "remainingPhysicalValidation": [
+    "live unbound hardware BAR write-all-ones transaction and restoration",
+    "VFIO hot-reset affected-set integration",
+    "override-independent physical isolation domain capture on the target host",
+    "firmware-stage bridge-window placement and post-boot guest BAR verification"
+  ]
+}

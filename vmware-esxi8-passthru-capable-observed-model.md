@@ -398,6 +398,11 @@ domain，而不是“DPDK”这个名字。如果 DPDK 使用 `uio_pci_generic/i
    `pci-hole64-size` 和 machine-readable manifest。
 5. 启动后验证 guest BAR/root window、IOMMU map 和中断；停止后先 detach/unmap 再释放 lease。
 
+这套顺序的可执行 reference implementation 位于
+[`pci-resource-model/`](pci-resource-model/README.md)。它不尝试复制 VMware 私有实现，
+而是把本文的公开输入、分层 verdict、dependency closure、MMIO placement 和 reason code
+变成可测试 API/CLI。
+
 ## 5. 复现
 
 完整矩阵会逐案重启 outer ESXi，并在结束时恢复基线：
