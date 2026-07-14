@@ -160,6 +160,10 @@ acsOverrideSource
 租约闭包使用 physical domain，VFIO open/bind 使用 kernel group。缺少或矛盾 provenance 时
 所有 override-dependent candidate fail-closed。本仓库的
 [`kernel-patches/`](kernel-patches/README.md) 提供对应 Linux 6.6 接口和已构建验证。
+对 physical domain 内每个 DMA-capable endpoint，必须二选一：与 payload 进入同一
+owner/IOAS，或在整个 lease 期间解绑驱动、关闭 bus master 并证明 quiesced。只有不会
+DMA 且不受 reset 影响的 fabric node 才可保留 host 所有权。任一 member 无法分类或
+停机时拒绝整个 candidate；ACS override 本身永远不构成隔离证据。
 
 ### 5.3 DMA 和中断底线
 
@@ -601,6 +605,9 @@ RMRR profile plan   = 当前 host 上所有匹配且可允许 candidate 的 RMRR
 
 如果 selector-wide RMRR union 无法避开 guest RAM，拒绝整个 profile 或要求管理员缩小
 allowed set，不能只因为当前选中的一张卡暂时可用就接受。
+“不与 guest RAM 重叠”只是必要条件，不是充分条件。真实 RMRR/IVMD device 还必须证明
+host reserved pages 可被安全保留为精确 identity mapping，且 device reset 后的 platform DMA
+协议仍然正确；否则即使 memory-map planner 成功也必须拒绝。
 
 ### 12.2 MMIO planner
 
@@ -619,7 +626,8 @@ allowed set，不能只因为当前选中的一张卡暂时可用就接受。
 - Legacy BIOS 是独立 profile，使用 SeaBIOS 重新验证 below-4G hole、ROM 和设备数量限制。
 - 默认 `rombar=0` 对齐当前 VMware 默认隐藏样本。
 - 显式 Option ROM 必须固定 hash、来源和执行 policy；未知 ROM 不进入 guest firmware。
-- VMware parity profile 固定 effective BAR size，不允许 guest 改 Resizable BAR。
+- VMware parity profile 固定 effective BAR size，并将 ReBAR control 隐藏或只读；未通过
+  guest config-write 负例时，不允许带可写 ReBAR capability 的设备进入该 profile。
 
 ### 12.4 启动参数模板
 
@@ -663,7 +671,7 @@ Dynamic 冷启动允许在显式 allowed set 内更换物理 identity，但必�
 | Surface | 基线行为 |
 | --- | --- |
 | PCIe topology/LinkCap | 按 profile 重建，不把 host link 原样当合同 |
-| AER | host ownership；过滤 guest AER header/ownership，保留经验证的 status body 语义 |
+| AER | host ownership；不向 guest 投递 AER notification；config surface 按实测 profile 过滤 |
 | PME | ACPI `_OSC` 按 profile；默认不向 guest 提交 native PME IRQ |
 | Option ROM | 默认隐藏；显式路径固定 ROM hash |
 | MSI/MSI-X | 保留并要求 interrupt remapping；记录 vector budget |
@@ -677,6 +685,9 @@ Dynamic 冷启动允许在显式 allowed set 内更换物理 identity，但必�
 等价 proxy 中实现，并绑定 profile/version。实验补丁见
 [`vmware-esxi8-lab/qemu-patches/`](vmware-esxi8-lab/qemu-patches/)，生产实现需要重写成通用、
 有测试的 property/object，而不是保留 lab-only 开关。
+当前黑盒样本中 guest 仍可见部分 raw status body，但这不等于 PCI error 被投递给
+guest；产品合同以“host 处理、guest 无 notification”为硬语义，再用 versioned profile
+对齐 config-space 可见性。
 
 ## 14. Lifecycle capability
 
@@ -859,27 +870,37 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 
 ## 18. 关键风险与控制
 
-| 风险 | 后果 | 强制控制 | 验收证据 |
-| --- | --- | --- | --- |
-| ACS override 缩小 group | P2P 绕过 IOMMU | 双域模型，整租 physical domain | provenance + peer-DMA negative/positive control |
-| reset 影响旁路 function | 破坏 host/其他 VM | VFIO affected set 闭包和原子 lease | hot-reset info + callback/真实硬件 |
-| reset 未清敏感状态 | 跨租户泄漏 | 双端 reset、state probe、失败 quarantine | generation register/vendor test |
-| 双重分配/TOCTOU | 两个 owner 同时 DMA | durable CAS、epoch、fd passing | 并发 race 测试 |
-| 多设备部分成功 | guest 少配或依赖拆分 | constraint solver、all-or-nothing rollback | 中途 bind/reset fault injection |
-| stale DMA/IOTLB/IRQ | power-off 后写 guest/host | unmap/invalidate/IRQ teardown 后才释放 | IOMMU trace 和 sentinel |
-| RMRR 与 guest RAM 重叠 | identity DMA 错址 | selector-wide RMRR envelope | synthetic DMAR overlap A/B |
-| 异构 candidate ABI 不兼容 | guest driver/firmware 失败 | guestAbiClass 和 per-candidate validation | cold restart across candidates |
-| MMIO 只配 firmware 一侧 | BAR 未分配或隐式高置 | OVMF/QEMU 联动 planner | guest `_CRS`、BAR、HMP |
-| host crash 后误释放 | split brain | power fencing 和 fencing token | kill/restart/old-token test |
-| QEMU crash 清理失败 | device 带旧状态回池 | pidfd cleanup + quarantine | SIGKILL fault injection |
-| Option ROM 不可信 | firmware supply-chain 风险 | 默认隐藏，显式 hash allowlist | ROM marker 和 hash |
-| AER/DPC fatal | host/设备失稳 | host ownership、health/quarantine | host/guest paired logs |
-| ATS/PRI/PASID 残留 | translation/cache 跨 owner | 默认过滤，vendor/IOMMUFD qualification | invalidate/reset/teardown trace |
-| P2P backend 不支持 | mapping fail 或越界 DMA | 默认拒绝，backend/profile gate | peer DMA + IOMMU trace |
-| live migration 能力误判 | 丢设备状态或脏页 | baseline blocker，VFIO feature 全量检查 | migration FSM/failure rollback |
-| runtime eject 未完成 | 提前释放仍在用设备 | 等 `DEVICE_DELETED` 和 fd teardown | guest cooperation timeout test |
-| NUMA 远端放置 | 性能与中断抖动 | hard/soft NUMA policy 分离 | locality 和性能 counter |
-| HCL/errata 变化 | 已知硬件缺陷进入生产 | signed versioned policy DB | policy hash 和 qualification report |
+| ID | 风险 | 后果 | 强制控制 | 验收证据 |
+| --- | --- | --- | --- | --- |
+| R01 | ACS override 缩小 group | P2P 绕过 IOMMU | 双域模型，整租 physical domain | provenance + peer-DMA negative/positive control |
+| R02 | reset 影响旁路 function | 破坏 host/其他 VM | VFIO affected set 闭包和原子 lease | hot-reset info + callback/真实硬件 |
+| R03 | reset 未清敏感状态 | 跨租户泄漏 | 双端 reset、state probe、失败 quarantine | generation register/vendor test |
+| R04 | 双重分配/TOCTOU | 两个 owner 同时 DMA | durable CAS、epoch、fd passing | 并发 race 测试 |
+| R05 | 多设备部分成功 | guest 少配或依赖拆分 | constraint solver、all-or-nothing rollback | 中途 bind/reset fault injection |
+| R06 | stale DMA/IOTLB/IRQ | power-off 后写 guest/host | unmap/invalidate/IRQ teardown 后才释放 | IOMMU trace 和 sentinel |
+| R07 | RMRR 与 guest RAM 重叠 | identity DMA 错址 | selector-wide RMRR envelope | synthetic DMAR overlap A/B |
+| R08 | 异构 candidate ABI 不兼容 | guest driver/firmware 失败 | guestAbiClass 和 per-candidate validation | cold restart across candidates |
+| R09 | MMIO 只配 firmware 一侧 | BAR 未分配或隐式高置 | OVMF/QEMU 联动 planner | guest `_CRS`、BAR、HMP |
+| R10 | host crash 后误释放 | split brain | power fencing 和 fencing token | kill/restart/old-token test |
+| R11 | QEMU crash 清理失败 | device 带旧状态回池 | pidfd cleanup + quarantine | SIGKILL fault injection |
+| R12 | Option ROM 不可信 | firmware supply-chain 风险 | 默认隐藏，显式 hash allowlist | ROM marker 和 hash |
+| R13 | AER/DPC fatal | host/设备失稳 | host ownership、health/quarantine | host/guest paired logs |
+| R14 | ATS/PRI/PASID 残留 | translation/cache 跨 owner | 默认过滤，vendor/IOMMUFD qualification | invalidate/reset/teardown trace |
+| R15 | P2P backend 不支持 | mapping fail 或越界 DMA | 默认拒绝，backend/profile gate | peer DMA + IOMMU trace |
+| R16 | live migration 能力误判 | 丢设备状态或脏页 | baseline blocker，VFIO feature 全量检查 | migration FSM/failure rollback |
+| R17 | runtime eject 未完成 | 提前释放仍在用设备 | 等 `DEVICE_DELETED` 和 fd teardown | guest cooperation timeout test |
+| R18 | NUMA 远端放置 | 性能与中断抖动 | hard/soft NUMA policy 分离 | locality 和性能 counter |
+| R19 | HCL/errata 变化 | 已知硬件缺陷进入生产 | signed versioned policy DB | policy hash 和 qualification report |
+| R20 | guest/driver/OEM 不支持 | 功能或服务保证失效 | 版本化外部支持矩阵 | vendor statement + guest workload test |
+| R21 | sub-page BAR 共享 4KB host page | 无关资源被映射或修改 | host resource page-isolation admission | sysfs/resource + config probe |
+| R22 | ReBAR 写能力逃逸 | guest 改变 BAR size 破坏 plan | 固定 effective size 并过滤/只读 ReBAR capability | config write negative test |
+| R23 | SR-IOV PF/VF lifecycle 依赖不完整 | VF 跨 owner、PF reset 破坏 VM | PF/VF 闭包、VF reset 和 capability filter | supported PF/VF hardware matrix |
+| R24 | PME 所有权不匹配 | guest 低功耗后无法唤醒设备 | `_OSC` 与 config/message 联合 policy | controlled PME injection |
+| R25 | 设备数/topology/resource ceiling | 第 N 个设备启动失败或 ABI 漂移 | 显式 profile limit 和全量资源试算 | 1/16/32/64/limit+1 matrix |
+| R26 | raw CLI/QMP 绕过管理门 | 未租约或未验证设备被挂载 | fd-only launch、QMP ACL、sandbox 和 privilege split | bypass negative test |
+| R27 | IOMMU/interrupt-remap errata | DMA 或 IRQ 隔离失效 | platform qualification 和 denylist | bare-metal fault/interrupt trace |
+| R28 | requester-ID alias 未被发现 | 多设备共用一 translation domain | alias/legacy subtree 整租 | peer DMA + requester trace |
+| R29 | 隐藏 functional dependency | 只 reset/分配部分 function 导致故障 | 保守 multifunction/PF-VF 闭包加 vendor rule | cross-function state test |
 
 ### 18.1 风险清零发布门
 
@@ -930,6 +951,11 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | C07 | RID alias/legacy bridge | alias domain 集体分配 | 已有 ESXi legacy；物理待验收 |
 | C08 | narrow errata deny | 精确 ID/revision 和 reason | 待实现 |
 | C09 | health/quarantine | 不健康设备不进入 candidate pool | 待实现 |
+| C10 | qualification hash/version 变更 | 相关 capability 立即 invalidated | 待实现 |
+| C11 | sub-4KB BAR 独占/共享 host page | 独占可评估；共享必须拒绝 | 待实现/物理验收 |
+| C12 | RCiEP regular function/VF A/B | regular 按 reset gate；RCiEP VF 拒绝 | regular 负例已有；VF 待验收 |
+| C13 | SR-IOV VF 与 PF reset dependency | PF/VF bundle 完整，VF 隔离可证明 | partial endpoint；支持型硬件待验收 |
+| C14 | PF guest 写 VF Enable/NumVFs | capability 不可写或整个 PF 被拒绝 | 待 QEMU filter |
 
 ### 19.2 静态 lifecycle
 
@@ -945,6 +971,7 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | S07 | forced VM off | DMA/IRQ 清理后可复用 | 已有嵌套；controller 待实现 |
 | S08 | 十次复用 | 无 stale DMA/interrupt/state | 已有嵌套；物理待验收 |
 | S09 | snapshot/suspend | 明确拒绝且设备保持可用 | 已有 ESXi；QEMU gate 待实现 |
+| S10 | Fault Tolerance 请求 | 对 DirectPath VM 明确拒绝 | Qman gate 待实现 |
 
 ### 19.3 Dynamic matcher 与 solver
 
@@ -981,6 +1008,9 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | M08 | MSI-X/MSI/INTx | remap 和功能证据 | MSI-X/MSI 已有；物理 INTx 待验收 |
 | M09 | ATS/PRI/PASID | 默认隐藏；显式 profile 完整清理 | 待真实支持设备 |
 | M10 | P2P | 默认拒绝；允许 profile 才成功 | ESXi synthetic 已有；QEMU backend gate 待实现 |
+| M11 | ReBAR capability 写入 | guest 无法改变 effective BAR size/address plan | 待 QEMU filter |
+| M12 | 1/16/32/64/65 devices | 已验收 limit 内稳定；limit+1 预检查拒绝 | 待实现 |
+| M13 | 真实 RMRR identity mapping | reserved page、guest hole、reset 后 DMA 都正确 | synthetic 已有；物理待验收 |
 
 ### 19.5 故障与多主机
 
@@ -995,21 +1025,24 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | F06 | HA candidate exhaustion | VM 保持 stopped，reason 完整 | 待实现 |
 | F07 | live migration request | parity profile 明确拒绝 | 已有 ESXi；QEMU gate 待实现 |
 | F08 | optional VFIO migration | feature/P2P/dirty tracking 全满足才通过 | 待支持硬件 |
+| F09 | raw CLI/QMP/storage API bypass | 无 lease/未验证设备无法附加，限制操作无法绕过 | 待实现 |
+| F10 | QEMU/kernel/firmware/policy 升级 | 依赖风险自动 invalidated，重验收前关闭 | 待实现 |
 
 ## 20. 实施路线
 
 ### Phase 0：规范冻结
 
 - 固定本文 schema、reason code、profile 和 evidence contract。
+- 将 K01-K29、R01-R29 和 qualification dependency graph 做成可机器验证的 release input。
 - 将现有 `pci-resource-model` 输出升级为 versioned inventory/plan。
-- 验收：旧 46 项测试迁移，JSON schema 和 golden files 稳定。
+- 验收：旧 46 项测试迁移，JSON schema/golden files 稳定，C10/F10 证明依赖变更会撤销能力。
 
 ### Phase 1：单 host 静态控制器
 
 - 实现 host agent、activation state、durable local lease、VFIO fd passing。
 - 接入 hot-reset affected set、rollback stack、health/quarantine。
 - 将 MMIO planner 从 root aperture 扩展到多级 bridge windows。
-- 验收：S00-S09、M00-M08 自动化，QEMU crash fault injection 通过。
+- 验收：S00-S10、M00-M08、M12 自动化，QEMU crash 和 F09 bypass fault injection 通过。
 
 ### Phase 2：单 host Dynamic
 
@@ -1026,9 +1059,9 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 
 ### Phase 4：QEMU parity surface
 
-- 把 AER/PME/ROM/LinkCap/ATS capability policy 从 lab patch 产品化。
+- 把 AER/PME/ROM/LinkCap/ReBAR/SR-IOV/ATS capability policy 从 lab patch 产品化。
 - 实现 versioned `directpath-profile` QOM object/property 和 QMP 状态查询。
-- 验收：guest config、ACPI、BAR、IRQ 和 host logs 与目标 VMware profile 比较。
+- 验收：guest config、ACPI、BAR、IRQ 和 host logs 与目标 VMware profile 比较，C14/M11/F09 负例不可绕过。
 
 ### Phase 5：可选扩展
 
@@ -1053,11 +1086,15 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 10. 所有纯软件用例自动执行；真实硬件缺口明确标记，不用 synthetic 结果冒充 E4。
 11. risk register 中没有 `OPEN`、`CONTROL_IMPLEMENTED`、`INVALIDATED` 或风险接受项；
     所有暴露能力均为 `VERIFIED`，其余均为不可绕过的 `FEATURE_DISABLED`。
+12. 第 24 节 K01-K29 每行都有实现、验收和风险处置；第 24.6 节的任一
+    Qman capability 只能在所有 applicable K/R 条目闭环后宣告。
 
 ## 22. 当前实现与缺口
 
 | 模块 | 当前状态 |
 | --- | --- |
+| K01-K29 全量对标合同 | 文档已完成；可机器执行的 release evaluator 尚未实现 |
+| qualification/risk DB | schema 需求已定；signed DB、依赖失效和 capability gate 尚未实现 |
 | BAR sizing、root MMIO allocator | 已实现并测试 |
 | 静态 `eligible/available/attachable` | 已实现并测试 |
 | Linux sysfs inventory | 已实现只读版本 |
@@ -1094,14 +1131,135 @@ capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP
 这些项目之外，matcher、solver、lease、rollback、quarantine、RMRR/MMIO、双 host 调度和
 绝大多数 lifecycle failure 都应先用 QEMU/instrumented endpoint 完成，不应等待物理硬件。
 
-## 24. 公开依据
+## 24. KB 312208 到 QEMU/Qman 的全量能力对标合同
+
+本节以 [Broadcom KB 312208](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
+的每一类公开要求为左侧合同，而不是只对齐 BAR 或启动参数。Qman 只能在对应
+行的实现、验收和风险门全部通过后宣告该能力。
+
+### 24.1 结论标记
+
+| 标记 | 含义 |
+| --- | --- |
+| `SW-CLOSE` | 风险可通过 Qman/controller/QEMU/kernel 实现和软件故障注入闭环 |
+| `HW-QUAL` | 还必须对精确 platform/device/revision/firmware 做真实硬件验收 |
+| `EXT-QUAL` | 依赖 OEM、device/guest OS/driver/workload vendor 的外部支持，Qman 不能用代码消除 |
+| `BACKEND-GAP` | 当前 stock QEMU/VFIO/IOMMUFD 缺少必要语义，完成补丁和验收前必须禁用 |
+
+`HW-QUAL`、`EXT-QUAL` 和 `BACKEND-GAP` 不是“接受风险”。它们表示当前不能无条件
+暴露能力：只有精确 allowlist 通过后才能开启，其余配置均为 `FEATURE_DISABLED`。
+
+### 24.2 支持矩阵、平台与 BAR
+
+| KB ID | VMware 公开合同 | QEMU/Qman 对应实现 | 结论 | 未闭环时的风险/处置 |
+| --- | --- | --- | --- | --- |
+| K01 | server、device、ESXi/guest OS、guest driver、solution 和 workload 均需支持 | 建立自有 qualification DB，key 至 host model/BIOS/IOMMU、device IDs/revision/firmware、kernel/QEMU/OVMF、guest/driver/workload | `EXT-QUAL` | Broadcom HCL 不能转授为 Qman 支持；缺少厂商声明时标为 unsupported，对应 R19/R20 |
+| K02 | platform 必须用 IOMMU 将 guest physical DMA 重映射到 host physical | VFIO cdev + IOMMUFD/IOAS，禁止 no-IOMMU；attach 前后核对 domain、mapping、fault 和 interrupt-remap | `HW-QUAL` | IOMMU/IR 硬件 errata 不能仅靠 API bit 排除；未验收 platform 禁用，R06/R27 |
+| K03 | passthrough 路径上 root port/switch downstream port 需 ACS；multifunction P2P 也需 ACS | 解析 native ACS capability/control 和整条 path，用 physical isolation domain 分配 | `HW-QUAL` | 伪造 ACS bit 不能防止真实 peer routing；需 peer-DMA 正/负对照，R01 |
+| K04 | VMware 要求真实 ACS；本部署又必须开 Linux ACS override | kernel group 只用于 VFIO 操作；安全 lease 整租 override 前 physical domain，其中 DMA endpoint 必须同 IOAS 或被证明 quiesced | `HW-QUAL` | ACS override 无法生成物理隔离；未知 member/P2P path 直接拒绝，R01/R26 |
+| K05 | BAR 必须按 4KB 或更大对齐；sub-4KB BAR 所在 host page 不得有其他资源 | inventory 同时检查 host resource start/size/page sharing 和 guest allocator 对齐；冲突则拒绝 | `SW-CLOSE` + `HW-QUAL` | host firmware 若将无关资源放入同页，QEMU 不能安全补救，R21 |
+| K06 | passthrough 不支持 Resizable BAR | 在 bind 前固定 effective BAR size，vfio-pci config policy 隐藏或只读 ReBAR control，guest 写入必须无效 | `BACKEND-GAP` | 只在 planner 记录 size 不够；stock vfio-pci 表面可见性需逐版验证，R22 |
+| K07 | legacy BIOS 受 below-4G/3.75GB 合计 BAR 限制；UEFI + 64-bit MMIO 支持大 BAR，host firmware 也需 above-4G mapping | SeaBIOS/OVMF 分 profile；parity legacy 显式实施 3.75GB ceiling；host admission 核对 above-4G 和 IOMMU/address-width 边界；UEFI 对 selected BAR 逐级 bridge packing，同时设置 OVMF aperture 与 QEMU `pci-hole64-size`，再核对 `_CRS`/BAR | `SW-CLOSE` | 单边配置、隐式对齐和机型拓扑可导致窗口不等价，R09 |
+| K08 | passthrough device 上限随 ESXi 版本为 16/32/64；目标 8.0 U3 为 64 | Qman profile 硬限 64，预建稳定 root ports，在租约前试算 BDF、bus number、MMIO、IRQ 和 fd 预算 | `SW-CLOSE` | 未完成 1/16/32/64/65 真实启动矩阵前对外 limit 必须降到已验证值，R25 |
+
+### 24.3 Reset、拓扑与功能依赖
+
+| KB ID | VMware 公开合同 | QEMU/Qman 对应实现 | 结论 | 未闭环时的风险/处置 |
+| --- | --- | --- | --- | --- |
+| K09 | 可选 FLR、SBR、Link Disable/Enable、D0-D3hot-D0，用于 host/VM 隔离和干净启动 | 读取 `reset_method`，通过 VFIO reset/hot-reset ioctl 选法；claim/release/reboot 都记录 callback、config/link/health | `HW-QUAL` | capability bit 或 ioctl success 不能证明内部状态已清；每个 device revision 需真机，R02/R03 |
+| K10 | reset 后不得看似已初始化、不得保留 secret、正常配置必须可再用 | vendor/instrumented generation/state/DMA/IRQ sentinel，双向 tenant A-to-B/B-to-A 清洁测试，不通过则 quarantine | `HW-QUAL` | 通用软件无法穷举设备内部/sideband state；无 vendor 证据不进 pool，R03 |
+| K11 | SBR/link reset 为 bus-level，同一 bus 的所有 function 必须给同一 VM | `VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` affected set 进 dependency closure，所有 member 原子租约 | `SW-CLOSE` + `HW-QUAL` | kernel reported set 外的 sideband/vendor dependency 仍需真机证明，R02/R29 |
+| K12 | root-complex integrated endpoint 可直通，但直连 host bridge 的 function 必须 FLR 或可接受 D3Hot reset；RCiEP VF 不支持 | scanner 根据 PCIe type/parent/physfn 分类；普通 RC endpoint 只在精确 reset 路径验证后放行，RCiEP VF 拒绝 | `HW-QUAL` | Linux 报告 D3hot 不等于设备符合 VMware 的干净 reset 语义，R03/R23 |
+| K13 | multifunction 若有功能依赖，所有依赖 function 必须给同一 VM | 默认整租 multifunction set，再叠加 reset/PF-VF/vendor functional group；不依赖需有明确 qualification rule 才可拆 | `HW-QUAL` | 隐藏 firmware/doorbell/sideband dependency 无法从 class/FLR 推出，R29 |
+| K14 | legacy PCI/PCIe-to-PCI bridge 后 function 因 bridge requester ID 需整体分配 | 重建 requesterAliasSet/legacy subtree，整租 translation/reset domain，不把 endpoint BDF 当独立 owner | `HW-QUAL` | alias 遗漏会使不同 VM 共用 IOMMU translation；未观测 requester trace 前禁用，R28 |
+| K15 | ESXi 7.0 U2+ 可用 `allowP2P` + `relaxACSforP2P` 开启 passthrough peer DMA | 整个 peer set 同 owner/IOAS、同 lease，独立 allow 和 ACS-relax policy，需 BAR mapping 与 peer DMA trace | `BACKEND-GAP` | 当前 QEMU IOMMUFD 公开文档仍说 PCI BAR P2P mapping 不支持；parity profile 必须关闭，R01/R15 |
+| K16 | SR-IOV VF 在满足平台/设备要求时可直通 | host 管理 PF/VF create/remove，VF 作 payload，PF/VF/reset/ARI 进 bundle，一个 VF 一个安全 owner | `HW-QUAL` | PF reset、VF FLR、firmware 和跨 VF state 需支持型 NIC/GPU 验收，R23/R29 |
+| K17 | PF 可为普通 function 直通，但不支持 guest 通过 PF SR-IOV capability 创建 VFs | vfio-pci profile 必须隐藏/只读 PF SR-IOV capability 和 VF Enable/NumVFs，或对带该 capability 的 PF 整体拒绝 | `BACKEND-GAP` | 未证明 config filter 前直通 PF 可让 guest 改变 host VF topology，R22/R23/R26 |
+
+### 24.4 Reserved memory、interrupt、error、ROM 与 power management
+
+| KB ID | VMware 公开合同 | QEMU/Qman 对应实现 | 结论 | 未闭环时的风险/处置 |
+| --- | --- | --- | --- | --- |
+| K18 | DMA 到 host reserved memory 必须由 RMRR 声明；VM RAM 不得重叠，ESXi 可自动调整 memory map | 解析 DMAR/IVMD 和 device scope；保留 guest GPA hole 并只在可安全建立精确 identity mapping 时启动 | `HW-QUAL` + `BACKEND-GAP` | 任意 host reserved page 不能盲目映射给 userspace/guest；当前默认拒绝真实 RMRR device，R07/R27 |
+| K19 | Dynamic 需尽量容纳所有 allowable device 的 RMRR；不可能时缩小 allowed set 或拒绝 | plan 阶段对 selector-wide candidate RMRR 取 union，任一 candidate 不可安全容纳时不宣告该 selector 可迁移 | `SW-CLOSE` + K18 gate | 只按当次 selected BDF 规划会使下次 Dynamic 选卡失败，R07/R08 |
+| K20 | MSI-X、MSI、INTx 都可用，但推荐 MSI/MSI-X | MSI/MSI-X 需 interrupt remapping 和 vector budget；INTx 需验证 shared-line mask/unmask/EOI、延迟和 DoS 界限 | `HW-QUAL` | 当前只对 MSI/MSI-X 有较强证据；INTx 在物理验收前默认禁用，R06/R27 |
+| K21 | PCI error 始终由 ESXi 处理，不向 guest 虚拟化；uncorrectable error 可能使 host 无法恢复 | QEMU profile 截获/过滤 AER ownership/config/event path，host agent 记录并 quarantine，guest 不收到 AER notification | `BACKEND-GAP` + `HW-QUAL` | stock vfio-pci guest surface 不等价；真实 fatal/NMI 无法用软件保证恢复，只能用合格设备、故障域和 fencing 限制，R13 |
+| K22 | Expansion ROM 可支持但默认不执行；开启后 power-on/restart 由 VM firmware 重执行 | 默认 `rombar=0`；显式 profile 固定 ROM hash/signature、`rombar`/`romfile`、OVMF/SeaBIOS marker 和 reboot re-exec | `SW-CLOSE` + `HW-QUAL` | ROM supply chain、reset 后可重执行性和 host-driver rebind 依赖需逐设备验收，R03/R12 |
+| K23 | PME 不向 guest 通知；BIOS `_OSC` 默认可能又授予 guest native PME control | ACPI `_OSC`、vfio-pci PM config 和 PME message 作为一个 profile；parity 默认 host-owned、不注入 guest IRQ | `BACKEND-GAP` + `HW-QUAL` | 只改 `_OSC` 或只吞 message 都可能使 guest driver 将设备留在低功耗；需受控 PME 注入，R24 |
+
+### 24.5 Static、Dynamic 与 lifecycle
+
+| KB/API ID | VMware 公开合同 | QEMU/Qman 对应实现 | 结论 | 未闭环时的风险/处置 |
+| --- | --- | --- | --- | --- |
+| K24 | VMDirectPath 将精确 PCI function 直接分配给 VM | static request 固定 deviceUid/identity/guest slot，完整 bundle 租约，fd-only 传入 QEMU | `SW-CLOSE` + device gates | controller/lease/rollback 产品代码未完成前不可上生产，R02-R06/R11/R26 |
+| K25 | Dynamic 可保存多个 allowed vendor/device 组合，power-on 时选择可用设备 | matcher + dependency bundle + 多 requirement solver + durable CAS；只在 run manifest 保存 `assignedId` | `SW-CLOSE` + device gates | 候选异构、竞争、部分 bind 和 stale binding 需 all-or-nothing/fault injection，R04/R05/R08 |
+| K26 | Dynamic 的 `assignedId` 是运行时 backing，powered-off 后可在另一 host 重新选择 | binding 与 runId/lease/generation 绑定，power-off 清空；cold relocate/HA 在 target host 重新解算 | `SW-CLOSE` | 原 host 未 fence 或持久化 BDF 会造成双 owner/错卡，R04/R10 |
+| K27 | power-on、guest restart 和功能负载必须正常；还要验证 forced VM shutdown/VM crash 和 host shutdown/crash | S00-S08/F00-F04；QEMU/agent/store/host 故障注入，DMA/IRQ teardown、reset、reconcile、quarantine 和 fencing | `SW-CLOSE` + `HW-QUAL` | virtual callback 只证明路径，不证明真实设备电气/内部状态，R03/R06/R10/R11 |
+| K28 | VMDirectPath 使 Suspend/Resume、Snapshots、Fault Tolerance 和 vMotion 不可用 | Qman API 和 scheduler 显式拒绝；QEMU 设 migration blocker，QMP/storage 路径加 ACL，返回稳定 reason | `SW-CLOSE` | 只在 UI 隐藏会被 raw QMP/CLI 绕过；必须完成负例和权限分离，R16/R26 |
+| K29 | Dynamic DirectPath 是 power-on selection，不是 runtime PCI hotplug | parity profile 启动前完成选择和 realize，运行中 `device_add/device_del` 拒绝 | `SW-CLOSE` | 把 QMP hotplug 当 Dynamic 会引入 guest eject/reset/release race，R17/R26 |
+
+### 24.6 Qman 对外可宣告的最终能力
+
+下表是产品能力合同，也是实现完成时的最终验收索引。“条件支持”意味着只对
+qualification DB 中的精确组合返回 true，绝不是风险豁免。
+
+| Qman capability | VMware 对标语义 | 最终对外结果 | 当前仓库状态 | 解锁条件/风险 |
+| --- | --- | --- | --- | --- |
+| `staticDirectPath` | 固定 function 静态直通 | 条件支持 | capability/resource model 已有；controller 未实现 | Phase 1 + K01-K24 applicable gates |
+| `dynamicDirectPath` | allowed set + power-on selection + runtime `assignedId` | 条件支持 | VMware 语义已验证；Qman solver/lease 未实现 | Phase 2 + K25/K26 |
+| `dynamicColdRelocate` | powered-off 后 target host 重新选卡 | 条件支持 | VMware 已验证；coordinator 未实现 | Phase 3 + fencing/ABI/RMRR gates |
+| `haRestartWithDirectPath` | host 故障后在有候选卡的 host 冷启动 | 条件支持 | 尚未实现 | K26/K27，原 host 必须 fenced |
+| `guestRebootWithDirectPath` | guest restart 后同一 assigned device 重新可用 | 条件支持 | VMware 已验证；Qman 真机矩阵未跑 | K09/K10/K27 |
+| `powerCycleWithDirectPath` | power-off/on 后 static 重用原卡，Dynamic 重新选卡 | 条件支持 | VMware 已验证；controller 未实现 | lease/reset/cleanup 全链路 |
+| `forcedOffRecovery` | VM crash/forced-off 后清理并安全复用设备 | 条件支持 | nested 证据已有；产品 cleanup 未实现 | K27，R03/R06/R11 |
+| `hostCrashRecovery` | host crash 后 reconcile，未 fence 不重分配 | 条件支持 | 尚未实现 | K26/K27，R10 |
+| `efiLargeBar` | UEFI + 64-bit MMIO 的大 BAR | 条件支持 | 1/2/4/8/32/64GB 参考证据已有 | 多级 planner、真实 BAR 和 K05-K07 |
+| `legacyBiosPassthrough` | below-4G 限制下的 legacy BIOS | 条件支持 | SeaBIOS 边界已测 | 单独 profile 和资源上限 |
+| `rebarGuestResize` | passthrough 不支持 Resizable BAR | false | config filter 未产品化 | K06/R22 |
+| `dependencyBundleIsolation` | bus/multifunction/legacy alias 依赖不得拆分 | 条件支持 | evaluator 已有部分模型 | K11/K13/K14，R02/R28/R29 |
+| `numaAwarePlacement` | 不改变直通语义，但避免远端 DMA/IRQ 性能风险 | 条件支持 | solver 未实现 | hard/soft locality policy，R18 |
+| `msiMsiX` | MSI/MSI-X passthrough | 条件支持 | nested translation/remap 证据已有 | 真实 platform IR/device qualification |
+| `intx` | legacy INTx passthrough | 默认关闭，精确硬件可条件开启 | nested functional fail | K20 物理 shared-line 验收 |
+| `atsPriPasid` | KB 312208 未承诺的 advanced DMA capability | parity profile 中 false | 未做真实设备验收 | 只能在独立 native profile 中条件开启，R14 |
+| `sriovVf` | 已由 host 创建的 VF 直通 | 默认关闭，支持型 PF/VF 可条件开启 | 只有 partial endpoint 证据 | K16 与 R23 |
+| `sriovPfGuestVfEnable` | guest 通过 PF 创建 VF | 永久拒绝 | filter 待产品化 | K17 |
+| `p2pDirectPath` | 显式允许 peer DMA | 当前拒绝 | ESXi synthetic 证据已有；IOMMUFD backend gap | K15，backend 支持和真机验收前不开启 |
+| `rmrrDevice` | reserved-memory identity DMA | 默认拒绝，精确 platform 可条件开启 | synthetic memory-map 证据已有 | K18/K19，安全 identity mapping + E4 |
+| `expansionRom` | 默认不执行，可显式开启 | 默认关闭，签名/hash profile 可条件开启 | 默认隐藏和 QEMU 正控已验证 | K22 |
+| `guestAerVirtualization` | PCI errors 不向 guest 虚拟化 | false，host-owned | lab surface 已验证；通用 filter 未产品化 | K21，完成 QEMU config/event policy |
+| `guestPmeNotification` | PME 被 host 忽略，不通知 guest | false，host-owned | lab injection 已验证；通用 profile 未产品化 | K23 |
+| `snapshot` | DirectPath VM 不可 snapshot | false | VMware 已验证；Qman gate 未实现 | K28 + bypass negative test |
+| `suspendResume` | DirectPath VM 不可 suspend/resume | false | 同上 | K28 |
+| `faultTolerance` | DirectPath VM 不可 FT | false | Qman 无对等 FT 实现 | K28，API 不得宣告 |
+| `liveMigration` | DirectPath VM 不可 vMotion | false in parity profile | VMware 已验证；Qman gate 未实现 | K28；VFIO migration 只属于另一 native profile |
+| `runtimeHotplug` | Dynamic 不等于 runtime hotplug | false in parity profile | 尚未实现 gate | K29 |
+| `maxPassthroughDevices` | ESXi 8.0 U1+ 上限 64 | 目标 64，运行时不超过已验证值 | 完整 64-device Qman 矩阵未跑 | K08/R25 |
+
+Qman 对外返回能力的唯一规则是：
+
+```text
+advertised(feature, host, device, vm, profile) =
+    implementationPresent
+ && everyApplicableKbRowVerified
+ && everyReferencedRiskIsVerifiedOrExposureIsDisabled
+ && qualificationHashesMatchRuntime
+ && noManagementBypassExists
+```
+
+因此，本节中“尚未实现”或“待真机”的行就是当前对应的技术风险清单；
+在它们闭环前，Qman 不得宣告对应能力已对标完成。
+
+## 25. 公开依据
 
 - [Broadcom KB 312208：VMDirectPath/Dynamic DirectPath 平台和设备要求](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
+- [Broadcom Compatibility Guide](https://compatibilityguide.broadcom.com/)
 - [vSphere API：HostPciPassthruInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruInfo.html)
 - [vSphere API：HostAssignableHardwareManager](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareManager.html)
 - [vSphere API：DynamicBackingInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html)
 - [vSphere API：AllowedDevice](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.AllowedDevice.html)
 - [Linux kernel：VFIO](https://docs.kernel.org/driver-api/vfio.html)
+- [Linux kernel：IOMMUFD](https://docs.kernel.org/userspace-api/iommufd.html)
+- [Linux kernel：x86 IOMMU 与 RMRR/IVRS](https://docs.kernel.org/next/x86/iommu.html)
 - [QEMU：IOMMUFD backend with VFIO](https://www.qemu.org/docs/master/devel/vfio-iommufd.html)
 - [QEMU：VFIO device migration](https://www.qemu.org/docs/master/devel/migration/vfio.html)
 - [QEMU：QMP device_add/device_del](https://www.qemu.org/docs/master/interop/qemu-qmp-ref.html)

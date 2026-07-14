@@ -24,7 +24,8 @@ test matrix, artifact contract, and QEMU equivalence checklist, see
 
 QEMU 平台完整复刻静态 VMDirectPath 与 Dynamic DirectPath 的控制平面设计，包括 capability
 分层、dependency bundle、候选求解、durable lease、IOMMUFD fd passing、rollback、
-quarantine、multi-host fencing 和分阶段验收，见
+quarantine、multi-host fencing、KB 312208 K01-K29 全量能力对标、R01-R29 风险清单
+和分阶段验收，见
 [`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)。
 
 QEMU -> ESXi 8 -> EFI Linux DirectPath 黑盒验证的中文结果报告，包括 MMIO
