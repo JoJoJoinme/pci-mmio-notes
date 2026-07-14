@@ -22,6 +22,11 @@ For the executable VMware implementation acceptance goals, evidence grades,
 test matrix, artifact contract, and QEMU equivalence checklist, see
 `vmware-directpath-acceptance-test-plan.md`.
 
+QEMU 平台完整复刻静态 VMDirectPath 与 Dynamic DirectPath 的控制平面设计，包括 capability
+分层、dependency bundle、候选求解、durable lease、IOMMUFD fd passing、rollback、
+quarantine、multi-host fencing 和分阶段验收，见
+[`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)。
+
 QEMU -> ESXi 8 -> EFI Linux DirectPath 黑盒验证的中文结果报告，包括 MMIO
 边界、32/64GB no-backing BAR、VT-d trace、MSI-only EDU、拓扑负例、双主机
 vMotion、host crash、guest reboot、INTx 和 Dynamic DirectPath `assignedId`
