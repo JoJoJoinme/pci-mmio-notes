@@ -1,11 +1,43 @@
 # QEMU 静态与动态 PCI 直通对标设计
 
-状态：架构基线 1.0
+状态：详细设计 2.0（可实现伪代码版）
 
 目标基线：VMware ESXi 8.0 U3、virtual hardware 20、EFI guest
 
 范围：公开接口、公开文档和本仓库黑盒结果所能观察的外部行为
 非目标：推导 VMware 私有代码、复制未公开算法或把实验绕过描述成硬件安全能力
+
+## 0. 阅读地图与系统心智模型
+
+本文按“事实、判断、占有、实现、验证”五层组织。第一次阅读只需先看本节、第 4 节总图、
+第 7 节 capable、第 8 节 domain、第 12 节 allocator 和第 9/10 节事务。
+
+| 想回答的问题 | 直接阅读 | 输出 |
+| --- | --- | --- |
+| 一块 PCI function 为什么 capable 或不 capable？ | 7.1-7.8 | 分层布尔值、稳定 reason、证据 provenance |
+| ACS override 后到底锁哪些设备？ | 5.2、8.1-8.5 | physical isolation domain 和 lease bundle |
+| FLR/SBR 会影响谁，如何找 reset domain？ | 8.2 | `ResetContract`、authoritative affected set |
+| BAR 怎么从设备需求变成 QEMU/OVMF 参数？ | 12.1、12.2.1-12.2.8 | guest PCI tree、逐桥窗口、root aperture、启动参数 |
+| Static/Dynamic 如何避免抢卡和半成功？ | 9.2-9.6、10.2-10.7、11 | CAS lease、rollback、runtime binding |
+| 哪些已经实现，哪些仍是设计？ | 22 | 代码映射和 fail-closed 状态 |
+
+```mermaid
+flowchart LR
+    FACT["事实层<br/>PCI topology, config, sysfs, ACPI, VFIO query"]
+    DECIDE["判断层<br/>role, isolation, reset, policy, ABI"]
+    OWN["占有层<br/>dependency closure, lease, fencing"]
+    REALIZE["实现层<br/>bind, IOMMUFD, MMIO plan, QEMU"]
+    PROVE["验证层<br/>QMP, guest BAR, IOMMU, audit"]
+
+    FACT --> DECIDE --> OWN --> REALIZE --> PROVE
+    PROVE -- "health/generation/evidence" --> FACT
+```
+
+最重要的边界只有三条：
+
+1. `capable` 是相对稳定的硬件加策略资格，不包含“现在是否空闲”和“某台 VM 的 MMIO 是否装得下”。
+2. kernel IOMMU group、physical isolation domain、reset domain 和最终 lease bundle 是四种不同集合。
+3. allocator 处理的是完整 guest PCI tree，不是把 passthrough BAR size 相加后写一个 hole。
 
 ## 1. 结论先行
 
@@ -136,6 +168,63 @@ flowchart LR
 | QEMU/VFIO | config/MMIO/IRQ/DMA 和可选 device migration | 分布式调度和跨进程租约 |
 | Policy DB | HCL、errata、override、trust-domain 规则 | 用整个 class code 代替精确证据 |
 
+### 4.2 控制面分层
+
+```mermaid
+flowchart TB
+    subgraph CP["Cluster control plane"]
+        API["VM API"] --> PROFILE["Profile resolver"]
+        PROFILE --> SCHED["Placement / Dynamic solver"]
+        SCHED --> STORE["Durable lease and fencing store"]
+    end
+
+    subgraph HP["Host privileged plane"]
+        SCAN["Inventory snapshotter"] --> CAP["Capability engine"]
+        CAP --> GRAPH["Domain / dependency graph"]
+        GRAPH --> ADMIT["VM-specific admission"]
+        ADMIT --> AGENT["Attach transaction controller"]
+        AGENT --> VFIO["VFIO cdev + IOMMUFD"]
+        AGENT --> RENDER["QEMU profile renderer"]
+    end
+
+    subgraph DP["Runtime data plane"]
+        QEMU["QEMU process"] --> DEV["Physical PCI function"]
+        DEV --> IOMMU["Host IOMMU / interrupt remapper"]
+    end
+
+    SCHED --> CAP
+    STORE <--> AGENT
+    VFIO --> QEMU
+    RENDER --> QEMU
+```
+
+`Profile resolver` 先冻结 firmware/layout/machine ABI；`Capability engine` 只读取 snapshot，
+不做 bind/reset；`Attach transaction controller` 只有拿到 durable lease 后才允许产生副作用。
+QEMU 进程不是 owner 的权威记录，QMP success 也不是硬件清理完成的证明。
+
+### 4.3 一次启动经过的七道门
+
+```mermaid
+flowchart LR
+    G1["G1 inventory complete"] --> G2["G2 hardware capable"]
+    G2 --> G3["G3 policy eligible"]
+    G3 --> G4["G4 enabled and active"]
+    G4 --> G5["G5 bundle available"]
+    G5 --> G6["G6 VM admission"]
+    G6 --> G7["G7 transactional attach verified"]
+
+    G1 -. fail .-> STOP["Reject with stage, devices, provenance"]
+    G2 -. fail .-> STOP
+    G3 -. fail .-> STOP
+    G4 -. fail .-> STOP
+    G5 -. fail .-> STOP
+    G6 -. fail .-> STOP
+    G7 -. fail .-> QUAR["Rollback or quarantine"]
+```
+
+前六道门必须是无副作用计算。只有 G7 可以改 driver、打开 VFIO fd、执行 reset 或启动 QEMU。
+任何 gate 都读取同一个 `inventoryEpoch/policyHash/profileHash`；版本不一致时整次计划作废。
+
 ## 5. 信任与安全模型
 
 ### 5.1 owner 和 trust domain
@@ -233,7 +322,10 @@ inventory 是事实快照，不是调度结果。每次 PCI add/remove、driver 
   },
   "isolation": {
     "provenance": "native-acs",
-    "overrideSource": "none"
+    "overrideSource": "none",
+    "nativeIsolation": true,
+    "effectiveIsolation": true,
+    "componentProvenanceComplete": true
   },
   "activation": {
     "adminEnabled": true,
@@ -276,6 +368,47 @@ inventory 是事实快照，不是调度结果。每次 PCI add/remove、driver 
 BAR 与 `PCI_COMMAND`。本仓库 [`pci-resource-model/`](pci-resource-model/README.md) 已实现该
 事务模型，但真实硬件写探测仍需单独资格验收。
 
+### 6.4 Snapshot、provenance 与一致性
+
+所有 evaluator 接受不可变 snapshot，不允许在算法中途再次零散读取 sysfs：
+
+```python
+record InventorySnapshot:
+    hostId: UUID
+    inventoryEpoch: uint64
+    kernelBootId: UUID
+    topologyHash: SHA256
+    policyHash: SHA256
+    capturedAt: Timestamp
+    hostFacts: HostFacts
+    devices: Map[BDF, DeviceRecord]
+
+record Fact[T]:
+    value: T
+    source: enum(kernel_uapi, patched_sysfs, acpi, config_space,
+                 vendor_rule, qualification_snapshot, manual_audited)
+    sourceVersion: string
+    observedAt: Timestamp
+    evidenceHash: SHA256
+```
+
+扫描器先收集全 host，再做 domain closure，最后原子发布新 epoch。只扫描请求 BDF 会漏掉
+IOMMU peer、reset peer 和 bridge child，因此不能产生 production snapshot。任一关键事实为
+unknown 时，不使用“最常见情况”补值，而是在对应 gate 返回 fail-closed reason。
+
+发布 snapshot 前至少检查：
+
+```python
+function publishSnapshot(raw):
+    assert every device.parent either null or exists in raw.devices
+    assert every domain member exists in raw.devices
+    assert every device is a member of its own operational domains
+    assert no parent cycle and no BDF identity collision
+    assert ACS native/effective/source tuple is internally consistent
+    assert topology did not change between first and final uevent sequence read
+    return immutableSnapshot(epoch = previous.epoch + 1)
+```
+
 ## 7. Capability 分层
 
 ### 7.1 输出模型
@@ -307,6 +440,25 @@ operationSupported(op) = attachable
 
 这些状态都必须返回，不能再压缩成一个 `passthroughCapable` 布尔值。
 
+```mermaid
+flowchart TB
+    ROLE["Assignable function role?"] --> HOST["IOMMU and interrupt prerequisites?"]
+    HOST --> ISO["Trustworthy isolation?"]
+    ISO --> RESET["Accepted reset contract?"]
+    RESET --> EXCL["No platform/errata exclusion?"]
+    EXCL --> HC["hardwareCapable"]
+    HC --> POLICY["HCL, trust-domain, profile policy"]
+    POLICY --> PC["passthruCapable / policyEligible"]
+    PC --> ENABLE["adminEnabled and hostActive"]
+    ENABLE --> FREE["Complete bundle healthy and free"]
+    FREE --> AVAIL["available"]
+    AVAIL --> VM["MMIO, RMRR, ABI, NUMA, IRQ admission"]
+    VM --> ATTACH["attachable for this VM"]
+```
+
+VMware API 的 `passthruCapable` 对标 `policyEligible`，而不是 `available` 或 `attachable`。
+设备被另一台 VM 占用时，capable 不应抖成 false；只是 `available=false`。
+
 ### 7.2 设备 role
 
 - Type-0 endpoint 和经过证明的 VF 可以作为 payload。
@@ -315,6 +467,38 @@ operationSupported(op) = attachable
 - class code 是 metadata，不做 CPU/memory/bridge class blanket blacklist。
 - 精确 denylist 只用于已知 errata，必须带 source、affected IDs/revisions、kernel/profile range、
   reason 和审计 override。
+
+Role 判断使用结构证据，class code 只用于交叉检查：
+
+```python
+function classifyFunctionRole(d: DeviceRecord) -> RoleDecision:
+    if d.structure.headerType == TYPE1:
+        return FABRIC("TYPE1_HEADER")
+
+    if d.structure.hasSubordinateBus:
+        return FABRIC("OWNS_SUBORDINATE_BUS")
+
+    if d.structure.pcieType in {
+        ROOT_PORT, UPSTREAM_PORT, DOWNSTREAM_PORT,
+        PCIE_TO_PCI_BRIDGE, PCI_TO_PCIE_BRIDGE
+    }:
+        return FABRIC("PCIE_FABRIC_TYPE")
+
+    if d.platform.hostBridge or d.platform.firmwareReserved:
+        return PLATFORM("PLATFORM_OWNED")
+
+    if d.sriov.isVirtualFunction:
+        return VIRTUAL_FUNCTION("SRIOV_VF")
+
+    if d.structure.headerType == TYPE0:
+        return ENDPOINT("TYPE0_ENDPOINT")
+
+    return UNKNOWN("INSUFFICIENT_STRUCTURE")
+```
+
+例如 CPU、内存控制器通常因 `platformOwned/firmwareReserved` 被拒绝；真实 Type-1 bridge 因
+结构角色被拒绝。把 class 改成 display/network 不能绕过这两个 gate，反过来也不需要维护一个
+“所有 CPU/memory class”黑名单。
 
 ### 7.3 reason code
 
@@ -346,9 +530,285 @@ HOST_FENCE_PENDING
 INVENTORY_EPOCH_CHANGED
 ```
 
+### 7.4 输出对象与 reason 排序
+
+```python
+record CapabilityDecision:
+    snapshotEpoch: uint64
+    target: BDF
+    payload: SortedSet[BDF]
+    hardwareCapable: bool
+    policyEligible: bool
+    passthruCapable: bool       # equals policyEligible
+    adminEnabled: bool
+    hostActive: bool
+    available: bool
+    attachable: bool | null     # null means no VM context was supplied
+    operationSupported: Map[Operation, bool]
+    selectedReset: Map[BDF, ResetContract]
+    leaseBundle: DependencyBundle | null
+    resourcePlan: VmResourcePlan | null
+    reasons: List[Reason]
+    warnings: List[Reason]
+    decisionHash: SHA256
+
+record Reason:
+    code: StableEnum
+    stage: enum(inventory, hardware, policy, activation,
+                availability, vm_admission, operation, transaction)
+    devices: SortedSet[BDF]
+    message: string
+    source: Provenance
+    details: CanonicalJson
+```
+
+Reasons 按 `stageOrder, code, devices` 稳定排序。API 文案可以本地化，但 code、devices、details
+和 decision hash 必须稳定，便于调度重试、审计和回归测试。
+
+### 7.5 capable 主算法
+
+这是无副作用算法。它不 bind driver、不 reset、不抢租约：
+
+```python
+function evaluatePassthrough(snapshot, target, requestContext?, policy):
+    ctx = requestContext or CapabilityContext.empty()
+    out = CapabilityDecision(
+        snapshotEpoch=snapshot.inventoryEpoch,
+        target=target,
+        attachable=(false if ctx.vmSpec exists else null))
+
+    # Gate 1: inventory completeness
+    if target not in snapshot.devices:
+        add(out, INVENTORY, DEVICE_NOT_IN_INVENTORY, {target})
+        return finalizeDecision(out)
+    if not snapshot.hostFacts.iommuPresent:
+        add(out, HARDWARE, HOST_IOMMU_MISSING, {target})
+    if snapshot.hostFacts.vfioNoIommuMode:
+        add(out, HARDWARE, VFIO_NOIOMMU_UNSAFE, {target})
+    if policy.requireInterruptRemapping:
+        requireKnownTrue(out, snapshot.hostFacts.interruptRemapping,
+                         INTERRUPT_REMAP_UNKNOWN, INTERRUPT_REMAP_MISSING)
+
+    payload = normalizePayload(target, ctx.explicitPayload)
+    out.payload = payload
+
+    # Gate 2: per-payload hardware facts
+    for bdf in payload:
+        d = snapshot.devices.get(bdf)
+        if d is null:
+            add(out, INVENTORY, DEVICE_NOT_IN_INVENTORY, {bdf})
+            continue
+        role = classifyFunctionRole(d)
+        if role.kind not in {ENDPOINT, VIRTUAL_FUNCTION}:
+            add(out, HARDWARE, HARDWARE_ROLE_NOT_ASSIGNABLE, {bdf}, role)
+        if d.platform.firmwareReserved or d.platform.hostCritical:
+            add(out, HARDWARE, PLATFORM_RESERVED, {bdf})
+
+        isolation = evaluateIsolation(snapshot, d, policy)
+        merge(out, isolation)
+
+        reset = selectPublishedResetContract(snapshot, bdf, policy.resetPolicy)
+        if reset.rejected:
+            merge(out, reset.reasons)
+        else:
+            out.selectedReset[bdf] = reset
+
+    out.hardwareCapable = noBlockingReason(out, through=HARDWARE)
+
+    # Gate 3: exact policy, never a broad class allow/deny shortcut
+    if out.hardwareCapable:
+        for bdf in payload:
+            d = snapshot.devices[bdf]
+            rule = policy.qualificationDb.matchExact(
+                host=snapshot.hostFacts.identity,
+                device=d.identity,
+                kernel=snapshot.hostFacts.kernel,
+                qemu=policy.qemuVersion,
+                profile=ctx.profile)
+            if rule is null:
+                add(out, POLICY, QUALIFICATION_MISSING, {bdf},
+                    source=policy.qualificationDb.provenance)
+                continue
+            if rule.denied:
+                add(out, POLICY, DEVICE_ERRATA_DENY, {bdf}, rule.provenance)
+            if not rule.supports(policy.trustDomain, ctx.operations):
+                add(out, POLICY, QUALIFICATION_MISSING, {bdf}, rule.provenance)
+
+    out.policyEligible = out.hardwareCapable and noBlockingReason(out, through=POLICY)
+    out.passthruCapable = out.policyEligible
+
+    # Gate 4: activation is reported separately
+    out.adminEnabled = out.policyEligible and allAdminEnabled(payload)
+    if out.policyEligible and not out.adminEnabled:
+        add(out, ACTIVATION, ADMIN_DISABLED, payload)
+    out.hostActive = out.adminEnabled and activationReady(payload)
+    if out.adminEnabled and not out.hostActive:
+        add(out, ACTIVATION, HOST_ACTIVATION_REQUIRED, payload)
+
+    # Gate 5: complete dependency set and current owners
+    if out.hostActive:
+        out.leaseBundle = buildDependencyBundle(
+            snapshot, payload, out.selectedReset, policy)
+        evaluateAvailability(snapshot, out.leaseBundle, ctx.owner, out)
+
+    # Gate 6: optional VM-specific admission
+    if ctx.vmSpec exists and out.available:
+        out.resourcePlan = planVmResources(snapshot, out.leaseBundle,
+                                           ctx.vmSpec,
+                                           ctx.profile)
+        evaluateVmAdmission(out.resourcePlan, ctx, out)
+        out.attachable = noBlockingReason(out, through=VM_ADMISSION)
+
+    evaluateOperationMatrix(out, ctx, policy)
+    return finalizeDecision(out)
+
+function finalizeDecision(out):
+    out.reasons = stableSort(out.reasons)
+    out.warnings = stableSort(out.warnings)
+    out.decisionHash = hashCanonical(out without localized messages)
+    return out
+
+function selectPublishedResetContract(snapshot, bdf, resetPolicy):
+    candidates = []
+    for c in snapshot.resetContracts.get(bdf, []):
+        if c.inventoryEpoch != snapshot.inventoryEpoch:
+            continue
+        if c.topologyHash != resetTopologyHash(
+                snapshot, bdf, c.affectedDevices):
+            continue
+        if c.source not in resetPolicy.trustedSources:
+            continue
+        if not resetPolicy.allows(c.method, c.scope):
+            continue
+        if not resetPolicy.qualificationDb.rule(c.qualificationRule).isCurrent:
+            continue
+        candidates.append(c)
+
+    if candidates is empty:
+        return reject(NO_ACCEPTED_RESET, {bdf})
+    return min(candidates, key=resetPolicy.stablePreferenceOrder)
+```
+
+`selectPublishedResetContract` 只读 snapshot。真正调用 VFIO/ACPI/vendor provider 的
+`discoverResetContract` 属于第 8.2 节的 inventory/qualification 流程；attach 事务再在租约内
+重查一次。三处不得合并成一个“方便”的 helper，否则 capable 查询会产生解绑/reset 类副作用。
+
+### 7.6 isolation evaluator
+
+```python
+function evaluateIsolation(snapshot, d, policy):
+    if d.domains.kernelIommuGroup is empty:
+        return reject(HARDWARE, IOMMU_GROUP_NOT_VIABLE, {d.bdf})
+
+    if not snapshot.hostFacts.acsOverrideActive:
+        if d.isolation.provenance in {NATIVE_ACS, NATURAL_TOPOLOGY,
+                                      STOCK_KERNEL_IOMMU_GROUP}:
+            return accept()
+        return reject(HARDWARE, ACS_OR_TOPOLOGY_ISOLATION_MISSING, {d.bdf})
+
+    # Override 开启后，patched kernel group 只能做 VFIO 操作单位。
+    if not policy.allowAcsOverride:
+        return reject(POLICY, ACS_OVERRIDE_NOT_ALLOWED, {d.bdf})
+    if not d.isolation.componentProvenanceComplete:
+        return reject(HARDWARE, PHYSICAL_ISOLATION_DOMAIN_UNKNOWN, {d.bdf})
+    if d.domains.physicalIsolationDomain is empty:
+        return reject(HARDWARE, PHYSICAL_ISOLATION_DOMAIN_UNKNOWN, {d.bdf})
+    if d.bdf not in d.domains.physicalIsolationDomain:
+        return reject(HARDWARE, PHYSICAL_ISOLATION_DOMAIN_INVALID, {d.bdf})
+    if d.domains.physicalDomainSource not in {
+            KERNEL_NATIVE_SHADOW_DOMAIN_V1,
+            QUALIFIED_PLATFORM_NATIVE_DOMAIN}:
+        return reject(HARDWARE, PHYSICAL_ISOLATION_DOMAIN_UNTRUSTED, {d.bdf})
+
+    return acceptWithWarning(
+        ACS_OVERRIDE_REQUIRES_WHOLE_PHYSICAL_DOMAIN,
+        devices=d.domains.physicalIsolationDomain)
+```
+
+`allowAcsOverride=true` 只允许进入“整租 physical domain”的条件路径，不会把 override 变成
+native ACS。unknown、来源冲突或 domain 不含自身均直接拒绝。
+
+### 7.7 availability 与 VM admission
+
+```python
+function evaluateAvailability(snapshot, bundle, owner, out):
+    if bundle.incompleteMembers not empty:
+        add(out, AVAILABILITY, DEPENDENCY_NOT_IN_INVENTORY,
+            bundle.incompleteMembers)
+        return
+
+    for member in bundle.members:
+        d = snapshot.devices[member]
+        if d.health.state != HEALTHY:
+            add(out, AVAILABILITY, DEVICE_QUARANTINED, {member}, d.health)
+        if leaseOwner(member) not in {FREE, owner}:
+            add(out, AVAILABILITY, DEPENDENCY_BUSY,
+                {member}, owner=leaseOwner(member))
+        if bundle.action[member] == QUIESCE_HOST and not canQuiesce(d):
+            add(out, AVAILABILITY, DEPENDENCY_CANNOT_QUIESCE, {member})
+
+    out.available = out.hostActive and noBlockingReason(out, through=AVAILABILITY)
+
+function evaluateVmAdmission(plan, ctx, out):
+    require(plan.success, VM_ADMISSION, MMIO_APERTURE_EXHAUSTED, plan.failure)
+    require(plan.allMandatoryBarsAssigned,
+            VM_ADMISSION, MANDATORY_BAR_UNASSIGNED, plan.unassigned)
+    require(plan.rmrrCompatible,
+            VM_ADMISSION, RMRR_PROFILE_CONFLICT, plan.rmrrConflict)
+    require(plan.guestAbiSignature in ctx.allowedAbiSignatures,
+            VM_ADMISSION, PROFILE_ABI_MISMATCH, plan.guestAbiSignature)
+    require(plan.deviceCount <= ctx.profile.maxDevices,
+            VM_ADMISSION, PROFILE_DEVICE_LIMIT, plan.deviceCount)
+    require(plan.numaPolicySatisfied,
+            VM_ADMISSION, NUMA_POLICY_UNSATISFIED, plan.numaDecision)
+    require(plan.interruptBudgetSatisfied,
+            VM_ADMISSION, INTERRUPT_BUDGET_EXHAUSTED, plan.interruptDecision)
+```
+
+### 7.8 不变量、缓存与重新计算
+
+- `passthruCapable` 只能因 inventory/policy/profile 事实变化而变化，不能因当前 lease owner 变化。
+- `available` 可以频繁变化，但不得写回 qualification DB。
+- `attachable` 必须带 VM spec 和 profile hash；脱离该上下文的 true 没有意义。
+- 任何 decision cache key 至少包含 `hostId + inventoryEpoch + policyHash + profileHash + requestHash`。
+- driver rebind、reset、AER fatal、link flap、SR-IOV VF create/remove 都使相关 cache 失效。
+- API 只允许从同一 decision object 派生各布尔值，禁止不同 endpoint 各自复制一套判断。
+
 ## 8. Dependency bundle
 
 ### 8.1 闭包规则
+
+先区分六种集合：
+
+| 集合 | 回答的问题 | 权威来源 | 是否直接决定 guest payload |
+| --- | --- | --- | --- |
+| `kernelIommuGroup` | kernel 允许哪些 function 共享一个 DMA owner？ | IOMMU core/VFIO | 否，决定 operational open/bind 单位 |
+| `physicalIsolationDomain` | 忽略 ACS override 后，哪些 function 可能互相绕过 IOMMU？ | native/effective ACS provenance + topology | 否，决定安全租约边界 |
+| `resetAffectedSet` | 执行选定 reset 会同时复位谁？ | VFIO hot-reset info 或已审核 function reset provider | 否，但必须全部被同 owner 控制 |
+| `requesterAliasSet` | 哪些 requester 在 IOMMU 看来不可区分？ | IOMMU/PCI alias API、legacy bridge topology | 通常要求同 IOAS/owner |
+| `functionalGroup` | 哪些 function 共享不可见硬件/firmware 状态？ | vendor rule/qualification | 由规则决定是否共同 payload |
+| `leaseBundle` | 为安全完成一次 assignment 最终锁谁？ | 上述集合的传递闭包 | 只有 action=`ASSIGN` 的成员进 guest |
+
+```mermaid
+flowchart LR
+    A["Endpoint A"] --> KG1["kernel group 7"]
+    B["Endpoint B"] --> KG2["kernel group 9<br/>split by ACS override"]
+    A --> PD["physical domain P1"]
+    B --> PD
+    A --> RD["reset affected set R1"]
+    C["Peer C"] --> RD
+    B --> FG["functional group F1"]
+    D["PF / fabric dependency"] --> FG
+
+    KG1 --> LEASE["transitive lease bundle"]
+    KG2 --> LEASE
+    PD --> LEASE
+    RD --> LEASE
+    FG --> LEASE
+```
+
+图中的 A、B 即使被 ACS override 分到不同 kernel group，仍因 P1 不能分给不同 trust domain；
+A 的 bus reset 又把 C 拉入同一 lease。最终 bundle 是 hypergraph closure，不是选择一个“最大 group”。
 
 对每个 payload seed 迭代求固定点：
 
@@ -376,6 +836,214 @@ leaseDomain = closure(
 reset。bus-level reset 必须通过 `VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` 或资格快照取得 affected
 set；仅按 sysfs parent 猜测的集合默认拒绝。reset 日志不是内部状态已清除的证明。
 
+```mermaid
+flowchart LR
+    QUAL["Inventory / qualification lease"] --> QUERY["Query function-reset provider<br/>or VFIO hot-reset info"]
+    QUERY --> SNAP["Publish ResetContract<br/>epoch + topologyHash"]
+    SNAP --> CAP["Capable path<br/>select contract only"]
+    CAP --> LEASE["Reserve complete dependency bundle"]
+    LEASE --> REQUERY["Attach-time authoritative re-query"]
+    REQUERY -->|same affected set| EXEC["Execute reset under full ownership"]
+    REQUERY -->|delta / incomplete owner| ABORT["Abort plan; rollback or quarantine"]
+    EXEC --> PROBE["Config / link / vendor state probes"]
+    PROBE -->|pass| CONTINUE["Continue attach"]
+    PROBE -->|fail| QUAR["Quarantine full affected set"]
+```
+
+这条链故意把“知道 reset 会影响谁”和“此刻拥有 reset 所需全部设备”分开。前者形成可缓存
+资格事实，后者只能在本次 lease 和同一个 VFIO ownership context 内证明。
+
+#### 8.2.1 ResetContract
+
+```python
+record ResetContract:
+    target: BDF
+    operation: enum(VFIO_DEVICE_RESET, VFIO_PCI_HOT_RESET,
+                    ACPI_RESET, VENDOR_RESET)
+    method: enum(DEVICE_SPECIFIC, ACPI, FLR, AF_FLR, PM,
+                 BUS, SLOT, LINK, HOT)
+    scope: enum(FUNCTION, AFFECTED_SET)
+    affectedDevices: SortedSet[BDF]
+    affectedKernelGroups: SortedSet[GroupId]
+    providerApi: string
+    providerFlags: uint64
+    source: Provenance
+    inventoryEpoch: uint64
+    topologyHash: SHA256         # target path + affected set, not whole-host hash
+    qualificationRule: RuleId
+    stateVerification: List[Probe]
+```
+
+`resetMethods` 表示候选能力，不等于 kernel 本次真的执行了某一种方法。只有 provider 能固定
+或报告方法时才填精确 method；否则记录 `VFIO_DEVICE_RESET` 加候选集合，并由 qualification
+证明其 scope。无法证明 function scope 时不能把 affected set 写成 `{target}`。
+
+#### 8.2.2 Discovery 是 inventory 生产流程，不是 capable 副作用
+
+bus-reset-only 设备通常需要先由 vfio-pci 打开才能查询 authoritative affected set。因此：
+
+1. `persistent-vfio` 设备可在正常 inventory 时查询。
+2. `bind-on-lease` 设备在管理员启用/qualification 阶段持有 host maintenance lease，临时
+   quiesce、bind、query、restore，并把结果写入带 epoch 的 snapshot。
+3. 普通 capable API 只消费已发布的 `ResetContract`，绝不为回答一个 GET 请求临时解绑设备。
+4. attach 前在实际 lease 下重新查询；结果变化则废弃计划。
+
+#### 8.2.3 查找 reset affected set 的伪代码
+
+```python
+function discoverResetContract(snapshot, bdf, provider, resetPolicy):
+    d = snapshot.devices[bdf]
+
+    # 优先选择已证明为 function-scoped 的路径。
+    for method in resetPolicy.functionMethodOrder:
+        capability = provider.queryFunctionReset(bdf, method)
+        if not capability.supported:
+            continue
+        if capability.scope != FUNCTION:
+            continue
+        rule = resetPolicy.qualificationDb.matchReset(
+            device=d.identity,
+            platform=snapshot.hostFacts.platform,
+            method=method,
+            scope=FUNCTION,
+            provider=capability.provenance)
+        if rule is null or not rule.allowed:
+            continue
+        return ResetContract(
+            target=bdf,
+            operation=capability.operation,
+            method=method,
+            scope=FUNCTION,
+            affectedDevices={bdf},
+            affectedKernelGroups=groupsOf({bdf}),
+            providerApi=capability.providerApi,
+            providerFlags=capability.flags,
+            source=capability.provenance,
+            inventoryEpoch=snapshot.inventoryEpoch,
+            topologyHash=resetTopologyHash(snapshot, bdf, {bdf}),
+            qualificationRule=rule.id,
+            stateVerification=rule.stateVerification)
+
+    if not resetPolicy.allowBusReset:
+        return reject(BUS_RESET_NOT_ALLOWED, {bdf})
+
+    # UAPI 使用 argsz/count 的可变长返回；先查询 count，再填充数组。
+    info = provider.getPciHotResetInfo(bdf)
+    if info.error == ENODEV:
+        return reject(NO_ACCEPTED_RESET, {bdf})
+    if info.failed or info.devices is empty:
+        return reject(RESET_DOMAIN_UNKNOWN, {bdf})
+
+    affected = {decodeBdf(x.segment, x.bus, x.devfn) for x in info.devices}
+    if bdf not in affected:
+        return reject(RESET_DOMAIN_INVALID, affected union {bdf})
+    if any(x not in snapshot.devices for x in affected):
+        return reject(RESET_DEPENDENCY_NOT_IN_INVENTORY, affected)
+
+    if provider.mode == CDEV:
+        # DEV_ID 只声明 union 字段类型；此时允许看到 NOT_OWNED。
+        if info.flags does not contain VFIO_PCI_HOT_RESET_FLAG_DEV_ID:
+            return reject(RESET_PROVIDER_MODE_MISMATCH, affected)
+        groups = groupsOf(affected)
+    else if provider.mode == LEGACY_GROUP:
+        if info.flags contains VFIO_PCI_HOT_RESET_FLAG_DEV_ID:
+            return reject(RESET_PROVIDER_MODE_MISMATCH, affected)
+        if any(x.groupId is unknown for x in info.devices):
+            return reject(RESET_DOMAIN_UNVERIFIED, affected)
+        groups = {x.groupId for x in info.devices}
+    else:
+        return reject(RESET_PROVIDER_MODE_UNSUPPORTED, {bdf})
+
+    method = provider.reportedHotResetMethod()
+    rule = resetPolicy.qualificationDb.matchReset(
+        device=d.identity,
+        platform=snapshot.hostFacts.platform,
+        method=method,
+        scope=AFFECTED_SET,
+        provider=KERNEL_VFIO_HOT_RESET_INFO)
+    if rule is null or not rule.allowed:
+        return reject(QUALIFICATION_MISSING, affected)
+
+    return ResetContract(
+        target=bdf,
+        operation=VFIO_PCI_HOT_RESET,
+        method=method,
+        scope=AFFECTED_SET,
+        affectedDevices=affected,
+        affectedKernelGroups=groups,
+        providerApi=provider.uapiVersion,
+        providerFlags=info.flags,
+        source=KERNEL_VFIO_HOT_RESET_INFO,
+        inventoryEpoch=snapshot.inventoryEpoch,
+        topologyHash=resetTopologyHash(snapshot, bdf, affected),
+        qualificationRule=rule.id,
+        stateVerification=rule.stateVerification)
+```
+
+Linux VFIO UAPI 对两种 ownership proof 的约束不同：legacy group 调用 reset 时提交完整
+`group_fds[]`；cdev 模式依靠同一 `iommufd_ctx` 中的 valid `devid`/owned flag，reset 传空 fd
+数组。一个 affected set 内混用 legacy group 与 cdev 不支持，设计直接拒绝。
+
+#### 8.2.4 执行 reset 的伪代码
+
+```python
+function executeReset(contract, lease, openedDevices, provider, qualificationDb):
+    require lease.state == PREPARING or lease.state == RELEASING
+    require lease.members containsAll contract.affectedDevices
+    require leaseStore.currentOwner(contract.affectedDevices) == lease.owner
+    require leaseStore.currentFencingToken(lease.hostId) == lease.fencingToken
+    require qualificationDb.rule(contract.qualificationRule).isCurrent
+    require currentResetTopologyHash(
+        contract.target, contract.affectedDevices) == contract.topologyHash
+
+    if contract.scope == FUNCTION:
+        freshFunction = provider.revalidateFunctionReset(
+            contract.target, contract.operation, contract.method)
+        require freshFunction.supported
+        require freshFunction.scope == FUNCTION
+        require freshFunction.provenance == contract.source
+    else:
+        fresh = provider.getPciHotResetInfo(contract.target)
+        require not fresh.failed
+        freshAffected = {
+            decodeBdf(x.segment, x.bus, x.devfn) for x in fresh.devices
+        }
+        require freshAffected == contract.affectedDevices
+
+    stopNewDma(contract.affectedDevices)
+    maskInterrupts(contract.affectedDevices)
+    clearBusMaster(contract.affectedDevices)
+    drainPendingTransactions(contract.affectedDevices)
+
+    if contract.scope == FUNCTION:
+        require openedDevices.owns(contract.target)
+        provider.executeFunctionReset(
+            contract.target, contract.operation, contract.method)
+    else if provider.mode == CDEV:
+        require openedDevices.allUseMode(CDEV, contract.affectedDevices)
+        require fresh.flags contains VFIO_PCI_HOT_RESET_FLAG_DEV_ID
+        require fresh.flags contains VFIO_PCI_HOT_RESET_FLAG_DEV_ID_OWNED
+        require no x.devid == VFIO_PCI_DEVID_NOT_OWNED for x in fresh.devices
+        require openedDevices.sameIommufdCtx(contract.affectedDevices)
+        provider.pciHotReset(contract.target, groupFds=[])
+    else if provider.mode == LEGACY_GROUP:
+        require openedDevices.allUseMode(LEGACY_GROUP, contract.affectedDevices)
+        freshGroups = {x.groupId for x in fresh.devices}
+        require freshGroups == contract.affectedKernelGroups
+        fds = openedDevices.groupFds(contract.affectedKernelGroups)
+        require count(fds) == count(contract.affectedKernelGroups)
+        provider.pciHotReset(contract.target, groupFds=fds)
+    else:
+        reject(RESET_PROVIDER_MODE_UNSUPPORTED, contract.affectedDevices)
+
+    restoreRequiredConfig(contract.affectedDevices)
+    for probe in contract.stateVerification:
+        require probe.verify() == PASS
+```
+
+任何 query delta、ownership 不完整、ioctl 失败或 state probe 失败，都 quarantine 整个
+`affectedDevices`，不能只隔离 target。
+
 ### 8.3 functional group
 
 functional group 覆盖 IOMMU 无法表达的设备关系，例如：
@@ -388,6 +1056,232 @@ functional group 覆盖 IOMMU 无法表达的设备关系，例如：
 
 来源优先级为 vendor/HCL signed rule、host firmware/topology、qualification snapshot、人工审核。
 不能从相同 VID:DID 自动推断功能依赖。
+
+### 8.4 ACS override 下重建 physical isolation domain
+
+本部署必须启用 override。不能只读 ACS capability bit，也不能把 override 后变小的 IOMMU
+group 当物理事实。事实来源按以下优先级使用：
+
+1. `KERNEL_NATIVE_SHADOW_DOMAIN_V1`：production authoritative source；
+2. override 关闭时的 stock kernel IOMMU group；
+3. `SOFTWARE_TOPOLOGY_ESTIMATE`：现有三项 ACS provenance 的保守估算，只用于开发和差分；
+4. 缺任何事实时为 unknown。
+
+```mermaid
+flowchart LR
+    HW["PCI topology + native ACS + DMA aliases"] --> SHADOW["Kernel native shadow-domain builder"]
+    OVERRIDE["ACS override policy"] --> EFFECTIVE["Effective kernel IOMMU groups"]
+    HW --> EFFECTIVE
+    SHADOW --> PHYS["physicalIsolationDomain<br/>security lease boundary"]
+    EFFECTIVE --> OPS["kernelIommuGroup<br/>VFIO open/bind boundary"]
+    PHYS --> CLOSE["Dependency closure"]
+    OPS --> CLOSE
+```
+
+#### 8.4.1 Kernel authoritative shadow domain
+
+现有 patch 已导出 `acs_native_isolation`、`acs_effective_isolation` 和
+`acs_override_source`，但还没有导出 architecture requester alias 和 override 前的完整 group。
+production 版本需增加 versioned shadow-domain ABI：
+
+```python
+record KernelPhysicalDomainFact:
+    abiVersion: "native-shadow-domain-v1"
+    topologyGeneration: uint64
+    domainId: SHA256
+    members: SortedSet[BDF]
+    nativeAcsRequiredFlags: uint16
+    aliasCoverageComplete: bool
+    architectureConstraintsComplete: bool
+    source: KERNEL_NATIVE_SHADOW_DOMAIN_V1
+```
+
+内核实现不是创建第二个 DMA domain，而是计算只读安全等价类；effective `iommu_group` 仍由
+override 后的正常路径创建。伪代码中的 `forEachArchitectureGroupingEdge` 是待重构的内核内部
+hook，必须复用实际 IOMMU/PCI group formation 的 alias/quirk 事实，不能在 sysfs 侧伪造：
+
+```c
+function rebuild_native_shadow_domains(pci_topology_generation):
+    uf = union_find(all_present_pci_requester_functions)
+    complete = true for each topology_component
+
+    /* 实际 effective group 永远是安全租约的下界。 */
+    for each effective_iommu_group:
+        uf.union_all(pci_members(effective_iommu_group))
+
+    /* 复用 kernel 已知 DMA requester aliases；无法映射的 RID 使 component unknown。 */
+    for each pci_dev dev:
+        for each alias_rid in pci_for_each_dma_alias(dev):
+            alias_dev = resolve_present_requester(alias_rid)
+            if alias_dev is missing:
+                complete[component(dev)] = false
+            else:
+                uf.union(dev, alias_dev)
+
+    /* 使用不含 pcie_acs_override 的 native verdict。 */
+    for each fabric_node bridge in postorder:
+        descendants = present_requesters_below(bridge)
+        if not pci_acs_native_enabled(bridge, SV | RR | CR | UF):
+            uf.union_all(descendants)
+
+    for each multifunction_slot slot:
+        if not native_multifunction_peer_isolation(slot, SV | RR | CR | UF):
+            uf.union_all(present_functions(slot))
+
+    /* 覆盖 iommu_ops/device_group、firmware alias 和非 PCI 层约束。 */
+    for each edge in forEachArchitectureGroupingEdge():
+        if edge cannot be represented by present lockable devices:
+            complete[edge.component] = false
+        else:
+            uf.union(edge.left, edge.right)
+
+    under topology_seqcount_write_lock:
+        for each uf component:
+            if not complete[component]:
+                publish_unknown(component, topology_generation)
+            else:
+                members = canonical_sort(component.members)
+                publish_same_fact_to_every_member(
+                    domain_id=sha256(abi_version, generation, members),
+                    members=members,
+                    alias_coverage_complete=true,
+                    architecture_constraints_complete=true)
+```
+
+ABI 可以是 sysfs 二进制/文本属性或 generic netlink dump，但必须支持一次 generation 的原子
+全量读取。userspace 接受前验证：member list 对称且含自身、每个 effective group 是某个 shadow
+domain 的子集、generation 一致、unknown component 不可租用。hotplug、AER remove、SR-IOV
+create/remove 和 topology reset 都递增 generation。
+
+验收需要同一硬件 A/B 启动：override 关闭时记录 stock groups，override 开启时要求 shadow
+domain 是对应 stock group/alias constraint 的相等或保守超集；再做受控 peer-DMA 正负对照。
+若架构 hook 尚未覆盖，`architectureConstraintsComplete=false` 直接拒绝，不用人工 allowlist
+覆盖安全事实。
+
+#### 8.4.2 Userspace estimate 仅作 fallback
+
+下面算法保留用于当前 reference model 和 kernel shadow-domain differential test。即使 provenance
+完整，其 source 仍是 `SOFTWARE_TOPOLOGY_ESTIMATE`；production policy 默认不把它放入
+`TRUSTED_SOURCES`，因为 userspace 未必看得到所有 architecture requester alias：
+
+```python
+function reconstructPhysicalDomains(snapshot):
+    if not snapshot.hostFacts.acsOverrideActive:
+        return mirrorStockIommuGroups(source=STOCK_KERNEL_IOMMU_GROUP)
+
+    uf = UnionFind(allBdfs(snapshot))
+
+    for component in topologyComponents(snapshot):
+        factsComplete = true
+        anchors = Map[Anchor, List[BDF]]()
+
+        for bdf in component.devices:
+            chain = ancestorChain(bdf)
+            if chain.hasCycle or any(not hasAcsProvenance(x) for x in chain):
+                factsComplete = false
+                continue
+
+            for x in chain:
+                f = snapshot.devices[x].isolation
+                if f.overrideSource != NONE:
+                    require f.nativeIsolation == false
+                    require f.effectiveIsolation == true
+                else:
+                    require f.nativeIsolation == f.effectiveIsolation
+
+            # 最高的 native non-isolating node 定义 conservative anchor。
+            nonIsolating = [x for x in chain
+                            if snapshot.devices[x].isolation.nativeIsolation == false]
+            anchor = highest(nonIsolating) if nonIsolating else uniqueNativeAnchor(bdf)
+            anchors[anchor].append(bdf)
+
+        if not factsComplete:
+            markPhysicalDomainUnknown(component)
+            continue
+
+        for members in anchors.values:
+            uf.unionAll(members)
+        for d in component.devices:
+            uf.unionAll(d.domains.kernelIommuGroup)
+            uf.unionAll(d.domains.multifunctionSet)
+            uf.unionAll(d.domains.requesterAliasSet)
+
+    for component in uf.components:
+        source = (SOFTWARE_TOPOLOGY_ESTIMATE
+                  if component.crossesOverridePath
+                  else KERNEL_NO_OVERRIDE_IOMMU_GROUP)
+        publishPhysicalDomain(component.members, source)
+```
+
+缺失 provenance 只使相应 topology component unknown，不应用手工猜测补齐。每个 domain
+必须包含自身并对所有成员给出相同 canonical member list；不满足对称性即 inventory invalid。
+若部署选择在单一 trust domain 的实验环境临时接受 estimate，manifest 必须标记 unsafe，且不能
+把该结果提升为 production qualification。
+
+### 8.5 构造最终 DependencyBundle
+
+Domain 是 hyperedge，使用固定点 closure：
+
+```python
+function buildDependencyBundle(snapshot, payload, resetContracts, policy):
+    pending = Queue(sorted(payload))
+    members = Set()
+    edges = List[DependencyEdge]()
+
+    while pending not empty:
+        bdf = pending.pop()
+        if bdf in members:
+            continue
+        members.add(bdf)
+        d = requireDevice(snapshot, bdf)
+
+        related = {
+            IOMMU: d.domains.kernelIommuGroup,
+            PHYSICAL: d.domains.physicalIsolationDomain,
+            RESET: resetContracts.get(bdf).affectedDevices,
+            REQUESTER_ALIAS: d.domains.requesterAliasSet,
+            MULTIFUNCTION: d.domains.multifunctionSet,
+            PF_VF: d.domains.pfVfDependencies,
+            FUNCTIONAL: d.domains.functionalGroup,
+            PLATFORM: d.domains.platformDependencies,
+        }
+        for kind, peers in related:
+            for peer in peers:
+                edges.append(DependencyEdge(bdf, peer, kind, provenanceOf(kind, d)))
+                if peer not in members:
+                    pending.push(peer)
+
+    actions = Map[BDF, MemberAction]()
+    for bdf in members:
+        d = snapshot.devices[bdf]
+        if bdf in payload or functionalRuleRequiresGuestAssignment(d, payload):
+            actions[bdf] = ASSIGN_TO_GUEST
+        else if resetOwnershipRequiresVfioOpen(bdf, resetContracts) or \
+                operationalGroupRequiresSingleDmaOwner(bdf, payload):
+            actions[bdf] = VFIO_HOLD_IN_SAME_IOAS
+        else if isNonDmaFabricNode(d) and canRemainHostOwnedWithoutResetConflict(d):
+            actions[bdf] = LOCK_ONLY
+        else if canQuiesceForLeaseLifetime(d):
+            actions[bdf] = QUIESCE_HOST
+        else:
+            return reject(DEPENDENCY_CANNOT_QUIESCE, {bdf})
+
+    return DependencyBundle(
+        id=hashCanonical(members, edges, actions),
+        members=sorted(members),
+        payload=sorted(bdf where actions[bdf] == ASSIGN_TO_GUEST),
+        actions=actions,
+        edges=stableSort(edges),
+        inventoryEpoch=snapshot.inventoryEpoch)
+```
+
+Bundle 的相交关系以 `members` 判断，而不是 payload。任何两 bundle 的 member intersection
+非空，就不能同时租给不同 owner。每条 edge 保存 kind 和 provenance，管理员可解释“为什么
+一张 NIC 把旁边 function/bridge 也锁住”。
+
+`VFIO_HOLD_IN_SAME_IOAS` 表示 function 不出现在 guest PCI tree，但 host agent 必须打开并
+置于同一 DMA owner，满足 IOMMU group 或 cdev hot-reset ownership。它与只关闭 bus master 的
+`QUIESCE_HOST` 不同，manifest 必须记录实际 action。
 
 ## 9. 静态直通设计
 
@@ -406,7 +1300,7 @@ functional group 覆盖 IOMMU 无法表达的设备关系，例如：
     "revisionId": 161
   },
   "guestSlot": "rp-dp0/00.0",
-  "profile": "vmware-esxi8u3-vhw20-efi"
+  "profile": "vmware-esxi8u3-vhw20-create-efi-acpi"
 }
 ```
 
@@ -433,6 +1327,28 @@ stateDiagram-v2
 
 ### 9.3 启动事务
 
+```mermaid
+sequenceDiagram
+    participant C as Coordinator
+    participant S as Snapshot/Capability
+    participant L as Lease Store
+    participant H as Host Agent
+    participant V as VFIO/IOMMUFD
+    participant Q as QEMU
+
+    C->>S: Evaluate static request at epoch E
+    S-->>C: decision + bundle + resource plan hash
+    C->>L: CAS reserve complete bundle
+    L-->>C: leaseId + fencing token
+    C->>H: Prepare(lease, decisionHash)
+    H->>H: Revalidate identity/domains/generation
+    H->>V: Quiesce, bind/open, same IOAS, reset
+    H->>Q: Spawn with inherited fds and immutable plan
+    Q-->>H: QMP realized
+    H->>H: Verify BAR/topology/IOMMU/IRQ
+    H->>L: PREPARING -> ATTACHED
+```
+
 1. 读取 inventory 和 policy epoch，确认 exact device identity。
 2. 计算 dependency bundle，执行 durable compare-and-swap lease。
 3. 再次读取 udev generation、BDF identity 和 group membership，防止 TOCTOU。
@@ -446,11 +1362,171 @@ stateDiagram-v2
 ### 9.4 释放事务
 
 1. 停止 guest DMA，等待 QEMU 退出或完成 device detach。
-2. 撤销 IRQ eventfd、DMA map、IOAS attachment 和 device fd。
-3. 关闭 bus master/interrupt，执行 release reset 并验证 link/config/health。
-4. 按 policy 重新绑定 host driver，或保持 persistent-vfio active。
-5. 清除 runtime binding，递增 device generation。
-6. 仅在所有步骤成功后释放 lease；否则进入 quarantine。
+2. 撤销 IRQ eventfd 和 DMA map、invalidate IOTLB，但保留 VFIO fd 与 ownership context。
+3. 在完整 affected-set ownership 仍成立时关闭 bus master/interrupt，执行 release reset。
+4. reset 验证后才 detach IOAS、关闭 device fd，并按 policy 恢复 host driver。
+5. 验证无 stale DMA/IRQ、identity/link/health，递增 device generation。
+6. 仅在全部成功时清除 runtime binding 并释放 lease；否则保留 recovery binding 并 quarantine。
+
+### 9.5 启动事务伪代码
+
+```python
+function attachStatic(vm, request):
+    profile = resolveAndPersistProfile(vm, request.profile)
+    snapshot = inventory.readImmutable()
+    decision = evaluatePassthrough(snapshot, request.bdf,
+                                   context(vm, profile), policy)
+    require decision.attachable == true
+
+    lease = leaseStore.reserveAllCAS(
+        bundleId=decision.leaseBundle.id,
+        members=decision.leaseBundle.members,
+        expectedInventoryEpoch=snapshot.inventoryEpoch,
+        expectedGenerations=generations(snapshot, decision.leaseBundle.members),
+        owner=vm.runId,
+        decisionHash=decision.decisionHash)
+    leaseStore.transitionCAS(lease, RESERVED, PREPARING)
+
+    rollback = CompensationStack()
+    rollback.push(() => leaseStore.releaseIfGenerationMatches(lease))
+
+    try:
+        current = inventory.readImmutable()
+        requireSameIdentityAndDomains(snapshot, current,
+                                      decision.leaseBundle.members)
+        require lease.fencingToken == leaseStore.currentToken(vm.hostId)
+
+        # 对 bundle member 执行 manifest 中的动作，不按 payload 猜。
+        for member in actionOrder(decision.leaseBundle):
+            action = decision.leaseBundle.actions[member]
+            if action == LOCK_ONLY:
+                continue
+            if action in {QUIESCE_HOST, VFIO_HOLD_IN_SAME_IOAS,
+                          ASSIGN_TO_GUEST}:
+                state = hostDriver.quiesce(member)
+                rollback.push(() => hostDriver.restore(member, state))
+            if action in {VFIO_HOLD_IN_SAME_IOAS, ASSIGN_TO_GUEST}:
+                binding = vfio.bindAndOpen(member)
+                rollback.push(() => vfio.closeAndRestore(binding))
+
+        ioas = iommufd.createIoas(vm.memoryMap)
+        rollback.push(() => iommufd.destroyIoas(ioas))
+        for binding in vfioBindings(decision.leaseBundle):
+            iommufd.attach(binding.fd, ioas)
+            rollback.push(() => iommufd.detach(binding.fd, ioas))
+
+        # bind/open 后在真实 ownership context 中重新查询，旧 contract 只作比较基线。
+        prepared = inventory.refreshMembers(decision.leaseBundle.members)
+        requireOnlyExpectedPreparationChanges(snapshot, prepared,
+                                               decision.leaseBundle)
+        freshContracts = []
+        for planned in deduplicateResetContracts(decision.selectedReset):
+            fresh = discoverResetContract(prepared, planned.target,
+                                          vfioProvider, policy.resetPolicy)
+            require resetSafetyEnvelope(fresh) == resetSafetyEnvelope(planned)
+            freshContracts.append(fresh)
+
+        # 同一 affected set 只 reset 一次，顺序由 dependency DAG 决定。
+        for contract in dependencyResetOrder(freshContracts):
+            executeReset(contract, lease, vfioBindings,
+                         vfioProvider, policy.qualificationDb)
+            rollback.push(() => executeRollbackResetOrQuarantine(
+                contract, lease, vfioBindings,
+                vfioProvider, policy.qualificationDb))
+
+        postReset = inventory.refreshMembers(decision.leaseBundle.members)
+        requireBarSizesAndIdentityUnchanged(snapshot, postReset)
+        finalPlan = planVmResources(postReset, decision.leaseBundle,
+                                    vm.spec, profile)
+        require finalPlan.success
+        require finalPlan.guestAbiSignature == decision.resourcePlan.guestAbiSignature
+
+        qemuSpec = renderQemu(profile, finalPlan,
+                              guestFds(decision.leaseBundle, vfioBindings), ioas)
+        process = qemu.spawnWithInheritedFds(qemuSpec, lease.fencingToken)
+        rollback.push(() => qemu.stopAndFence(process))
+
+        qmp = qemu.waitQmpReady(process, profile.startTimeout)
+        verifyRealizedTopology(qmp, finalPlan)
+        verifyHostIommuOwnership(ioas, decision.leaseBundle)
+        guestEvidence = verifyGuestResources(vm, finalPlan)
+        require guestEvidence.allMandatoryBarsMatch
+        observedPlan = verifyObservedPlan(finalPlan, qmp, guestEvidence)
+
+        binding = persistRuntimeBindingCAS(
+            vm=vm, lease=lease, process=process,
+            manifest=buildAssignmentManifest(
+                decision, freshContracts, finalPlan, observedPlan))
+        rollback.push(() => clearRuntimeBindingCAS(binding))
+
+        leaseStore.transitionCAS(lease, PREPARING, ATTACHED)
+        rollback.commit()
+        return binding
+
+    catch error:
+        failures = rollback.runReverse()
+        if failures affect DMA, reset, ownership, or identity:
+            quarantine(decision.leaseBundle.members, error, failures)
+            leaseStore.transitionToQuarantined(lease)
+        else:
+            leaseStore.releaseIfGenerationMatches(lease)
+        raise structuredAttachFailure(error, failures)
+```
+
+`renderQemu` 只能使用 plan 中的 guest slot、machine、firmware hash、BAR aperture 和已继承 fd；
+禁止再按 BDF 扫描设备或重新选择 Dynamic candidate。
+
+### 9.6 释放事务伪代码
+
+```python
+function releaseAssignment(binding, reason):
+    lease = leaseStore.require(binding.leaseId, state=ATTACHED)
+    leaseStore.transitionCAS(lease, ATTACHED, RELEASING)
+
+    failures = []
+    qemu.stopGuestDmaOrFence(binding.process)
+    waitProcessExit(binding.process)
+    failures += disableAllIrqEventfds(binding)
+    failures += unmapAllDmaAndInvalidateIotlb(binding.ioas)
+
+    for contract in reverseResetOrder(binding.manifest.resetContracts):
+        failures += tryExecuteReleaseReset(
+            contract, lease, binding.openedDevices,
+            vfioProvider, policy.resetPolicy, policy.qualificationDb)
+
+    # hot reset 完成前不能丢掉 cdev/iommufd 或 legacy group ownership proof。
+    failures += detachAllDevices(binding.ioas)
+    failures += closeDeviceFdsAndDestroyIoas(binding)
+    failures += verifyNoStaleDmaIrq(binding.manifest)
+    failures += restoreHostDriversByManifest(binding.manifest.memberActions)
+    failures += verifyIdentityAndHealth(binding.manifest.bundleMembers)
+
+    bumpGeneration(binding.manifest.bundleMembers)
+    if failures is empty:
+        clearRuntimeBindingCAS(binding)
+        leaseStore.transitionCAS(lease, RELEASING, FREE)
+    else:
+        markRuntimeBindingRecoveryRequired(binding, failures)
+        quarantine(binding.manifest.bundleMembers, reason, failures)
+        leaseStore.transitionToQuarantined(lease)
+
+function tryExecuteReleaseReset(planned, lease, openedDevices,
+                                provider, resetPolicy, qualificationDb):
+    current = inventory.refreshMembers(planned.affectedDevices)
+    fresh = discoverResetContract(current, planned.target,
+                                  provider, resetPolicy)
+    if fresh.rejected:
+        return failure(RELEASE_RESET_UNAVAILABLE, fresh.reasons)
+    if resetSafetyEnvelope(fresh) != resetSafetyEnvelope(planned):
+        return failure(RESET_DOMAIN_CHANGED,
+                       planned=planned.affectedDevices,
+                       current=fresh.affectedDevices)
+    return captureFailure(() => executeReset(
+        fresh, lease, openedDevices, provider, qualificationDb))
+```
+
+QEMU 退出只满足释放流程的第一个条件。DMA unmap/IOTLB invalidation、IRQ teardown、release
+reset 和 health verification 任一缺失，都不能把 lease 变成 FREE。
 
 ## 10. Dynamic DirectPath 设计
 
@@ -479,7 +1555,7 @@ stateDiagram-v2
       "guestAbiClass": "nvme-tier-a-v1"
     }
   ],
-  "profile": "vmware-esxi8u3-vhw20-efi"
+  "profile": "vmware-esxi8u3-vhw20-create-efi-acpi"
 }
 ```
 
@@ -495,6 +1571,58 @@ stateDiagram-v2
 3. 计算 `resourceSignature`、`guestAbiClass`、NUMA 和 health。
 4. 去重相同 lease domain；同一物理 bundle 不能伪装成多个 candidate。
 5. 排除与 request 的 trust domain、firmware 或 operation policy 不兼容者。
+
+```python
+record Candidate:
+    id: SHA256
+    primaryDevice: BDF
+    assignPayload: SortedSet[BDF]
+    bundle: DependencyBundle
+    resourceSignature: ResourceSignature
+    guestAbiSignature: SHA256
+    numaNode: int | UNKNOWN
+    scoreInputs: Map
+    decisionHash: SHA256
+
+function buildCandidates(snapshot, requirement, vmContext, policy):
+    byBundle = Map[BundleId, Candidate]()
+
+    for bdf in sorted(snapshot.devices):
+        d = snapshot.devices[bdf]
+        if not exactMatcher(requirement.allowedDevices, d.identity):
+            continue
+        if requirement.customLabel exists and \
+                requirement.customLabel not in d.policy.labels:
+            continue
+
+        decision = evaluatePassthrough(snapshot, bdf, vmContext.withoutMmio(), policy)
+        if not decision.policyEligible or not decision.hostActive:
+            continue
+        if decision.leaseBundle has blocking availability reason:
+            continue
+
+        candidate = Candidate(
+            primaryDevice=bdf,
+            assignPayload=decision.leaseBundle.payload,
+            bundle=decision.leaseBundle,
+            resourceSignature=signatureOfBarsRmrrIrq(decision.leaseBundle),
+            guestAbiSignature=computeGuestAbiSignature(d, vmContext.profile),
+            numaNode=effectiveNumaNode(decision.leaseBundle),
+            decisionHash=decision.decisionHash)
+
+        if candidate.guestAbiSignature not in requirement.allowedAbiSignatures:
+            continue
+
+        # 同一 lease bundle 只能形成一个物理 candidate。
+        byBundle[candidate.bundle.id] = chooseStableRepresentative(
+            byBundle.get(candidate.bundle.id), candidate)
+
+    return stableSort(byBundle.values, candidatePreferenceKey)
+```
+
+若一个 functional group 必须整体进 guest，candidate 的 `assignPayload` 包含完整组；若该组需要
+同时满足多个 virtual slot，则在 solver 前折叠成一个 compound requirement/candidate，不能让
+两个 requirement 各自“选中”同一 bundle。
 
 ### 10.3 多设备原子求解
 
@@ -517,6 +1645,82 @@ host MMIO/RMRR/NUMA/IRQ/VM device-count 限制满足
 5. 最后按稳定 `deviceUid` 排序。
 
 这不是声称 VMware 使用同一排序，而是提供稳定、可审计且满足相同外部约束的选择。
+
+```mermaid
+flowchart LR
+    R0["Requirement R0<br/>count=1"] --> C0["Candidate bundle A"]
+    R0 --> C1["Candidate bundle B"]
+    R1["Requirement R1<br/>count=1"] --> C1
+    R1 --> C2["Candidate bundle C"]
+    C0 --> RES["Global constraints<br/>bundle disjoint + MMIO + RMRR + ABI"]
+    C1 --> RES
+    C2 --> RES
+```
+
+上图不能先贪心给 R0 选 B，否则 R1 无解；backtracking 应选 A+C。
+
+```python
+function solveDynamic(snapshot, requirements, vmSpec, profile, policy):
+    slots = expandCountsAndCompoundRequirements(requirements)
+    candidates = {slot.id: buildCandidates(snapshot, slot, context(vmSpec, profile),
+                                             policy)
+                  for slot in slots}
+    if any(candidates[slot.id] is empty for slot in slots):
+        return reject(PROFILE_NO_MATCH, emptySlotIds(candidates))
+
+    best = null
+    memo = Set()
+
+    function search(unassigned, selected, occupiedMembers, partialResources):
+        nonlocal best
+        if unassigned is empty:
+            plan = planVmResources(snapshot, bundles(selected), vmSpec, profile)
+            if not plan.success:
+                return
+            solution = scoreAndCanonicalize(selected, plan)
+            if best is null or solution.score < best.score:
+                best = solution
+            return
+
+        stateKey = hashCanonical(unassigned, selected.bundleIds,
+                                 occupiedMembers, partialResources.lowerBounds)
+        if stateKey in memo:
+            return
+        memo.add(stateKey)
+
+        # MRV: 每轮选择当前可行 candidate 最少的 requirement。
+        slot = min(unassigned,
+                   key=lambda r: count(feasibleCandidates(r, occupiedMembers,
+                                                          partialResources)))
+        for c in stableSort(feasibleCandidates(slot, occupiedMembers,
+                                                partialResources),
+                            candidatePreferenceKey):
+            if intersects(c.bundle.members, occupiedMembers):
+                continue
+            if violatesFunctionalCollectiveRule(c, selected):
+                continue
+            nextResources = addResourceLowerBound(partialResources,
+                                                  c.resourceSignature)
+            if exceedsHardLimits(nextResources, vmSpec, profile):
+                continue
+            if best exists and lowerBoundScore(selected + c) >= best.score:
+                continue
+            search(unassigned - {slot},
+                   selected + {(slot, c)},
+                   occupiedMembers union c.bundle.members,
+                   nextResources)
+
+    search(slots, {}, {}, emptyResourceBounds())
+    if best is null:
+        return reject(PROFILE_NO_GLOBAL_SOLUTION,
+                      explainUnsatisfiedConstraints(candidates))
+    return best.with(snapshotEpoch=snapshot.inventoryEpoch,
+                     policyHash=policy.hash,
+                     profileHash=profile.hash)
+```
+
+`partialResources` 只做安全 lower-bound pruning；最终必须调用精确 allocator。某组选择因 2GiB
+alignment 失败时，solver 会继续尝试 BAR 更小的 candidate，而不是把 Dynamic 请求直接判死。
 
 ### 10.4 事务和 `assignedId`
 
@@ -546,6 +1750,51 @@ sequenceDiagram
 baseline profile 在 QEMU 启动前就选定并 realize `vfio-pci`。QMP `device_add/device_del` 是独立
 扩展，`device_del` 只发起 guest eject，必须等待 `DEVICE_DELETED` 才能继续 teardown。未证明
 guest cooperation、reset 和 driver recovery 时，runtime hotplug capability 为 false。
+
+### 10.6 原子 reservation 与重试
+
+```python
+function reserveDynamicSolution(vm, solution):
+    members = union(c.bundle.members for c in solution.candidates)
+    return leaseStore.transaction:
+        require currentInventoryEpoch(solution.hostId) == solution.snapshotEpoch
+        require all lease(member) in {FREE, vm.runId} for member in members
+        require generations(members) == solution.expectedGenerations
+        create one LeaseRecord(state=RESERVED,
+                               members=sorted(members),
+                               bundleIds=solution.bundleIds,
+                               ownerVmId=vm.id,
+                               runId=vm.runId,
+                               fencingToken=nextToken(solution.hostId))
+```
+
+不允许逐 candidate 写 lease，因为第二个失败时，第一个已经可被外部观察，容易形成部分 reservation。
+CAS conflict 返回 retryable `INVENTORY_EPOCH_CHANGED` 或 `DEPENDENCY_BUSY`，coordinator 重新读取
+snapshot 并从 candidate 构造开始重算。
+
+### 10.7 Dynamic attach 复用同一事务核心
+
+```python
+function attachDynamic(vm, request):
+    snapshot = inventory.readImmutable()
+    solution = solveDynamic(snapshot, request.requirements,
+                            vm.spec, resolveProfile(vm), policy)
+    require solution.success
+    lease = reserveDynamicSolution(vm, solution)
+
+    # 与 static 的差别仅在 selection；之后使用同一个 prepare/rollback core。
+    binding = attachSelectedBundles(vm, solution.candidates,
+                                    solution.resourcePlan, lease)
+    runtime.assignedIds = {
+        slot.requestKey: candidate.primaryDevice
+        for slot, candidate in solution.selection
+    }
+    persistRuntimeBindingCAS(runtime, onlyIfLeaseState=ATTACHED)
+    return runtime
+```
+
+`assignedId` 只能在 QEMU 和 guest resource verification 完成后发布；停止 VM 时先清 runtime
+binding，再释放 lease。持久 VM definition 始终只保存 matcher/profile。
 
 ## 11. Durable lease 与并发控制
 
@@ -600,6 +1849,13 @@ PCI link presence
 
 发生变化返回 `INVENTORY_EPOCH_CHANGED` 并从头求解，不在旧计划上局部修补。
 
+严格 epoch 比较适用于 `RESERVED -> PREPARING` 之前。进入 `PREPARING` 后，driver bind、VFIO open
+和 reset 本来就会改变 operational facts；host agent 必须为每个预期变化记录 mutation receipt，
+刷新 lease members，并逐字段证明差异只来自本事务。任何未列入 action manifest 的 topology、
+identity、domain、BAR size 或 owner 变化仍然中止事务。reset 使用租约内 fresh `ResetContract`，
+所以不会拿初始 epoch 的 provider 结果直接执行；全局无关设备的变化也不能绕过 member generation、
+fencing token 和 affected-topology hash 的检查。
+
 ## 12. BAR、MMIO、RMRR 与 firmware
 
 ### 12.1 两阶段 admission
@@ -628,6 +1884,380 @@ host reserved pages 可被安全保留为精确 identity mapping，且 device re
    `pci-hole64-size`，不允许只设置一侧。
 6. 记录 guest RAM、firmware reserved ranges、其他 virtual device BAR 和 RMRR。
 7. plan 是事务结果；任何 BAR 失败时不返回部分布局。
+
+```mermaid
+flowchart LR
+    INPUT["Selected bundles + VM spec + profile"] --> TREE["Build complete guest PCI resource tree"]
+    TREE --> RULES["BAR / bridge / root / reservation constraints"]
+    RULES --> SOLVER["Exact interval solver"]
+    SOLVER -->|UNSAT / timeout| REJECT["Fail closed with stable reason"]
+    SOLVER --> PLAN["AdmissionPlan + bridge/root windows"]
+    PLAN --> ENCODE["Render topology + OVMF/SeaBIOS + QEMU aperture"]
+    ENCODE --> BOOT["Start QEMU"]
+    BOOT --> OBSERVE["QMP + ACPI + guest BAR observedPlan"]
+    OBSERVE -->|constraints match| COMMIT["Commit assignment manifest"]
+    OBSERVE -->|mismatch| ROLLBACK["Stop VM and rollback assignment"]
+```
+
+关键分层是：solver 证明“存在可行布局”，renderer 证明“backend 能表达该布局约束”，
+post-boot verifier 再证明“firmware/guest 实际实现了允许的布局”。三者任一失败都不能提交 VM。
+
+#### 12.2.1 Planner 不是 firmware allocator
+
+Stock QEMU 中，host agent 只能设置 machine/topology/aperture，BAR 最终地址仍由 OVMF、
+SeaBIOS 或 guest kernel allocator 决定。因此系统保存两个对象：
+
+```text
+admissionPlan   # 启动前证明完整资源树存在可行解，并生成 aperture/topology 参数
+observedPlan    # 启动后从 QMP、ACPI、guest sysfs 读回的实际 BAR/window
+```
+
+`admissionPlan` 通过不代表地址已经被强制实现。普通功能 profile 要求实际结果满足 plan 的
+约束；严格地址 parity profile 要求逐地址相等。Stock backend 无法强制严格结果时返回
+`BACKEND_RESOURCE_PLACEMENT_GAP`，不能把预测地址写成既成事实。
+
+#### 12.2.2 输入模型
+
+```python
+record ResourceDemand:
+    key: string                 # guestDeviceId/BARn or ROM
+    ownerNode: GuestPciNodeId
+    size: uint64
+    alignment: uint64
+    kind: enum(IO, MEMORY)
+    prefetchable: bool
+    addressBits: enum(BELOW_1M, BITS_32, BITS_64)
+    mandatory: bool
+    fixedAddress: uint64 | null
+    source: enum(PASSTHROUGH_BAR, VIRTUAL_DEVICE_BAR,
+                 BRIDGE_INTERNAL, OPTION_ROM, PLATFORM_RESERVED)
+
+record BridgeWindowCapability:
+    kind: enum(IO, NON_PREFETCH_MEMORY, PREFETCH_MEMORY)
+    addressBits: 32 | 64
+    baseGranularity: uint64
+    limitGranularity: uint64
+
+record GuestPciNode:
+    id: string
+    type: enum(ROOT, BRIDGE, FUNCTION)
+    parent: NodeId | null
+    guestSlot: string
+    demands: List[ResourceDemand]
+    windowCapabilities: List[BridgeWindowCapability]
+    children: List[NodeId]
+
+record VmResourcePlan:
+    success: bool
+    failure: PlanFailure | null
+    profileId: string
+    profileHash: SHA256
+    firmwareHash: SHA256
+    inventoryEpoch: uint64
+    tree: GuestPciTree
+    barPlacements: Map[DemandKey, AddressRange]
+    bridgeWindows: Map[NodeId, List[WindowPlan]]
+    rootHighWindows: Map[RootId, AddressRange | empty]
+    firmwareApertureBytes: uint64
+    hostBridgeApertureBytes: uint64
+    qemuArguments: List[string]
+    expectedRootTopology: RootTopologyConstraint
+    expectedHighWindows: Map[RootId, WindowConstraint]
+    verificationPolicy: PostBootVerificationPolicy
+    expectedConstraints: List[PostBootConstraint]
+    allMandatoryBarsAssigned: bool
+    unassigned: SortedSet[DemandKey]
+    rmrrCompatible: bool
+    rmrrConflict: List[AddressRange]
+    guestAbiSignature: SHA256
+    deviceCount: uint32
+    numaPolicySatisfied: bool
+    numaDecision: NumaDecision
+    interruptBudgetSatisfied: bool
+    interruptDecision: InterruptDecision
+    planHash: SHA256
+```
+
+普通 BAR 的 alignment 等于 effective size；ReBAR 使用 host 当前生效 size，不允许 guest 在
+parity profile 中改 size。BAR 当前 host address 不参与 guest placement。MSI-X table 已包含在
+其 BAR 内，不重复计数；ROM 只有 `rombar=1` 时进入 demand。
+
+Planner 的输入必须包含：
+
+- 所有 `ASSIGN_TO_GUEST` function 的全部 BAR，而不只是目标大 BAR；
+- machine 自带和命令行添加的磁盘、网卡、显示、USB、桥、PXB/root-port 等虚拟设备资源；
+- 每一级 bridge 的 decode capability 和 window granularity；
+- guest RAM、ECAM、APIC、firmware、ACPI、RMRR/IVMD identity range 与其他 fixed reservation；
+- profile 的 firmware/layout、root 数、bus range、device count 和 below/high-MMIO policy。
+
+#### 12.2.3 完整树上的约束
+
+```mermaid
+flowchart TB
+    ROOT["Root PCI0<br/>low/high pools"]
+    RP1["Root port 1<br/>prefetch window"]
+    RP2["Root port 2<br/>prefetch window"]
+    AUX["virtio disk/net<br/>auxiliary BARs"]
+    GPU["VFIO function<br/>BAR0 + 2GiB BAR2"]
+    NIC["VFIO NIC<br/>BARs + ROM policy"]
+
+    ROOT --> RP1 --> GPU
+    ROOT --> RP2 --> NIC
+    ROOT --> AUX
+
+    GPU -- "demand bottom-up" --> RP1
+    NIC -- "demand bottom-up" --> RP2
+    RP1 -- "window demand" --> ROOT
+    RP2 -- "window demand" --> ROOT
+    ROOT -. "absolute base top-down" .-> RP1
+    ROOT -. "absolute base top-down" .-> RP2
+```
+
+每个 BAR 必须被其路径上每一级 bridge window 覆盖。对每对 sibling bridge，其同类窗口不得
+重叠；parent bus 上的 direct BAR 也不得与 child window 重叠。能否高置由整条路径决定：
+64-bit prefetch BAR 只有在每一级 prefetch window 都能编码 64-bit base/limit 时才可放 high；
+路径中任何一级只能 32-bit，就必须低置或拒绝。
+
+核心约束可写成：
+
+```text
+bar.base % bar.alignment == 0
+bar.base >= selected_pool.start
+bar.end  <= selected_pool.end
+no_overlap(sibling BARs and sibling bridge windows on the same bus/channel)
+bridge.window contains every child BAR/window routed through that channel
+bridge.base/limit obey backend capability granularity
+all fixed/reserved intervals are excluded
+every mandatory demand has exactly one placement
+```
+
+#### 12.2.4 Demand 收集与路径校验伪代码
+
+```python
+function buildGuestResourceTree(snapshot, selectedBundles, vmSpec, profile):
+    tree = profile.instantiateStableGuestTopology(vmSpec.virtualDevices)
+
+    for assignment in selectedBundles.assignedPayload:
+        slot = profile.requireGuestSlot(assignment.requestKey)
+        node = tree.attachFunction(slot, assignment.hostBdf)
+        d = snapshot.devices[assignment.hostBdf]
+        for bar in d.resources.bars:
+            demand = ResourceDemand(
+                key=node.id + "/BAR" + bar.index,
+                ownerNode=node.id,
+                size=bar.effectiveSize,
+                alignment=bar.effectiveSize,
+                kind=bar.kind,
+                prefetchable=bar.prefetchable,
+                addressBits=bar.addressBits,
+                mandatory=qualificationDb.isMandatory(d.identity, bar.index),
+                fixedAddress=null,
+                source=PASSTHROUGH_BAR)
+            validateDemand(demand)
+            tree.addDemand(node, demand)
+
+    tree.addDemands(profile.virtualDeviceResourceCatalog(vmSpec))
+    tree.addFixedReservations(profile.platformMemoryMap(vmSpec))
+
+    for demand in tree.demands:
+        channel = routeChannel(demand)
+        for bridge in tree.ancestors(demand.ownerNode):
+            cap = bridge.findWindowCapability(channel)
+            if cap is null:
+                return reject(BRIDGE_WINDOW_TYPE_UNSUPPORTED,
+                              demand.key, bridge.id, channel)
+            if demandMayBeHigh(demand) and cap.addressBits < 64:
+                markLowOnly(demand, reason=bridge.id)
+
+    return tree
+```
+
+`validateDemand` 检查 size/alignment 为 2 的幂、32-bit BAR 不超过 4GiB、sub-page BAR 的 host
+page isolation、duplicate BAR、ReBAR effective size、ROM policy 和 backend 最大地址位宽。
+
+#### 12.2.5 精确 placement solver
+
+生产实现不能只做 first-fit greedy。使用受限 interval/CP-SAT solver；参考 backtracking 必须与
+同一约束模型做 differential test。变量包括每个 BAR base/pool、每个 bridge window base/limit
+和每个 root aperture。
+
+```python
+function planVmResources(snapshot, bundles, vmSpec, profile):
+    tree = buildGuestResourceTree(snapshot, bundles, vmSpec, profile)
+    if tree.rejected:
+        return failure(tree.reason)
+
+    model = ConstraintModel()
+    lowPools, highPools = profile.rootAddressPools(vmSpec)
+    subtractReservations(lowPools, highPools, tree.fixedReservations)
+
+    for demand in stableSort(tree.demands,
+                             key=(-alignment, -size, key)):
+        base = model.intVar(demand.key + ".base")
+        pool = model.choiceVar(allowedPools(demand, tree, profile))
+        model.add(base % demand.alignment == 0)
+        model.add(rangeContains(pool, base, demand.size))
+        if demand.fixedAddress exists:
+            model.add(base == demand.fixedAddress)
+
+    for bridge in tree.bridgesPostOrder:
+        for channel in bridge.requiredChannels:
+            win = model.windowVars(bridge.id, channel)
+            cap = bridge.windowCapability(channel)
+            model.add(win.base % cap.baseGranularity == 0)
+            model.add((win.limit + 1) % cap.limitGranularity == 0)
+            for childResource in routedChildren(bridge, channel):
+                model.add(win.base <= childResource.base)
+                model.add(win.limit >= childResource.end - 1)
+
+    for bus, channel in tree.busChannels:
+        model.addNoOverlap(resourcesDecodedOn(bus, channel))
+    model.addNoOverlap(allLeafMemoryBarsInCpuAddressSpace())
+    model.exclude(tree.fixedReservations)
+
+    # Profile 定义语义目标，不把一个通用最小化策略冒充 VMware。
+    model.lexicographicObjective(
+        profile.preferLowForFlexible64Bit,
+        minimizeTotalHighAperture,
+        minimizeBridgePadding,
+        stableAddressTieBreakByDemandKey)
+
+    result = exactSolver.solve(model, timeout=profile.solverTimeout)
+    if result == UNSAT:
+        return failure(MMIO_APERTURE_EXHAUSTED,
+                       unsatCore=explainConstraintCore(model))
+    if result == TIMEOUT:
+        return failure(MMIO_PLANNER_TIMEOUT, retryable=false)
+
+    plan = materializePlan(tree, result, profile)
+    plan.success = true
+    plan.profileId = profile.id
+    plan.profileHash = profile.hash
+    plan.firmwareHash = profile.firmwareHash
+    plan.inventoryEpoch = snapshot.inventoryEpoch
+    populateRmrAbiNumaAndInterruptAdmission(plan, snapshot, bundles,
+                                            vmSpec, profile)
+    require plan.allMandatoryBarsAssigned
+    if not backendCanEncode(profile, plan):
+        return failure(BACKEND_APERTURE_ENCODING_GAP,
+                       diagnostics=explainEncodingGap(profile, plan))
+    plan.qemuArguments = renderApertureArguments(profile, plan)
+    plan.expectedConstraints = buildPostBootConstraints(profile, plan)
+    plan.expectedRootTopology = profile.expectedRootTopology(plan.tree)
+    plan.expectedHighWindows = buildHighWindowConstraints(profile, plan)
+    plan.verificationPolicy = profile.postBootVerificationPolicy
+    plan.planHash = hashCanonical(plan without diagnostics)
+    return plan
+```
+
+Solver timeout 是拒绝，不得退回 greedy。为避免求解规模失控，先做确定性的 constraint
+propagation、地址位宽剪枝和 aggregate lower bound；这些只能排除必然无解分支，不能替代最终解。
+
+#### 12.2.6 逐桥 window 与 root aperture 计算
+
+```python
+function materializePlan(tree, solution, profile):
+    plan = VmResourcePlan.empty(tree=tree)
+    for demand in tree.demands:
+        if solution.hasBase(demand):
+            plan.barPlacements[demand.key] = [
+                solution.base(demand), solution.end(demand))
+        else:
+            plan.unassigned.add(demand.key)
+    plan.allMandatoryBarsAssigned = no mandatory demand is unassigned
+
+    for bridge in tree.bridgesPostOrder:
+        for channel in bridge.requiredChannels:
+            children = routedChildren(bridge, channel)
+            rawStart = min(solution.base(x) for x in children)
+            rawEnd = max(solution.end(x) for x in children)
+            cap = bridge.windowCapability(channel)
+            base = alignDown(rawStart, cap.baseGranularity)
+            end = alignUp(rawEnd, cap.limitGranularity)
+            require every child is contained in [base, end)
+            plan.bridgeWindows[bridge.id].append([base, end))
+
+    for root in tree.roots:
+        leaves = highMemoryLeaves(root)
+        if leaves is empty:
+            plan.rootHighWindows[root.id] = empty
+        else:
+            start = min(solution.base(x) for x in leaves)
+            end = max(solution.end(x) for x in leaves)
+            require [start, end) is contiguous and excludes reservations
+            plan.rootHighWindows[root.id] = [start, end)
+
+    plan.firmwareApertureBytes = profile.encodeFirmwareAperture(
+        plan.rootHighWindows, plan.bridgeWindows)
+    plan.hostBridgeApertureBytes = profile.encodeHostBridgeAperture(
+        plan.rootHighWindows, plan.bridgeWindows)
+    return plan
+```
+
+多 root profile 必须保存每个 root 的窗口。若 stock QEMU/OVMF 只有一个全局 knob，renderer
+必须证明该 knob 能覆盖所有 root 且不会违反 profile；否则返回 `BACKEND_APERTURE_ENCODING_GAP`。
+
+2GiB exact-hole 反例说明为什么不能只求和：
+
+```text
+available high window: [4GiB, 6GiB), size 2GiB
+auxiliary/bridge demand: 16KiB
+target BAR: size=2GiB, alignment=2GiB
+
+16KiB 放在开头后，下一个 2GiB-aligned base 是 6GiB，已经越界；
+2GiB BAR 先放又占满整个 window，16KiB 无处可放。因此总需求略大于 2GiB，必然 UNSAT。
+扩大到 4GiB 后才有解。
+```
+
+#### 12.2.7 QEMU/firmware 参数渲染
+
+```python
+function renderApertureArguments(profile, plan):
+    high = plan.hostBridgeApertureBytes
+    args = []
+    if profile.firmware == OVMF:
+        args += ["-fw_cfg",
+                 "name=opt/ovmf/X-PciMmio64Mb,string=" + ceilMiB(
+                     plan.firmwareApertureBytes)]
+    else if profile.firmware == SEABIOS:
+        require profile.seabiosLargeBarPolicy allows plan
+    else:
+        return reject(FIRMWARE_BACKEND_UNSUPPORTED)
+
+    args += ["-global",
+             profile.hostBridgeProperty + ".pci-hole64-size=" + formatSize(high)]
+    args += profile.renderMachineAndBridgeTree(plan.tree)
+    return args
+```
+
+OVMF 和 host bridge 两侧必须同时设置；SeaBIOS 不消费 OVMF fw_cfg。`pci-hole64-size` 是
+above-4G host window，不是 below-4G `pci-hole-size`。参数值、machine type、firmware hash 和
+plan hash 一起进入 manifest。
+
+#### 12.2.8 启动后闭环
+
+```python
+function verifyObservedPlan(plan, qmp, guestEvidence):
+    observed = collectObservedPlan(
+        qmpInfoPci=qmp.queryPci(),
+        qemuMemoryTree=qmp.queryMemoryTreeOrHmp(),
+        acpiRoots=guestEvidence.acpiRootResources,
+        pciTree=guestEvidence.lspciTree,
+        sysfsResources=guestEvidence.sysfsPciResources)
+
+    require observed.firmwareHash == plan.firmwareHash
+    require observed.rootTopology satisfies plan.expectedRootTopology
+    require every mandatory BAR is nonzero and has expected size/type
+    require every BAR is contained by every bridge/root window on its path
+    require no observed BAR overlaps RAM/reserved/another BAR
+    require observed.highWindows satisfies plan.expectedHighWindows
+    if plan.verificationPolicy.requiresExactAddresses:
+        require observed.addresses == plan.barPlacements
+    return observed
+```
+
+验证失败时停止 VM 并回滚 assignment。若只是 backend placement 与 profile 不符，quarantine
+profile/build；只有伴随 reset、DMA、identity 或 device health 失败时才 quarantine 物理 bundle。
 
 ### 12.3 firmware profile
 
@@ -941,6 +2571,7 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 | R32 | 把 stock q35/PXB 当精确 VMware topology | guest driver、slot、ACPI 路径和管理 ABI 漂移 | approximation 标记；严格 profile 要求 custom machine，否则拒绝 | chipset/root/bus/ACPI golden diff |
 | R33 | MMIO 只累计 endpoint BAR | bridge/辅助 BAR 与 alignment 使 mandatory BAR 未分配 | 全树自底向上 packing、padding 与 mandatory-BAR assertion | exact-hole bridge 2G/4G A/B |
 | R34 | Legacy BIOS mandatory large BAR 静默未分配 | guest 枚举但设备功能不完整 | admission 预拒绝或仅 lab degraded profile；启动后核对所有 mandatory BAR | VMware LF00 与 SeaBIOS 对照 |
+| R35 | userspace ACS shadow domain 漏掉 architecture requester alias | override 后把可 P2P/同 RID 的设备拆给不同 owner | kernel native shadow-domain ABI；software estimate 不进 production trusted sources | override off/on group A/B、alias trace、peer-DMA 正负对照 |
 
 ### 18.1 风险清零发布门
 
@@ -996,6 +2627,11 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | C12 | RCiEP regular function/VF A/B | regular 按 reset gate；RCiEP VF 拒绝 | regular 负例已有；VF 待验收 |
 | C13 | SR-IOV VF 与 PF reset dependency | PF/VF bundle 完整，VF 隔离可证明 | partial endpoint；支持型硬件待验收 |
 | C14 | PF guest 写 VF Enable/NumVFs | capability 不可写或整个 PF 被拒绝 | 待 QEMU filter |
+| C15 | 重复 capable 查询 | driver、lease、reset counter、generation 全部不变，decision hash 稳定 | evaluator 纯函数已有；host 集成负例待实现 |
+| C16 | 一个 topology component 缺 ACS provenance | 仅该 component 为 unknown；无关 component 结论不变 | 当前实现会全局失效，待修正 |
+| C17 | VFIO cdev/legacy/mixed hot reset | cdev 要求 `DEV_ID_OWNED`；legacy 要求完整 group fds；mixed 拒绝 | UAPI 设计已定，provider 待实现 |
+| C18 | stale `ResetContract` | epoch/topology/rule 任一变化即不可选择 | 待实现 |
+| C19 | kernel native shadow domain | override-on shadow domain 是 override-off stock/alias constraint 的相等或保守超集；unknown component 拒绝 | phase-1 provenance patch 已构建；shadow ABI 待实现 |
 
 ### 19.2 静态 lifecycle
 
@@ -1012,6 +2648,8 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | S08 | 十次复用 | 无 stale DMA/interrupt/state | 已有嵌套；物理待验收 |
 | S09 | snapshot/suspend | 明确拒绝且设备保持可用 | 已有 ESXi；QEMU gate 待实现 |
 | S10 | Fault Tolerance 请求 | 对 DirectPath VM 明确拒绝 | Qman gate 待实现 |
+| S11 | attach 前 reset affected set 改变 | 放弃旧 plan，不执行 reset，不启动 QEMU | 待 VFIO provider/fault injection |
+| S12 | reset 后 state probe 失败 | affected set 整体 quarantine，lease 不回 FREE | 待 controller/fault injection |
 
 ### 19.3 Dynamic matcher 与 solver
 
@@ -1055,6 +2693,10 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | M15 | CreateVM 与直接注册缺省路径 | resolved layout 和 provenance 跨 power cycle 稳定 | 已有，LF04-LF06 |
 | M16 | QEMU firmware/topology 七 profile | 每个 profile 对 root、target BAR 和预期正负结果自动断言 | 已有，7/7 pass |
 | M17 | 严格 VMware guest machine ABI | custom machine 同时匹配 chipset/root topology/ACPI/BAR golden | 未实现；stock QEMU 标记 `BACKEND_TOPOLOGY_GAP` |
+| M18 | 2GiB exact-hole + 16KiB auxiliary demand | 2GiB 为 UNSAT；扩大到 4GiB 后成功，逐桥 containment 正确 | root 反例已有；多级 solver 待实现 |
+| M19 | first-fit/greedy 失败但精确布局有解 | exact solver 找到解，结果稳定 | 待实现 |
+| M20 | exact solver timeout | 返回不可重试 `MMIO_PLANNER_TIMEOUT`，不降级 greedy | 待实现 |
+| M21 | observed BAR/window 偏离 admission plan | VM 不提交，assignment 回滚，backend profile invalidated | 待 post-boot controller |
 
 ### 19.5 故障与多主机
 
@@ -1077,16 +2719,17 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 ### Phase 0：规范冻结
 
 - 固定本文 schema、reason code、profile 和 evidence contract。
-- 将 K01-K29、R01-R34 和 qualification dependency graph 做成可机器验证的 release input。
+- 将 K01-K29、R01-R35 和 qualification dependency graph 做成可机器验证的 release input。
 - 将现有 `pci-resource-model` 输出升级为 versioned inventory/plan。
-- 验收：旧 46 项测试迁移，JSON schema/golden files 稳定，C10/F10 证明依赖变更会撤销能力。
+- 验收：旧 46 项测试迁移，JSON schema/golden files 稳定，C10/C15-C19/F10 证明查询无副作用、
+  domain provenance、reset contract 和依赖失效语义。
 
 ### Phase 1：单 host 静态控制器
 
 - 实现 host agent、activation state、durable local lease、VFIO fd passing。
 - 接入 hot-reset affected set、rollback stack、health/quarantine。
 - 将 MMIO planner 从 root aperture 扩展到多级 bridge windows。
-- 验收：S00-S10、M00-M08、M12、M14-M17 自动化，QEMU crash 和 F09 bypass fault injection 通过。
+- 验收：S00-S12、M00-M08、M12、M14-M21 自动化，QEMU crash 和 F09 bypass fault injection 通过。
 
 ### Phase 2：单 host Dynamic
 
@@ -1139,16 +2782,19 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | --- | --- |
 | K01-K29 全量对标合同 | 文档已完成；可机器执行的 release evaluator 尚未实现 |
 | qualification/risk DB | schema 需求已定；signed DB、依赖失效和 capability gate 尚未实现 |
-| BAR sizing、root MMIO allocator | 已实现并测试 |
-| 静态 `eligible/available/attachable` | 已实现并测试 |
-| Linux sysfs inventory | 已实现只读版本 |
-| mandatory ACS override provenance | kernel patch 已完整构建；运行新 kernel 待验收 |
-| reset affected set | 模型支持，真实 VFIO ioctl 尚未接入 scanner |
-| Dynamic matcher/solver | 设计完成，尚未实现 |
-| durable lease/host agent | 尚未实现 |
+| capable evaluator | `capability.py` 已有 role/isolation/reset-policy/availability/VM-fit 基线；尚缺第 7.5 节完整 gate、稳定 reason schema、admin activation、精确 qualification 和 operation matrix |
+| dependency closure | 已合并 kernel group、physical domain、reset estimate、multifunction 和 platform dependency；尚缺 requester alias、PF/VF、functional rule、member action 与 edge provenance |
+| Linux sysfs inventory | 已有只读 scanner；snapshot publish/CAS、health/generation 和 authoritative provider facts 尚未实现 |
+| mandatory ACS override provenance | phase-1 native/effective/source patch 已完整构建但未运行；authoritative native shadow-domain ABI 尚未实现；当前 userspace estimate 还会在单点 provenance 缺失时全局失效，不能进入 production trusted sources |
+| reset affected set | 当前只按 sysfs parent 生成 `estimated` 集合，不能用于生产通过路径；`VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` discovery/re-query/execute provider 尚未实现 |
+| BAR sizing、root MMIO allocator | `allocator.py` 已实现 BAR 归一化、alignment、low/high root pool 和事务失败测试 |
+| 多级 bridge resource planner | 第 12.2 节完整树/精确 solver/renderer/observed-plan verifier 尚未实现；当前 root result 不能冒充完整 admission proof |
+| 静态 `eligible/available/attachable` | reference model 已实现并测试；第 9.5/9.6 节 bind/reset/fd/QEMU/rollback controller 尚未实现 |
+| Dynamic matcher/solver | 第 10 节详细算法已定，尚未实现 |
+| durable lease/host agent | 尚未实现；当前任何脚本运行结果都不是 durable ownership proof |
 | bind/reset rollback/quarantine | 尚未实现 |
-| 多级 bridge resource planner | 尚未实现 |
 | multi-host coordinator/fencing | 尚未实现 |
+| firmware/layout resolver | VMware LF00-LF06 与 QEMU 七 profile 已验证；产品化 resolver、持久 provenance 和 strict custom machine 尚未实现 |
 | AER/PME/ROM QEMU parity | lab patch/验证已有，尚未产品化 |
 | VFIO migration/hotplug extension | 尚未实现，baseline 明确拒绝 |
 
@@ -1200,7 +2846,7 @@ capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP
 | K01 | server、device、ESXi/guest OS、guest driver、solution 和 workload 均需支持 | 建立自有 qualification DB，key 至 host model/BIOS/IOMMU、device IDs/revision/firmware、kernel/QEMU/OVMF、guest/driver/workload | `EXT-QUAL` | Broadcom HCL 不能转授为 Qman 支持；缺少厂商声明时标为 unsupported，对应 R19/R20 |
 | K02 | platform 必须用 IOMMU 将 guest physical DMA 重映射到 host physical | VFIO cdev + IOMMUFD/IOAS，禁止 no-IOMMU；attach 前后核对 domain、mapping、fault 和 interrupt-remap | `HW-QUAL` | IOMMU/IR 硬件 errata 不能仅靠 API bit 排除；未验收 platform 禁用，R06/R27 |
 | K03 | passthrough 路径上 root port/switch downstream port 需 ACS；multifunction P2P 也需 ACS | 解析 native ACS capability/control 和整条 path，用 physical isolation domain 分配 | `HW-QUAL` | 伪造 ACS bit 不能防止真实 peer routing；需 peer-DMA 正/负对照，R01 |
-| K04 | VMware 要求真实 ACS；本部署又必须开 Linux ACS override | kernel group 只用于 VFIO 操作；安全 lease 整租 override 前 physical domain，其中 DMA endpoint 必须同 IOAS 或被证明 quiesced | `HW-QUAL` | ACS override 无法生成物理隔离；未知 member/P2P path 直接拒绝，R01/R26 |
+| K04 | VMware 要求真实 ACS；本部署又必须开 Linux ACS override | kernel group 只用于 VFIO 操作；kernel native shadow domain 作为安全 lease 边界，其中 DMA endpoint 必须同 IOAS 或被证明 quiesced | `HW-QUAL` | ACS override 无法生成物理隔离；shadow ABI/alias coverage/peer path 未闭环即拒绝，R01/R26/R35 |
 | K05 | BAR 必须按 4KB 或更大对齐；sub-4KB BAR 所在 host page 不得有其他资源 | inventory 同时检查 host resource start/size/page sharing 和 guest allocator 对齐；冲突则拒绝 | `SW-CLOSE` + `HW-QUAL` | host firmware 若将无关资源放入同页，QEMU 不能安全补救，R21 |
 | K06 | passthrough 不支持 Resizable BAR | 在 bind 前固定 effective BAR size，vfio-pci config policy 隐藏或只读 ReBAR control，guest 写入必须无效 | `BACKEND-GAP` | 只在 planner 记录 size 不够；stock vfio-pci 表面可见性需逐版验证，R22 |
 | K07 | legacy BIOS 受 below-4G/3.75GB 合计 BAR 限制；UEFI + 64-bit MMIO 支持大 BAR，host firmware 也需 above-4G mapping | SeaBIOS/OVMF 分 profile；parity legacy 显式实施 3.75GB ceiling；host admission 核对 above-4G 和 IOMMU/address-width 边界；UEFI 对 selected BAR 逐级 bridge packing，同时设置 OVMF aperture 与 QEMU `pci-hole64-size`，再核对 `_CRS`/BAR | `SW-CLOSE` | 单边配置、隐式对齐和机型拓扑可导致窗口不等价，R09 |
@@ -1295,7 +2941,110 @@ advertised(feature, host, device, vm, profile) =
 因此，本节中“尚未实现”或“待真机”的行就是当前对应的技术风险清单；
 在它们闭环前，Qman 不得宣告对应能力已对标完成。
 
-## 25. 公开依据
+## 25. 详细算法实施追踪
+
+本节给出推荐的代码所有权边界。路径是目标结构，不要求一次性重命名现有 reference model；
+但依赖方向必须保持单向，特别是 decision 层不能调用产生 bind/reset 副作用的 provider。
+
+### 25.1 目标模块分层
+
+```mermaid
+flowchart TB
+    subgraph FACTS["pci/inventory"]
+        SCAN["scanner.py"]
+        SNAP["snapshot.py"]
+        ISO["isolation.py"]
+        RESETFACT["reset_qualification.py"]
+    end
+
+    subgraph DECISION["pci/decision"]
+        CAP["capability.py"]
+        DEP["dependency.py"]
+        ADMIT["admission.py"]
+    end
+
+    subgraph RES["pci/resources"]
+        TREE["guest_tree.py"]
+        ALLOC["planner.py"]
+        RENDER["qemu_renderer.py"]
+        OBS["observed_plan.py"]
+    end
+
+    subgraph OWN["pci/ownership"]
+        LEASE["lease.py"]
+        FENCE["fencing.py"]
+    end
+
+    subgraph RUNTIME["pci/runtime"]
+        VFIOP["vfio_provider.py"]
+        ATTACH["attach.py"]
+        RELEASE["release.py"]
+        RECOVER["recovery.py"]
+    end
+
+    SCAN --> SNAP
+    ISO --> SNAP
+    RESETFACT --> SNAP
+    SNAP --> CAP --> DEP --> ADMIT
+    ADMIT --> TREE --> ALLOC --> RENDER
+    LEASE --> ATTACH
+    ADMIT --> ATTACH
+    VFIOP --> ATTACH --> OBS
+    RENDER --> ATTACH
+    ATTACH --> RELEASE --> RECOVER
+    FENCE --> LEASE
+```
+
+允许的调用方向是 facts -> decision -> ownership/resources -> runtime -> evidence。runtime 可以触发
+新一轮 inventory，但不能反向修改旧 snapshot；旧对象只能被标记 stale，不能原地“修好”。
+
+### 25.2 算法合同
+
+| 算法 | 前置条件 | 成功后置条件 | 允许副作用 | 失败策略 | 规模/复杂度 |
+| --- | --- | --- | --- | --- | --- |
+| `publishSnapshot`（6.4） | 一次扫描的拓扑、config、provider facts 同 epoch | snapshot canonical、对称 domain、hash 可复现 | 原子替换 published pointer | 整个新 snapshot 不发布 | `O(V+E)` |
+| `evaluatePassthrough`（7.5） | immutable snapshot + policy/profile hash | 六层状态和 reason 自洽，decision hash 稳定 | 无 | fail-closed，不改设备 | `O(payload + closure edges)` |
+| `reconstructPhysicalDomains`（8.4） | patched-kernel provenance 覆盖目标 component | 每个已知 domain 自包含、对称、来源可信 | 无 | 仅相应 component unknown | `O(V alpha(V)+E)` |
+| `discoverResetContract`（8.2.3） | maintenance lease 或 persistent VFIO ownership | authoritative affected set 带 epoch/topology/rule | qualification 阶段临时 bind/open 可回滚 | 不发布 contract | `O(affected devices)` |
+| `buildDependencyBundle`（8.5） | 所有引用 domain 已发布 | fixed-point closure、action 和 edge provenance 完整 | 无 | missing/unsafe member 时拒绝 | `O(V+E)` |
+| `planVmResources`（12.2.5） | 完整 guest tree、fixed reservations、profile | 所有 mandatory demand、逐桥 window、root aperture 同一解 | 无 | UNSAT/timeout 均拒绝 | NP-hard；profile 设置硬规模和 timeout |
+| `solveDynamic`（10.3） | 每个 requirement 已构造去重 candidate | 全 requirement、bundle disjoint、全局 resource plan 同时满足 | 无 | 无全局解即整体拒绝 | 最坏指数级；MRV/memo/lower-bound 剪枝 |
+| `attachSelectedBundles`（9.5） | durable lease + fresh epoch + resource plan | VFIO ownership、reset、QEMU、observed plan、manifest 全提交 | 有，必须全部入 rollback 栈 | rollback；清理不确定则 quarantine | 线性步骤，外部调用有 deadline |
+| `releaseAssignment`（9.6） | 当前 fencing token 和 run generation 匹配 | DMA/IRQ/fd/driver/reset 清理已验证后才 FREE | 有 | 保留 lease 并 quarantine | `O(bundle members)` |
+
+`planVmResources` 和 `solveDynamic` 的 worst case 不能靠文档消除；风险控制是限制 profile 规模、
+确定性 timeout、保存 unsat/timeout 诊断，并在超时时拒绝。任何 heuristic 只能给 solver warm start，
+不能产生 `success=true`。
+
+### 25.3 当前代码到目标模块
+
+| 设计章节 | 当前文件/证据 | 已有能力 | 下一实现单元 | 验收 |
+| --- | --- | --- | --- | --- |
+| 6.1-6.4 inventory | `pci_resource_model/linux_sysfs.py` | sysfs/config/topology/BAR 的只读采集 | immutable snapshot schema、atomic publish、health/generation/provider provenance | C10、C15、C18、F10 |
+| 7.2-7.8 capable | `pci_resource_model/capability.py` | role、isolation、reset policy、eligible/available/attachable 基线 | 拆出六 gate、稳定 reason、exact qualification、operation matrix；保持纯函数 | C00-C15 |
+| 8.4 physical domain | phase-1 kernel patch + `linux_sysfs.py::reconstruct_physical_isolation_domains` | ACS native/effective/source 与 userspace union-find estimate | 实现 kernel native shadow-domain ABI；estimate 改为 per-component 并仅作 differential evidence | C05、C06、C16、C19 |
+| 8.2 reset domain | 当前只有 sysfs parent `estimated` set | 可供 lab 展示，不是 production proof | 新增 VFIO cdev/legacy provider、两阶段 query、UAPI mode/ownership 负例 | C03、C04、C17、C18、S11、S12 |
+| 8.5 dependency bundle | `capability.py::_dependency_closure` | 五类集合的基础 closure | edge provenance、requester alias、PF/VF、functional rule、member action | C07、C13、D03、D14 |
+| 12.2 allocator | `pci_resource_model/allocator.py` | root low/high pool、BAR alignment、事务失败 | 完整 guest tree、逐桥 window、exact solver、backend renderer、observed verifier | M00-M03、M18-M21 |
+| 9 static transaction | 设计/实验脚本 | 单项 QEMU/VFIO 证据 | durable controller、fd-only launch、rollback/quarantine、manifest commit | S00-S12、F00、F09 |
+| 10 Dynamic | VMware 黑盒证据和本节伪代码 | matcher/assignedId 外部语义已知 | candidate builder、global solver、atomic reservation、runtime binding | D00-D14 |
+| 11/15 ownership/recovery | 尚无产品模块 | 状态机和风险合同已定 | SQLite/CAS 单 host lease、pidfd reconcile、generation、quarantine workflow | D09-D11、F00-F04 |
+| 12.3/13 profile surface | firmware 七 profile、AER/PME/ROM lab patch | 黑盒与 QEMU 分项证据 | versioned resolver/QOM policy/custom machine 或明确 backend gap | M05-M17、F09 |
+
+### 25.4 建议的实现提交顺序
+
+1. 先冻结 snapshot/reason/plan JSON schema，并把现有 46 项测试改为读取这些稳定对象。
+2. 实现 VFIO reset provider，只发布 `ResetContract`，暂不做自动 attach；先闭环 C17/C18。
+3. 实现 kernel native shadow-domain ABI，修正 per-component estimate，完成 dependency edge/action manifest。
+4. 实现完整 guest tree 和 exact allocator，以 M18-M21 阻止 root-only 结果被误用。
+5. 实现单 host durable lease 与 static attach/release；所有副作用接入统一 rollback 栈。
+6. 在 static 故障注入通过后复用事务 core，实现 Dynamic matcher/solver。
+7. 最后接入 multi-host fencing 和 parity surface；每一步都由第 18 节 risk gate 控制暴露。
+
+每个提交都必须保持尚未完成的 capability 为 `FEATURE_DISABLED`。不允许先开放 raw QEMU/VFIO
+入口，再期待后续控制面补上安全边界。
+
+## 26. 公开依据
 
 - [Broadcom KB 312208：VMDirectPath/Dynamic DirectPath 平台和设备要求](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
 - [Broadcom Compatibility Guide](https://compatibilityguide.broadcom.com/)
@@ -1304,6 +3053,7 @@ advertised(feature, host, device, vm, profile) =
 - [vSphere API：DynamicBackingInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html)
 - [vSphere API：AllowedDevice](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.AllowedDevice.html)
 - [Linux kernel：VFIO](https://docs.kernel.org/driver-api/vfio.html)
+- [Linux UAPI：`vfio.h` hot-reset affected set 与 cdev/legacy ownership 合同](https://github.com/torvalds/linux/blob/master/include/uapi/linux/vfio.h)
 - [Linux kernel：IOMMUFD](https://docs.kernel.org/userspace-api/iommufd.html)
 - [Linux kernel：x86 IOMMU 与 RMRR/IVRS](https://docs.kernel.org/next/x86/iommu.html)
 - [QEMU：IOMMUFD backend with VFIO](https://www.qemu.org/docs/master/devel/vfio-iommufd.html)
