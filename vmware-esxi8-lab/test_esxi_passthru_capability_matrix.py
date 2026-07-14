@@ -39,6 +39,8 @@ BASE_ENV = {
     "QEMU_ESXI_PCI_TESTDEV_MEMBAR_SIZE": "0",
     "QEMU_ESXI_EDU": "0",
     "QEMU_ESXI_VIRTIO_NET": "0",
+    "QEMU_ESXI_VIRTIO_CLASS": "",
+    "QEMU_ESXI_X3130_UPSTREAM": "0",
     "QEMU_ESXI_EEPRO100": "0",
     "QEMU_ESXI_DISABLE_ACS": "0",
     "QEMU_ESXI_IOMMU": "1",
@@ -59,6 +61,16 @@ CASES: dict[str, dict[str, Any]] = {
         "subject": "0000:01:01.0",
         "expected": {"capable": True, "reset": "Bridge reset"},
         "variable": "Endpoint without PCIe/PM/FLR capability below a PCIe root port",
+    },
+    "pcie-x3130-upstream-flr": {
+        "env": {"QEMU_ESXI_X3130_UPSTREAM": "1"},
+        "targets": ["0000:01:02.0", "0000:00:08.0"],
+        "subject": "0000:01:02.0",
+        "expected": {"capable": False, "reset": "Function reset"},
+        "variable": (
+            "Add a real Type-1 PCIe switch upstream port with native FLR; "
+            "keep the non-FLR Root Port as the same-boot control"
+        ),
     },
     "root-e1000e-no-function-reset": {
         "env": {"QEMU_ESXI_TOPOLOGY": "root"},
@@ -94,6 +106,100 @@ CASES: dict[str, dict[str, Any]] = {
         "subject": "0000:00:09.0",
         "expected": {"capable": True, "resetContains": "Function"},
         "variable": "Make PMCSR state bits read-only while preserving FLR",
+    },
+    "root-virtio-class-network": {
+        "env": {
+            "QEMU_ESXI_TOPOLOGY": "root",
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_CLASS": "0x0200",
+            "QEMU_ESXI_VIRTIO_FLR": "on",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_VIRTIO_ROOT_CAP": "on",
+            "QEMU_ESXI_QEMU_BINARY": CAPABILITY_QEMU,
+        },
+        "targets": ["0000:00:09.0", "0000:00:08.0"],
+        "subject": "0000:00:09.0",
+        "expected": {"capable": True, "resetContains": "Function"},
+        "variable": "Explicit 0x0200 network class control with FLR",
+    },
+    "root-virtio-class-memory": {
+        "env": {
+            "QEMU_ESXI_TOPOLOGY": "root",
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_CLASS": "0x0500",
+            "QEMU_ESXI_VIRTIO_FLR": "on",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_VIRTIO_ROOT_CAP": "on",
+            "QEMU_ESXI_QEMU_BINARY": CAPABILITY_QEMU,
+        },
+        "targets": ["0000:00:09.0", "0000:00:08.0"],
+        "subject": "0000:00:09.0",
+        "expected": {"capable": True, "resetContains": "Function"},
+        "variable": "Change only the endpoint class to 0x0500 RAM memory",
+    },
+    "root-virtio-class-pentium": {
+        "env": {
+            "QEMU_ESXI_TOPOLOGY": "root",
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_CLASS": "0x0b02",
+            "QEMU_ESXI_VIRTIO_FLR": "on",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_VIRTIO_ROOT_CAP": "on",
+            "QEMU_ESXI_QEMU_BINARY": CAPABILITY_QEMU,
+        },
+        "targets": ["0000:00:09.0", "0000:00:08.0"],
+        "subject": "0000:00:09.0",
+        "expected": {"capable": True, "resetContains": "Function"},
+        "variable": "Change only the endpoint class to 0x0b02 Pentium processor",
+    },
+    "root-virtio-class-coprocessor": {
+        "env": {
+            "QEMU_ESXI_TOPOLOGY": "root",
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_CLASS": "0x0b40",
+            "QEMU_ESXI_VIRTIO_FLR": "on",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_VIRTIO_ROOT_CAP": "on",
+            "QEMU_ESXI_QEMU_BINARY": CAPABILITY_QEMU,
+        },
+        "targets": ["0000:00:09.0", "0000:00:08.0"],
+        "subject": "0000:00:09.0",
+        "expected": {"capable": True, "resetContains": "Function"},
+        "variable": "Change only the endpoint class to 0x0b40 co-processor",
+    },
+    "root-virtio-class-host-bridge": {
+        "env": {
+            "QEMU_ESXI_TOPOLOGY": "root",
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_CLASS": "0x0600",
+            "QEMU_ESXI_VIRTIO_FLR": "on",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_VIRTIO_ROOT_CAP": "on",
+            "QEMU_ESXI_QEMU_BINARY": CAPABILITY_QEMU,
+        },
+        "targets": ["0000:00:09.0", "0000:00:08.0"],
+        "subject": "0000:00:09.0",
+        "expected": {"capable": True, "resetContains": "Function"},
+        "variable": (
+            "Change only the Type-0 endpoint class to 0x0600 host bridge"
+        ),
+    },
+    "root-virtio-class-pci-bridge": {
+        "env": {
+            "QEMU_ESXI_TOPOLOGY": "root",
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_CLASS": "0x0604",
+            "QEMU_ESXI_VIRTIO_FLR": "on",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_VIRTIO_ROOT_CAP": "on",
+            "QEMU_ESXI_QEMU_BINARY": CAPABILITY_QEMU,
+        },
+        "targets": ["0000:00:09.0", "0000:00:08.0"],
+        "subject": "0000:00:09.0",
+        "expected": {"capable": True, "resetContains": "Function"},
+        "variable": (
+            "Change only the Type-0 endpoint class to 0x0604 PCI bridge"
+        ),
     },
     "root-virtio-pm-only": {
         "env": {

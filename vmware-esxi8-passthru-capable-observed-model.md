@@ -6,11 +6,14 @@
 
 ## 1. 结论
 
-本地 15 项单变量矩阵表明，`HostPciPassthruInfo.passthruCapable` 不是“设备 ID 在白名单”
-的同义词，也不是“当前 VM 一定能分配该设备”。对本轮受控端点，最小外部模型是：
+本地原 15 项 IOMMU/reset/ACS/topology 矩阵，加上 6 项 class-code A/B 和 1 项真实
+Type-1 bridge FLR 对照表明，`HostPciPassthruInfo.passthruCapable` 不是“设备 ID 或 class
+在白名单”的同义词，也不是“当前 VM 一定能分配该设备”。对本轮受控设备，最小外部
+模型是：
 
 ```text
 staticCapable = hostIommuPresent
+             && functionIsAssignablePayload
              && acceptedResetBoundaryExists
              && acsPolicyPasses
              && deviceIsNotPlatformReserved
@@ -23,7 +26,9 @@ assignableNow = staticCapable
              && mmioAndRmrrAdmissionPasses
 ```
 
-这是由实验现象归纳出的判别式，不是 VMware 内部实现声明。15 个资格样本全部符合；
+`functionIsAssignablePayload` 表示该 function 不是维持宿主 PCI fabric 的 Type-1 bridge
+等结构节点；它描述外部现象，不声称 VMware 内部字段或检查顺序。以上判别式由实验
+归纳，不是 VMware 内部实现声明。22 个资格样本全部符合；
 共享 dependency 的大 BAR 负例又证明第二个判别式不能省略。
 
 ## 2. 15 项资格矩阵
@@ -55,6 +60,48 @@ _artifacts/vmware-directpath-runs/
 
 矩阵 verdict 为 `pass`，restore verdict 为 `pass`。QEMU 11.0.2 lab binary SHA256：
 `021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393`。
+
+### 2.1 六项 class-code 单变量矩阵
+
+六轮均使用同一个 QEMU `virtio-net-pci` function：VID:DID `1af4:1041`、Type-0
+`Header Type=0x00`、Root Complex 位置、FLR、IOMMU 和其余 capabilities 完全相同，
+只覆盖 PCI base/subclass：
+
+| Class | ESXi class name | FLR | ESXi 观察 | 结果 |
+| --- | --- | --- | --- | --- |
+| `0x0200` | Ethernet controller | true | `Function reset`、`Capable=true` | pass |
+| `0x0500` | RAM memory | true | `Function reset`、`Capable=true` | pass |
+| `0x0b02` | Pentium | true | `Function reset`、`Capable=true` | pass |
+| `0x0b40` | Co-processor | true | `Function reset`、`Capable=true` | pass |
+| `0x0600` | Host bridge | true | `Function reset`、`Capable=true` | pass |
+| `0x0604` | PCI bridge | true | `Function reset`、`Capable=true` | pass |
+
+原始结果位于
+`20260714-esxi8-class-gate-v1/matrix-result.json`，matrix 与 restore verdict 均为
+`pass`。实验 QEMU 6.2 binary SHA256 为
+`26bef9b942dcaee8c4f10cf1b9b5837671acaadb3bdd466f5655e41056e0387d`。
+
+这组结果只证明 class code 本身不是 blanket gate。特别是 `0x0604` 样本仍是 Type-0
+endpoint，并不冒充一个实际产生 subordinate bus 的 Type-1 bridge。本组验收对象是
+host 静态 `passthruCapable`，没有把 class/header 不一致的实验 function 分配给 L3 guest；
+它足以否定 class-only 资格模型，但不是这种畸形设备组合的生产可用性证明。
+
+### 2.2 真实 Type-1 bridge 的 FLR 对照
+
+同一次 ESXi 启动中加入 QEMU TI X3130 upstream port。该模型是真实 Type-1 bridge，
+QEMU 原生调用 `pcie_cap_flr_init()` 并实现 FLR config write；其上游 QEMU Root Port 是
+同启动对照：
+
+| Function | Header/PCIe type | FLR | Reset Method | Capable |
+| --- | --- | --- | --- | --- |
+| X3130 upstream `104c:8232` | Type-1 / Upstream Port | true | `Function reset` | false |
+| QEMU Root Port `1b36:000c` | Type-1 / Root Port | false | `None` | false |
+
+原始结果位于 `20260714-esxi8-real-bridge-flr-v2/matrix-result.json`，matrix 与 restore
+verdict 均为 `pass`。X3130 负例最关键：ESXi 已接受其 FLR 并报告 `Function reset`，
+却仍判 `passthruCapable=false`。所以对真实 bridge，FLR 是不充分条件；结构角色 gate
+独立于 reset gate。结合上节 Type-0 `class=0604` 正例，也可排除“只按 0604 class
+拒绝”的模型。
 
 ## 3. 可成立的推理
 
@@ -100,11 +147,42 @@ dependency，VM 立即完成 IOMMU mapping 和 EFI Linux heartbeat。证据：
 所以 AH 的运行时选择至少还检查完整 dependency 的独占性/可租用性。Basic capability、
 owner state、AH selection 和 VM MMIO admission 必须分别记录。
 
-### 3.5 设备 ID 不是本矩阵的主要决定变量
+### 3.5 class code、FLR 与结构角色不是同一个 gate
 
-矩阵覆盖 Intel e1000e/i82559、Red Hat virtio/EDU 与不同 class。相同 virtio identity
-只改变 FLR、PM、拓扑、ACS 或 IOMMU 即发生 capability 翻转。可据此否定“仅由 VID:DID
-白名单决定”的简单模型，但不能否定 VMware 对某些真实产品另有支持/HCL policy。
+- `0x0500 RAM memory`、`0x0b02 Pentium`、`0x0b40 Co-processor` 均可 capable，故
+  CPU/memory base class 不构成 blanket blacklist。物理 CPU 本身通常也不是一个可移交
+  PCI function；PCI class `0x0b` 只是 PCI function 的分类元数据。
+- Type-0 endpoint 即使写成 `0x0600/0x0604` 仍 capable，故 bridge class code 本身不
+  构成 blanket blacklist。
+- 真正 Type-1 X3130 bridge 即使有 FLR 且 ESXi 报告 `Function reset`，仍 incapable，
+  证明“有 FLR”对 host-fabric 结构节点不充分。
+- 普通 endpoint 自身无 FLR 时，可借上游 bridge reset 变为 capable；此时 bridge 是
+  parent/dependency/reset boundary，而不是作为 payload 暴露给 guest。
+
+因此“CPU、内存、桥不能直通”必须拆开理解：独立 PCI memory/coprocessor endpoint 可以
+通过；宿主 host bridge、root port、switch port、集成内存控制器等平台 fabric/resource
+通常不能作为独立 payload 移交。当前证据支持按 header/PCIe port type、spawned bus、
+拓扑职责和平台保留状态综合判断，但不推导 VMware 私有实现的具体检查顺序。
+
+### 3.6 VMware 是否有白名单或黑名单
+
+公开证据显示至少有三种不同概念，不能混称为一个 blacklist：
+
+1. [Broadcom KB 312208](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
+   要求生产支持组合位于 Compatibility Guide，并公开 IOMMU、ACS、reset 与 bridge
+   dependency 约束。这是支持/HCL 边界，不等于运行时 `passthruCapable` 白名单；本地
+   非 HCL 的 QEMU VID:DID 仍可得到 `Capable=true`。
+2. [`/etc/vmware/passthru.map` 的公开格式](https://knowledge.broadcom.com/external/article/416531/esxi-host-experience-psod-hpe-proliant-x.html)
+   是 `vendor-id device-id resetMethod fptShareable`，VID/DID 可用 `ffff` 通配。它是按
+   设备 identity 覆盖 reset/shareability 的 quirk map，能间接改变资格或运行行为，
+   但公开格式没有通用 `deny` 动作，不能直接称为黑名单。
+3. [HostPciPassthruInfo API](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruInfo.html)
+   只说明 `passthruCapable` 由 vmkctl 决定，并暴露可能为 bridge 的 `dependentDevice`；
+   它不公开 reason code 或完整算法。
+
+所以可以实锤“不是纯 VID:DID/class 白名单，也不是 FLR 单条件”；不能实锤“VMware
+内部绝不存在任何设备 deny/quirk”。公开可见、最接近设备策略表的是 `passthru.map`
+和 HCL，而平台结构排除是另一层资格 gate。
 
 ## 4. QEMU/VFIO 对齐核对表
 
@@ -112,6 +190,7 @@ owner state、AH selection 和 VM MMIO admission 必须分别记录。
 | --- | --- | --- |
 | Host IOMMU gate | 启用 VT-d/AMD-Vi；禁止 no-IOMMU/unsafe interrupts | IOMMU group、map/unmap 和 interrupt remap 可审计 |
 | Reset boundary | 读取 host `reset_method`；FLR 优先，bus reset 时租用整组 | callback trace、影响 function 集合、十次复用 |
+| Function role | 区分 assignable endpoint 与 host bridge/root/switch port 等 fabric node；不可只按 class code | header type、PCIe port type、subordinate bus、parent/dependency 一致 |
 | ACS policy | 要求真实 ACS 或天然隔离拓扑 | 不依赖 ACS override；group 与拓扑一致 |
 | Dependency | 将 IOMMU group、reset domain、multifunction/bridge dependency 合并成原子 lease | 同组不能拆给不同 VM；失败指出具体 dependency |
 | Owner state | 分离 `eligible`、`bound-to-vfio`、`leased`、`attached` | 状态机与恢复日志，不用一个布尔值代替 |
@@ -136,6 +215,18 @@ owner state、AH selection 和 VM MMIO admission 必须分别记录。
 wsl -d Ubuntu-22.04 -- python3 `
   /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py `
   --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID
+```
+
+只复现本次 class/bridge 机制：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID `
+  --cases root-virtio-class-network root-virtio-class-memory `
+    root-virtio-class-pentium root-virtio-class-coprocessor `
+    root-virtio-class-host-bridge root-virtio-class-pci-bridge `
+    pcie-x3130-upstream-flr
 ```
 
 大 BAR dependency A/B 复现见

@@ -111,7 +111,7 @@ D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server �
 | I01 | INTx 与 QEMU direct control | `test_esxi_intx_mode.py`、`qemu-intx-direct-validate.sh` | IRQ 计数、流量 |
 | I02/D00/R00 | EDU MSI-only、DMA、reset sentinel | `test_esxi_edu.py`、`qemu-edu-direct-validate.sh` | Guest IRQ/DMA、VT-d/IR trace、VMware reset log |
 | L02/L04 | vMotion 与 host crash | `test_esxi_vmotion_matrix.py`、`test_esxi_host_crash_recovery.py` | task fault、恢复状态 |
-| CAP00-CAP14 | `passthruCapable` 资格判定 | `test_esxi_passthru_capability_matrix.py` | IOMMU、FLR/bridge reset、ACS、dependency、restore |
+| CAP00-CAP21 | `passthruCapable` 资格判定 | `test_esxi_passthru_capability_matrix.py` | IOMMU、FLR/bridge reset、ACS、class code、真实 Type-1 bridge、dependency、restore |
 | S01-S05 | Option ROM、PME、AER、P2P、RMRR | `test_esxi_optionrom.py`、`test_esxi_pme.py`、AER runner、`test_esxi_p2p_matrix.py`、`test_esxi_rmrr_matrix.py` | guest/config/log/QEMU trace 三方结果 |
 | SRIOV | PF/VF 公开 surface | `test_esxi_sriov.py`、`collect_esxi_sriov_driver_surface.py` | raw capability、driver state、VF inventory |
 
@@ -354,7 +354,7 @@ wsl -d Ubuntu-22.04 -- python3 /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/te
 SID/IOVA 不再解析到旧 backing，并被分类为 fault、context absent 或 host-domain
 rebound。当前 v5 实测是 domain 2 切到 domain 1 的 host identity rebound。
 
-`passthruCapable` 15 项矩阵：
+`passthruCapable` 22 项矩阵：
 
 ```powershell
 wsl -d Ubuntu-22.04 -- python3 `
@@ -362,10 +362,23 @@ wsl -d Ubuntu-22.04 -- python3 `
   --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID
 ```
 
-该 runner 会逐案切换 IOMMU、FLR/PM/D3hot、Root Complex/PCIe/legacy topology 和 ACS
-policy，并自动恢复基线。必须同时检查 `passthruCapable`、`Reset Method`、parent/
-dependent device 和 restore verdict；专题解释见
+该 runner 会逐案切换 IOMMU、FLR/PM/D3hot、Root Complex/PCIe/legacy topology、ACS、
+同 endpoint class code，并加入带原生 FLR 的真实 Type-1 X3130 bridge。必须同时检查
+`passthruCapable`、`Reset Method`、header/PCIe port type、parent/dependent device 和
+restore verdict；专题解释见
 [`../vmware-esxi8-passthru-capable-observed-model.md`](../vmware-esxi8-passthru-capable-observed-model.md)。
+
+只复现 class 与真实 bridge gate：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID `
+  --cases root-virtio-class-network root-virtio-class-memory `
+    root-virtio-class-pentium root-virtio-class-coprocessor `
+    root-virtio-class-host-bridge root-virtio-class-pci-bridge `
+    pcie-x3130-upstream-flr
+```
 
 PME/P2P/RMRR/Option ROM 当前入口：
 

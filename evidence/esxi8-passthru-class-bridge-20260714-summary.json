@@ -1,0 +1,100 @@
+{
+  "date": "2026-07-14",
+  "scope": "Publicly observable ESXi DirectPath capability behavior in an authorized nested lab; no private implementation inference",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "qemu": "6.2.0 plus opt-in virtio-net class-code instrumentation",
+    "qemuBinarySha256": "26bef9b942dcaee8c4f10cf1b9b5837671acaadb3bdd466f5655e41056e0387d",
+    "iommu": "QEMU Intel IOMMU enabled"
+  },
+  "classCodeMatrix": {
+    "run": "20260714-esxi8-class-gate-v1",
+    "verdict": "pass",
+    "restoreVerdict": "pass",
+    "acceptanceLayer": "Host static passthruCapable only; the deliberately class/header-mismatched variants were not assigned to an L3 guest",
+    "controlledInput": {
+      "vendorId": "0x1af4",
+      "deviceId": "0x1041",
+      "headerType": "0x00",
+      "pcieFunctionLevelResetCapable": true,
+      "topology": "Root Complex Integrated Endpoint",
+      "onlyChangedField": "PCI base/subclass code"
+    },
+    "cases": [
+      {
+        "class": "0x0200",
+        "className": "Ethernet controller",
+        "passthruCapable": true,
+        "resetMethod": "Function reset"
+      },
+      {
+        "class": "0x0500",
+        "className": "RAM memory",
+        "passthruCapable": true,
+        "resetMethod": "Function reset"
+      },
+      {
+        "class": "0x0b02",
+        "className": "Pentium",
+        "passthruCapable": true,
+        "resetMethod": "Function reset"
+      },
+      {
+        "class": "0x0b40",
+        "className": "Co-processor",
+        "passthruCapable": true,
+        "resetMethod": "Function reset"
+      },
+      {
+        "class": "0x0600",
+        "className": "Host bridge",
+        "passthruCapable": true,
+        "resetMethod": "Function reset"
+      },
+      {
+        "class": "0x0604",
+        "className": "PCI bridge",
+        "passthruCapable": true,
+        "resetMethod": "Function reset"
+      }
+    ],
+    "inference": "A blanket denylist keyed only by the tested CPU, memory, host-bridge, or PCI-bridge class codes is disproven for Type-0 assignable endpoints."
+  },
+  "type1BridgeFlr": {
+    "hypothesisFalsificationRun": "20260714-esxi8-real-bridge-flr-v1",
+    "regressionRun": "20260714-esxi8-real-bridge-flr-v2",
+    "verdict": "pass",
+    "restoreVerdict": "pass",
+    "subject": {
+      "bdf": "0000:01:02.0",
+      "vendorId": "0x104c",
+      "deviceId": "0x8232",
+      "class": "0x0604",
+      "className": "PCI bridge",
+      "headerType": "0x01",
+      "pcieDevicePortType": 5,
+      "pcieFunctionLevelResetCapable": true,
+      "resetMethod": "Function reset",
+      "passthruCapable": false,
+      "parent": "0000:00:08.0"
+    },
+    "sameBootControl": {
+      "bdf": "0000:00:08.0",
+      "vendorId": "0x1b36",
+      "deviceId": "0x000c",
+      "class": "0x0604",
+      "className": "PCI bridge",
+      "headerType": "0x01",
+      "pcieDevicePortType": 4,
+      "pcieFunctionLevelResetCapable": false,
+      "resetMethod": "None",
+      "passthruCapable": false
+    },
+    "inference": "A recognized FLR reset path is not sufficient for a real Type-1 fabric bridge. Structural bridge role is an eligibility gate separate from both class code and reset method."
+  },
+  "publicPolicyBoundary": {
+    "compatibilityGuide": "Support qualification boundary; not equivalent to the observed runtime passthruCapable gate",
+    "passthruMap": "VID:DID-wildcard reset-method and fptShareable quirk map; the cited public format has no generic deny action",
+    "remainingUnknown": "These experiments do not disprove undisclosed product-specific deny policy or HCL/driver restrictions for physical hardware"
+  }
+}

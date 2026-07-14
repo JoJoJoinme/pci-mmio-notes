@@ -13,6 +13,7 @@ oprom_marker_patch="$script_dir/qemu-patches/0006-e1000e-option-rom-marker-trace
 oprom_counter_patch="$script_dir/qemu-patches/0007-e1000e-option-rom-marker-counter.patch"
 d3hot_reset_patch="$script_dir/qemu-patches/0008-virtio-pci-d3hot-reset-lab.patch"
 pme_d3hot_patch="$script_dir/qemu-patches/0009-virtio-pci-pme-d3hot-advertisement-lab.patch"
+class_code_patch="$script_dir/qemu-patches/0014-virtio-net-pci-class-code-lab.patch"
 
 if [[ ! -f "$source_dir/VERSION" ]]; then
   echo "QEMU source tree not found at $source_dir" >&2
@@ -46,6 +47,9 @@ fi
 if ! grep -q x-pcie-pme-d3hot "$source_dir/hw/virtio/virtio-pci.c"; then
   patch -d "$source_dir" -p1 < "$pme_d3hot_patch"
 fi
+if ! grep -q x-pci-class-code "$source_dir/hw/virtio/virtio-net-pci.c"; then
+  patch -d "$source_dir" -p1 < "$class_code_patch"
+fi
 
 if [[ ! -f "$build_dir/build.ninja" ]]; then
   mkdir -p "$build_dir"
@@ -74,4 +78,5 @@ sha256sum \
   "$oprom_marker_patch" \
   "$oprom_counter_patch" \
   "$d3hot_reset_patch" \
-  "$pme_d3hot_patch"
+  "$pme_d3hot_patch" \
+  "$class_code_patch"

@@ -303,7 +303,7 @@ Bypassing non-ACS capable device in hierarchy
 因此它只能证明 VMware 存在 bypass 分支，不能作为生产安全配置。生产 VFIO/ESXi
 对标仍应要求真实 ACS、正确 IOMMU group，禁止把 `pcie_acs_override` 当成通过条件。
 
-15 项 `passthruCapable` 单变量矩阵进一步把资格判断收敛为外部可观察模型：
+扩展后的 22 项 `passthruCapable` 单变量/对照矩阵进一步把资格判断收敛为外部可观察模型：
 
 - 没有 IOMMU 时，即使 ESXi 能报告 `Bridge reset`，`passthruCapable=false`。
 - Root Complex 直挂 endpoint 只有公开 FLR 时通过；PM-only、D3hot 状态位或 PME/D3
@@ -312,10 +312,15 @@ Bypassing non-ACS capable device in hierarchy
   后，仍可得到 `Bridge reset` 和 `passthruCapable=true`。
 - Root Port 无 ACS 且当前 bypass policy 打开时仍 capable；开启严格 ACS 检查后，同一
   设备变为 incapable。
+- 同一个 `1af4:1041` Type-0 FLR endpoint 只切换 class code 为 `0200/0500/0b02/0b40/
+  0600/0604` 时，六轮均为 `Function reset`、`passthruCapable=true`；不存在这些 base
+  class 的 blanket blacklist。
+- 真正的 Type-1 X3130 upstream bridge 公开 FLR 后，ESXi 能报告 `Function reset`，但
+  `passthruCapable=false`。因此 bridge 的结构角色是独立 gate，FLR 对真实 bridge 不充分。
 - `passthruCapable` 只回答静态资格，不保证运行时可分配。共享 dependency 的大 BAR
   设备即使 `Capable/Enabled/Active=true`，仍可能被 AH 拒绝；独占 Root Port 后通过。
 
-完整 15/15 矩阵、推理边界和 QEMU 核对表见
+完整 22/22 矩阵、白名单/quirk 边界、推理限制和 QEMU 核对表见
 [`vmware-esxi8-passthru-capable-observed-model.md`](vmware-esxi8-passthru-capable-observed-model.md)。
 
 ## 6. DMA、中断与 reset

@@ -206,6 +206,24 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     ;;
 esac
 
+x3130_upstream_present="${QEMU_ESXI_X3130_UPSTREAM:-0}"
+if [[ "$x3130_upstream_present" == "1" ]]; then
+  if [[ "${QEMU_ESXI_TOPOLOGY:-pcie}" != "pcie" ]]; then
+    echo "QEMU_ESXI_X3130_UPSTREAM requires QEMU_ESXI_TOPOLOGY=pcie" >&2
+    exit 2
+  fi
+  if [[ "${QEMU_ESXI_IVSHMEM_ALT_SHARED_ROOT_PORT:-0}" == "1" ]]; then
+    echo "QEMU_ESXI_X3130_UPSTREAM conflicts with the shared alt slot" >&2
+    exit 2
+  fi
+  test_devices+=(
+    -device "x3130-upstream,id=test_switch_up,bus=test_rp,addr=0x02.0"
+  )
+elif [[ "$x3130_upstream_present" != "0" ]]; then
+  echo "QEMU_ESXI_X3130_UPSTREAM must be 0 or 1" >&2
+  exit 2
+fi
+
 largebar_size="${QEMU_ESXI_PCI_TESTDEV_MEMBAR_SIZE:-0}"
 edu_present="${QEMU_ESXI_EDU:-0}"
 virtio_net_present="${QEMU_ESXI_VIRTIO_NET:-0}"
@@ -320,6 +338,9 @@ if [[ "$virtio_net_present" == "1" ]]; then
   virtio_net_options+=",x-pcie-deverr-init=${QEMU_ESXI_VIRTIO_DEVERR:-on}"
   virtio_net_options+=",x-pcie-extcap-init=${QEMU_ESXI_VIRTIO_EXTCAP:-on}"
   virtio_net_options+=",aer=${QEMU_ESXI_VIRTIO_AER:-off}"
+  if [[ -n "${QEMU_ESXI_VIRTIO_CLASS:-}" ]]; then
+    virtio_net_options+=",x-pci-class-code=${QEMU_ESXI_VIRTIO_CLASS}"
+  fi
   if [[ -n "${QEMU_ESXI_VIRTIO_ROOT_CAP:-}" ]]; then
     virtio_net_options+=",x-pcie-root-cap-init=${QEMU_ESXI_VIRTIO_ROOT_CAP}"
   fi
