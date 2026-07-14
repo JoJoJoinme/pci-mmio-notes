@@ -186,6 +186,81 @@ owner state、AH selection 和 VM MMIO admission 必须分别记录。
 
 ## 4. QEMU/VFIO 对齐核对表
 
+### 4.1 class-code 结果为什么不矛盾
+
+PCI class code 适合描述 function 提供什么服务，不足以证明该 function 在宿主 PCI
+fabric 中承担什么职责。`class=0604` 的 Type-0 endpoint 没有 secondary bus；真正的
+Type-1 bridge 则会生成下游总线并成为其他 requester 的 parent/reset boundary。因此本轮
+结果更适合解释为：ESXi 对“可分配 payload”的识别优先于 class label，随后再检查
+IOMMU、reset、ACS 和平台保留条件。当前证据不能证明 ESXi 的内部检查顺序，但已经排除
+class-only 和 FLR-only 两种模型。
+
+这个外部现象与 Linux VFIO 的公开实现高度同构：
+
+- [`vfio_pci_core_register_device()`](https://github.com/torvalds/linux/blob/master/drivers/vfio/pci/vfio_pci_core.c)
+  明确要求 `pdev->hdr_type == PCI_HEADER_TYPE_NORMAL`；Type-1 bridge 在注册为
+  `vfio-pci` 设备前即被拒绝，而代码没有用 PCI class 做这一结构 gate。
+- 同一函数按 reset 影响范围建立 device set：root-bus endpoint/SR-IOV VF 使用自身，
+  可 slot reset 时使用 slot，否则使用整条 bus。也就是说 reset 是一个集合属性，不是
+  endpoint 上的一位布尔属性。
+- [VFIO UAPI](https://github.com/torvalds/linux/blob/master/include/uapi/linux/vfio.h)
+  的 `VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` 返回 hot reset 会影响的全部 function；执行
+  `VFIO_DEVICE_PCI_HOT_RESET` 前必须证明拥有整个 affected set。
+- [QEMU `hw/vfio/pci.c`](https://gitlab.com/qemu-project/qemu/-/blob/master/hw/vfio/pci.c)
+  正是先查询该 affected set，再区分单个和多个在用 VFIO device 的 hot reset。
+
+这不是 VMware 私有实现的源码旁证，只是一个公开、可审计且能解释相同外部现象的参考
+架构。QEMU 平台无需仿造一个 class 白名单；Linux/VFIO 已经给出了更合适的结构和
+reset-domain 原语。
+
+### 4.2 推荐的 QEMU 平台判定模型
+
+不要把 stock QEMU 能否启动作为唯一的 `passthroughCapable`。QEMU 是 attach 执行端，
+Linux VFIO 是安全强制层；与 ESXi host inventory/AH 最接近的准入和调度逻辑应位于
+libvirt 上层或自有 host service。推荐把一个 BDF 的依赖单元定义为：
+
+```text
+dependency(BDF) = closure(
+    iommuIsolationGroup
+  U resetAffectedSet
+  U vfioDeviceSet
+  U multifunctionAndRequesterAliasSet
+  U platformReservedDependencies
+)
+
+eligible = vfioType0Bindable
+        && hostIommuAndInterruptRemapReady
+        && acceptedResetPathExists
+        && acsAndRequesterIsolationPass
+        && noPlatformReservation
+        && noApplicableErrataDeny
+
+availableNow = eligible
+            && every(dependency(BDF)) is exclusively leasable
+
+attachableToVM = availableNow
+              && guestMmioAndRmrrAdmissionPass
+              && requestedMigrationModeSupported
+```
+
+这里的 `vfioType0Bindable` 是 Linux `vfio-pci` 当前结构边界，不是建议自行按 class
+重写一遍。`acceptedResetPathExists` 应同时检查 device reset 和
+`VFIO_DEVICE_GET_PCI_HOT_RESET_INFO`，并把 affected set 纳入同一原子 lease。stock QEMU
+即使只打印 reset warning 仍可能继续的场景，平台若要对标 ESXi，应在 preflight 阶段
+转成明确拒绝。
+
+Linux `vfio-pci` 确实还有一个很窄的
+[VID:DID denylist](https://github.com/torvalds/linux/blob/master/drivers/vfio/pci/vfio_pci.c)：
+它针对已知会造成可利用稳定性或安全问题的硬件 errata，默认阻止 probe，并提供带风险
+告警的 `disable_denylist` 模块参数。这是 QEMU 平台值得参考的“黑名单”形态：只用于有
+证据的设备例外，带 reason/source/kernel-range 和审计过的 override；不要把 CPU、memory、
+bridge 等整个 class 当 denylist。
+
+建议 API 不只返回一个布尔值，而返回 `eligible/available/attachable` 三层状态、完整
+dependency BDF 列表、所选 reset method/affected set，以及稳定 reason code。这样既不会
+把“硬件原则上可直通”和“此刻可租用”混在一起，也能准确解释 MMIO、RMRR、迁移或同组
+占用造成的晚期失败。
+
 | VMware 可观察层 | QEMU/VFIO 实现要求 | 验收值 |
 | --- | --- | --- |
 | Host IOMMU gate | 启用 VT-d/AMD-Vi；禁止 no-IOMMU/unsafe interrupts | IOMMU group、map/unmap 和 interrupt remap 可审计 |
