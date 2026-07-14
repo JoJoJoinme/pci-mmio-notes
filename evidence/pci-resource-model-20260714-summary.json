@@ -1,6 +1,6 @@
 {
   "date": "2026-07-14",
-  "scope": "Executable PCI BAR sizing, guest MMIO allocation, and passthrough capability reference model",
+  "scope": "Executable PCI BAR sizing, guest MMIO allocation, mandatory-ACS-override provenance, and passthrough capability reference model",
   "implementation": {
     "path": "pci-resource-model",
     "language": "Python 3.10+ standard library",
@@ -9,7 +9,9 @@
       "read-only Linux sysfs inventory",
       "transactional below/above-4G MMIO allocator",
       "linked OVMF X-PciMmio64Mb and QEMU pci-hole64-size output",
-      "eligible/available/attachable passthrough evaluator"
+      "eligible/available/attachable passthrough evaluator",
+      "Linux 6.6 native/effective ACS provenance patch",
+      "dual-domain model: patched operational IOMMU group plus conservative physical isolation domain"
     ]
   },
   "validation": {
@@ -19,7 +21,7 @@
         "python -m unittest discover -v (Windows, from pci-resource-model)"
       ],
       "verdict": "pass",
-      "cases": 38
+      "cases": 46
     },
     "lint": {
       "command": "ruff check pci-resource-model && ruff format --check pci-resource-model",
@@ -27,9 +29,10 @@
       "verdict": "pass"
     },
     "wheelInstall": {
-      "command": "pip install --force-reinstall ./pci-resource-model",
+      "command": "pip wheel --no-deps; pip install --force-reinstall pci_resource_model-0.1.0-py3-none-any.whl",
       "artifact": "pci_resource_model-0.1.0-py3-none-any.whl",
-      "consoleSmoke": "installed pci-resource-model allocate command reproduced the 2 GiB result",
+      "artifactSha256": "e77f38594343568849f53748123628ce3e057d52b42e60ba9c2d20f8791fb4bc",
+      "consoleSmoke": "installed pci-resource-model capable command returned conditional with the complete three-function physical-domain lease",
       "verdict": "pass"
     },
     "twoGiBEndToEnd": {
@@ -55,6 +58,57 @@
       },
       "verdict": "pass"
     },
+    "mandatoryOverrideEndToEnd": {
+      "input": "pci-resource-model/examples/mandatory-acs-override.json",
+      "scenario": "three singleton patched groups below one non-isolating root port",
+      "defaultPolicy": {
+        "exitCode": 0,
+        "eligible": true,
+        "available": true,
+        "attachable": true,
+        "verdict": "conditional",
+        "requiredLease": [
+          "0000:00:01.0",
+          "0000:01:00.0",
+          "0000:01:00.1"
+        ],
+        "warning": "ACS_OVERRIDE_REQUIRES_WHOLE_PHYSICAL_DOMAIN"
+      },
+      "denyPolicy": {
+        "argument": "--deny-acs-override",
+        "exitCode": 1,
+        "eligible": false,
+        "reasonCode": "ACS_OVERRIDE_NOT_ALLOWED"
+      },
+      "verdict": "pass"
+    },
+    "kernelAcsProvenancePatch": {
+      "base": {
+        "release": "linux-msft-wsl-6.6.123.2",
+        "commit": "a07f9ea8a99139913acbcc1c160b132cb2a49c81"
+      },
+      "patch": "kernel-patches/0001-PCI-expose-ACS-override-provenance.patch",
+      "patchSha256": "96827635cec02352597502c9f4ab0dfe89274e77718178d48c1a8833854e83f2",
+      "patchedTree": "e934924a1369e637c732e3ae217a68084bd65e03",
+      "applyCheck": "pass",
+      "checkpatchStrict": {
+        "errors": 0,
+        "warnings": 0,
+        "checks": 0,
+        "verdict": "pass"
+      },
+      "fullBuild": {
+        "command": "build-acs-provenance-wsl-kernel.sh; KERNEL_RESUME=1 after the execution-tool timeout",
+        "result": "Kernel: arch/x86/boot/bzImage is ready (#1)",
+        "patchedKernelCommit": "f40455e240558b5570a5c64895be07d1c4b04eba",
+        "imageBytes": 16617472,
+        "imageSha256": "368ce6851bd056bc0c205611b9052a0cf966f188f8b4a5eb2a9b5d584bb9055c",
+        "configSha256": "f573a9a5221b8292951a4516138d89acd28caba18fc2e000963531553b0b520c",
+        "verdict": "pass"
+      },
+      "bootedInCurrentWsl": false,
+      "verdict": "build-pass-boot-pending"
+    },
     "wslReadOnlyScan": {
       "command": "python3 -m pci_resource_model scan --interrupt-remapping unknown",
       "source": "linux-sysfs-read-only",
@@ -63,6 +117,8 @@
       "largestObservedBarBytes": 8589934592,
       "hostIommuPresent": false,
       "acsOverrideActive": false,
+      "acsProvenanceInterfaceComplete": false,
+      "physicalDomainRule": "stock-kernel-iommu-group",
       "verdict": "pass"
     },
     "wslFailClosed": {
@@ -84,13 +140,16 @@
     "Linux scan consumes kernel-probed sysfs resources and never writes live BARs",
     "Direct BAR sizing requires an explicit ConfigSpace backend and a quiesced exclusively owned function",
     "ACS override never reuses the patched kernel group as physical-isolation proof",
+    "Override-dependent admission requires complete native/effective/source provenance and an atomic lease over the reconstructed physical domain",
+    "Missing or inconsistent provenance invalidates all reconstructed domains instead of trusting singleton patched groups",
     "Estimated bus-reset domains and missing dependency inventory fail closed by default",
     "MMIO admission is separate from static capability"
   ],
   "remainingPhysicalValidation": [
     "live unbound hardware BAR write-all-ones transaction and restoration",
+    "boot the built provenance kernel on the target host and compare exported sysfs facts with PCI parent topology and IOMMU groups",
+    "physical peer-to-peer DMA and IOMMU isolation acceptance under the mandatory override deployment",
     "VFIO hot-reset affected-set integration",
-    "override-independent physical isolation domain capture on the target host",
     "firmware-stage bridge-window placement and post-boot guest BAR verification"
   ]
 }

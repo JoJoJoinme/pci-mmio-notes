@@ -201,6 +201,7 @@ class DeviceInventory:
     bars: tuple[Bar, ...] = ()
     iommu_group: tuple[str, ...] = ()
     physical_isolation_domain: tuple[str, ...] = ()
+    physical_isolation_domain_source: str = "unknown"
     reset_methods: tuple[str, ...] = ()
     reset_domain: tuple[str, ...] = ()
     reset_domain_source: str = "unknown"
@@ -213,6 +214,9 @@ class DeviceInventory:
     driver: str | None = None
     parent: str | None = None
     acs: AcsState | None = None
+    acs_native_isolation: bool | None = None
+    acs_effective_isolation: bool | None = None
+    acs_override_source: str = "unknown"
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -233,6 +237,14 @@ class DeviceInventory:
             "reset_methods",
             tuple(dict.fromkeys(method.lower() for method in self.reset_methods)),
         )
+        object.__setattr__(
+            self,
+            "physical_isolation_domain_source",
+            self.physical_isolation_domain_source.lower(),
+        )
+        object.__setattr__(
+            self, "acs_override_source", self.acs_override_source.lower()
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -245,6 +257,7 @@ class DeviceInventory:
             "bars": [bar.to_dict() for bar in self.bars],
             "kernelIommuGroup": list(self.iommu_group),
             "physicalIsolationDomain": list(self.physical_isolation_domain),
+            "physicalIsolationDomainSource": self.physical_isolation_domain_source,
             "resetMethods": list(self.reset_methods),
             "resetDomain": list(self.reset_domain),
             "resetDomainSource": self.reset_domain_source,
@@ -257,6 +270,9 @@ class DeviceInventory:
             "driver": self.driver,
             "parent": self.parent,
             "acs": None if self.acs is None else self.acs.to_dict(),
+            "acsNativeIsolation": self.acs_native_isolation,
+            "acsEffectiveIsolation": self.acs_effective_isolation,
+            "acsOverrideSource": self.acs_override_source,
             "metadata": dict(self.metadata),
         }
 
@@ -274,6 +290,9 @@ class DeviceInventory:
             bars=tuple(Bar.from_dict(bar) for bar in value.get("bars", ())),
             iommu_group=tuple(value.get("kernelIommuGroup", ())),
             physical_isolation_domain=tuple(value.get("physicalIsolationDomain", ())),
+            physical_isolation_domain_source=str(
+                value.get("physicalIsolationDomainSource", "unknown")
+            ),
             reset_methods=tuple(value.get("resetMethods", ())),
             reset_domain=tuple(value.get("resetDomain", ())),
             reset_domain_source=str(value.get("resetDomainSource", "json")),
@@ -290,6 +309,9 @@ class DeviceInventory:
             acs=(
                 None if value.get("acs") is None else AcsState.from_dict(value["acs"])
             ),
+            acs_native_isolation=value.get("acsNativeIsolation"),
+            acs_effective_isolation=value.get("acsEffectiveIsolation"),
+            acs_override_source=str(value.get("acsOverrideSource", "unknown")),
             metadata=dict(value.get("metadata", {})),
         )
 

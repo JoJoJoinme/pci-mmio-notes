@@ -1,0 +1,308 @@
+From db20d224b0dbe6ef05a0520f9334bdee5bb1c137 Mon Sep 17 00:00:00 2001
+From: JoJoJoinme <JoJoJoinme@users.noreply.github.com>
+Date: Tue, 14 Jul 2026 19:03:00 +0800
+Subject: [PATCH] PCI: expose ACS override provenance
+
+Keep the native ACS verdict separate from the effective verdict when
+pcie_acs_override is required.
+
+Export both verdicts and the applied override source through PCI sysfs.
+Policy engines can then reconstruct a conservative pre-override isolation
+domain.
+
+Signed-off-by: JoJoJoinme <JoJoJoinme@users.noreply.github.com>
+---
+ .../admin-guide/kernel-parameters.txt         | 15 +++-
+ drivers/pci/pci-sysfs.c                       | 49 +++++++++++
+ drivers/pci/pci.c                             | 32 +++++--
+ drivers/pci/pci.h                             | 16 ++++
+ drivers/pci/quirks.c                          | 83 +++++++++++++++++++
+ 5 files changed, 185 insertions(+), 10 deletions(-)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index fff3ca50c..242f6b8ba 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -4508,6 +4508,20 @@
+ 		force	Enable ASPM even on devices that claim not to support it.
+ 			WARNING: Forcing ASPM on may cause system lockups.
+ 
++	pcie_acs_override=
++			[PCIE] Override missing PCIe ACS isolation for IOMMU
++			group construction.  This does not add isolation to the
++			hardware and may permit peer-to-peer DMA around the IOMMU.
++			The PCI device sysfs attributes acs_native_isolation,
++			acs_effective_isolation, and acs_override_source retain
++			provenance for policy engines.
++			downstream
++				Override downstream and root ports without ACS.
++			multifunction
++				Override multifunction PCIe devices without ACS.
++			id:vvvv:dddd
++				Override one vendor/device ID; repeat up to 16 IDs.
++
+ 	pcie_ports=	[PCIE] PCIe port services handling:
+ 		native	Use native PCIe services (PME, AER, DPC, PCIe hotplug)
+ 			even if the platform doesn't give the OS permission to
+@@ -7367,4 +7381,3 @@
+ 				memory, and other data can't be written using
+ 				xmon commands.
+ 			off	xmon is disabled.
+-
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 300caafcf..a1157f7ae 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -635,6 +635,52 @@ static ssize_t driver_override_show(struct device *dev,
+ }
+ static DEVICE_ATTR_RW(driver_override);
+ 
++#define PCI_IOMMU_REQUIRED_ACS_FLAGS \
++	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
++
++static ssize_t acs_native_isolation_show(struct device *dev,
++					 struct device_attribute *attr, char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sysfs_emit(buf, "%u\n",
++		pci_acs_native_enabled(pdev, PCI_IOMMU_REQUIRED_ACS_FLAGS));
++}
++static DEVICE_ATTR_RO(acs_native_isolation);
++
++static ssize_t acs_effective_isolation_show(struct device *dev,
++					    struct device_attribute *attr,
++					    char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sysfs_emit(buf, "%u\n",
++		pci_acs_enabled(pdev, PCI_IOMMU_REQUIRED_ACS_FLAGS));
++}
++static DEVICE_ATTR_RO(acs_effective_isolation);
++
++static ssize_t acs_override_source_show(struct device *dev,
++					struct device_attribute *attr, char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (pci_acs_native_enabled(pdev, PCI_IOMMU_REQUIRED_ACS_FLAGS))
++		return sysfs_emit(buf, "none\n");
++
++	switch (pci_dev_acs_override_source(pdev)) {
++	case PCI_ACS_OVERRIDE_ID:
++		return sysfs_emit(buf, "id\n");
++	case PCI_ACS_OVERRIDE_DOWNSTREAM:
++		return sysfs_emit(buf, "downstream\n");
++	case PCI_ACS_OVERRIDE_MULTIFUNCTION:
++		return sysfs_emit(buf, "multifunction\n");
++	case PCI_ACS_OVERRIDE_NONE:
++	default:
++		return sysfs_emit(buf, "none\n");
++	}
++}
++static DEVICE_ATTR_RO(acs_override_source);
++
+ static struct attribute *pci_dev_attrs[] = {
+ 	&dev_attr_power_state.attr,
+ 	&dev_attr_resource.attr,
+@@ -664,6 +710,9 @@ static struct attribute *pci_dev_attrs[] = {
+ #endif
+ 	&dev_attr_driver_override.attr,
+ 	&dev_attr_ari_enabled.attr,
++	&dev_attr_acs_native_isolation.attr,
++	&dev_attr_acs_effective_isolation.attr,
++	&dev_attr_acs_override_source.attr,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9a3f6bb60..a13933963 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3643,22 +3643,19 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+ }
+ 
+ /**
+- * pci_acs_enabled - test ACS against required flags for a given device
++ * pci_acs_native_enabled - test native ACS against required flags
+  * @pdev: device to test
+  * @acs_flags: required PCI ACS flags
+  *
+  * Return true if the device supports the provided flags.  Automatically
+  * filters out flags that are not implemented on multifunction devices.
+  *
+- * Note that this interface checks the effective ACS capabilities of the
+- * device rather than the actual capabilities.  For instance, most single
+- * function endpoints are not required to support ACS because they have no
+- * opportunity for peer-to-peer access.  We therefore return 'true'
+- * regardless of whether the device exposes an ACS capability.  This makes
+- * it much easier for callers of this function to ignore the actual type
+- * or topology of the device when testing ACS support.
++ * This includes standard ACS, topology rules, and device-specific quirks,
++ * but deliberately excludes the pcie_acs_override command line policy.
++ * It is used to retain an auditable physical-isolation verdict even when
++ * the effective IOMMU groups are split by that policy.
+  */
+-bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
++bool pci_acs_native_enabled(struct pci_dev *pdev, u16 acs_flags)
+ {
+ 	int ret;
+ 
+@@ -3722,6 +3719,23 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ 	return true;
+ }
+ 
++/**
++ * pci_acs_enabled - test effective ACS against required flags
++ * @pdev: device to test
++ * @acs_flags: required PCI ACS flags
++ *
++ * Prefer native isolation.  Apply the explicitly unsafe override only when
++ * native ACS does not satisfy the request, so sysfs can report whether the
++ * effective result actually depends on the override.
++ */
++bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
++{
++	if (pci_acs_native_enabled(pdev, acs_flags))
++		return true;
++
++	return pci_dev_acs_override_source(pdev) != PCI_ACS_OVERRIDE_NONE;
++}
++
+ /**
+  * pci_acs_path_enabled - test ACS flags from start to end in a hierarchy
+  * @start: starting downstream device
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d69a17947..203a603a1 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -530,8 +530,18 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ }
+ 
+ void pci_acs_init(struct pci_dev *dev);
++enum pci_acs_override_source {
++	PCI_ACS_OVERRIDE_NONE,
++	PCI_ACS_OVERRIDE_ID,
++	PCI_ACS_OVERRIDE_DOWNSTREAM,
++	PCI_ACS_OVERRIDE_MULTIFUNCTION,
++};
++
++bool pci_acs_native_enabled(struct pci_dev *dev, u16 acs_flags);
+ #ifdef CONFIG_PCI_QUIRKS
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
++enum pci_acs_override_source
++pci_dev_acs_override_source(struct pci_dev *dev);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
+ int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
+ int pcie_failed_link_retrain(struct pci_dev *dev);
+@@ -541,6 +551,12 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+ {
+ 	return -ENOTTY;
+ }
++
++static inline enum pci_acs_override_source
++pci_dev_acs_override_source(struct pci_dev *dev)
++{
++	return PCI_ACS_OVERRIDE_NONE;
++}
+ static inline int pci_dev_specific_enable_acs(struct pci_dev *dev)
+ {
+ 	return -ENOTTY;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 30a5f809e..a22593eb9 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5024,6 +5024,89 @@ static int  pci_quirk_wangxun_nic_acs(struct pci_dev *dev, u16 acs_flags)
+ 	return false;
+ }
+ 
++static bool acs_override_downstream;
++static bool acs_override_multifunction;
++
++#define NUM_ACS_OVERRIDE_IDS 16
++struct acs_override_id {
++	u16 vendor;
++	u16 device;
++};
++
++static struct acs_override_id acs_override_ids[NUM_ACS_OVERRIDE_IDS];
++static u8 acs_override_id_count;
++
++static int __init pcie_acs_override_setup(char *options)
++{
++	char *token;
++
++	while ((token = strsep(&options, ",")) != NULL) {
++		u16 vendor, device;
++		char tail;
++
++		if (!strcmp(token, "downstream")) {
++			acs_override_downstream = true;
++			continue;
++		}
++		if (!strcmp(token, "multifunction")) {
++			acs_override_multifunction = true;
++			continue;
++		}
++		if (sscanf(token, "id:%hx:%hx%c", &vendor, &device, &tail) == 2) {
++			if (acs_override_id_count == NUM_ACS_OVERRIDE_IDS) {
++				pr_warn("PCIe ACS override ID table is full\n");
++				continue;
++			}
++			acs_override_ids[acs_override_id_count].vendor = vendor;
++			acs_override_ids[acs_override_id_count].device = device;
++			acs_override_id_count++;
++			continue;
++		}
++		if (*token)
++			pr_warn("PCIe ACS override ignored unknown token: %s\n", token);
++	}
++
++	if (acs_override_downstream || acs_override_multifunction ||
++	    acs_override_id_count)
++		pr_warn("PCIe ACS override enabled; IOMMU groups are not physical isolation proof\n");
++
++	return 0;
++}
++early_param("pcie_acs_override", pcie_acs_override_setup);
++
++enum pci_acs_override_source
++pci_dev_acs_override_source(struct pci_dev *dev)
++{
++	int i;
++
++	/* Match the established patch semantics: never override real ACS. */
++	if (!pci_is_pcie(dev) ||
++	    pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS))
++		return PCI_ACS_OVERRIDE_NONE;
++
++	for (i = 0; i < acs_override_id_count; i++)
++		if (acs_override_ids[i].vendor == dev->vendor &&
++		    acs_override_ids[i].device == dev->device)
++			return PCI_ACS_OVERRIDE_ID;
++
++	switch (pci_pcie_type(dev)) {
++	case PCI_EXP_TYPE_DOWNSTREAM:
++	case PCI_EXP_TYPE_ROOT_PORT:
++		if (acs_override_downstream)
++			return PCI_ACS_OVERRIDE_DOWNSTREAM;
++		break;
++	case PCI_EXP_TYPE_ENDPOINT:
++	case PCI_EXP_TYPE_UPSTREAM:
++	case PCI_EXP_TYPE_LEG_END:
++	case PCI_EXP_TYPE_RC_END:
++		if (acs_override_multifunction && dev->multifunction)
++			return PCI_ACS_OVERRIDE_MULTIFUNCTION;
++		break;
++	}
++
++	return PCI_ACS_OVERRIDE_NONE;
++}
++
+ static const struct pci_dev_acs_enabled {
+ 	u16 vendor;
+ 	u16 device;
+-- 
+2.34.1
+

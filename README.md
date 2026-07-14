@@ -39,6 +39,10 @@ hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设�
 OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable evaluator。机器可读
 验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。
 
+对必须启用 `pcie_acs_override` 的 host，配套的 Linux 6.6 provenance patch、自动构建入口
+和双域 capable 规则见 [`kernel-patches/`](kernel-patches/README.md)。patched IOMMU group
+继续用于 VFIO，安全 lease 则使用忽略 override 后保守重建的 physical isolation domain。
+
 PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU 对标结论，
 见 `vmware-aer-blackbox-results.md`；QEMU OVMF/SeaBIOS surface A/B 入口为
 `qemu-aer-surface-validate.sh`。

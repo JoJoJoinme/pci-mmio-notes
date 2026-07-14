@@ -27,12 +27,24 @@ TRUSTED_ISOLATION = {
     IsolationProvenance.NATURAL_TOPOLOGY,
     IsolationProvenance.KERNEL_GROUP,
 }
+TRUSTED_PHYSICAL_DOMAIN_SOURCES = {
+    "stock-kernel-iommu-group",
+    "kernel-no-override-iommu-group",
+    "kernel-acs-provenance-topology-conservative",
+    "qualification-snapshot",
+    "manual-audited",
+}
+OVERRIDE_INDEPENDENT_SOURCES = {
+    "kernel-no-override-iommu-group",
+    "qualification-snapshot",
+    "manual-audited",
+}
 
 
 @dataclass(frozen=True)
 class CapabilityPolicy:
     require_interrupt_remapping: bool = True
-    allow_acs_override: bool = False
+    allow_acs_override: bool = True
     allow_bus_reset: bool = True
     allow_estimated_reset_domain: bool = False
     allow_host_driver_rebind: bool = True
@@ -191,7 +203,11 @@ def _check_isolation(
     policy: CapabilityPolicy,
 ) -> tuple[CapabilityReason | None, CapabilityReason | None]:
     provenance = device.isolation_provenance
-    if host.acs_override_active and provenance == IsolationProvenance.KERNEL_GROUP:
+    if (
+        host.acs_override_active
+        and provenance == IsolationProvenance.KERNEL_GROUP
+        and device.physical_isolation_domain_source not in OVERRIDE_INDEPENDENT_SOURCES
+    ):
         provenance = IsolationProvenance.ACS_OVERRIDE
 
     if provenance in TRUSTED_ISOLATION:
@@ -229,6 +245,31 @@ def _check_isolation(
                 ),
                 None,
             )
+        if device.bdf not in device.physical_isolation_domain:
+            return (
+                _reason(
+                    "PHYSICAL_ISOLATION_DOMAIN_INVALID",
+                    "eligible",
+                    f"{device.bdf} is absent from its physical isolation domain",
+                    device.physical_isolation_domain,
+                    physicalDomainSource=device.physical_isolation_domain_source,
+                ),
+                None,
+            )
+        if (
+            device.physical_isolation_domain_source
+            not in TRUSTED_PHYSICAL_DOMAIN_SOURCES
+        ):
+            return (
+                _reason(
+                    "PHYSICAL_ISOLATION_DOMAIN_UNTRUSTED",
+                    "eligible",
+                    f"{device.bdf} physical isolation domain has no trusted provenance",
+                    device.physical_isolation_domain,
+                    physicalDomainSource=device.physical_isolation_domain_source,
+                ),
+                None,
+            )
         return (
             None,
             _reason(
@@ -237,6 +278,7 @@ def _check_isolation(
                 f"{device.bdf} is conditional on leasing its complete physical domain",
                 device.physical_isolation_domain,
                 trustDomain=policy.trust_domain,
+                physicalDomainSource=device.physical_isolation_domain_source,
             ),
         )
 

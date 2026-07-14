@@ -87,8 +87,9 @@ QEMU profile 只有在以下可观测边界与 VMware 实测结果相符时，�
 - 产品默认行为至少需要 E2。
 - DMA、reset、中断机制尽量同时具备 E2 和 E3。
 - “受支持等价”或硬件安全性结论必须有 E4。
-- `pcie_acs_override`、VFIO no-IOMMU、unsafe interrupt 只能做反例，不能进入
-  通过用例。
+- `pcie_acs_override` 不能作为硬件隔离证据；必须常开的部署只有在内核导出 native
+  provenance、平台重建并整租 physical domain 时才能作为 `conditional` 通过。
+  VFIO no-IOMMU 和 unsafe interrupt 仍只能做反例。
 - 每项结论必须绑定 ESXi build、virtual hardware version、QEMU/OVMF build、
   device ID 和 host platform。
 
@@ -263,7 +264,7 @@ AER 已证明 stock QEMU 的 guest surface 不等价，完整过滤仍需 QEMU p
 | Below-4G 压力 | 对齐 RAM 和其他 virtual device BAR 消耗 | BAR 地址或失败边界一致 |
 | Host IOMMU | 裸机 VT-d/AMD-Vi、真实 IOMMU group、`vfio-pci` | 无 VFIO no-IOMMU 和 unsafe interrupt mode |
 | Guest vIOMMU | 目标 VMware VM 未暴露时不添加 | Guest DMAR/IOMMU presence 与 VMware 一致 |
-| ACS | Physical ACS + clean group；虚拟拓扑使用 q35 root-port ACS | 通过 profile 不使用 ACS override |
+| ACS | Physical ACS + clean group；mandatory override 时使用 native/effective provenance patch 和 shadow physical domain | override group 只用于 VFIO，整租的 physical domain 才用于安全判定 |
 | Multifunction | 同 slot 不同 function，`multifunction=on`，分配所有 reset-dependent function | Group membership 和 L2 topology 一致 |
 | Reset | Host `reset_method`；bus-wide reset 时集体分配 | 十次 lifecycle cycle，无 stale DMA/interrupt |
 | MSI/MSI-X/INTx | VFIO 默认路径 + host interrupt remapping | Guest mode 和 host remapping 证据一致 |

@@ -24,6 +24,10 @@ IORESOURCE_MEM = 0x00000200
 IORESOURCE_PREFETCH = 0x00002000
 IORESOURCE_MEM_64 = 0x00100000
 PCI_HEADER_TYPE = 0x0E
+PCI_STATUS = 0x06
+PCI_STATUS_CAP_LIST = 0x10
+PCI_CAPABILITY_LIST = 0x34
+PCI_CAP_ID_EXP = 0x10
 PCI_BASE_ADDRESS_0 = 0x10
 PCI_BASE_ADDRESS_SPACE_IO = 0x01
 PCI_BASE_ADDRESS_MEM_TYPE_MASK = 0x06
@@ -42,6 +46,15 @@ def _read_text(path: Path, default: str = "") -> str:
 def _read_hex(path: Path, default: int = 0) -> int:
     text = _read_text(path)
     return int(text, 0) if text else default
+
+
+def _read_optional_bool(path: Path) -> bool | None:
+    text = _read_text(path).lower()
+    if text in {"1", "y", "yes", "true"}:
+        return True
+    if text in {"0", "n", "no", "false"}:
+        return False
+    return None
 
 
 def _read_config(path: Path) -> bytes:
@@ -81,6 +94,26 @@ def parse_acs_state(config: bytes) -> AcsState | None:
         if next_offset < 0x100 or next_offset % 4:
             return None
         offset = next_offset
+    return None
+
+
+def parse_pcie_type(config: bytes) -> int | None:
+    """Return the PCIe Device/Port Type from the standard capability list."""
+
+    if len(config) <= PCI_CAPABILITY_LIST or not (
+        _le16(config, PCI_STATUS) & PCI_STATUS_CAP_LIST
+    ):
+        return None
+    offset = config[PCI_CAPABILITY_LIST] & ~0x3
+    visited: set[int] = set()
+    while offset and offset not in visited and offset + 2 <= len(config):
+        if offset < 0x40:
+            return None
+        visited.add(offset)
+        capability_id = config[offset]
+        if capability_id == PCI_CAP_ID_EXP and offset + 4 <= len(config):
+            return (_le16(config, offset + 2) >> 4) & 0xF
+        offset = config[offset + 1] & ~0x3
     return None
 
 
@@ -235,15 +268,21 @@ def _scan_device(
     )
     role = _function_role(device_path, header_type)
     group = _iommu_group(device_path)
+    native_isolation = _read_optional_bool(device_path / "acs_native_isolation")
+    effective_isolation = _read_optional_bool(device_path / "acs_effective_isolation")
+    override_source = _read_text(device_path / "acs_override_source", "unknown")
     if group and acs_override_active:
         provenance = IsolationProvenance.ACS_OVERRIDE
         physical_domain: tuple[str, ...] = ()
+        physical_domain_source = "unknown"
     elif group:
         provenance = IsolationProvenance.KERNEL_GROUP
         physical_domain = group
+        physical_domain_source = "stock-kernel-iommu-group"
     else:
         provenance = IsolationProvenance.MISSING
         physical_domain = ()
+        physical_domain_source = "unknown"
 
     return DeviceInventory(
         bdf=bdf,
@@ -260,14 +299,19 @@ def _scan_device(
         ),
         iommu_group=group,
         physical_isolation_domain=physical_domain,
+        physical_isolation_domain_source=physical_domain_source,
         reset_methods=_reset_methods(device_path),
         isolation_provenance=provenance,
         platform_reserved=role == FunctionRole.FABRIC,
         driver=_driver_name(device_path),
         parent=_parent_bdf(device_path, bdf),
         acs=parse_acs_state(config),
+        acs_native_isolation=native_isolation,
+        acs_effective_isolation=effective_isolation,
+        acs_override_source=override_source,
         metadata={
             "configBytesReadable": len(config),
+            "pcieType": parse_pcie_type(config),
             "sysfsPath": str(device_path),
         },
     )
@@ -311,6 +355,164 @@ def _add_domains(devices: dict[str, DeviceInventory]) -> dict[str, DeviceInvento
     return result
 
 
+def _ancestor_chain(devices: dict[str, DeviceInventory], bdf: str) -> tuple[str, ...]:
+    chain: list[str] = []
+    seen: set[str] = set()
+    current: str | None = bdf
+    while current and current in devices and current not in seen:
+        seen.add(current)
+        chain.append(current)
+        current = devices[current].parent
+    return tuple(chain)
+
+
+def _anchor_key(
+    devices: dict[str, DeviceInventory],
+    bdf: str,
+    chain: tuple[str, ...],
+) -> str:
+    nonisolating = [
+        member for member in chain if devices[member].acs_native_isolation is False
+    ]
+    if not nonisolating:
+        return f"native:{bdf}"
+
+    anchor_bdf = nonisolating[-1]
+    anchor = devices[anchor_bdf]
+    if anchor.function_role != FunctionRole.FABRIC:
+        if len(anchor.multifunction_aliases) > 1:
+            return f"slot:{_slot_key(anchor_bdf)}"
+        if anchor.metadata.get("pcieType") is None and anchor.parent is None:
+            return f"legacy-bus:{anchor_bdf.rsplit(':', 1)[0]}"
+    return f"node:{anchor_bdf}"
+
+
+def reconstruct_physical_isolation_domains(
+    devices: dict[str, DeviceInventory],
+    *,
+    acs_override_active: bool,
+) -> dict[str, DeviceInventory]:
+    """Rebuild a conservative pre-override isolation domain from kernel facts.
+
+    The patched IOMMU group remains the operational VFIO group.  This shadow
+    domain joins every function below the highest non-isolating native ACS
+    node, then closes over operational groups and multifunction aliases.
+    Missing or internally inconsistent kernel provenance leaves the domain
+    unknown instead of guessing from raw capability bits.
+    """
+
+    if not acs_override_active:
+        return devices
+
+    roots = {bdf: bdf for bdf in devices}
+
+    def find(bdf: str) -> str:
+        while roots[bdf] != bdf:
+            roots[bdf] = roots[roots[bdf]]
+            bdf = roots[bdf]
+        return bdf
+
+    def union(left: str, right: str) -> None:
+        left_root = find(left)
+        right_root = find(right)
+        if left_root != right_root:
+            roots[right_root] = left_root
+
+    chains = {bdf: _ancestor_chain(devices, bdf) for bdf in devices}
+    complete: dict[str, bool] = {}
+    override_paths: dict[str, tuple[str, ...]] = {}
+    anchors: dict[str, list[str]] = {}
+    accepted_sources = {"none", "id", "downstream", "multifunction"}
+
+    for bdf, chain in chains.items():
+        valid = bool(chain)
+        path: list[str] = []
+        for member in chain:
+            device = devices[member]
+            source = device.acs_override_source
+            if (
+                device.acs_native_isolation is None
+                or device.acs_effective_isolation is None
+                or source not in accepted_sources
+            ):
+                valid = False
+                continue
+            if source != "none":
+                if device.acs_native_isolation or not device.acs_effective_isolation:
+                    valid = False
+                else:
+                    path.append(member)
+            elif device.acs_effective_isolation != device.acs_native_isolation:
+                valid = False
+        complete[bdf] = valid
+        override_paths[bdf] = tuple(path)
+        if valid:
+            anchors.setdefault(_anchor_key(devices, bdf, chain), []).append(bdf)
+
+    if not all(complete.values()):
+        return {
+            bdf: replace(
+                device,
+                physical_isolation_domain=(),
+                physical_isolation_domain_source="unknown",
+                isolation_provenance=IsolationProvenance.ACS_OVERRIDE,
+                metadata={
+                    **device.metadata,
+                    "acsOverridePath": list(override_paths.get(bdf, ())),
+                },
+            )
+            for bdf, device in devices.items()
+        }
+
+    for members in anchors.values():
+        for member in members[1:]:
+            union(members[0], member)
+    for bdf, device in devices.items():
+        for peer in device.iommu_group + device.multifunction_aliases:
+            if peer in devices:
+                union(bdf, peer)
+
+    components: dict[str, set[str]] = {}
+    for bdf in devices:
+        components.setdefault(find(bdf), set()).add(bdf)
+
+    result: dict[str, DeviceInventory] = {}
+    for bdf, device in devices.items():
+        component = components[find(bdf)]
+        component_complete = all(complete.get(member, False) for member in component)
+        component_override_path = tuple(
+            sorted(
+                {
+                    path_member
+                    for member in component
+                    for path_member in override_paths.get(member, ())
+                }
+            )
+        )
+        metadata = dict(device.metadata)
+        metadata["acsOverridePath"] = list(override_paths.get(bdf, ()))
+        if component_complete:
+            domain = tuple(sorted(component))
+            if component_override_path:
+                source = "kernel-acs-provenance-topology-conservative"
+                provenance = IsolationProvenance.ACS_OVERRIDE
+            else:
+                source = "kernel-no-override-iommu-group"
+                provenance = IsolationProvenance.KERNEL_GROUP
+        else:
+            domain = ()
+            source = "unknown"
+            provenance = IsolationProvenance.ACS_OVERRIDE
+        result[bdf] = replace(
+            device,
+            physical_isolation_domain=domain,
+            physical_isolation_domain_source=source,
+            isolation_provenance=provenance,
+            metadata=metadata,
+        )
+    return result
+
+
 def _bool_file(path: Path) -> bool:
     return _read_text(path).lower() in {"1", "y", "yes", "true"}
 
@@ -338,12 +540,30 @@ def scan_linux_sysfs(
         for path in paths
     }
     all_devices = _add_domains(all_devices)
+    all_devices = reconstruct_physical_isolation_domains(
+        all_devices,
+        acs_override_active=acs_override_active,
+    )
     devices = (
         all_devices
         if requested is None
         else {bdf: device for bdf, device in all_devices.items() if bdf in requested}
     )
     iommu_present = any(device.iommu_group for device in all_devices.values())
+    acs_provenance_interface_complete = all(
+        device.acs_native_isolation is not None
+        and device.acs_effective_isolation is not None
+        and device.acs_override_source != "unknown"
+        for device in all_devices.values()
+    )
+    if acs_override_active:
+        physical_domain_rule = (
+            "kernel-acs-provenance-topology-conservative"
+            if acs_provenance_interface_complete
+            else "unknown-missing-kernel-acs-provenance"
+        )
+    else:
+        physical_domain_rule = "stock-kernel-iommu-group"
     no_iommu_mode = _bool_file(
         Path("/sys/module/vfio/parameters/enable_unsafe_noiommu_mode")
     )
@@ -361,10 +581,7 @@ def scan_linux_sysfs(
             "uid": os.geteuid() if hasattr(os, "geteuid") else None,
             "scannedDeviceCount": len(all_devices),
             "returnedDeviceCount": len(devices),
-            "physicalDomainRule": (
-                "unknown-when-acs-override-active"
-                if acs_override_active
-                else "stock-kernel-iommu-group"
-            ),
+            "acsProvenanceInterfaceComplete": acs_provenance_interface_complete,
+            "physicalDomainRule": physical_domain_rule,
         },
     )

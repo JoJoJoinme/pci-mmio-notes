@@ -156,13 +156,19 @@ class CapabilityTests(unittest.TestCase):
         self.assertFalse(result.attachable)
         self.assertIn("DEPENDENCY_BUSY", [item.code for item in result.reasons])
 
-    def test_acs_override_is_rejected_by_default(self):
+    def test_acs_override_can_be_denied_by_policy(self):
         device = endpoint(
             isolation_provenance=IsolationProvenance.ACS_OVERRIDE,
             physical_isolation_domain=(TARGET, "0000:02:00.0"),
+            physical_isolation_domain_source=(
+                "kernel-acs-provenance-topology-conservative"
+            ),
         )
 
-        result = evaluate(host(device, acs_override_active=True))
+        result = evaluate(
+            host(device, acs_override_active=True),
+            policy=CapabilityPolicy(allow_acs_override=False),
+        )
 
         self.assertFalse(result.eligible)
         self.assertIn(
@@ -177,7 +183,6 @@ class CapabilityTests(unittest.TestCase):
 
         result = evaluate(
             host(device, acs_override_active=True),
-            policy=CapabilityPolicy(allow_acs_override=True),
         )
 
         self.assertFalse(result.eligible)
@@ -191,6 +196,9 @@ class CapabilityTests(unittest.TestCase):
         device = endpoint(
             isolation_provenance=IsolationProvenance.ACS_OVERRIDE,
             physical_isolation_domain=(TARGET, peer),
+            physical_isolation_domain_source=(
+                "kernel-acs-provenance-topology-conservative"
+            ),
         )
 
         peer_device = replace(
@@ -203,12 +211,26 @@ class CapabilityTests(unittest.TestCase):
                 acs_override_active=True,
                 devices={TARGET: device, peer: peer_device},
             ),
-            policy=CapabilityPolicy(allow_acs_override=True),
         )
 
         self.assertTrue(result.attachable)
         self.assertEqual(result.verdict, "conditional")
         self.assertIn(peer, result.required_lease)
+
+    def test_override_domain_without_provenance_is_rejected(self):
+        device = endpoint(
+            isolation_provenance=IsolationProvenance.ACS_OVERRIDE,
+            physical_isolation_domain=(TARGET,),
+            physical_isolation_domain_source="unknown",
+        )
+
+        result = evaluate(host(device, acs_override_active=True))
+
+        self.assertFalse(result.eligible)
+        self.assertIn(
+            "PHYSICAL_ISOLATION_DOMAIN_UNTRUSTED",
+            [item.code for item in result.reasons],
+        )
 
     def test_estimated_bus_reset_domain_fails_closed(self):
         peer = "0000:01:00.1"

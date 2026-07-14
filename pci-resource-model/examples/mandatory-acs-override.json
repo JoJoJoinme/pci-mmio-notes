@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "host": {
+    "iommuPresent": true,
+    "interruptRemapping": true,
+    "noIommuMode": false,
+    "acsOverrideActive": true,
+    "source": "controlled-mandatory-override-example",
+    "metadata": {
+      "description": "Singleton patched groups below one non-isolating root port"
+    }
+  },
+  "leases": {},
+  "devices": [
+    {
+      "bdf": "0000:00:01.0",
+      "vendorId": 32902,
+      "deviceId": 4660,
+      "classCode": 394240,
+      "headerType": 1,
+      "functionRole": "fabric",
+      "bars": [],
+      "kernelIommuGroup": ["0000:00:01.0"],
+      "physicalIsolationDomain": [
+        "0000:00:01.0",
+        "0000:01:00.0",
+        "0000:01:00.1"
+      ],
+      "physicalIsolationDomainSource": "kernel-acs-provenance-topology-conservative",
+      "resetMethods": [],
+      "resetDomain": [],
+      "resetDomainSource": "unknown",
+      "multifunctionAliases": ["0000:00:01.0"],
+      "platformDependencies": [],
+      "isolationProvenance": "acs-override",
+      "platformReserved": true,
+      "errataDenied": false,
+      "rmrrConflict": false,
+      "driver": "pcieport",
+      "parent": null,
+      "acs": null,
+      "acsNativeIsolation": false,
+      "acsEffectiveIsolation": true,
+      "acsOverrideSource": "downstream",
+      "metadata": {
+        "pcieType": 4,
+        "acsOverridePath": ["0000:00:01.0"]
+      }
+    },
+    {
+      "bdf": "0000:01:00.0",
+      "vendorId": 6966,
+      "deviceId": 4161,
+      "classCode": 131072,
+      "headerType": 0,
+      "functionRole": "endpoint",
+      "bars": [
+        {
+          "bdf": "0000:01:00.0",
+          "index": 0,
+          "size": 1073741824,
+          "space": "memory",
+          "address": 0,
+          "is64": true,
+          "prefetchable": true,
+          "below1M": false,
+          "source": "controlled-example"
+        }
+      ],
+      "kernelIommuGroup": ["0000:01:00.0"],
+      "physicalIsolationDomain": [
+        "0000:00:01.0",
+        "0000:01:00.0",
+        "0000:01:00.1"
+      ],
+      "physicalIsolationDomainSource": "kernel-acs-provenance-topology-conservative",
+      "resetMethods": ["flr"],
+      "resetDomain": ["0000:01:00.0"],
+      "resetDomainSource": "pci-config-flr",
+      "multifunctionAliases": ["0000:01:00.0", "0000:01:00.1"],
+      "platformDependencies": [],
+      "isolationProvenance": "acs-override",
+      "platformReserved": false,
+      "errataDenied": false,
+      "rmrrConflict": false,
+      "driver": "vfio-pci",
+      "parent": "0000:00:01.0",
+      "acs": null,
+      "acsNativeIsolation": true,
+      "acsEffectiveIsolation": true,
+      "acsOverrideSource": "none",
+      "metadata": {
+        "pcieType": 0,
+        "acsOverridePath": ["0000:00:01.0"]
+      }
+    },
+    {
+      "bdf": "0000:01:00.1",
+      "vendorId": 6966,
+      "deviceId": 4161,
+      "classCode": 131072,
+      "headerType": 0,
+      "functionRole": "endpoint",
+      "bars": [],
+      "kernelIommuGroup": ["0000:01:00.1"],
+      "physicalIsolationDomain": [
+        "0000:00:01.0",
+        "0000:01:00.0",
+        "0000:01:00.1"
+      ],
+      "physicalIsolationDomainSource": "kernel-acs-provenance-topology-conservative",
+      "resetMethods": ["flr"],
+      "resetDomain": ["0000:01:00.1"],
+      "resetDomainSource": "pci-config-flr",
+      "multifunctionAliases": ["0000:01:00.0", "0000:01:00.1"],
+      "platformDependencies": [],
+      "isolationProvenance": "acs-override",
+      "platformReserved": false,
+      "errataDenied": false,
+      "rmrrConflict": false,
+      "driver": "vfio-pci",
+      "parent": "0000:00:01.0",
+      "acs": null,
+      "acsNativeIsolation": true,
+      "acsEffectiveIsolation": true,
+      "acsOverrideSource": "none",
+      "metadata": {
+        "pcieType": 0,
+        "acsOverridePath": ["0000:00:01.0"]
+      }
+    }
+  ]
+}

@@ -218,7 +218,20 @@ def build_parser() -> argparse.ArgumentParser:
         default=_INHERIT,
         metavar="STATE",
     )
-    capable.add_argument("--allow-acs-override", action="store_true")
+    acs_policy = capable.add_mutually_exclusive_group()
+    acs_policy.add_argument(
+        "--allow-acs-override",
+        dest="allow_acs_override",
+        action="store_true",
+        default=True,
+        help="accept override only with a trusted complete physical domain (default)",
+    )
+    acs_policy.add_argument(
+        "--deny-acs-override",
+        dest="allow_acs_override",
+        action="store_false",
+        help="reject every function whose isolation depends on ACS override",
+    )
     capable.add_argument("--no-require-interrupt-remapping", action="store_true")
     capable.add_argument("--no-bus-reset", action="store_true")
     capable.add_argument("--allow-estimated-reset-domain", action="store_true")

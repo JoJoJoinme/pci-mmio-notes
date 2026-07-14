@@ -345,6 +345,11 @@ kernel 启动一次并保存原始 IOMMU group/topology；在线重建则必须�
 `pci_acs_enabled()` 结果。还应记录 `/proc/cmdline`、启动期 ACS override warning、kernel
 build/source hash 和 override 匹配范围。仅仅“内核编入补丁但本次未激活”不应降级设备。
 
+如果生产约束要求 override 始终开启，本仓库提供
+[`kernel-patches/`](kernel-patches/README.md)：内核同时导出 native/effective ACS verdict 和
+实际 override source，scanner 据此保守重建 shadow physical domain。这样无需关闭补丁，
+也不会把 patched group 当成物理证明；缺少 provenance 接口时仍 fail-closed。
+
 推荐按目标信任域给 verdict，而不是全局一个 capable：
 
 | Policy | ACS override-dependent split | Verdict |

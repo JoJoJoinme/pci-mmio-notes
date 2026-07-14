@@ -82,8 +82,9 @@ attachable = available + BAR allocation + RMRR admission
 - sysfs 父拓扑只能估算 bus reset domain，默认报 `RESET_DOMAIN_UNVERIFIED`。生产路径应接
   `VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` 或资格测试保存的 affected set。
 - 未启用 ACS override 时，平台原子租用完整 stock-kernel IOMMU group。
-- 启用 override 后，kernel group 不再是物理隔离证明。默认拒绝；即使显式允许，也必须
-  提供独立重建的 `physicalIsolationDomain` 并整域租用。
+- 启用 override 后，kernel group 只作为 VFIO 操作单位。默认策略允许 mandatory override，
+  但必须从可信 provenance 重建 `physicalIsolationDomain` 并整域租用；可用
+  `--deny-acs-override` 切回全拒绝策略。
 - dependency 中任何 BDF 未进入 inventory 时，报 `DEPENDENCY_NOT_IN_INVENTORY`，不会
   默认为空闲。
 - BAR/MMIO 失败只让 `attachable=false`，不会篡改前面的静态 `eligible` 结论。
@@ -98,6 +99,12 @@ python3 -m pci_resource_model scan \
   --interrupt-remapping true \
   --output inventory.json
 ```
+
+必须启用 ACS override 的 host 应使用
+[`../kernel-patches/`](../kernel-patches/README.md) 中的 provenance patch。scanner 会读取
+`acs_native_isolation`、`acs_effective_isolation`、`acs_override_source`，把 patched
+`kernelIommuGroup` 与保守重建的 `physicalIsolationDomain` 同时写入 inventory。接口缺失或
+任一 function 证据不自洽时保持 fail-closed，不会退回相信拆分后的 group。
 
 对样例中的 2 GiB BAR做 demand-driven placement：
 
@@ -124,6 +131,20 @@ python3 -m pci_resource_model capable \
   --mmio64 0x100000000:0x200000000
 ```
 
+mandatory override 的整域租用样例：
+
+```bash
+PYTHONPATH=pci-resource-model \
+python3 -m pci_resource_model capable \
+  --inventory pci-resource-model/examples/mandatory-acs-override.json \
+  --target 0000:01:00.0 \
+  --mmio32 0x80000000:0xc0000000
+```
+
+该例的 patched groups 都是 singleton，但输出为 `verdict=conditional`，且
+`requiredLease` 包含 non-isolating root port 与两个 endpoint。使用
+`--deny-acs-override` 可验证全拒绝策略。
+
 所有地址范围的 `END` 都是 exclusive。对真实 QEMU VM，应从 machine/firmware 已保留的
 PCI root windows 构造这些输入，而不是把示例地址硬编码进生产。
 
@@ -140,12 +161,13 @@ python3 -m unittest discover -v -s pci-resource-model/tests
 - low/high placement、32 位优先、reserved range、对齐和事务失败。
 - Type-0 class A/B、Type-1+FLR 负例、IOMMU/reset/ACS override/dependency。
 - `eligible=true` 但 dependency busy 或 MMIO admission 失败的分层结果。
-- Linux resource 与 ACS extended capability 解析。
+- Linux resource、PCIe type、ACS extended capability 与 mandatory-override shadow domain。
 
 ## 6. 当前边界
 
 - 直接探测只覆盖 standard BAR0-BAR5，不含 ROM、SR-IOV VF BAR和 Resizable BAR支持集合。
-- sysfs scanner 不执行 VFIO hot-reset ioctl，也不猜测 override 前的真实物理隔离域。
+- sysfs scanner 不执行 VFIO hot-reset ioctl；override physical domain 依赖定制内核 provenance，
+  并采用可能过度合并的保守父拓扑算法。
 - allocator 计算 root-level aperture demand，不复刻 OVMF 的完整多级 bridge window算法。
 - QEMU 参数是启动前需求；启动后仍必须核对 guest BAR、ACPI `_CRS`、IOMMU map 和中断。
 - 本环境只有 WSL synthetic PCI，可验证只读扫描和算法，不能替代真实设备写全 1 sizing、

@@ -34,6 +34,7 @@
       ],
       "kernelIommuGroup": ["0000:65:00.0"],
       "physicalIsolationDomain": ["0000:65:00.0"],
+      "physicalIsolationDomainSource": "stock-kernel-iommu-group",
       "resetMethods": ["flr"],
       "resetDomain": ["0000:65:00.0"],
       "resetDomainSource": "pci-config-flr",
@@ -46,6 +47,9 @@
       "driver": "vfio-pci",
       "parent": "0000:64:00.0",
       "acs": null,
+      "acsNativeIsolation": null,
+      "acsEffectiveIsolation": null,
+      "acsOverrideSource": "none",
       "metadata": {}
     }
   ]
