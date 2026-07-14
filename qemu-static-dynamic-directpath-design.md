@@ -818,6 +818,8 @@ GET  /vms/{vm}/directpath/runtime-bindings
   "profile": "vmware-esxi8u3-vhw20-efi",
   "inventoryEpoch": 1042,
   "policyHash": "sha256:...",
+  "riskRegisterHash": "sha256:...",
+  "qualificationBundleHash": "sha256:...",
   "leaseId": "uuid",
   "fencingToken": 981,
   "bindings": [
@@ -878,6 +880,39 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 | runtime eject 未完成 | 提前释放仍在用设备 | 等 `DEVICE_DELETED` 和 fd teardown | guest cooperation timeout test |
 | NUMA 远端放置 | 性能与中断抖动 | hard/soft NUMA policy 分离 | locality 和性能 counter |
 | HCL/errata 变化 | 已知硬件缺陷进入生产 | signed versioned policy DB | policy hash 和 qualification report |
+
+### 18.1 风险清零发布门
+
+“消除所有技术风险”在本设计中的可执行定义是：**支持范围内零已知未缓解风险**。
+不宣称无法证明的“绝对零风险”；无法闭环的风险必须通过禁用设备、关闭功能、
+缩小 profile 或拒绝启动来消除暴露，不能以“已接受”代替控制。
+
+每一条 risk record 必须包含 risk ID、影响范围、owner、预防控制、检测、隔离/恢复、
+测试 ID、证据等级、artifact hash 和以下唯一状态之一：
+
+```text
+OPEN                 # 已识别，未实现完整控制；阻断发布
+CONTROL_IMPLEMENTED   # 控制已实现但证据未闭环；阻断发布
+VERIFIED              # 控制与正/负/故障注入证据都通过；可在限定 profile 中暴露
+FEATURE_DISABLED      # 对应功能在 API、调度和 QEMU 三层都 fail-closed；不属于支持范围
+INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并阻断发布
+```
+
+发布和运行时强制规则：
+
+1. 只有 `VERIFIED` 能进入 supported capability；`FEATURE_DISABLED` 必须在三层负例中证明无法绕过。
+2. isolation、DMA/IOTLB/IRQ teardown、reset/state leakage、lease/fencing、identity 和 firmware
+   integrity 不接受 waiver；只能 `VERIFIED` 或 `FEATURE_DISABLED`。
+3. 硬件相关风险不能用 synthetic/QEMU 证据提升为物理硬件 `VERIFIED`；未验收的
+   VID:DID/revision/topology 自动落入 deny-by-default。
+4. 每个风险都必须同时拥有 prevention、detection、containment 和 recovery；只有日志或只有
+   rollback 不算闭环。
+5. QEMU、kernel、firmware、policy DB、host platform class 或 device revision 变更时，按依赖图
+   自动将相关 `VERIFIED` 置为 `INVALIDATED`，重新验收前不可用。
+6. CI/release controller 要求 risk register 无 `OPEN`、`CONTROL_IMPLEMENTED`、`INVALIDATED` 和
+   `accepted-risk` 类状态；manifest 固定 risk/qualification hash，运行时 hash 不符立即拒绝。
+7. 新发现严重风险时先撤销 capability 并 quarantine 已影响设备，再进行根因分析；
+   不等待下一个常规版本。
 
 ## 19. 验收矩阵
 
@@ -1016,6 +1051,8 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 8. 每个拒绝有稳定 reason code、具体 devices、provenance 和 policy/profile hash。
 9. VMware parity 与 QEMU-native extension 分 profile，测试和 API 不混淆。
 10. 所有纯软件用例自动执行；真实硬件缺口明确标记，不用 synthetic 结果冒充 E4。
+11. risk register 中没有 `OPEN`、`CONTROL_IMPLEMENTED`、`INVALIDATED` 或风险接受项；
+    所有暴露能力均为 `VERIFIED`，其余均为不可绕过的 `FEATURE_DISABLED`。
 
 ## 22. 当前实现与缺口
 
@@ -1033,6 +1070,10 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 | multi-host coordinator/fencing | 尚未实现 |
 | AER/PME/ROM QEMU parity | lab patch/验证已有，尚未产品化 |
 | VFIO migration/hotplug extension | 尚未实现，baseline 明确拒绝 |
+
+在 Phase 1-4 和对应风险闭环完成前，本仓库的产物是 reference/qualification model，
+不是可上生产的 DirectPath 控制器。未实现或仅 synthetic 验证的能力必须在对外
+capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP 路径绕过。
 
 当前可执行参考实现为 [`pci-resource-model/`](pci-resource-model/README.md)，现有 VMware
 黑盒结论和 Case 索引分别见
