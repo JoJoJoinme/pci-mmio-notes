@@ -93,10 +93,11 @@ D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server �
 | Case | 目标 | 入口 | 核心证据 |
 |---|---|---|---|
 | G0/G1 | ESXi 识别设备并成功启动 L3 EFI VM | 基础启动脚本 | `lspci`、串口、`vmware.log` |
+| LF00-LF06 | VMware firmware/layout 显式四格与两种缺省路径 | `Test-EsxiFirmwareLayoutMatrix.ps1`、`Test-EsxiCreateVmLayoutDefault.ps1` | 输入/生效 VMX、API 三阶段 layout、root bus、BAR2、IOMMU、power-on fault |
 | M00-M05 | 1G/2G BAR 与 `use64bitMMIO` 组合 | `Run-EsxiDirectPathMmioCase.ps1` | Guest BAR 地址、root window、effective VMX |
 | M04/M07 | 4G/8G gate 与 aggregate packing | `test_esxi_dynamic_bar_aggregate.py` | page limit、BAR/root window、heartbeat |
 | M04 8/32/64G | no-backing large-BAR gate/预算/runtime | `test_esxi_largebar_matrix.py` | page limit、IOMMU mapping、guest BAR/heartbeat、outer QEMU argv/HMP |
-| Q00-Q02 | QEMU/OVMF 对照 | `qemu-ovmf-initrd-mmio-check.sh` | OVMF resource map、BAR 是否分配 |
+| Q00-Q06 | QEMU SeaBIOS/OVMF、single/bridge/PXB/q35 对照 | `qemu-firmware-layout-matrix-validate.sh` | 固件、chipset、ACPI roots、BAR2、预期正负断言 |
 | A01 | 无 ACS 路径 | 外层 `DISABLE_ACS=1` | `vmkernel.log`、claim/owner |
 | A04 | 根端点 reset 能力 | 外层 `TOPOLOGY=root` | ESXi passthru inventory |
 | A05 | 传统桥依赖组 | 外层 `TOPOLOGY=legacy` | 依赖设备、批量 enable 行为 |
@@ -219,7 +220,54 @@ wsl -d Ubuntu-22.04 -- python3 `
 dependency。当前通过地址：8G=`0x1ffe00000000-0x1fffffffffff`、
 32G=`0x1ff800000000-0x1fffffffffff`、64G=`0x1ff000000000-0x1fffffffffff`。
 
-## 5. QEMU/OVMF 对照矩阵
+## 5. Firmware/layout 与 QEMU 对照矩阵
+
+### 5.1 VMware vHW20 矩阵
+
+VMware 的固件值是 `bios|efi`，不是 SeaBIOS/OVMF；`motherboardLayout=acpi` 表示多个
+ACPI host bridge，不是“是否启用 ACPI”。显式四格与直接注册 key-absent controls：
+
+```powershell
+.\vmware-esxi8-lab\Test-EsxiFirmwareLayoutMatrix.ps1 `
+  -RunId 20260715-layout-replay `
+  -BridgePolicy PcieRootPorts `
+  -IncludeDefaultControls
+
+# 调用端超时但 serial/vmware.log 已完整时，只重新分析同一批产物
+.\vmware-esxi8-lab\Test-EsxiFirmwareLayoutMatrix.ps1 `
+  -RunId 20260715-layout-replay `
+  -BridgePolicy PcieRootPorts `
+  -IncludeDefaultControls `
+  -AnalyzeOnly
+```
+
+CreateVM API 的 layout field unset 必须与直接注册分开测试；临时 VM 会自动销毁：
+
+```powershell
+.\vmware-esxi8-lab\Test-EsxiCreateVmLayoutDefault.ps1 `
+  -Firmware Efi -PowerOn -RunId 20260715-create-efi-replay
+.\vmware-esxi8-lab\Test-EsxiCreateVmLayoutDefault.ps1 `
+  -Firmware Bios -PowerOn -RunId 20260715-create-bios-replay
+```
+
+默认 `-ExpectedLayout Auto` 会自断言 EFI/acpi、BIOS/i440bx。测试未知 ESXi/vHW 版本的
+实际缺省值时使用 `-ExpectedLayout Observe`，先保留观测结果，再为该版本建立独立 profile。
+
+通过条件：
+
+| Case | 预期 |
+|---|---|
+| `i440bx+bios` | 单根 `PCI0 [00-7f]`；endpoint/IOMMU/小 BAR 正常；2GiB BAR2 未分配 |
+| `i440bx+efi` | 单根；2GiB BAR2 高置 |
+| `acpi+efi` | 多根 `PCI0/PC08/PC0G`；2GiB BAR2 高置；保存 effective slot/bridge rewrite |
+| `acpi+bios` | power-on 精确失败：`ACPI motherboard layout requires EFI.` |
+| CreateVM field unset | EFI 解析为 `acpiHostBridges`；BIOS 解析为 `i440bxHostBridge` |
+| 直接注册 key absent | EFI/BIOS 均走 i440bx-like fallback；不能写成 CreateVM 默认 |
+
+完整已执行结果、artifact 索引和产品文档解释见
+[`vmware-firmware-layout-matrix.md`](../vmware-firmware-layout-matrix.md)。
+
+### 5.2 QEMU/OVMF high-MMIO 基础矩阵
 
 ```powershell
 wsl -d Ubuntu-22.04 -- bash -lc "cd /mnt/e/Code/PCI/github-export && WORKDIR=/tmp/qemu-mmio-2g MACHINE=pc-q35-jammy BAR_SIZES=2G CASES='ovmf_default ovmf_both_zero ovmf_both_2g' ./qemu-ovmf-initrd-mmio-check.sh"
@@ -235,15 +283,22 @@ wsl -d Ubuntu-22.04 -- bash -lc "cd /mnt/e/Code/PCI/github-export && WORKDIR=/tm
 
 结论判定不能只看 QEMU 命令行；必须同时看 OVMF/Guest 的 root resource window 和端点 BAR 最终地址。
 
-当前与 VMware 样本直接对照的一键入口：
+当前 firmware/layout 全矩阵的一键入口：
 
 ```powershell
-wsl -d Ubuntu-22.04 -- env WORKDIR=/mnt/e/Code/PCI/_artifacts/mmio-tests/qemu-vmware-default-profile-REPLAY bash /mnt/e/Code/PCI/github-export/qemu-vmware-default-profile-validate.sh
+wsl -d Ubuntu-22.04 -- env `
+  WORKDIR=/mnt/e/Code/PCI/_artifacts/mmio-tests/qemu-firmware-layout-REPLAY `
+  bash /mnt/e/Code/PCI/github-export/qemu-firmware-layout-matrix-validate.sh
 ```
 
-它包含 i440fx 1G 低置通过、i440fx 2G 高置通过和 q35 zero/zero 负例。SeaBIOS
-矩阵由 `qemu-ovmf-real-linux-validate.sh` 复现；它只验证固件/ACPI 边界，不作为
-VMware EFI 等价 profile。
+脚本自动断言 7 个 profile：SeaBIOS+i440fx single/bridge、OVMF+i440fx
+single/bridge exact-2G、bridge 4G 正控、OVMF+i440fx+PXB multi-root 和
+OVMF+q35+pcie-root-port。结果写入 `results.tsv`。
+
+这些 profile 分别验证固件、资源装箱和拓扑边界，不是一个统一的 VMware 精确替代：
+i440fx 保留 legacy chipset 类别但不是 VMware 440BX/PIIX4，PXB 的 bridge identity 不同，
+q35 则向 guest 暴露 Q35/ICH9。SeaBIOS 还会把 2GiB BAR 高置，与 VMware
+`i440bx+bios` 的 BAR2 未分配结果相反。
 
 ## 6. 拓扑、ACS、依赖和链路
 

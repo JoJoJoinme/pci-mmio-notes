@@ -33,6 +33,7 @@ QEMU L0 可以逐项改变 PCIe 拓扑、ACS、multifunction、BAR 大小、Opti
 
 | 领域 | 必须回答的 VMware 问题 | 验收证据 |
 | --- | --- | --- |
+| Firmware/主板布局 | `bios/efi` 与 `i440bx/acpi` 哪些组合可启动；创建、导入和直接注册时缺省值是否相同？ | 输入/生效 VMX、CreateVM API 快照、guest PCI tree/ACPI roots、BAR 地址和 power-on fault |
 | 默认 MMIO 策略 | EFI + passthrough device，但没有 `pciPassthru.use64bitMMIO` 时，实际暴露哪些 below-4G/above-4G root window？ | VMX、`vmware.log`、guest ACPI `_CRS`、`/proc/iomem` 和 BAR 地址 |
 | 显式 64-bit MMIO | 只有 `use64bitMMIO=TRUE` 时默认多大；显式 SizeGB 如何改变资源图？ | 同设备、单变量 A/B 测试和 guest 运行时证据 |
 | 设备资格 | ACS、拓扑、multifunction、bridge 类型和 reset 能力如何影响 `passthruCapable`？ | vSphere API、host 日志和可控 QEMU 拓扑 |
@@ -65,11 +66,12 @@ passthrough device，不能单独满足这项运行时验收。
 QEMU profile 只有在以下可观测边界与 VMware 实测结果相符时，才能标记为等价：
 
 1. Firmware 类型和 guest 可见 PCIe 拓扑。
-2. ACPI root bridge 的 32-bit/64-bit memory window。
-3. 相同 below-4G 压力下的 BAR 地址或失败边界。
-4. Host DMA isolation 和 interrupt remapping 前提。
-5. Multifunction 与 reset dependency 边界。
-6. 场景涉及的 Option ROM、PME、AER 和生命周期策略。
+2. Guest 可见 host-bridge/chipset identity；只匹配 root-port 外观不算精确等价。
+3. ACPI root bridge 的数量、bus range 和 32-bit/64-bit memory window。
+4. 相同 below-4G 压力下的 BAR 地址或失败边界。
+5. Host DMA isolation 和 interrupt remapping 前提。
+6. Multifunction 与 reset dependency 边界。
+7. 场景涉及的 Option ROM、PME、AER 和生命周期策略。
 
 “QEMU 成功启动”或“参数名字看起来对应”不算通过。
 
@@ -182,9 +184,32 @@ Gate 失败本身是有效结论，不是丢弃日志的理由。
 | A05 | Endpoint 放到 conventional/legacy bridge 后 | 是否要求整个 requester-ID domain 集体分配？ | dependency list 和 collective assignment |
 | A06 | 只改变 root-port `x-speed`/`x-width` | VMware 保留、屏蔽还是重建 L2 link capability？ | L1/L2 `LnkCap/LnkSta` 对比 |
 
-### 7.2 MMIO 与 BAR 分配
+### 7.2 Firmware 与 motherboardLayout
 
-固定 EFI L2 和 endpoint identity，只改变 BAR 大小、RAM 压力或指定 VMX 参数。
+VMware 的 firmware 值是 `bios|efi`；SeaBIOS 和 OVMF 只是 QEMU 对照固件。VMware
+`motherboardLayout=acpi` 表示多个 ACPI host bridge，不等于“开启 ACPI”，也不等于 Q35。
+
+| ID | VMware 输入 | 必须得到的答案 | 当前实测结果 |
+| --- | --- | --- | --- |
+| LF00 | vHW20、`bios`、显式 `i440bx`、三个 DirectPath endpoint | 单根桥、设备/IOMMU/小 BAR 可用；2GiB BAR 是否可分配 | pass；`PCI0 [00-7f]`，流量/DMA/MSI 正常，2GiB BAR2 未分配 |
+| LF01 | vHW20、`efi`、显式 `i440bx`、相同设备 | 单根桥和 2GiB BAR 高置 | pass；`PCI0 [00-7f]`，BAR2=`0x1fff80000000-0x1fffffffffff` |
+| LF02 | vHW20、`efi`、显式 `acpi`、相同设备 | 多根桥、effective slot rewrite 和 2GiB BAR 高置 | pass；`PCI0 [00-01]`、`PC08 [02]`、`PC0G [03]`，BAR2 同 LF01 |
+| LF03 | vHW20、`bios`、显式 `acpi` | 保存精确禁止边界 | pass-negative；power-on 返回 `ACPI motherboard layout requires EFI.` |
+| LF04 | 直接注册 VMX、`bios`、layout key absent | 注册 fallback 和 legacy BAR 边界 | pass；i440bx-like 单根桥，2GiB BAR2 未分配 |
+| LF05 | 直接注册 VMX、`efi`、layout key absent | 不把注册 fallback 误写成 CreateVM 默认 | pass；i440bx-like 单根桥，2GiB BAR 高置 |
+| LF06 | vSphere CreateVM API、layout field unset，分别 `efi`/`bios` | 记录产品创建路径实际解析值并跨 power cycle 核对 | pass；EFI=`acpiHostBridges`，BIOS=`i440bxHostBridge` |
+
+LF00-LF03 必须保存输入 VMX、生效 VMX、`vmware.log`、serial、root bus ranges、目标
+`resource2` 和 IOMMU mapping。LF06 必须在 after-create、after-power-on、after-power-off
+三阶段读取 API 字段，并销毁临时 VM。CreateVM、Content Library/import 和直接注册是不同
+配置解析路径；报告“默认值”时必须同时写明路径、vHW、firmware 和生效布局。
+
+### 7.3 MMIO 与 BAR 分配
+
+固定 EFI L2、resolved layout 和 endpoint identity，只改变 BAR 大小、RAM 压力或指定
+VMX 参数。每个受支持 EFI layout 至少执行 M00 和一个显式 high-MMIO anchor；LF01/LF02
+已完成相同 2GiB BAR 的 i440bx/acpi 对照。若 root window、BAR placement 或 effective
+bridge policy 任一不同，再展开该 layout 的完整 M00-M07，而不是把一个 layout 的结果外推。
 
 | ID | VMware 设置 | BAR 用例 | 必须得到的答案 |
 | --- | --- | --- | --- |
@@ -201,7 +226,7 @@ Gate 失败本身是有效结论，不是丢弃日志的理由。
 `_CRS`、`/proc/iomem`、`lspci` 和 sysfs resource。Power-on failure 只有在同时
 保存 VMware message ID、请求范围和可用范围时才算有效证据。
 
-### 7.3 DMA、中断与 Reset
+### 7.4 DMA、中断与 Reset
 
 | ID | 操作 | 必须观察到的结果 |
 | --- | --- | --- |
@@ -219,7 +244,7 @@ Gate 失败本身是有效结论，不是丢弃日志的理由。
 不能只根据 PCI capability bit 推断 reset 方法。嵌套实验使用 QEMU config-space 和
 device reset trace；裸机使用 `/reset_method`、设备日志和外部行为复核。
 
-### 7.4 ROM、PME、AER、P2P、RMRR 与 Dynamic DirectPath
+### 7.5 ROM、PME、AER、P2P、RMRR 与 Dynamic DirectPath
 
 | ID | 测试 | 验收边界 |
 | --- | --- | --- |
@@ -238,7 +263,7 @@ AER 注入。随后已用 instrumented endpoint/DMAR patch 完成 PME、P2P、RM
 AER 已证明 stock QEMU 的 guest surface 不等价，完整过滤仍需 QEMU patch。真实硬件仍
 负责电气 reset、vendor state、真实 ACS/INTx 和 SR-IOV driver/firmware 结论。
 
-### 7.5 生命周期与产品限制
+### 7.6 生命周期与产品限制
 
 | ID | 操作 | 通过条件 |
 | --- | --- | --- |
@@ -256,8 +281,11 @@ AER 已证明 stock QEMU 的 guest surface 不等价，完整过滤仍需 QEMU p
 
 | 项目 | QEMU/OVMF/VFIO 控制 | 验收方法 |
 | --- | --- | --- |
-| Machine/Firmware | q35 + OVMF + 显式 `pcie-root-port` | Guest topology 和 ACPI table 与 VMware profile 一致 |
-| VMware 默认 high-MMIO 候选 | `X-PciMmio64Mb=0` + `q35-pcihost.pci-hole64-size=0` | 仅当 M00 证明没有 above-4G root window 时采用 |
+| VMware `i440bx+efi` 功能近似 | i440fx + OVMF；需要 PCIe surface 时另跑 q35 + `pcie-root-port` | 前者保留 legacy chipset 类别但没有 VMware PCIe root-port surface；后者是 Q35/ICH9，不能宣称 chipset 等价 |
+| VMware `acpi+efi` 功能近似 | i440fx + OVMF + `pxb` multi-root | 核对多 ACPI root、bus range、BAR；PXB 的 QEMU bridge identity 与 VMware 不同，只能标记 topology approximation |
+| VMware `i440bx+bios` 边界 | i440fx + SeaBIOS 独立 profile | 必须核对 BAR 最终地址；SeaBIOS 可将 2GiB BAR 高置，不能据此宣称 VMware BIOS 等价 |
+| 禁止组合 | Qman 启动前拒绝 `acpi+bios`；QEMU 无需制造可启动替代品 | 返回稳定 profile/firmware mismatch reason，VMware 精确负例保留 |
+| QEMU below-4G-only profile | `X-PciMmio64Mb=0` + `<host-bridge>.pci-hole64-size=0` | 只在完整 BAR tree 可低置时采用；不是 VMware 全局默认 |
 | 显式 N-GB high MMIO | `X-PciMmio64Mb=N*1024` + `pci-hole64-size=NG` | 比较实际 `_CRS` 和 BAR 地址，不只比较配置 N |
 | 只设置 OVMF knob | 禁止作为通过配置 | 本地已证明 QEMU host bridge 仍可暴露 above-4G space |
 | 只设置 host-bridge knob | 禁止作为通过配置 | OVMF 仍可能把 BAR 放到 4G 以上并迫使 ACPI 覆盖 |
@@ -279,7 +307,7 @@ AER 已证明 stock QEMU 的 guest surface 不等价，完整过滤仍需 QEMU p
 | Dynamic DirectPath | 外部 launcher 按 ID/label 选择 BDF 后启动 QEMU | Selection log 对应 VMware `allowedDevice`/`assignedId` |
 | Lifecycle | 普通 VFIO 默认视为不可迁移，除非证明 device-specific migration | 不支持操作明确失败且 device 仍可用 |
 
-当前 VMware 默认 MMIO 候选命令：
+下面命令只代表 QEMU-native q35/OVMF PCIe profile，不再称为 VMware layout 默认值：
 
 ```bash
 qemu-system-x86_64 \
@@ -293,9 +321,10 @@ qemu-system-x86_64 \
   -device vfio-pci,host=0000:65:00.0,bus=rp1,addr=00.0,rombar=0
 ```
 
-只有 M00 提供 active-passthrough guest 证据后，这段命令才能从“候选”升级为
-“已验收 VMware 默认 profile”。本地 QEMU 已经证明，只设置 `fw_cfg` 而保留默认
-`pci-hole64-size` 时，Linux 仍可能把 BAR 分配到 4G 以上。
+它可以验证两侧 high-MMIO knob 和 PCIe root-port surface，但 guest 会看到 Q35/ICH9，
+不能满足 VMware vHW20 `i440bx/acpi` 样本的精确 chipset ABI。本地 QEMU 已经证明，
+只设置 `fw_cfg` 而保留默认 `pci-hole64-size` 时，Linux 仍可能把 BAR 分配到 4G 以上。
+完整 profile 命令和断言由 `qemu-firmware-layout-matrix-validate.sh` 维护。
 
 需要特别区分属性名：本项目讨论的是 above-4G 的 `pci-hole64-size`。本地 QEMU
 6.2 中 i440fx 默认值为 2G，q35 默认值为 32G；它不是 below-4G `pci-hole-size`。
@@ -304,13 +333,14 @@ qemu-system-x86_64 \
 
 1. 固定 ESXi/QEMU/OVMF build，先实现产物自动采集。
 2. 执行 G0，保存无 passthrough 的平台 baseline。
-3. 执行 A00-A03，确认 synthetic endpoint 能否进入 active DirectPath，以及
+3. 执行 LF00-LF06，先冻结 firmware、layout、创建路径和 guest ABI。
+4. 执行 A00-A03，确认 synthetic endpoint 能否进入 active DirectPath，以及
    VMware 如何计算 dependency。
-4. 使用 256M 和 1G BAR 执行 M00-M03，以最少用例回答主 MMIO 问题。
-5. 打开 QEMU `vtd_*` 和 device trace，执行 D00、I00、R00-R03。
-6. 扩展到 M04-M07、A04-A06 和 Dynamic DirectPath。
-7. 只针对仍未回答的 reset/PME/RMRR 问题实现 instrumented endpoint；AER 转为实现并验证 config-space filter。
-8. 在裸机 ESXi 上用至少一个真实 NIC/NVMe 重放已通过用例；只有 large BAR/P2P
+5. 使用 256M 和 1G BAR 执行 M00-M03，以最少用例回答主 MMIO 问题。
+6. 打开 QEMU `vtd_*` 和 device trace，执行 D00、I00、R00-R03。
+7. 扩展到 M04-M07、A04-A06 和 Dynamic DirectPath。
+8. 只针对仍未回答的 reset/PME/RMRR 问题实现 instrumented endpoint；AER 转为实现并验证 config-space filter。
+9. 在裸机 ESXi 上用至少一个真实 NIC/NVMe 重放已通过用例；只有 large BAR/P2P
    场景再引入 GPU/FPGA。
 
 ## 10. 完成标准
@@ -323,8 +353,10 @@ qemu-system-x86_64 \
 4. 真实硬件结论有 E4，无法取得 E4 的项目明确标记未验证。
 5. 最终 QEMU profile 通过与 VMware profile 相同的 guest resource 和 lifecycle 检查。
 6. 所有脚本、规范化结果、非敏感日志和结论表都能从仓库复现。
+7. 每个 supported profile 固化 firmware、resolved layout、machine type、root topology、
+   firmware hash 和 guest ABI signature；stock QEMU 无法精确复刻的字段必须是显式 gap。
 
-## 11. 2026-07-14 本地执行状态
+## 11. 2026-07-15 本地执行状态
 
 详细输出和推理见 `vmware-esxi8-directpath-local-results.md`。本轮使用两台 ESXi
 8.0.3 build 24280767、VCSA 8.0.3、vHW 20 EFI L3、QEMU 6.2/11.0.2、WSL 6.6 KVM、
@@ -339,6 +371,8 @@ virtual VT-d 与共享 NFS。
 | A05 | pass | legacy bridge 后所有 endpoint 共用 bridge dependency，启用一个会自动启用全部 |
 | A06 | pass | L1 2.5GT/s x1 被 VMware 在 L2 重建成 5GT/s x32 |
 | `passthruCapable` 累计 23-case | pass | 15 项基础矩阵、全局 ACS bypass、6 项 class 和真实 Type-1 bridge 已分离各 gate；restore pass |
+| LF00-LF03 | pass | `i440bx+bios`、`i440bx+efi`、`acpi+efi` 均完成精确正例；`acpi+bios` 得到精确 power-on 负例 |
+| LF04-LF06 | pass | 直接注册 key-absent 为 i440bx-like fallback；CreateVM vHW20 缺省解析为 EFI/acpi、BIOS/i440bx，三阶段稳定 |
 | M00-M03/M05/M06 | pass | 1GB 默认低置；2GB 在 absent/false/true/Size 变体下均自动高置 |
 | M04 4GB | pass | absent/Size4-only 超过 917504-page limit；TRUE-only 与 TRUE+Size4 均通过 |
 | M04 8GB | pass-runtime | 独占 Root Port + no-backing `pci-testdev` 七项矩阵通过；TRUE-only/TRUE+Size8 均有 heartbeat、目标枚举与 mapping |
@@ -367,7 +401,8 @@ virtual VT-d 与共享 NFS。
 | L02 | pass | 普通 VM live vMotion 成功；Classic/Dynamic DirectPath live vMotion 按预期拒绝 |
 | L03/L05 | pass | host 重启和 `--apply-now` owner 切换状态已记录 |
 | L04 | pass | DMA/heartbeat 时 SIGKILL outer QEMU；host/datastore/owner 恢复且同 VM 再次 I/O 成功 |
-| SeaBIOS boundary | pass | fw_cfg 被忽略；host hole64 控制默认窗，但 present BAR 可迫使最小高窗 |
+| QEMU firmware/layout 7-profile | pass | SeaBIOS/i440fx、OVMF/i440fx single/bridge、OVMF/PXB multi-root、OVMF/q35 root-port 全部完成正负断言 |
+| SeaBIOS parity boundary | pass-not-equivalent | SeaBIOS 在 single/bridge profile 都可把 2GiB BAR 高置；VMware `i440bx+bios` 未分配该 BAR |
 
 ## 12. 参考资料
 
@@ -385,3 +420,7 @@ virtual VT-d 与共享 NFS。
   https://www.qemu.org/docs/master/specs/edu.html
 - 本地已执行 QEMU 证据：`qemu-vmdirectpath-nonbar-local-validation.md`
 - 现有 VMware MMIO/QEMU 映射说明：`vmware-passthrough-mmio-validation.md`
+- Firmware/layout 完整报告与可复现索引：`vmware-firmware-layout-matrix.md`
+- 机器可读汇总：`evidence/esxi8-firmware-layout-20260715-summary.json`
+- Broadcom `VirtualHardware.MotherboardLayout`：
+  https://developer.broadcom.com/xapis/vmware-storage-policy-api/latest/vim.vm.VirtualHardware.MotherboardLayout.html

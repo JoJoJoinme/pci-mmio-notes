@@ -1,0 +1,207 @@
+{
+  "date": "2026-07-15",
+  "scope": "Publicly observable firmware, motherboard-layout, PCI topology, and BAR-allocation behavior in an authorized nested ESXi/QEMU lab",
+  "overallVerdict": "pass",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "virtualHardware": 20,
+    "directPathDevices": [
+      "0000:01:00.0 8086:10d3",
+      "0000:01:00.1 8086:10d3",
+      "0000:01:01.0 1af4:1110 with a 2 GiB 64-bit prefetchable BAR"
+    ],
+    "qemu": "QEMU 6.2.0 (Debian 1:6.2+dfsg-2ubuntu6.30)",
+    "ovmf": {
+      "package": "2022.02-3ubuntu0.22.04.5",
+      "codeSha256": "ae38909179bebd3fff70a6ffbf568b6df0c8e63db8c2a1cdbac47cd0cc96f464",
+      "varsTemplateSha256": "6ed987af3a3c155be71665f510eae3e007eda9b8b94afd59d45e91c4a11565cc"
+    },
+    "seabios": {
+      "package": "1.15.0-1",
+      "bios256kSha256": "8f27163afee12e1334fa44b108a4bcce81ec06fb3261fbaa8e2543933933f110"
+    },
+    "qemuGuestKernel": "Ubuntu 6.8.0-124-generic"
+  },
+  "vmwareCreateVmDefaults": {
+    "method": "vSphere CreateVM API against the standalone ESXi host; ConfigSpec left motherboardLayout unset; temporary VM was powered on, powered off, and destroyed",
+    "efi": {
+      "run": "20260715-esxi8-api-createvm-assert-efi-v2-createvm-default",
+      "request": "vmx-20 + firmware=efi + motherboardLayout unset",
+      "afterCreate": "acpiHostBridges",
+      "afterPowerOn": "acpiHostBridges",
+      "afterPowerOff": "acpiHostBridges",
+      "layoutAssertion": true,
+      "cleanup": "destroyed",
+      "verdict": "pass"
+    },
+    "bios": {
+      "run": "20260715-esxi8-api-createvm-assert-bios-v2-createvm-default",
+      "request": "vmx-20 + firmware=bios + motherboardLayout unset",
+      "afterCreate": "i440bxHostBridge",
+      "afterPowerOn": "i440bxHostBridge",
+      "afterPowerOff": "i440bxHostBridge",
+      "layoutAssertion": true,
+      "cleanup": "destroyed",
+      "verdict": "pass"
+    }
+  },
+  "vmwareExplicitMatrix": {
+    "common": {
+      "bridgeInput": "four VMware pcieRootPort devices with eight functions each",
+      "use64bitMmio": "absent",
+      "bar2SizeGiB": 2
+    },
+    "cases": [
+      {
+        "id": "LF00-i440bx-bios",
+        "run": "20260715-esxi8-i440bx-pcie-rootports-v3",
+        "firmware": "bios",
+        "layout": "i440bx",
+        "powerOn": "pass",
+        "guestCompleted": true,
+        "iommuMapped": true,
+        "targetVisible": true,
+        "rootTopology": "PCI0, bus 00-7f",
+        "chipset": "8086:7190 440BX plus PIIX4",
+        "bar2Mapped": false,
+        "bar2Probe": "BAR demand 0x00000000-0x7fffffff was observed, but no nonzero sysfs resource2 was assigned",
+        "verdict": "pass"
+      },
+      {
+        "id": "LF01-i440bx-efi",
+        "run": "20260715-esxi8-i440bx-pcie-rootports-v3",
+        "firmware": "efi",
+        "layout": "i440bx",
+        "powerOn": "pass",
+        "guestCompleted": true,
+        "iommuMapped": true,
+        "targetVisible": true,
+        "rootTopology": "PCI0, bus 00-7f",
+        "chipset": "8086:7190 440BX plus PIIX4",
+        "bar2Mapped": true,
+        "bar2": "0x1fff80000000-0x1fffffffffff",
+        "note": "The client-side matrix process timed out after the guest completed; AnalyzeOnly recovered the effective verdict from the complete serial and vmware.log artifacts",
+        "verdict": "pass"
+      },
+      {
+        "id": "LF02-acpi-efi",
+        "run": "20260715-esxi8-acpi-efi-retry-v4",
+        "firmware": "efi",
+        "layout": "acpi",
+        "powerOn": "pass",
+        "guestCompleted": true,
+        "iommuMapped": true,
+        "targetVisible": true,
+        "rootTopology": "PCI0 bus 00-01, PC08 bus 02, PC0G bus 03",
+        "chipset": "8086:7190 440BX plus PIIX4",
+        "effectiveBridgePolicy": "ESXi replaced the input pcieRootPort set with pciRootBridge0/1 and assigned passthrough slots 32/33/34",
+        "bar2Mapped": true,
+        "bar2": "0x1fff80000000-0x1fffffffffff",
+        "verdict": "pass"
+      },
+      {
+        "id": "LF03-acpi-bios-negative",
+        "run": "20260715-esxi8-i440bx-pcie-rootports-v3",
+        "firmware": "bios",
+        "layout": "acpi",
+        "powerOn": "rejected",
+        "failure": "ACPI motherboard layout requires EFI.",
+        "iommuMapped": false,
+        "targetVisible": false,
+        "verdict": "expected-negative-pass"
+      }
+    ]
+  },
+  "vmwareRegisteredVmxKeyAbsentControls": {
+    "run": "20260715-esxi8-layout-default-controls-v5",
+    "method": "Directly register a vmx-20 VMX with chipset.motherboardLayout absent and explicit pcieRootPort input",
+    "bios": {
+      "observedLayout": "i440bx-like single root",
+      "rootTopology": "PCI0, bus 00-7f",
+      "bar2Mapped": false,
+      "verdict": "pass"
+    },
+    "efi": {
+      "observedLayout": "i440bx-like single root",
+      "rootTopology": "PCI0, bus 00-7f",
+      "bar2Mapped": true,
+      "bar2": "0x1fff80000000-0x1fffffffffff",
+      "verdict": "pass"
+    },
+    "conclusion": "CreateVM defaults and direct-registered VMX key-absent fallback are different workflows and must not share one unqualified default claim"
+  },
+  "qemuMatrix": {
+    "run": "20260715-firmware-layout-matrix-final",
+    "runner": "qemu-firmware-layout-matrix-validate.sh",
+    "verdict": "pass",
+    "cases": [
+      {
+        "profile": "seabios-i440fx-single",
+        "roots": 1,
+        "bar2Mapped": true,
+        "bar2": "0x100000000-0x17fffffff",
+        "rootHighWindow": "0x100000000-0x18000bfff"
+      },
+      {
+        "profile": "seabios-i440fx-pci-bridge",
+        "roots": 1,
+        "bar2Mapped": true,
+        "bar2": "0x180000000-0x1ffffffff",
+        "rootHighWindow": "0x100000000-0x20000bfff"
+      },
+      {
+        "profile": "ovmf-i440fx-single",
+        "roots": 1,
+        "bar2Mapped": true,
+        "bar2": "0x100000000-0x17fffffff",
+        "rootHighWindow": "0x100000000-0x17fffffff"
+      },
+      {
+        "profile": "ovmf-i440fx-pci-bridge-exact2g",
+        "roots": 1,
+        "bar2Mapped": false,
+        "rootHighWindow": "0x100000000-0x17fffffff",
+        "reason": "The bridge consumed a small high resource and the remaining range could not fit another 2 GiB-aligned BAR"
+      },
+      {
+        "profile": "ovmf-i440fx-pci-bridge-4g-control",
+        "roots": 1,
+        "bar2Mapped": true,
+        "bar2": "0x100000000-0x17fffffff",
+        "rootHighWindow": "0x100000000-0x1ffffffff"
+      },
+      {
+        "profile": "ovmf-i440fx-pxb",
+        "roots": 2,
+        "rootTopology": "PCI0 bus 00-01, PC02 bus 02-03",
+        "bar2Mapped": true,
+        "bar2": "0x100000000-0x17fffffff",
+        "extraGuestDevices": "1b36:0009 QEMU PCI Expander bridge and 1b36:0001 internal PCI bridge"
+      },
+      {
+        "profile": "ovmf-q35-root-port",
+        "roots": 1,
+        "bar2Mapped": true,
+        "bar2": "0x100000000-0x17fffffff",
+        "chipset": "Q35/ICH9 instead of VMware 440BX/PIIX4",
+        "rootPort": "1b36:000c QEMU PCIe Root port"
+      }
+    ]
+  },
+  "observableConclusions": [
+    "VMware firmware and motherboard layout are independent profile axes; acpi plus BIOS is explicitly unsupported",
+    "Both tested VMware layouts still exposed a 440BX/PIIX4 chipset; acpi changed the host-bridge topology rather than changing the guest to Q35",
+    "A VMware BIOS guest may enumerate and exercise passthrough endpoints while leaving a 2 GiB BAR unassigned",
+    "SeaBIOS is not a behavioral substitute for VMware BIOS: tested QEMU SeaBIOS profiles allocated the same 2 GiB BAR above 4 GiB",
+    "Stock QEMU has no single argument set that simultaneously preserves the VMware legacy chipset identity, VMware PCIe-root-port topology, VMware acpi multi-root topology, and exact high-MMIO base",
+    "MMIO planning must include every auxiliary and bridge resource plus alignment padding; target BAR sizes alone are insufficient"
+  ],
+  "localArtifactRoots": [
+    "_artifacts/vmware-directpath-runs/20260715-esxi8-i440bx-pcie-rootports-v3",
+    "_artifacts/vmware-directpath-runs/20260715-esxi8-acpi-efi-retry-v4",
+    "_artifacts/vmware-directpath-runs/20260715-esxi8-layout-default-controls-v5",
+    "_artifacts/vmware-directpath-runs/20260715-esxi8-api-createvm-assert-efi-v2-createvm-default",
+    "_artifacts/vmware-directpath-runs/20260715-esxi8-api-createvm-assert-bios-v2-createvm-default",
+    "_artifacts/mmio-tests/20260715-firmware-layout-matrix-final"
+  ]
+}

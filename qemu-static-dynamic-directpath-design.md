@@ -35,6 +35,12 @@ QEMU + OVMF/SeaBIOS + VFIO/IOMMUFD
    不得直接回到 free pool。
 7. VMware 对标 profile 默认拒绝 snapshot、suspend、live migration 和 runtime hotplug；QEMU
    原生 VFIO migration 或 hotplug 只能作为单独扩展 profile，经能力证明后启用。
+8. Firmware、VM 创建路径和 resolved motherboard layout 是 guest ABI；缺省值必须在创建时
+   解析并持久化。Stock QEMU 只能提供分项功能近似时，严格 profile 必须 fail-closed。
+
+Firmware/layout 的已执行黑盒矩阵、原始产物索引和 QEMU 7-profile 结果见
+[`vmware-firmware-layout-matrix.md`](vmware-firmware-layout-matrix.md)；机器可读摘要见
+[`evidence/esxi8-firmware-layout-20260715-summary.json`](evidence/esxi8-firmware-layout-20260715-summary.json)。
 
 ## 2. 设计目标与边界
 
@@ -61,14 +67,17 @@ QEMU + OVMF/SeaBIOS + VFIO/IOMMUFD
 版本差异必须进入 profile，不能形成一个永久不变的“VMware 默认值”：
 
 ```text
-vmware-esxi8u3-vhw20-efi       # 本仓库主要实测基线
-vmware-esxi8u3-vhw20-bios      # 仅在 SeaBIOS/legacy BIOS 用例中启用
-qemu-vfio-native               # 允许经过证明的 VFIO migration/hotplug 扩展
-lab-unsafe                     # 只用于实验，输出永远带 unsafe 标记
+vmware-esxi8u3-vhw20-create-efi-acpi        # CreateVM 缺省解析结果
+vmware-esxi8u3-vhw20-create-bios-i440bx     # CreateVM 缺省解析结果
+vmware-esxi8u3-vhw20-explicit-efi-i440bx    # 显式 legacy layout + EFI
+vmware-esxi8u3-vhw20-register-efi-i440bx    # key-absent 直接注册 fallback
+qemu-vfio-native                            # 允许经过证明的 VFIO migration/hotplug 扩展
+lab-unsafe                                  # 只用于实验，输出永远带 unsafe 标记
 ```
 
 profile 至少固定 QEMU、kernel、firmware、machine type、guest firmware、vHW 对标版本、
-capability filter、MMIO policy、migration policy 和 policy database hash。
+配置创建路径、resolved motherboard layout、root topology、capability filter、MMIO policy、
+migration policy 和 policy database hash。`acpi+bios` 是启动前拒绝的非法组合，不创建 profile。
 
 ## 3. VMware 公开状态到 QEMU 平台状态的映射
 
@@ -622,16 +631,36 @@ host reserved pages 可被安全保留为精确 identity mapping，且 device re
 
 ### 12.3 firmware profile
 
-- EFI 基线使用 OVMF，并固定 CODE/VARS hash。
-- Legacy BIOS 是独立 profile，使用 SeaBIOS 重新验证 below-4G hole、ROM 和设备数量限制。
+- EFI 基线使用 OVMF，并固定 CODE/VARS hash；Legacy BIOS 使用 SeaBIOS 并固定镜像 hash。
+- SeaBIOS 是 QEMU legacy firmware，不是 VMware `firmware=bios` 的行为等价物。本地实测中
+  SeaBIOS 可将 2GiB BAR 高置，而 VMware `i440bx+bios` 将同一 BAR 留为未分配。
+- Qman 创建 VM 时必须把 requested firmware/layout 解析成持久化 `resolvedLayout`，不能在
+  QEMU 升级、导入或恢复时重新套用“当前默认”。`acpi+bios` 在资源规划前返回
+  `PROFILE_FIRMWARE_LAYOUT_MISMATCH`。
+- VMware CreateVM vHW20 缺省实测为 EFI/acpi、BIOS/i440bx；直接注册 layout key-absent
+  VMX 的实测 fallback 为 i440bx-like。两条路径必须是不同 profile provenance。
 - 默认 `rombar=0` 对齐当前 VMware 默认隐藏样本。
 - 显式 Option ROM 必须固定 hash、来源和执行 policy；未知 ROM 不进入 guest firmware。
 - VMware parity profile 固定 effective BAR size，并将 ReBAR control 隐藏或只读；未通过
   guest config-write 负例时，不允许带可写 ReBAR capability 的设备进入该 profile。
 
+Stock QEMU 的 profile 边界如下：
+
+| VMware 目标 | Stock QEMU 功能近似 | 已知不可消除差异 |
+| --- | --- | --- |
+| `i440bx+efi` | i440fx + OVMF；PCIe surface 另用 q35 + root-port 交叉验证 | i440fx 是 440FX/PIIX3 且无 VMware root-port surface；q35 是 Q35/ICH9 |
+| `acpi+efi` | i440fx + OVMF + PXB multi-root | PXB/内部 bridge identity、bus 编排和 VMware 440BX/PIIX4 identity 不同 |
+| `i440bx+bios` | i440fx + SeaBIOS 边界测试 | 大 BAR placement 已实测不等价 |
+
+因此 stock QEMU profile 只能声明 `functional-approximation`。若产品合同要求同时稳定
+VMware chipset identity、PCIe root-port surface、ACPI 多根桥命名/bus range 和 BAR placement，
+必须实现版本化 custom QEMU machine/host bridge，并重新执行完整 guest ABI 与迁移兼容性矩阵；
+在该实现完成前返回 `BACKEND_TOPOLOGY_GAP`，不能悄悄选择 q35。
+
 ### 12.4 启动参数模板
 
-优先由 host agent 打开 IOMMUFD 和 VFIO cdev，再把 fd 传给 QEMU：
+下面只是一份 QEMU-native q35/OVMF PCIe profile 模板，不代表 VMware ACPI layout 的精确
+machine ABI。host agent 应先打开 IOMMUFD 和 VFIO cdev，再把 fd 传给 QEMU：
 
 ```bash
 qemu-system-x86_64 \
@@ -647,6 +676,12 @@ qemu-system-x86_64 \
 
 精确参数由启动时探测的 QEMU build capability 决定。旧 kernel/QEMU 可退回 legacy
 group/container，但仍必须持有完整 platform lease；禁止退回 no-IOMMU。
+
+VMware `i440bx+efi` 和 `acpi+efi` 功能近似的命令由
+`qemu-firmware-layout-matrix-validate.sh` 生成。MMIO planner 必须把 endpoint、root/secondary
+bridge、PXB 和所有辅助设备 BAR 一起按 alignment 自底向上装箱；本地 2GiB exact-hole
+用例已经证明，普通 `pci-bridge` 自身消耗少量 high resource 后，可使一个 2GiB-aligned
+BAR 无法装入名义 2GiB aperture。
 
 ## 13. Guest ABI 与 QEMU surface policy
 
@@ -901,6 +936,11 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 | R27 | IOMMU/interrupt-remap errata | DMA 或 IRQ 隔离失效 | platform qualification 和 denylist | bare-metal fault/interrupt trace |
 | R28 | requester-ID alias 未被发现 | 多设备共用一 translation domain | alias/legacy subtree 整租 | peer DMA + requester trace |
 | R29 | 隐藏 functional dependency | 只 reset/分配部分 function 导致故障 | 保守 multifunction/PF-VF 闭包加 vendor rule | cross-function state test |
+| R30 | 创建/导入/注册路径重新解析 layout | 升级或恢复后 guest PCI ABI 漂移 | 持久化 requested/resolved layout 与 provenance，导入时显式确认 | CreateVM/register/import golden matrix |
+| R31 | 接受 `acpi+bios` 非法组合 | 启动晚期失败或 backend 行为偏离 | API/schema/launcher 三层 fail-closed | LF03 和 raw-launch bypass 负例 |
+| R32 | 把 stock q35/PXB 当精确 VMware topology | guest driver、slot、ACPI 路径和管理 ABI 漂移 | approximation 标记；严格 profile 要求 custom machine，否则拒绝 | chipset/root/bus/ACPI golden diff |
+| R33 | MMIO 只累计 endpoint BAR | bridge/辅助 BAR 与 alignment 使 mandatory BAR 未分配 | 全树自底向上 packing、padding 与 mandatory-BAR assertion | exact-hole bridge 2G/4G A/B |
+| R34 | Legacy BIOS mandatory large BAR 静默未分配 | guest 枚举但设备功能不完整 | admission 预拒绝或仅 lab degraded profile；启动后核对所有 mandatory BAR | VMware LF00 与 SeaBIOS 对照 |
 
 ### 18.1 风险清零发布门
 
@@ -1000,7 +1040,7 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | M00 | 1/2/4/8/32/64GB BAR | placement/failure 与 profile 一致 | 已有 |
 | M01 | aggregate/alignment | bridge/root windows 正确 | root-level 已有；多级 planner 待实现 |
 | M02 | OVMF-only/host-hole-only | 两种不完整配置均为负例 | 已有 |
-| M03 | SeaBIOS profile | below-4G、ROM、device count 独立结论 | 部分已有 |
+| M03 | SeaBIOS profile | below-4G、ROM、device count 和 large-BAR placement 独立结论 | large-BAR 边界已有；ROM/device count 继续沿用独立矩阵 |
 | M04 | RMRR compatible/overlap | 自动 hole 或精确拒绝 | 已有 synthetic ESXi |
 | M05 | ROM default/explicit | 默认隐藏；显式 hash/marker | 已有默认与 QEMU 正控 |
 | M06 | AER correctable/nonfatal | host/guest surface 符合 profile | 已有 |
@@ -1011,6 +1051,10 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | M11 | ReBAR capability 写入 | guest 无法改变 effective BAR size/address plan | 待 QEMU filter |
 | M12 | 1/16/32/64/65 devices | 已验收 limit 内稳定；limit+1 预检查拒绝 | 待实现 |
 | M13 | 真实 RMRR identity mapping | reserved page、guest hole、reset 后 DMA 都正确 | synthetic 已有；物理待验收 |
+| M14 | VMware firmware/layout 四格 | 三个有效组合完成 endpoint/IOMMU/BAR/topology；`acpi+bios` 精确拒绝 | 已有，LF00-LF03 |
+| M15 | CreateVM 与直接注册缺省路径 | resolved layout 和 provenance 跨 power cycle 稳定 | 已有，LF04-LF06 |
+| M16 | QEMU firmware/topology 七 profile | 每个 profile 对 root、target BAR 和预期正负结果自动断言 | 已有，7/7 pass |
+| M17 | 严格 VMware guest machine ABI | custom machine 同时匹配 chipset/root topology/ACPI/BAR golden | 未实现；stock QEMU 标记 `BACKEND_TOPOLOGY_GAP` |
 
 ### 19.5 故障与多主机
 
@@ -1033,7 +1077,7 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 ### Phase 0：规范冻结
 
 - 固定本文 schema、reason code、profile 和 evidence contract。
-- 将 K01-K29、R01-R29 和 qualification dependency graph 做成可机器验证的 release input。
+- 将 K01-K29、R01-R34 和 qualification dependency graph 做成可机器验证的 release input。
 - 将现有 `pci-resource-model` 输出升级为 versioned inventory/plan。
 - 验收：旧 46 项测试迁移，JSON schema/golden files 稳定，C10/F10 证明依赖变更会撤销能力。
 
@@ -1042,7 +1086,7 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 - 实现 host agent、activation state、durable local lease、VFIO fd passing。
 - 接入 hot-reset affected set、rollback stack、health/quarantine。
 - 将 MMIO planner 从 root aperture 扩展到多级 bridge windows。
-- 验收：S00-S10、M00-M08、M12 自动化，QEMU crash 和 F09 bypass fault injection 通过。
+- 验收：S00-S10、M00-M08、M12、M14-M17 自动化，QEMU crash 和 F09 bypass fault injection 通过。
 
 ### Phase 2：单 host Dynamic
 
@@ -1213,8 +1257,10 @@ qualification DB 中的精确组合返回 true，绝不是风险豁免。
 | `powerCycleWithDirectPath` | power-off/on 后 static 重用原卡，Dynamic 重新选卡 | 条件支持 | VMware 已验证；controller 未实现 | lease/reset/cleanup 全链路 |
 | `forcedOffRecovery` | VM crash/forced-off 后清理并安全复用设备 | 条件支持 | nested 证据已有；产品 cleanup 未实现 | K27，R03/R06/R11 |
 | `hostCrashRecovery` | host crash 后 reconcile，未 fence 不重分配 | 条件支持 | 尚未实现 | K26/K27，R10 |
+| `firmwareLayoutProfiles` | 创建路径、firmware 与 resolved motherboard layout 构成稳定 VM ABI | 条件支持 | VMware LF00-LF06 已验证；Qman resolver 未实现 | R30/R31；持久化 provenance 与三层 bypass 负例 |
+| `acpiMultiRootLayout` | EFI 下多个 ACPI host bridge | 功能近似；严格 parity 暂不支持 | PXB/OVMF 功能正例已有 | custom machine 完成 M17 前保留 `BACKEND_TOPOLOGY_GAP`，R32 |
 | `efiLargeBar` | UEFI + 64-bit MMIO 的大 BAR | 条件支持 | 1/2/4/8/32/64GB 参考证据已有 | 多级 planner、真实 BAR 和 K05-K07 |
-| `legacyBiosPassthrough` | below-4G 限制下的 legacy BIOS | 条件支持 | SeaBIOS 边界已测 | 单独 profile 和资源上限 |
+| `legacyBiosPassthrough` | below-4G 限制下的 legacy BIOS | 条件支持；mandatory large BAR 默认拒绝 | VMware BIOS 与 SeaBIOS 边界已测且不等价 | 单独 profile、全 BAR assertion 和 R34 |
 | `rebarGuestResize` | passthrough 不支持 Resizable BAR | false | config filter 未产品化 | K06/R22 |
 | `dependencyBundleIsolation` | bus/multifunction/legacy alias 依赖不得拆分 | 条件支持 | evaluator 已有部分模型 | K11/K13/K14，R02/R28/R29 |
 | `numaAwarePlacement` | 不改变直通语义，但避免远端 DMA/IRQ 性能风险 | 条件支持 | solver 未实现 | hard/soft locality policy，R18 |

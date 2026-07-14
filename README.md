@@ -1,6 +1,6 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-14
+Record date: 2026-07-15
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
@@ -9,6 +9,13 @@ secrets or lab credentials.
 For the fuller Chinese write-up based on real OVMF/SeaBIOS boot with an Ubuntu
 cloud image, see `qemu-vmware-mmio-comparison.md`. The corresponding runner is
 `qemu-ovmf-real-linux-validate.sh`.
+
+For the completed VMware `i440bx/acpi` x `BIOS/EFI` matrix, CreateVM-default
+versus directly registered key-absent controls, and the seven-profile QEMU
+topology comparison, see
+[`vmware-firmware-layout-matrix.md`](vmware-firmware-layout-matrix.md). Its
+machine-readable result is
+[`evidence/esxi8-firmware-layout-20260715-summary.json`](evidence/esxi8-firmware-layout-20260715-summary.json).
 
 For the follow-up VMDirectPath/passthrough-specific validation matrix based on
 Broadcom KB 312208, see `vmware-passthrough-mmio-validation.md`.
@@ -24,7 +31,7 @@ test matrix, artifact contract, and QEMU equivalence checklist, see
 
 QEMU 平台完整复刻静态 VMDirectPath 与 Dynamic DirectPath 的控制平面设计，包括 capability
 分层、dependency bundle、候选求解、durable lease、IOMMUFD fd passing、rollback、
-quarantine、multi-host fencing、KB 312208 K01-K29 全量能力对标、R01-R29 风险清单
+quarantine、multi-host fencing、KB 312208 K01-K29 全量能力对标、R01-R34 风险清单
 和分阶段验收，见
 [`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)。
 
@@ -119,6 +126,13 @@ When the aggregate BAR envelope cannot fit below 4G, a launcher must instead
 set both knobs to the required high-aperture size.  For the tested 2GB BAR this
 was `X-PciMmio64Mb=2048` plus `pci-hole64-size=2G`.  It matched high/low
 classification and size, but not VMware's exact high base address.
+
+The 2026-07-15 layout matrix adds a required qualification: VMware CreateVM
+defaults are workflow-sensitive. On the tested vHW20 host, CreateVM selected
+`acpiHostBridges` for EFI and `i440bxHostBridge` for BIOS, while a directly
+registered VMX with the layout key absent used the i440bx-like single-root
+fallback. Both explicit VMware EFI layouts still exposed 440BX/PIIX4, so q35
+is a PCIe-topology approximation rather than a chipset-equivalent default.
 
 ## QEMU OVMF local validation
 

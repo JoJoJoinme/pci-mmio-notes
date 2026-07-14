@@ -8,6 +8,13 @@
 > 低置，2GB BAR 即使显式 `use64bitMMIO=FALSE` 也会自动获得 2GB 高窗。
 > 完整证据见 `vmware-esxi8-directpath-local-results.md`。下文的 QEMU knob
 > 单项行为仍有效，但固定的 `both_zero = VMware default` 映射已被取代。
+>
+> 2026-07-15 layout 更新：VMware CreateVM API 在本地 vHW20 host 上为 EFI
+> 选择 `acpiHostBridges`、为 BIOS 选择 `i440bxHostBridge`；直接注册且 layout
+> key 缺省的 VMX 则走 i440bx-like fallback。显式 `i440bx+EFI`、`acpi+EFI`
+> 和 `i440bx+BIOS` 均已完成 DirectPath guest 验证，`acpi+BIOS` 被固定错误拒绝。
+> QEMU 7 项对照和完整参数边界见
+> [`vmware-firmware-layout-matrix.md`](vmware-firmware-layout-matrix.md)。
 
 本文记录本目录中围绕 QEMU、OVMF、SeaBIOS 与 VMware EFI 默认 PCI MMIO 行为的对比测试。重点不是证明某个单独 BAR 是否能启动，而是确定：如果要模拟 VMware EFI 默认 VM 的 PCI MMIO 语义，QEMU 参数应该如何设置。
 
@@ -97,6 +104,12 @@ SeaBIOS 不使用 OVMF 的 `X-PciMmio64Mb` fw_cfg knob。因此 SeaBIOS 下不�
 ```
 
 注意 SeaBIOS 的行为和 OVMF 不完全一样：即使 `pci-hole64-size=0`，如果 SeaBIOS 已经把某个 64-bit BAR 分配到 4G 以上，QEMU/ACPI 仍会向 Linux 报告一个覆盖实际 BAR 的最小 high window。这代表“不预留默认 aperture”，不代表“禁止所有 above-4G BAR”。
+
+它也不等于 VMware BIOS parity。本地 2GB BAR 实测中，VMware
+`i440bx+BIOS` 枚举到了 endpoint，但 BAR2 未分配；QEMU i440fx+SeaBIOS
+在 single-root 和 `pci-bridge` 两种拓扑下都成功把 BAR2 放到 4G 以上。
+因此生产 launcher 应把 VMware legacy profile 的 mandatory BAR 失败做成
+启动前拒绝，不能只换用 SeaBIOS 就宣称行为对齐。
 
 如果 SeaBIOS 下要显式给 4GB high window：
 

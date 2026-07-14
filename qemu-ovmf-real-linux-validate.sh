@@ -6,6 +6,7 @@ image_url=${IMAGE_URL:-https://cloud-images.ubuntu.com/noble/current/noble-serve
 base_image=${BASE_IMAGE:-"$workdir/noble-server-cloudimg-amd64.img"}
 machine=${MACHINE:-pc-i440fx-jammy}
 firmware=${FIRMWARE:-ovmf}
+topology=${TOPOLOGY:-single-root}
 ram=${RAM:-3584M}
 bar_size=${BAR_SIZE:-1G}
 bar_sizes=${BAR_SIZES:-$bar_size}
@@ -16,6 +17,7 @@ cpu=${CPU:-host}
 host_bridge=${HOST_BRIDGE:-auto}
 no_net=${NO_NET:-0}
 no_ivshmem=${NO_IVSHMEM:-0}
+virtio_disable_modern=${VIRTIO_DISABLE_MODERN:-0}
 
 mkdir -p "$workdir"
 
@@ -99,6 +101,18 @@ bootcmd:
     echo
     echo "=== cmdline ==="
     cat /proc/cmdline
+
+    echo
+    echo "=== ACPI PCI roots ==="
+    dmesg | grep -E 'ACPI: PCI Root Bridge|PCI host bridge to bus|root bus resource' || true
+
+    echo
+    echo "=== lspci tree ==="
+    lspci -nn -tv || true
+
+    echo
+    echo "=== lspci devices ==="
+    lspci -nn || true
 
     echo
     echo "=== ivshmem target ==="
@@ -206,6 +220,18 @@ write_files:
       cat /proc/cmdline
 
       echo
+      echo "=== ACPI PCI roots ==="
+      dmesg | grep -E 'ACPI: PCI Root Bridge|PCI host bridge to bus|root bus resource' || true
+
+      echo
+      echo "=== lspci tree ==="
+      lspci -nn -tv || true
+
+      echo
+      echo "=== lspci devices ==="
+      lspci -nn || true
+
+      echo
       echo "=== ivshmem target ==="
       found=0
       for d in /sys/bus/pci/devices/*; do
@@ -299,7 +325,9 @@ run_case() {
   local firmware_args=()
   local net_args=()
   local ivshmem_args=()
+  local ivshmem_device="ivshmem-plain,memdev=shm"
   local reboot_args=(-no-reboot)
+  local virtio_suffix=""
 
   rm -rf "$case_dir"
   mkdir -p "$case_dir"
@@ -319,13 +347,19 @@ run_case() {
   base_format=$(qemu-img info --output=json "$base_image" | sed -n 's/.*"format": *"\([^"]*\)".*/\1/p' | head -1)
   qemu-img create -f qcow2 -F "${base_format:-qcow2}" -b "$base_image" "$disk" >/dev/null
   make_seed_image "${name}_bar-${bar_size_value}" "$case_dir/seed" "$seed"
+  if [ "$virtio_disable_modern" = 1 ]; then
+    virtio_suffix=",disable-modern=on"
+  fi
   if [ "$no_net" != 1 ]; then
-    net_args=(-netdev user,id=net0 -device virtio-net-pci,netdev=net0)
+    net_args=(-netdev user,id=net0 -device "virtio-net-pci,netdev=net0,bus=${root_bus}${virtio_suffix}")
   fi
   if [ "$no_ivshmem" != 1 ]; then
+    if [ -n "$ivshmem_bus" ]; then
+      ivshmem_device+=",bus=$ivshmem_bus"
+    fi
     ivshmem_args=(
       -object memory-backend-memfd,id=shm,size="$bar_size_value",share=on
-      -device ivshmem-plain,memdev=shm
+      -device "$ivshmem_device"
     )
   fi
   if [ -n "$linux_kernel_args" ]; then
@@ -344,10 +378,11 @@ run_case() {
     -serial mon:stdio \
     "${reboot_args[@]}" \
     "${firmware_args[@]}" \
+    "${topology_args[@]}" \
     -drive if=none,id=osdisk,format=qcow2,file="$disk" \
-    -device virtio-blk-pci,drive=osdisk \
+    -device "virtio-blk-pci,drive=osdisk,bus=${root_bus}${virtio_suffix}" \
     -drive if=none,id=cidata,format=raw,file="$seed",readonly=on \
-    -device virtio-blk-pci,drive=cidata \
+    -device "virtio-blk-pci,drive=cidata,bus=${root_bus}${virtio_suffix}" \
     "${net_args[@]}" \
     "${ivshmem_args[@]}" \
     "$@" 2>&1 | tee "$log"
@@ -368,6 +403,67 @@ if [ "$host_bridge" = auto ]; then
     *) host_bridge=i440FX-pcihost ;;
   esac
 fi
+
+case "$machine" in
+  *q35*) root_bus=pcie.0 ;;
+  *) root_bus=pci.0 ;;
+esac
+
+topology_args=()
+ivshmem_bus=${IVSHMEM_BUS:-}
+case "$topology" in
+  single-root)
+    ;;
+  pci-bridge)
+    case "$machine" in
+      *q35*)
+        echo "TOPOLOGY=pci-bridge is the i440fx bridge analogue; use q35-root-port for q35" >&2
+        exit 2
+        ;;
+    esac
+    topology_args=(
+      -device pci-bridge,id=br1,bus=pci.0,chassis_nr=1,addr=0x08
+    )
+    if [ -z "$ivshmem_bus" ]; then
+      ivshmem_bus=br1
+    fi
+    ;;
+  pxb-multi-root)
+    case "$machine" in
+      *q35*)
+        echo "TOPOLOGY=pxb-multi-root requires i440fx; use pxb-pcie for q35" >&2
+        exit 2
+        ;;
+    esac
+    topology_args=(
+      -object memory-backend-ram,id=ram0,size="$ram"
+      -numa node,nodeid=0,memdev=ram0
+      -device pxb,id=pxb1,bus=pci.0,bus_nr=2,numa_node=0,addr=0x08
+    )
+    if [ -z "$ivshmem_bus" ]; then
+      ivshmem_bus=pxb1
+    fi
+    ;;
+  q35-root-port)
+    case "$machine" in
+      *q35*) ;;
+      *)
+        echo "TOPOLOGY=q35-root-port requires a q35 machine" >&2
+        exit 2
+        ;;
+    esac
+    topology_args=(
+      -device pcie-root-port,id=rp1,bus=pcie.0,chassis=1,slot=1
+    )
+    if [ -z "$ivshmem_bus" ]; then
+      ivshmem_bus=rp1
+    fi
+    ;;
+  *)
+    echo "unknown TOPOLOGY: $topology" >&2
+    exit 2
+    ;;
+esac
 
 if [ "$firmware" = ovmf ]; then
   ovmf_code=$(find_ovmf_file OVMF_CODE \
@@ -394,11 +490,15 @@ echo "BASE_IMAGE=$base_image"
 echo "LINUX_KERNEL_ARGS=${linux_kernel_args:-<default image cmdline>}"
 echo "FIRMWARE=$firmware"
 echo "MACHINE=$machine"
+echo "TOPOLOGY=$topology"
+echo "IVSHMEM_BUS=${ivshmem_bus:-<default>}"
 echo "HOST_BRIDGE=$host_bridge"
+echo "ROOT_BUS=$root_bus"
 echo "BAR_SIZES=$bar_sizes"
 echo "CASES=$cases"
 echo "NO_NET=$no_net"
 echo "NO_IVSHMEM=$no_ivshmem"
+echo "VIRTIO_DISABLE_MODERN=$virtio_disable_modern"
 echo
 
 run_named_case() {
@@ -429,6 +529,10 @@ run_named_case() {
     ovmf_host_4g)
       run_case "$case_name" "$bar_size_value" \
         -global "$host_bridge".pci-hole64-size=4G
+      ;;
+    ovmf_host_2g)
+      run_case "$case_name" "$bar_size_value" \
+        -global "$host_bridge".pci-hole64-size=2G
       ;;
     ovmf_both_4g)
       run_case "$case_name" "$bar_size_value" \

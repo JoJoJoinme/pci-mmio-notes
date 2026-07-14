@@ -215,8 +215,12 @@ preconditions rather than QEMU flags.
 
 ### Baseline QEMU/VFIO shape
 
-For PCIe devices, prefer q35 and explicit root ports. That is closer to an ESXi
-EFI VM with PCIe root ports than i440fx.
+For a QEMU-native PCIe profile, prefer q35 and explicit root ports. This matches
+the root-port programming surface better than i440fx, but it is not an exact
+VMware firmware/layout profile: the tested VMware `i440bx` and `acpi` layouts
+both exposed a 440BX/PIIX4 chipset identity, while q35 exposes Q35/ICH9. For the
+full matrix and profile-specific alternatives, see
+[`vmware-firmware-layout-matrix.md`](vmware-firmware-layout-matrix.md).
 
 ```bash
 qemu-system-x86_64 \
@@ -245,7 +249,7 @@ VMware's exact high base address.
 | Guest-visible vIOMMU | Usually leave absent for ordinary DirectPath equivalence. Add `-device intel-iommu,intremap=on,caching-mode=on` only when matching a VMware VM with virtual IOMMU exposed. | Host IOMMU is required for passthrough safety; guest vIOMMU is a separate virtual feature. | Guest: `dmesg | grep -Ei 'DMAR|IOMMU'`; ACPI tables show DMAR only when intentionally exposed. |
 | ACS / isolation groups | Use real hardware with proper ACS so VFIO groups are isolated. Do not use Linux `pcie_acs_override` for a supported-equivalent proof. | VMware's ACS rule and Linux VFIO groups are both approximations of "can this device DMA outside the assignment boundary?" | Host: every assigned function's `/iommu_group/devices` contains only functions intended for the VM. |
 | Relaxed P2P DMA | No generic QEMU equivalent to VMware's relaxed ACS/P2P policy. Use real topology that supports P2P and device-specific support; for NVIDIA GPUDirect, QEMU has `x-nv-gpudirect-clique`, but that is not a general ACS bypass. | P2P is governed by physical switches, ACS forwarding, IOMMU behavior, and device drivers. | Benchmark or driver proof of P2P; inspect IOMMU groups and PCIe switch ACS capabilities. |
-| PCIe topology | Use q35 plus `pcie-root-port`; optionally set `x-speed=` and `x-width=` on the root port if guest-visible link characteristics matter. | VMware EFI guests expose PCIe root ports; q35 is the QEMU PCIe machine. | Guest: `lspci -tv` and `lspci -vv` LinkCap/LinkSta. |
+| Firmware/layout topology | Use i440fx+OVMF for the closest stock legacy-chipset EFI shape, i440fx+OVMF+PXB for a functional multi-root approximation, and q35+`pcie-root-port` only for the PCIe root-port surface. SeaBIOS is a separate legacy boundary profile. | No stock QEMU machine simultaneously preserves VMware 440BX/PIIX4 identity, its PCIe root-port surface, ACPI multi-root layout, and measured BAR placement. | Guest: chipset IDs, `lspci -tv`, ACPI roots/bus ranges, LinkCap/LinkSta, and every mandatory BAR. |
 | Multifunction devices | Assign all dependent functions. Preserve multifunction layout with `multifunction=on` and same slot when needed. | Reset, power management, and driver binding often operate at device/package scope, not one isolated function. | Host IOMMU group contains all functions assigned; guest sees functions under same slot if required. |
 | Reset semantics | Prefer devices with FLR. If only bus reset works, all devices affected by that reset must be safe to reset and usually must be assigned together. Tune host reset choice via `/sys/bus/pci/devices/BDF/reset_method` when available, not via a portable QEMU flag. | VMware and VFIO both need a way to put the device in a clean state before/after VM ownership. | Host: check `/sys/bus/pci/devices/BDF/reset` and `reset_method`; QEMU/vfio logs; repeated VM start/stop without wedging. |
 | Legacy PCI bridges | Avoid if possible. If a device is behind a conventional bridge and the IOMMU group includes the bridge/other devices, assign the whole group or do not treat it as supported-equivalent. | Legacy bridges often lack requester isolation, so the assignable unit is larger than a single endpoint. | Host: IOMMU group membership; guest: `lspci -tv` if bridge topology is intentionally reproduced. |
