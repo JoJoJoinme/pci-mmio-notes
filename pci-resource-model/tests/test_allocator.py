@@ -1,6 +1,11 @@
 import unittest
 
-from pci_resource_model.allocator import GIB, AllocationPolicy, plan_mmio
+from pci_resource_model.allocator import (
+    GIB,
+    AllocationPolicy,
+    plan_mmio,
+    project_qemu_hole64_window,
+)
 from pci_resource_model.model import AddressRange, Bar
 
 
@@ -9,6 +14,44 @@ def memory_bar(index, size, *, is_64=True, bdf="0000:01:00.0"):
 
 
 class AllocatorTests(unittest.TestCase):
+    def test_qemu_hole64_floor_does_not_cap_assigned_bars(self):
+        window = project_qemu_hole64_window(
+            32 * GIB,
+            [
+                AddressRange(64 * GIB, 128 * GIB),
+                AddressRange(128 * GIB, 192 * GIB),
+            ],
+            fallback_start=4 * GIB,
+        )
+
+        self.assertEqual(window.runtime_start, 64 * GIB)
+        self.assertEqual(window.runtime_end, 192 * GIB)
+        self.assertEqual(window.runtime_span_bytes, 128 * GIB)
+
+    def test_qemu_hole64_zero_floor_still_covers_assigned_bars(self):
+        window = project_qemu_hole64_window(
+            0,
+            [
+                AddressRange(64 * GIB, 128 * GIB),
+                AddressRange(128 * GIB, 192 * GIB),
+            ],
+            fallback_start=4 * GIB,
+        )
+
+        self.assertEqual(window.runtime_start, 64 * GIB)
+        self.assertEqual(window.runtime_end, 192 * GIB)
+
+    def test_qemu_hole64_without_assignments_is_only_the_floor(self):
+        window = project_qemu_hole64_window(
+            32 * GIB,
+            [],
+            fallback_start=4 * GIB,
+        )
+
+        self.assertIsNone(window.assigned_start)
+        self.assertEqual(window.runtime_start, 4 * GIB)
+        self.assertEqual(window.runtime_end, 36 * GIB)
+
     def test_one_gib_bar_fits_low_and_emits_zero_high_aperture(self):
         result = plan_mmio(
             [memory_bar(0, GIB)],

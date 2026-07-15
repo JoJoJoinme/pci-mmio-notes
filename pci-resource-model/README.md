@@ -60,6 +60,19 @@ IOMMU group、reset method、父拓扑和原始 ACS capability/control。
 没有 high BAR时两项均为 0。SeaBIOS 模式只生成 host bridge 属性，因为 SeaBIOS 不读取
 OVMF fw_cfg。
 
+字段语义必须分开：`requiredHighSpanBytes` 是 planner 求出的连续 high demand，
+`qemuPciHole64FloorBytes` 是渲染到 QEMU 的最小 root-window 跨度。兼容字段
+`highApertureBytes` 当前与二者取相同值，但不能解释为 QEMU hard cap。QEMU 会用实际已分配
+BAR 的最高 end 与 `runtimeStart + floor` 中更大的一个作为 runtime end。
+`project_qemu_hole64_window()` 实现并测试了这一公开行为：两块 64GiB BAR 位于
+`[64GiB,192GiB)` 时，32GiB 或 0 floor 都不会缩小实际 128GiB window；没有已分配 BAR 时，
+32GiB floor 才单独表现为 `[fallbackStart,fallbackStart+32GiB)`。
+
+SeaBIOS 1.15 能按探测到的 BAR demand 自动生成比 floor 更大的窗口；OVMF 默认对同一双
+64GiB 用例没有分配 BAR，显式 128GiB fw_cfg + floor 后才通过。因此 renderer 仍为 production
+profile 显式输出已求解的 floor，并要求启动后核对 QOM start/end、bridge windows 和 BAR。
+复现实验见 [`../qemu-q35-firmware-dual-64g-results.md`](../qemu-q35-firmware-dual-64g-results.md)。
+
 ## 3. capable 模型
 
 [`capability.py`](pci_resource_model/capability.py) 不返回含糊的单一布尔值：

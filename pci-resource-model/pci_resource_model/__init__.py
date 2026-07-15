@@ -1,6 +1,12 @@
 """PCI BAR allocation and passthrough capability reference model."""
 
-from .allocator import AllocationPolicy, AllocationResult, plan_mmio
+from .allocator import (
+    AllocationPolicy,
+    AllocationResult,
+    QemuHole64Window,
+    plan_mmio,
+    project_qemu_hole64_window,
+)
 from .bar_probe import (
     ConfigSpace,
     LinuxSysfsConfigSpace,
@@ -34,8 +40,10 @@ __all__ = [
     "IsolationProvenance",
     "LinuxSysfsConfigSpace",
     "ProbeError",
+    "QemuHole64Window",
     "evaluate_passthrough",
     "plan_mmio",
+    "project_qemu_hole64_window",
     "probe_standard_bars",
     "probe_unbound_linux_device",
 ]

@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-16",
+  "overall": "pass",
+  "environment": {
+    "qemu": "QEMU 6.2.0 (Debian 1:6.2+dfsg-2ubuntu6.30)",
+    "machine": "pc-q35-jammy",
+    "cpu": "host",
+    "ramBytes": 1073741824,
+    "seabios": "1.15.0-1",
+    "ovmf": "2022.02-3ubuntu0.22.04.5",
+    "endpoint": "QEMU pci-testdev 1b36:0005",
+    "endpointCount": 2,
+    "barBytesPerEndpoint": 68719476736,
+    "barBackingStorage": false,
+    "topology": "one endpoint behind each of two q35 PCIe Root Ports"
+  },
+  "seabiosCases": {
+    "default-1x64": {
+      "qomFloorBytes": 34359738368,
+      "runtimeWindow": [68719476736, 137438953472],
+      "assignedBars": [[68719476736, 137438953472]],
+      "heartbeat": true,
+      "verdict": "pass"
+    },
+    "default-2x64": {
+      "qomFloorBytes": 34359738368,
+      "runtimeWindow": [68719476736, 206158430208],
+      "assignedBars": [
+        [68719476736, 137438953472],
+        [137438953472, 206158430208]
+      ],
+      "heartbeat": true,
+      "verdict": "pass"
+    },
+    "explicit-32g-2x64": {
+      "qomFloorBytes": 34359738368,
+      "runtimeWindow": [68719476736, 206158430208],
+      "assignedBarCount": 2,
+      "heartbeat": true,
+      "verdict": "pass"
+    },
+    "explicit-0-2x64": {
+      "qomFloorBytes": 0,
+      "runtimeWindow": [68719476736, 206158430208],
+      "assignedBarCount": 2,
+      "heartbeat": true,
+      "verdict": "pass"
+    }
+  },
+  "ovmfCases": {
+    "default-2x64": {
+      "qomFloorBytes": 34359738368,
+      "runtimeWindow": [4294967296, 38654705664],
+      "assignedBarCount": 0,
+      "heartbeat": false,
+      "verdict": "pass-negative-control"
+    },
+    "explicit-128g-2x64": {
+      "ovmfPciMmio64Mb": 131072,
+      "qomFloorBytes": 137438953472,
+      "runtimeWindow": [137438953472, 274877906944],
+      "assignedBars": [
+        [137438953472, 206158430208],
+        [206158430208, 274877906944]
+      ],
+      "heartbeat": true,
+      "verdict": "pass"
+    }
+  },
+  "observedModel": {
+    "qemuPciHole64SizeMeaning": "minimum runtime root-window span measured from the runtime start, not a capacity ceiling",
+    "runtimeStart": "lowest assigned 64-bit PCI memory address, or the platform fallback when no high BAR is assigned",
+    "runtimeEnd": "max(highest assigned BAR end, roundUp(runtimeStart + configuredFloor, 1 GiB))",
+    "seabios": "after 32-bit packing fails, migrates eligible 64-bit entries and derives the high region from actual size and alignment demand",
+    "ovmf": "uses its own firmware aperture input; q35's default floor alone did not cause the two 64 GiB BARs to be assigned"
+  },
+  "sourceEvidence": {
+    "qemuQ35": "hw/pci-host/q35.c: Q35_PCI_HOST_HOLE64_SIZE_DEFAULT and q35_host_get_pci_hole64_start/end",
+    "qemuPciRange": "hw/pci/pci.c: pci_bus_get_w64_range includes decode-enabled 64-bit BARs and 64-bit prefetch bridge windows above 4 GiB",
+    "qemu11CrossCheck": "QEMU 11.0.2 retains the same 32 GiB default and max(actual end, floor end) getter logic; source audit only",
+    "qemuAcpi": "hw/i386/acpi-build.c: acpi_get_pci_holes and QWord root resource emission",
+    "seabios": "src/fw/pciinit.c: pci_bios_get_bar, pci_region_migrate_64bit_entries, pci_bios_map_devices"
+  },
+  "artifactHashes": {
+    "qemuBinary": "sha256:7d1e85a29e09c49f6a1c60a18713d80a72ef3b8932c4183cc100bce3a01fa64e",
+    "qemu11Q35Source": "sha256:88767cc8b1fb586e8bb499dffdf9f9f886aa0a54cf4ebd3164ea6a6ad2d554dd",
+    "seabiosBinary": "sha256:781966722ba843531ac8aaf40e10eaddba5db7444e64390ee797732be5168ce2",
+    "seabiosResults": "sha256:6ba51127254fb2352aeac9eeb6bfbc338911e5737b8dcc7c056c98b29b1f8118",
+    "seabiosDefault2InfoPci": "sha256:097db4654c6e18db32f27e3d36c5664a9d3c2a2344ff52f342db0ba8c1a5440d",
+    "seabiosDefault2Debug": "sha256:4fd17f75fb9b751c4aaa98c4d6f1298fb17d70d4805f213c7559f28f6b8876da",
+    "ovmfResults": "sha256:7d37a0f56a34807a74edaa8f773428fbea7ba3777b40f9af9af5aab0ae1dd3e3",
+    "ovmfDefaultInfoPci": "sha256:8228ccefc7440ffd0ee9ac23709a21d9226676496a9fd112707e4a4625fc86f5",
+    "ovmfExplicit128InfoPci": "sha256:5cb50c4ebc0d9c2df6ec67f9106714006554a276274f94b3edf8973b15d030b9"
+  },
+  "reproduceWith": [
+    "qemu-q35-seabios-hole64-floor-validate.sh",
+    "qemu-q35-ovmf-dual-64g-validate.sh"
+  ],
+  "rawEvidenceLocal": [
+    "/root/pci-evidence/q35-seabios-floor-final-20260716-005149",
+    "/root/pci-evidence/q35-ovmf-dual-final-20260716-005825"
+  ]
+}

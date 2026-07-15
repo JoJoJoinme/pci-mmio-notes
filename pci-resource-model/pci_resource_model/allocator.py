@@ -132,6 +132,73 @@ class AllocationPolicy:
 
 
 @dataclass(frozen=True)
+class QemuHole64Window:
+    """QEMU's realized root window, separating the floor from assigned BARs."""
+
+    configured_floor_bytes: int
+    assigned_start: int | None
+    assigned_end: int | None
+    runtime_start: int
+    runtime_end: int
+
+    @property
+    def runtime_span_bytes(self) -> int:
+        return self.runtime_end - self.runtime_start
+
+    def to_dict(self) -> dict[str, int | None]:
+        return {
+            "configuredFloorBytes": self.configured_floor_bytes,
+            "assignedStart": self.assigned_start,
+            "assignedEnd": self.assigned_end,
+            "runtimeStart": self.runtime_start,
+            "runtimeEnd": self.runtime_end,
+            "runtimeSpanBytes": self.runtime_span_bytes,
+        }
+
+
+def project_qemu_hole64_window(
+    configured_floor_bytes: int,
+    assigned_ranges: Iterable[AddressRange],
+    *,
+    fallback_start: int,
+    granularity: int = GIB,
+) -> QemuHole64Window:
+    """Model q35/i440fx hole64 getters when the compatibility fix is enabled.
+
+    ``pci-hole64-size`` is a minimum span measured from the runtime start.  It
+    does not cap firmware-assigned 64-bit BARs: the exported end covers the
+    assigned range or the configured floor, whichever reaches farther.
+    """
+
+    if configured_floor_bytes < 0:
+        raise ValueError("configured_floor_bytes must not be negative")
+    if fallback_start < 0:
+        raise ValueError("fallback_start must not be negative")
+    if not is_power_of_two(granularity):
+        raise ValueError("granularity must be a power of two")
+
+    ranges = tuple(assigned_ranges)
+    if ranges:
+        assigned_start = min(interval.start for interval in ranges)
+        assigned_end = max(interval.end for interval in ranges)
+        runtime_start = assigned_start
+    else:
+        assigned_start = None
+        assigned_end = None
+        runtime_start = fallback_start
+
+    floor_end = align_up(runtime_start + configured_floor_bytes, granularity)
+    runtime_end = max(assigned_end or runtime_start, floor_end)
+    return QemuHole64Window(
+        configured_floor_bytes=configured_floor_bytes,
+        assigned_start=assigned_start,
+        assigned_end=assigned_end,
+        runtime_start=runtime_start,
+        runtime_end=runtime_end,
+    )
+
+
+@dataclass(frozen=True)
 class BarAllocation:
     bar: Bar
     address: int
@@ -220,6 +287,8 @@ class AllocationResult:
             "lowFree": [interval.to_dict() for interval in self.low_free],
             "highFree": [interval.to_dict() for interval in self.high_free],
             "highApertureBytes": self.high_aperture_bytes,
+            "requiredHighSpanBytes": self.high_aperture_bytes,
+            "qemuPciHole64FloorBytes": self.high_aperture_bytes,
             "highApertureAlignment": self.high_aperture_alignment,
             "qemuArguments": self.qemu_arguments(
                 firmware=firmware, host_bridge=host_bridge

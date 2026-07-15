@@ -1880,8 +1880,9 @@ host reserved pages 可被安全保留为精确 identity mapping，且 device re
 2. 按 size/alignment 进行 below-4G packing。
 3. 不能低置的 64-bit BAR 进入 high aperture。
 4. 以实际 bridge tree 自底向上聚合 window，不只计算 root-level 总和。
-5. high aperture 同时设置 OVMF `X-PciMmio64Mb` 和 QEMU host bridge
-   `pci-hole64-size`，不允许只设置一侧。
+5. OVMF profile 同时设置 `X-PciMmio64Mb` 与 QEMU host bridge
+   `pci-hole64-size`；SeaBIOS 虽可按实际 BAR 自动扩窗，生产 profile 仍显式 pin 已求解的
+   QEMU floor，不把 firmware 默认值当 admission 证明。
 6. 记录 guest RAM、firmware reserved ranges、其他 virtual device BAR 和 RMRR。
 7. plan 是事务结果；任何 BAR 失败时不返回部分布局。
 
@@ -1915,6 +1916,47 @@ observedPlan    # 启动后从 QMP、ACPI、guest sysfs 读回的实际 BAR/wind
 `admissionPlan` 通过不代表地址已经被强制实现。普通功能 profile 要求实际结果满足 plan 的
 约束；严格地址 parity profile 要求逐地址相等。Stock backend 无法强制严格结果时返回
 `BACKEND_RESOURCE_PLACEMENT_GAP`，不能把预测地址写成既成事实。
+
+##### 12.2.1.1 `pci-hole64-size` 是 floor，不是 cap
+
+QEMU Q35 的 `pci-hole64-size` 必须在 schema 和日志中命名为
+`qemuPciHole64FloorBytes`。QEMU 6.2 的公开实现先从 `pci_bus_get_w64_range()` 读取 firmware
+已经写入的实际 64-bit BAR/bridge 范围，再按配置值扩展最小跨度；本地 QEMU 11.0.2
+源码交叉核对仍保持相同公式与 32GiB 默认值：
+
+```python
+function projectQemuHole64(configuredFloor, actualW64, fallbackStart):
+    if actualW64 is nonempty:
+        runtimeStart = actualW64.start
+        actualEnd = actualW64.end
+    else:
+        runtimeStart = fallbackStart
+        actualEnd = runtimeStart
+
+    floorEnd = alignUp(runtimeStart + configuredFloor, 1GiB)
+    runtimeEnd = max(actualEnd, floorEnd)
+    return [runtimeStart, runtimeEnd)
+```
+
+因此 `configuredFloor=32GiB` 不会拒绝 firmware 已分配的 128GiB span；即使 floor 为 0，
+runtime window 仍须覆盖实际 BAR。2026-07-16 本地正例是 Q35 + SeaBIOS + 两个 64GiB
+BAR：默认 32GiB 和显式 0 均得到 `[64GiB,192GiB)`。同拓扑 OVMF 默认负例没有分配 BAR，
+只得到 `[4GiB,36GiB)`；同时设置 OVMF 与 QEMU 128GiB 后得到 `[128GiB,256GiB)`。
+完整证据见 `qemu-q35-firmware-dual-64g-results.md`。
+
+```mermaid
+flowchart TB
+    DEMAND["实际 BAR/bridge window"] --> ACTUAL["pci_bus_get_w64_range"]
+    FLOOR["QOM configured floor"] --> MAX["runtimeEnd = max(actualEnd, start + floor)"]
+    ACTUAL --> MAX
+    MAX --> QOM["runtime start/end"]
+    QOM --> ACPI["ACPI QWord root resource"]
+```
+
+这不意味着管理面可以省掉 planner。自动扩窗只能证明某个 firmware/build 在启动后做出了
+可用布局，不能提前证明 OVMF、不同 SeaBIOS 版本、不同 bridge tree 或受限 physical-address
+width 一定成功。生产 renderer 显式 pin floor 是为了稳定 ABI 和可预检性，不是因为该属性
+本身是 hard capacity。
 
 #### 12.2.2 输入模型
 
@@ -1959,7 +2001,8 @@ record VmResourcePlan:
     bridgeWindows: Map[NodeId, List[WindowPlan]]
     rootHighWindows: Map[RootId, AddressRange | empty]
     firmwareApertureBytes: uint64
-    hostBridgeApertureBytes: uint64
+    requiredHighSpanBytes: uint64
+    qemuPciHole64FloorBytes: uint64
     qemuArguments: List[string]
     expectedRootTopology: RootTopologyConstraint
     expectedHighWindows: Map[RootId, WindowConstraint]
@@ -2187,15 +2230,20 @@ function materializePlan(tree, solution, profile):
             require [start, end) is contiguous and excludes reservations
             plan.rootHighWindows[root.id] = [start, end)
 
+    plan.requiredHighSpanBytes = profile.requiredEncodedHighSpan(
+        plan.rootHighWindows, plan.bridgeWindows)
     plan.firmwareApertureBytes = profile.encodeFirmwareAperture(
         plan.rootHighWindows, plan.bridgeWindows)
-    plan.hostBridgeApertureBytes = profile.encodeHostBridgeAperture(
-        plan.rootHighWindows, plan.bridgeWindows)
+    plan.qemuPciHole64FloorBytes = profile.encodeQemuHole64Floor(
+        requiredSpan=plan.requiredHighSpanBytes,
+        bridgeWindows=plan.bridgeWindows)
     return plan
 ```
 
 多 root profile 必须保存每个 root 的窗口。若 stock QEMU/OVMF 只有一个全局 knob，renderer
 必须证明该 knob 能覆盖所有 root 且不会违反 profile；否则返回 `BACKEND_APERTURE_ENCODING_GAP`。
+单 root 时 `requiredEncodedHighSpan` 就是该 root 的 covering span；多 root 时由 backend profile
+按实际编码关系计算，既不能简单求和，也不能取一个未经证明的最大值。
 
 2GiB exact-hole 反例说明为什么不能只求和：
 
@@ -2213,9 +2261,11 @@ target BAR: size=2GiB, alignment=2GiB
 
 ```python
 function renderApertureArguments(profile, plan):
-    high = plan.hostBridgeApertureBytes
+    required = plan.requiredHighSpanBytes
+    floor = plan.qemuPciHole64FloorBytes
     args = []
     if profile.firmware == OVMF:
+        require plan.firmwareApertureBytes >= required
         args += ["-fw_cfg",
                  "name=opt/ovmf/X-PciMmio64Mb,string=" + ceilMiB(
                      plan.firmwareApertureBytes)]
@@ -2224,15 +2274,21 @@ function renderApertureArguments(profile, plan):
     else:
         return reject(FIRMWARE_BACKEND_UNSUPPORTED)
 
-    args += ["-global",
-             profile.hostBridgeProperty + ".pci-hole64-size=" + formatSize(high)]
+    if profile.releaseClass == PRODUCTION:
+        require floor >= required
+    else:
+        require profile.releaseClass == QUALIFICATION_AUTO_GROW
+
+    args += ["-global", profile.hostBridgeProperty +
+             ".pci-hole64-size=" + formatSize(floor)]
     args += profile.renderMachineAndBridgeTree(plan.tree)
     return args
 ```
 
 OVMF 和 host bridge 两侧必须同时设置；SeaBIOS 不消费 OVMF fw_cfg。`pci-hole64-size` 是
-above-4G host window，不是 below-4G `pci-hole-size`。参数值、machine type、firmware hash 和
-plan hash 一起进入 manifest。
+above-4G root window 的**最小跨度**，不是 below-4G `pci-hole-size`，也不是已分配 BAR 的
+硬上限。`QUALIFICATION_AUTO_GROW` 只用于复现 floor 语义，不得被调度器宣传为 production
+capability。参数值、machine type、firmware hash 和 plan hash 一起进入 manifest。
 
 #### 12.2.8 启动后闭环
 
@@ -2241,6 +2297,9 @@ function verifyObservedPlan(plan, qmp, guestEvidence):
     observed = collectObservedPlan(
         qmpInfoPci=qmp.queryPci(),
         qemuMemoryTree=qmp.queryMemoryTreeOrHmp(),
+        qemuHole64Floor=qmp.qomGet("pci-hole64-size"),
+        qemuHole64Start=qmp.qomGet("pci-hole64-start"),
+        qemuHole64End=qmp.qomGet("pci-hole64-end"),
         acpiRoots=guestEvidence.acpiRootResources,
         pciTree=guestEvidence.lspciTree,
         sysfsResources=guestEvidence.sysfsPciResources)
@@ -2250,6 +2309,8 @@ function verifyObservedPlan(plan, qmp, guestEvidence):
     require every mandatory BAR is nonzero and has expected size/type
     require every BAR is contained by every bridge/root window on its path
     require no observed BAR overlaps RAM/reserved/another BAR
+    require observed.qemuHole64Floor == plan.qemuPciHole64FloorBytes
+    require observed.qemuHole64Runtime covers every observed high BAR/window
     require observed.highWindows satisfies plan.expectedHighWindows
     if plan.verificationPolicy.requiresExactAddresses:
         require observed.addresses == plan.barPlacements
@@ -2263,7 +2324,9 @@ profile/build；只有伴随 reset、DMA、identity 或 device health 失败时�
 
 - EFI 基线使用 OVMF，并固定 CODE/VARS hash；Legacy BIOS 使用 SeaBIOS 并固定镜像 hash。
 - SeaBIOS 是 QEMU legacy firmware，不是 VMware `firmware=bios` 的行为等价物。本地实测中
-  SeaBIOS 可将 2GiB BAR 高置，而 VMware `i440bx+bios` 将同一 BAR 留为未分配。
+  SeaBIOS 可将 2GiB BAR 高置，而 VMware `i440bx+bios` 将同一 BAR 留为未分配；Q35 +
+  SeaBIOS 1.15 还可在 QEMU floor 为 32GiB 或 0 时，按两块 64GiB BAR 的实际需求生成
+  128GiB high window。该行为是独立的 QEMU profile，不能冒充 VMware BIOS 语义。
 - Qman 创建 VM 时必须把 requested firmware/layout 解析成持久化 `resolvedLayout`，不能在
   QEMU 升级、导入或恢复时重新套用“当前默认”。`acpi+bios` 在资源规划前返回
   `PROFILE_FIRMWARE_LAYOUT_MISMATCH`。
@@ -2514,7 +2577,7 @@ GET  /vms/{vm}/directpath/runtime-bindings
     "mmio64": [],
     "rmrrEnvelope": [],
     "ovmfPciMmio64Mb": 2048,
-    "qemuPciHole64Size": 2147483648
+    "qemuPciHole64FloorBytes": 2147483648
   },
   "artifacts": {
     "qemuHash": "sha256:...",
@@ -2572,6 +2635,7 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 | R33 | MMIO 只累计 endpoint BAR | bridge/辅助 BAR 与 alignment 使 mandatory BAR 未分配 | 全树自底向上 packing、padding 与 mandatory-BAR assertion | exact-hole bridge 2G/4G A/B |
 | R34 | Legacy BIOS mandatory large BAR 静默未分配 | guest 枚举但设备功能不完整 | admission 预拒绝或仅 lab degraded profile；启动后核对所有 mandatory BAR | VMware LF00 与 SeaBIOS 对照 |
 | R35 | userspace ACS shadow domain 漏掉 architecture requester alias | override 后把可 P2P/同 RID 的设备拆给不同 owner | kernel native shadow-domain ABI；software estimate 不进 production trusted sources | override off/on group A/B、alias trace、peer-DMA 正负对照 |
+| R36 | 把 QEMU `pci-hole64-size` floor 当 hard cap，或把 SeaBIOS auto-grow 当通用保证 | 前者错误拒绝可行 VM；后者让 OVMF/升级后 VM 启动失败或 BAR 未分配 | schema 分离 required span、firmware aperture、QEMU floor 与 observed runtime window；production 显式 pin 并启动后核对 | M22/M23、QOM/HMP/firmware paired logs |
 
 ### 18.1 风险清零发布门
 
@@ -2697,6 +2761,8 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | M19 | first-fit/greedy 失败但精确布局有解 | exact solver 找到解，结果稳定 | 待实现 |
 | M20 | exact solver timeout | 返回不可重试 `MMIO_PLANNER_TIMEOUT`，不降级 greedy | 待实现 |
 | M21 | observed BAR/window 偏离 admission plan | VM 不提交，assignment 回滚，backend profile invalidated | 待 post-boot controller |
+| M22 | Q35 + SeaBIOS，双 64GiB BAR，floor=default/32GiB/0 | 两个 BAR 均分配；runtime window 覆盖 128GiB；QOM floor 保持请求值 | 已有，4/4 pass |
+| M23 | Q35 + OVMF，双 64GiB BAR默认/显式 128GiB | 默认 0/2 BAR；fw_cfg 与 floor 均为 128GiB 后 2/2 BAR 且 heartbeat | 已有，2/2 pass |
 
 ### 19.5 故障与多主机
 
@@ -2719,9 +2785,9 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 ### Phase 0：规范冻结
 
 - 固定本文 schema、reason code、profile 和 evidence contract。
-- 将 K01-K29、R01-R35 和 qualification dependency graph 做成可机器验证的 release input。
+- 将 K01-K29、R01-R36 和 qualification dependency graph 做成可机器验证的 release input。
 - 将现有 `pci-resource-model` 输出升级为 versioned inventory/plan。
-- 验收：旧 46 项测试迁移，JSON schema/golden files 稳定，C10/C15-C19/F10 证明查询无副作用、
+- 验收：现有测试迁移，JSON schema/golden files 稳定，C10/C15-C19/F10 证明查询无副作用、
   domain provenance、reset contract 和依赖失效语义。
 
 ### Phase 1：单 host 静态控制器
@@ -2849,7 +2915,7 @@ capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP
 | K04 | VMware 要求真实 ACS；本部署又必须开 Linux ACS override | kernel group 只用于 VFIO 操作；kernel native shadow domain 作为安全 lease 边界，其中 DMA endpoint 必须同 IOAS 或被证明 quiesced | `HW-QUAL` | ACS override 无法生成物理隔离；shadow ABI/alias coverage/peer path 未闭环即拒绝，R01/R26/R35 |
 | K05 | BAR 必须按 4KB 或更大对齐；sub-4KB BAR 所在 host page 不得有其他资源 | inventory 同时检查 host resource start/size/page sharing 和 guest allocator 对齐；冲突则拒绝 | `SW-CLOSE` + `HW-QUAL` | host firmware 若将无关资源放入同页，QEMU 不能安全补救，R21 |
 | K06 | passthrough 不支持 Resizable BAR | 在 bind 前固定 effective BAR size，vfio-pci config policy 隐藏或只读 ReBAR control，guest 写入必须无效 | `BACKEND-GAP` | 只在 planner 记录 size 不够；stock vfio-pci 表面可见性需逐版验证，R22 |
-| K07 | legacy BIOS 受 below-4G/3.75GB 合计 BAR 限制；UEFI + 64-bit MMIO 支持大 BAR，host firmware 也需 above-4G mapping | SeaBIOS/OVMF 分 profile；parity legacy 显式实施 3.75GB ceiling；host admission 核对 above-4G 和 IOMMU/address-width 边界；UEFI 对 selected BAR 逐级 bridge packing，同时设置 OVMF aperture 与 QEMU `pci-hole64-size`，再核对 `_CRS`/BAR | `SW-CLOSE` | 单边配置、隐式对齐和机型拓扑可导致窗口不等价，R09 |
+| K07 | legacy BIOS 受 below-4G/3.75GB 合计 BAR 限制；UEFI + 64-bit MMIO 支持大 BAR，host firmware 也需 above-4G mapping | SeaBIOS/OVMF 分 profile；parity legacy 显式实施 3.75GB ceiling；host admission 核对 above-4G 和 IOMMU/address-width 边界；对 selected BAR 逐级 bridge packing；OVMF 同时设置 firmware aperture 与 QEMU floor，SeaBIOS production profile 显式 pin floor，再核对 QOM runtime window、`_CRS`/BAR | `SW-CLOSE` | `pci-hole64-size` 是 floor 而非 cap；单边配置、隐式 auto-grow、对齐和机型拓扑可导致窗口不等价，R09/R36 |
 | K08 | passthrough device 上限随 ESXi 版本为 16/32/64；目标 8.0 U3 为 64 | Qman profile 硬限 64，预建稳定 root ports，在租约前试算 BDF、bus number、MMIO、IRQ 和 fd 预算 | `SW-CLOSE` | 未完成 1/16/32/64/65 真实启动矩阵前对外 limit 必须降到已验证值，R25 |
 
 ### 24.3 Reset、拓扑与功能依赖
@@ -3025,7 +3091,7 @@ flowchart TB
 | 8.4 physical domain | phase-1 kernel patch + `linux_sysfs.py::reconstruct_physical_isolation_domains` | ACS native/effective/source 与 userspace union-find estimate | 实现 kernel native shadow-domain ABI；estimate 改为 per-component 并仅作 differential evidence | C05、C06、C16、C19 |
 | 8.2 reset domain | 当前只有 sysfs parent `estimated` set | 可供 lab 展示，不是 production proof | 新增 VFIO cdev/legacy provider、两阶段 query、UAPI mode/ownership 负例 | C03、C04、C17、C18、S11、S12 |
 | 8.5 dependency bundle | `capability.py::_dependency_closure` | 五类集合的基础 closure | edge provenance、requester alias、PF/VF、functional rule、member action | C07、C13、D03、D14 |
-| 12.2 allocator | `pci_resource_model/allocator.py` | root low/high pool、BAR alignment、事务失败 | 完整 guest tree、逐桥 window、exact solver、backend renderer、observed verifier | M00-M03、M18-M21 |
+| 12.2 allocator | `pci_resource_model/allocator.py` | root low/high pool、BAR alignment、事务失败、QEMU floor/runtime projection | 完整 guest tree、逐桥 window、exact solver、backend renderer、observed verifier | M00-M03、M18-M23 |
 | 9 static transaction | 设计/实验脚本 | 单项 QEMU/VFIO 证据 | durable controller、fd-only launch、rollback/quarantine、manifest commit | S00-S12、F00、F09 |
 | 10 Dynamic | VMware 黑盒证据和本节伪代码 | matcher/assignedId 外部语义已知 | candidate builder、global solver、atomic reservation、runtime binding | D00-D14 |
 | 11/15 ownership/recovery | 尚无产品模块 | 状态机和风险合同已定 | SQLite/CAS 单 host lease、pidfd reconcile、generation、quarantine workflow | D09-D11、F00-F04 |
@@ -3033,10 +3099,10 @@ flowchart TB
 
 ### 25.4 建议的实现提交顺序
 
-1. 先冻结 snapshot/reason/plan JSON schema，并把现有 46 项测试改为读取这些稳定对象。
+1. 先冻结 snapshot/reason/plan JSON schema，并把现有测试改为读取这些稳定对象。
 2. 实现 VFIO reset provider，只发布 `ResetContract`，暂不做自动 attach；先闭环 C17/C18。
 3. 实现 kernel native shadow-domain ABI，修正 per-component estimate，完成 dependency edge/action manifest。
-4. 实现完整 guest tree 和 exact allocator，以 M18-M21 阻止 root-only 结果被误用。
+4. 实现完整 guest tree 和 exact allocator，以 M18-M23 阻止 root-only/floor-as-cap 结果被误用。
 5. 实现单 host durable lease 与 static attach/release；所有副作用接入统一 rollback 栈。
 6. 在 static 故障注入通过后复用事务 core，实现 Dynamic matcher/solver。
 7. 最后接入 multi-host fencing 和 parity surface；每一步都由第 18 节 risk gate 控制暴露。
@@ -3059,3 +3125,7 @@ flowchart TB
 - [QEMU：IOMMUFD backend with VFIO](https://www.qemu.org/docs/master/devel/vfio-iommufd.html)
 - [QEMU：VFIO device migration](https://www.qemu.org/docs/master/devel/migration/vfio.html)
 - [QEMU：QMP device_add/device_del](https://www.qemu.org/docs/master/interop/qemu-qmp-ref.html)
+- [QEMU 6.2：Q35 `pci-hole64` floor 与实际 BAR range](https://gitlab.com/qemu-project/qemu/-/blob/v6.2.0/hw/pci-host/q35.c)
+- [QEMU 6.2：`pci_bus_get_w64_range` 收集 decode-enabled 64-bit BAR/bridge window](https://gitlab.com/qemu-project/qemu/-/blob/v6.2.0/hw/pci/pci.c)
+- [QEMU 6.2：ACPI root QWord resource 生成](https://gitlab.com/qemu-project/qemu/-/blob/v6.2.0/hw/i386/acpi-build.c)
+- [SeaBIOS 1.15：PCI BAR/bridge allocator](https://qemu.googlesource.com/seabios/+/refs/tags/rel-1.15.0/src/fw/pciinit.c)

@@ -1,6 +1,6 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-15
+Record date: 2026-07-16
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
@@ -17,6 +17,11 @@ topology comparison, see
 machine-readable result is
 [`evidence/esxi8-firmware-layout-20260715-summary.json`](evidence/esxi8-firmware-layout-20260715-summary.json).
 
+For the Q35 dual-64GiB-BAR correction proving that QEMU `pci-hole64-size` is a
+floor rather than a hard cap, including SeaBIOS auto-growth and OVMF default/
+explicit controls, see
+[`qemu-q35-firmware-dual-64g-results.md`](qemu-q35-firmware-dual-64g-results.md).
+
 For the follow-up VMDirectPath/passthrough-specific validation matrix based on
 Broadcom KB 312208, see `vmware-passthrough-mmio-validation.md`.
 
@@ -31,7 +36,7 @@ test matrix, artifact contract, and QEMU equivalence checklist, see
 
 QEMU 平台完整复刻静态 VMDirectPath 与 Dynamic DirectPath 的控制平面设计，包括 capability
 分层、dependency bundle、候选求解、durable lease、IOMMUFD fd passing、rollback、
-quarantine、multi-host fencing、KB 312208 K01-K29 全量能力对标、R01-R35 风险清单，
+quarantine、multi-host fencing、KB 312208 K01-K29 全量能力对标、R01-R36 风险清单，
 并给出 capable、dependency/reset domain、静态/动态事务和多级 MMIO allocator 的分层图、
 数据合同、可实现伪代码和分阶段验收，见
 [`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)。
@@ -123,9 +128,9 @@ The current cold-boot parity runner proves the i440fx 1GB case; q35 zero/zero
 with the same 1GB BAR is a negative control because the BAR remains unassigned.
 Machine type and the full below-4G layout are part of the profile.
 
-When the aggregate BAR envelope cannot fit below 4G, a launcher must instead
-set both knobs to the required high-aperture size.  For the tested 2GB BAR this
-was `X-PciMmio64Mb=2048` plus `pci-hole64-size=2G`.  It matched high/low
+When an OVMF aggregate BAR envelope cannot fit below 4G, a deterministic
+launcher must set both knobs to the required high-aperture size. For the tested
+2GB BAR this was `X-PciMmio64Mb=2048` plus `pci-hole64-size=2G`. It matched high/low
 classification and size, but not VMware's exact high base address.
 
 The 2026-07-15 layout matrix adds a required qualification: VMware CreateVM
@@ -134,6 +139,10 @@ defaults are workflow-sensitive. On the tested vHW20 host, CreateVM selected
 registered VMX with the layout key absent used the i440bx-like single-root
 fallback. Both explicit VMware EFI layouts still exposed 440BX/PIIX4, so q35
 is a PCIe-topology approximation rather than a chipset-equivalent default.
+13. Q35 `pci-hole64-size=32G` is a minimum root-window span, not a BAR capacity
+    ceiling. SeaBIOS 1.15 assigned two 64GiB BARs into `[64GiB,192GiB)` with
+    the default, explicit 32GiB, and even zero floor. OVMF default assigned
+    neither BAR; explicit 128GiB fw_cfg plus a 128GiB QEMU floor assigned both.
 
 ## QEMU OVMF local validation
 
@@ -553,7 +562,10 @@ guest-visible 64-bit PCI MMIO space:
   the OVMF 64-bit host aperture.
 - QEMU i440fx and q35 expose a host-bridge property named `pci-hole64-size`.
   In the tested QEMU 6.2 build and local source tree, i440fx defaults to 2G
-  (`1ULL << 31`) and q35 defaults to 32G (`1ULL << 35`).
+  (`1ULL << 31`) and q35 defaults to 32G (`1ULL << 35`). Source and dual-64GiB
+  A/B tests prove this value is a minimum span from the runtime start, not a
+  hard capacity: QEMU uses the farther of the actual assigned BAR end and
+  `start + pci-hole64-size`.
 - QEMU ACPI generation publishes a 64-bit root-bridge memory resource when the
   host bridge has a non-empty `pci-hole64-start`/`pci-hole64-end` range.
 
@@ -567,8 +579,12 @@ OVMF:
 QEMU host bridge:
   -global q35-pcihost.pci-hole64-size=0
   -global i440FX-pcihost.pci-hole64-size=0
-  controls the QEMU/ACPI 64-bit PCI host-window resource
+  controls the minimum QEMU/ACPI 64-bit PCI host-window span
 ```
+
+SeaBIOS can still assign 64-bit BARs above 4G when this floor is zero; QEMU then
+publishes the actual assigned range. OVMF does not inherit that allocator
+behavior, so the two firmware profiles must remain separate.
 
 The below-4G PCI hole is a different topic. In this validation, the relevant
 QEMU property is `pci-hole64-size`, not a below-4G `pci-hole-size`.

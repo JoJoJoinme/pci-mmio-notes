@@ -101,6 +101,8 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(rc, 0)
         self.assertEqual(result["highApertureBytes"], 2 << 30)
+        self.assertEqual(result["requiredHighSpanBytes"], 2 << 30)
+        self.assertEqual(result["qemuPciHole64FloorBytes"], 2 << 30)
         self.assertIn(
             "name=opt/ovmf/X-PciMmio64Mb,string=2048",
             result["qemuArguments"],
