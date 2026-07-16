@@ -43,7 +43,8 @@ QEMU L0 可以逐项改变 PCIe 拓扑、ACS、multifunction、BAR 大小、Opti
 | Expansion ROM | 默认只是禁止执行 ROM，还是连 guest 可见 ROM BAR 也不暴露？ | guest PCI config 和 firmware log 的前后对比 |
 | PME/AER | 哪些事件由 ESXi 持有，哪些会进入 guest？ | 主动事件注入和 host/guest 成对日志 |
 | Dynamic DirectPath | 如何选候选设备，何时设置 `assignedId`，多个 allowed device 如何计算资源包络？ | VM 开机前、运行中、关机后的 API 快照 |
-| 生命周期 | snapshot、suspend、migration、hotplug、强制关机分别支持还是拒绝？ | API 结果、task fault 和操作后的设备状态 |
+| Fixed passthrough hotplug | `fixedPassthruHotPlugEnabled` 的配置门、资源预留、add/eject/失败补偿是什么？ | powered-off/online API A/B、guest/QMP、BAR/window、lease/fd/reset 成对证据 |
+| 生命周期 | snapshot、suspend、migration、Dynamic runtime switch、强制关机分别支持还是拒绝？ | API 结果、task fault 和操作后的设备状态 |
 
 ### 2.2 VMware 默认 MMIO 的最低验收条件
 
@@ -273,6 +274,14 @@ AER 已证明 stock QEMU 的 guest surface 不等价，完整过滤仍需 QEMU p
 | L03 | L2 关机时重启 ESXi | Passthrough activation 和 ownership 可预测恢复 |
 | L04 | L2 运行时强制关闭 ESXi | 下一次 host/VM boot 不保留不安全状态 |
 | L05 | 删除并重新添加 passthrough 配置 | 记录 reboot/rebind 要求和 API state transition |
+| L06 | flag=false、Dynamic backing 或 raw API 尝试 runtime add/remove | 精确记录拒绝 fault，原 device/assignment 不变 |
+| L07 | powered-on 设置 `fixedPassthruHotPlugEnabled`；停机启用时改变 memory reservation | 前者必须拒绝；记录 ESXi 对 full-memory reservation 的实际 enforcement |
+| L08 | fixed device runtime hot-add success + 每阶段 fault injection | 记录 boot-time aperture/slot、config/API、guest enumerate、BAR、reset；不存在半挂载 |
+| L09 | fixed device runtime hot-remove success + guest eject timeout/reset failure | 记录何时 backing/owner/fd 消失；未完成 eject/cleanup 时设备不得变为可分配 |
+
+L06-L09 是独立的 fixed passthrough hotplug 画像，不改变 X00-X03 的 Dynamic 定义。每个 case
+必须至少保存 VM 停机配置、power-on 后配置、操作前后 device backing、guest PCI tree、BAR/window、
+ESXi task fault/日志和 outer QEMU trace；只观察 UI 按钮是否出现不算通过。
 
 ## 8. QEMU 侧核对表
 
@@ -401,6 +410,7 @@ virtual VT-d 与共享 NFS。
 | L02 | pass | 普通 VM live vMotion 成功；Classic/Dynamic DirectPath live vMotion 按预期拒绝 |
 | L03/L05 | pass | host 重启和 `--apply-now` owner 切换状态已记录 |
 | L04 | pass | DMA/heartbeat 时 SIGKILL outer QEMU；host/datastore/owner 恢复且同 VM 再次 I/O 成功 |
+| L06-L09 | planned/API-confirmed | 8.0 U3 API 字段、停机设置约束和 full-memory-reservation 注记已确认；ESXi fixed-device add/remove 黑盒尚未执行，不得写成 unsupported 或 pass |
 | QEMU firmware/layout 7-profile | pass | SeaBIOS/i440fx、OVMF/i440fx single/bridge、OVMF/PXB multi-root、OVMF/q35 root-port 全部完成正负断言 |
 | SeaBIOS parity boundary | pass-not-equivalent | SeaBIOS 在 single/bridge profile 都可把 2GiB BAR 高置；VMware `i440bx+bios` 未分配该 BAR |
 
@@ -409,11 +419,13 @@ virtual VT-d 与共享 NFS。
 - Broadcom KB 312208，VMDirectPath/Dynamic DirectPath requirements：
   https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html
 - vSphere API `HostPciPassthruInfo`：
-  https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruInfo.html
+  https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruInfo.html
 - vSphere API `HostAssignableHardwareManager`：
-  https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareManager.html
+  https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.AssignableHardwareManager.html
 - vSphere API `VirtualPCIPassthroughDynamicBackingInfo`：
-  https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html
+  https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html
+- vSphere API `VirtualMachineConfigSpec.fixedPassthruHotPlugEnabled`：
+  https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.vm.ConfigSpec.html#fixedPassthruHotPlugEnabled
 - QEMU tracing documentation：
   https://www.qemu.org/docs/master/devel/tracing.html
 - QEMU EDU device specification：

@@ -1,16 +1,26 @@
 # QEMU 静态与动态 PCI 直通对标设计
 
-状态：详细设计 2.0（可实现伪代码版）
+状态：详细设计 2.2（ESXi 8.0.3 基线冻结版）
 
-目标基线：VMware ESXi 8.0 U3、virtual hardware 20、EFI guest
+目标基线：VMware ESXi 8.0.3 build 24280767、vSphere API 8.0.3.0、
+virtual hardware 20
 
 范围：公开接口、公开文档和本仓库黑盒结果所能观察的外部行为
 非目标：推导 VMware 私有代码、复制未公开算法或把实验绕过描述成硬件安全能力
 
+版本边界：本文不包含 vSphere 9.0/9.1 的 DirectPath Profile Manager、`directPathState`
+或新增 binding 字段。其他 ESXi 版本只能作为旁证，不能改变本 profile 的状态、默认值或
+完成标准。
+
+面向实现者的模块接口、持久化表、事务补偿、crash reconcile、API 和端到端 worked example
+见 [`qman-directpath-implementation-blueprint.md`](qman-directpath-implementation-blueprint.md)。
+本文继续作为算法、风险和验收编号的规范正文。
+
 ## 0. 阅读地图与系统心智模型
 
-本文按“事实、判断、占有、实现、验证”五层组织。第一次阅读只需先看本节、第 4 节总图、
-第 7 节 capable、第 8 节 domain、第 12 节 allocator 和第 9/10 节事务。
+本文按“事实、判断、占有、实现、验证”五层组织。第一次接触系统的读者先阅读实现蓝图
+第 0-3 节和第 19 节完整例子；需要实现具体算法时，再回到本文第 7 节 capable、第 8 节
+domain、第 12 节 allocator 和第 9/10 节事务。
 
 | 想回答的问题 | 直接阅读 | 输出 |
 | --- | --- | --- |
@@ -20,6 +30,7 @@
 | BAR 怎么从设备需求变成 QEMU/OVMF 参数？ | 12.1、12.2.1-12.2.8 | guest PCI tree、逐桥窗口、root aperture、启动参数 |
 | Static/Dynamic 如何避免抢卡和半成功？ | 9.2-9.6、10.2-10.7、11 | CAS lease、rollback、runtime binding |
 | 哪些已经实现，哪些仍是设计？ | 22 | 代码映射和 fail-closed 状态 |
+| 模块怎么接、数据怎么落盘、失败怎么补偿？ | 实现蓝图 3、8-18 | API、SQL、时序、补偿和实施计划 |
 
 ```mermaid
 flowchart LR
@@ -57,7 +68,8 @@ QEMU + OVMF/SeaBIOS + VFIO/IOMMUFD
 
 1. 静态直通持久绑定一个明确 host device；动态直通持久保存匹配条件，只在 VM 启动事务中
    产生临时 `assignedId`。
-2. Dynamic DirectPath 表示 power-on selection，不表示运行中 PCI hot-add/hot-remove。
+2. Dynamic DirectPath 表示 power-on selection，不表示运行中 PCI hot-add/hot-remove。ESXi 8.0.3
+   另有 `fixedPassthruHotPlugEnabled` 固定设备热插拔能力，必须作为独立可选 profile 建模。
 3. `capable`、管理员启用、host 激活、当前可租用、对某个 VM 可启动和某项生命周期操作可用
    是六种不同状态。
 4. 候选单位不是单个 BDF，而是 IOMMU、物理隔离、reset、RID alias、multifunction 和功能
@@ -65,8 +77,9 @@ QEMU + OVMF/SeaBIOS + VFIO/IOMMUFD
 5. ACS override 后的 kernel IOMMU group 只用于 VFIO 操作，不能缩小平台安全租约。
 6. 多设备分配、bind、reset、QEMU 启动和释放必须是可回滚事务；清理失败进入 quarantine，
    不得直接回到 free pool。
-7. VMware 对标 profile 默认拒绝 snapshot、suspend、live migration 和 runtime hotplug；QEMU
-   原生 VFIO migration 或 hotplug 只能作为单独扩展 profile，经能力证明后启用。
+7. VMware 对标 baseline 默认拒绝 snapshot、suspend、live migration 和 runtime hotplug；
+   ESXi fixed passthrough hotplug 与 QEMU-native VFIO hotplug/migration 都只能作为各自独立 profile，
+   经对应能力证明后启用。
 8. Firmware、VM 创建路径和 resolved motherboard layout 是 guest ABI；缺省值必须在创建时
    解析并持久化。Stock QEMU 只能提供分项功能近似时，严格 profile 必须 fail-closed。
 
@@ -103,6 +116,7 @@ vmware-esxi8u3-vhw20-create-efi-acpi        # CreateVM 缺省解析结果
 vmware-esxi8u3-vhw20-create-bios-i440bx     # CreateVM 缺省解析结果
 vmware-esxi8u3-vhw20-explicit-efi-i440bx    # 显式 legacy layout + EFI
 vmware-esxi8u3-vhw20-register-efi-i440bx    # key-absent 直接注册 fallback
+vmware-esxi8u3-vhw20-fixed-hotplug          # 可选 fixed device hot-add/remove；S13-S16 后启用
 qemu-vfio-native                            # 允许经过证明的 VFIO migration/hotplug 扩展
 lab-unsafe                                  # 只用于实验，输出永远带 unsafe 标记
 ```
@@ -115,7 +129,10 @@ migration policy 和 policy database hash。`acpi+bios` 是启动前拒绝的非
 
 Broadcom API 将静态设备状态分成 `passthruCapable`、`passthruEnabled` 和
 `passthruActive`；其中 Active 明确定义为 enabled 且 host 已重启。Dynamic backing 则保存
-`allowedDevice`、可选 `customLabel` 和仅在 VM powered-on 时设置的 `assignedId`。
+`allowedDevice`、可选 `customLabel` 和仅在 VM powered-on 时设置的 `assignedId`。vSphere API
+8.0.1 起还提供 `fixedPassthruHotPlugEnabled`，用于独立的 fixed passthrough runtime add/remove；
+该字段只能在 VM powered-off 时设置；API 注明应设置 full guest-memory reservation，Qman 将其
+收紧为 fail-closed 前置条件。
 
 | VMware 可观察状态 | QEMU 平台等价状态 | 说明 |
 | --- | --- | --- |
@@ -128,6 +145,7 @@ Broadcom API 将静态设备状态分成 `passthruCapable`、`passthruEnabled` �
 | `customLabel` | `labels` exact matcher | 标签是调度条件，不是安全证明 |
 | `assignedId` | `RuntimeBinding.hostBdf` | 只存在于当前 run；power-off 后清空 |
 | AH binding | `LeaseRecord + RuntimeBinding` | durable lease 是权威 owner，QEMU manifest 是运行证据 |
+| `fixedPassthruHotPlugEnabled` | `FixedHotplugProfile.enabled` | 独立于 Dynamic；停机配置、全内存预留、boot-time capacity |
 
 Linux 不需要为了外观对标而强制 host reboot。平台应输出实际激活模式：
 
@@ -519,6 +537,10 @@ ADMIN_DISABLED
 HOST_ACTIVATION_REQUIRED
 DEVICE_QUARANTINED
 DEPENDENCY_BUSY
+DEPENDENCY_PROVENANCE_UNKNOWN
+DEPENDENCY_ACTION_UNKNOWN
+DEPENDENCY_ACTION_CONFLICT
+DEPENDENCY_CLOSURE_LIMIT
 PROFILE_NO_MATCH
 PROFILE_ABI_MISMATCH
 RMRR_PROFILE_CONFLICT
@@ -572,6 +594,7 @@ Reasons 按 `stageOrder, code, devices` 稳定排序。API 文案可以本地化
 ```python
 function evaluatePassthrough(snapshot, target, requestContext?, policy):
     ctx = requestContext or CapabilityContext.empty()
+    profile = ctx.profile or policy.defaultCapabilityProfile
     out = CapabilityDecision(
         snapshotEpoch=snapshot.inventoryEpoch,
         target=target,
@@ -592,70 +615,76 @@ function evaluatePassthrough(snapshot, target, requestContext?, policy):
     payload = normalizePayload(target, ctx.explicitPayload)
     out.payload = payload
 
-    # Gate 2: per-payload hardware facts
-    for bdf in payload:
-        d = snapshot.devices.get(bdf)
-        if d is null:
-            add(out, INVENTORY, DEVICE_NOT_IN_INVENTORY, {bdf})
-            continue
-        role = classifyFunctionRole(d)
-        if role.kind not in {ENDPOINT, VIRTUAL_FUNCTION}:
-            add(out, HARDWARE, HARDWARE_ROLE_NOT_ASSIGNABLE, {bdf}, role)
-        if d.platform.firmwareReserved or d.platform.hostCritical:
-            add(out, HARDWARE, PLATFORM_RESERVED, {bdf})
+    # Gate 2: resolve the stable dependency/action/reset closure before reading
+    # admin, owner, health or VM resources. A target cannot be capable when a
+    # mandatory guest/reset dependency has no safe action or reset contract.
+    closure = resolveCapabilityClosure(snapshot, payload, profile, policy)
+    merge(out, closure.reasons)
+    if closure.success:
+        out.payload = closure.bundle.payload
+        out.leaseBundle = closure.bundle
+        out.selectedReset = closure.selectedReset
 
-        isolation = evaluateIsolation(snapshot, d, policy)
-        merge(out, isolation)
-
-        reset = selectPublishedResetContract(snapshot, bdf, policy.resetPolicy)
-        if reset.rejected:
-            merge(out, reset.reasons)
-        else:
-            out.selectedReset[bdf] = reset
-
-    out.hardwareCapable = noBlockingReason(out, through=HARDWARE)
-
-    # Gate 3: exact policy, never a broad class allow/deny shortcut
-    if out.hardwareCapable:
-        for bdf in payload:
+        for bdf in closure.bundle.payload:
             d = snapshot.devices[bdf]
-            rule = policy.qualificationDb.matchExact(
+            role = classifyFunctionRole(d)
+            if role.kind not in {ENDPOINT, VIRTUAL_FUNCTION}:
+                add(out, HARDWARE, HARDWARE_ROLE_NOT_ASSIGNABLE, {bdf}, role)
+            if d.platform.firmwareReserved or d.platform.hostCritical:
+                add(out, HARDWARE, PLATFORM_RESERVED, {bdf})
+            merge(out, evaluateIsolation(snapshot, d, policy))
+            if bdf not in closure.selectedReset:
+                add(out, HARDWARE, RESET_NOT_SUPPORTED, {bdf})
+
+    out.hardwareCapable = closure.success and \
+                         noBlockingReason(out, through=HARDWARE)
+
+    # Gate 3: exact policy for every member/action, never a broad class shortcut.
+    # A LOCK_ONLY fabric node may use a signed platform-action rule; it does not
+    # need a guest-driver rule, but an implicit/missing action rule still rejects.
+    if out.hardwareCapable:
+        for bdf, action in out.leaseBundle.actions.sortedItems():
+            d = snapshot.devices[bdf]
+            rule = policy.qualificationDb.matchMemberAction(
                 host=snapshot.hostFacts.identity,
                 device=d.identity,
+                action=action,
                 kernel=snapshot.hostFacts.kernel,
                 qemu=policy.qemuVersion,
-                profile=ctx.profile)
+                profile=profile)
             if rule is null:
                 add(out, POLICY, QUALIFICATION_MISSING, {bdf},
+                    details={"requiredAction": action},
                     source=policy.qualificationDb.provenance)
                 continue
             if rule.denied:
                 add(out, POLICY, DEVICE_ERRATA_DENY, {bdf}, rule.provenance)
-            if not rule.supports(policy.trustDomain, ctx.operations):
+            if not rule.supports(policy.trustDomain, ctx.operations, action):
                 add(out, POLICY, QUALIFICATION_MISSING, {bdf}, rule.provenance)
 
     out.policyEligible = out.hardwareCapable and noBlockingReason(out, through=POLICY)
     out.passthruCapable = out.policyEligible
 
     # Gate 4: activation is reported separately
-    out.adminEnabled = out.policyEligible and allAdminEnabled(payload)
+    out.adminEnabled = out.policyEligible and allAdminEnabled(out.payload)
     if out.policyEligible and not out.adminEnabled:
-        add(out, ACTIVATION, ADMIN_DISABLED, payload)
-    out.hostActive = out.adminEnabled and activationReady(payload)
+        add(out, ACTIVATION, ADMIN_DISABLED, out.payload)
+    out.hostActive = out.adminEnabled and \
+                     activationReadyForActions(out.leaseBundle.actions)
     if out.adminEnabled and not out.hostActive:
-        add(out, ACTIVATION, HOST_ACTIVATION_REQUIRED, payload)
+        add(out, ACTIVATION, HOST_ACTIVATION_REQUIRED,
+            out.leaseBundle.members)
 
-    # Gate 5: complete dependency set and current owners
+    # Gate 5: only current health/owners change availability; the bundle above
+    # is already part of the stable capable decision.
     if out.hostActive:
-        out.leaseBundle = buildDependencyBundle(
-            snapshot, payload, out.selectedReset, policy)
         evaluateAvailability(snapshot, out.leaseBundle, ctx.owner, out)
 
     # Gate 6: optional VM-specific admission
     if ctx.vmSpec exists and out.available:
         out.resourcePlan = planVmResources(snapshot, out.leaseBundle,
                                            ctx.vmSpec,
-                                           ctx.profile)
+                                           profile)
         evaluateVmAdmission(out.resourcePlan, ctx, out)
         out.attachable = noBlockingReason(out, through=VM_ADMISSION)
 
@@ -1218,62 +1247,118 @@ function reconstructPhysicalDomains(snapshot):
 若部署选择在单一 trust domain 的实验环境临时接受 estimate，manifest 必须标记 unsafe，且不能
 把该结果提升为 production qualification。
 
-### 8.5 构造最终 DependencyBundle
+### 8.5 构造 CapabilityClosure 与最终 DependencyBundle
 
-Domain 是 hyperedge，使用固定点 closure：
+Domain 是 hyperedge。member action 可能把新 function 提升为 guest payload，而每个新增 payload
+又需要自己的 reset contract；reset affected set 反过来继续扩大 ownership members。因此不能
+对初始 BDF 选完 reset 后做一次 union，也不能对新 member 调用不存在的 `resetContracts[bdf]`。
+使用以下 owner-independent 单调固定点：
 
 ```python
-function buildDependencyBundle(snapshot, payload, resetContracts, policy):
-    pending = Queue(sorted(payload))
-    members = Set()
-    edges = List[DependencyEdge]()
+function resolveCapabilityClosure(snapshot, initialPayload, profile, policy):
+    payload = Set(initialPayload)
+    members = Set(initialPayload)
+    actions = Map(default=NONE)
+    resetContracts = Map[BDF, ResetContract]()
+    edges = Set[DependencyEdge]()
 
-    while pending not empty:
-        bdf = pending.pop()
-        if bdf in members:
-            continue
-        members.add(bdf)
-        d = requireDevice(snapshot, bdf)
+    for bdf in payload:
+        actions[bdf] = ASSIGN_TO_GUEST
 
-        related = {
-            IOMMU: d.domains.kernelIommuGroup,
-            PHYSICAL: d.domains.physicalIsolationDomain,
-            RESET: resetContracts.get(bdf).affectedDevices,
-            REQUESTER_ALIAS: d.domains.requesterAliasSet,
-            MULTIFUNCTION: d.domains.multifunctionSet,
-            PF_VF: d.domains.pfVfDependencies,
-            FUNCTIONAL: d.domains.functionalGroup,
-            PLATFORM: d.domains.platformDependencies,
-        }
-        for kind, peers in related:
-            for peer in peers:
-                edges.append(DependencyEdge(bdf, peer, kind, provenanceOf(kind, d)))
-                if peer not in members:
-                    pending.push(peer)
+    repeat:
+        previous = hashCanonical(payload, members, actions,
+                                 resetContracts, edges)
 
-    actions = Map[BDF, MemberAction]()
-    for bdf in members:
-        d = snapshot.devices[bdf]
-        if bdf in payload or functionalRuleRequiresGuestAssignment(d, payload):
-            actions[bdf] = ASSIGN_TO_GUEST
-        else if resetOwnershipRequiresVfioOpen(bdf, resetContracts) or \
-                operationalGroupRequiresSingleDmaOwner(bdf, payload):
-            actions[bdf] = VFIO_HOLD_IN_SAME_IOAS
-        else if isNonDmaFabricNode(d) and canRemainHostOwnedWithoutResetConflict(d):
-            actions[bdf] = LOCK_ONLY
-        else if canQuiesceForLeaseLifetime(d):
-            actions[bdf] = QUIESCE_HOST
-        else:
-            return reject(DEPENDENCY_CANNOT_QUIESCE, {bdf})
+        # Expand stable topology/security/functional domains first.
+        for bdf in sorted(members):
+            d = requireDevice(snapshot, bdf)
+            domains = {
+                IOMMU: d.domains.kernelIommuGroup,
+                PHYSICAL: d.domains.physicalIsolationDomain,
+                REQUESTER_ALIAS: d.domains.requesterAliasSet,
+                MULTIFUNCTION: d.domains.multifunctionSet,
+                PF_VF: d.domains.pfVfDependencies,
+                FUNCTIONAL: d.domains.functionalGroup,
+                PLATFORM: d.domains.platformDependencies,
+            }
+            for kind, peers in domains:
+                if not trustedAndComplete(kind, d):
+                    return reject(DEPENDENCY_PROVENANCE_UNKNOWN, {bdf})
+                for peer in peers:
+                    requireDevice(snapshot, peer)
+                    edge = DependencyEdge(
+                        bdf, peer, kind, provenanceOf(kind, d))
+                    edges.add(edge)
+                    members.add(peer)
+                    action = conservativeRequiredMemberAction(
+                        edge, snapshot.dependencyFacts,
+                        payload, profile.dependencyPolicy,
+                        currentActions=actions)
+                    actions[peer] = mergeMemberActionOrReject(
+                        actions[peer], action)
 
-    return DependencyBundle(
-        id=hashCanonical(members, edges, actions),
+        # Only independently assigned/reset targets select a reset method.
+        # A peer held solely because SBR affects it does not recursively select
+        # an unrelated reset method unless an action rule promotes it.
+        resetTargets = sorted(bdf for bdf in members
+                              if actionRequiresTargetReset(actions[bdf]))
+        for bdf in resetTargets:
+            contract = selectPublishedResetContract(
+                snapshot, bdf, policy.resetPolicy)
+            if contract.rejected:
+                return rejectWith(contract.reasons)
+            resetContracts[bdf] = contract
+
+            for peer in contract.affectedDevices:
+                requireDevice(snapshot, peer)
+                edges.add(DependencyEdge(
+                    bdf, peer, RESET, contract.provenance))
+                members.add(peer)
+                hold = resetOwnershipAction(contract, target=bdf, peer=peer)
+                actions[peer] = mergeMemberActionOrReject(
+                    actions[peer], hold)
+
+        promoted = {bdf for bdf in members
+                    if actions[bdf] == ASSIGN_TO_GUEST}
+        payload = payload union promoted
+
+        if members.size > policy.maxDependencyMembers or \
+                edges.size > policy.maxDependencyEdges:
+            return reject(DEPENDENCY_CLOSURE_LIMIT, members)
+    until hashCanonical(payload, members, actions,
+                        resetContracts, edges) == previous
+
+    if any action in {NONE, UNKNOWN}:
+        return reject(DEPENDENCY_ACTION_UNKNOWN,
+                      membersWithUnknownAction(actions))
+    if not actionCompatibilityIsSafe(actions, resetContracts):
+        return reject(DEPENDENCY_ACTION_CONFLICT,
+                      conflictingMembers(actions))
+
+    bundle = DependencyBundle(
+        id=hashCanonical(members, payload, edges, actions,
+                         snapshot.inventoryEpoch, policy.hash),
         members=sorted(members),
-        payload=sorted(bdf where actions[bdf] == ASSIGN_TO_GUEST),
-        actions=actions,
+        payload=sorted(payload),
+        actions=canonicalMap(actions),
         edges=stableSort(edges),
-        inventoryEpoch=snapshot.inventoryEpoch)
+        inventoryEpoch=snapshot.inventoryEpoch,
+        policyHash=policy.hash)
+    return CapabilityClosure(
+        success=true,
+        bundle=bundle,
+        selectedReset=resetContracts)
 ```
+
+`mergeMemberActionOrReject` 使用显式 action lattice，不是随意取 enum 最大值。默认可提升路径是
+`LOCK_ONLY -> VFIO_HOLD_IN_SAME_IOAS -> ASSIGN_TO_GUEST`；`QUIESCE_HOST` 与 guest assignment
+冲突时必须有精确 signed rule，否则拒绝。算法以 set 去重、stable sort 和 member/edge 上限保证
+cycle-safe、确定性终止；超限不能返回截断 bundle。
+
+action resolver 只使用内置保守映射和 snapshot 中带可信 provenance 的 dependency fact；它不读
+owner/admin，也不接受普通 allowlist 缩小 physical/reset closure。qualification gate 随后验证每个
+member/action 的精确支持。未来若要缩小闭包，必须创建新 profile、改变 policy hash 并以 E4 证据
+证明，而不是在运行时覆写 capable。
 
 Bundle 的相交关系以 `members` 判断，而不是 payload。任何两 bundle 的 member intersection
 非空，就不能同时租给不同 owner。每条 edge 保存 kind 和 provenance，管理员可解释“为什么
@@ -1750,6 +1835,11 @@ sequenceDiagram
 baseline profile 在 QEMU 启动前就选定并 realize `vfio-pci`。QMP `device_add/device_del` 是独立
 扩展，`device_del` 只发起 guest eject，必须等待 `DEVICE_DELETED` 才能继续 teardown。未证明
 guest cooperation、reset 和 driver recovery 时，runtime hotplug capability 为 false。
+
+这不否定 ESXi 8.0.3 的 fixed passthrough hotplug。后者由 VM 级
+`fixedPassthruHotPlugEnabled` 显式开启，操作对象仍是精确 fixed backing，不从 Dynamic allowed
+set 在线换卡。Qman 分别暴露 `dynamicDirectPath`、`dynamicRuntimeHotplug=false` 和可选
+`fixedPassthruHotplug`，禁止一个布尔值同时代表三种语义；完整事务见实现蓝图 9.7。
 
 ### 10.6 原子 reservation 与重试
 
@@ -2431,7 +2521,8 @@ guest；产品合同以“host 处理、guest 无 notification”为硬语义，
 | live migration | 拒绝 | 拒绝 | 当前实测 `assignHwNotAvailable` |
 | powered-off relocate | 固定设备通常 host-bound | 允许 | 目标 host 重新求解 Dynamic request |
 | HA restart | 条件允许 | 条件允许 | 原 host fenced，目标有完整 candidate bundle |
-| runtime hot-add/remove | 拒绝 | 拒绝 | Dynamic 不等于 hotplug |
+| runtime hot-add/remove（baseline） | 拒绝 | 拒绝 | Dynamic 不等于 hotplug |
+| fixed passthru hotplug profile | 条件允许 | 拒绝 | 停机启用 flag、全内存预留、boot-time capacity、S13-S16 |
 | host maintenance evacuation | 关机/应用层处理 | 关机后 relocate | 不能伪装成 live migration |
 
 ### 14.2 QEMU-native migration 扩展
@@ -2443,14 +2534,28 @@ tracking 可用，且全部 P2P devices 支持 P2P migration/quiescent state 时
 迁移失败或取消必须把 device state 恢复为 RUNNING；源端 lease 在 destination commit 前不可
 释放。多设备 migration 的 stop/start 不是天然原子操作，必须遵守 VFIO P2P quiescent 规则。
 
-### 14.3 runtime hotplug 扩展
+### 14.3 fixed passthrough hotplug 与 QEMU-native hotplug
 
-可选实现必须：
+ESXi 8.0.3 的 `fixedPassthruHotPlugEnabled` 是本对标范围内的可选 fixed-device 能力；它不是
+Dynamic，也不能直接等同于任意 QEMU `device_add/device_del`。Qman 的实现合同是：
 
-1. 预留稳定 PCIe root port 和 firmware hotplug aperture。
-2. 在 `device_add` 前完成完整 lease、bind、reset 和 admission。
-3. `device_del` 后等待 `DEVICE_DELETED`，不能把 QMP command success 当成已拔除。
-4. 再执行 unmap/reset/rebind/release；guest 不合作时保持 lease 并进入 recovery。
+1. 只在 VM powered-off 时启用；`memoryReservationBytes == guestMemoryBytes`，禁用 balloon、
+   memory hot-add 和 overcommit。
+2. power-on 前预留稳定 PCIe root port、guest slot、bus number、firmware/ACPI hotplug aperture、
+   MMIO/IRQ/fd capacity；运行中不得扩张 `_CRS` 或 bridge window。
+3. hot-add 仍按 exact Static identity 运行 capability/bundle/lease/reset/MMIO admission，
+   `device_add` 前必须已有 durable lease 和 fd-only manifest。
+4. add 后以 guest enumerate + functional heartbeat 提交；add 失败但 eject/fd teardown 不确定时保留
+   lease 并 quarantine，不能为了回滚提前释放。
+5. hot-remove 先完成 guest quiesce/eject，`device_del` 后等待 `DEVICE_DELETED` 和 fd teardown；
+   再 unmap/invalidate/reset/state-probe/rebind/release。超时进入不可重入 `EJECT_PENDING` 并保持
+   lease，等待迟到事件或 QEMU/VM stop 后走 reconcile；不能退回普通 ATTACHED 后接受新操作。
+6. QMP ACL 只接受 controller-signed runId/lease/token/slot 命令；baseline、Dynamic 和 raw QMP
+   路径继续拒绝。
+7. 不把 exact fixed device 在线替换为另一个 BDF；需要换卡时先完整 remove，再发起新的 fixed add。
+
+若产品另行提供比 VMware profile 更宽的任意 QEMU-native hotplug，它必须使用不同 capability 和
+profile，重新验证 guest cooperation、reset、aperture 与 recovery，不能继承 S13-S16 的结论。
 
 ## 15. Crash、rollback 与 quarantine
 
@@ -2636,6 +2741,8 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 | R34 | Legacy BIOS mandatory large BAR 静默未分配 | guest 枚举但设备功能不完整 | admission 预拒绝或仅 lab degraded profile；启动后核对所有 mandatory BAR | VMware LF00 与 SeaBIOS 对照 |
 | R35 | userspace ACS shadow domain 漏掉 architecture requester alias | override 后把可 P2P/同 RID 的设备拆给不同 owner | kernel native shadow-domain ABI；software estimate 不进 production trusted sources | override off/on group A/B、alias trace、peer-DMA 正负对照 |
 | R36 | 把 QEMU `pci-hole64-size` floor 当 hard cap，或把 SeaBIOS auto-grow 当通用保证 | 前者错误拒绝可行 VM；后者让 OVMF/升级后 VM 启动失败或 BAR 未分配 | schema 分离 required span、firmware aperture、QEMU floor 与 observed runtime window；production 显式 pin 并启动后核对 | M22/M23、QOM/HMP/firmware paired logs |
+| R37 | 把 fixed passthrough hotplug 与 Dynamic/raw QMP 混为一条路径，或未在 boot 前预留 capacity | 在线扩大 window、半挂载、guest 未 eject 就释放，造成 BAR/lease/DMA/IRQ 失配 | 独立 capability/profile、停机 flag、全内存预留、boot-time slot/MMIO/IRQ plan、lease-signed QMP、等待 guest heartbeat/`DEVICE_DELETED`/fd cleanup | S13-S16、F09 和 add/remove fault injection |
+| R38 | 先对请求 BDF 判 capable，等激活/attach 才扩 dependency；或只给初始 payload 选 reset | mandatory function 无 reset/qualification 仍显示 capable，之后晚失败或被错误拆分 | owner-independent action/reset 固定点 closure 前置到 hardware/policy gate；每个 member/action exact qualification；超限/unknown/conflict fail-closed | C20、C04/C13/C17/C18/D14，busy A/B 稳定性 |
 
 ### 18.1 风险清零发布门
 
@@ -2696,6 +2803,7 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | C17 | VFIO cdev/legacy/mixed hot reset | cdev 要求 `DEV_ID_OWNED`；legacy 要求完整 group fds；mixed 拒绝 | UAPI 设计已定，provider 待实现 |
 | C18 | stale `ResetContract` | epoch/topology/rule 任一变化即不可选择 | 待实现 |
 | C19 | kernel native shadow domain | override-on shadow domain 是 override-off stock/alias constraint 的相等或保守超集；unknown component 拒绝 | phase-1 provenance patch 已构建；shadow ABI 待实现 |
+| C20 | capability closure 前置与 reset/action 固定点 | mandatory dependency 无 reset/action/qualification 时 target capable=false；同 bundle free/busy A/B 只改变 available，不改变 capable/bundle hash | 设计已修正；reference evaluator/fixture 待实现 |
 
 ### 19.2 静态 lifecycle
 
@@ -2714,6 +2822,10 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | S10 | Fault Tolerance 请求 | 对 DirectPath VM 明确拒绝 | Qman gate 待实现 |
 | S11 | attach 前 reset affected set 改变 | 放弃旧 plan，不执行 reset，不启动 QEMU | 待 VFIO provider/fault injection |
 | S12 | reset 后 state probe 失败 | affected set 整体 quarantine，lease 不回 FREE | 待 controller/fault injection |
+| S13 | fixed hotplug flag=false 或 Dynamic/raw QMP 尝试在线 add/remove | 稳定拒绝；原 assignment、lease 和 device function 不变 | API 语义已确认；ESXi/Qman 负例待跑 |
+| S14 | powered-on 修改 flag；停机启用但 memory reservation/capacity 不足 | 前者拒绝；Qman 对后者 fail-closed，不启动不完整 profile | API 约束已确认；ESXi enforcement/Qman 待跑 |
+| S15 | fixed device hot-add success/fault matrix | lease 在 `device_add` 前；预留 slot/window 不变；成功有 guest heartbeat；任意 fault 全回滚或 quarantine | ESXi 黑盒与 Qman controller 待实现 |
+| S16 | fixed device hot-remove success/guest-timeout/reset-fault | 等 `DEVICE_DELETED` 和 QEMU fd teardown 后才 cleanup/release；timeout 保持 `EJECT_PENDING`/lease 且不可重入；cleanup 不确定 quarantine | ESXi 黑盒与 Qman controller 待实现 |
 
 ### 19.3 Dynamic matcher 与 solver
 
@@ -2785,9 +2897,9 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 ### Phase 0：规范冻结
 
 - 固定本文 schema、reason code、profile 和 evidence contract。
-- 将 K01-K29、R01-R36 和 qualification dependency graph 做成可机器验证的 release input。
+- 将 K01-K30、R01-R38 和 qualification dependency graph 做成可机器验证的 release input。
 - 将现有 `pci-resource-model` 输出升级为 versioned inventory/plan。
-- 验收：现有测试迁移，JSON schema/golden files 稳定，C10/C15-C19/F10 证明查询无副作用、
+- 验收：现有测试迁移，JSON schema/golden files 稳定，C10/C15-C20/F10 证明查询无副作用、
   domain provenance、reset contract 和依赖失效语义。
 
 ### Phase 1：单 host 静态控制器
@@ -2818,8 +2930,9 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 
 ### Phase 5：可选扩展
 
+- 先实现 ESXi 8.0.3 fixed passthrough hotplug 独立 profile，完成 S13-S16、F09、R17/R37。
 - 仅对明确支持的 vendor VFIO device 启用 migration。
-- 仅对通过 guest cooperation 和 reset 验收的设备启用 runtime hotplug。
+- 另一个 `qemu-vfio-native` profile 才可提供超出 fixed-device 合同的任意 runtime hotplug。
 - 支持 SR-IOV PF/VF lifecycle、device groups 和 ATS/PRI/PASID advanced profile。
 - 扩展能力不得改变 VMware parity profile 的默认拒绝结果。
 
@@ -2839,14 +2952,14 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 10. 所有纯软件用例自动执行；真实硬件缺口明确标记，不用 synthetic 结果冒充 E4。
 11. risk register 中没有 `OPEN`、`CONTROL_IMPLEMENTED`、`INVALIDATED` 或风险接受项；
     所有暴露能力均为 `VERIFIED`，其余均为不可绕过的 `FEATURE_DISABLED`。
-12. 第 24 节 K01-K29 每行都有实现、验收和风险处置；第 24.6 节的任一
+12. 第 24 节 K01-K30 每行都有实现、验收和风险处置；第 24.6 节的任一
     Qman capability 只能在所有 applicable K/R 条目闭环后宣告。
 
 ## 22. 当前实现与缺口
 
 | 模块 | 当前状态 |
 | --- | --- |
-| K01-K29 全量对标合同 | 文档已完成；可机器执行的 release evaluator 尚未实现 |
+| K01-K30 全量对标合同 | 文档已完成；可机器执行的 release evaluator 尚未实现 |
 | qualification/risk DB | schema 需求已定；signed DB、依赖失效和 capability gate 尚未实现 |
 | capable evaluator | `capability.py` 已有 role/isolation/reset-policy/availability/VM-fit 基线；尚缺第 7.5 节完整 gate、稳定 reason schema、admin activation、精确 qualification 和 operation matrix |
 | dependency closure | 已合并 kernel group、physical domain、reset estimate、multifunction 和 platform dependency；尚缺 requester alias、PF/VF、functional rule、member action 与 edge provenance |
@@ -2862,7 +2975,8 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | multi-host coordinator/fencing | 尚未实现 |
 | firmware/layout resolver | VMware LF00-LF06 与 QEMU 七 profile 已验证；产品化 resolver、持久 provenance 和 strict custom machine 尚未实现 |
 | AER/PME/ROM QEMU parity | lab patch/验证已有，尚未产品化 |
-| VFIO migration/hotplug extension | 尚未实现，baseline 明确拒绝 |
+| fixed passthrough hotplug | API 合同已确认；ESXi 黑盒 S13-S16 与 Qman 事务均未实现，默认关闭 |
+| VFIO migration/任意 hotplug extension | 尚未实现，baseline 明确拒绝 |
 
 在 Phase 1-4 和对应风险闭环完成前，本仓库的产物是 reference/qualification model，
 不是可上生产的 DirectPath 控制器。未实现或仅 synthetic 验证的能力必须在对外
@@ -2953,6 +3067,7 @@ capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP
 | K27 | power-on、guest restart 和功能负载必须正常；还要验证 forced VM shutdown/VM crash 和 host shutdown/crash | S00-S08/F00-F04；QEMU/agent/store/host 故障注入，DMA/IRQ teardown、reset、reconcile、quarantine 和 fencing | `SW-CLOSE` + `HW-QUAL` | virtual callback 只证明路径，不证明真实设备电气/内部状态，R03/R06/R10/R11 |
 | K28 | VMDirectPath 使 Suspend/Resume、Snapshots、Fault Tolerance 和 vMotion 不可用 | Qman API 和 scheduler 显式拒绝；QEMU 设 migration blocker，QMP/storage 路径加 ACL，返回稳定 reason | `SW-CLOSE` | 只在 UI 隐藏会被 raw QMP/CLI 绕过；必须完成负例和权限分离，R16/R26 |
 | K29 | Dynamic DirectPath 是 power-on selection，不是 runtime PCI hotplug | parity profile 启动前完成选择和 realize，运行中 `device_add/device_del` 拒绝 | `SW-CLOSE` | 把 QMP hotplug 当 Dynamic 会引入 guest eject/reset/release race，R17/R26 |
+| K30 | vSphere API 8.0.1+ 可在 VM 停机时设置 `fixedPassthruHotPlugEnabled`，下次 power-on 为 fixed passthrough add/remove 做准备；API 注明应全额预留 guest memory | 独立 fixed-hotplug profile；Qman 强制 full memory reservation，boot 前预留 slot/bus/MMIO/IRQ/fd capacity；exact Static bundle 先 lease/bind/reset 后 `device_add`，remove 等 `DEVICE_DELETED`/fd teardown 后才 cleanup/release | `SW-CLOSE` + device/guest gates | VMware 未公开的 slot/eject/failure 细节需 ESXi 8.0.3 黑盒；未完成 S13-S16 时 capability=false；与 Dynamic/raw QMP 混用会触发 R17/R26/R37 |
 
 ### 24.6 Qman 对外可宣告的最终能力
 
@@ -2990,7 +3105,9 @@ qualification DB 中的精确组合返回 true，绝不是风险豁免。
 | `suspendResume` | DirectPath VM 不可 suspend/resume | false | 同上 | K28 |
 | `faultTolerance` | DirectPath VM 不可 FT | false | Qman 无对等 FT 实现 | K28，API 不得宣告 |
 | `liveMigration` | DirectPath VM 不可 vMotion | false in parity profile | VMware 已验证；Qman gate 未实现 | K28；VFIO migration 只属于另一 native profile |
-| `runtimeHotplug` | Dynamic 不等于 runtime hotplug | false in parity profile | 尚未实现 gate | K29 |
+| `dynamicRuntimeHotplug` | Dynamic 只在 power-on 选卡 | false | 尚未实现 gate | K29 |
+| `fixedPassthruHotplug` | 8.0 U3 可选 fixed-device runtime add/remove | 默认关闭；精确组合可条件开启 | API 合同已确认；ESXi/Qman 均未完成 S13-S16 | K30、R17/R26/R37 |
+| `qemuNativeRuntimeHotplug` | 超出 VMware fixed-device 合同的 QEMU 扩展 | false in parity profiles | 尚未实现 | 独立 native profile 和全套 qualification |
 | `maxPassthroughDevices` | ESXi 8.0 U1+ 上限 64 | 目标 64，运行时不超过已验证值 | 完整 64-device Qman 矩阵未跑 | K08/R25 |
 
 Qman 对外返回能力的唯一规则是：
@@ -3072,7 +3189,7 @@ flowchart TB
 | `evaluatePassthrough`（7.5） | immutable snapshot + policy/profile hash | 六层状态和 reason 自洽，decision hash 稳定 | 无 | fail-closed，不改设备 | `O(payload + closure edges)` |
 | `reconstructPhysicalDomains`（8.4） | patched-kernel provenance 覆盖目标 component | 每个已知 domain 自包含、对称、来源可信 | 无 | 仅相应 component unknown | `O(V alpha(V)+E)` |
 | `discoverResetContract`（8.2.3） | maintenance lease 或 persistent VFIO ownership | authoritative affected set 带 epoch/topology/rule | qualification 阶段临时 bind/open 可回滚 | 不发布 contract | `O(affected devices)` |
-| `buildDependencyBundle`（8.5） | 所有引用 domain 已发布 | fixed-point closure、action 和 edge provenance 完整 | 无 | missing/unsafe member 时拒绝 | `O(V+E)` |
+| `resolveCapabilityClosure`（8.5） | 所有引用 domain/reset/dependency fact 已发布 | owner-independent fixed-point bundle、member action、selected reset 和 edge provenance | 无 | missing/unknown/conflict/limit 时拒绝 | `O(V+E)`（有显式上限） |
 | `planVmResources`（12.2.5） | 完整 guest tree、fixed reservations、profile | 所有 mandatory demand、逐桥 window、root aperture 同一解 | 无 | UNSAT/timeout 均拒绝 | NP-hard；profile 设置硬规模和 timeout |
 | `solveDynamic`（10.3） | 每个 requirement 已构造去重 candidate | 全 requirement、bundle disjoint、全局 resource plan 同时满足 | 无 | 无全局解即整体拒绝 | 最坏指数级；MRV/memo/lower-bound 剪枝 |
 | `attachSelectedBundles`（9.5） | durable lease + fresh epoch + resource plan | VFIO ownership、reset、QEMU、observed plan、manifest 全提交 | 有，必须全部入 rollback 栈 | rollback；清理不确定则 quarantine | 线性步骤，外部调用有 deadline |
@@ -3087,12 +3204,12 @@ flowchart TB
 | 设计章节 | 当前文件/证据 | 已有能力 | 下一实现单元 | 验收 |
 | --- | --- | --- | --- | --- |
 | 6.1-6.4 inventory | `pci_resource_model/linux_sysfs.py` | sysfs/config/topology/BAR 的只读采集 | immutable snapshot schema、atomic publish、health/generation/provider provenance | C10、C15、C18、F10 |
-| 7.2-7.8 capable | `pci_resource_model/capability.py` | role、isolation、reset policy、eligible/available/attachable 基线 | 拆出六 gate、稳定 reason、exact qualification、operation matrix；保持纯函数 | C00-C15 |
+| 7.2-7.8 capable | `pci_resource_model/capability.py` | role、isolation、reset policy、eligible/available/attachable 基线 | 拆出六 gate、前置 action/reset closure、稳定 reason、exact member-action qualification、operation matrix；保持纯函数 | C00-C15、C20 |
 | 8.4 physical domain | phase-1 kernel patch + `linux_sysfs.py::reconstruct_physical_isolation_domains` | ACS native/effective/source 与 userspace union-find estimate | 实现 kernel native shadow-domain ABI；estimate 改为 per-component 并仅作 differential evidence | C05、C06、C16、C19 |
 | 8.2 reset domain | 当前只有 sysfs parent `estimated` set | 可供 lab 展示，不是 production proof | 新增 VFIO cdev/legacy provider、两阶段 query、UAPI mode/ownership 负例 | C03、C04、C17、C18、S11、S12 |
 | 8.5 dependency bundle | `capability.py::_dependency_closure` | 五类集合的基础 closure | edge provenance、requester alias、PF/VF、functional rule、member action | C07、C13、D03、D14 |
 | 12.2 allocator | `pci_resource_model/allocator.py` | root low/high pool、BAR alignment、事务失败、QEMU floor/runtime projection | 完整 guest tree、逐桥 window、exact solver、backend renderer、observed verifier | M00-M03、M18-M23 |
-| 9 static transaction | 设计/实验脚本 | 单项 QEMU/VFIO 证据 | durable controller、fd-only launch、rollback/quarantine、manifest commit | S00-S12、F00、F09 |
+| 9 static transaction | 设计/实验脚本 | 单项 QEMU/VFIO 证据 | durable controller、fd-only launch、rollback/quarantine、fixed-hotplug sub-transaction、manifest commit | S00-S16、F00、F09 |
 | 10 Dynamic | VMware 黑盒证据和本节伪代码 | matcher/assignedId 外部语义已知 | candidate builder、global solver、atomic reservation、runtime binding | D00-D14 |
 | 11/15 ownership/recovery | 尚无产品模块 | 状态机和风险合同已定 | SQLite/CAS 单 host lease、pidfd reconcile、generation、quarantine workflow | D09-D11、F00-F04 |
 | 12.3/13 profile surface | firmware 七 profile、AER/PME/ROM lab patch | 黑盒与 QEMU 分项证据 | versioned resolver/QOM policy/custom machine 或明确 backend gap | M05-M17、F09 |
@@ -3114,10 +3231,11 @@ flowchart TB
 
 - [Broadcom KB 312208：VMDirectPath/Dynamic DirectPath 平台和设备要求](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
 - [Broadcom Compatibility Guide](https://compatibilityguide.broadcom.com/)
-- [vSphere API：HostPciPassthruInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruInfo.html)
-- [vSphere API：HostAssignableHardwareManager](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareManager.html)
-- [vSphere API：DynamicBackingInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html)
-- [vSphere API：AllowedDevice](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.AllowedDevice.html)
+- [vSphere 8.0 U3 API：HostPciPassthruInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruInfo.html)
+- [vSphere 8.0 U3 API：HostAssignableHardwareManager](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.AssignableHardwareManager.html)
+- [vSphere 8.0 U3 API：DynamicBackingInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html)
+- [vSphere 8.0 U3 API：AllowedDevice](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.vm.device.VirtualPCIPassthrough.AllowedDevice.html)
+- [vSphere 8.0 U3 API：`VirtualMachineConfigSpec.fixedPassthruHotPlugEnabled`](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.vm.ConfigSpec.html#fixedPassthruHotPlugEnabled)
 - [Linux kernel：VFIO](https://docs.kernel.org/driver-api/vfio.html)
 - [Linux UAPI：`vfio.h` hot-reset affected set 与 cdev/legacy ownership 合同](https://github.com/torvalds/linux/blob/master/include/uapi/linux/vfio.h)
 - [Linux kernel：IOMMUFD](https://docs.kernel.org/userspace-api/iommufd.html)

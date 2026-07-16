@@ -1,6 +1,6 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-16
+Record date: 2026-07-17
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
@@ -36,10 +36,15 @@ test matrix, artifact contract, and QEMU equivalence checklist, see
 
 QEMU 平台完整复刻静态 VMDirectPath 与 Dynamic DirectPath 的控制平面设计，包括 capability
 分层、dependency bundle、候选求解、durable lease、IOMMUFD fd passing、rollback、
-quarantine、multi-host fencing、KB 312208 K01-K29 全量能力对标、R01-R36 风险清单，
+quarantine、multi-host fencing、KB 312208/API K01-K30 全量能力对标、R01-R38 风险清单，
 并给出 capable、dependency/reset domain、静态/动态事务和多级 MMIO allocator 的分层图、
 数据合同、可实现伪代码和分阶段验收，见
 [`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)。
+
+面向实现团队的配套蓝图冻结 ESXi 8.0.3 build 24280767 / API 8.0.3.0 基线，
+用模块接口、持久化 schema、Static/Dynamic/fixed-hotplug 时序、逐步补偿矩阵、crash reconcile、
+对外 API、可执行验收场景和完整 GPU dependency worked example 说明如何落地，见
+[`qman-directpath-implementation-blueprint.md`](qman-directpath-implementation-blueprint.md)。
 
 QEMU -> ESXi 8 -> EFI Linux DirectPath 黑盒验证的中文结果报告，包括 MMIO
 边界、32/64GB no-backing BAR、VT-d trace、MSI-only EDU、拓扑负例、双主机
