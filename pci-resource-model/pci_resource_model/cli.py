@@ -162,6 +162,9 @@ def _capable(args: argparse.Namespace) -> int:
             allow_bus_reset=not args.no_bus_reset,
             allow_estimated_reset_domain=args.allow_estimated_reset_domain,
             allow_host_driver_rebind=not args.no_host_driver_rebind,
+            qualified_shared_attach_groups=tuple(
+                args.qualified_shared_attach_group
+            ),
             trust_domain=args.trust_domain,
         ),
         allocation_policy=_allocation_policy(args),
@@ -236,6 +239,12 @@ def build_parser() -> argparse.ArgumentParser:
     capable.add_argument("--no-bus-reset", action="store_true")
     capable.add_argument("--allow-estimated-reset-domain", action="store_true")
     capable.add_argument("--no-host-driver-rebind", action="store_true")
+    capable.add_argument(
+        "--qualified-shared-attach-group",
+        action="append",
+        default=[],
+        help="exact exclusive attach group qualified for same-VM co-assignment",
+    )
     capable.add_argument("--trust-domain", default="untrusted-vm")
     capable.add_argument("--output", default="-")
     _add_mmio_arguments(capable)

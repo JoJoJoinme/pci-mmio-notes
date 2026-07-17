@@ -48,6 +48,7 @@ class CapabilityPolicy:
     allow_bus_reset: bool = True
     allow_estimated_reset_domain: bool = False
     allow_host_driver_rebind: bool = True
+    qualified_shared_attach_groups: tuple[str, ...] = ()
     trust_domain: str = "untrusted-vm"
 
 
@@ -492,6 +493,52 @@ def evaluate_passthrough(
     allocation: AllocationResult | None = None
 
     if available:
+        missing_attach_groups = [
+            bdf for bdf in payload if not host.devices[bdf].exclusive_attach_group
+        ]
+        if missing_attach_groups:
+            reasons.append(
+                _reason(
+                    "EXCLUSIVE_ATTACH_GROUP_UNKNOWN",
+                    "attachable",
+                    "exclusive attach group is not proven",
+                    missing_attach_groups,
+                )
+            )
+
+        attach_groups: dict[str, list[str]] = {}
+        for bdf in payload:
+            group = host.devices[bdf].exclusive_attach_group
+            if group:
+                attach_groups.setdefault(group, []).append(bdf)
+        collisions = {
+            group: tuple(sorted(devices))
+            for group, devices in attach_groups.items()
+            if len(devices) > 1
+        }
+        qualified_groups = {
+            group.lower() for group in policy.qualified_shared_attach_groups
+        }
+        unqualified_collisions = {
+            group: devices
+            for group, devices in collisions.items()
+            if group not in qualified_groups
+        }
+        if unqualified_collisions:
+            reasons.append(
+                _reason(
+                    "EXCLUSIVE_ATTACH_GROUP_COLLISION",
+                    "attachable",
+                    "multiple payload devices require the same exclusive attach resource",
+                    (
+                        bdf
+                        for devices in unqualified_collisions.values()
+                        for bdf in devices
+                    ),
+                    groups=unqualified_collisions,
+                )
+            )
+
         rmrr_devices = [bdf for bdf in payload if host.devices[bdf].rmrr_conflict]
         if rmrr_devices:
             reasons.append(

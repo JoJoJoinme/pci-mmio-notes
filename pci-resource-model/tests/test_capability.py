@@ -29,6 +29,8 @@ def endpoint(**changes):
         "physical_isolation_domain": (TARGET,),
         "reset_methods": ("flr",),
         "reset_domain": (TARGET,),
+        "owner_activation_group": f"conservative:{TARGET}",
+        "exclusive_attach_group": f"conservative:{TARGET}",
         "isolation_provenance": IsolationProvenance.KERNEL_GROUP,
     }
     values.update(changes)
@@ -49,6 +51,7 @@ def host(device=None, **changes):
 
 
 def dependency_device(bdf, members):
+    group = "conservative:" + ",".join(sorted(members))
     return replace(
         endpoint(),
         bdf=bdf,
@@ -56,6 +59,8 @@ def dependency_device(bdf, members):
         iommu_group=tuple(members),
         physical_isolation_domain=tuple(members),
         reset_domain=(bdf,),
+        owner_activation_group=group,
+        exclusive_attach_group=group,
     )
 
 
@@ -78,6 +83,17 @@ class CapabilityTests(unittest.TestCase):
         self.assertEqual(result.verdict, "true")
         self.assertEqual(result.reset_methods[TARGET], "flr")
         self.assertEqual(result.allocation.high_aperture_bytes, 2 * GIB)
+
+    def test_missing_exclusive_attach_group_fails_closed(self):
+        result = evaluate(host(endpoint(exclusive_attach_group=None)))
+
+        self.assertTrue(result.eligible)
+        self.assertTrue(result.available)
+        self.assertFalse(result.attachable)
+        self.assertIn(
+            "EXCLUSIVE_ATTACH_GROUP_UNKNOWN",
+            [item.code for item in result.reasons],
+        )
 
     def test_class_code_does_not_override_type0_endpoint_role(self):
         device = endpoint(class_code=0x060400)
@@ -155,6 +171,83 @@ class CapabilityTests(unittest.TestCase):
         self.assertFalse(result.available)
         self.assertFalse(result.attachable)
         self.assertIn("DEPENDENCY_BUSY", [item.code for item in result.reasons])
+
+    def test_same_exclusive_attach_group_is_not_coalesced_by_default(self):
+        peer = "0000:01:00.1"
+        group = "dependent:0000:00:08.0"
+        device = endpoint(exclusive_attach_group=group)
+        peer_device = replace(
+            endpoint(),
+            bdf=peer,
+            bars=(),
+            iommu_group=(peer,),
+            physical_isolation_domain=(peer,),
+            reset_domain=(peer,),
+            exclusive_attach_group=group,
+        )
+        inventory = host(device, devices={TARGET: device, peer: peer_device})
+
+        result = evaluate(inventory, payload_devices=[peer])
+
+        self.assertTrue(result.eligible)
+        self.assertTrue(result.available)
+        self.assertFalse(result.attachable)
+        self.assertIn(
+            "EXCLUSIVE_ATTACH_GROUP_COLLISION",
+            [item.code for item in result.reasons],
+        )
+
+    def test_shared_attach_group_requires_explicit_qualified_policy(self):
+        peer = "0000:01:00.1"
+        group = "dependent:0000:00:08.0"
+        device = endpoint(exclusive_attach_group=group)
+        peer_device = replace(
+            endpoint(),
+            bdf=peer,
+            bars=(),
+            iommu_group=(peer,),
+            physical_isolation_domain=(peer,),
+            reset_domain=(peer,),
+            exclusive_attach_group=group,
+        )
+        inventory = host(device, devices={TARGET: device, peer: peer_device})
+
+        result = evaluate(
+            inventory,
+            payload_devices=[peer],
+            policy=CapabilityPolicy(qualified_shared_attach_groups=(group,)),
+        )
+
+        self.assertTrue(result.attachable)
+
+    def test_qualified_shared_attach_group_does_not_open_another_group(self):
+        peer = "0000:01:00.1"
+        actual_group = "dependent:0000:00:08.0"
+        device = endpoint(exclusive_attach_group=actual_group)
+        peer_device = replace(
+            endpoint(),
+            bdf=peer,
+            bars=(),
+            iommu_group=(peer,),
+            physical_isolation_domain=(peer,),
+            reset_domain=(peer,),
+            exclusive_attach_group=actual_group,
+        )
+        inventory = host(device, devices={TARGET: device, peer: peer_device})
+
+        result = evaluate(
+            inventory,
+            payload_devices=[peer],
+            policy=CapabilityPolicy(
+                qualified_shared_attach_groups=("dependent:0000:00:09.0",)
+            ),
+        )
+
+        self.assertFalse(result.attachable)
+        self.assertIn(
+            "EXCLUSIVE_ATTACH_GROUP_COLLISION",
+            [item.code for item in result.reasons],
+        )
 
     def test_acs_override_can_be_denied_by_policy(self):
         device = endpoint(

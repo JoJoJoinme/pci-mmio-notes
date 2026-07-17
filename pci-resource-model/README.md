@@ -102,24 +102,32 @@ attachable = available + BAR allocation + RMRR admission
   `--deny-acs-override` 切回全拒绝策略。
 - dependency 中任何 BDF 未进入 inventory 时，报 `DEPENDENCY_NOT_IN_INVENTORY`，不会
   默认为空闲。
+- scanner 对 IOMMU、physical isolation、reset、multifunction 和 platform dependency 求传递闭包，
+  生成保守的 `ownerActivationGroup`/`exclusiveAttachGroup`；外部 inventory 缺 group 时
+  `attachable=false`，不会默认为 singleton。
 - BAR/MMIO 失败只让 `attachable=false`，不会篡改前面的静态 `eligible` 结论。
 
 ## 4. Host owner activation
 
-[`activation.py`](pci_resource_model/activation.py) 纯函数规划完整 dependency bundle 的宿主 owner
-切换，不执行 unbind、reset、lease 或 reboot：
+[`activation.py`](pci_resource_model/activation.py) 纯函数从显式 BDF request 扩展完整
+`ownerActivationGroup` 后规划宿主 owner 切换，不执行 unbind、reset、lease 或 reboot；
+`exclusiveAttachGroup`、reset domain 和 physical isolation domain 分别保存：
+每个 `ActivationMember` 必须显式携带 group ID 和 completeness proof；unknown 不得退化为 singleton。
 
 ```text
 ALREADY_ACTIVE   effective owner 已全部匹配
 LIVE_APPLY       当前可 quiesce，可在 durable bundle lease 后执行 live transition
-REBOOT_REQUIRED  live transition 被 busy/策略阻断，但存在精确 early-boot claim
-DENIED           identity/owner/action 未知、host-critical、foreign lease 或无 boot claim
+REBOOT_REQUIRED  request mode 显式允许 deferred，且完整 owner group 有精确 early-boot claim
+DENIED           persistent host use、identity/owner/action 未知、host-critical、foreign lease 或无 boot claim
 ```
 
 planner 故意不接收 FLR bit、class code 或 BAR size。它们分别属于 reset safety、payload role 和
 resource admission，不能证明 native driver 当前可安全解绑。`REBOOT_REQUIRED` 也不是自动重启
-指令；controller 只有在显式 maintenance workflow 已持久化 exact identity/path/bundle boot claim
-后才可接受该结果。运行中 guest PCI hotplug 永久不在此模型范围内。
+指令；controller 只有在显式 maintenance workflow 已持久化 exact identity/path/owner-group boot
+claim 后才可接受该结果。Capability evaluator 默认拒绝一个 VM payload 中重复的
+`exclusiveAttachGroup`；实验性放宽必须通过
+`--qualified-shared-attach-group <exact-group-id>` 精确列出，不存在全局 allow 开关。运行中 guest
+PCI hotplug 永久不在此模型范围内。
 
 ## 5. CLI
 
@@ -194,8 +202,9 @@ python3 -m unittest discover -v -s pci-resource-model/tests
 - Type-0 class A/B、Type-1+FLR 负例、IOMMU/reset/ACS override/dependency。
 - `eligible=true` 但 dependency busy 或 MMIO admission 失败的分层结果。
 - Linux resource、PCIe type、ACS extended capability 与 mandatory-override shadow domain。
-- desired/effective owner 分离、idle/busy A/B、dependency closure、stale identity、foreign lease、
-  host-critical、early-boot claim 和 disable/rebind activation。
+- desired/effective owner 分离、request-to-owner-group expansion、idle/transient/persistent busy A/B、
+  shared attach collision、stale identity、foreign lease、host-critical、early-boot claim 和
+  disable/rebind activation。
 
 ## 7. 当前边界
 

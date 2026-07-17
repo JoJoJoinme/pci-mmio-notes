@@ -113,8 +113,59 @@ D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server �
 | I02/D00/R00 | EDU MSI-only、DMA、reset sentinel | `test_esxi_edu.py`、`qemu-edu-direct-validate.sh` | Guest IRQ/DMA、VT-d/IR trace、VMware reset log |
 | L02/L04 | vMotion 与 host crash | `test_esxi_vmotion_matrix.py`、`test_esxi_host_crash_recovery.py` | task fault、恢复状态 |
 | CAP00-CAP22 | `passthruCapable` 资格判定 | `test_esxi_passthru_capability_matrix.py` | IOMMU、FLR/bridge reset、ACS policy、class code、真实 Type-1 bridge、dependency、restore |
+| O00-O10 | owner activation、deferred/reboot、consumer Busy、依赖扩组、VM 独占 lease | `test_esxi_owner_activation.py` + 受控 vSwitch | Configured/Current Owner、SOAP fault、ESXCLI、host/vSwitch snapshot、`vmware.log` |
 | S01-S05 | Option ROM、PME、AER、P2P、RMRR | `test_esxi_optionrom.py`、`test_esxi_pme.py`、AER runner、`test_esxi_p2p_matrix.py`、`test_esxi_rmrr_matrix.py` | guest/config/log/QEMU trace 三方结果 |
 | SRIOV | PF/VF 公开 surface | `test_esxi_sriov.py`、`collect_esxi_sriov_driver_surface.py` | raw capability、driver state、VF inventory |
+
+### 3.1 O00-O10 owner activation 复现入口
+
+统一脚本只从 Caveat 读取密码，不把凭据写入 argv、结果或仓库。`snapshot` 是只读；`api-set` 和
+`admission-pair` 必须显式带 `--execute`。`--target` 是 SOAP 的 request set，`--observe` 只增加
+事务前后读回的 BDF，正是验证“请求一个 member、观察整个 owner group”的关键：
+
+```powershell
+# 只读 inventory/owner/vSwitch/vmk 快照
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_owner_activation.py snapshot `
+  --host 172.31.91.10 `
+  --target 0000:02:01.0 --observe 0000:02:01.1 `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/snapshot
+
+# 只请求空闲 function 0，同时观察共享 dependency 的 function 1
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_owner_activation.py api-set `
+  --host 172.31.91.10 `
+  --target 0000:02:01.0 --observe 0000:02:01.1 `
+  --apply-now --execute `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/api-idle-request
+
+# 两 VM 和同 VM shared-dependent admission；临时 VM 在 finally 中销毁
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_owner_activation.py admission-pair `
+  --host 172.31.91.10 `
+  --target 0000:02:01.0 --target 0000:02:01.1 `
+  --datastore pci-mmio-local --execute `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/admission
+```
+
+脚本固定检查 ESXi build `24280767` 和实验 host system UUID，拒绝管理 BDF/重复 target，并保存 SOAP state、ESXCLI PCI state、
+physical NIC、vSwitch、vmkernel interface、相关 hostd/vmkernel 日志和临时 VM `vmware.log`。
+`admission-pair` 要求 host 已退出 maintenance mode；脚本会在 `CreateVM` 前明确拒绝，避免把
+笼统的 `InvalidState` 误判为 passthrough admission 结果。
+若实验环境的管理 BDF 不同，先用只读 snapshot 确认，再显式传正确的 `--management-bdf`；不能
+为了跑 case 把保护参数指向待测设备。
+
+受控 Busy 用非管理、非 datastore uplink 构造，完整对象为：
+
+```text
+test BDF -> vmnic2 -> vSwitchBusy -> BusyPG -> vmk1
+```
+
+O04 必须对同一 BDF 成对运行：consumer 存在时 apply-now/direct deferred 都失败；删除 `vmk1`、
+`BusyPG`、uplink 和 `vSwitchBusy` 后 apply-now 成功。O03/O07 则在 disposable overlay 上发 deferred
+请求、保存 reboot 前快照、真实重启 host，再核对 uptime、Configured/Current Owner 和 module。
+共享 bridge case 使用 `QEMU_ESXI_TOPOLOGY=legacy`；PCIe different-dependent control 使用
+`QEMU_ESXI_TOPOLOGY=pcie`。每次 mutation 后都必须恢复 owner/vSwitch/临时 VM，或直接丢弃 overlay。
 
 ## 4. MMIO Case：VMware 默认与高级参数
 

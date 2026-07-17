@@ -63,12 +63,13 @@ hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设�
 OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable evaluator。机器可读
 验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。
 
-ESXi passthrough 启用后“立即生效还是需要重启”的外部模型、官方契约、本地
-Configured/Current Owner 与 enabled/active 成对证据、SHA256，以及 Qman 四态 activation
+ESXi passthrough 启用后“立即生效还是需要重启”的外部模型、真实 host reboot、受控 vSwitch
+Busy A/B、共享 bridge dependency 扩组、SOAP request-set 不对称、VM 独占 lease、SHA256，以及 Qman 四态 activation
 planner 见 [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)、
 [`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)
 和 [`pci-resource-model/pci_resource_model/activation.py`](pci-resource-model/pci_resource_model/activation.py)。
-重启需求是 owner transition 的运行时结果，不是 FLR、class code 或 BAR 的静态属性。
+重启需求是 owner transition 的运行时结果，不是 FLR、class code 或 BAR 的静态属性；Qman
+明确采用“先扩 owner group、再逐成员预检”，并把 VM exclusive attach lease 与 reset domain 分离。
 
 对必须启用 `pcie_acs_override` 的 host，配套的 Linux 6.6 provenance patch、自动构建入口
 和双域 capable 规则见 [`kernel-patches/`](kernel-patches/README.md)。patched IOMMU group
@@ -156,12 +157,15 @@ is a PCIe-topology approximation rather than a chipset-equivalent default.
     the default, explicit 32GiB, and even zero floor. OVMF default assigned
     neither BAR; explicit 128GiB fw_cfg plus a 128GiB QEMU floor assigned both.
 14. ESXi 8.0.3 can make DirectPath active without a host reboot when
-    `--apply-now` can detach the complete dependency set: local evidence reads
-    Configured Owner and Current Owner as `VM Passthru`, with API enabled/active
-    both true. Deferred requests or busy native consumers require a maintenance
-    reboot only when an exact early-boot claim exists. Capability, stale
-    identity, host-critical policy and incomplete dependency failures are
-    denials; reboot is not a repair strategy.
+    `--apply-now` succeeds. A dedicated deferred endpoint was also observed
+    changing only Configured Owner until a real host reboot claimed it through
+    `pciPassthru`. Persistent vSwitch use rejected both immediate and direct
+    deferred requests; it was not a generic reboot-required state.
+15. A shared bridge `dependentDevice` exposed request-target asymmetry: requesting
+    the idle member expanded and activated both, while explicitly requesting the
+    busy member or full set failed through both ESXCLI and SOAP. The same shared
+    dependency was an exclusive VM-admission lease, including within one VM.
+    Qman intentionally uses safer expand-first/preflight-all semantics.
 
 ## QEMU OVMF local validation
 

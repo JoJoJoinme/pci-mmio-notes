@@ -2,6 +2,7 @@ import unittest
 
 from pci_resource_model.linux_sysfs import parse_acs_state, parse_resource_lines
 from pci_resource_model.linux_sysfs import (
+    add_conservative_assignment_groups,
     parse_pcie_type,
     reconstruct_physical_isolation_domains,
 )
@@ -118,6 +119,16 @@ class LinuxSysfsParserTests(unittest.TestCase):
         self.assertEqual(
             result[left].isolation_provenance,
             IsolationProvenance.ACS_OVERRIDE,
+        )
+
+        grouped = add_conservative_assignment_groups(result)
+        self.assertEqual(
+            grouped[left].exclusive_attach_group,
+            grouped[right].exclusive_attach_group,
+        )
+        self.assertEqual(
+            grouped[left].owner_activation_group,
+            grouped[root_port].owner_activation_group,
         )
 
     def test_missing_kernel_provenance_invalidates_every_shadow_domain(self):

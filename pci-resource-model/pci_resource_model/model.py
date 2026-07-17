@@ -207,6 +207,8 @@ class DeviceInventory:
     reset_domain_source: str = "unknown"
     multifunction_aliases: tuple[str, ...] = ()
     platform_dependencies: tuple[str, ...] = ()
+    owner_activation_group: str | None = None
+    exclusive_attach_group: str | None = None
     isolation_provenance: IsolationProvenance = IsolationProvenance.UNKNOWN
     platform_reserved: bool = False
     errata_denied: bool = False
@@ -245,6 +247,10 @@ class DeviceInventory:
         object.__setattr__(
             self, "acs_override_source", self.acs_override_source.lower()
         )
+        for field_name in ("owner_activation_group", "exclusive_attach_group"):
+            value = getattr(self, field_name)
+            if value:
+                object.__setattr__(self, field_name, value.lower())
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -263,6 +269,8 @@ class DeviceInventory:
             "resetDomainSource": self.reset_domain_source,
             "multifunctionAliases": list(self.multifunction_aliases),
             "platformDependencies": list(self.platform_dependencies),
+            "ownerActivationGroup": self.owner_activation_group,
+            "exclusiveAttachGroup": self.exclusive_attach_group,
             "isolationProvenance": self.isolation_provenance.value,
             "platformReserved": self.platform_reserved,
             "errataDenied": self.errata_denied,
@@ -298,6 +306,8 @@ class DeviceInventory:
             reset_domain_source=str(value.get("resetDomainSource", "json")),
             multifunction_aliases=tuple(value.get("multifunctionAliases", ())),
             platform_dependencies=tuple(value.get("platformDependencies", ())),
+            owner_activation_group=value.get("ownerActivationGroup"),
+            exclusive_attach_group=value.get("exclusiveAttachGroup"),
             isolation_provenance=IsolationProvenance(
                 value.get("isolationProvenance", IsolationProvenance.UNKNOWN.value)
             ),

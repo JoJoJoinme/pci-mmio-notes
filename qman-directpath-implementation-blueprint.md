@@ -409,6 +409,29 @@ API 文案可以本地化；`code/devices/details/hash` 必须稳定并参与回
 | functional group | signed vendor/platform rule | 按 rule 整租或同 VM |
 | platform dependency | RMRR/firmware/platform rule | 特定 action 或拒绝 |
 
+同一张 dependency graph 投影为不同用途的 key，不能输出一个万能 `bundleId`：
+
+```python
+function buildAssignmentGroups(snapshot):
+    safetyEdges = IOMMU | PHYSICAL | RESET | REQUESTER_ALIAS |
+                  MULTIFUNCTION | PF_VF | FUNCTIONAL | PLATFORM
+
+    for connectedComponent in transitiveClosure(snapshot.devices, safetyEdges):
+        conservativeId = canonicalId(connectedComponent.members)
+        for device in connectedComponent.members:
+            # 没有 VMware dependentDevice 等更精确、已 qualification 的事实时，
+            # owner/attach 都使用同一保守超集，而不是猜 singleton。
+            device.ownerActivationGroup = conservativeId
+            device.exclusiveAttachGroup = conservativeId
+
+    applySignedExactRulesThatMayOnlySplitQualifiedEdges()
+    require every payload has complete owner/attach group provenance
+```
+
+reference scanner 已实现 IOMMU、physical isolation、reset、multifunction 和 platform dependency
+的保守传递闭包。缺 `exclusiveAttachGroup` 的外部 inventory 只能到 `available`，不得成为
+`attachable`；精确放宽只接受 exact group ID，不提供 host-wide boolean。
+
 ### 6.2 CapabilityClosure 固定点
 
 closure 是 `hardwareCapable/policyEligible` 的输入，必须在读取 admin、owner、health 之前求出。
@@ -676,6 +699,8 @@ CREATE TABLE assignment_member (
     device_uid          TEXT NOT NULL,
     bdf                 TEXT NOT NULL,
     action              TEXT NOT NULL,
+    owner_group_id      TEXT NOT NULL,
+    attach_group_id     TEXT NOT NULL,
     original_driver     TEXT,
     reset_contract_hash TEXT,
     vfio_device_id      TEXT,
@@ -683,12 +708,13 @@ CREATE TABLE assignment_member (
 );
 
 CREATE TABLE host_activation_intent (
-    bundle_id               TEXT PRIMARY KEY,
+    intent_id               TEXT PRIMARY KEY,
     desired_owner           TEXT NOT NULL,
     request_mode            TEXT NOT NULL,
     state                   TEXT NOT NULL,
     identity_manifest_hash  TEXT NOT NULL,
-    dependency_bundle_hash  TEXT NOT NULL,
+    requested_set_hash      TEXT NOT NULL,
+    owner_group_hash        TEXT NOT NULL,
     expected_snapshot_epoch INTEGER NOT NULL,
     applied_boot_id         TEXT,
     observed_state_hash     TEXT,
@@ -724,7 +750,8 @@ JSON 字段在实现中使用 versioned canonical schema；上表只描述事务
 
 `host_activation_intent` 只保存显式 maintenance owner 变更；普通 `bind-on-lease` 不制造
 desired/current 长期分离。`PENDING_REBOOT` 必须同时固定 exact device identity、physical path、
-完整 dependency bundle 和 snapshot epoch；boot 后只有 observed owner/provider hash 全匹配才转
+显式 request set、扩展后的 owner activation group 和 snapshot epoch；boot 后只有该 owner group 的
+observed owner/provider hash 全匹配才转
 `ACTIVE`。BDF 或 identity 漂移时转 `FAILED`，禁止按同 VID:DID 猜设备。
 
 ### 8.3 CAS 不变量
@@ -760,28 +787,51 @@ ESXi 8.0.3 的公开接口和本地证据要求 Qman 分开保存：
 adminEnabled             管理员允许进入直通池
 desiredOwner             maintenance 持久意图
 effectiveOwner           当前实际 driver/provider owner
-hostActive               complete bundle 的 effective owner 已读回匹配
+requestSet               本次 API/CLI 明确请求的 BDF
+ownerActivationGroup     实际必须共同切换宿主 owner 的闭包
+exclusiveAttachGroup     VM admission 必须独占的 lease key
+hostActive               完整 ownerActivationGroup 的 effective owner 已读回匹配
 activationDisposition    ALREADY_ACTIVE | LIVE_APPLY | REBOOT_REQUIRED | DENIED
 ```
 
 官方 ESXCLI 8.0.3 明确规定：`--apply-now` 会立即在 native driver 与 `pciPassthru` 间重绑；
-不带该参数则重启后生效。本地 `20260713-capability-smoke-v5` 和
+不带该参数则请求重启后生效。本地 `20260713-capability-smoke-v5` 和
 `20260713-esxi8-flr-vm-power-v1` 进一步证明 `-a` 后无 host reboot 即可得到 Current Owner=
 `VM Passthru` 和 API `passthruActive=true`。相反，`20260711-largebar2g/M00` 保存了 Configured
 Owner=`VM Passthru`、Current Owner=`VMkernel` 的分离态。脱敏命令/输出摘录见
 [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)，机器可读索引见
 [`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)。
 
+2026-07-18 的新增实测关闭了此前的两个缺口：专用 endpoint deferred 后经过真实 host reboot
+成功由 `pciPassthru` claim；持久 vSwitch uplink 对 apply-now 和 direct deferred 都原子拒绝，
+移除 consumer 后同一 BDF 立即成功。共享 bridge dependency 还出现 request-target 不对称：仅请求
+空闲 member 会自动切换整个组，而显式请求 busy member 或完整组会失败；SOAP 与 ESXCLI 一致。
+VM power-on A/B 则证明同一 dependency 形成 exclusive attach lease，且同 VM 双 member 也不合并。
+
 因此 reboot requirement 是一次 ownership transaction 的结果，不是 device 的 FLR/class/BAR
 静态属性。FLR/SBR 仍属于 attach/release reset gate；它不能证明 native driver、storage path 或
-host service 当前可解绑。
+host service 当前可解绑。Qman 对 VMware 的 request-target 不对称采取安全分歧：**先扩完整
+owner group，再逐成员预检**，绝不借由请求另一个 sibling 静默拆除 network/storage/management
+consumer。
+
+```mermaid
+flowchart LR
+    REQ["requestSet"] --> EXPAND["expand ownerActivationGroup"]
+    EXPAND --> PREFLIGHT["preflight every host consumer"]
+    PREFLIGHT --> OWNER["bind/read back effective owner"]
+    OWNER --> LEASE["lease exclusiveAttachGroup"]
+    LEASE --> ADMIT["MMIO/IRQ/DMA/guest ABI admission"]
+    RESET["resetDomain/recovery contract"] -. independent input .-> PREFLIGHT
+    RESET -. independent input .-> ADMIT
+```
 
 ```mermaid
 stateDiagram-v2
     [*] --> ENABLED
     ENABLED --> ACTIVE: effective owner already matches
-    ENABLED --> LIVE_APPLICABLE: complete bundle can quiesce now
+    ENABLED --> LIVE_APPLICABLE: expanded owner group can quiesce now
     ENABLED --> PENDING_REBOOT: explicit maintenance intent
+    ENABLED --> DENIED: persistent host use or incomplete group
     LIVE_APPLICABLE --> APPLYING: durable bundle lease
     APPLYING --> ACTIVE: all owners/providers read back
     APPLYING --> ENABLED: rollback verified
@@ -793,70 +843,102 @@ stateDiagram-v2
 #### 8.4.2 无副作用 planner
 
 ```python
-function planHostActivation(snapshot, bundle, desiredOwner, requestMode):
-    require bundle.complete
-    require bundle.hash and every identity/action fact match snapshot
+function planHostActivation(snapshot, requestedBdfs, desiredOwner, requestMode):
+    requested = resolveExactIdentity(snapshot, requestedBdfs)
+    ownerGroup = expandOwnerActivationGroups(snapshot, requested)
+    require ownerGroup.complete
+    require ownerGroup.hash and every identity/action fact match snapshot
 
-    if any member.identity/path mismatches persisted deviceUid:
+    if any ownerGroup member.identity/path mismatches persisted deviceUid:
         return DENIED(ACTIVATION_IDENTITY_MISMATCH)
-    if any member.currentOwner is UNKNOWN:
+    if any ownerGroup member.currentOwner is UNKNOWN:
         return DENIED(CURRENT_OWNER_UNKNOWN)
-    if any member.quiesceState is UNKNOWN:
+    if any ownerGroup member.quiesceState is UNKNOWN:
         return DENIED(QUIESCE_STATE_UNKNOWN)
-    if any member is hostCritical, policyDenied, quarantined,
+    if any ownerGroup member is hostCritical, policyDenied, quarantined,
            or leasedByOther:
         return DENIED(exactReasonAndMembers)
-    if all member.currentOwner == desiredOwner:
+    if any ownerGroup member.quiesceState == PERSISTENT_HOST_USE:
+        return DENIED(PERSISTENT_HOST_USE)
+    if all ownerGroup member.currentOwner == desiredOwner:
         return ALREADY_ACTIVE
 
-    changing = members where currentOwner != desiredOwner
+    changing = ownerGroup members where currentOwner != desiredOwner
     if requestMode != DEFER_TO_REBOOT and
-           all changing members are idle and liveTransitionSupported:
+           all changing members are IDLE and liveTransitionSupported:
         return LIVE_APPLY(changing)
 
     # Reboot is recommended only when an implementation can claim this exact
-    # identity bundle before native drivers/services make it busy.
-    if all changing members have exactEarlyBootClaimProof:
+    # owner group before native drivers/services make it busy.
+    if requestMode explicitly permits reboot fallback and
+           all changing members have exactEarlyBootClaimProof:
         return REBOOT_REQUIRED(changing, liveBlockers)
     return DENIED(BOOT_CLAIM_UNSUPPORTED)
 ```
 
 该函数不得 bind、unbind、reset、写 config space 或持久化 desired owner。参考实现
-[`activation.py`](pci-resource-model/pci_resource_model/activation.py) 以完整 bundle 为输入，测试
-证明只把一个 dependency member 改为 Busy，就会使同一硬件从 `LIVE_APPLY` 变为
-`REBOOT_REQUIRED`，但 capable/bundle 不变。
+[`activation.py`](pci-resource-model/pci_resource_model/activation.py) 以 inventory + request set 为输入，测试
+证明 owner-group expansion 和 incomplete-group fail-closed；idle 返回 `LIVE_APPLY`，persistent
+host use 返回 `DENIED`；主动 deferred 的 idle device，或 `LIVE_OR_REBOOT` 下有 transient blocker
+的 device，只有完整 owner group 具备 exact boot proof 才返回 `REBOOT_REQUIRED`。这些运行态变化
+不改变硬件 capable。
 
-#### 8.4.3 Lease 后的 live executor
+#### 8.4.3 VM admission 的独占 attach lease
+
+Host owner 已激活不等于设备对某个 VM 可分配。调度器必须把已选 payload 展开为
+`exclusiveAttachGroup`，并在任何 QEMU fd、IOMMU mapping 或 guest resource 分配前原子加锁：
 
 ```python
-function executeLiveActivation(plan, bundle, lease):
+function acquireAttachLeases(vm, selectedDevices, snapshot):
+    groups = expandExclusiveAttachGroups(snapshot, selectedDevices)
+    require every group is complete and generation-current
+
+    # ESXi 8.0.3 shared-dependent 实测中，同 VM 双 function 仍冲突；
+    # 因此默认不以 vmId 相同为由合并重复 group。
+    if count(groups) != count(unique(groups)):
+        require exactQualificationAllowsSharedAttach(selectedDevices)
+        otherwise return DENIED(EXCLUSIVE_ATTACH_GROUP_COLLISION)
+
+    return store.atomicMultiKeyLease(
+        keys=sort(unique(groups)), owner=vm.runId,
+        expectedEpoch=snapshot.epoch, fencingToken=nextToken())
+```
+
+qualification 若要放宽，必须精确绑定 VID:DID/subsystem/revision/firmware、reset contract、DMA
+isolation、错误恢复和 teardown 证据；不能按 class、vendor 或“同 VM”全局放宽。
+
+#### 8.4.4 Lease 后的 live executor
+
+```python
+function executeLiveActivation(plan, ownerGroup, activationLease):
     require plan.disposition in {ALREADY_ACTIVE, LIVE_APPLY}
-    require lease atomically owns every bundle member
-    require current epoch/generation/identity/bundle hash == plan inputs
+    require activationLease atomically owns every ownerGroup member
+    require activationLease also covers required isolation/reset safety closures
+    require current epoch/generation/identity/ownerGroup hash == plan inputs
 
     if plan.disposition == ALREADY_ACTIVE:
-        observed = readEffectiveOwnersAndProviders(bundle)
+        observed = readEffectiveOwnersAndProviders(ownerGroup)
         require observed exactly matches plan.desiredOwner
         return observed
 
-    journal = durableJournal(PREPARING_ACTIVATION, plan, lease)
+    journal = durableJournal(PREPARING_ACTIVATION, plan, activationLease)
     rollback = RollbackStack()
     try:
-        for member in bundle.hostQuiesceOrder:
+        for member in ownerGroup.hostQuiesceOrder:
             token = quiesceHostConsumers(member, deadline)
             rollback.push(restoreHostConsumers(member, token))
 
-        for member in bundle.unbindOrder:
+        for member in ownerGroup.unbindOrder:
             original = readDriverAndOverride(member)
             unbindNativeDriver(member)
             rollback.push(restoreDriverAndOverride(member, original))
 
-        for member in bundle.vfioHoldOrAssignMembers:
+        for member in ownerGroup.vfioHoldOrAssignMembers:
             setDriverOverride(member, "vfio-pci")
             bindVfio(member)
             rollback.push(unbindVfioAndRestoreOverride(member))
 
-        observed = readEffectiveOwnersProvidersGroups(bundle)
+        observed = readEffectiveOwnersProvidersGroups(ownerGroup)
         require every expected member has target owner/provider
         require no unexpected member changed owner
         require kernel group viability and physical-domain lease still hold
@@ -865,10 +947,10 @@ function executeLiveActivation(plan, bundle, lease):
         return observed
     except error:
         failures = rollback.runReverse()
-        if failures or effectiveOwnerCannotBeProved(bundle):
-            quarantine(bundle, ACTIVATION_ROLLBACK_UNCERTAIN, evidence())
+        if failures or effectiveOwnerCannotBeProved(ownerGroup):
+            quarantine(ownerGroup, ACTIVATION_ROLLBACK_UNCERTAIN, evidence())
         else:
-            journal.commit(ROLLED_BACK, observedHash=hashCurrent(bundle))
+            journal.commit(ROLLED_BACK, observedHash=hashCurrent(ownerGroup))
         raise stableActivationError(error, failures)
 ```
 
@@ -877,7 +959,7 @@ function executeLiveActivation(plan, bundle, lease):
 分离。disable 走同一事务的反向路径，但必须先证明无 VM lease、QEMU/VFIO fd、DMA mapping 和
 IRQ owner。
 
-#### 8.4.4 Early-boot claim
+#### 8.4.5 Early-boot claim
 
 “重启可能解决”必须对应真实实现。仅执行 Linux reboot 而没有 boot-time owner policy，native
 driver 会再次先绑定，结果仍然 Busy。生产实现优先采用一个小型 kernel early-owner hook：
@@ -889,15 +971,15 @@ function pciDeviceAddedEarly(dev, signedBootOwnerManifest):
                        signedBootOwnerManifest)
     if entry is null:
         return NORMAL_DRIVER_PROBE
-    if entry.bundleManifestIncompleteOrHashMismatch:
-        markActivationFailed(entry.bundleId)
+    if entry.ownerGroupManifestIncompleteOrHashMismatch:
+        markActivationFailed(entry.ownerGroupId)
         return NORMAL_DRIVER_PROBE
     dev.driver_override = "vfio-pci"
-    recordEarlyClaimCandidate(entry.bundleId, dev)
+    recordEarlyClaimCandidate(entry.ownerGroupId, dev)
 
-function reconcileBootActivation(bundleIntent, currentBootId):
-    observed = readCompleteBundleOwnersProviders(bundleIntent)
-    if identityAndBundleMatch(bundleIntent, observed) and allBoundToVfio(observed):
+function reconcileBootActivation(ownerIntent, currentBootId):
+    observed = readOwnerGroupOwnersProviders(ownerIntent)
+    if identityAndOwnerGroupMatch(ownerIntent, observed) and allBoundToVfio(observed):
         casIntent(PENDING_REBOOT, ACTIVE,
                   appliedBootId=currentBootId,
                   observedStateHash=hash(observed))
@@ -1682,7 +1764,8 @@ capability 的机器可执行 release evaluator。重复 O00-O09、S13-S16/F09�
 | ADR-009 | P2P/RMRR/INTx/SR-IOV 是否首版必须？ | 全部默认关闭，逐项 qualification | 任一首版必选都会增加真实硬件和 backend 前置条件 |
 | ADR-010 | qualification/policy 谁签发和审批？ | 版本化签名 DB，安全/硬件 owner 双审 | 无 owner 时不能安全运营 deny/allow 与失效流程 |
 | ADR-011 | guest runtime PCI hotplug | **已决定：**永久不支持，所有 DirectPath profile 四层拒绝 | 将来若改变必须新 ADR、新 profile 和独立安全审计，不能沿用本设计证明 |
-| ADR-012 | passthrough owner 激活策略 | bind-on-lease 为默认；显式维护模式才持久 early-boot VFIO claim；产品不自动重启 host | 自动重启或全局 VID:DID claim 会扩大故障域并可能夺走管理/存储设备 |
+| ADR-012 | passthrough owner 激活策略 | bind-on-lease 为默认；显式维护模式才持久 early-boot VFIO claim；先扩 owner group 再逐成员预检；产品不自动重启 host | 自动重启、全局 VID:DID claim 或复制 VMware request-target 不对称都可能夺走管理/存储/网络设备 |
+| ADR-013 | owner/reset/attach domain 是否共用一个 bundle | **不共用：**分别持久化 ownerActivationGroup、resetDomain、exclusiveAttachGroup 和 physicalIsolationDomain；事务按所需闭包取并集 | 混用一个 key 会造成漏租、同 VM 双占、无关 sibling 误解绑或过度拒绝 |
 
 仍希望产品/平台方补充的事实如下；它们不阻塞 reference model 与详细设计：
 
@@ -1692,8 +1775,8 @@ capability 的机器可执行 release evaluator。重复 O00-O09、S13-S16/F09�
 4. 多租户强度、host crash RTO，以及是否有可自动调用的 BMC/power fencing。
 5. 是否提供显式 host maintenance 工作流，以及允许的重启编排、Secure Boot/initramfs 更新方式。
 
-这些答案会改变模块实现或验收规模，但不会改变四条安全不变量：whole-domain lease、权威 reset
-affected set、durable ownership、清理不确定即 quarantine。
+这些答案会改变模块实现或验收规模，但不会改变安全不变量：先扩 owner group 再全员预检、
+whole-domain lease、权威 reset affected set、durable ownership、清理不确定即 quarantine。
 
 ## 19. 一个完整 Dynamic 例子
 

@@ -157,7 +157,7 @@ ESXCLI 同时提供 `--apply-now`，本地实测也证明它可在不重启 host
 | `passthruCapable` | `hardwareCapable && policyEligible` | 不受当前 owner 和 VM MMIO 布局影响 |
 | `passthruEnabled` | `adminEnabled` | 管理员允许该设备进入直通池 |
 | `passthruActive` / `Current Owner` | `hostActive` / `effectiveOwner` | 只由读回的实际 owner/provider 状态决定 |
-| `dependentDevice` | `requiredLease` | 完整 dependency closure，不只返回一个 bridge |
+| `dependentDevice` | `ownerActivationGroup + exclusiveAttachGroup` | 它是重要观测输入，但不能机械折叠成唯一 reset domain |
 | static backing BDF | `StaticRequest.deviceUid` | BDF 和身份都必须匹配，禁止静默替换 |
 | `allowedDevice` | `DynamicRequirement.matcher` | VID:DID，加可选 subsystem/revision |
 | `customLabel` | `labels` exact matcher | 标签是调度条件，不是安全证明 |
@@ -169,6 +169,11 @@ ESXCLI 同时提供 `--apply-now`，本地实测也证明它可在不重启 host
 Dynamic backing 仍保存 `allowedDevice`、可选 `customLabel` 和仅在 VM powered-on 时设置的
 `assignedId`；它与 host owner activation 是正交概念。
 
+2026-07-18 的共享 bridge dependency 实测进一步要求分开四个闭包：管理员显式提交的
+`requestSet`、实际共同切换宿主 owner 的 `ownerActivationGroup`、VM admission 独占的
+`exclusiveAttachGroup`，以及 FLR/SBR/PM 描述的 `resetDomain`。四者可以重叠，但数据模型和
+锁键不得共用一个未经证明的 `bundleId`。
+
 ### 3.2 公开合同与本地实锤
 
 | 证据 | 直接证明 |
@@ -176,10 +181,15 @@ Dynamic backing 仍保存 `allowedDevice`、可选 `customLabel` 和仅在 VM po
 | ESXCLI 8.0.3 `hardware pci pcipassthru set --apply-now` | 带 `-a` 会解绑 native driver 并绑定 `pciPassthru`；不带 `-a` 明确延迟到 host reboot |
 | `HostPciPassthruInfo` | `passthruEnabled` 是配置，`passthruActive` 是生效状态，`dependentDevice` 是必须 unclaim 的设备且可能为 bridge |
 | Broadcom KB 309986 | UI 绿色代表 enabled+active；橙色代表状态已改变但要重启后可用 |
-| Broadcom KB 434815 | HBA 已建立 storage paths 时 native driver detach 返回 Busy，立即应用失败并转为 reboot 后应用 |
+| Broadcom KB 434815 | HBA 已建立 storage paths 时 native driver detach 返回 Busy；这是特定 consumer/driver 案例，不能泛化为所有 Busy |
 | 本地 `20260713-capability-smoke-v5/root-virtio-flr-pm` | `-a` 返回 0 后立即得到 Configured/Current Owner 均为 `VM Passthru`、module=`pciPassthru`，中间没有 host reboot |
 | 本地 `20260713-esxi8-flr-vm-power-v1` | 同一立即切换后 vSphere API 返回 enabled=true、active=true，进一步否定“Active 必须真的重启过” |
 | 本地 `20260711-largebar2g/M00` | 已出现 Configured Owner=`VM Passthru`、Current Owner=`VMkernel`、module=`ne1000` 的 desired/effective 分离态 |
+| 本地 `20260718-esxi8-owner-activation-v1` O03/O07 | 专用 endpoint deferred 后 desired/effective 分离；真实 host reboot、uptime 归零后同一 BDF 由 `pciPassthru` claim |
+| 本地 v1 O04 A/B | 持久 vSwitch uplink 对 apply-now 和 direct deferred 都原子拒绝；移除 consumer 后同一 BDF 立即成功 |
+| 本地 v1 O05 | 两个 sibling 的 `dependentDevice` 不同时，空闲 function 可单独激活，忙 sibling 保持 native |
+| 本地 `20260718-esxi8-owner-activation-legacy-v2` L04/L11 | 共享 bridge dependency 时，请求空闲 member 自动扩展整组；显式请求 busy member 或整组则 ESXCLI/SOAP 均失败 |
+| 本地 legacy-v2 L20/L22 | 同 dependency 两 VM 并发冲突；释放后可复用；同一 VM 同时加入两 member 也在第二项 AH admission 失败 |
 
 脱敏命令/输出摘录见
 [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)，机器可读索引见
@@ -195,9 +205,9 @@ stateDiagram-v2
     HOST_OWNED --> CONFIG_PENDING: persist desiredOwner=passthrough
     CONFIG_PENDING --> APPLYING: apply-now / UI immediate attempt
     CONFIG_PENDING --> PENDING_REBOOT: deferred request
-    APPLYING --> PASSTHRU_ACTIVE: complete dependency set unbound and claimed
-    APPLYING --> PENDING_REBOOT: native owner cannot detach but boot claim is valid
-    APPLYING --> DENIED: identity, dependency, policy or host-critical blocker
+    APPLYING --> PASSTHRU_ACTIVE: expanded owner group claimed
+    APPLYING --> CONFIG_PENDING: failure rolled back, no deferred intent
+    APPLYING --> DENIED: persistent consumer, identity, dependency or policy blocker
     PENDING_REBOOT --> PASSTHRU_ACTIVE: early boot owner policy succeeds
     PENDING_REBOOT --> FAILED: boot observation still mismatches desired owner
 ```
@@ -205,9 +215,10 @@ stateDiagram-v2
 决定因素分三类：
 
 1. **请求语义**：ESXCLI 不带 `-a` 就是显式延迟应用，设备再空闲也要等重启；这不是硬件判断。
-2. **当前可解绑性**：带 `-a` 或 UI 尝试立即应用时，完整 dependency set 的 native driver、
-   host service、storage path、网络用途或其他 consumer 必须能 quiesce/unclaim。Busy 是运行时状态，
-   所以同一设备今天可 live apply、明天可能需要重启。
+2. **当前可解绑性**：带 `-a` 或 UI 尝试立即应用时，扩展后的 owner group 的 native driver、
+   host service、storage path、网络用途或其他 consumer 必须能 quiesce/unclaim。本地 vSwitch A/B
+   表明持久 host use 是 `DENIED`，并不会因为省略 `-a` 自动变成 pending reboot；只有被精确分类为
+   transient、且具备 boot-claim proof 的阻塞才可能进入维护重启路径。
 3. **重启是否真的能解决**：只有“启动早期可在 native driver/service claim 前交给 passthrough”
    的 ownership blocker 才是 `REBOOT_REQUIRED`。不可直通、identity/物理槽位记录不匹配、依赖
    不完整、host-critical 或策略拒绝都应是 `DENIED`，不能用“重启试试”掩盖。
@@ -218,29 +229,36 @@ driver 当前可 detach，因此不能单独决定 reboot。BAR/MMIO 更是 VM a
 
 ### 3.4 Qman 激活规划算法
 
-规划必须是无副作用纯函数，并以完整 `DependencyBundle` 为输入：
+规划必须是无副作用纯函数，并先从显式请求扩展完整 `ownerActivationGroup`。它不能把
+reset/isolation/VM admission closure 当成同一个集合：
 
 ```python
-function planHostActivation(snapshot, bundle, desiredOwner, requestMode):
-    require bundle is complete and action-qualified
+function planHostActivation(snapshot, requestedBdfs, desiredOwner, requestMode):
+    requested = resolveExactIdentity(snapshot, requestedBdfs)
+    ownerGroup = expandOwnerActivationGroups(snapshot, requested)
+    require ownerGroup is complete and action-qualified
 
-    if any member identity/path does not match persisted identity:
+    if any ownerGroup member identity/path does not match persisted identity:
         return DENIED(ACTIVATION_IDENTITY_MISMATCH)
-    if any member owner is UNKNOWN:
+    if any ownerGroup member owner is UNKNOWN:
         return DENIED(CURRENT_OWNER_UNKNOWN)
-    if any member quiesce fact is UNKNOWN:
+    if any ownerGroup member quiesce fact is UNKNOWN:
         return DENIED(QUIESCE_STATE_UNKNOWN)
-    if any member is host-critical, policy-denied, quarantined,
+    if any ownerGroup member is host-critical, policy-denied, quarantined,
            or leased by another VM:
         return DENIED(exact blocker)
-    if every member effectiveOwner == desiredOwner:
+    if any ownerGroup member has PERSISTENT_HOST_USE:
+        return DENIED(PERSISTENT_HOST_USE)
+    if every ownerGroup member effectiveOwner == desiredOwner:
         return ALREADY_ACTIVE
 
+    changing = ownerGroup members where effectiveOwner != desiredOwner
     if requestMode != DEFER_TO_REBOOT and
-           every changing member can quiesce and live-transition:
+           every changing member is IDLE and live-transition-supported:
         return LIVE_APPLY
 
-    if every changing member has a proven early-boot claim path:
+    if requestMode explicitly permits reboot fallback and
+           every changing member has a proven exact early-boot claim path:
         return REBOOT_REQUIRED
     return DENIED(BOOT_CLAIM_UNSUPPORTED)
 ```
@@ -248,8 +266,10 @@ function planHostActivation(snapshot, bundle, desiredOwner, requestMode):
 参考实现和覆盖四态、unknown/identity/lease/boot-claim 边界的单元测试见
 [`activation.py`](pci-resource-model/pci_resource_model/activation.py) 与
 [`test_activation.py`](pci-resource-model/tests/test_activation.py)。模型有意不把 reset bit 作为
-输入，并证明一个 dependency member Busy 会使整个 bundle 从 `LIVE_APPLY` 变成
-`REBOOT_REQUIRED`。
+重启判断；它验证 owner-group expansion、incomplete-group fail-closed、persistent host use 拒绝，
+以及只有 request mode 显式允许 deferred、完整 owner group 具有 exact boot proof 时才返回
+`REBOOT_REQUIRED`。主动 deferred 可用于 idle device；transient Busy 可在 `LIVE_OR_REBOOT` 下
+fallback；persistent host use 始终拒绝。
 
 Qman 只支持两种实现模式：
 
@@ -2975,13 +2995,15 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | O00 | configured owner 与 current owner 分离 | desired/effective 分字段；不得仅凭 Enabled 宣告 Active | ESXi 本地证据已有 |
 | O01 | idle complete bundle + apply-now | 不重启即切到 passthrough provider；完整成员读回一致 | ESXi 8.0.3 本地 pass |
 | O02 | O01 后读取 vSphere API | `passthruEnabled=true`、`passthruActive=true`，证明 Active 不要求真实 reboot history | ESXi 8.0.3 本地 pass |
-| O03 | 相同 idle device 不带 apply-now | desired 改变、effective 保持，结论为 `REBOOT_REQUIRED` | ESXCLI 8.0.3 合同确认；专门本地 case 待跑 |
-| O04 | native driver/service busy | live unbind 失败；只有已证明 early-boot claim 时才返回 `REBOOT_REQUIRED` | Broadcom HBA KB 实锤；本地受控 busy case 待跑 |
-| O05 | dependency bundle 仅一个 member busy | 整个 bundle 不能 partial live apply；同一 snapshot capable 不变 | reference model pass；ESXi pair 待跑 |
+| O03 | 相同 idle device 不带 apply-now | desired 改变、effective 保持，结论为 `REBOOT_REQUIRED` | ESXi 8.0.3 本地 pass；真实重启前后成对证据 |
+| O04 | 持久 vSwitch consumer busy | apply-now 与 direct deferred 均原子拒绝；移除 consumer 后同 BDF live apply 成功 | ESXi 8.0.3 本地 pass；不能泛化为 reboot-required |
+| O05a | sibling 的 dependentDevice 不同 | 空闲 member 可单独 live apply；忙 sibling owner 不变 | ESXi 8.0.3 PCIe 本地 pass |
+| O05b | sibling 共享 bridge dependentDevice | 请求空闲 member 自动扩组；显式请求 busy member/整组失败 | ESXi 8.0.3 ESXCLI + SOAP 本地 pass；Qman 采用先扩组再预检的保守分歧 |
 | O06 | BDF/physical path identity stale | `DENIED(ACTIVATION_IDENTITY_MISMATCH)`，重启不能作为修复建议 | Broadcom GPU ConfigStore KB；Qman model pass |
-| O07 | scheduled reboot / early-boot claim | boot 后 desired/effective/driver/bundle 全一致才提交 Active；不一致为 FAILED | ESXi host reboot owner 恢复已有；Qman boot agent 待实现 |
+| O07 | scheduled reboot / early-boot claim | boot 后 desired/effective/driver/owner group 全一致才提交 Active；不一致为 FAILED | ESXi 真实 host reboot 本地 pass；Qman boot agent 待实现 |
 | O08 | disable active bundle | 无 lease且可 quiesce时 live rebind host；leased/busy时拒绝或 maintenance，不部分释放 | reference model pass；controller 待实现 |
-| O09 | planner 无副作用和状态 A/B | 相同 identity 下只改 busy 状态，`LIVE_APPLY` 稳定变 `REBOOT_REQUIRED`；inventory/driver 不变 | `test_activation.py` 已实现 |
+| O09 | planner 无副作用和状态 A/B | idle live-only=`LIVE_APPLY`；idle defer=`REBOOT_REQUIRED`；persistent use=`DENIED`；transient+live-or-reboot+proof=`REBOOT_REQUIRED` | `test_activation.py` 已实现 |
+| O10 | shared dependent VM admission | A 占用 function 0 时 B/function 1 失败；A 释放后 B 成功；同 VM 双 function 默认也拒绝 | ESXi 8.0.3 本地 pass；reference evaluator 已加 collision gate |
 
 ### 19.3 静态 lifecycle
 

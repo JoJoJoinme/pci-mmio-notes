@@ -1,72 +1,121 @@
 {
   "date": "2026-07-18",
-  "scope": "Publicly observable ESXi 8.0.3 DirectPath host-owner activation behavior and a Qman reference model; no private implementation inference",
+  "scope": "Publicly observable ESXi 8.0.3 DirectPath owner activation, reboot, dependency expansion and VM admission behavior; no private implementation inference",
   "baseline": {
     "esxi": "VMware ESXi 8.0.3 build-24280767",
     "vsphereApi": "8.0.3.0",
-    "virtualHardware": 20
+    "virtualHardware": 20,
+    "environment": "authorized nested ESXi on QEMU"
   },
   "readableEvidence": "evidence/esxi8-passthru-activation-20260718.md",
+  "reproducer": "vmware-esxi8-lab/test_esxi_owner_activation.py",
+  "reproducerValidation": {
+    "snapshot": {
+      "artifact": "20260718-esxi8-owner-reproducer-v3/R01-snapshot-fixed/result.json",
+      "sha256": "88bee5263f85dd91e628024829ced09999b6d12bdd4df8c1d78be7c04fe6946f",
+      "result": "both functions were capable, enabled and active, shared dependentDevice 0000:01:00.0, and every CLI collector completed successfully"
+    },
+    "admissionPair": {
+      "artifact": "20260718-esxi8-owner-reproducer-v3/R04-admission-pair-phase-logs/result.json",
+      "sha256": "3bd4c9c052cbdb9e8af8e89fccaac71a8d9b1d8037ed484e53ff302f1ce5bfb1",
+      "result": "verdict=pass; phase logs captured AH collision markers for the cross-VM and same-VM cases; temporary VMs were removed"
+    }
+  },
   "officialContracts": {
     "esxcli803": {
       "url": "https://developer.broadcom.com/xapis/esxcli-command-reference/8.0.3/namespace/esxcli_hardware.html",
-      "observation": "hardware pci pcipassthru set --apply-now unbinds the native driver and binds pciPassthru immediately; without --apply-now the configured change takes effect after host reboot"
+      "observation": "hardware pci pcipassthru set --apply-now requests immediate native-to-passthrough rebinding; without --apply-now the configured request is intended for host reboot"
     },
     "hostPciPassthruInfo": {
       "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruInfo.html",
-      "observation": "passthruEnabled is user configuration, passthruActive is effective state, and dependentDevice is the device that must be unclaimed and may be a bridge"
+      "observation": "passthruEnabled is configured state, passthruActive is effective state, and dependentDevice identifies a device that must be unclaimed and may be a bridge"
+    },
+    "hostPciPassthruSystem": {
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruSystem.html",
+      "observation": "UpdatePassthruConfig exposes the host owner configuration transaction through the public SOAP API"
+    },
+    "deviceBackingInfo": {
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo.html",
+      "observation": "static passthrough backing carries id, vendorId, deviceId, systemId and deviceName"
     },
     "kb309986": {
       "url": "https://knowledge.broadcom.com/external/article/309986/configuring-vmdirectpath-io-passthrough.html",
-      "observation": "green means enabled and active; orange means configured state changed and a host reboot is required"
+      "observation": "green represents enabled and active; orange represents configured state changed but not yet active"
     },
     "kb434815": {
       "url": "https://knowledge.broadcom.com/external/article/434815/hba-adapter-hba355i-registers-as-storage.html",
-      "observation": "a storage HBA with claimed paths is busy, native-driver detach fails, and the configuration is deferred to reboot"
+      "observation": "a storage HBA with active paths can make native-driver detach return Busy; this is a consumer-specific example and is not generalized to every busy device"
     }
   },
   "localEvidence": {
-    "immediateOwnerSwitch": {
-      "run": "20260713-capability-smoke-v5/root-virtio-flr-pm",
-      "artifact": "_artifacts/vmware-directpath-runs/20260713-capability-smoke-v5/root-virtio-flr-pm/owner-toggle.txt",
-      "sha256": "c62ad74bd660f4e16cc30f21b0b8662ad00a3c069e552f408fea10d0db2cf525",
-      "command": "esxcli hardware pci pcipassthru set -d 0000:00:09.0 -e true -a",
-      "result": "exit=0; Configured Owner=VM Passthru; Current Owner=VM Passthru; Module Name=pciPassthru",
-      "hostRebootBetweenCommandAndObservation": false
+    "dedicatedDeferredBeforeReboot": {
+      "artifact": "20260718-esxi8-owner-activation-v1/O03-deferred-before-reboot.txt",
+      "sha256": "9929da1e5f1aad6fae9021a0afac64807a21fc64e1db299da0780ed77347d8fb",
+      "result": "command succeeded; Configured Owner became VM Passthru while Current Owner and native module remained unchanged"
     },
-    "immediateApiActive": {
-      "run": "20260713-esxi8-flr-vm-power-v1",
-      "artifact": "_artifacts/vmware-directpath-runs/20260713-esxi8-flr-vm-power-v1/result.json",
-      "sha256": "eaa24b1ff6ba5a621eb937e50794c011e2af80418c7b6ac6f408e63c534b3a23",
-      "result": "after the apply-now command, Configured Owner and Current Owner were VM Passthru and vSphere reported passthruEnabled=true, passthruActive=true",
-      "hostRebootBetweenCommandAndApiObservation": false
+    "dedicatedAfterRealHostReboot": {
+      "artifact": "20260718-esxi8-owner-activation-v1/O07-post-reboot.txt",
+      "sha256": "236f743a9e538b8d8c614f015809014575bcb85bdd095b76879c5e7739c9ece2",
+      "result": "host uptime reset and the same BDF became Current Owner=VM Passthru with module pciPassthru"
     },
-    "configuredEffectiveMismatch": {
-      "run": "20260711-largebar2g/M00-largebar2g-default",
-      "artifact": "_artifacts/vmware-directpath-runs/20260711-largebar2g/M00-largebar2g-default/esxi-pci-before.txt",
-      "sha256": "aafb68f85accb3554e67652da134315f5ff6db57bb4e8e4bb86415393404dee5",
-      "result": "three devices were listed enabled; sampled devices had Configured Owner=VM Passthru while Current Owner=VMkernel and Module Name=ne1000",
-      "interpretation": "configured intent alone is not proof that the effective owner switched"
+    "persistentVswitchBusyApplyNow": {
+      "artifact": "20260718-esxi8-owner-activation-v1/O04-busy-apply-now.txt",
+      "sha256": "4f6beb6b45398d56ca0f0f4ebd6e2f48d549d376be141003c13ed4ed1717028b",
+      "result": "exit=1 with explicit vSwitch uplink error; configured and current owner remained native"
     },
-    "effectiveOwnerAfterActivation": {
-      "run": "20260711-largebar2g/M00b-largebar2g-default-active",
-      "artifact": "_artifacts/vmware-directpath-runs/20260711-largebar2g/M00b-largebar2g-default-active/esxi-pci-before.txt",
-      "sha256": "b6a6c58a07424acf085713c535da5fef2ffb1aac90534bd19bf0a45d39ba3aa8",
-      "result": "the same sampled BDFs had Configured Owner=VM Passthru, Current Owner=VM Passthru, and Module Name=pciPassthru"
+    "persistentVswitchBusyDeferred": {
+      "artifact": "20260718-esxi8-owner-activation-v1/O04-busy-deferred-before-reboot.txt",
+      "sha256": "49052bd0aa4e62d42f7d8b5c1aca4a75624e365c401ae7a7fc6ce4e2555b3e83",
+      "result": "deferred request also returned exit=1 and did not persist desired passthrough state"
+    },
+    "sameBdfAfterConsumerRemoval": {
+      "artifact": "20260718-esxi8-owner-activation-v1/O04-idle-apply-now-same-bdf.txt",
+      "sha256": "b1f6a3cb7ece4cd1f3619a2cf7fde9570ffb2d3faa1d5507cf23380a180796b2",
+      "result": "after removing the vSwitch consumer, apply-now succeeded on the same device"
+    },
+    "differentDependencySibling": {
+      "artifact": "20260718-esxi8-owner-activation-v1/O05-sibling-busy-apply-fn0.txt",
+      "sha256": "6d11e1ad6acae43e3384d6bd4cbe9cfbf406aee1cfb2e167524a52bef4bf6c5c",
+      "result": "an idle function with a different dependentDevice activated while its busy sibling remained native"
+    },
+    "sharedBridgeDependencyExpansion": {
+      "artifact": "20260718-esxi8-owner-activation-legacy-v2/L04-enable-fn0-shared-bridge-sibling-busy.txt",
+      "sha256": "88f668890d41afd76baba4a7f56d34edf8a6d4e0d618c79626eac36659aa3a2d",
+      "result": "requesting only the idle function succeeded and automatically activated both functions sharing the bridge dependency"
+    },
+    "soapExplicitRequestPreflight": {
+      "artifact": "20260718-esxi8-owner-activation-legacy-v2/L11-api-explicit-request-set-busy-check.txt",
+      "sha256": "71bac2e114ed9fec3c02fde2b1ce7d9a4185b17c5fe420029d438d25f7524efc",
+      "result": "explicit request sets containing the busy function failed with vim.hostd.pcipassthru.vswitchUplink.failed; requesting only the idle function succeeded and expanded"
+    },
+    "sharedDependencyAfterRealReboot": {
+      "artifact": "20260718-esxi8-owner-activation-legacy-v2/L15-post-real-reboot.txt",
+      "sha256": "ae98e272ce55eae5f159d2a6eb6f34c96136b5e583603aae99f9ed64bfa24f8c",
+      "result": "deferred request through the idle member configured both; real reboot claimed both and left the persisted vSwitch without an uplink"
+    },
+    "exclusiveAdmissionLease": {
+      "artifact": "20260718-esxi8-owner-activation-legacy-v2/L20-shared-dependent-admission-two-vms-correct-id.json",
+      "sha256": "6a51b1bb04ee1aae5ed6aa2a75b49c4fc3133d688b39b3936d6ffb74ad677a89",
+      "result": "VM-A using the first function powered on; VM-B using the second failed AH selection while A was running"
+    },
+    "leaseReleaseAndSameVmCollision": {
+      "artifact": "20260718-esxi8-owner-activation-legacy-v2/L22-shared-dependent-lease-release-and-same-vm.json",
+      "sha256": "7c41f54341aeea47f0464c5f8c13856d2fc59c740b6d4d67b0560f063b3eb119",
+      "result": "VM-B powered on after A released the lease; one VM containing both functions failed on its second passthrough device"
     }
   },
   "observedModel": {
+    "requestSet": "the BDFs explicitly named by the ESXCLI or SOAP request",
+    "ownerActivationGroup": "the devices whose effective host owner changes together",
+    "exclusiveAttachGroup": "the resource boundary exclusively leased during VM admission",
+    "resetContract": "an independent recovery contract; it does not by itself determine owner grouping, admission grouping or reboot",
     "desiredState": "passthruEnabled / Configured Owner",
     "effectiveState": "passthruActive / Current Owner / bound module",
-    "liveApply": "possible when the complete dependency set can be quiesced, detached from its current owner, and claimed by the target owner",
-    "rebootRequired": "a transaction result or explicitly deferred request, not a static FLR, class-code, or BAR property",
-    "rebootBoundary": "boot can apply the persisted owner policy before native drivers and host services make the dependency set busy",
-    "notFixedByReboot": [
-      "device is not passthru capable",
-      "identity or device-layer path is stale",
-      "dependency or isolation proof is incomplete",
-      "device is host-critical or policy denied"
-    ]
+    "liveApply": "possible when the resulting activation group can be claimed immediately",
+    "rebootRequired": "valid only for an explicit deferred transaction with an exact early-boot owner claim",
+    "persistentVswitchUse": "locally observed as an atomic denial for both apply-now and direct deferred requests",
+    "requestTargetAsymmetry": "on the shared bridge topology, requesting the idle member expanded to the group, while explicitly requesting the busy member or full group failed",
+    "vmAdmission": "members sharing the observed dependency formed an exclusive lease; no same-VM coalescing was observed"
   },
   "qmanContract": {
     "states": [
@@ -76,19 +125,35 @@
       "DENIED"
     ],
     "invariants": [
-      "plan the complete dependency bundle, never one BDF",
-      "do not infer reboot requirement from FLR alone",
-      "do not report hostActive from command success or desired state",
-      "verify current owner, driver, lease, DMA, IRQ, reset and identity after transition",
-      "do not automatically reboot; use an explicit maintenance transaction",
+      "resolve exact identity and expand every owner activation group before consumer preflight",
+      "deny incomplete groups, unknown ownership, host-critical members and persistent host use",
+      "do not infer reboot requirement from FLR, class code, BAR size or generic busy state",
+      "return REBOOT_REQUIRED only for an explicit maintenance transaction with a proven exact boot claim",
+      "verify effective owner and provider for every expanded member after transition or reboot",
+      "lease every exclusive attach group atomically at VM admission",
+      "deny duplicate exclusive attach groups even within one VM unless an exact qualified policy proves safety",
+      "never silently remove network, storage or management consumers through sibling expansion",
       "runtime guest PCI hotplug remains permanently disabled"
     ],
     "referenceImplementation": "pci-resource-model/pci_resource_model/activation.py",
-    "tests": "pci-resource-model/tests/test_activation.py"
+    "tests": [
+      "pci-resource-model/tests/test_activation.py",
+      "pci-resource-model/tests/test_capability.py"
+    ]
   },
+  "remainingSoftwareWork": [
+    "build versioned owner, attach, reset and physical-isolation groups from authoritative host facts",
+    "implement the durable owner executor, rollback, quarantine and observed-state commit",
+    "implement signed exact early-boot claims and post-reboot reconciliation",
+    "implement atomic multi-key attach leases with epoch and fencing",
+    "integrate Static and Dynamic assignment transactions with the MMIO/firmware planner",
+    "enforce lifecycle and runtime-hotplug negative gates through API, scheduler, launcher and QMP",
+    "provide a linearizable multi-host lease store and real power fencing for HA"
+  ],
   "limitations": [
-    "The nested lab has strong positive evidence for immediate activation and an observed desired/effective mismatch, but has not yet reproduced a controlled busy-driver apply-now failure locally.",
-    "The busy HBA and stale device-layer-path negative mechanisms are supported by public Broadcom KB observations, not by local physical HBA/GPU reproduction.",
-    "A physical host is still required to qualify boot-critical drivers, actual storage paths, and vendor-device recovery behavior."
+    "The owner, reboot, dependency and VM admission behaviors were executed on ESXi 8.0.3, but the nested endpoints were QEMU virtual devices.",
+    "Physical HBA storage paths, GPU multifunction coupling, vendor reset side effects, DPC/AER recovery and boot-critical host devices still require physical-hardware qualification.",
+    "SR-IOV, ATS/PASID/PRI, peer-to-peer DMA and platform RMRR/IVMD behavior cannot be proven by the simplified nested endpoints.",
+    "The local observations justify fail-closed control-plane semantics but do not replace a per-model HCL and errata database."
   ]
 }

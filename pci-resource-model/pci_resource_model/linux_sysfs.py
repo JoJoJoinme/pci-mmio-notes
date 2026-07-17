@@ -355,6 +355,62 @@ def _add_domains(devices: dict[str, DeviceInventory]) -> dict[str, DeviceInvento
     return result
 
 
+def add_conservative_assignment_groups(
+    devices: dict[str, DeviceInventory],
+) -> dict[str, DeviceInventory]:
+    """Join every known ownership/lease dependency into a safe default group."""
+
+    roots = {bdf: bdf for bdf in devices}
+
+    def find(bdf: str) -> str:
+        while roots[bdf] != bdf:
+            roots[bdf] = roots[roots[bdf]]
+            bdf = roots[bdf]
+        return bdf
+
+    def union(left: str, right: str) -> None:
+        left_root = find(left)
+        right_root = find(right)
+        if left_root != right_root:
+            roots[right_root] = left_root
+
+    for bdf, device in devices.items():
+        closures = (
+            device.iommu_group,
+            device.physical_isolation_domain,
+            device.reset_domain,
+            device.multifunction_aliases,
+            device.platform_dependencies,
+        )
+        for closure in closures:
+            for member in closure:
+                if member in devices:
+                    union(bdf, member)
+
+    components: dict[str, list[str]] = {}
+    for bdf in devices:
+        components.setdefault(find(bdf), []).append(bdf)
+
+    result: dict[str, DeviceInventory] = {}
+    for members in components.values():
+        ordered = tuple(sorted(members))
+        group_id = "conservative:" + ",".join(ordered)
+        for bdf in ordered:
+            device = devices[bdf]
+            result[bdf] = replace(
+                device,
+                owner_activation_group=group_id,
+                exclusive_attach_group=group_id,
+                metadata={
+                    **device.metadata,
+                    "assignmentGroupSource": (
+                        "iommu+physical+reset+multifunction+platform-closure"
+                    ),
+                },
+            )
+    return result
+
+
 def _ancestor_chain(devices: dict[str, DeviceInventory], bdf: str) -> tuple[str, ...]:
     chain: list[str] = []
     seen: set[str] = set()
@@ -544,6 +600,7 @@ def scan_linux_sysfs(
         all_devices,
         acs_override_active=acs_override_active,
     )
+    all_devices = add_conservative_assignment_groups(all_devices)
     devices = (
         all_devices
         if requested is None

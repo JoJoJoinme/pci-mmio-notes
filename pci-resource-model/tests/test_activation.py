@@ -14,6 +14,9 @@ def member(bdf: str = "0000:65:00.0", **changes) -> ActivationMember:
     values = {
         "bdf": bdf,
         "current_owner": DeviceOwner.HOST,
+        "boot_claim_supported": True,
+        "owner_group": f"singleton:{bdf.lower()}",
+        "owner_group_complete": True,
     }
     values.update(changes)
     return ActivationMember(**values)
@@ -24,8 +27,12 @@ def reason_codes(plan) -> set[str]:
 
 
 class ActivationTests(unittest.TestCase):
+    def test_owner_group_must_be_explicit(self) -> None:
+        with self.assertRaisesRegex(ValueError, "owner activation group"):
+            member(owner_group="")
+
     def test_empty_bundle_is_rejected(self) -> None:
-        with self.assertRaisesRegex(ValueError, "bundle must not be empty"):
+        with self.assertRaisesRegex(ValueError, "inventory must not be empty"):
             plan_activation([], desired_owner=DeviceOwner.PASSTHROUGH)
 
     def test_unknown_desired_owner_is_rejected(self) -> None:
@@ -66,26 +73,52 @@ class ActivationTests(unittest.TestCase):
         self.assertEqual(plan.disposition, ActivationDisposition.REBOOT_REQUIRED)
         self.assertIn("REQUESTED_DEFERRED_APPLY", reason_codes(plan))
 
-    def test_busy_driver_changes_same_device_to_reboot_required(self) -> None:
+    def test_transient_busy_changes_same_device_to_reboot_required(self) -> None:
         plan = plan_activation(
-            [member(quiesce_state=QuiesceState.BUSY)],
+            [member(quiesce_state=QuiesceState.TRANSIENT_BUSY)],
             desired_owner=DeviceOwner.PASSTHROUGH,
             request_mode=ActivationRequestMode.LIVE_OR_REBOOT,
         )
 
         self.assertEqual(plan.disposition, ActivationDisposition.REBOOT_REQUIRED)
-        self.assertIn("HOST_DRIVER_BUSY", reason_codes(plan))
+        self.assertIn("HOST_DRIVER_TRANSIENT_BUSY", reason_codes(plan))
         self.assertFalse(plan.available_for_start_transaction)
 
-    def test_one_busy_dependency_defers_the_whole_bundle(self) -> None:
+    def test_one_transient_busy_owner_member_defers_the_owner_set(self) -> None:
         plan = plan_activation(
-            [member(), member("0000:65:00.1", quiesce_state=QuiesceState.BUSY)],
+            [
+                member(),
+                member(
+                    "0000:65:00.1",
+                    quiesce_state=QuiesceState.TRANSIENT_BUSY,
+                ),
+            ],
             desired_owner=DeviceOwner.PASSTHROUGH,
             request_mode=ActivationRequestMode.LIVE_OR_REBOOT,
         )
 
         self.assertEqual(plan.disposition, ActivationDisposition.REBOOT_REQUIRED)
         self.assertEqual(plan.members, ("0000:65:00.0", "0000:65:00.1"))
+
+    def test_persistent_host_use_is_denied_even_with_boot_claim(self) -> None:
+        plan = plan_activation(
+            [member(quiesce_state=QuiesceState.PERSISTENT_HOST_USE)],
+            desired_owner=DeviceOwner.PASSTHROUGH,
+            request_mode=ActivationRequestMode.LIVE_OR_REBOOT,
+        )
+
+        self.assertEqual(plan.disposition, ActivationDisposition.DENIED)
+        self.assertIn("PERSISTENT_HOST_USE", reason_codes(plan))
+
+    def test_live_only_does_not_silently_turn_busy_into_reboot_plan(self) -> None:
+        plan = plan_activation(
+            [member(quiesce_state=QuiesceState.TRANSIENT_BUSY)],
+            desired_owner=DeviceOwner.PASSTHROUGH,
+            request_mode=ActivationRequestMode.LIVE_ONLY,
+        )
+
+        self.assertEqual(plan.disposition, ActivationDisposition.DENIED)
+        self.assertIn("HOST_DRIVER_TRANSIENT_BUSY", reason_codes(plan))
 
     def test_host_critical_dependency_is_denied_not_fixed_by_reboot(self) -> None:
         plan = plan_activation(
@@ -158,7 +191,7 @@ class ActivationTests(unittest.TestCase):
         plan = plan_activation(
             [
                 member(
-                    quiesce_state=QuiesceState.BUSY,
+                    quiesce_state=QuiesceState.TRANSIENT_BUSY,
                     boot_claim_supported=False,
                 )
             ],
@@ -168,6 +201,76 @@ class ActivationTests(unittest.TestCase):
 
         self.assertEqual(plan.disposition, ActivationDisposition.DENIED)
         self.assertIn("BOOT_CLAIM_UNSUPPORTED", reason_codes(plan))
+
+    def test_boot_claim_defaults_to_fail_closed(self) -> None:
+        plan = plan_activation(
+            [
+                ActivationMember(
+                    bdf="0000:65:00.0",
+                    current_owner=DeviceOwner.HOST,
+                    owner_group="singleton:0000:65:00.0",
+                    owner_group_complete=True,
+                    live_transition_supported=False,
+                )
+            ],
+            desired_owner=DeviceOwner.PASSTHROUGH,
+            request_mode=ActivationRequestMode.LIVE_OR_REBOOT,
+        )
+
+        self.assertEqual(plan.disposition, ActivationDisposition.DENIED)
+        self.assertIn("BOOT_CLAIM_UNSUPPORTED", reason_codes(plan))
+
+    def test_requested_member_expands_owner_group_before_preflight(self) -> None:
+        group = "dependent:0000:01:00.0"
+        plan = plan_activation(
+            [
+                member("0000:02:01.0", owner_group=group),
+                member(
+                    "0000:02:01.1",
+                    owner_group=group,
+                    quiesce_state=QuiesceState.PERSISTENT_HOST_USE,
+                ),
+            ],
+            desired_owner=DeviceOwner.PASSTHROUGH,
+            requested_bdfs=["0000:02:01.0"],
+        )
+
+        self.assertEqual(plan.disposition, ActivationDisposition.DENIED)
+        self.assertEqual(plan.requested_members, ("0000:02:01.0",))
+        self.assertEqual(plan.members, ("0000:02:01.0", "0000:02:01.1"))
+        self.assertIn("PERSISTENT_HOST_USE", reason_codes(plan))
+
+    def test_different_owner_groups_do_not_expand_to_busy_sibling(self) -> None:
+        plan = plan_activation(
+            [
+                member("0000:01:00.0", owner_group="dependent:0000:00:08.0"),
+                member(
+                    "0000:01:00.1",
+                    owner_group="dependent:0000:01:00.1",
+                    quiesce_state=QuiesceState.PERSISTENT_HOST_USE,
+                ),
+            ],
+            desired_owner=DeviceOwner.PASSTHROUGH,
+            requested_bdfs=["0000:01:00.0"],
+        )
+
+        self.assertEqual(plan.disposition, ActivationDisposition.LIVE_APPLY)
+        self.assertEqual(plan.members, ("0000:01:00.0",))
+
+    def test_incomplete_owner_group_is_denied(self) -> None:
+        plan = plan_activation(
+            [
+                member(
+                    owner_group="dependent:0000:01:00.0",
+                    owner_group_complete=False,
+                )
+            ],
+            desired_owner=DeviceOwner.PASSTHROUGH,
+            requested_bdfs=["0000:65:00.0"],
+        )
+
+        self.assertEqual(plan.disposition, ActivationDisposition.DENIED)
+        self.assertIn("OWNER_ACTIVATION_GROUP_INCOMPLETE", reason_codes(plan))
 
     def test_disable_can_live_rebind_to_host_when_idle(self) -> None:
         plan = plan_activation(

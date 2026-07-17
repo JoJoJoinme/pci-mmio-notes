@@ -304,13 +304,15 @@ attach 之前，不改变运行中 VM 的 guest topology，也不属于 PCI hotp
 | O00 | configured owner 与 current owner 分离 | desired/effective 分字段；不能仅凭 Enabled 宣告 Active |
 | O01 | idle complete bundle + `--apply-now` | 不重启即可切到 passthrough provider；所有 dependency 成员读回一致 |
 | O02 | O01 后读取 vSphere API | `passthruEnabled=true` 且 `passthruActive=true`；Active 不依赖真实 reboot history |
-| O03 | 相同 idle device 不带 `--apply-now` | desired 改变、effective 保持；精确分类为 `REBOOT_REQUIRED` |
-| O04 | native driver/service/path busy | live unbind 失败；仅存在 exact early-boot claim 时才建议维护重启 |
-| O05 | complete bundle 中仅一个成员 busy | 禁止 partial live apply；capable 与 bundle identity 不因 busy 改变 |
+| O03 | 相同 idle device 不带 `--apply-now` | desired 改变、effective 保持；真实重启后 exact BDF/owner/driver 全量匹配 |
+| O04 | 持久 vSwitch consumer busy | apply-now 和 direct deferred 都原子拒绝；移除 consumer 后同 BDF live apply 成功；不得泛化为 reboot-required |
+| O05a | sibling 的 `dependentDevice` 不同 | 空闲 member 可独立 live apply，busy sibling 保持 native |
+| O05b | sibling 共享 bridge `dependentDevice` | 分别测试 request idle、request busy、request full set；记录 ESXCLI/SOAP 的扩组与拒绝不对称；Qman 必须先扩组再全员预检 |
 | O06 | BDF/physical path identity stale | `DENIED(ACTIVATION_IDENTITY_MISMATCH)`；不得把重启当成修复 |
 | O07 | persisted owner intent 后维护重启 | boot 后按 exact identity/path/bundle 读回 owner/driver；不一致为 failed/quarantine |
 | O08 | disable active bundle | 无 lease且可 quiesce时 live rebind host；leased/busy 时拒绝或进入 maintenance |
-| O09 | planner 纯函数 A/B | 仅切换 idle/busy，`LIVE_APPLY` 稳定变为 `REBOOT_REQUIRED`；查询不解绑、不 reset、不建 lease |
+| O09 | planner 纯函数 A/B | idle live-only=`LIVE_APPLY`；idle defer=`REBOOT_REQUIRED`；persistent use=`DENIED`；transient+live-or-reboot+proof=`REBOOT_REQUIRED` |
+| O10 | shared dependent VM admission | A/function0 运行时 B/function1 失败；A 释放后 B 成功；同 VM 双 function 默认也拒绝，证明 exclusive attach lease |
 
 判定不是 `hasFLR ? live : reboot`，也不是 class/BAR 静态表。核心输入是完整 dependency bundle
 的当前 effective owner、可 quiesce 状态、lease、identity、host-critical policy，以及能否在下一次
@@ -452,9 +454,11 @@ virtual VT-d 与共享 NFS。
 | L04 | pass | DMA/heartbeat 时 SIGKILL outer QEMU；host/datastore/owner 恢复且同 VM 再次 I/O 成功 |
 | L06-L09 | Qman-scope-decided | Qman 永久不支持 guest runtime hotplug；四层负向门已设计，controller/launcher/QMP 集成待实现。ESXi fixed-hotplug API 只作产品差异，不再阻塞发布 |
 | O00-O02 | pass | 本地 `--apply-now` 后无需重启即得到 Configured/Current=`VM Passthru`，API enabled/active 均为 true；desired/effective mismatch 负样本也已固化 |
-| O03-O04 | contract/official-observed | ESXCLI 8.0.3 明确区分 apply-now 与 reboot apply；Broadcom busy-HBA 实例证明 live detach 可因 active path 失败。专门本地 deferred/busy case 尚未执行 |
-| O05-O06/O08-O09 | model-pass | 完整 dependency、unknown/stale identity、lease、boot claim、disable/rebind、idle/busy A/B 均有 reference-model 单测；Qman controller 集成待实现 |
-| O07 | partial | ESXi 重启后 owner 恢复证据已有；Qman exact early-boot claim/reconcile agent 待实现 |
+| O03/O07 | ESXi-local-pass | 专用 endpoint deferred 后 desired/current 分离；真实 host reboot、uptime 归零后同 BDF 由 `pciPassthru` claim。Qman boot agent 待实现 |
+| O04 | ESXi-local-pass | 持久 vSwitch uplink 对 apply-now 和 direct deferred 均原子拒绝；移除 consumer 后同 BDF 成功。真实 HBA/GPU consumer 仍需物理 qualification |
+| O05a/O05b | ESXi-local-pass | PCIe 不同 dependency 可拆；legacy 共享 bridge dependency 的 request-target 不对称由 ESXCLI/SOAP 同时复现；Qman 明确采用更保守顺序 |
+| O06/O08-O09 | model-pass | unknown/stale identity、lease、boot claim、disable/rebind、owner-group expansion 和 persistent/transient busy A/B 均有 reference-model 单测；controller 集成待实现 |
+| O10 | ESXi-local-pass/model-pass | 跨 VM 独占、释放后复用、同 VM 双 member 冲突均已执行；reference evaluator 默认拒绝重复 attach group |
 | QEMU firmware/layout 7-profile | pass | SeaBIOS/i440fx、OVMF/i440fx single/bridge、OVMF/PXB multi-root、OVMF/q35 root-port 全部完成正负断言 |
 | SeaBIOS parity boundary | pass-not-equivalent | SeaBIOS 在 single/bridge profile 都可把 2GiB BAR 高置；VMware `i440bx+bios` 未分配该 BAR |
 

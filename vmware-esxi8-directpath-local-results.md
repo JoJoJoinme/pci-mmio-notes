@@ -159,21 +159,36 @@ Passthru Capable: true
 Current Owner=`VMkernel`、Module=`ne1000`，证明 desired/configured 与 effective/current 必须
 分开保存。
 
-ESXCLI 8.0.3 的公开合同解释了分支：带 `--apply-now` 会立即尝试解绑 native driver 并绑定
-`pciPassthru`；不带则显式延迟到 host reboot。Broadcom 的 busy-HBA 案例进一步证明，active
-storage path 可令 live detach 返回 Busy。由此得到的外部模型是：
+2026-07-18 又在同一 ESXi 8.0.3 build 上补齐了 deferred、真实 host reboot 和受控 Busy A/B：
+
+- 专用 `0000:01:00.1` 不带 `--apply-now` 时命令成功，Configured Owner 变为 passthrough，
+  Current Owner/driver 保持 native；真实重启后 uptime 归零，同一 BDF 由 `pciPassthru` claim。
+- 把同一类 endpoint 配为 `vmnic2 -> vSwitchBusy -> vmk1` 后，apply-now 和 direct deferred
+  都返回明确的 vSwitch uplink 错误，desired/current 均不变；移除 consumer 后同一 BDF 立即成功。
+- PCIe sibling 的 `dependentDevice` 不同时，空闲 function 可单独切换，忙 sibling 保持 native。
+- legacy bridge 下两 function 共享 `dependentDevice` 时，仅请求空闲 function 会自动切换两者；
+  显式请求 busy function 或完整 set 反而失败，SOAP 与 ESXCLI 一致。
+- 共享 dependency 的 function 形成 VM admission 独占 lease：A 运行时 B 失败，A 释放后 B 成功；
+  同一 VM 同时配置两者也在第二项 AH selection 失败。
+
+因此 ESXCLI 合同中的 deferred 路径不能与任意 Busy 画等号，Broadcom busy-HBA 案例也不能泛化到
+所有 host consumer。外部模型至少分开 request set、owner activation group、exclusive attach
+group 和 reset contract：
 
 ```text
 ALREADY_ACTIVE   complete dependency 的 current owner 已匹配
-LIVE_APPLY       当前可 quiesce，取得完整 bundle lease 后可立即重绑
-REBOOT_REQUIRED  当前不能 live apply，但有精确 early-boot claim 可抢在 native consumer 前绑定
-DENIED           capability、identity、dependency、lease 或 host-critical/policy 条件不成立
+LIVE_APPLY       扩展后的 owner group 全员可 quiesce，可立即重绑
+REBOOT_REQUIRED  request mode 显式允许 deferred，且完整 owner group 有精确 early-boot claim proof
+DENIED           persistent host use、capability、identity、incomplete group、lease 或 policy 不成立
 ```
 
+Qman 不复制 VMware 观测到的 request-target 不对称：先扩完整 owner group，再预检每个成员，
+持久 network/storage/management consumer 一律拒绝；之后再按 exclusive attach group 获取 VM lease。
 FLR/SBR 决定 attach/release/reset safety，但不证明 native driver 当前能否解绑；class code 与 BAR
 也不能决定重启。没有 exact early-boot owner policy 时，单纯重启 Linux 只会让 native driver
 再次绑定，不能承诺“重启后生效”。Qman 不支持 guest runtime PCI hotplug；这里的 live apply
-发生在 VM power-on attach 之前，不改变运行中 guest PCI tree。
+发生在 VM power-on attach 之前，不改变运行中 guest PCI tree。完整证据、SHA256 和复现入口见
+[`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)。
 
 ## 2. 实验拓扑与证据边界
 
@@ -669,7 +684,7 @@ Git 内可审计摘要：
 | SR-IOV 功能 VF | QEMU NVMe/igb 的 raw SR-IOV capability/VFE 可构造，但 ESXi 将 PF Total/Initial VFs 视为 0 或不枚举 VF；igbn 在 I350 identity 下因 NVM checksum 拒绝 | 使用 ESXi HCL 支持的真实 PF，或实现足以让对应 ESXi driver 完成 NVM/firmware 初始化的完整模型 |
 | 真实 reset/ACS/INTx | 虚拟 callback 不能证明电气行为、vendor state 清除或物理中断路由 | 裸机 ESXi + 同设备 Linux/VFIO A/B，记录 FLR/SBR、IOMMU group、IRQ 和敏感状态 |
 | Option ROM 正向样本 | 当前仅得到 ESXi enabled-but-not-executed 负例 | 使用已知受支持且能被 ESXi 保存的物理 adapter ROM，再用同一 marker 协议复核 |
-| owner live-apply Busy 负例 | 本地已有 idle `--apply-now` 正例和 desired/effective mismatch，但尚未对同一 BDF 制造受控 native consumer Busy | 在非管理/非存储关键设备上建立可撤销 consumer，执行 `--apply-now`，成对保存 driver/path/owner/task fault；真实 HBA ordering 仍需物理 E4 |
+| 物理 owner-consumer qualification | nested ESXi 已完成同 BDF vSwitch Busy/idle、direct deferred、真实 reboot、shared dependency expansion 和 VM exclusive lease | 仍需在真实 HBA/GPU 上重放 storage path、multifunction coupling、boot ordering 与 vendor recovery；nested 结果不替代 E4 |
 | 跨版本语义 | 当前主结论绑定 ESXi 8.0 U3；ESXi 6.5 仅作旁证 | 自动跑 6.5/7.0/8.0 U2/U3 同一 matrix，不跨版本外推默认 MMIO/资格规则 |
 
 ### 10.3 自定义 WSL 内核/QEMU 的定位
@@ -700,8 +715,9 @@ dependency 的 AH 失败在两版都复现，因此不能把拓扑问题归咎�
    SHA256、版本和 `pass|fail|partial|blocked` 原因，便于自动 diff。
 8. **保留破坏性保护。** AER uncorrectable、host crash、P2P fault、ROM 和 RMRR 必须用
    disposable qcow2、独立 run ID 与自动 restore。
-9. **实现 owner activation executor。** planner 已可执行，但产品还需要完整 bundle 的 durable
-   journal/live rebind/rollback/quarantine，以及按 exact identity/path/bundle 工作的 early-boot
+9. **实现 owner activation executor 与 attach lease coordinator。** planner/evaluator 已可执行，
+   但产品还需要 owner-group durable journal、逐成员 consumer preflight、live rebind/rollback/
+   quarantine、exclusive-attach multi-key CAS，以及按 exact identity/path/group 工作的 early-boot
    claim 和 boot reconcile；没有这条执行链时不能对外宣告 maintenance reboot activation。
 
 ## 12. 当前可接受的 QEMU 对标基线
@@ -740,7 +756,7 @@ q35 的 zero/zero + 1GB BAR 是已验证负例，不能只把上面 property 名
 | P2P 与 ACS relaxation | 两个 peer-DMA endpoint + ACS/IOMMU policy；不能把单个开关当成功 | 默认/relax-only 被 IOMMU fault 阻断；`allowP2P=TRUE` 才成功，ACS/no-ACS A/B 已跑 |
 | RMRR | 修改 QEMU DMAR builder 发布 RMRR，并保留相同 guest physical range/identity map | patched QEMU：自动 PCI-hole 调整 pass；低 RAM overlap 在 ESXi host boot 拒绝 |
 | lifecycle/migration | 默认拒绝 save/snapshot/suspend/live migration；powered-off relocate 后重新选卡 | snapshot/suspend/vMotion/relocate/host-crash 已验证 |
-| host owner activation | desired/effective 分离；完整 bundle 四态 planner；lease 后 live bind 或显式 exact early-boot claim | ESXi idle immediate 正例与 mismatch 已固化；Qman planner 单测通过；busy 本地负例、executor/boot agent 待实现 |
+| host owner activation | request set、owner activation group、exclusive attach group 分离；先扩组再预检；lease 后 live bind 或显式 exact early-boot claim | ESXi deferred/reboot、vSwitch Busy A/B、dependency expansion 与 VM lease 均本地 pass；Qman planner/evaluator 单测通过；executor/boot agent 待实现 |
 | guest runtime PCI hotplug | API、scheduler、launcher、QMP 都拒绝；Dynamic 只在 power-on 选卡 | Qman 产品范围永久关闭，不把 VMware fixed-hotplug API 误当实现待办 |
 | LinkCap/拓扑呈现 | 明确选择 synthetic guest topology，不把物理 speed/width 原样当合同 | 已观察 VMware 重建 LinkCap |
 

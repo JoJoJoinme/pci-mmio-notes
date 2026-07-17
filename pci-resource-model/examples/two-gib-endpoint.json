@@ -40,6 +40,8 @@
       "resetDomainSource": "pci-config-flr",
       "multifunctionAliases": ["0000:65:00.0"],
       "platformDependencies": [],
+      "ownerActivationGroup": "conservative:0000:65:00.0",
+      "exclusiveAttachGroup": "conservative:0000:65:00.0",
       "isolationProvenance": "kernel-group",
       "platformReserved": false,
       "errataDenied": false,
