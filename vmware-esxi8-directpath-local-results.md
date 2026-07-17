@@ -1,6 +1,6 @@
 # ESXi 8 VMDirectPath 本地黑盒验证结果报告
 
-日期：2026-07-11 至 2026-07-14
+日期：2026-07-11 至 2026-07-18
 目标版本：VMware ESXi 8.0.3 build 24280767
 外层平台：WSL2 + QEMU 6.2/11.0.2 + KVM，两台嵌套 ESXi + VCSA 8.0.3
 最新运行态：WSL 6.6.123.2 自编译 KVM 内核，QEMU 11.0.2 capability-lab build
@@ -17,6 +17,9 @@ L3：vHW 20、EFI、Linux 5.15.0-185
 和 [`evidence/esxi8-directpath-20260714-summary.json`](evidence/esxi8-directpath-20260714-summary.json)。
 `passthruCapable` 专题模型见
 [`vmware-esxi8-passthru-capable-observed-model.md`](vmware-esxi8-passthru-capable-observed-model.md)。
+Host owner activation 的脱敏命令/输出与机器可读摘要见
+[`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)
+和 [`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)。
 
 ## 1. 结论摘要
 
@@ -135,6 +138,42 @@ QEMU 对标启动器必须：
 与 VMware 不同。VMware 将本轮 2GB window 放在 guest 45-bit GPA 顶部；i440fx
 将其放在 4GB 紧上方。若要求地址与合成 root-bus 拓扑逐字一致，需要修改
 OVMF/QEMU allocator 或实现专用 machine type。
+
+### 1.4 启用 passthrough 后是否要重启是 owner transaction 结果
+
+本地 `owner-toggle.txt` 保存了下面的正例：
+
+```text
+esxcli hardware pci pcipassthru set -d 0000:00:09.0 -e true -a
+exit=0
+
+Configured Owner: VM Passthru
+Current Owner: VM Passthru
+Module Name: pciPassthru
+Passthru Capable: true
+```
+
+命令与读回之间没有 host reboot；同一运行随后由 vSphere API 读到
+`passthruEnabled=true`、`passthruActive=true`。因此 Active 的外部含义是 effective owner 已经
+匹配，不是“历史上一定重启过”。另一组样本则明确出现 Configured Owner=`VM Passthru`、
+Current Owner=`VMkernel`、Module=`ne1000`，证明 desired/configured 与 effective/current 必须
+分开保存。
+
+ESXCLI 8.0.3 的公开合同解释了分支：带 `--apply-now` 会立即尝试解绑 native driver 并绑定
+`pciPassthru`；不带则显式延迟到 host reboot。Broadcom 的 busy-HBA 案例进一步证明，active
+storage path 可令 live detach 返回 Busy。由此得到的外部模型是：
+
+```text
+ALREADY_ACTIVE   complete dependency 的 current owner 已匹配
+LIVE_APPLY       当前可 quiesce，取得完整 bundle lease 后可立即重绑
+REBOOT_REQUIRED  当前不能 live apply，但有精确 early-boot claim 可抢在 native consumer 前绑定
+DENIED           capability、identity、dependency、lease 或 host-critical/policy 条件不成立
+```
+
+FLR/SBR 决定 attach/release/reset safety，但不证明 native driver 当前能否解绑；class code 与 BAR
+也不能决定重启。没有 exact early-boot owner policy 时，单纯重启 Linux 只会让 native driver
+再次绑定，不能承诺“重启后生效”。Qman 不支持 guest runtime PCI hotplug；这里的 live apply
+发生在 VM power-on attach 之前，不改变运行中 guest PCI tree。
 
 ## 2. 实验拓扑与证据边界
 
@@ -584,6 +623,7 @@ NVM/firmware/driver contract 的设备模型。
 | RMRR 自动 hole/低 RAM 拒绝 | `_artifacts/vmware-directpath-runs/20260713-esxi8-rmrr-auto-v9-flr/`、`20260713-esxi8-rmrr-unsupported-v9-flr/` |
 | Option ROM 正控与 ESXi 负例 | `_artifacts/vmware-directpath-runs/20260713-qemu-optionrom-minimal-compressed-padded-v33/`、`20260713-esxi8-optionrom-minimal-compressed-padded-v4/` |
 | SR-IOV PF/VF surface | `_artifacts/vmware-directpath-runs/20260714-esxi8-sriov-*/` |
+| owner `--apply-now`、API active 与 desired/effective A/B | `_artifacts/vmware-directpath-runs/20260713-capability-smoke-v5/`、`20260713-esxi8-flr-vm-power-v1/`、`20260711-largebar2g/` |
 
 每个 MMIO case 至少保留：`case.json`、生效 VMX、ESXi PCI owner、`vmware.log`、
 guest serial 和最终 power state。失败用例也保留，不能只归档成功样本。
@@ -604,6 +644,8 @@ Git 内可审计摘要：
 - [`evidence/qemu-esxi-nfs-offload-20260712-summary.json`](evidence/qemu-esxi-nfs-offload-20260712-summary.json)
 - [`evidence/esxi8-directpath-20260714-summary.json`](evidence/esxi8-directpath-20260714-summary.json)
 - [`evidence/esxi8-edu-dma-teardown-20260714-summary.json`](evidence/esxi8-edu-dma-teardown-20260714-summary.json)
+- [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)
+- [`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)
 
 ## 10. 剩余边界与解锁方法
 
@@ -627,6 +669,7 @@ Git 内可审计摘要：
 | SR-IOV 功能 VF | QEMU NVMe/igb 的 raw SR-IOV capability/VFE 可构造，但 ESXi 将 PF Total/Initial VFs 视为 0 或不枚举 VF；igbn 在 I350 identity 下因 NVM checksum 拒绝 | 使用 ESXi HCL 支持的真实 PF，或实现足以让对应 ESXi driver 完成 NVM/firmware 初始化的完整模型 |
 | 真实 reset/ACS/INTx | 虚拟 callback 不能证明电气行为、vendor state 清除或物理中断路由 | 裸机 ESXi + 同设备 Linux/VFIO A/B，记录 FLR/SBR、IOMMU group、IRQ 和敏感状态 |
 | Option ROM 正向样本 | 当前仅得到 ESXi enabled-but-not-executed 负例 | 使用已知受支持且能被 ESXi 保存的物理 adapter ROM，再用同一 marker 协议复核 |
+| owner live-apply Busy 负例 | 本地已有 idle `--apply-now` 正例和 desired/effective mismatch，但尚未对同一 BDF 制造受控 native consumer Busy | 在非管理/非存储关键设备上建立可撤销 consumer，执行 `--apply-now`，成对保存 driver/path/owner/task fault；真实 HBA ordering 仍需物理 E4 |
 | 跨版本语义 | 当前主结论绑定 ESXi 8.0 U3；ESXi 6.5 仅作旁证 | 自动跑 6.5/7.0/8.0 U2/U3 同一 matrix，不跨版本外推默认 MMIO/资格规则 |
 
 ### 10.3 自定义 WSL 内核/QEMU 的定位
@@ -657,6 +700,9 @@ dependency 的 AH 失败在两版都复现，因此不能把拓扑问题归咎�
    SHA256、版本和 `pass|fail|partial|blocked` 原因，便于自动 diff。
 8. **保留破坏性保护。** AER uncorrectable、host crash、P2P fault、ROM 和 RMRR 必须用
    disposable qcow2、独立 run ID 与自动 restore。
+9. **实现 owner activation executor。** planner 已可执行，但产品还需要完整 bundle 的 durable
+   journal/live rebind/rollback/quarantine，以及按 exact identity/path/bundle 工作的 early-boot
+   claim 和 boot reconcile；没有这条执行链时不能对外宣告 maintenance reboot activation。
 
 ## 12. 当前可接受的 QEMU 对标基线
 
@@ -694,6 +740,8 @@ q35 的 zero/zero + 1GB BAR 是已验证负例，不能只把上面 property 名
 | P2P 与 ACS relaxation | 两个 peer-DMA endpoint + ACS/IOMMU policy；不能把单个开关当成功 | 默认/relax-only 被 IOMMU fault 阻断；`allowP2P=TRUE` 才成功，ACS/no-ACS A/B 已跑 |
 | RMRR | 修改 QEMU DMAR builder 发布 RMRR，并保留相同 guest physical range/identity map | patched QEMU：自动 PCI-hole 调整 pass；低 RAM overlap 在 ESXi host boot 拒绝 |
 | lifecycle/migration | 默认拒绝 save/snapshot/suspend/live migration；powered-off relocate 后重新选卡 | snapshot/suspend/vMotion/relocate/host-crash 已验证 |
+| host owner activation | desired/effective 分离；完整 bundle 四态 planner；lease 后 live bind 或显式 exact early-boot claim | ESXi idle immediate 正例与 mismatch 已固化；Qman planner 单测通过；busy 本地负例、executor/boot agent 待实现 |
+| guest runtime PCI hotplug | API、scheduler、launcher、QMP 都拒绝；Dynamic 只在 power-on 选卡 | Qman 产品范围永久关闭，不把 VMware fixed-hotplug API 误当实现待办 |
 | LinkCap/拓扑呈现 | 明确选择 synthetic guest topology，不把物理 speed/width 原样当合同 | 已观察 VMware 重建 LinkCap |
 
 核心原则是：QEMU CLI 只能表达其中一部分。设备资格、Dynamic lease、依赖组、迁移拒绝
@@ -705,6 +753,8 @@ machine patch。把缺失语义硬塞成一个 `-global` 参数，会得到表�
 - [Broadcom KB 312208：VMDirectPath/Dynamic DirectPath 平台与设备要求](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
 - [vSphere API：VirtualPCIPassthrough DynamicBackingInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html)
 - [vSphere API：Host AssignableHardwareManager](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareManager.html)
+- [ESXCLI 8.0.3：hardware pci pcipassthru set](https://developer.broadcom.com/xapis/esxcli-command-reference/8.0.3/namespace/esxcli_hardware.html)
+- [Broadcom KB 434815：busy HBA native-driver detach](https://knowledge.broadcom.com/external/article/434815/hba-adapter-hba355i-registers-as-storage.html)
 - [QEMU EDU 公开设备协议](https://www.qemu.org/docs/master/specs/edu.html)
 - [`vmware-directpath-acceptance-test-plan.md`](vmware-directpath-acceptance-test-plan.md)
 - [`qemu-vmware-mmio-comparison.md`](qemu-vmware-mmio-comparison.md)

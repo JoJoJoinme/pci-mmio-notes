@@ -81,10 +81,13 @@ flowchart TB
 | --- | --- | --- |
 | Semantic parity | 状态、资格、资源、错误、生命周期和失败结果等价 | 必须 |
 | Guest ABI parity | guest PCI 路径、ACPI root、slot、BAR 与 capability surface 稳定 | 必须稳定；允许明确记录的 topology approximation |
-| Strict topology parity | chipset/root bridge/ACPI namespace 与 VMware golden 完全一致 | 默认关闭；需 custom QEMU machine 后单独开启 |
+| Strict topology parity | chipset/root bridge/ACPI namespace 与 VMware golden 完全一致 | 不支持；不是产品目标 |
 
-因此 stock Q35/PXB 能满足功能时可进入 `functional` profile，但必须在 manifest 中记录
-`BACKEND_TOPOLOGY_GAP`；要求 strict parity 的 VM 在 custom machine 完成前直接拒绝。
+这里的 guest topology 只指 VM 内看到的虚拟 PCI/ACPI root、root port/bridge、BDF 路径、
+桥窗口、`_CRS` 和 BAR，不是宿主机物理拓扑或 ACS 安全 domain。Qman 不伪装成 VMware
+芯片组，但必须把自己的 machine profile、guest slot 和 ACPI/资源 ABI 做成跨重启与升级稳定
+的合同。因此 stock Q35/PXB 可进入 semantic profile；manifest 记录其 profile identity，产品
+不提供 `strict VMware topology` 开关。
 
 ### 1.3 Firmware/layout profile
 
@@ -94,7 +97,7 @@ VMware 8.0 U3 黑盒矩阵与 QEMU qualification profile 分开表达：
 | --- | --- | --- | --- |
 | BIOS + i440bx | 有效 | i440fx + SeaBIOS | legacy/below-4G profile；mandatory large BAR 预拒绝 |
 | EFI + i440bx | 有效 | i440fx + OVMF | legacy root topology + UEFI profile |
-| EFI + acpi | 有效 | Q35/PXB + OVMF | 功能近似；strict topology 需 custom machine |
+| EFI + acpi | 有效 | Q35/PXB + OVMF | 语义近似并冻结 Qman guest ABI；不宣称 VMware chipset identity 等价 |
 | BIOS + acpi | ESXi 启动前拒绝 | Q35 + SeaBIOS 只作 QEMU qualification | parity API、schema 和 raw-launch 三层都拒绝 |
 
 Q35 + SeaBIOS 的双 64GiB BAR 结果用于理解 QEMU allocator，不会把 VMware 明确拒绝的
@@ -116,7 +119,7 @@ INTx                            = false unless exact hardware is qualified
 real RMRR device                = false unless exact identity mapping is qualified
 snapshot/suspend/FT/vMotion     = false
 Dynamic runtime device switch   = false
-fixed passthru hotplug          = false until optional profile is qualified
+fixed passthru hotplug          = false, permanently unsupported
 maximum passthrough functions   = min(64, locally qualified limit)
 ```
 
@@ -139,8 +142,8 @@ maximum passthrough functions   = min(64, locally qualified limit)
 - 不还原 VMware 私有 capable、candidate 排序或 MMIO allocator。
 - 不保证任意 PCI endpoint 都能安全直通；默认 deny-by-default。
 - 不把 QEMU synthetic callback 当成物理隔离、reset 清理或 vendor 支持证明。
-- 不在 baseline profile 中实现 live migration 或 Dynamic runtime device switching；ESXi 8.0.3
-  的 fixed passthrough hotplug 作为独立可选 profile，按第 9.7 节验收后才可开启。
+- 不实现 guest runtime PCI hot-add/hot-remove；ESXi 8.0.3 的 fixed hotplug API 只作为产品差异
+  记录，Qman 永久返回 `FEATURE_DISABLED`。host owner 的 live activation 不属于 guest hotplug。
 - 不允许运维人员用 raw QEMU CLI 绕开 Qman 的 lease 和 admission。
 
 ### 2.3 Definition of Done
@@ -286,14 +289,15 @@ erDiagram
 
 ## 5. Capability 详细设计
 
-### 5.1 六层状态
+### 5.1 状态分层
 
 | 层 | 回答的问题 | 典型失败 |
 | --- | --- | --- |
 | `hardwareCapable` | 结构、IOMMU、物理隔离和 reset 是否可证明 | Type-1 payload、IOMMU missing、domain unknown |
 | `policyEligible` | 精确平台/设备/profile 是否被 qualification 允许 | rule missing、errata deny |
 | `adminEnabled` | 管理员是否把设备放入直通池 | disabled |
-| `hostActive` | host 是否已完成必要激活且 provider 可用 | driver/activation pending |
+| `hostActive` | complete bundle 的 effective owner/provider 是否已读回为目标状态 | desired/current mismatch |
+| `activationDisposition` | 本次 owner transition 是已生效、可 live apply、需维护重启还是拒绝 | driver busy、identity stale、host-critical |
 | `available` | 完整 bundle 此刻是否健康且未被占用 | dependency busy、quarantine |
 | `attachable` | 对这个 VM/profile 的资源和操作是否可行 | MMIO UNSAT、RMRR overlap、ABI mismatch |
 
@@ -322,11 +326,18 @@ function evaluate(snapshot, target, vmContext, profile, policy):
     policyEligible = hardwareCapable and qualification.allAllowed
 
     adminEnabled = policyEligible and activationDb.allEnabled(closure.payload)
-    hostActive = adminEnabled and providerReadyForActions(closure.actions)
+    activationPlan = null
+    hostActive = false
+    if adminEnabled:
+        activationPlan = planHostActivation(
+            snapshot, closure.bundle, desiredOwner=PASSTHROUGH,
+            requestMode=vmContext.activationRequestMode or LIVE_ONLY)
+        hostActive = activationPlan.disposition == ALREADY_ACTIVE
 
     bundle = closure.bundle if closure.success else null
     available = false
-    if hostActive:
+    if activationPlan exists and \
+            activationPlan.disposition in {ALREADY_ACTIVE, LIVE_APPLY}:
         available = bundle.complete and healthyAndUnowned(bundle)
 
     plan = null
@@ -359,7 +370,10 @@ display class 仍应因结构角色拒绝。精确 VID:DID/revision denylist 只
   "hardwareCapable": true,
   "policyEligible": true,
   "adminEnabled": true,
-  "hostActive": true,
+  "hostActive": false,
+  "activationDisposition": "live-apply",
+  "desiredOwner": "passthrough",
+  "effectiveOwner": "host",
   "available": false,
   "attachable": null,
   "bundleId": "sha256:...",
@@ -629,14 +643,11 @@ BAR 为 0 或 observed plan 偏离均在 assignment commit 前失败并回滚。
 ```sql
 CREATE TABLE assignment_run (
     run_id              TEXT PRIMARY KEY,
-    parent_vm_run_id    TEXT,
     vm_id               TEXT NOT NULL,
     request_type        TEXT NOT NULL,
     operation           TEXT NOT NULL,
     state               TEXT NOT NULL,
     host_id             TEXT,
-    capacity_slot_id    TEXT,
-    qmp_epoch           INTEGER,
     snapshot_epoch      INTEGER NOT NULL,
     policy_hash         TEXT NOT NULL,
     profile_hash        TEXT NOT NULL,
@@ -671,29 +682,19 @@ CREATE TABLE assignment_member (
     PRIMARY KEY (run_id, device_uid)
 );
 
-CREATE TABLE vm_fixed_hotplug_profile (
-    vm_id                    TEXT PRIMARY KEY,
-    enabled                  INTEGER NOT NULL,
-    profile_id               TEXT NOT NULL,
-    guest_memory_bytes       INTEGER NOT NULL,
-    memory_reservation_bytes INTEGER NOT NULL,
-    capacity_plan_hash       TEXT NOT NULL,
-    version                  INTEGER NOT NULL,
-    updated_at               TEXT NOT NULL
-);
-
-CREATE TABLE hotplug_capacity_slot (
-    parent_vm_run_id    TEXT NOT NULL,
-    slot_id             TEXT NOT NULL,
-    guest_slot          TEXT NOT NULL,
-    mmio32_bytes        INTEGER NOT NULL,
-    mmio64_bytes        INTEGER NOT NULL,
-    irq_vector_budget   INTEGER NOT NULL,
-    vfio_fd_budget      INTEGER NOT NULL,
-    state               TEXT NOT NULL,
-    assignment_run_id   TEXT,
-    version             INTEGER NOT NULL,
-    PRIMARY KEY (parent_vm_run_id, slot_id)
+CREATE TABLE host_activation_intent (
+    bundle_id               TEXT PRIMARY KEY,
+    desired_owner           TEXT NOT NULL,
+    request_mode            TEXT NOT NULL,
+    state                   TEXT NOT NULL,
+    identity_manifest_hash  TEXT NOT NULL,
+    dependency_bundle_hash  TEXT NOT NULL,
+    expected_snapshot_epoch INTEGER NOT NULL,
+    applied_boot_id         TEXT,
+    observed_state_hash     TEXT,
+    reason_code             TEXT,
+    version                 INTEGER NOT NULL,
+    updated_at              TEXT NOT NULL
 );
 
 CREATE TABLE quarantine_record (
@@ -721,11 +722,10 @@ CREATE TABLE idempotency_record (
 JSON 字段在实现中使用 versioned canonical schema；上表只描述事务关系，不允许把无法查询的
 任意 JSON 当成所有权权威。
 
-`vm_fixed_hotplug_profile` 只能在 VM powered-off 的配置事务中改写。`hotplug_capacity_slot`
-由本次 VM power-on manifest 生成，不能跨 `parent_vm_run_id` 复用；slot 的
-`UNUSED -> RESERVED -> IN_USE -> EJECT_PENDING -> CLEANING -> UNUSED` 也必须 expected-version CAS。
-assignment 的 EJECT_PENDING、QMP epoch、slot occupancy 和 bundle lease 都是 crash reconcile
-输入，不能只留在 controller 内存。
+`host_activation_intent` 只保存显式 maintenance owner 变更；普通 `bind-on-lease` 不制造
+desired/current 长期分离。`PENDING_REBOOT` 必须同时固定 exact device identity、physical path、
+完整 dependency bundle 和 snapshot epoch；boot 后只有 observed owner/provider hash 全匹配才转
+`ACTIVE`。BDF 或 identity 漂移时转 `FAILED`，禁止按同 VID:DID 猜设备。
 
 ### 8.3 CAS 不变量
 
@@ -749,6 +749,170 @@ function acquireBundleLease(request, bundle, snapshot):
 
 同一物理 domain 的所有可租元素必须在一个原子 key/transaction 中竞争。按单 BDF 分别 CAS
 再补偿会产生短暂双 owner，设计上禁止。
+
+### 8.4 Host owner activation 与 reboot decision
+
+#### 8.4.1 外部状态合同
+
+ESXi 8.0.3 的公开接口和本地证据要求 Qman 分开保存：
+
+```text
+adminEnabled             管理员允许进入直通池
+desiredOwner             maintenance 持久意图
+effectiveOwner           当前实际 driver/provider owner
+hostActive               complete bundle 的 effective owner 已读回匹配
+activationDisposition    ALREADY_ACTIVE | LIVE_APPLY | REBOOT_REQUIRED | DENIED
+```
+
+官方 ESXCLI 8.0.3 明确规定：`--apply-now` 会立即在 native driver 与 `pciPassthru` 间重绑；
+不带该参数则重启后生效。本地 `20260713-capability-smoke-v5` 和
+`20260713-esxi8-flr-vm-power-v1` 进一步证明 `-a` 后无 host reboot 即可得到 Current Owner=
+`VM Passthru` 和 API `passthruActive=true`。相反，`20260711-largebar2g/M00` 保存了 Configured
+Owner=`VM Passthru`、Current Owner=`VMkernel` 的分离态。脱敏命令/输出摘录见
+[`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)，机器可读索引见
+[`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)。
+
+因此 reboot requirement 是一次 ownership transaction 的结果，不是 device 的 FLR/class/BAR
+静态属性。FLR/SBR 仍属于 attach/release reset gate；它不能证明 native driver、storage path 或
+host service 当前可解绑。
+
+```mermaid
+stateDiagram-v2
+    [*] --> ENABLED
+    ENABLED --> ACTIVE: effective owner already matches
+    ENABLED --> LIVE_APPLICABLE: complete bundle can quiesce now
+    ENABLED --> PENDING_REBOOT: explicit maintenance intent
+    LIVE_APPLICABLE --> APPLYING: durable bundle lease
+    APPLYING --> ACTIVE: all owners/providers read back
+    APPLYING --> ENABLED: rollback verified
+    APPLYING --> QUARANTINED: partial transition or rollback uncertain
+    PENDING_REBOOT --> ACTIVE: early-boot claim and observation pass
+    PENDING_REBOOT --> FAILED: identity/bundle/owner observation mismatch
+```
+
+#### 8.4.2 无副作用 planner
+
+```python
+function planHostActivation(snapshot, bundle, desiredOwner, requestMode):
+    require bundle.complete
+    require bundle.hash and every identity/action fact match snapshot
+
+    if any member.identity/path mismatches persisted deviceUid:
+        return DENIED(ACTIVATION_IDENTITY_MISMATCH)
+    if any member.currentOwner is UNKNOWN:
+        return DENIED(CURRENT_OWNER_UNKNOWN)
+    if any member.quiesceState is UNKNOWN:
+        return DENIED(QUIESCE_STATE_UNKNOWN)
+    if any member is hostCritical, policyDenied, quarantined,
+           or leasedByOther:
+        return DENIED(exactReasonAndMembers)
+    if all member.currentOwner == desiredOwner:
+        return ALREADY_ACTIVE
+
+    changing = members where currentOwner != desiredOwner
+    if requestMode != DEFER_TO_REBOOT and
+           all changing members are idle and liveTransitionSupported:
+        return LIVE_APPLY(changing)
+
+    # Reboot is recommended only when an implementation can claim this exact
+    # identity bundle before native drivers/services make it busy.
+    if all changing members have exactEarlyBootClaimProof:
+        return REBOOT_REQUIRED(changing, liveBlockers)
+    return DENIED(BOOT_CLAIM_UNSUPPORTED)
+```
+
+该函数不得 bind、unbind、reset、写 config space 或持久化 desired owner。参考实现
+[`activation.py`](pci-resource-model/pci_resource_model/activation.py) 以完整 bundle 为输入，测试
+证明只把一个 dependency member 改为 Busy，就会使同一硬件从 `LIVE_APPLY` 变为
+`REBOOT_REQUIRED`，但 capable/bundle 不变。
+
+#### 8.4.3 Lease 后的 live executor
+
+```python
+function executeLiveActivation(plan, bundle, lease):
+    require plan.disposition in {ALREADY_ACTIVE, LIVE_APPLY}
+    require lease atomically owns every bundle member
+    require current epoch/generation/identity/bundle hash == plan inputs
+
+    if plan.disposition == ALREADY_ACTIVE:
+        observed = readEffectiveOwnersAndProviders(bundle)
+        require observed exactly matches plan.desiredOwner
+        return observed
+
+    journal = durableJournal(PREPARING_ACTIVATION, plan, lease)
+    rollback = RollbackStack()
+    try:
+        for member in bundle.hostQuiesceOrder:
+            token = quiesceHostConsumers(member, deadline)
+            rollback.push(restoreHostConsumers(member, token))
+
+        for member in bundle.unbindOrder:
+            original = readDriverAndOverride(member)
+            unbindNativeDriver(member)
+            rollback.push(restoreDriverAndOverride(member, original))
+
+        for member in bundle.vfioHoldOrAssignMembers:
+            setDriverOverride(member, "vfio-pci")
+            bindVfio(member)
+            rollback.push(unbindVfioAndRestoreOverride(member))
+
+        observed = readEffectiveOwnersProvidersGroups(bundle)
+        require every expected member has target owner/provider
+        require no unexpected member changed owner
+        require kernel group viability and physical-domain lease still hold
+        journal.commit(ACTIVE, observedHash=hash(observed))
+        rollback.disarm()
+        return observed
+    except error:
+        failures = rollback.runReverse()
+        if failures or effectiveOwnerCannotBeProved(bundle):
+            quarantine(bundle, ACTIVATION_ROLLBACK_UNCERTAIN, evidence())
+        else:
+            journal.commit(ROLLED_BACK, observedHash=hashCurrent(bundle))
+        raise stableActivationError(error, failures)
+```
+
+默认 `bind-on-lease` 使用这条路径。live apply 因 Busy 失败时，Qman 先完成 rollback；只有另一个
+显式 maintenance 请求才可写 `PENDING_REBOOT`，不能像 UI 便利逻辑一样悄悄留下 desired/current
+分离。disable 走同一事务的反向路径，但必须先证明无 VM lease、QEMU/VFIO fd、DMA mapping 和
+IRQ owner。
+
+#### 8.4.4 Early-boot claim
+
+“重启可能解决”必须对应真实实现。仅执行 Linux reboot 而没有 boot-time owner policy，native
+driver 会再次先绑定，结果仍然 Busy。生产实现优先采用一个小型 kernel early-owner hook：
+
+```python
+function pciDeviceAddedEarly(dev, signedBootOwnerManifest):
+    entry = exactMatch(dev.firmwarePath, dev.physicalSlot,
+                       dev.vendorDeviceSubsystemRevision,
+                       signedBootOwnerManifest)
+    if entry is null:
+        return NORMAL_DRIVER_PROBE
+    if entry.bundleManifestIncompleteOrHashMismatch:
+        markActivationFailed(entry.bundleId)
+        return NORMAL_DRIVER_PROBE
+    dev.driver_override = "vfio-pci"
+    recordEarlyClaimCandidate(entry.bundleId, dev)
+
+function reconcileBootActivation(bundleIntent, currentBootId):
+    observed = readCompleteBundleOwnersProviders(bundleIntent)
+    if identityAndBundleMatch(bundleIntent, observed) and allBoundToVfio(observed):
+        casIntent(PENDING_REBOOT, ACTIVE,
+                  appliedBootId=currentBootId,
+                  observedStateHash=hash(observed))
+    else:
+        casIntent(PENDING_REBOOT, FAILED,
+                  reason=ACTIVATION_OBSERVED_STATE_MISMATCH)
+        quarantineAnyPartiallyClaimedMembers(observed)
+```
+
+boot manifest 必须在 PCI driver probe 前可用并经过签名/secure-boot policy 校验；只用
+`vfio-pci.ids=VID:DID` 不合格，因为会抢走同型号 host-critical device。initramfs/udev 方案只有在
+所有相关 native driver 都是 module、且 probe ordering 已逐 build 验收时才可作为 profile；存在
+built-in driver 或 ordering unknown 时必须使用 kernel hook 或返回 `BOOT_CLAIM_UNSUPPORTED`。
+Qman 永不自动 reboot；maintenance orchestrator 负责 host drain、显式批准、reboot 和 O07
+reconcile，失败后不启动任何 DirectPath VM。
 
 ## 9. Static DirectPath 事务
 
@@ -810,7 +974,8 @@ sequenceDiagram
     L-->>S: lease + fencing token
     S->>H: Prepare(run manifest hashes, lease)
     H->>H: verify epoch, identity, generation, token
-    H->>V: detach/bind, open cdev, create IOAS
+    H->>H: execute/verify complete-bundle owner activation
+    H->>V: open cdev, create IOAS
     H->>V: re-query reset set and execute reset
     H->>H: re-plan after reset
     H->>Q: pass fds and launch frozen profile
@@ -828,8 +993,8 @@ sequenceDiagram
 | --- | --- | --- | --- | --- |
 | 0 | CAS lease 完整 bundle | token/version/members | 删除未产生副作用的 lease | 保留 lease，人工审计 store |
 | 1 | 核对 epoch、identity、generation | fresh snapshot delta=0 | 释放 lease，重新规划 | inventory unknown 时保留 lease |
-| 2 | unbind 原 driver | driver link、device quiesced | rebind 原 driver | quarantine bundle |
-| 3 | bind/open VFIO cdev | owned device fd、provider ID | close fd、rebind | quarantine |
+| 2 | 执行完整 bundle owner activation | 每个成员 current owner/driver 读回匹配 | 按 journal 恢复原 owner | quarantine bundle |
+| 3 | open VFIO cdev | owned device fd、provider ID | close fd、恢复 owner | quarantine |
 | 4 | 创建 IOAS/attach device | domain/member/IOMMU evidence | detach/destroy IOAS | quarantine |
 | 5 | re-query 并执行 reset | affected set 相同、reset + state probe | release-side reset/rebind | quarantine affected set |
 | 6 | reset 后重新探测 BAR/plan | plan/ABI hash 与 admission 相容 | 逆序清理 | quarantine if BAR identity unstable |
@@ -852,6 +1017,7 @@ function attachStatic(vm, request, idempotencyKey):
     require request.deviceUid resolves exactly in snapshot
     decision = evaluate(snapshot, request.deviceUid, vm.context, profile, policy)
     require decision.attachable == true
+    require decision.activationDisposition in {ALREADY_ACTIVE, LIVE_APPLY}
 
     lease = acquireBundleLease(newRunId(), decision.bundle, snapshot)
     rollback = RollbackStack()
@@ -861,12 +1027,12 @@ function attachStatic(vm, request, idempotencyKey):
         assertFresh(lease, snapshot, decision)
         assertFencingToken(lease)
 
-        for member in decision.bundle.actionOrder:
-            original = hostDriver(member)
-            detachHostDriver(member)
-            rollback.push(rebindDriver(member, original))
+        activation = executeLiveActivation(
+            decision.activationPlan, decision.bundle, lease)
+        rollback.push(restoreActivationOrQuarantine(activation, lease))
+        require activation.everyEffectiveOwnerMatches
 
-        handles = vfio.openOwnedDevices(decision.bundle)
+        handles = vfio.openActivatedDevices(decision.bundle, activation)
         rollback.push(closeAll(handles))
 
         ioas = iommufd.createIoasAndAttach(handles)
@@ -886,7 +1052,7 @@ function attachStatic(vm, request, idempotencyKey):
         rollback.push(killAndWaitFdTeardown(qemu))
 
         observed = verifier.collectAndVerify(qemu, vm, finalPlan, ioas)
-        manifest = buildManifest(lease, decision, finalPlan, observed)
+        manifest = buildManifest(lease, decision, activation, finalPlan, observed)
         store.commitAttached(lease, manifest, expectedState=PREPARING)
         rollback.disarm()
         return manifest.assignmentId
@@ -924,7 +1090,10 @@ function releaseAssignment(assignmentId, reason):
         quarantine(binding.bundle, RELEASE_CLEANUP_UNCERTAIN, evidence())
         return QUARANTINED
 
-    rebindOriginalDrivers(binding.members)
+    if binding.activationMode == BIND_ON_LEASE:
+        rebindOriginalDrivers(binding.members)
+    else:
+        verifyPersistentVfioOwner(binding.members)
     publishNewDeviceGenerations(binding.bundle)
     store.release(lease, expectedToken=binding.fencingToken)
     return FREE
@@ -933,141 +1102,17 @@ function releaseAssignment(assignmentId, reason):
 guest reboot 不经过 release：设备仍由同一 VM、runId 和 IOAS 占有，但必须验证 reboot 后
 functional heartbeat，并按 profile 执行允许的 reset/ROM 语义。
 
-### 9.7 ESXi 8.0.3 fixed passthrough hotplug 可选事务
+### 9.7 Guest runtime PCI hotplug 永久关闭
 
-这项能力不能并入 Dynamic。vSphere 8.0 U3 的
-[`fixedPassthruHotPlugEnabled`](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.vm.ConfigSpec.html#fixedPassthruHotPlugEnabled)
-公开合同是：只可在 VM powered-off 时改变；启用后在下次 power-on 做额外准备，使 **fixed
-passthrough device** 可在 VM 运行时 add/remove；同时应将 VM memory reservation 设为全部 guest
-memory。它自 vSphere API 8.0.1.0 起存在。公开 API 没有说明 slot/window、guest eject、失败补偿
-或支持设备集合，因此这些细节必须黑盒验收，不能凭字段名称补全 VMware 行为。
+vSphere 8.0 U3 的 `fixedPassthruHotPlugEnabled` 是 VMware 的独立能力事实，不是 Qman 的待办。
+Qman 的 `fixedPassthruHotplug`、`dynamicRuntimeHotplug` 和 `qemuNativeRuntimeHotplug` 永久为
+false。API 设置该字段返回 `FEATURE_DISABLED/HOTPLUG_UNSUPPORTED`；scheduler 不创建 hotplug
+capacity；launcher 不创建可热拔 slot；QMP proxy 和 sandbox 无条件拒绝
+`device_add/device_del`。
 
-三种语义必须用不同 capability 和事务表示：
-
-| 语义 | 持久对象 | 选卡时刻 | 运行中换卡 | Qman capability |
-| --- | --- | --- | --- | --- |
-| 普通 Static | 精确 `deviceUid` | VM 配置时 | 否 | `staticDirectPath` |
-| Dynamic | allowed tuples + label | 每次 power-on | 否 | `dynamicDirectPath` |
-| Fixed hotplug | 精确 `deviceUid` + hotplug capacity | hot-add 请求时 | 只允许显式 add/remove，不替换 backing | `fixedPassthruHotplug` |
-
-基线 profile 中该 capability 为 false。可选 profile 只有同时满足以下条件才可创建：
-
-1. `fixedPassthruHotPlugEnabled=true` 在 VM 停机时持久化；运行中修改返回
-   `VM_MUST_BE_POWERED_OFF`。
-2. `memoryReservationBytes == guestMemoryBytes`，balloon、memory hot-add 和 overcommit 对该 VM
-   关闭；Qman 将“should”收紧为 fail-closed 前置条件。
-3. VM power-on 前根据管理员声明的 `HotplugCapacityPlan` 预留稳定 root port/guest slot、bus number、
-   32/64-bit MMIO aperture、IRQ/vector 和 QEMU fd 上限；运行中不扩大 ACPI `_CRS` 或 bridge window。
-4. 固定设备仍执行完整 capability、dependency closure、MMIO fit、lease、reset 和 fd-only gate；
-   hotplug flag 不会使不合格设备变合格。
-5. firmware/layout、guest OS/driver 和精确设备组合已通过 S13-S16；未通过组合返回
-   `FIXED_HOTPLUG_NOT_QUALIFIED`。
-
-每次在线 add 都创建 child `AssignmentRun(parent_vm_run_id=...)`，状态为
-`PREPARING -> ATTACHED -> EJECTING -> RELEASING -> REMOVED`。eject deadline 到期转入
-`EJECT_PENDING`，迟到 `DEVICE_DELETED` 后再进入 `RELEASING`；任一 cleanup proof 不确定则进入
-`QUARANTINED`。VM 主 run 与 child run 分开，避免一块在线设备的失败把仍在运行的 VM 错标为失败。
-
-```mermaid
-sequenceDiagram
-    participant C as Qman controller
-    participant L as Lease store
-    participant H as Host agent
-    participant Q as QEMU
-    participant G as Guest
-
-    C->>C: Revalidate running VM and reserved capacity
-    C->>L: CAS reserve exact static bundle
-    L-->>C: lease + fencing token
-    C->>H: Bind, reset, open fds, attach IOAS
-    H->>Q: device_add on pre-created slot with fd refs
-    Q-->>H: command accepted
-    H->>G: wait enumeration and functional heartbeat
-    G-->>H: device usable
-    H-->>C: commit ATTACHED binding
-    Note over C,G: Remove starts with guest quiesce/eject
-    C->>Q: device_del
-    Q-->>C: DEVICE_DELETED event
-    C->>H: verify fd teardown, unmap, reset, rebind
-    H->>L: release only after cleanup proof
-```
-
-Hot-add 伪代码：
-
-```python
-function hotAddFixed(vmId, staticRequest, capacitySlot, idempotencyKey):
-    vm = store.getRunningVm(vmId)
-    require vm.profile.fixedPassthruHotPlugEnabled
-    require vm.memoryReservationBytes == vm.guestMemoryBytes
-    require capacitySlot in vm.bootManifest.unusedHotplugSlots
-
-    snapshot = inventory.readImmutable()
-    decision = evaluateStatic(snapshot, staticRequest, vm, vm.profile, policy)
-    require decision.hostActive and decision.available
-    require planner.fitsReservedHotplugCapacity(
-        decision.bundle, capacitySlot, vm.bootManifest.hotplugCapacityPlan)
-
-    lease = store.reserveBundleCAS(decision.bundle, vm.runId, idempotencyKey)
-    prepared = host.prepareBundle(decision, lease)  # bind/reset/fds/IOAS; rollback journaled
-
-    try:
-        qmp.deviceAdd(slot=capacitySlot.guestSlot,
-                      fdRefs=prepared.fdRefs,
-                      properties=decision.renderedDeviceProperties)
-        observed = waitGuestEnumerationAndHeartbeat(
-            capacitySlot.guestSlot, decision.guestAbiSignature, deadline=profile.hotAddDeadline)
-        require observed.matches(decision)
-        return store.commitAttachedHotplug(lease, observed, expectedVmRunId=vm.runId)
-    except error:
-        outcome = tryDeviceDelAndWaitFdTeardown(capacitySlot, prepared)
-        if outcome != CLEANLY_DELETED:
-            store.retainLeaseAndMarkRecovery(lease, HOT_ADD_ROLLBACK_UNCERTAIN)
-            quarantine(decision.bundle, error, evidence())
-        else:
-            host.cleanupPreparedBundle(prepared)
-            store.release(lease, expectedToken=lease.token)
-        raise stableAssignmentError(error, outcome)
-```
-
-Hot-remove 伪代码：
-
-```python
-function hotRemoveFixed(assignmentId, idempotencyKey):
-    binding = store.getAttachedHotplugBinding(assignmentId)
-    require binding.vmRunId == runtime.currentRunId(binding.vmId)
-    store.casAssignment(binding, ATTACHED, EJECTING, idempotencyKey)
-
-    requestGuestQuiesce(binding)
-    qmp.deviceDel(binding.qemuDeviceId)
-    event = waitQmpDeviceDeleted(binding.qemuDeviceId, profile.hotRemoveDeadline)
-    if event.missing:
-        # QMP command success is not removal; QEMU may still own fd/DMA/IRQ.
-        store.casAssignment(binding, EJECTING, EJECT_PENDING,
-                            reason=GUEST_EJECT_TIMEOUT,
-                            eventWatcher=runtime.currentQmpEpoch)
-        return failure(GUEST_EJECT_TIMEOUT,
-                       assignmentState=EJECT_PENDING,
-                       leaseRetained=true)
-
-    require waitQemuVfioFdReferencesClosed(binding)
-    result = host.cleanupDetachedBundleWithoutStoppingVm(binding)
-    if not result.resetStateDmaIrqAllVerified:
-        quarantine(binding.bundle, HOT_REMOVE_CLEANUP_UNCERTAIN, result.evidence)
-        return QUARANTINED
-
-    store.release(binding.lease, expectedToken=binding.fencingToken)
-    markCapacitySlotUnused(binding.capacitySlot)
-    return REMOVED
-```
-
-`EJECT_PENDING` 禁止新的 add/remove/release 请求，也绝不释放 lease。controller 持续等待同一
-QMP epoch 的 `DEVICE_DELETED` 后续事件；QEMU/VM 被强制停止时转入普通 release/reconcile 路径。
-host agent 可保留 cleanup 所需的 control fd，但必须证明 QEMU 对应 fd reference 已关闭后才开始
-unmap/reset。
-
-QMP ACL 不再是简单的全局禁用：baseline 和 Dynamic profile 永远拒绝 `device_add/device_del`；只有
-带有效 runId、lease、fencing token、预留 slot 和 controller-signed command 的 fixed-hotplug profile
-可调用。运维 raw QMP、CLI 和 storage API 仍必须失败。
+S13-S16/F09 必须证明拒绝前后 VM definition、assignment、lease、VFIO fd、guest PCI tree、BAR
+window、DMA/IRQ owner 均不变。host owner 的 `LIVE_APPLY` 发生在 VM power-on 前，不改变运行中
+guest topology，因此不属于本节禁止的 device hotplug。
 
 ## 10. Dynamic DirectPath 事务
 
@@ -1123,7 +1168,7 @@ function buildCandidates(snapshot, requirement, vm, profile, policy):
             continue
 
         decision = evaluate(snapshot, device.uid, vm.withoutMmio(), profile, policy)
-        if not decision.hostActive:
+        if decision.activationDisposition not in {ALREADY_ACTIVE, LIVE_APPLY}:
             continue
         if decision.bundle has blocking availability reason:
             continue
@@ -1243,18 +1288,6 @@ function reconcileHost(hostId, kernelBootId):
                 verifyRuntimeOrQuarantine(run)
             case (ATTACHED, qemuMissing):
                 releaseAssignment(run.assignmentId, QEMU_CRASH)
-            case (EJECTING, qemuAliveAndDevicePresent):
-                resumeEjectEventWatch(run)
-            case (EJECT_PENDING, qemuAliveAndDevicePresent):
-                resumeEjectEventWatch(run)  # lease and slot remain unavailable
-            case (EJECTING, qemuAliveAndDeviceAbsentAndQemuFdClosed):
-                resumeDetachedBundleCleanup(run)
-            case (EJECT_PENDING, qemuAliveAndDeviceAbsentAndQemuFdClosed):
-                resumeDetachedBundleCleanup(run)
-            case (EJECTING, qemuMissing):
-                cleanupAfterVmExit(run)
-            case (EJECT_PENDING, qemuMissing):
-                cleanupAfterVmExit(run)
             case (PREPARING, noSideEffects):
                 store.release(run.lease)
             case (PREPARING, partialSideEffects):
@@ -1278,7 +1311,8 @@ function reconcileHost(hostId, kernelBootId):
 | host power loss | owner 未知 | fence host，再在目标重新选择 Dynamic | fence proof + 新 token |
 | reset affected set 改变 | 原 plan 作废 | 不执行 reset，rollback | 新 snapshot/plan/lease |
 | QEMU 启动后 BAR 漂移 | 未提交 assignment | kill、teardown、profile invalidated | 新 qualification 通过 |
-| fixed hot-remove eject timeout | QEMU/guest 可能仍持有设备 | `EJECT_PENDING`，保留 lease/slot，等待事件或 VM stop | `DEVICE_DELETED` + QEMU fd teardown + cleanup proof |
+| live owner transition 部分完成 | bundle owner 不确定，禁止启动 QEMU | 按 journal 回滚；回滚不完整则 quarantine | 所有成员 effective owner/driver 与目标状态一致并有读回证据 |
+| boot claim 与运行时 identity 不匹配 | 设备仍归原 host owner，不可分配 | 拒绝激活并报警，不按 VID:DID 猜测 | exact identity/path/bundle 重新发现并生成新 intent |
 | release reset/state probe 失败 | bundle 仍归旧 run/quarantine | 禁止 rebind/重分配 | 人工或自动 remediation 证明 clean |
 
 ### 11.3 Fencing 底线
@@ -1337,7 +1371,7 @@ guest 注入 AER notification。
 | ATS/PRI/PASID | parity 不承诺 | 默认隐藏；独立 native profile 才可 qualification |
 | migration | 不支持 vMotion | QEMU migration blocker + API/QMP ACL |
 | Dynamic runtime hotplug | Dynamic 只在 power-on 选卡 | baseline/Dynamic profile 拒绝 `device_add/device_del` |
-| fixed passthru hotplug | 8.0 U3 可选 fixed-device add/remove | 独立 profile；全内存预留、boot-time capacity、lease-signed QMP；见 9.7 |
+| fixed passthru hotplug | ESXi 8.0 U3 存在该可选能力 | Qman 永久不支持；API、scheduler、launcher、QMP 四层稳定拒绝；见 9.7 |
 
 ### 12.4 Observed plan verifier
 
@@ -1370,11 +1404,11 @@ guest probe 不可用时不允许静默跳过。可定义不需要完整 guest O
 | `POST /directpath/evaluate` | 无 | decision、plan 或 unsat reason |
 | `POST /vms/{id}/directpath/static` | 持久配置 | Static request version |
 | `POST /vms/{id}/directpath/dynamic` | 持久配置 | Dynamic requirements version |
-| `PUT /vms/{id}/directpath/fixed-hotplug-profile` | 停机时持久配置 | flag、memory/capacity plan version |
+| `POST /hosts/{id}/directpath/activation-plan` | 无 | bundle 的 desired/effective owner、disposition、reason |
+| `PUT /hosts/{id}/directpath/bundles/{bundleId}/desired-owner` | 维护配置 | exact boot claim、intent version、是否要求维护重启 |
+| `POST /hosts/{id}/directpath/bundles/{bundleId}/apply-activation` | owner transition | 读回后的 effective owner 或 rollback/quarantine |
 | `POST /vms/{id}/power-on-plan` | reservation | runId、host、selected bundle、plan summary |
 | `POST /assignment-runs/{runId}/commit` | attach | assignmentId、manifest hash |
-| `POST /vms/{id}/directpath/fixed-hotplug` | 在线 attach | fixed assignmentId、slot、manifest hash |
-| `DELETE /assignments/{id}` | 在线 eject 或普通 release | REMOVED、EJECT_PENDING(timeout) 或 QUARANTINED |
 | `POST /assignments/{id}/release` | release | FREE 或 QUARANTINED |
 | `GET /assignments/{id}` | 无 | binding、lease、evidence、health |
 | `POST /quarantine/{bundleId}/remediate` | 高权限 | remediation run，不直接 clear |
@@ -1439,6 +1473,10 @@ unsafe isolation 和 planner timeout 默认不可盲重试。
   "bundleMembers": ["0000:65:00.0", "0000:65:00.1"],
   "snapshotEpoch": 1842,
   "fencingToken": 901,
+  "activationMode": "bind-on-lease",
+  "desiredOwner": "passthrough",
+  "activationPlanHash": "sha256:...",
+  "effectiveOwnerEvidenceHash": "sha256:...",
   "policyHash": "sha256:...",
   "profileHash": "sha256:...",
   "decisionHash": "sha256:...",
@@ -1456,6 +1494,8 @@ manifest 是审计记录，不替代 lease store。manifest 不完整时 assignm
 
 ```text
 directpath_capability_decisions_total{result,reason,profile}
+directpath_activation_plans_total{disposition,reason,mode}
+directpath_activation_transitions_total{direction,result,stage}
 directpath_candidate_count{host,requirement}
 directpath_solver_duration_seconds{result}
 directpath_lease_conflicts_total{bundle}
@@ -1482,7 +1522,7 @@ verdict、文件 SHA256 和工具版本。只保存“最终 pass”不足以复
 | --- | --- | --- |
 | ACS override 伪造安全 group | kernel shadow domain + whole-domain lease | 尝试把原生同域成员分给两个 VM 必须拒绝 |
 | raw CLI 直通未租设备 | QEMU 无 BDF 权限、fd-only、launcher allowlist | `-device vfio-pci,host=` 生产入口失败 |
-| QMP runtime 添加/删除设备 | baseline/Dynamic blocker；fixed-hotplug 只接受 controller-signed lease command | raw `device_add/device_del` 返回稳定拒绝 |
+| QMP runtime 添加/删除设备 | 所有 DirectPath profile 永久阻断，宿主 owner live activation 不经过 QMP | raw `device_add/device_del` 返回稳定拒绝 |
 | stale agent 提交旧 lease | fencing token + expected version | 旧 token commit/release 均失败 |
 | reset 影响旁路 function | authoritative affected set + closure | 少一个 owner fd 时 hot reset 失败且不执行 |
 | BAR/ReBAR 改变已批准 plan | config filter + post-boot verifier | guest resize/write 不改变 effective plan |
@@ -1500,7 +1540,8 @@ verdict、文件 SHA256 和工具版本。只保存“最终 pass”不足以复
 | shadow-domain ABI | C05、C06、C07、C19 | R01、R28、R35 |
 | VFIO reset provider | C03、C04、C17、C18、S11、S12 | R02、R03、R29 |
 | full resource planner | M00-M04、M11、M18-M23 | R07、R09、R21、R22、R33、R34、R36 |
-| Static transaction | S00-S16、F00、F09 | R03-R06、R11、R17、R26、R37 |
+| host owner activation | O00-O09 | R03、R06、R11、R39 |
+| Static transaction | S00-S16、F00、F09 | R03-R06、R11、R17、R26、R37、R39 |
 | Dynamic solver | D00-D14 | R04、R05、R08、R23、R29 |
 | multi-host fencing | F01-F07 | R04、R10 |
 | parity surface | M05-M10、M14-M17 | R12-R17、R22-R24、R30-R32 |
@@ -1593,10 +1634,11 @@ health/generation。完成门：C03-C07、C17-C19。
 交付：完整 guest tree、逐桥精确求解、firmware/QEMU renderer、observed verifier。完成门：
 M00-M04、M11、M18-M23。
 
-### Phase 1C：单 host Static
+### Phase 1C：单 host owner activation 与 Static
 
-交付：SQLite/CAS lease、fd-only launcher、rollback journal、release/quarantine/reconcile、API/QMP
-bypass gate。完成门：S00-S12、F00、F09。
+交付：desired/effective 四态 planner、完整 bundle live executor、exact early-boot claim/reconcile、
+SQLite/CAS lease、fd-only launcher、rollback journal、release/quarantine/reconcile、API/QMP bypass
+gate。完成门：O00-O09、S00-S16、F00、F09。
 
 ### Phase 2：单 host Dynamic
 
@@ -1613,11 +1655,12 @@ F01-F07；未 fence 的 host 不发生重分配。
 交付：AER/PME/ROM/ReBAR/SR-IOV filters、versioned QOM profile、真实硬件 E4 matrix。只有精确
 qualified combination 对外开启；其余保持 `FEATURE_DISABLED`。
 
-### Phase 5：ESXi 8.0.3 可选 fixed passthrough hotplug
+### Phase 5：发布闭环与长期故障注入
 
-交付：powered-off flag/memory-reservation gate、boot-time hotplug capacity、精确 static bundle 的
-hot-add/hot-remove 事务、guest eject timeout recovery 和 lease-signed QMP ACL。完成门：S13-S16、
-F09、R17/R37；未完成时 `fixedPassthruHotplug=false`，不影响 Static/Dynamic baseline 发布。
+交付：升级/回滚兼容矩阵、长时间 DMA/IRQ soak、host service/boot/store 故障注入、所有风险和
+capability 的机器可执行 release evaluator。重复 O00-O09、S13-S16/F09，证明 owner activation
+在 crash 后可 reconcile，且所有 DirectPath profile 均无法绕过 API、scheduler、launcher 或 QMP
+进行 guest runtime hotplug。
 
 每个提交只开放其已闭环能力。禁止先提供 raw VFIO/QEMU escape hatch，再等待未来补控制面。
 
@@ -1628,7 +1671,7 @@ F09、R17/R37；未完成时 `fixedPassthruHotplug=false`，不影响 Static/Dyn
 
 | ADR | 需要确认的问题 | 推荐默认值 | 不同答案的影响 |
 | --- | --- | --- | --- |
-| ADR-001 | parity 是功能语义还是严格 VMware topology？ | 先做 semantic + stable guest ABI；strict 单独 profile | strict 需要 custom QEMU machine/ACPI，工期显著增加 |
+| ADR-001 | guest topology 对标范围 | **已决定：**语义对标 + 稳定 Qman guest ABI；不严格复制 VMware topology | guest ABI 变化必须新增 versioned machine profile，不能原地漂移 |
 | ADR-002 | 生产最低 kernel/QEMU/firmware 版本？ | 单一受控版本，VFIO cdev + IOMMUFD；legacy 只作 lab | 支持 legacy VFIO 会增加 reset ownership 和测试组合 |
 | ADR-003 | Qman 是单机产品还是已有 cluster control plane？ | host-local SQLite 接口先实现，抽象兼容 consensus store | 直接多 host 需要先确定 store/fencing/leader 语义 |
 | ADR-004 | 是否存在互不信任租户？ | 按强多租户设计，不接受 ACS override 缩组 | 单租户也不能放宽 reset/DMA 清理，但可简化调度策略 |
@@ -1638,16 +1681,16 @@ F09、R17/R37；未完成时 `fixedPassthruHotplug=false`，不影响 Static/Dyn
 | ADR-008 | 最大设备数是否必须首版达到 64？ | 首版宣告实际通过值，目标逐步到 64 | 一开始要求 64 会提前放大 bus/MMIO/IRQ/fd 测试规模 |
 | ADR-009 | P2P/RMRR/INTx/SR-IOV 是否首版必须？ | 全部默认关闭，逐项 qualification | 任一首版必选都会增加真实硬件和 backend 前置条件 |
 | ADR-010 | qualification/policy 谁签发和审批？ | 版本化签名 DB，安全/硬件 owner 双审 | 无 owner 时不能安全运营 deny/allow 与失效流程 |
-| ADR-011 | ESXi fixed passthrough hotplug 是否首版范围？ | baseline 后独立 profile；先完成 Static/Dynamic | 首版必选会增加 boot aperture、guest eject、在线 rollback 和设备/guest 组合矩阵 |
+| ADR-011 | guest runtime PCI hotplug | **已决定：**永久不支持，所有 DirectPath profile 四层拒绝 | 将来若改变必须新 ADR、新 profile 和独立安全审计，不能沿用本设计证明 |
+| ADR-012 | passthrough owner 激活策略 | bind-on-lease 为默认；显式维护模式才持久 early-boot VFIO claim；产品不自动重启 host | 自动重启或全局 VID:DID claim 会扩大故障域并可能夺走管理/存储设备 |
 
-最希望用户补充的是五项事实：
+仍希望产品/平台方补充的事实如下；它们不阻塞 reference model 与详细设计：
 
 1. Qman 当前进程/服务边界、已有调度器和状态存储是什么。
 2. 计划冻结的 production kernel、QEMU、OVMF/SeaBIOS 最低版本。
 3. 首批必须支持的设备清单，至少 VID:DID/revision、firmware、host 型号和 guest driver。
-4. 是否要求严格复刻 VMware guest topology，还是接受明确标记的功能近似。
-5. 多租户强度、host crash RTO，以及是否有可自动调用的 BMC/power fencing。
-6. 首版是否必须支持 `fixedPassthruHotPlugEnabled`，以及目标 guest OS/driver/device 组合。
+4. 多租户强度、host crash RTO，以及是否有可自动调用的 BMC/power fencing。
+5. 是否提供显式 host maintenance 工作流，以及允许的重启编排、Secure Boot/initramfs 更新方式。
 
 这些答案会改变模块实现或验收规模，但不会改变四条安全不变量：whole-domain lease、权威 reset
 affected set、durable ownership、清理不确定即 quarantine。
@@ -1676,7 +1719,7 @@ affected set、durable ownership、清理不确定即 quarantine。
 
 ## 20. 规范与证据索引
 
-- 完整算法、风险 R01-R38、验收 C/S/D/M/F：
+- 完整算法、风险 R01-R39、验收 C/S/D/M/F/O：
   [`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)
 - ESXi 8.0 U3 黑盒结果与 case 索引：
   [`vmware-esxi8-directpath-local-results.md`](vmware-esxi8-directpath-local-results.md)
@@ -1686,5 +1729,12 @@ affected set、durable ownership、清理不确定即 quarantine。
 - firmware/layout 矩阵：[`vmware-firmware-layout-matrix.md`](vmware-firmware-layout-matrix.md)
 - 可执行验收目标：[`vmware-directpath-acceptance-test-plan.md`](vmware-directpath-acceptance-test-plan.md)
 - 当前 reference model：[`pci-resource-model/`](pci-resource-model/README.md)
+- Host owner activation 证据与 SHA256：
+  [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)、
+  [`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)
+- ESXCLI 8.0.3 `--apply-now` 合同：
+  [`hardware pci pcipassthru set`](https://developer.broadcom.com/xapis/esxcli-command-reference/8.0.3/namespace/esxcli_hardware.html)
+- Broadcom busy-driver 重启边界：
+  [KB 434815](https://knowledge.broadcom.com/external/article/434815/hba-adapter-hba355i-registers-as-storage.html)
 - vSphere 8.0 U3 fixed passthrough hotplug API：
   [`VirtualMachineConfigSpec.fixedPassthruHotPlugEnabled`](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.vm.ConfigSpec.html#fixedPassthruHotPlugEnabled)

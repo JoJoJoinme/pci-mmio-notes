@@ -10,6 +10,8 @@ config/sysfs inventory
         +--> IOMMU/ACS/reset/topology --> eligible
                     + dependency owners --> available
                     + MMIO/RMRR admission --> attachable
+        |
+        +--> desired/effective owner + quiesce --> activation disposition
 ```
 
 实现只依赖 Python 3.10+ 标准库。它适合放在 libvirt 上层、自有 host service 或
@@ -102,7 +104,24 @@ attachable = available + BAR allocation + RMRR admission
   默认为空闲。
 - BAR/MMIO 失败只让 `attachable=false`，不会篡改前面的静态 `eligible` 结论。
 
-## 4. CLI
+## 4. Host owner activation
+
+[`activation.py`](pci_resource_model/activation.py) 纯函数规划完整 dependency bundle 的宿主 owner
+切换，不执行 unbind、reset、lease 或 reboot：
+
+```text
+ALREADY_ACTIVE   effective owner 已全部匹配
+LIVE_APPLY       当前可 quiesce，可在 durable bundle lease 后执行 live transition
+REBOOT_REQUIRED  live transition 被 busy/策略阻断，但存在精确 early-boot claim
+DENIED           identity/owner/action 未知、host-critical、foreign lease 或无 boot claim
+```
+
+planner 故意不接收 FLR bit、class code 或 BAR size。它们分别属于 reset safety、payload role 和
+resource admission，不能证明 native driver 当前可安全解绑。`REBOOT_REQUIRED` 也不是自动重启
+指令；controller 只有在显式 maintenance workflow 已持久化 exact identity/path/bundle boot claim
+后才可接受该结果。运行中 guest PCI hotplug 永久不在此模型范围内。
+
+## 5. CLI
 
 只读扫描当前 Linux host：
 
@@ -161,7 +180,7 @@ python3 -m pci_resource_model capable \
 所有地址范围的 `END` 都是 exclusive。对真实 QEMU VM，应从 machine/firmware 已保留的
 PCI root windows 构造这些输入，而不是把示例地址硬编码进生产。
 
-## 5. 测试
+## 6. 测试
 
 ```bash
 PYTHONPATH=pci-resource-model \
@@ -175,13 +194,17 @@ python3 -m unittest discover -v -s pci-resource-model/tests
 - Type-0 class A/B、Type-1+FLR 负例、IOMMU/reset/ACS override/dependency。
 - `eligible=true` 但 dependency busy 或 MMIO admission 失败的分层结果。
 - Linux resource、PCIe type、ACS extended capability 与 mandatory-override shadow domain。
+- desired/effective owner 分离、idle/busy A/B、dependency closure、stale identity、foreign lease、
+  host-critical、early-boot claim 和 disable/rebind activation。
 
-## 6. 当前边界
+## 7. 当前边界
 
 - 直接探测只覆盖 standard BAR0-BAR5，不含 ROM、SR-IOV VF BAR和 Resizable BAR支持集合。
 - sysfs scanner 不执行 VFIO hot-reset ioctl；override physical domain 依赖定制内核 provenance，
   并采用可能过度合并的保守父拓扑算法。
 - allocator 计算 root-level aperture demand，不复刻 OVMF 的完整多级 bridge window算法。
 - QEMU 参数是启动前需求；启动后仍必须核对 guest BAR、ACPI `_CRS`、IOMMU map 和中断。
+- activation 目前只有无副作用 planner；durable journal、live driver transition、exact early-boot
+  claim 和 boot reconcile 属于 Qman host agent 实现，不由本 reference model 执行。
 - 本环境只有 WSL synthetic PCI，可验证只读扫描和算法，不能替代真实设备写全 1 sizing、
   电气 reset 或物理 ACS 验收。

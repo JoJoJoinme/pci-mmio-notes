@@ -1,6 +1,6 @@
 # VMware VMDirectPath 实现细节验收目标与测试计划
 
-日期：2026-07-11
+日期：2026-07-18
 
 ## 1. 目的与范围
 
@@ -43,8 +43,14 @@ QEMU L0 可以逐项改变 PCIe 拓扑、ACS、multifunction、BAR 大小、Opti
 | Expansion ROM | 默认只是禁止执行 ROM，还是连 guest 可见 ROM BAR 也不暴露？ | guest PCI config 和 firmware log 的前后对比 |
 | PME/AER | 哪些事件由 ESXi 持有，哪些会进入 guest？ | 主动事件注入和 host/guest 成对日志 |
 | Dynamic DirectPath | 如何选候选设备，何时设置 `assignedId`，多个 allowed device 如何计算资源包络？ | VM 开机前、运行中、关机后的 API 快照 |
-| Fixed passthrough hotplug | `fixedPassthruHotPlugEnabled` 的配置门、资源预留、add/eject/失败补偿是什么？ | powered-off/online API A/B、guest/QMP、BAR/window、lease/fd/reset 成对证据 |
+| Host owner activation | passthrough 配置何时立即生效、何时需要 host reboot、何时重启也不能修复？ | Configured/Current Owner、enabled/active、driver、dependency、命令和 reboot 前后成对证据 |
+| Fixed passthrough hotplug | ESXi 8.0 U3 的公开能力与 Qman 产品边界是否混淆？ | ESXi API 契约归档；Qman API/scheduler/launcher/QMP 四层负向测试 |
 | 生命周期 | snapshot、suspend、migration、Dynamic runtime switch、强制关机分别支持还是拒绝？ | API 结果、task fault 和操作后的设备状态 |
+
+本文中的 **guest topology** 是 guest 内可观察的虚拟 PCI/ACPI 结构：root、root port/bridge、
+bus/slot/function 路径、ACPI root 与 `_CRS` window、BAR 地址。它不是宿主物理 PCIe 拓扑，
+也不是设备热插拔。Qman 只承诺稳定、版本化的自身 guest ABI，不要求逐节点复制 VMware
+chipset/root-port identity。
 
 ### 2.2 VMware 默认 MMIO 的最低验收条件
 
@@ -62,17 +68,22 @@ QEMU L0 可以逐项改变 PCIe 拓扑、ACS、multifunction、BAR 大小、Opti
 现有普通 EFI VM 的 VMX 检查仍然是有价值的配置旁证，但因为当时没有 active
 passthrough device，不能单独满足这项运行时验收。
 
-### 2.3 QEMU 等价性的最低验收条件
+### 2.3 QEMU 对标的最低验收条件
 
-QEMU profile 只有在以下可观测边界与 VMware 实测结果相符时，才能标记为等价：
+证据报告分开使用两个标签：`strict-topology-equivalent` 要求 guest-visible identity 和拓扑逐项
+一致；Qman 产品使用 `semantic-parity`，要求资源、安全和生命周期语义一致，并冻结自己的
+versioned guest ABI。当前设计明确不交付 strict VMware topology。
 
-1. Firmware 类型和 guest 可见 PCIe 拓扑。
-2. Guest 可见 host-bridge/chipset identity；只匹配 root-port 外观不算精确等价。
-3. ACPI root bridge 的数量、bus range 和 32-bit/64-bit memory window。
-4. 相同 below-4G 压力下的 BAR 地址或失败边界。
-5. Host DMA isolation 和 interrupt remapping 前提。
-6. Multifunction 与 reset dependency 边界。
-7. 场景涉及的 Option ROM、PME、AER 和生命周期策略。
+`semantic-parity` 至少满足：
+
+1. Firmware 类型和版本化的 Qman guest PCI/ACPI topology 均被记录且稳定。
+2. ACPI root bridge 的数量、bus range 和 32-bit/64-bit memory window 满足同一资源约束。
+3. 相同 below-4G 压力下的 BAR 地址或失败边界。
+4. Host DMA isolation 和 interrupt remapping 前提。
+5. Multifunction 与 reset dependency 边界。
+6. 场景涉及的 Option ROM、PME、AER 和生命周期策略。
+
+严格 VMware identity 仍作为实验差异保存，但不阻塞 Qman `semantic-parity`。
 
 “QEMU 成功启动”或“参数名字看起来对应”不算通过。
 
@@ -274,14 +285,37 @@ AER 已证明 stock QEMU 的 guest surface 不等价，完整过滤仍需 QEMU p
 | L03 | L2 关机时重启 ESXi | Passthrough activation 和 ownership 可预测恢复 |
 | L04 | L2 运行时强制关闭 ESXi | 下一次 host/VM boot 不保留不安全状态 |
 | L05 | 删除并重新添加 passthrough 配置 | 记录 reboot/rebind 要求和 API state transition |
-| L06 | flag=false、Dynamic backing 或 raw API 尝试 runtime add/remove | 精确记录拒绝 fault，原 device/assignment 不变 |
-| L07 | powered-on 设置 `fixedPassthruHotPlugEnabled`；停机启用时改变 memory reservation | 前者必须拒绝；记录 ESXi 对 full-memory reservation 的实际 enforcement |
-| L08 | fixed device runtime hot-add success + 每阶段 fault injection | 记录 boot-time aperture/slot、config/API、guest enumerate、BAR、reset；不存在半挂载 |
-| L09 | fixed device runtime hot-remove success + guest eject timeout/reset failure | 记录何时 backing/owner/fd 消失；未完成 eject/cleanup 时设备不得变为可分配 |
+| L06 | Qman API 请求启用 fixed/Dynamic runtime hotplug | `FEATURE_DISABLED/HOTPLUG_UNSUPPORTED`，VM definition 不变 |
+| L07 | 已开机 VM 请求切换 Dynamic backing | 请求被拒；原 assignment、lease、guest PCI tree 不变 |
+| L08 | 绕过 API 直接向生产 QMP 发送 `device_add/device_del` | launcher/QMP ACL 稳定拒绝，不创建或删除 VFIO fd |
+| L09 | 重复、并发或 crash-retry 尝试绕过 L06-L08 | 每次都 fail-closed；无 slot/capacity/eject 状态或孤儿 lease |
 
-L06-L09 是独立的 fixed passthrough hotplug 画像，不改变 X00-X03 的 Dynamic 定义。每个 case
-必须至少保存 VM 停机配置、power-on 后配置、操作前后 device backing、guest PCI tree、BAR/window、
-ESXi task fault/日志和 outer QEMU trace；只观察 UI 按钮是否出现不算通过。
+ESXi 8.0 U3 的 `fixedPassthruHotPlugEnabled` 仍作为公开产品差异归档，但 Qman 不支持 guest
+runtime PCI hotplug，因此不再把 ESXi 在线 add/eject 黑盒实现作为发布前置。L06-L09 是 Qman
+永久负向门；它们不改变 X00-X03 的 Dynamic 定义。Dynamic 只在 power-on transaction 中选卡。
+
+### 7.7 Host owner activation 与 reboot decision
+
+这些用例验证宿主设备从 native owner 切换到 passthrough provider。它们发生在 VM power-on
+attach 之前，不改变运行中 VM 的 guest topology，也不属于 PCI hotplug。
+
+| ID | 测试 | 通过条件 |
+| --- | --- | --- |
+| O00 | configured owner 与 current owner 分离 | desired/effective 分字段；不能仅凭 Enabled 宣告 Active |
+| O01 | idle complete bundle + `--apply-now` | 不重启即可切到 passthrough provider；所有 dependency 成员读回一致 |
+| O02 | O01 后读取 vSphere API | `passthruEnabled=true` 且 `passthruActive=true`；Active 不依赖真实 reboot history |
+| O03 | 相同 idle device 不带 `--apply-now` | desired 改变、effective 保持；精确分类为 `REBOOT_REQUIRED` |
+| O04 | native driver/service/path busy | live unbind 失败；仅存在 exact early-boot claim 时才建议维护重启 |
+| O05 | complete bundle 中仅一个成员 busy | 禁止 partial live apply；capable 与 bundle identity 不因 busy 改变 |
+| O06 | BDF/physical path identity stale | `DENIED(ACTIVATION_IDENTITY_MISMATCH)`；不得把重启当成修复 |
+| O07 | persisted owner intent 后维护重启 | boot 后按 exact identity/path/bundle 读回 owner/driver；不一致为 failed/quarantine |
+| O08 | disable active bundle | 无 lease且可 quiesce时 live rebind host；leased/busy 时拒绝或进入 maintenance |
+| O09 | planner 纯函数 A/B | 仅切换 idle/busy，`LIVE_APPLY` 稳定变为 `REBOOT_REQUIRED`；查询不解绑、不 reset、不建 lease |
+
+判定不是 `hasFLR ? live : reboot`，也不是 class/BAR 静态表。核心输入是完整 dependency bundle
+的当前 effective owner、可 quiesce 状态、lease、identity、host-critical policy，以及能否在下一次
+early boot 用精确 claim 抢在 native consumer 之前完成绑定。没有 early-boot 执行机制时，
+`busy` 只能是 `DENIED`，不能许诺“重启后生效”。
 
 ## 8. QEMU 侧核对表
 
@@ -314,6 +348,8 @@ ESXi task fault/日志和 outer QEMU trace；只观察 UI 按钮是否出现不�
 | Memory pinning | Prealloc/hugepage memory + 足够 memlock | 负载下无 VFIO mapping failure |
 | NUMA | vCPU 和 memory 绑定 device 所在 NUMA node | Locality 和性能计数符合 profile |
 | Dynamic DirectPath | 外部 launcher 按 ID/label 选择 BDF 后启动 QEMU | Selection log 对应 VMware `allowedDevice`/`assignedId` |
+| Host owner activation | desired/effective owner 四态 planner；lease 后完整 bundle live bind，或显式 exact early-boot claim | O00-O09；只有 owner/driver 全量读回一致才可启动 QEMU；产品不自动 reboot |
+| Guest runtime PCI hotplug | 不创建 hotplug profile/slot/capacity；生产 QMP 禁止 DirectPath `device_add/device_del` | L06-L09 四层负向门；运行中 guest PCI tree 和 assignment 不变 |
 | Lifecycle | 普通 VFIO 默认视为不可迁移，除非证明 device-specific migration | 不支持操作明确失败且 device 仍可用 |
 
 下面命令只代表 QEMU-native q35/OVMF PCIe profile，不再称为 VMware layout 默认值：
@@ -348,8 +384,10 @@ qemu-system-x86_64 \
 5. 使用 256M 和 1G BAR 执行 M00-M03，以最少用例回答主 MMIO 问题。
 6. 打开 QEMU `vtd_*` 和 device trace，执行 D00、I00、R00-R03。
 7. 扩展到 M04-M07、A04-A06 和 Dynamic DirectPath。
-8. 只针对仍未回答的 reset/PME/RMRR 问题实现 instrumented endpoint；AER 转为实现并验证 config-space filter。
-9. 在裸机 ESXi 上用至少一个真实 NIC/NVMe 重放已通过用例；只有 large BAR/P2P
+8. 执行 O00-O09，分离 desired/effective owner，并对 idle/busy、完整 dependency 与 exact
+   early-boot claim 做 A/B；L06-L09 始终作为 Qman 负向门。
+9. 只针对仍未回答的 reset/PME/RMRR 问题实现 instrumented endpoint；AER 转为实现并验证 config-space filter。
+10. 在裸机 ESXi 上用至少一个真实 NIC/NVMe 重放已通过用例；只有 large BAR/P2P
    场景再引入 GPU/FPGA。
 
 ## 10. 完成标准
@@ -364,8 +402,10 @@ qemu-system-x86_64 \
 6. 所有脚本、规范化结果、非敏感日志和结论表都能从仓库复现。
 7. 每个 supported profile 固化 firmware、resolved layout、machine type、root topology、
    firmware hash 和 guest ABI signature；stock QEMU 无法精确复刻的字段必须是显式 gap。
+8. owner activation 对完整 bundle 只有 `ALREADY_ACTIVE`、`LIVE_APPLY`、`REBOOT_REQUIRED`、
+   `DENIED` 四种稳定结论；所有 transition 均有 desired/effective/driver 读回和 rollback 证据。
 
-## 11. 2026-07-15 本地执行状态
+## 11. 2026-07-18 本地执行状态
 
 详细输出和推理见 `vmware-esxi8-directpath-local-results.md`。本轮使用两台 ESXi
 8.0.3 build 24280767、VCSA 8.0.3、vHW 20 EFI L3、QEMU 6.2/11.0.2、WSL 6.6 KVM、
@@ -408,9 +448,13 @@ virtual VT-d 与共享 NFS。
 | X03 | pass | powered-off relocate 后目标 host 重新解析 `assignedId` |
 | L00/L01 | pass | snapshot 与 suspend 均按产品限制返回 `vim.fault.InvalidState` |
 | L02 | pass | 普通 VM live vMotion 成功；Classic/Dynamic DirectPath live vMotion 按预期拒绝 |
-| L03/L05 | pass | host 重启和 `--apply-now` owner 切换状态已记录 |
+| L03/L05 | pass | host 重启和 owner 配置删除/重加状态已记录；细化判定归入 O00-O09 |
 | L04 | pass | DMA/heartbeat 时 SIGKILL outer QEMU；host/datastore/owner 恢复且同 VM 再次 I/O 成功 |
-| L06-L09 | planned/API-confirmed | 8.0 U3 API 字段、停机设置约束和 full-memory-reservation 注记已确认；ESXi fixed-device add/remove 黑盒尚未执行，不得写成 unsupported 或 pass |
+| L06-L09 | Qman-scope-decided | Qman 永久不支持 guest runtime hotplug；四层负向门已设计，controller/launcher/QMP 集成待实现。ESXi fixed-hotplug API 只作产品差异，不再阻塞发布 |
+| O00-O02 | pass | 本地 `--apply-now` 后无需重启即得到 Configured/Current=`VM Passthru`，API enabled/active 均为 true；desired/effective mismatch 负样本也已固化 |
+| O03-O04 | contract/official-observed | ESXCLI 8.0.3 明确区分 apply-now 与 reboot apply；Broadcom busy-HBA 实例证明 live detach 可因 active path 失败。专门本地 deferred/busy case 尚未执行 |
+| O05-O06/O08-O09 | model-pass | 完整 dependency、unknown/stale identity、lease、boot claim、disable/rebind、idle/busy A/B 均有 reference-model 单测；Qman controller 集成待实现 |
+| O07 | partial | ESXi 重启后 owner 恢复证据已有；Qman exact early-boot claim/reconcile agent 待实现 |
 | QEMU firmware/layout 7-profile | pass | SeaBIOS/i440fx、OVMF/i440fx single/bridge、OVMF/PXB multi-root、OVMF/q35 root-port 全部完成正负断言 |
 | SeaBIOS parity boundary | pass-not-equivalent | SeaBIOS 在 single/bridge profile 都可把 2GiB BAR 高置；VMware `i440bx+bios` 未分配该 BAR |
 
@@ -420,6 +464,12 @@ virtual VT-d 与共享 NFS。
   https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html
 - vSphere API `HostPciPassthruInfo`：
   https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruInfo.html
+- ESXCLI 8.0.3 `hardware pci pcipassthru set --apply-now`：
+  https://developer.broadcom.com/xapis/esxcli-command-reference/8.0.3/namespace/esxcli_hardware.html
+- Broadcom KB 309986，configured/active 与 reboot-required UI 状态：
+  https://knowledge.broadcom.com/external/article/309986/configuring-vmdirectpath-io-passthrough.html
+- Broadcom KB 434815，active storage path 导致 native-driver live detach busy：
+  https://knowledge.broadcom.com/external/article/434815/hba-adapter-hba355i-registers-as-storage.html
 - vSphere API `HostAssignableHardwareManager`：
   https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.AssignableHardwareManager.html
 - vSphere API `VirtualPCIPassthroughDynamicBackingInfo`：
@@ -434,5 +484,9 @@ virtual VT-d 与共享 NFS。
 - 现有 VMware MMIO/QEMU 映射说明：`vmware-passthrough-mmio-validation.md`
 - Firmware/layout 完整报告与可复现索引：`vmware-firmware-layout-matrix.md`
 - 机器可读汇总：`evidence/esxi8-firmware-layout-20260715-summary.json`
+- Host owner activation 脱敏摘录与 SHA256：`evidence/esxi8-passthru-activation-20260718.md`
+- Host owner activation 机器可读摘要：`evidence/esxi8-passthru-activation-20260718-summary.json`
+- Qman activation planner：`pci-resource-model/pci_resource_model/activation.py`
+- Activation A/B 单测：`pci-resource-model/tests/test_activation.py`
 - Broadcom `VirtualHardware.MotherboardLayout`：
   https://developer.broadcom.com/xapis/vmware-storage-policy-api/latest/vim.vm.VirtualHardware.MotherboardLayout.html

@@ -1,6 +1,6 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-17
+Record date: 2026-07-18
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
@@ -36,13 +36,13 @@ test matrix, artifact contract, and QEMU equivalence checklist, see
 
 QEMU 平台完整复刻静态 VMDirectPath 与 Dynamic DirectPath 的控制平面设计，包括 capability
 分层、dependency bundle、候选求解、durable lease、IOMMUFD fd passing、rollback、
-quarantine、multi-host fencing、KB 312208/API K01-K30 全量能力对标、R01-R38 风险清单，
+quarantine、multi-host fencing、KB 312208/API K01-K31 全量能力对标、R01-R39 风险清单，
 并给出 capable、dependency/reset domain、静态/动态事务和多级 MMIO allocator 的分层图、
 数据合同、可实现伪代码和分阶段验收，见
 [`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)。
 
 面向实现团队的配套蓝图冻结 ESXi 8.0.3 build 24280767 / API 8.0.3.0 基线，
-用模块接口、持久化 schema、Static/Dynamic/fixed-hotplug 时序、逐步补偿矩阵、crash reconcile、
+用模块接口、持久化 schema、Static/Dynamic 与 host owner activation 时序、逐步补偿矩阵、crash reconcile、
 对外 API、可执行验收场景和完整 GPU dependency worked example 说明如何落地，见
 [`qman-directpath-implementation-blueprint.md`](qman-directpath-implementation-blueprint.md)。
 
@@ -62,6 +62,13 @@ hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设�
 事务式 32/64 位 BAR sizing、Linux sysfs 只读 inventory、below/above-4G allocator、
 OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable evaluator。机器可读
 验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。
+
+ESXi passthrough 启用后“立即生效还是需要重启”的外部模型、官方契约、本地
+Configured/Current Owner 与 enabled/active 成对证据、SHA256，以及 Qman 四态 activation
+planner 见 [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)、
+[`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)
+和 [`pci-resource-model/pci_resource_model/activation.py`](pci-resource-model/pci_resource_model/activation.py)。
+重启需求是 owner transition 的运行时结果，不是 FLR、class code 或 BAR 的静态属性。
 
 对必须启用 `pcie_acs_override` 的 host，配套的 Linux 6.6 provenance patch、自动构建入口
 和双域 capable 规则见 [`kernel-patches/`](kernel-patches/README.md)。patched IOMMU group
@@ -148,6 +155,13 @@ is a PCIe-topology approximation rather than a chipset-equivalent default.
     ceiling. SeaBIOS 1.15 assigned two 64GiB BARs into `[64GiB,192GiB)` with
     the default, explicit 32GiB, and even zero floor. OVMF default assigned
     neither BAR; explicit 128GiB fw_cfg plus a 128GiB QEMU floor assigned both.
+14. ESXi 8.0.3 can make DirectPath active without a host reboot when
+    `--apply-now` can detach the complete dependency set: local evidence reads
+    Configured Owner and Current Owner as `VM Passthru`, with API enabled/active
+    both true. Deferred requests or busy native consumers require a maintenance
+    reboot only when an exact early-boot claim exists. Capability, stale
+    identity, host-critical policy and incomplete dependency failures are
+    denials; reboot is not a repair strategy.
 
 ## QEMU OVMF local validation
 

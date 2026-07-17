@@ -1,0 +1,94 @@
+{
+  "date": "2026-07-18",
+  "scope": "Publicly observable ESXi 8.0.3 DirectPath host-owner activation behavior and a Qman reference model; no private implementation inference",
+  "baseline": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "vsphereApi": "8.0.3.0",
+    "virtualHardware": 20
+  },
+  "readableEvidence": "evidence/esxi8-passthru-activation-20260718.md",
+  "officialContracts": {
+    "esxcli803": {
+      "url": "https://developer.broadcom.com/xapis/esxcli-command-reference/8.0.3/namespace/esxcli_hardware.html",
+      "observation": "hardware pci pcipassthru set --apply-now unbinds the native driver and binds pciPassthru immediately; without --apply-now the configured change takes effect after host reboot"
+    },
+    "hostPciPassthruInfo": {
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruInfo.html",
+      "observation": "passthruEnabled is user configuration, passthruActive is effective state, and dependentDevice is the device that must be unclaimed and may be a bridge"
+    },
+    "kb309986": {
+      "url": "https://knowledge.broadcom.com/external/article/309986/configuring-vmdirectpath-io-passthrough.html",
+      "observation": "green means enabled and active; orange means configured state changed and a host reboot is required"
+    },
+    "kb434815": {
+      "url": "https://knowledge.broadcom.com/external/article/434815/hba-adapter-hba355i-registers-as-storage.html",
+      "observation": "a storage HBA with claimed paths is busy, native-driver detach fails, and the configuration is deferred to reboot"
+    }
+  },
+  "localEvidence": {
+    "immediateOwnerSwitch": {
+      "run": "20260713-capability-smoke-v5/root-virtio-flr-pm",
+      "artifact": "_artifacts/vmware-directpath-runs/20260713-capability-smoke-v5/root-virtio-flr-pm/owner-toggle.txt",
+      "sha256": "c62ad74bd660f4e16cc30f21b0b8662ad00a3c069e552f408fea10d0db2cf525",
+      "command": "esxcli hardware pci pcipassthru set -d 0000:00:09.0 -e true -a",
+      "result": "exit=0; Configured Owner=VM Passthru; Current Owner=VM Passthru; Module Name=pciPassthru",
+      "hostRebootBetweenCommandAndObservation": false
+    },
+    "immediateApiActive": {
+      "run": "20260713-esxi8-flr-vm-power-v1",
+      "artifact": "_artifacts/vmware-directpath-runs/20260713-esxi8-flr-vm-power-v1/result.json",
+      "sha256": "eaa24b1ff6ba5a621eb937e50794c011e2af80418c7b6ac6f408e63c534b3a23",
+      "result": "after the apply-now command, Configured Owner and Current Owner were VM Passthru and vSphere reported passthruEnabled=true, passthruActive=true",
+      "hostRebootBetweenCommandAndApiObservation": false
+    },
+    "configuredEffectiveMismatch": {
+      "run": "20260711-largebar2g/M00-largebar2g-default",
+      "artifact": "_artifacts/vmware-directpath-runs/20260711-largebar2g/M00-largebar2g-default/esxi-pci-before.txt",
+      "sha256": "aafb68f85accb3554e67652da134315f5ff6db57bb4e8e4bb86415393404dee5",
+      "result": "three devices were listed enabled; sampled devices had Configured Owner=VM Passthru while Current Owner=VMkernel and Module Name=ne1000",
+      "interpretation": "configured intent alone is not proof that the effective owner switched"
+    },
+    "effectiveOwnerAfterActivation": {
+      "run": "20260711-largebar2g/M00b-largebar2g-default-active",
+      "artifact": "_artifacts/vmware-directpath-runs/20260711-largebar2g/M00b-largebar2g-default-active/esxi-pci-before.txt",
+      "sha256": "b6a6c58a07424acf085713c535da5fef2ffb1aac90534bd19bf0a45d39ba3aa8",
+      "result": "the same sampled BDFs had Configured Owner=VM Passthru, Current Owner=VM Passthru, and Module Name=pciPassthru"
+    }
+  },
+  "observedModel": {
+    "desiredState": "passthruEnabled / Configured Owner",
+    "effectiveState": "passthruActive / Current Owner / bound module",
+    "liveApply": "possible when the complete dependency set can be quiesced, detached from its current owner, and claimed by the target owner",
+    "rebootRequired": "a transaction result or explicitly deferred request, not a static FLR, class-code, or BAR property",
+    "rebootBoundary": "boot can apply the persisted owner policy before native drivers and host services make the dependency set busy",
+    "notFixedByReboot": [
+      "device is not passthru capable",
+      "identity or device-layer path is stale",
+      "dependency or isolation proof is incomplete",
+      "device is host-critical or policy denied"
+    ]
+  },
+  "qmanContract": {
+    "states": [
+      "ALREADY_ACTIVE",
+      "LIVE_APPLY",
+      "REBOOT_REQUIRED",
+      "DENIED"
+    ],
+    "invariants": [
+      "plan the complete dependency bundle, never one BDF",
+      "do not infer reboot requirement from FLR alone",
+      "do not report hostActive from command success or desired state",
+      "verify current owner, driver, lease, DMA, IRQ, reset and identity after transition",
+      "do not automatically reboot; use an explicit maintenance transaction",
+      "runtime guest PCI hotplug remains permanently disabled"
+    ],
+    "referenceImplementation": "pci-resource-model/pci_resource_model/activation.py",
+    "tests": "pci-resource-model/tests/test_activation.py"
+  },
+  "limitations": [
+    "The nested lab has strong positive evidence for immediate activation and an observed desired/effective mismatch, but has not yet reproduced a controlled busy-driver apply-now failure locally.",
+    "The busy HBA and stale device-layer-path negative mechanisms are supported by public Broadcom KB observations, not by local physical HBA/GPU reproduction.",
+    "A physical host is still required to qualify boot-critical drivers, actual storage paths, and vendor-device recovery behavior."
+  ]
+}
