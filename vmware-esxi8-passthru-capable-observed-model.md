@@ -114,8 +114,14 @@ verdict 均为 `pass`。X3130 负例最关键：ESXi 已接受其 FLR 并报告 
 ### 3.1 IOMMU 是资格门槛，不只是运行时优化
 
 关闭 virtual VT-d 后，设备仍有可识别拓扑和 bridge reset，但 ESXi 将其判为 incapable。
-因此 QEMU/VFIO 对标不能使用 no-IOMMU mode，也不能把“QEMU 能启动设备”当成 DirectPath
-资格等价证据。
+2026-07-18 又在独立 Workstation ESXi 8.0.3 负控中读到 `ACPI DMAR table not found` 和
+`IOMMU is not available`；45/45 `HostPciPassthruInfo` 均 incapable，其中 vmxnet3 网卡仍报告
+`Bridge reset`，USB controller 仍报告 `Function reset`。全量结果和 hash 见
+[`evidence/esxi8-workstation-noiommu-20260718.md`](evidence/esxi8-workstation-noiommu-20260718.md)。
+因此 QEMU/VFIO 的 **VM payload** 不能使用 no-IOMMU mode，也不能把“QEMU 能启动设备”
+当成 DirectPath 资格等价证据。这不要求关闭宿主为可信 DPDK 设置的全局
+`enable_unsafe_noiommu_mode`：全局允许位与目标 BDF 的实际 DMA backend 是两个事实，后者
+必须逐设备验证。
 
 ### 3.2 ESXi 关心可隔离的 reset boundary
 
@@ -384,7 +390,7 @@ domain，而不是“DPDK”这个名字。如果 DPDK 使用 `uio_pci_generic/i
 
 | VMware 可观察层 | QEMU/VFIO 实现要求 | 验收值 |
 | --- | --- | --- |
-| Host IOMMU gate | 启用 VT-d/AMD-Vi；禁止 no-IOMMU/unsafe interrupts | IOMMU group、map/unmap 和 interrupt remap 可审计 |
+| Host IOMMU gate | VM payload 启用 VT-d/AMD-Vi并逐设备禁止 no-IOMMU/unsafe interrupts；宿主 DPDK 全局允许位独立 | IOMMU backend、group、map/unmap 和 interrupt remap 可审计；DPDK BDF 不进入 VM candidate |
 | Reset boundary | 读取 host `reset_method`；FLR 优先，bus reset 时租用整组 | callback trace、影响 function 集合、十次复用 |
 | Function role | 区分 assignable endpoint 与 host bridge/root/switch port 等 fabric node；不可只按 class code | header type、PCIe port type、subordinate bus、parent/dependency 一致 |
 | ACS policy | 要求真实 ACS 或天然隔离拓扑 | 不依赖 ACS override；group 与拓扑一致 |

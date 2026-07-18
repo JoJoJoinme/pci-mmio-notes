@@ -7,6 +7,7 @@ from pci_resource_model.model import (
     AddressRange,
     Bar,
     DeviceInventory,
+    DmaIsolationMode,
     FunctionRole,
     HostInventory,
     IsolationProvenance,
@@ -32,6 +33,8 @@ def endpoint(**changes):
         "owner_activation_group": f"conservative:{TARGET}",
         "exclusive_attach_group": f"conservative:{TARGET}",
         "isolation_provenance": IsolationProvenance.KERNEL_GROUP,
+        "dma_isolation_mode": DmaIsolationMode.IOMMU,
+        "dma_isolation_source": "test-iommu-domain",
     }
     values.update(changes)
     return DeviceInventory(**values)
@@ -74,6 +77,19 @@ def evaluate(inventory, **changes):
 
 
 class CapabilityTests(unittest.TestCase):
+    def test_legacy_noiommu_host_field_round_trips_with_explicit_name(self):
+        inventory = HostInventory.from_dict(
+            {
+                "schemaVersion": 1,
+                "host": {"noIommuMode": True},
+                "devices": [],
+            }
+        )
+
+        self.assertTrue(inventory.no_iommu_mode)
+        self.assertTrue(inventory.to_dict()["host"]["unsafeNoIommuModeEnabled"])
+        self.assertNotIn("noIommuMode", inventory.to_dict()["host"])
+
     def test_happy_path_is_attachable(self):
         result = evaluate(host())
 
@@ -119,6 +135,90 @@ class CapabilityTests(unittest.TestCase):
 
         self.assertFalse(result.eligible)
         self.assertIn("HOST_IOMMU_MISSING", [item.code for item in result.reasons])
+
+    def test_global_unsafe_noiommu_switch_does_not_reject_iommu_device(self):
+        result = evaluate(host(no_iommu_mode=True))
+
+        self.assertTrue(result.attachable)
+        self.assertIn(
+            "HOST_UNSAFE_NOIOMMU_MODE_ENABLED",
+            [item.code for item in result.warnings],
+        )
+        self.assertNotIn(
+            "DEVICE_NO_IOMMU_DMA_ISOLATION",
+            [item.code for item in result.reasons],
+        )
+
+    def test_noiommu_target_is_rejected_even_when_host_switch_allows_it(self):
+        device = endpoint(
+            dma_isolation_mode=DmaIsolationMode.NO_IOMMU,
+            dma_isolation_source="vfio-noiommu-devnode",
+        )
+
+        result = evaluate(host(device, no_iommu_mode=True))
+
+        self.assertFalse(result.eligible)
+        self.assertIn(
+            "DEVICE_NO_IOMMU_DMA_ISOLATION",
+            [item.code for item in result.reasons],
+        )
+
+    def test_unknown_device_iommu_backing_fails_closed(self):
+        device = endpoint(
+            dma_isolation_mode=DmaIsolationMode.UNKNOWN,
+            dma_isolation_source="missing-provider-proof",
+        )
+
+        result = evaluate(host(device))
+
+        self.assertFalse(result.eligible)
+        self.assertIn(
+            "DEVICE_IOMMU_BACKING_UNKNOWN",
+            [item.code for item in result.reasons],
+        )
+
+    def test_host_dataplane_reservation_never_enters_vm_candidate_pool(self):
+        device = endpoint(host_reservation="dataplane-dpdk")
+
+        result = evaluate(host(device, no_iommu_mode=True))
+
+        self.assertTrue(result.eligible)
+        self.assertFalse(result.available)
+        self.assertFalse(result.attachable)
+        reservation = next(
+            item for item in result.reasons if item.code == "HOST_DEVICE_RESERVED"
+        )
+        self.assertEqual(reservation.stage, "available")
+        self.assertEqual(
+            reservation.details["reservations"],
+            {TARGET: "dataplane-dpdk"},
+        )
+
+    def test_host_reserved_dependency_blocks_candidate_not_capability(self):
+        peer = "0000:01:00.1"
+        device = endpoint(
+            reset_methods=("bus",),
+            reset_domain=(TARGET, peer),
+            reset_domain_source="vfio-hot-reset-info",
+        )
+        reserved_peer = replace(
+            dependency_device(peer, (TARGET, peer)),
+            host_reservation="dataplane-dpdk",
+        )
+        inventory = host(
+            device,
+            devices={TARGET: device, peer: reserved_peer},
+        )
+
+        result = evaluate(inventory)
+
+        self.assertTrue(result.eligible)
+        self.assertFalse(result.available)
+        self.assertFalse(result.attachable)
+        reservation = next(
+            item for item in result.reasons if item.code == "HOST_DEVICE_RESERVED"
+        )
+        self.assertEqual(reservation.devices, (peer,))
 
     def test_no_reset_is_static_capability_failure(self):
         device = endpoint(reset_methods=(), reset_domain=())

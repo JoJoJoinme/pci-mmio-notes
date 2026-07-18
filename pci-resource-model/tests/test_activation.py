@@ -110,6 +110,30 @@ class ActivationTests(unittest.TestCase):
         self.assertEqual(plan.disposition, ActivationDisposition.DENIED)
         self.assertIn("PERSISTENT_HOST_USE", reason_codes(plan))
 
+    def test_dpdk_reservation_is_denied_even_with_boot_claim(self) -> None:
+        plan = plan_activation(
+            [member(host_reservation="dataplane-dpdk")],
+            desired_owner=DeviceOwner.PASSTHROUGH,
+            request_mode=ActivationRequestMode.DEFER_TO_REBOOT,
+        )
+
+        self.assertEqual(plan.disposition, ActivationDisposition.DENIED)
+        self.assertIn("HOST_DEVICE_RESERVED", reason_codes(plan))
+        self.assertNotIn("REQUESTED_DEFERRED_APPLY", reason_codes(plan))
+
+    def test_dpdk_reservation_does_not_block_return_to_host(self) -> None:
+        plan = plan_activation(
+            [
+                member(
+                    current_owner=DeviceOwner.PASSTHROUGH,
+                    host_reservation="dataplane-dpdk",
+                )
+            ],
+            desired_owner=DeviceOwner.HOST,
+        )
+
+        self.assertEqual(plan.disposition, ActivationDisposition.LIVE_APPLY)
+
     def test_live_only_does_not_silently_turn_busy_into_reboot_plan(self) -> None:
         plan = plan_activation(
             [member(quiesce_state=QuiesceState.TRANSIENT_BUSY)],

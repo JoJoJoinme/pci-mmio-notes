@@ -7,6 +7,7 @@ from .allocator import AllocationPolicy, AllocationResult, plan_mmio
 from .model import (
     AddressRange,
     DeviceInventory,
+    DmaIsolationMode,
     FunctionRole,
     HostInventory,
     IsolationProvenance,
@@ -333,15 +334,15 @@ def evaluate_passthrough(
         )
 
     if host.no_iommu_mode:
-        reasons.append(
+        warnings.append(
             _reason(
-                "VFIO_NOIOMMU_UNSAFE",
+                "HOST_UNSAFE_NOIOMMU_MODE_ENABLED",
                 "eligible",
-                "host reports VFIO no-IOMMU mode",
-                payload,
+                "host permits unsafe VFIO for a separate trusted host dataplane; "
+                "guest devices are still checked individually",
             )
         )
-    elif not host.iommu_present:
+    if not host.iommu_present:
         reasons.append(
             _reason(
                 "HOST_IOMMU_MISSING",
@@ -408,6 +409,26 @@ def evaluate_passthrough(
                     (bdf,),
                 )
             )
+        if device.dma_isolation_mode == DmaIsolationMode.NO_IOMMU:
+            reasons.append(
+                _reason(
+                    "DEVICE_NO_IOMMU_DMA_ISOLATION",
+                    "eligible",
+                    f"{bdf} would DMA without an IOMMU translation domain",
+                    (bdf,),
+                    dmaIsolationSource=device.dma_isolation_source,
+                )
+            )
+        elif device.dma_isolation_mode != DmaIsolationMode.IOMMU:
+            reasons.append(
+                _reason(
+                    "DEVICE_IOMMU_BACKING_UNKNOWN",
+                    "eligible",
+                    f"{bdf} has no proven IOMMU-backed DMA path",
+                    (bdf,),
+                    dmaIsolationSource=device.dma_isolation_source,
+                )
+            )
         if device.errata_denied:
             reasons.append(
                 _reason(
@@ -447,6 +468,21 @@ def evaluate_passthrough(
                     "available",
                     "the complete lease domain is not present in inventory",
                     unknown_dependencies,
+                )
+            )
+        host_reserved = {
+            bdf: device.host_reservation
+            for bdf in required_lease
+            if (device := host.devices.get(bdf)) is not None and device.host_reservation
+        }
+        if host_reserved:
+            reasons.append(
+                _reason(
+                    "HOST_DEVICE_RESERVED",
+                    "available",
+                    "one or more dependency functions are reserved for a host workload",
+                    host_reserved,
+                    reservations=host_reserved,
                 )
             )
         busy = {

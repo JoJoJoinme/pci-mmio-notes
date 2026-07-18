@@ -639,6 +639,8 @@ NVM/firmware/driver contract 的设备模型。
 | Option ROM 正控与 ESXi 负例 | `_artifacts/vmware-directpath-runs/20260713-qemu-optionrom-minimal-compressed-padded-v33/`、`20260713-esxi8-optionrom-minimal-compressed-padded-v4/` |
 | SR-IOV PF/VF surface | `_artifacts/vmware-directpath-runs/20260714-esxi8-sriov-*/` |
 | owner `--apply-now`、API active 与 desired/effective A/B | `_artifacts/vmware-directpath-runs/20260713-capability-smoke-v5/`、`20260713-esxi8-flr-vm-power-v1/`、`20260711-largebar2g/` |
+| Workstation ESXi 无 IOMMU 全量负控 | `_artifacts/vmware-directpath-runs/20260718-workstation-esxi8-noiommu-live-v4/` |
+| QEMU/Linux VFIO IOMMU/no-IOMMU provider A/B | `_artifacts/vmware-directpath-runs/20260718-qemu-vfio-noiommu-split-v2/` |
 
 每个 MMIO case 至少保留：`case.json`、生效 VMX、ESXi PCI owner、`vmware.log`、
 guest serial 和最终 power state。失败用例也保留，不能只归档成功样本。
@@ -661,6 +663,9 @@ Git 内可审计摘要：
 - [`evidence/esxi8-edu-dma-teardown-20260714-summary.json`](evidence/esxi8-edu-dma-teardown-20260714-summary.json)
 - [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)
 - [`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)
+- [`evidence/esxi8-workstation-noiommu-20260718.md`](evidence/esxi8-workstation-noiommu-20260718.md)
+- [`evidence/esxi8-workstation-noiommu-20260718-summary.json`](evidence/esxi8-workstation-noiommu-20260718-summary.json)
+- [`evidence/qemu-vfio-noiommu-split-20260718.md`](evidence/qemu-vfio-noiommu-split-20260718.md)
 
 ## 10. 剩余边界与解锁方法
 
@@ -745,7 +750,8 @@ q35 的 zero/zero + 1GB BAR 是已验证负例，不能只把上面 property 名
 | VMware 外部语义 | QEMU/VFIO 对齐办法 | 当前状态 |
 | --- | --- | --- |
 | UEFI 与 64-bit MMIO | OVMF 同时控制 fw_cfg aperture 与 host bridge hole64；launcher 按选中 BAR 计算 | 1/2/4GB、aggregate 和 8/32/64GB guest runtime 已验证；大 BAR 必须独占 dependency |
-| IOMMU isolation | 真实部署使用 host IOMMU + `vfio-pci`；nested 模型给 ESXi `intel-iommu,intremap=on` | e1000e MSI-X 与 EDU MSI/DMA 的 VT-d trace pass；D01 已证明关机从 guest domain 切回 host identity domain；禁止 no-IOMMU |
+| IOMMU isolation | VM payload 使用 host IOMMU + `vfio-pci`；nested 模型给 ESXi `intel-iommu,intremap=on`；宿主 DPDK 的全局 unsafe no-IOMMU 允许位独立 | e1000e MSI-X 与 EDU MSI/DMA 的 VT-d trace pass；D01 已证明关机从 guest domain 切回 host identity domain；VM fd 禁止 no-IOMMU，DPDK BDF 显式 host-reserved |
+| Host DPDK/VM no-IOMMU 分流 | 两个 QEMU Ubuntu guest 均设置 unsafe=`Y`，只改变 Intel vIOMMU presence，再把同一 e1000e 绑定 `vfio-pci`；另跑 Workstation ESXi 无 DMAR 负控 | 无 IOMMU=`/dev/vfio/noiommu-0`，有 IOMMU=`/dev/vfio/7`+cdev；ESXi 45/45 incapable 且 reset-capable 网卡/USB 也不例外，证明全局允许位、class、reset 都不能替代 VM IOMMU gate |
 | ACS 与 dependency | 每组设备挂独立 `pcie-root-port`；按 host IOMMU group/reset dependency 原子租用 | PCIe/legacy/root/no-ACS 矩阵已跑 |
 | reset 方法与总线依赖 | 让 VFIO 执行 FLR/bus reset；同 dependency 整组分配；endpoint generation register 记录回调 | 虚拟 FLR power-on/off callback pass；bridge dependency pass；SBR/D3 与真实状态清除待 E4 |
 | Dynamic candidate | orchestrator 按 allowed class 选 BDF，记录运行时 lease，关机释放；目标 host 重新选择 | X00-X03 pass；不能持久化固定 BDF |

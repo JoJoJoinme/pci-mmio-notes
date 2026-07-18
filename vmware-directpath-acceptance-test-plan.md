@@ -103,7 +103,8 @@ versioned guest ABI。当前设计明确不交付 strict VMware topology。
 - “受支持等价”或硬件安全性结论必须有 E4。
 - `pcie_acs_override` 不能作为硬件隔离证据；必须常开的部署只有在内核导出 native
   provenance、平台重建并整租 physical domain 时才能作为 `conditional` 通过。
-  VFIO no-IOMMU 和 unsafe interrupt 仍只能做反例。
+  VFIO no-IOMMU 和 unsafe interrupt 对 **VM payload** 仍只能做反例；宿主 DPDK 可保持全局
+  unsafe no-IOMMU 允许位，但其 BDF 必须被保留并从 VM candidate pool 排除。
 - 每项结论必须绑定 ESXi build、virtual hardware version、QEMU/OVMF build、
   device ID 和 host platform。
 
@@ -244,6 +245,11 @@ bridge policy 任一不同，再展开该 layout 的完整 M00-M07，而不是�
 | --- | --- | --- |
 | D00 | L2 driver load 并持续 DMA | ESXi 启用 VT-d，为 endpoint requester ID 建立 context/domain，并发生 translation |
 | D01 | 停止并关闭 L2 | Guest-owned translation 不再解析到原 guest backing；记录 context 被删除还是切回 host domain，不能把“必须 fault”写成先验 |
+| D02 | QEMU host 保持目标设备 IOMMU-backed，只切换全局 `enable_unsafe_noiommu_mode=0/1` | 两次 VM eligibility/attach 均通过；开启时仅多 `HOST_UNSAFE_NOIOMMU_MODE_ENABLED` warning |
+| D03 | 将目标绑定为 `/dev/vfio/noiommu-$GROUP` | 在 QEMU 启动前硬拒绝 `DEVICE_NO_IOMMU_DMA_ISOLATION`；不能因 driver=`vfio-pci` 放行 |
+| D04 | 移除目标设备 IOMMU/provider provenance | fail-closed 为 `DEVICE_IOMMU_BACKING_UNKNOWN`，不得猜测 singleton group 安全 |
+| D05 | 把目标 BDF 标为 `hostReservation=dataplane-dpdk` | Static 请求和 Dynamic matcher 都排除；DPDK owner/流量不受 VM 查询影响 |
+| D06 | Host 关闭 IOMMU，但保留 DPDK no-IOMMU | DPDK 正控仍可接管/收发；所有 VM passthrough 请求因 host/per-device IOMMU gate 拒绝 |
 | I00 | MSI-X 流量 | L2 vector 与 QEMU `vtd_ir_*`、device MSI-X trace 可以关联 |
 | I01 | 支持时强制 INTx-only | 记录 shared-line 行为、延迟和 VMware warning |
 | I02 | 设备/driver 支持时强制 MSI-only | MSI 保持 remapped 且功能正常 |
@@ -255,6 +261,15 @@ bridge policy 任一不同，再展开该 layout 的完整 M00-M07，而不是�
 
 不能只根据 PCI capability bit 推断 reset 方法。嵌套实验使用 QEMU config-space 和
 device reset trace；裸机使用 `/reset_method`、设备日志和外部行为复核。
+
+D02/D03/D06 的 VFIO provider A/B 已由 QEMU 11.0.2 + Ubuntu 24.04 guest 实际执行并通过，
+两侧均保持 unsafe switch=`Y`；完整命令、serial marker 和 hash 见
+[`evidence/qemu-vfio-noiommu-split-20260718.md`](evidence/qemu-vfio-noiommu-split-20260718.md)。
+D06 的 VMware 负控也已在 Workstation ESXi 8.0.3 实际执行：日志明确显示 DMAR 缺失和
+IOMMU unavailable，45/45 API 条目 incapable，带 Function/Bridge reset 的 endpoint 也未放行；
+见 [`evidence/esxi8-workstation-noiommu-20260718.md`](evidence/esxi8-workstation-noiommu-20260718.md)。
+D05 的 candidate exclusion 由 reference model 单元测试覆盖；真实 DPDK PMD 包转发仍属于
+目标平台 qualification，不能由本虚拟 e1000e bind 结果替代。
 
 ### 7.5 ROM、PME、AER、P2P、RMRR 与 Dynamic DirectPath
 
@@ -335,7 +350,7 @@ early boot 用精确 claim 抢在 native consumer 之前完成绑定。没有 ea
 | 只设置 OVMF knob | 禁止作为通过配置 | 本地已证明 QEMU host bridge 仍可暴露 above-4G space |
 | 只设置 host-bridge knob | 禁止作为通过配置 | OVMF 仍可能把 BAR 放到 4G 以上并迫使 ACPI 覆盖 |
 | Below-4G 压力 | 对齐 RAM 和其他 virtual device BAR 消耗 | BAR 地址或失败边界一致 |
-| Host IOMMU | 裸机 VT-d/AMD-Vi、真实 IOMMU group、`vfio-pci` | 无 VFIO no-IOMMU 和 unsafe interrupt mode |
+| Host IOMMU | VM payload 使用裸机 VT-d/AMD-Vi、真实 IOMMU group、`vfio-pci` | 按设备证明 IOMMU-backed；宿主 DPDK 可开全局 unsafe 位，但 VM fd 不能来自 `noiommu-*`，interrupt remapping 仍必需 |
 | Guest vIOMMU | 目标 VMware VM 未暴露时不添加 | Guest DMAR/IOMMU presence 与 VMware 一致 |
 | ACS | Physical ACS + clean group；mandatory override 时使用 native/effective provenance patch 和 shadow physical domain | override group 只用于 VFIO，整租的 physical domain 才用于安全判定 |
 | Multifunction | 同 slot 不同 function，`multifunction=on`，分配所有 reset-dependent function | Group membership 和 L2 topology 一致 |
@@ -431,6 +446,7 @@ virtual VT-d 与共享 NFS。
 | M07 aggregate | pass | 2x1GB 低置；单 2GB 高置；1GB+2GB 形成 3GB DirectPath 高 range |
 | D00/I00 | pass | requester `01:00.0` 的 VT-d translation 和 MSI-X interrupt remap 已关联 |
 | D01 | pass | `20260714-esxi8-edu-dma-teardown-v5`：同 SID/IOVA 在运行中为 domain 2、解析到 guest backing；关机全局 context/IOTLB invalidate 后切到 domain 1 恒等映射，未保留 stale guest translation |
+| D02-D06 | pass-software/partial-platform | QEMU 双 guest 证明同为 unsafe=`Y` 时可分别得到 normal IOMMU group/cdev 与 `noiommu-*`；Workstation ESXi 实测 DMAR 缺失时 45/45 incapable；reference model 按设备放行/拒绝并排除 DPDK reservation。真实 DPDK PMD 包转发和物理 IOMMU fault 仍需目标平台 qualification |
 | I01 | nested-functional-fail | `pci=nomsi` 得到 legacy IO-APIC，但 11 个样本 IRQ/tx 均为 0；同 ISO QEMU direct pass |
 | I02 | pass | MSI-only EDU 两阶段各完成 1 个软件 IRQ、2 个 DMA completion IRQ；Guest IOVA、物理 MSI 和 VT-d/IR trace 已关联 |
 | R00 | pass-virtual-flr/partial-E4 | Root-complex virtio FLR 获得 `Function reset`，power-on/off 均有 outer qdev reset callback；SBR/D3 与真实状态清除待 E4 |

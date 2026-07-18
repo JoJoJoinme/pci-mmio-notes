@@ -92,14 +92,15 @@ def validate_targets(
     invalid = [target for target in normalized if not BDF_PATTERN.fullmatch(target)]
     if invalid:
         raise RuntimeError(f"invalid PCI BDFs: {invalid}")
-    if management_bdf.lower() in normalized:
+    requested_for_change = {target.lower() for target in required_capable}
+    if management_bdf.lower() in requested_for_change:
         raise RuntimeError(f"refusing to operate on management BDF {management_bdf}")
 
     pci = {device.id: device for device in (host.hardware.pciDevice or [])}
-    passthru = {
-        item.id: item for item in (host.config.pciPassthruInfo or [])
-    }
-    missing = [target for target in normalized if target not in pci or target not in passthru]
+    passthru = {item.id: item for item in (host.config.pciPassthruInfo or [])}
+    missing = [
+        target for target in normalized if target not in pci or target not in passthru
+    ]
     if missing:
         raise RuntimeError(f"targets absent from host inventory: {missing}")
     incapable = [
@@ -119,6 +120,13 @@ def validate_targets(
 
 def command_snapshot(ssh: EsxiSsh, observe: list[str]) -> dict[str, Any]:
     commands = {
+        "version": "esxcli system version get",
+        "uptime": "esxcli system stats uptime get",
+        "platform": "esxcli hardware platform get",
+        "iommuEvidence": (
+            "grep -Ei 'ACPI DMAR table not found|IOMMU is not available|"
+            "IOV_EnableDMARemap' /var/log/vmkernel.log | tail -n 40"
+        ),
         "passthruList": "esxcli hardware pci pcipassthru list",
         "physicalNics": "esxcli network nic list",
         "standardVswitches": "esxcli network vswitch standard list",
@@ -162,8 +170,7 @@ def public_log_snapshot(ssh: EsxiSsh) -> dict[str, Any]:
             "| tail -n 300"
         ),
         "vmkernel": (
-            "grep -Ei 'pci.?passthru|vswitch|vmnic' /var/log/vmkernel.log "
-            "| tail -n 300"
+            "grep -Ei 'pci.?passthru|vswitch|vmnic' /var/log/vmkernel.log | tail -n 300"
         ),
     }
     logs: dict[str, Any] = {}
@@ -314,7 +321,8 @@ def passthru_log_markers(log: str) -> list[str]:
         for line in log.splitlines()
         if "AH Failed" in line
         or "suitable device" in line
-        or "pciPassthru" in line and "power on failed" in line.lower()
+        or "pciPassthru" in line
+        and "power on failed" in line.lower()
     ][-40:]
 
 
@@ -342,9 +350,7 @@ def run_admission_pair(
         raise RuntimeError("both targets must be passthruActive before admission test")
 
     target_info = host.parent.environmentBrowser.QueryConfigTarget(host=host)
-    available = {
-        item.pciDevice.id: item for item in (target_info.pciPassthrough or [])
-    }
+    available = {item.pciDevice.id: item for item in (target_info.pciPassthrough or [])}
     if any(target not in available for target in targets):
         raise RuntimeError("active targets are absent from QueryConfigTarget")
 
@@ -381,16 +387,16 @@ def run_admission_pair(
         conflict_log = save_vm_log(
             ssh, vm_b, output_dir / "phase-2-second-vm-conflict.log"
         )
-        result["secondVmWhileFirstRuns"]["vmwareLogMarkers"] = (
-            passthru_log_markers(conflict_log)
+        result["secondVmWhileFirstRuns"]["vmwareLogMarkers"] = passthru_log_markers(
+            conflict_log
         )
         power_off(vm_a)
         result["secondVmAfterRelease"] = power_on(vm_b, host)
         released_log = save_vm_log(
             ssh, vm_b, output_dir / "phase-3-second-vm-after-release.log"
         )
-        result["secondVmAfterRelease"]["vmwareLogMarkers"] = (
-            passthru_log_markers(released_log)
+        result["secondVmAfterRelease"]["vmwareLogMarkers"] = passthru_log_markers(
+            released_log
         )
         power_off(vm_b)
 
@@ -409,8 +415,8 @@ def run_admission_pair(
         same_vm_log = save_vm_log(
             ssh, vm_both, output_dir / "phase-4-same-vm-both-functions.log"
         )
-        result["sameVmBothFunctions"]["vmwareLogMarkers"] = (
-            passthru_log_markers(same_vm_log)
+        result["sameVmBothFunctions"]["vmwareLogMarkers"] = passthru_log_markers(
+            same_vm_log
         )
 
         result["verdict"] = (
@@ -447,6 +453,11 @@ def main() -> None:
         default=[],
         help="additional BDF to read before/after without adding it to the request",
     )
+    parser.add_argument(
+        "--observe-all",
+        action="store_true",
+        help="read every HostPciPassthruInfo entry; valid only for snapshot mode",
+    )
     parser.add_argument("--management-bdf", default="0000:00:05.0")
     parser.add_argument("--expected-build", default="24280767")
     parser.add_argument(
@@ -478,7 +489,14 @@ def main() -> None:
     targets = [target.lower() for target in args.target]
     if len(targets) != len(set(targets)):
         raise RuntimeError("duplicate --target BDFs are not allowed")
-    observe = list(dict.fromkeys(targets + [item.lower() for item in args.observe]))
+    if args.observe_all and args.mode != "snapshot":
+        raise RuntimeError("--observe-all is valid only for snapshot mode")
+    observed_inputs = [item.lower() for item in args.observe]
+    if args.observe_all:
+        observed_inputs.extend(
+            sorted(item.id.lower() for item in (host.config.pciPassthruInfo or []))
+        )
+    observe = list(dict.fromkeys(targets + observed_inputs))
     checked_bdfs = list(dict.fromkeys(targets + observe))
     ssh = EsxiSsh(args.host, password)
     result: dict[str, Any] = {

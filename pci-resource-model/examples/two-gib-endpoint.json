@@ -3,7 +3,7 @@
   "host": {
     "iommuPresent": true,
     "interruptRemapping": true,
-    "noIommuMode": false,
+    "unsafeNoIommuModeEnabled": false,
     "acsOverrideActive": false,
     "source": "controlled-example",
     "metadata": {
@@ -43,6 +43,9 @@
       "ownerActivationGroup": "conservative:0000:65:00.0",
       "exclusiveAttachGroup": "conservative:0000:65:00.0",
       "isolationProvenance": "kernel-group",
+      "dmaIsolationMode": "iommu",
+      "dmaIsolationSource": "controlled-iommu-domain",
+      "hostReservation": null,
       "platformReserved": false,
       "errataDenied": false,
       "rmrrConflict": false,

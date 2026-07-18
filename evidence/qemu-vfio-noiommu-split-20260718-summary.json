@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-18",
+  "test": "qemu-vfio-noiommu-split",
+  "runner": "vmware-esxi8-lab/test_qemu_vfio_noiommu_split.py",
+  "environment": {
+    "qemuVersion": "11.0.2",
+    "qemuSha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393",
+    "machine": "q35,accel=kvm,kernel-irqchip=split",
+    "firmware": "OVMF",
+    "guest": "Ubuntu 24.04.4 LTS",
+    "guestKernel": "6.8.0-124-generic",
+    "device": "QEMU e1000e 8086:10d3 at 0000:01:00.0",
+    "baseImageSha256": "5fa5b05e5ec239858c4531485d6023b0896448c2df7c63b34f8dae6ea6051a44"
+  },
+  "cases": [
+    {
+      "id": "no-iommu",
+      "virtualIommu": false,
+      "unsafeNoIommuModeEnabled": true,
+      "preBindGroup": null,
+      "postBindDriver": "vfio-pci",
+      "postBindGroup": "0",
+      "vfioNode": "/dev/vfio/noiommu-0",
+      "dmaIsolationMode": "no-iommu",
+      "failures": 0,
+      "verdict": "pass"
+    },
+    {
+      "id": "iommu-with-unsafe-switch",
+      "virtualIommu": true,
+      "interruptRemapping": true,
+      "unsafeNoIommuModeEnabled": true,
+      "preBindGroup": "7",
+      "postBindDriver": "vfio-pci",
+      "postBindGroup": "7",
+      "vfioNodes": [
+        "/dev/vfio/7",
+        "/dev/vfio/devices/vfio0"
+      ],
+      "dmaIsolationMode": "iommu",
+      "failures": 0,
+      "verdict": "pass"
+    }
+  ],
+  "artifacts": {
+    "localDirectory": "_artifacts/vmware-directpath-runs/20260718-qemu-vfio-noiommu-split-v2",
+    "summarySha256": "a0b62e2b3af2cfdf1b155fab5427415299f93b24d0c964fe8b74afa6dee70227",
+    "noIommuSerialSha256": "2fdb0dabbec328e1c8ad3e0f3de98f78537d85e5f704c78e5250b6e47b7e69e1",
+    "iommuSerialSha256": "efdd3c872d72c3296775b0ead5dfcc7b1605cd31609242736bfc69b52447a4d3"
+  },
+  "referenceModel": {
+    "unitTestCommand": "PYTHONPATH=pci-resource-model python -m unittest discover -s pci-resource-model/tests -v",
+    "unitTests": 87,
+    "verdict": "pass",
+    "coveredReasons": [
+      "HOST_UNSAFE_NOIOMMU_MODE_ENABLED",
+      "DEVICE_NO_IOMMU_DMA_ISOLATION",
+      "DEVICE_IOMMU_BACKING_UNKNOWN",
+      "HOST_DEVICE_RESERVED"
+    ]
+  },
+  "verdict": "pass",
+  "limitations": [
+    "QEMU virtual PCI and Linux VFIO evidence is not real-hardware DMA or errata qualification",
+    "vfio-pci takeover was verified but a DPDK PMD packet-forwarding workload was not run",
+    "authoritative VM admission still requires attach-time IOMMUFD or TYPE1/TYPE1v2 verification"
+  ]
+}

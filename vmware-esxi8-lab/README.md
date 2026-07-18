@@ -61,7 +61,27 @@ wsl -d Ubuntu-22.04 -- bash /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/start
 
 改变外层设备或拓扑前先正常关闭 ESXi；若只能强制结束 QEMU，必须把该次执行标为环境中断，不能当作生命周期通过证据。
 
-### 2.1 NFS transport 完整性
+### 2.1 Workstation ESXi 无 IOMMU 负控
+
+当前 Workstation ESXi 可作为不带 virtual VT-d 的实际负控。`snapshot --observe-all` 只读取
+vSphere property、ESXCLI 和 vmkernel log，不改变 owner：
+
+```powershell
+& 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' start `
+  'E:\vm\vmware\esxi8-auto-codex\esxi8-auto-codex.vmx' nogui
+.\vmware-esxi8-lab\Wait-EsxiReady.ps1 -HostName 192.168.91.128
+wsl -e python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_owner_activation.py snapshot `
+  --host 192.168.91.128 --target 0000:02:00.0 --observe-all `
+  --expected-system-uuid c6fc4d56-d087-918d-f012-631536abaf6d `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/20260718-workstation-esxi8-noiommu-live-v4
+```
+
+验收点：`iommuEvidence` 同时包含 DMAR 缺失和 IOMMU unavailable；全部 API 条目
+`capable=false`，`passthruList.stdout` 为空。完整结果见
+[`evidence/esxi8-workstation-noiommu-20260718.md`](../evidence/esxi8-workstation-noiommu-20260718.md)。
+
+### 2.2 NFS transport 完整性
 
 当前启动脚本会先加载 `sunrpc`、`nfsd`、`auth_rpcgss`，幂等恢复 NFS export，给
 QEMU management TAP 设置 `vnet_hdr=off`，并
@@ -83,6 +103,27 @@ wsl -d Ubuntu-22.04 -- dmesg
 
 必须看到 bridge 的 GRO/GSO/TSO 为 off，连续 NFS 写入/哈希成功，并且测试期间没有新增
 `RPC fragment too large`。这属于实验 transport integrity，不是 VMware 产品行为。
+
+### 2.3 VFIO no-IOMMU 与 IOMMU 分流
+
+这个用例不启动 ESXi；它在两个 QEMU Ubuntu guest 内实际把同一 e1000e 从 native driver
+切换给 `vfio-pci`，验证宿主全局 unsafe 允许位与逐设备 DMA backend 是两个事实：
+
+```powershell
+wsl -d Ubuntu-22.04 -- bash -lc "cd /mnt/e/Code/PCI/github-export && \
+python3 vmware-esxi8-lab/test_qemu_vfio_noiommu_split.py \
+--output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/vfio-noiommu-split"
+```
+
+通过条件：
+
+1. 两个 guest 都输出 `UNSAFE_SWITCH=Y` 和 `POST_BIND_DRIVER=vfio-pci`。
+2. 无 vIOMMU 场景 bind 前 group=none，bind 后出现 `/dev/vfio/noiommu-N`。
+3. Intel vIOMMU 场景 bind 前后 group 不变，出现 `/dev/vfio/N` 和 VFIO cdev。
+4. 两侧均输出 `VFIO_SPLIT_FAILURES=0`、`VFIO_SPLIT_PASS`，最终 `summary.json` verdict=pass。
+
+已归档结论和 artifact hash 见
+[`../evidence/qemu-vfio-noiommu-split-20260718.md`](../evidence/qemu-vfio-noiommu-split-20260718.md)。
 
 D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server 侧出现
 `svc_tcp_read_marker ... RPC fragment too large`，ESXi 随后把 datastore 标为

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-07-18",
+  "test": "esxi8-workstation-no-iommu-negative-control",
+  "runner": "vmware-esxi8-lab/test_esxi_owner_activation.py snapshot --observe-all",
+  "environment": {
+    "outerHypervisor": "VMware Workstation 17.5.0 build-22583795",
+    "outerVirtualHardware": 20,
+    "outerFirmware": "efi",
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "platform": "VMware20,1",
+    "systemUuid": "c6fc4d56-d087-918d-f012-631536abaf6d",
+    "iommuAvailable": false,
+    "iommuEvidence": [
+      "ACPI DMAR table not found",
+      "DCF is disabled because the IOMMU is not available"
+    ]
+  },
+  "observations": {
+    "hostPciPassthruInfoCount": 45,
+    "esxcliPciBlocksFound": 45,
+    "passthruCapableTrue": 0,
+    "passthruEnabledTrue": 0,
+    "passthruActiveTrue": 0,
+    "pcipassthruListEmpty": true,
+    "contrasts": [
+      {
+        "bdf": "0000:00:00.0",
+        "role": "host bridge",
+        "resetMethod": "None",
+        "passthruCapable": false
+      },
+      {
+        "bdf": "0000:02:00.0",
+        "role": "USB controller",
+        "resetMethod": "Function reset",
+        "passthruCapable": false
+      },
+      {
+        "bdf": "0000:0b:00.0",
+        "role": "Ethernet controller",
+        "resetMethod": "Bridge reset",
+        "passthruCapable": false
+      }
+    ]
+  },
+  "artifacts": {
+    "localDirectory": "_artifacts/vmware-directpath-runs/20260718-workstation-esxi8-noiommu-live-v4",
+    "resultBytes": 59324,
+    "resultSha256": "1b1fa1e740fb084c7513e12e2cc37197fb13a3c088e66e6e61be6ecc956e812d"
+  },
+  "verdict": "pass-negative",
+  "conclusions": [
+    "ESXi DirectPath hard-rejects the observed platform when DMA remapping is unavailable",
+    "network class and Function/Bridge reset are not sufficient passthruCapable conditions",
+    "missing IOMMU is a hardware capability failure, not a reboot-remediable owner conflict"
+  ],
+  "limitations": [
+    "VMware Workstation virtual hardware is not physical-server qualification",
+    "the negative control does not verify physical ACS, reset, interrupt remapping or IOMMU errata",
+    "the run does not execute a DPDK PMD packet-forwarding workload"
+  ]
+}

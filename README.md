@@ -60,8 +60,18 @@ hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设�
 
 上述设计已有可运行实现，见 [`pci-resource-model/`](pci-resource-model/README.md)：包括
 事务式 32/64 位 BAR sizing、Linux sysfs 只读 inventory、below/above-4G allocator、
-OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable evaluator。机器可读
+OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable evaluator。模型已将
+宿主 DPDK 的 unsafe no-IOMMU 允许位与 VM payload 的 per-device IOMMU gate 分离，并用
+`hostReservation` 把 dataplane BDF 排除出 Static/Dynamic 候选池。机器可读
 验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。
+
+上述 no-IOMMU 分流另有真实 QEMU/Linux provider A/B：两个 guest 都保持 unsafe switch=`Y`，
+无 vIOMMU 时得到 `/dev/vfio/noiommu-0`，有 Intel vIOMMU 时得到正常 group node 与 cdev。
+结果、hash 和复现入口见
+[`evidence/qemu-vfio-noiommu-split-20260718.md`](evidence/qemu-vfio-noiommu-split-20260718.md)。
+ESXi 侧另有 Workstation 实际负控：vmkernel 明确记录 DMAR 缺失/IOMMU unavailable，45/45
+`HostPciPassthruInfo` 均 incapable，包括带 Function/Bridge reset 的 USB 与网卡；见
+[`evidence/esxi8-workstation-noiommu-20260718.md`](evidence/esxi8-workstation-noiommu-20260718.md)。
 
 ESXi passthrough 启用后“立即生效还是需要重启”的外部模型、真实 host reboot、受控 vSwitch
 Busy A/B、共享 bridge dependency 扩组、SOAP request-set 不对称、VM 独占 lease、SHA256，以及 Qman 四态 activation

@@ -44,6 +44,7 @@ class ActivationMember:
     identity_matches: bool = True
     action_known: bool = True
     leased_by_other: bool = False
+    host_reservation: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "bdf", self.bdf.lower())
@@ -102,17 +103,11 @@ def _select_owner_members(
     if missing:
         raise ValueError(f"requested BDFs are absent from inventory: {missing}")
 
-    requested_groups = {
-        by_bdf[bdf].owner_group
-        for bdf in requested
-    }
+    requested_groups = {by_bdf[bdf].owner_group for bdf in requested}
     selected = tuple(
         member
         for member in inventory
-        if member.bdf in requested
-        or (
-            member.owner_group in requested_groups
-        )
+        if member.bdf in requested or (member.owner_group in requested_groups)
     )
     return requested, selected
 
@@ -142,14 +137,10 @@ def plan_activation(
     reasons: list[ActivationReason] = []
 
     incomplete_groups = tuple(
-        member
-        for member in ordered
-        if not member.owner_group_complete
+        member for member in ordered if not member.owner_group_complete
     )
     if incomplete_groups:
-        reasons.append(
-            _reason("OWNER_ACTIVATION_GROUP_INCOMPLETE", incomplete_groups)
-        )
+        reasons.append(_reason("OWNER_ACTIVATION_GROUP_INCOMPLETE", incomplete_groups))
 
     identity_bad = tuple(member for member in ordered if not member.identity_matches)
     if identity_bad:
@@ -164,6 +155,14 @@ def plan_activation(
     )
     if unknown_owner:
         reasons.append(_reason("CURRENT_OWNER_UNKNOWN", unknown_owner))
+
+    host_reserved = tuple(
+        member
+        for member in ordered
+        if desired_owner == DeviceOwner.PASSTHROUGH and member.host_reservation
+    )
+    if host_reserved:
+        reasons.append(_reason("HOST_DEVICE_RESERVED", host_reserved))
 
     if reasons:
         return ActivationPlan(
@@ -209,9 +208,7 @@ def plan_activation(
         reasons.append(_reason("PERSISTENT_HOST_USE", persistent_use))
 
     quiesce_unknown = tuple(
-        member
-        for member in transition
-        if member.quiesce_state == QuiesceState.UNKNOWN
+        member for member in transition if member.quiesce_state == QuiesceState.UNKNOWN
     )
     if quiesce_unknown:
         reasons.append(_reason("QUIESCE_STATE_UNKNOWN", quiesce_unknown))
@@ -228,7 +225,8 @@ def plan_activation(
 
     if request_mode != ActivationRequestMode.DEFER_TO_REBOOT:
         live_blocked = tuple(
-            member for member in transition
+            member
+            for member in transition
             if not member.live_transition_supported
             or member.quiesce_state == QuiesceState.TRANSIENT_BUSY
         )
@@ -282,7 +280,8 @@ def plan_activation(
 
     reboot_reasons: list[ActivationReason] = []
     busy = tuple(
-        member for member in transition
+        member
+        for member in transition
         if member.quiesce_state == QuiesceState.TRANSIENT_BUSY
     )
     if busy:

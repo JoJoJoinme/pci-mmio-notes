@@ -1,6 +1,6 @@
 # Qman Static/Dynamic DirectPath 实现蓝图
 
-状态：详细设计 1.0（ESXi 8.0.3 基线冻结版）
+状态：详细设计 1.2（ESXi 8.0.3 基线冻结版）
 目标读者：Qman 架构、host agent、QEMU/VFIO、调度、测试和安全评审人员
 规范正文：[`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)
 
@@ -10,8 +10,53 @@
 
 ## 0. 五分钟读懂系统
 
-Qman 对标的不是一条 QEMU 命令，而是 ESXi 8.0.3 在设备资格、资源规划、排他占有、
-生命周期和失败恢复上的公开外部语义：
+### 0.1 先看当前平台的矛盾
+
+Qman 宿主同时承担两类直接设备访问：可信宿主 DPDK dataplane 必须在没有 IOMMU 时仍能
+接管指定网卡；不受信任 VM 的 PCI passthrough 则必须保证设备 DMA 只能访问该 VM 的内存。
+此外，宿主因 DPDK 独占约束常开 ACS override，VM 又可能一次直通多张大 BAR GPU。
+
+如果把这些需求压成一个全局 `no-IOMMU=false` 或一个 `capable=true`，会出现两个相反错误：
+
+| 错误模型 | 直接后果 |
+| --- | --- |
+| 看到全局 unsafe no-IOMMU 开关就拒绝整台 host | IOMMU-backed GPU 也无法给 VM，DPDK 与虚拟化不能共存 |
+| 因宿主允许 DPDK no-IOMMU，就允许任意 VFIO device 进入 VM | guest 可驱动设备 DMA 到任意 host memory |
+| 把 DPDK 网卡和空闲设备放进同一 Dynamic candidate pool | VM 启动可抢占 dataplane，造成宿主业务中断 |
+| capable 时不计算 dependency/reset domain | sibling 或 bridge 被另一 owner 使用，attach/release 破坏其他设备 |
+| 只按 BAR 总和设置 `pci-hole64-size` | 多级桥窗、对齐和 firmware placement 仍可能失败 |
+| live detach 失败统一建议重启 | persistent host consumer 重启后仍会抢回设备，形成维护事故 |
+
+所以 Qman 对标的不是一条 QEMU 命令，而是 ESXi 8.0.3 在设备资格、资源规划、排他占有、
+host owner 激活、生命周期和失败恢复上的公开外部语义。PCI 基础术语和 VFIO 原理先读规范
+正文第 0.4 节；本蓝图从工程模块和数据合同继续。
+
+### 0.2 先给出解决办法
+
+| 问题 | VMware 可观察语义 | Qman 设计落点 |
+| --- | --- | --- |
+| 设备是否可直通 | `passthruCapable` | role + per-device IOMMU + isolation + reset + qualification |
+| 管理员是否启用 | `passthruEnabled` | durable desired owner，不与 capable 混合 |
+| 何时重启生效 | `passthruActive`、Configured/Current Owner、apply-now | activation planner 输出 live/reboot/deny，并在 boot 后 reconcile |
+| 共同切换谁 | `dependentDevice` | 显式 owner activation group；reset/isolation/attach 各自建模 |
+| 大 BAR 如何放置 | `use64bitMMIO` 与 firmware/layout | 完整 guest PCI tree allocator，统一渲染 QEMU/firmware 参数 |
+| Static/Dynamic | fixed backing 与 `allowedDevice/assignedId` | 固定 identity 或开机求解；都复用同一 capability/lease/attach core |
+
+no-IOMMU 使用 **按 owner 和设备分流**，而不是全局二选一：
+
+```text
+host unsafe-noiommu capability = enabled for explicitly reserved DPDK devices
+VM passthrough policy          = every payload must prove IOMMU-backed DMA
+DPDK BDF                       = hostReservation=dataplane-dpdk, never a VM candidate
+VM preferred provider          = VFIO cdev + IOMMUFD (no noiommu support)
+VM legacy fallback             = verified TYPE1/TYPE1v2 only
+```
+
+这一分流已由 QEMU/Linux 双 guest 实测：两边全局 unsafe switch 都为 `Y`，无 vIOMMU 的设备
+生成 `/dev/vfio/noiommu-0`，有 vIOMMU 的设备生成正常 `/dev/vfio/7` 和 cdev。证据与复现见
+[`evidence/qemu-vfio-noiommu-split-20260718.md`](evidence/qemu-vfio-noiommu-split-20260718.md)。
+
+### 0.3 端到端链路
 
 ```mermaid
 flowchart LR
@@ -108,7 +153,11 @@ Q35 + SeaBIOS 的双 64GiB BAR 结果用于理解 QEMU allocator，不会把 VMw
 在 qualification 完成前，以下默认值是设计合同，不是临时建议：
 
 ```text
-no-IOMMU                         = false, hard reject
+host unsafe no-IOMMU switch      = enabled/allowed for trusted DPDK
+host DPDK device reservation     = explicit, excluded from VM candidates
+VM per-device IOMMU backing      = required, no-IOMMU/unknown hard reject
+VM VFIO cdev + IOMMUFD           = preferred and required where available
+VM legacy VFIO backend           = TYPE1/TYPE1v2 only, no noiommu group
 interrupt remapping             = required
 ACS override                    = allowed only with whole physical-domain lease
 ReBAR guest resize              = false
@@ -257,6 +306,26 @@ record InventorySnapshot:
     devices: Map[BDF, DeviceRecord]
     resetContracts: Map[BDF, List[ResetContract]]
 
+record HostFacts:
+    identity: HostIdentity
+    iommuPresent: Fact[bool]
+    interruptRemapping: Fact[bool | unknown]
+    unsafeNoIommuModeEnabled: Fact[bool]
+    acsOverrideActive: Fact[bool]
+
+record DeviceRecord:
+    identity: DeviceIdentity
+    roleFacts: RoleFacts
+    dmaIsolationMode: Fact[enum(IOMMU, NO_IOMMU, UNKNOWN)]
+    dmaIsolationProvenance: ProviderProof
+    hostReservation: Fact[string | null]
+    kernelIommuGroup: Fact[Set[BDF]]
+    physicalIsolationDomain: Fact[Set[BDF]]
+    ownerActivationGroup: Fact[Set[BDF]]
+    exclusiveAttachGroup: Fact[string]
+    resetContracts: List[ResetContractRef]
+    bars: List[BarRequirement]
+
 record Fact[T]:
     value: T
     source: enum(kernel_uapi, patched_kernel_abi, acpi,
@@ -268,6 +337,12 @@ record Fact[T]:
 
 扫描流程必须读取一次 topology generation，在完整扫描后再次读取；发生变化则丢弃整轮，
 不发布拼接快照。所有 evaluator 只接收已发布对象，不允许中途零散重读 sysfs。
+
+`unsafeNoIommuModeEnabled` 是宿主 kernel capability，不是某个设备的运行 backend；它为 true
+只产生审计 warning。`dmaIsolationMode` 才进入 VM hardware gate。仅由 sysfs 推断时，
+`/dev/vfio/noiommu-$GROUP` 是明确的 `NO_IOMMU` 反证；最终 `IOMMU` proof 必须来自 cdev 成功
+绑定 IOMMUFD/IOAS，或 legacy container 成功选择 TYPE1/TYPE1v2。DPDK 编排配置必须在快照
+发布前覆盖 `hostReservation`，无法关联到准确 BDF/identity 时拒绝发布候选快照。
 
 ### 4.3 运行对象关系
 
@@ -310,9 +385,22 @@ capable 不应抖动，只改变 availability。
 function evaluate(snapshot, target, vmContext, profile, policy):
     require snapshot is published and immutable
 
+    if snapshot.hostFacts.unsafeNoIommuModeEnabled:
+        warnings += HOST_UNSAFE_NOIOMMU_MODE_ENABLED
+    if not snapshot.hostFacts.iommuPresent:
+        reasons += HOST_IOMMU_MISSING
+
     closure = resolveCapabilityClosure(snapshot, {target}, profile, policy)
-    hardwareCapable = closure.success and everyAssignedMemberPassesHardwareGates(
-        snapshot, closure.payload, closure.selectedReset, policy)
+    hardwareCapable = closure.success
+    for bdf in closure.payload:
+        d = snapshot.devices[bdf]
+        if d.dmaIsolationMode == NO_IOMMU:
+            reasons += DEVICE_NO_IOMMU_DMA_ISOLATION(bdf)
+        if d.dmaIsolationMode == UNKNOWN:
+            reasons += DEVICE_IOMMU_BACKING_UNKNOWN(bdf)
+        reasons += evaluateRoleIsolationResetAndPlatformGates(
+            snapshot, d, closure.selectedReset[bdf], policy)
+    hardwareCapable = hardwareCapable and noHardwareBlockingReason(reasons)
 
     qualification = QualificationResult.notEvaluated()
     if closure.success:
@@ -336,9 +424,16 @@ function evaluate(snapshot, target, vmContext, profile, policy):
 
     bundle = closure.bundle if closure.success else null
     available = false
+    if bundle is not null:
+        for bdf in bundle.members:
+            if snapshot.devices[bdf].hostReservation is not null:
+                reasons += HOST_DEVICE_RESERVED(
+                    bdf, snapshot.devices[bdf].hostReservation,
+                    stage=AVAILABILITY)
     if activationPlan exists and \
             activationPlan.disposition in {ALREADY_ACTIVE, LIVE_APPLY}:
-        available = bundle.complete and healthyAndUnowned(bundle)
+        available = bundle.complete and healthyAndUnowned(bundle) and \
+                    noHostReservations(bundle, snapshot)
 
     plan = null
     attachable = null
@@ -352,6 +447,11 @@ function evaluate(snapshot, target, vmContext, profile, policy):
 closure、hardware 和 policy 三层不得读取 VM owner/admin/当前健康状态；availability/attachability
 不得反向改写 capable。查询 API 重复执行时，
 driver、reset generation、lease 和设备寄存器必须完全不变。
+
+因此一张结构、IOMMU、隔离和 reset 均合格、但被宿主 DPDK 保留的网卡可以保持
+`hardwareCapable=true`、`policyEligible=true`，同时必须是 `available=false`。这是刻意的分层：
+前两个字段允许资格缓存稳定复用，后一个字段和 activation planner 才负责防止 VM 抢占宿主
+dataplane；planner 还必须把该情况硬拒绝为 `HOST_DEVICE_RESERVED`，不能建议重启。
 
 ### 5.3 Role 不是 class whitelist
 
@@ -858,6 +958,9 @@ function planHostActivation(snapshot, requestedBdfs, desiredOwner, requestMode):
     if any ownerGroup member is hostCritical, policyDenied, quarantined,
            or leasedByOther:
         return DENIED(exactReasonAndMembers)
+    if desiredOwner == PASSTHROUGH and
+           any ownerGroup member.hostReservation is not null:
+        return DENIED(HOST_DEVICE_RESERVED)
     if any ownerGroup member.quiesceState == PERSISTENT_HOST_USE:
         return DENIED(PERSISTENT_HOST_USE)
     if all ownerGroup member.currentOwner == desiredOwner:
@@ -882,6 +985,10 @@ function planHostActivation(snapshot, requestedBdfs, desiredOwner, requestMode):
 host use 返回 `DENIED`；主动 deferred 的 idle device，或 `LIVE_OR_REBOOT` 下有 transient blocker
 的 device，只有完整 owner group 具备 exact boot proof 才返回 `REBOOT_REQUIRED`。这些运行态变化
 不改变硬件 capable。
+
+`hostReservation=dataplane-dpdk` 必须在 owner-group 扩展后逐成员检查。它代表平台明确保留，
+不是“当前进程 busy”：目标或 sibling 被 DPDK 保留时，即使进程暂时退出且具备 boot claim，
+VM 方向仍返回 `DENIED(HOST_DEVICE_RESERVED)`，绝不能建议重启；从 passthrough 归还 host 则允许。
 
 #### 8.4.3 VM admission 的独占 attach lease
 
@@ -1076,8 +1183,8 @@ sequenceDiagram
 | 0 | CAS lease 完整 bundle | token/version/members | 删除未产生副作用的 lease | 保留 lease，人工审计 store |
 | 1 | 核对 epoch、identity、generation | fresh snapshot delta=0 | 释放 lease，重新规划 | inventory unknown 时保留 lease |
 | 2 | 执行完整 bundle owner activation | 每个成员 current owner/driver 读回匹配 | 按 journal 恢复原 owner | quarantine bundle |
-| 3 | open VFIO cdev | owned device fd、provider ID | close fd、恢复 owner | quarantine |
-| 4 | 创建 IOAS/attach device | domain/member/IOMMU evidence | detach/destroy IOAS | quarantine |
+| 3 | open VM VFIO provider | cdev fd，或非 `noiommu-*` legacy group；provider ID 与 BDF/identity 匹配 | close fd、恢复 owner | quarantine |
+| 4 | 创建 IOAS/attach device | cdev 成功 bind IOMMUFD，或 legacy 明确选择 TYPE1/TYPE1v2；domain/member/IOMMU evidence | detach/destroy IOAS | quarantine |
 | 5 | re-query 并执行 reset | affected set 相同、reset + state probe | release-side reset/rebind | quarantine affected set |
 | 6 | reset 后重新探测 BAR/plan | plan/ABI hash 与 admission 相容 | 逆序清理 | quarantine if BAR identity unstable |
 | 7 | 向 QEMU 传 fd 并启动 | pidfd、QMP machine/device realized | kill QEMU、等待 fd teardown | quarantine |
@@ -1114,11 +1221,13 @@ function attachStatic(vm, request, idempotencyKey):
         rollback.push(restoreActivationOrQuarantine(activation, lease))
         require activation.everyEffectiveOwnerMatches
 
-        handles = vfio.openActivatedDevices(decision.bundle, activation)
+        provider = vfio.openVmIommuProvider()
+        handles = provider.openActivatedDevices(decision.bundle, activation)
         rollback.push(closeAll(handles))
 
-        ioas = iommufd.createIoasAndAttach(handles)
+        ioas = provider.createIoasAndAttach(handles)
         rollback.push(detachAndDestroy(ioas, handles))
+        require provider.provesIommuTranslationForEvery(decision.bundle.payload)
 
         freshReset = resetProvider.requeryAll(decision.resetContracts, handles)
         require sameAffectedSets(freshReset, decision.resetContracts)
@@ -1146,6 +1255,35 @@ function attachStatic(vm, request, idempotencyKey):
             store.release(lease, expectedToken=lease.token)
         raise stableAssignmentError(error, failures)
 ```
+
+VM provider 不能根据宿主全局 `unsafeNoIommuModeEnabled` 猜测结果，必须验证本次打开的 fd：
+
+```python
+function openVmIommuProvider():
+    if kernel.supportsVfioCdevAndIommufd:
+        return CdevIommufdProvider(
+            rejectIfBindIommufdFails=true,
+            requireIoasAttachForEveryPayload=true)
+
+    provider = LegacyVfioType1Provider()
+    for group in requestedOperationalGroups:
+        path = resolveVfioGroupNode(group)
+        if basename(path).startsWith("noiommu-"):
+            reject(DEVICE_NO_IOMMU_DMA_ISOLATION, group.members)
+        groupFd = open(path)
+        require ioctl(groupFd, VFIO_GROUP_GET_STATUS).viable
+        require container.checkExtension(VFIO_TYPE1v2_IOMMU) or \
+                container.checkExtension(VFIO_TYPE1_IOMMU)
+        selected = container.setIommu(prefer=VFIO_TYPE1v2_IOMMU,
+                                      fallback=VFIO_TYPE1_IOMMU)
+        require selected not in {VFIO_NOIOMMU_IOMMU, UNKNOWN}
+        provider.recordProof(group, selected, fdIdentity(groupFd))
+    return provider
+```
+
+host DPDK 走另一个受限 service/provider API；Qman VM launcher 不接受它产生的 group fd、UIO
+fd 或 `/dev/vfio/noiommu-*`。二者还应使用不同 Unix 用户、device cgroup/SELinux policy 和
+fd-passing socket，避免“scheduler 拒绝了，但运维把 DPDK fd 塞给 QEMU”的旁路。
 
 ### 9.6 Release 伪代码
 
@@ -1766,6 +1904,7 @@ capability 的机器可执行 release evaluator。重复 O00-O09、S13-S16/F09�
 | ADR-011 | guest runtime PCI hotplug | **已决定：**永久不支持，所有 DirectPath profile 四层拒绝 | 将来若改变必须新 ADR、新 profile 和独立安全审计，不能沿用本设计证明 |
 | ADR-012 | passthrough owner 激活策略 | bind-on-lease 为默认；显式维护模式才持久 early-boot VFIO claim；先扩 owner group 再逐成员预检；产品不自动重启 host | 自动重启、全局 VID:DID claim 或复制 VMware request-target 不对称都可能夺走管理/存储/网络设备 |
 | ADR-013 | owner/reset/attach domain 是否共用一个 bundle | **不共用：**分别持久化 ownerActivationGroup、resetDomain、exclusiveAttachGroup 和 physicalIsolationDomain；事务按所需闭包取并集 | 混用一个 key 会造成漏租、同 VM 双占、无关 sibling 误解绑或过度拒绝 |
+| ADR-014 | 宿主 DPDK no-IOMMU 与 VM 直通如何共存 | **已决定：**允许宿主全局 unsafe switch；DPDK BDF 显式 host-reserved；VM 逐设备要求 IOMMU，并只接受 cdev/IOMMUFD 或已验证 TYPE1/TYPE1v2 | 全局 hard reject 会误杀安全设备；全局放行会让 guest 获得无 DMA 隔离的设备 |
 
 仍希望产品/平台方补充的事实如下；它们不阻塞 reference model 与详细设计：
 
@@ -1812,6 +1951,10 @@ whole-domain lease、权威 reset affected set、durable ownership、清理不�
 - firmware/layout 矩阵：[`vmware-firmware-layout-matrix.md`](vmware-firmware-layout-matrix.md)
 - 可执行验收目标：[`vmware-directpath-acceptance-test-plan.md`](vmware-directpath-acceptance-test-plan.md)
 - 当前 reference model：[`pci-resource-model/`](pci-resource-model/README.md)
+- VFIO unsafe switch 与逐设备 DMA backend 的 QEMU/Linux 实测：
+  [`evidence/qemu-vfio-noiommu-split-20260718.md`](evidence/qemu-vfio-noiommu-split-20260718.md)
+- ESXi 无 IOMMU 全量负控：
+  [`evidence/esxi8-workstation-noiommu-20260718.md`](evidence/esxi8-workstation-noiommu-20260718.md)
 - Host owner activation 证据与 SHA256：
   [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-passthru-activation-20260718.md)、
   [`evidence/esxi8-passthru-activation-20260718-summary.json`](evidence/esxi8-passthru-activation-20260718-summary.json)

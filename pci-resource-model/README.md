@@ -80,11 +80,12 @@ profile 显式输出已求解的 floor，并要求启动后核对 QOM start/end�
 [`capability.py`](pci_resource_model/capability.py) 不返回含糊的单一布尔值：
 
 ```text
-eligible   = IOMMU/interrupt-remap + assignable Type-0 role
+eligible   = per-device IOMMU-backed DMA + interrupt-remap + assignable Type-0 role
            + accepted reset path + trustworthy isolation
-           + no platform reservation/errata deny
+           + no platform reservation or errata deny
 
 available  = eligible + complete dependency lease is present and free
+           + no dependency member is host-reserved
 
 attachable = available + BAR allocation + RMRR admission
 ```
@@ -93,6 +94,15 @@ attachable = available + BAR allocation + RMRR admission
 
 - PCI class code 只作为元数据，不做 CPU/memory/bridge class blanket blacklist。
 - Type-1 或实际承载 subordinate bus 的 function 是 fabric node，不作为 payload。
+- `host.unsafeNoIommuModeEnabled=true` 只表示内核为宿主可信 DPDK 允许 unsafe VFIO；它产生
+  warning，不会否决同一 host 上有真实 IOMMU backing 的 VM 设备。旧输入字段
+  `host.noIommuMode` 仍可读取，但新 inventory 只输出语义明确的新字段。
+- 每个 VM payload 必须是 `dmaIsolationMode=iommu`；`no-iommu` 与 `unknown` 均硬拒绝。
+  scanner 会把 `/dev/vfio/noiommu-$GROUP` 标为反例，最终生产 proof 仍需 host agent 成功
+  使用 VFIO cdev/IOMMUFD，或 legacy TYPE1/TYPE1v2 backend。
+- 宿主 DPDK BDF 必须由编排配置覆盖 `hostReservation=dataplane-dpdk`。它不改写稳定的硬件
+  `eligible` 事实，但会让完整 dependency bundle 的 `available=false`，因此永不进入
+  Static/Dynamic VM candidate pool；sysfs 无法仅凭 driver 名称可靠推断业务 owner。
 - FLR 是 function reset；bus reset 必须携带完整 affected set。
 - sysfs 父拓扑只能估算 bus reset domain，默认报 `RESET_DOMAIN_UNVERIFIED`。生产路径应接
   `VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` 或资格测试保存的 affected set。

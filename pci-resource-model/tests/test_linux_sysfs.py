@@ -1,6 +1,13 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
-from pci_resource_model.linux_sysfs import parse_acs_state, parse_resource_lines
+from pci_resource_model.linux_sysfs import (
+    _dma_isolation,
+    parse_acs_state,
+    parse_resource_lines,
+)
 from pci_resource_model.linux_sysfs import (
     add_conservative_assignment_groups,
     parse_pcie_type,
@@ -8,6 +15,7 @@ from pci_resource_model.linux_sysfs import (
 )
 from pci_resource_model.model import (
     DeviceInventory,
+    DmaIsolationMode,
     FunctionRole,
     IsolationProvenance,
 )
@@ -40,6 +48,60 @@ def inventory_device(
 
 
 class LinuxSysfsParserTests(unittest.TestCase):
+    def test_vfio_noiommu_devnode_is_per_device_negative_proof(self):
+        with TemporaryDirectory() as directory:
+            vfio_root = Path(directory)
+            (vfio_root / "noiommu-7").touch()
+            with patch(
+                "pci_resource_model.linux_sysfs._iommu_group_id",
+                return_value="7",
+            ):
+                mode, source = _dma_isolation(
+                    Path("/synthetic/0000:01:00.0"),
+                    ("0000:01:00.0",),
+                    vfio_root=vfio_root,
+                )
+
+        self.assertEqual(mode, DmaIsolationMode.NO_IOMMU)
+        self.assertEqual(source, "vfio-noiommu-devnode")
+
+    def test_real_group_without_noiommu_devnode_is_iommu_backed(self):
+        with TemporaryDirectory() as directory:
+            with patch(
+                "pci_resource_model.linux_sysfs._iommu_group_id",
+                return_value="9",
+            ):
+                mode, source = _dma_isolation(
+                    Path("/synthetic/0000:01:00.0"),
+                    ("0000:01:00.0",),
+                    vfio_root=Path(directory),
+                )
+
+        self.assertEqual(mode, DmaIsolationMode.IOMMU)
+        self.assertEqual(source, "linux-iommu-group")
+
+    def test_unsafe_switch_and_vfio_without_provider_node_is_unknown(self):
+        with TemporaryDirectory() as directory:
+            with (
+                patch(
+                    "pci_resource_model.linux_sysfs._iommu_group_id",
+                    return_value="9",
+                ),
+                patch(
+                    "pci_resource_model.linux_sysfs._driver_name",
+                    return_value="vfio-pci",
+                ),
+            ):
+                mode, source = _dma_isolation(
+                    Path("/synthetic/0000:01:00.0"),
+                    ("0000:01:00.0",),
+                    vfio_root=Path(directory),
+                    unsafe_noiommu_mode_enabled=True,
+                )
+
+        self.assertEqual(mode, DmaIsolationMode.UNKNOWN)
+        self.assertEqual(source, "ambiguous-vfio-group")
+
     def test_parses_one_64bit_bar_without_emitting_upper_slot(self):
         config = bytearray(4096)
         config[0x0E] = 0

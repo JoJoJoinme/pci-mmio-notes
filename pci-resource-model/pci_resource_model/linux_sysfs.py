@@ -12,6 +12,7 @@ from .model import (
     Bar,
     BarSpace,
     DeviceInventory,
+    DmaIsolationMode,
     FunctionRole,
     HostInventory,
     IsolationProvenance,
@@ -207,6 +208,42 @@ def _iommu_group(device_path: Path) -> tuple[str, ...]:
     )
 
 
+def _iommu_group_id(device_path: Path) -> str | None:
+    link = device_path / "iommu_group"
+    if not link.exists():
+        return None
+    try:
+        return link.resolve(strict=True).name
+    except (FileNotFoundError, OSError):
+        return None
+
+
+def _dma_isolation(
+    device_path: Path,
+    group: tuple[str, ...],
+    *,
+    vfio_root: Path = Path("/dev/vfio"),
+    unsafe_noiommu_mode_enabled: bool = False,
+) -> tuple[DmaIsolationMode, str]:
+    """Distinguish a hardware-IOMMU group from VFIO's synthetic noiommu group."""
+
+    group_id = _iommu_group_id(device_path)
+    if not group or group_id is None:
+        return DmaIsolationMode.UNKNOWN, "missing-iommu-group"
+    if (vfio_root / f"noiommu-{group_id}").exists():
+        return DmaIsolationMode.NO_IOMMU, "vfio-noiommu-devnode"
+    if unsafe_noiommu_mode_enabled and _driver_name(device_path) == "vfio-pci":
+        has_group_node = (vfio_root / group_id).exists()
+        vfio_cdev_dir = device_path / "vfio-dev"
+        try:
+            has_cdev = vfio_cdev_dir.is_dir() and any(vfio_cdev_dir.iterdir())
+        except OSError:
+            has_cdev = False
+        if not has_group_node and not has_cdev:
+            return DmaIsolationMode.UNKNOWN, "ambiguous-vfio-group"
+    return DmaIsolationMode.IOMMU, "linux-iommu-group"
+
+
 def _parent_bdf(device_path: Path, bdf: str) -> str | None:
     try:
         components = [part.lower() for part in device_path.resolve().parts]
@@ -260,6 +297,8 @@ def _scan_device(
     device_path: Path,
     *,
     acs_override_active: bool,
+    unsafe_noiommu_mode_enabled: bool,
+    vfio_root: Path,
 ) -> DeviceInventory:
     bdf = device_path.name.lower()
     config = _read_config(device_path / "config")
@@ -268,6 +307,12 @@ def _scan_device(
     )
     role = _function_role(device_path, header_type)
     group = _iommu_group(device_path)
+    dma_isolation_mode, dma_isolation_source = _dma_isolation(
+        device_path,
+        group,
+        vfio_root=vfio_root,
+        unsafe_noiommu_mode_enabled=unsafe_noiommu_mode_enabled,
+    )
     native_isolation = _read_optional_bool(device_path / "acs_native_isolation")
     effective_isolation = _read_optional_bool(device_path / "acs_effective_isolation")
     override_source = _read_text(device_path / "acs_override_source", "unknown")
@@ -302,6 +347,8 @@ def _scan_device(
         physical_isolation_domain_source=physical_domain_source,
         reset_methods=_reset_methods(device_path),
         isolation_provenance=provenance,
+        dma_isolation_mode=dma_isolation_mode,
+        dma_isolation_source=dma_isolation_source,
         platform_reserved=role == FunctionRole.FABRIC,
         driver=_driver_name(device_path),
         parent=_parent_bdf(device_path, bdf),
@@ -579,11 +626,15 @@ def scan_linux_sysfs(
     proc_cmdline: Path = Path("/proc/cmdline"),
     interrupt_remapping: bool | None = None,
     selected_bdfs: Iterable[str] | None = None,
+    vfio_root: Path = Path("/dev/vfio"),
 ) -> HostInventory:
     """Build a read-only Linux PCI inventory from kernel-probed sysfs data."""
 
     cmdline = _read_text(proc_cmdline)
     acs_override_active = "pcie_acs_override=" in cmdline
+    no_iommu_mode = _bool_file(
+        Path("/sys/module/vfio/parameters/enable_unsafe_noiommu_mode")
+    )
     requested = (
         None if selected_bdfs is None else {bdf.lower() for bdf in selected_bdfs}
     )
@@ -592,7 +643,12 @@ def scan_linux_sysfs(
     ]
     # Scan all devices first so reset and multifunction domains are complete.
     all_devices = {
-        path.name.lower(): _scan_device(path, acs_override_active=acs_override_active)
+        path.name.lower(): _scan_device(
+            path,
+            acs_override_active=acs_override_active,
+            unsafe_noiommu_mode_enabled=no_iommu_mode,
+            vfio_root=vfio_root,
+        )
         for path in paths
     }
     all_devices = _add_domains(all_devices)
@@ -606,7 +662,10 @@ def scan_linux_sysfs(
         if requested is None
         else {bdf: device for bdf, device in all_devices.items() if bdf in requested}
     )
-    iommu_present = any(device.iommu_group for device in all_devices.values())
+    iommu_present = any(
+        device.dma_isolation_mode == DmaIsolationMode.IOMMU
+        for device in all_devices.values()
+    )
     acs_provenance_interface_complete = all(
         device.acs_native_isolation is not None
         and device.acs_effective_isolation is not None
@@ -621,9 +680,6 @@ def scan_linux_sysfs(
         )
     else:
         physical_domain_rule = "stock-kernel-iommu-group"
-    no_iommu_mode = _bool_file(
-        Path("/sys/module/vfio/parameters/enable_unsafe_noiommu_mode")
-    )
     return HostInventory(
         iommu_present=iommu_present,
         interrupt_remapping=interrupt_remapping,

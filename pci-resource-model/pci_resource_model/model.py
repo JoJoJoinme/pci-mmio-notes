@@ -32,6 +32,14 @@ class IsolationProvenance(StringEnum):
     UNKNOWN = "unknown"
 
 
+class DmaIsolationMode(StringEnum):
+    """How DMA from this function is constrained on the host."""
+
+    IOMMU = "iommu"
+    NO_IOMMU = "no-iommu"
+    UNKNOWN = "unknown"
+
+
 def parse_int(value: int | str | None, default: int = 0) -> int:
     if value is None:
         return default
@@ -210,6 +218,9 @@ class DeviceInventory:
     owner_activation_group: str | None = None
     exclusive_attach_group: str | None = None
     isolation_provenance: IsolationProvenance = IsolationProvenance.UNKNOWN
+    dma_isolation_mode: DmaIsolationMode = DmaIsolationMode.UNKNOWN
+    dma_isolation_source: str = "unknown"
+    host_reservation: str | None = None
     platform_reserved: bool = False
     errata_denied: bool = False
     rmrr_conflict: bool = False
@@ -247,6 +258,9 @@ class DeviceInventory:
         object.__setattr__(
             self, "acs_override_source", self.acs_override_source.lower()
         )
+        object.__setattr__(
+            self, "dma_isolation_source", self.dma_isolation_source.lower()
+        )
         for field_name in ("owner_activation_group", "exclusive_attach_group"):
             value = getattr(self, field_name)
             if value:
@@ -272,6 +286,9 @@ class DeviceInventory:
             "ownerActivationGroup": self.owner_activation_group,
             "exclusiveAttachGroup": self.exclusive_attach_group,
             "isolationProvenance": self.isolation_provenance.value,
+            "dmaIsolationMode": self.dma_isolation_mode.value,
+            "dmaIsolationSource": self.dma_isolation_source,
+            "hostReservation": self.host_reservation,
             "platformReserved": self.platform_reserved,
             "errataDenied": self.errata_denied,
             "rmrrConflict": self.rmrr_conflict,
@@ -311,6 +328,11 @@ class DeviceInventory:
             isolation_provenance=IsolationProvenance(
                 value.get("isolationProvenance", IsolationProvenance.UNKNOWN.value)
             ),
+            dma_isolation_mode=DmaIsolationMode(
+                value.get("dmaIsolationMode", DmaIsolationMode.UNKNOWN.value)
+            ),
+            dma_isolation_source=str(value.get("dmaIsolationSource", "unknown")),
+            host_reservation=value.get("hostReservation"),
             platform_reserved=bool(value.get("platformReserved", False)),
             errata_denied=bool(value.get("errataDenied", False)),
             rmrr_conflict=bool(value.get("rmrrConflict", False)),
@@ -351,7 +373,7 @@ class HostInventory:
             "host": {
                 "iommuPresent": self.iommu_present,
                 "interruptRemapping": self.interrupt_remapping,
-                "noIommuMode": self.no_iommu_mode,
+                "unsafeNoIommuModeEnabled": self.no_iommu_mode,
                 "acsOverrideActive": self.acs_override_active,
                 "source": self.source,
                 "metadata": dict(self.metadata),
@@ -377,7 +399,12 @@ class HostInventory:
         return cls(
             iommu_present=bool(host.get("iommuPresent", False)),
             interrupt_remapping=host.get("interruptRemapping"),
-            no_iommu_mode=bool(host.get("noIommuMode", False)),
+            no_iommu_mode=bool(
+                host.get(
+                    "unsafeNoIommuModeEnabled",
+                    host.get("noIommuMode", False),
+                )
+            ),
             acs_override_active=bool(host.get("acsOverrideActive", False)),
             devices=devices,
             leases=dict(value.get("leases", {})),
