@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E3-DMA-PROVIDER-001",
+  "observedAt": "2026-07-20T17:55:59Z",
+  "subject": "QEMU_GUEST_VFIO_REFERENCE",
+  "evidenceGrade": "E3",
+  "claimBoundary": "REFERENCE_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "1f46a2382430a06faa772f2711f4b08518a514ed",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "vmware-esxi8-lab/test_qemu_vfio_noiommu_split.py": "1c275a1fcbd4b379916c1fbc519c4933b9f897b993488ee15d868f0d376d8db9"
+    }
+  },
+  "sut": {
+    "environment": "Two QEMU Ubuntu guests on WSL2/KVM; identical e1000e endpoint with and without Intel vIOMMU",
+    "components": [
+      {
+        "name": "QEMU",
+        "version": "11.0.2 q35",
+        "sha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+      },
+      {
+        "name": "Ubuntu guest kernel",
+        "version": "6.8.0-124-generic"
+      },
+      {
+        "name": "Ubuntu cloud image",
+        "version": "24.04.4 LTS",
+        "sha256": "5fa5b05e5ec239858c4531485d6023b0896448c2df7c63b34f8dae6ea6051a44"
+      },
+      {
+        "name": "OVMF CODE",
+        "version": "2022.02",
+        "sha256": "ae38909179bebd3fff70a6ffbf568b6df0c8e63db8c2a1cdbac47cd0cc96f464"
+      },
+      {
+        "name": "OVMF VARS template",
+        "version": "2022.02",
+        "sha256": "6ed987af3a3c155be71665f510eae3e007eda9b8b94afd59d45e91c4a11565cc"
+      }
+    ]
+  },
+  "hypotheses": [
+    "The global VFIO unsafe no-IOMMU switch is not a per-device DMA isolation verdict.",
+    "Qman admission must distinguish a noiommu VFIO node from an IOMMU-backed group/cdev for the selected device."
+  ],
+  "observations": [
+    {
+      "name": "no-vIOMMU",
+      "result": {
+        "unsafeSwitch": "Y",
+        "preBindGroup": null,
+        "postBindDriver": "vfio-pci",
+        "postBindGroup": "0",
+        "vfioNode": "/dev/vfio/noiommu-0",
+        "dmaMode": "no-iommu",
+        "failures": 0
+      }
+    },
+    {
+      "name": "Intel-vIOMMU-with-same-unsafe-switch",
+      "result": {
+        "unsafeSwitch": "Y",
+        "postBindDriver": "vfio-pci",
+        "vfioNode": "/dev/vfio/N and /dev/vfio/devices/vfio0",
+        "dmaMode": "iommu",
+        "failures": 0
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F1-02", "TS-F3-03"],
+    "caseIds": ["C21"],
+    "riskIds": ["R27"]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-vfio-noiommu-split-v1/summary.json",
+      "sha256": "c848bfe5bc9ff60bb804623f8327a7e8a1f4215da60d812ab80f65960ba81e55",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-vfio-noiommu-split-v1/no-iommu/serial.log",
+      "sha256": "1ba4aa3947b254802e6a02e90d006a5c23f9fa0d067425fa11628bafe7ffb021",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-vfio-noiommu-split-v1/iommu-with-unsafe-switch/serial.log",
+      "sha256": "107162e5da9f748b7559030cb3062a11cb9ddc9bd358b3749ae551215eb103a7",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "The device and IOMMU are virtual; R27 remains OPEN until physical IOMMU/interrupt-remapping and errata qualification.",
+    "The runner proves vfio-pci takeover and provider-node separation but does not complete an IOMMUFD IOAS attach or a DPDK packet workload.",
+    "C21 remains implementation-blocked until the Qman attach provider consumes and enforces these facts."
+  ]
+}

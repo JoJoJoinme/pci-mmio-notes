@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-QEMU-CONTROL-001",
+  "observedAt": "2026-07-20T18:20:21Z",
+  "subject": "QEMU_CONTROL_REFERENCE",
+  "evidenceGrade": "E3",
+  "claimBoundary": "REFERENCE_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "1f46a2382430a06faa772f2711f4b08518a514ed",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-lab/test_qemu_control_boundary.py": "f63401ff36a550f73c265435fb047950be42bd28ef932d8d73d202a0111f5191"
+    }
+  },
+  "sut": {
+    "environment": "WSL2 Ubuntu-22.04 with KVM; QEMU-only instrumented reference",
+    "components": [
+      {
+        "name": "QEMU",
+        "version": "11.0.2 pc-q35-11.0",
+        "sha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+      },
+      {
+        "name": "WSL kernel",
+        "version": "6.6.123.2-microsoft-standard-WSL2+"
+      }
+    ]
+  },
+  "hypotheses": [
+    "Raw QMP access can add a PCI endpoint after machine creation and therefore bypass a cold-start-only admission design.",
+    "A guest BDF is not sufficient persistent identity across launches.",
+    "A successful QMP device_del response is not sufficient teardown proof."
+  ],
+  "observations": [
+    {
+      "name": "raw-device-add",
+      "result": {
+        "beforePresent": false,
+        "afterPresent": true,
+        "bdf": "0000:01:00.0",
+        "endpoint": "8086:10d3"
+      }
+    },
+    {
+      "name": "same-bdf-different-identity",
+      "result": {
+        "bdf": "0000:01:00.0",
+        "firstEndpoint": "8086:10d3",
+        "secondEndpoint": "1b36:0005"
+      }
+    },
+    {
+      "name": "device-del-is-asynchronous",
+      "result": {
+        "qmpResponse": "success",
+        "presentOneSecondLater": true,
+        "deviceDeletedEventObserved": false
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F3-01", "TS-F3-04", "TS-F4-05", "TS-F5-05"],
+    "caseIds": ["S01", "S15", "F09"],
+    "riskIds": ["R04", "R17", "R26", "R37"]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qman-qemu-control-v7/summary.json",
+      "sha256": "dc8c8d51ffb945b49d98ed7c8eac514c67ff36c08534f8fca93dd617e2eb6c2d",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qman-qemu-control-v7/raw-qmp-hotplug-qmp.jsonl",
+      "sha256": "af776abc035c9abb37b771b84bee0f37b7dedb201002c098684980bb42704651",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qman-qemu-control-v7/static-e1000e-qmp.jsonl",
+      "sha256": "f6fad1b44ac2708a218dc700697db4d863b225987449145aa25b33805d157fca",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qman-qemu-control-v7/static-testdev-qmp.jsonl",
+      "sha256": "4a00d2d7a49d6202bc0be40323c23d947eb5c653840291754aadd684bf99bfd1",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "Emulated endpoints prove QEMU control semantics, not VFIO or physical-device behavior.",
+    "The device_add command was issued after QMP stop; it proves a post-planning control-plane bypass, not successful Guest online hotplug.",
+    "This proves why a QMP proxy/ACL is required; the Qman proxy does not yet exist and S15/F09 remain implementation-blocked.",
+    "The same-BDF experiment uses guest identity and supports a stronger fingerprint rule; it does not test VMware same-host-BDF replacement detection."
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-07-21",
+  "project": "Qman DirectPath parity and PCI passthrough control plane",
+  "targetRelease": "V3",
+  "deliveryModel": "SINGLE_TARGET_MULTI_WAVE",
+  "currentMilestone": "G0",
+  "currentClaim": "REFERENCE_AND_QUALIFICATION_MODEL_ONLY",
+  "authoritativeDocuments": {
+    "humanStatus": "PROJECT-STATUS.md",
+    "productTree": "ipd/README.md",
+    "materialMap": "ipd/MATERIAL-MAP.md",
+    "vmwareBehaviorModel": "ipd/VMWARE-BEHAVIOR-MODEL.md",
+    "vmwareBehaviorContract": "contracts/vmware-behavior-model.json",
+    "vmwareSourceRegister": "contracts/vmware-source-register.json",
+    "vmwareResultSchema": "contracts/vmware-experiment-result.schema.json",
+    "qmanTechnicalEvidence": "ipd/QMAN-TECHNICAL-EVIDENCE.md",
+    "qmanEvidenceIndex": "contracts/qman-evidence-index.json",
+    "qmanResultSchema": "contracts/qman-technical-evidence.schema.json",
+    "detailedDesign": "qemu-static-dynamic-directpath-design.md",
+    "implementationBlueprint": "qman-directpath-implementation-blueprint.md",
+    "acceptancePlan": "vmware-directpath-acceptance-test-plan.md",
+    "referenceModel": "pci-resource-model/README.md"
+  },
+  "openDecisions": [
+    "ADR-002",
+    "ADR-003",
+    "ADR-005",
+    "ADR-007",
+    "ADR-010"
+  ],
+  "milestones": [
+    {
+      "id": "G0",
+      "name": "Design and contract convergence",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": "G1",
+      "name": "Host inventory and qualification baseline",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G2",
+      "name": "Static single-host transaction controller",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G3",
+      "name": "Owner activation and boot reconcile",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G4",
+      "name": "Dynamic selection and full resource planning",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G5",
+      "name": "Failure recovery and multi-host fencing",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G6",
+      "name": "Production qualification and release",
+      "status": "NOT_STARTED"
+    }
+  ],
+  "freezeRules": [
+    "Do not expand product capability claims while G0 is incomplete.",
+    "Do not treat synthetic or reference-model evidence as physical hardware qualification.",
+    "Do not mark a milestone complete without executable acceptance evidence.",
+    "Do not bypass OPEN, CONTROL_IMPLEMENTED, or INVALIDATED risk states."
+  ],
+  "observations": {
+    "referenceUnitTests": {
+      "asOf": "2026-07-21",
+      "command": "python -m unittest discover -s pci-resource-model/tests -t pci-resource-model",
+      "result": "PASS",
+      "testsRun": 87,
+      "isReleaseEvidence": false
+    },
+    "qmanTechnicalEvidence": {
+      "asOf": "2026-07-21",
+      "records": 4,
+      "grades": {"E2": 1, "E3": 3, "E4": 0},
+      "claimBoundary": "REFERENCE_ONLY",
+      "productCasesClosed": 0,
+      "risksClosed": 0,
+      "statusUpdated": false
+    }
+  }
+}

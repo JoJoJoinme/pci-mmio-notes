@@ -2,6 +2,13 @@
 
 日期：2026-07-18
 
+> 治理说明（2026-07-21）：本文保留为既有实验计划和复现说明。F1-F8/39 Tech Story 的
+> canonical VMware 行为入口现为
+> [`ipd/VMWARE-BEHAVIOR-MODEL.md`](ipd/VMWARE-BEHAVIOR-MODEL.md)，机器映射为
+> [`contracts/vmware-behavior-model.json`](contracts/vmware-behavior-model.json)。本文原有
+> `A00/M00/D00/...` 均视为 legacy alias；VMware canonical Case 使用 `VMW-*`，Qman 产品
+> Case 继续使用详细设计第 19 节的 C/O/S/D/M/F，二者不得混用。
+
 ## 1. 目的与范围
 
 本文定义如何通过黑盒实验摸清 VMware ESXi 的 VMDirectPath I/O 和 Dynamic
@@ -87,7 +94,11 @@ versioned guest ABI。当前设计明确不交付 strict VMware topology。
 
 “QEMU 成功启动”或“参数名字看起来对应”不算通过。
 
-## 3. 证据等级与结论规则
+## 3. Legacy 证据等级与结论规则
+
+下表只用于解释既有报告，不再作为新结果的 canonical schema。新实验使用
+`subject + basisKind + observationStatus + sutProfile + limitations + artifact hashes`，以避免
+本文 E2/E3 与实现蓝图中同名等级含义不同。
 
 | 等级 | 证据来源 | 允许得出的结论 |
 | --- | --- | --- |

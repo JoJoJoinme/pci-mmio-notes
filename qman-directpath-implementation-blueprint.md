@@ -1,12 +1,23 @@
 # Qman Static/Dynamic DirectPath 实现蓝图
 
-状态：详细设计 1.2（ESXi 8.0.3 基线冻结版）
+状态：详细设计 1.3（ESXi 8.0.3/vHW20 外部行为基线冻结；产品 G0 收敛中）
 目标读者：Qman 架构、host agent、QEMU/VFIO、调度、测试和安全评审人员
 规范正文：[`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)
 
 本文回答“工程师拿到设计后具体怎么实现”。规范正文仍是 capability、domain、allocator、
 风险和验收编号的权威来源；本文给出阅读路径、模块接口、持久化模型、事务补偿、端到端
 样例和需要产品方确认的架构决策。二者冲突时，以规范正文的 fail-closed 规则为准。
+当前 milestone、开放决策和发布阻断项见 [`PROJECT-STATUS.md`](PROJECT-STATUS.md)。
+
+产品范围以 [`ipd/README.md`](ipd/README.md) 为准：唯一目标是 F1-F8 全部完成的
+`V3-FULL-DIRECTPATH`。本文 Phase 1A-4 是 W1-W6 内部的工程子阶段，不是独立产品版本。
+实现不得按 NIC/GPU/HBA 或具体 VID:DID 分叉主流程；通用技术准入由隔离、dependency、reset、
+owner、MMIO 和 Guest 约束决定，生产支持则只对 compatibility catalog 中的精确 qualification
+profile 生效。VMware 参考模型和实验缺口见
+[`ipd/VMWARE-BEHAVIOR-MODEL.md`](ipd/VMWARE-BEHAVIOR-MODEL.md)。
+当前 Qman/reference-side 的 WSL/QEMU 结果、runner/hash、E2/E3/E4 边界见
+[`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md)。这些结果用于冻结实现约束，
+不代表下述 controller、QMP gate、lease 或 recovery 已经存在。
 
 ## 0. 五分钟读懂系统
 
@@ -1749,6 +1760,12 @@ verdict、文件 SHA256 和工具版本。只保存“最终 pass”不足以复
 | release 后 stale DMA/IRQ | unmap/invalidate/IRQ teardown + sentinel | teardown 后 DMA/IRQ 触发 quarantine |
 | policy/firmware/QEMU 升级沿用旧证明 | dependency hash invalidation | hash 改变后 capability 自动关闭 |
 
+`QMAN-QEMU-CONTROL-001` 已在未受控 QEMU 的 machine 暂停态证明 raw `device_add` 可以越过
+冷启动设备规划，且 `device_del` 成功 reply 后设备仍可能存在。它不证明 Guest 在线热插已
+成功；它是上述控制面威胁的 E3 正控，不是“阻断已实现”的负例。
+只有 Qman QMP proxy/ACL 上相同命令稳定拒绝，并同时证明 device tree、fd、generation 和 lease
+均未改变后，S15/F09 才能进入产品关闭评审。
+
 ## 16. 验收与双向追踪
 
 ### 16.1 模块到场景
@@ -1824,17 +1841,24 @@ invariants:
 无法稳定自动断言的场景不能标记 `VERIFIED`；它只能是 `CONTROL_IMPLEMENTED` 或对应功能
 `FEATURE_DISABLED`。
 
-### 16.3 Evidence 等级
+### 16.3 Qman Evidence 等级与机器合同
 
 | 等级 | 含义 | 可证明什么 |
 | --- | --- | --- |
-| E1 | 文档/源码推理 | 设计依据，不证明运行行为 |
 | E2 | 单元/模型测试 | 算法与 schema |
 | E3 | QEMU/instrumented endpoint | 软件路径和外部 surface |
 | E4 | 指定真实平台/设备 | 物理 isolation/reset/IRQ/vendor behavior |
 
-E3 不得把 R01/R03/R20/R27 等硬件风险提升为 E4。qualification key 至少包含 host model/BIOS、
-IOMMU、device VID:DID/revision/firmware、kernel/QEMU/firmware 和 guest driver/workload。
+文档/源码推理作为 `OFFICIAL_CONTRACT`、`NORMATIVE_DESIGN` 或其他 `basis_kind` 管理，不伪装成
+运行结果。每条 Qman result 必须满足
+[`qman-technical-evidence.schema.json`](contracts/qman-technical-evidence.schema.json)，并登记到
+[`qman-evidence-index.json`](contracts/qman-evidence-index.json)；发布门检查 result/runner hash、
+TS/Case/Risk 引用和 `closureEffect`。reference/component subject 与 E2 不关闭产品状态，E3 不得把
+R01/R03/R20/R27 等硬件风险提升为 E4。qualification key 至少包含 host model/BIOS、IOMMU、
+device VID:DID/revision/firmware、kernel/QEMU/firmware 和 guest driver/workload。
+
+截至 2026-07-21，索引中 1 条 E2、3 条 E3 都是 `REFERENCE_ONLY`：它们分别固定 reference
+model、raw QMP/BDF、VFIO provider split、QEMU/OVMF MMIO 的设计前提，产品 Case/Risk 关闭数为 0。
 
 ## 17. 实施计划与提交边界
 
@@ -1848,6 +1872,7 @@ C10、C15、C16、C18、C20、F10。
 
 交付：kernel native shadow-domain ABI、VFIO cdev/IOMMUFD reset provider、per-component provenance、
 health/generation。完成门：C03-C07、C17-C19。
+逐设备 DMA provider gate 在本阶段实现，并以 C21 的 no-IOMMU 负控/IOMMU-backed 正控验收。
 
 ### Phase 1B：完整资源 planner
 
@@ -1898,7 +1923,7 @@ capability 的机器可执行 release evaluator。重复 O00-O09、S13-S16/F09�
 | ADR-005 | 首批支持哪些真实设备？ | deny-by-default，先选 1 款 NIC + 1 款 GPU 做 E4 | 没有精确设备就只能交付 reference controller |
 | ADR-006 | Static 和 Dynamic 的产品优先级？ | 先 Static，再复用事务 core 做 Dynamic | 同时开发会把 lease/rollback 缺陷复制两遍 |
 | ADR-007 | host crash 后 RTO 与 fencing 设施？ | 正确性优先；无 fence proof 不重启 | 若要求快速 HA，必须提供 BMC/电源 fencing SLA |
-| ADR-008 | 最大设备数是否必须首版达到 64？ | 首版宣告实际通过值，目标逐步到 64 | 一开始要求 64 会提前放大 bus/MMIO/IRQ/fd 测试规模 |
+| ADR-008 | 最大设备数是否必须首版达到当前 U3/vHW20 的保守候选 64；是否另建 vHW21/128 profile？ | 首版只宣告实际通过值；先查询 U3/vHW20 runtime option 并逐步验到 64，vHW21/128 必须作为独立版本化 profile 验收 | 官方 maximum 表没有直接列 U3/vHW20 这一 pair；把 host release、vHW、runtime option 和 Qman verified limit 压成一个常量，会错误拒绝或过度宣告能力，并提前放大 bus/MMIO/IRQ/fd 测试规模 |
 | ADR-009 | P2P/RMRR/INTx/SR-IOV 是否首版必须？ | 全部默认关闭，逐项 qualification | 任一首版必选都会增加真实硬件和 backend 前置条件 |
 | ADR-010 | qualification/policy 谁签发和审批？ | 版本化签名 DB，安全/硬件 owner 双审 | 无 owner 时不能安全运营 deny/allow 与失效流程 |
 | ADR-011 | guest runtime PCI hotplug | **已决定：**永久不支持，所有 DirectPath profile 四层拒绝 | 将来若改变必须新 ADR、新 profile 和独立安全审计，不能沿用本设计证明 |
@@ -1906,7 +1931,8 @@ capability 的机器可执行 release evaluator。重复 O00-O09、S13-S16/F09�
 | ADR-013 | owner/reset/attach domain 是否共用一个 bundle | **不共用：**分别持久化 ownerActivationGroup、resetDomain、exclusiveAttachGroup 和 physicalIsolationDomain；事务按所需闭包取并集 | 混用一个 key 会造成漏租、同 VM 双占、无关 sibling 误解绑或过度拒绝 |
 | ADR-014 | 宿主 DPDK no-IOMMU 与 VM 直通如何共存 | **已决定：**允许宿主全局 unsafe switch；DPDK BDF 显式 host-reserved；VM 逐设备要求 IOMMU，并只接受 cdev/IOMMUFD 或已验证 TYPE1/TYPE1v2 | 全局 hard reject 会误杀安全设备；全局放行会让 guest 获得无 DMA 隔离的设备 |
 
-仍希望产品/平台方补充的事实如下；它们不阻塞 reference model 与详细设计：
+仍希望产品/平台方补充的事实如下；它们不阻塞 reference model 与规范正文维护，但会阻塞
+G0 完成、生产实现范围冻结和 release：
 
 1. Qman 当前进程/服务边界、已有调度器和状态存储是什么。
 2. 计划冻结的 production kernel、QEMU、OVMF/SeaBIOS 最低版本。
@@ -1950,6 +1976,11 @@ whole-domain lease、权威 reset affected set、durable ownership、清理不�
 - AER 外部模型：[`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md)
 - firmware/layout 矩阵：[`vmware-firmware-layout-matrix.md`](vmware-firmware-layout-matrix.md)
 - 可执行验收目标：[`vmware-directpath-acceptance-test-plan.md`](vmware-directpath-acceptance-test-plan.md)
+- Qman 技术证据、复现命令与关闭边界：
+  [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md)
+- Qman 机器证据索引与 result schema：
+  [`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json)、
+  [`contracts/qman-technical-evidence.schema.json`](contracts/qman-technical-evidence.schema.json)
 - 当前 reference model：[`pci-resource-model/`](pci-resource-model/README.md)
 - VFIO unsafe switch 与逐设备 DMA backend 的 QEMU/Linux 实测：
   [`evidence/qemu-vfio-noiommu-split-20260718.md`](evidence/qemu-vfio-noiommu-split-20260718.md)

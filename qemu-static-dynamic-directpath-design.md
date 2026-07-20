@@ -1,6 +1,6 @@
 # QEMU 静态与动态 PCI 直通对标设计
 
-状态：详细设计 2.5（ESXi 8.0.3 基线冻结版）
+状态：详细设计 2.6（ESXi 8.0.3/vHW20 外部行为基线冻结；产品 G0 收敛中）
 
 目标基线：VMware ESXi 8.0.3 build 24280767、vSphere API 8.0.3.0、
 virtual hardware 20
@@ -15,6 +15,17 @@ virtual hardware 20
 面向实现者的模块接口、持久化表、事务补偿、crash reconcile、API 和端到端 worked example
 见 [`qman-directpath-implementation-blueprint.md`](qman-directpath-implementation-blueprint.md)。
 本文继续作为算法、风险和验收编号的规范正文。
+当前 milestone、实现边界、开放 ADR 和机器发布门见
+[`PROJECT-STATUS.md`](PROJECT-STATUS.md)。详细设计完成不等于产品实现或生产 qualification 完成。
+
+产品范围以 [`ipd/README.md`](ipd/README.md) 为准：唯一目标是完成 F1-F8 的
+`V3-FULL-DIRECTPATH`；本文 Phase 0-4 是技术实施分解，不是 V1/V2 部分产品发布。底层
+attach/admission engine 以约束驱动方式追求通用安全 PCI 直通，生产 `SUPPORTED` 仅授予
+compatibility catalog 中的精确 qualification profile。VMware 官方合同、可观察行为和待验证
+假设统一见 [`ipd/VMWARE-BEHAVIOR-MODEL.md`](ipd/VMWARE-BEHAVIOR-MODEL.md)。
+Qman/reference-side 的 E2/E3/E4 定义、WSL/QEMU 实测、hash 与关闭权限统一见
+[`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md)；其中 reference subject
+只能验证设计前提，不能把本设计标记为产品实现完成。
 
 ## 0. 先理解问题，再看方案
 
@@ -3192,7 +3203,7 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 | R22 | ReBAR 写能力逃逸 | guest 改变 BAR size 破坏 plan | 固定 effective size 并过滤/只读 ReBAR capability | config write negative test |
 | R23 | SR-IOV PF/VF lifecycle 依赖不完整 | VF 跨 owner、PF reset 破坏 VM | PF/VF 闭包、VF reset 和 capability filter | supported PF/VF hardware matrix |
 | R24 | PME 所有权不匹配 | guest 低功耗后无法唤醒设备 | `_OSC` 与 config/message 联合 policy | controlled PME injection |
-| R25 | 设备数/topology/resource ceiling | 第 N 个设备启动失败或 ABI 漂移 | 显式 profile limit 和全量资源试算 | 1/16/32/64/limit+1 matrix |
+| R25 | 设备数/topology/resource ceiling | 第 N 个设备启动失败或 ABI 漂移 | 按 ESXi build、virtual hardware version 和 Qman verified limit 计算显式 profile limit，并做全量资源试算 | 1/legacy-limit/verified-limit/vendor-contract-limit/limit+1 matrix |
 | R26 | raw CLI/QMP 绕过管理门 | 未租约或未验证设备被挂载 | fd-only launch、QMP ACL、sandbox 和 privilege split | bypass negative test |
 | R27 | IOMMU/interrupt-remap errata | DMA 或 IRQ 隔离失效 | platform qualification 和 denylist | bare-metal fault/interrupt trace |
 | R28 | requester-ID alias 未被发现 | 多设备共用一 translation domain | alias/legacy subtree 整租 | peer DMA + requester trace |
@@ -3241,6 +3252,23 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 7. 新发现严重风险时先撤销 capability 并 quarantine 已影响设备，再进行根因分析；
    不等待下一个常规版本。
 
+### 18.2 当前 Qman 技术证据与设计反馈（2026-07-21）
+
+本节只记录已由机器索引和 hash 固定的事实。权威记录是
+[`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json)，结果合同是
+[`contracts/qman-technical-evidence.schema.json`](contracts/qman-technical-evidence.schema.json)。
+
+| Evidence | 等级/subject | 已验证的设计前提 | 对实现的强制反馈 | 仍未关闭 |
+| --- | --- | --- | --- | --- |
+| `QMAN-E2-REFERENCE-MODEL-001` | E2 / reference model | 87/87 纯函数与 schema 单测通过 | 保持 capability、owner、allocator 查询无副作用且 hash 可复现 | C20 完整四格、产品 controller、任何 Risk |
+| `QMAN-QEMU-CONTROL-001` | E3 / QEMU control reference | raw QMP 可在冷启动规划后、machine 暂停态添加 PCI endpoint；相同 guest BDF 可承载不同 VID:DID；`device_del` reply 不是 teardown 完成；未验证 Guest 在线热插 | Static 身份必须是 `deviceUid + fingerprint`；生产 QMP 必须 allowlist；release 必须等待 Guest/backend/IOMMU/reset 完成证据 | S15/F09、Qman QMP gate、lease/reconcile |
+| `QMAN-E3-DMA-PROVIDER-001` | E3 / QEMU+Guest+VFIO reference | unsafe=`Y` 时 `noiommu-*` 与 IOMMU-backed group/cdev 仍可逐设备区分 | VM attach provider 必须逐设备证明 DMA provider；不能按全局 unsafe switch 整机放行或整机拒绝 | C21 产品场景、物理 IOMMU/IR/errata、IOMMUFD attach |
+| `QMAN-E3-MMIO-OBSERVED-001` | E3 / QEMU+firmware reference | QEMU 11/OVMF 双 64 GiB BAR：默认 0/2 分配；128 GiB firmware aperture 与 QEMU floor 配对后 2/2 且 heartbeat | 分开持久化 required span、firmware aperture、QEMU floor、observed runtime window；不把 floor 当 hard cap | M23 产品 post-start commit/rollback、物理 BAR qualification |
+
+四条结果的 `closureEffect` 都为空，Risk 状态继续保持 `OPEN`，G0/release 继续 `BLOCKED`。
+该边界很重要：这些实验把“为什么必须有控制”从推理提升为 E2/E3，但仓库中尚无完整 Qman
+controller，不能据此宣告 QMP 绕过已封堵、VFIO attach 已安全或设备已进入兼容性列表。
+
 ## 19. 验收矩阵
 
 ### 19.1 Inventory 与 capable
@@ -3268,6 +3296,7 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | C18 | stale `ResetContract` | epoch/topology/rule 任一变化即不可选择 | 待实现 |
 | C19 | kernel native shadow domain | override-on shadow domain 是 override-off stock/alias constraint 的相等或保守超集；unknown component 拒绝 | phase-1 provenance patch 已构建；shadow ABI 待实现 |
 | C20 | capability closure 前置与 reset/action 固定点 | mandatory dependency 无 reset/action/qualification 时 target capable=false；同 bundle free/busy A/B 只改变 available，不改变 capable/bundle hash | 设计已修正；reference evaluator/fixture 待实现 |
+| C21 | global unsafe switch 与逐设备 DMA provider A/B | 相同 device 在 unsafe=`Y` 时：`noiommu-*` 稳定拒绝；IOMMU-backed group/cdev 才可继续 attach admission；全局开关本身不改变设备 capable | QEMU/Guest/VFIO E3 A/B 已通过；Qman attach provider 待实现，物理 E4 待验收 |
 
 ### 19.2 Host owner activation
 
@@ -3344,7 +3373,7 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | M09 | ATS/PRI/PASID | 默认隐藏；显式 profile 完整清理 | 待真实支持设备 |
 | M10 | P2P | 默认拒绝；允许 profile 才成功 | ESXi synthetic 已有；QEMU backend gate 待实现 |
 | M11 | ReBAR capability 写入 | guest 无法改变 effective BAR size/address plan | 待 QEMU filter |
-| M12 | 1/16/32/64/65 devices | 已验收 limit 内稳定；limit+1 预检查拒绝 | 待实现 |
+| M12 | 1/legacy-limit/verified-limit/vendor-contract-limit/limit+1 devices | 已验收 effective limit 内稳定；limit+1 预检查拒绝；不得把 host release ceiling 与 vHW ceiling 混为一值 | 待实现 |
 | M13 | 真实 RMRR identity mapping | reserved page、guest hole、reset 后 DMA 都正确 | synthetic 已有；物理待验收 |
 | M14 | VMware firmware/layout 四格 | 三个有效组合完成 endpoint/IOMMU/BAR/topology；`acpi+bios` 精确拒绝 | 已有，LF00-LF03 |
 | M15 | CreateVM 与直接注册缺省路径 | resolved layout 和 provenance 跨 power cycle 稳定 | 已有，LF04-LF06 |
@@ -3386,6 +3415,7 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 ### Phase 1：单 host 静态控制器
 
 - 实现 host agent、activation state、durable local lease、VFIO fd passing。
+- 实现逐设备 DMA provider gate，并以 C21 将 `noiommu-*` 拒绝与 IOMMU-backed 正控接入产品 Case。
 - 接入 hot-reset affected set、rollback stack、health/quarantine。
 - 将 MMIO planner 从 root aperture 扩展到多级 bridge windows。
 - 验收：O00-O09、S00-S12、M00-M08、M12、M14-M21 自动化，QEMU crash 和 F09 bypass
@@ -3441,8 +3471,8 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 
 | 模块 | 当前状态 |
 | --- | --- |
-| K01-K31 全量对标合同 | 文档已完成；可机器执行的 release evaluator 尚未实现 |
-| qualification/risk DB | schema 需求已定；signed DB、依赖失效和 capability gate 尚未实现 |
+| K01-K31 全量对标合同 | 文档已完成；仓库已有 G0 governance evaluator，能从本文提取 R/Case 并 fail-closed 报告缺口；完整 Case 定义、CI/product release controller 尚未完成 |
+| qualification/risk DB | 已建立 R01-R39 全 `OPEN` 的初始治理基线，明确暴露未分配 owner/恢复/测试/证据字段；signed DB、依赖失效和 runtime capability gate 尚未实现 |
 | capable evaluator | `capability.py` 已有 role、per-device DMA mode、host dataplane reservation、isolation/reset-policy/availability/VM-fit 基线；全局 unsafe switch 只告警，no-IOMMU/unknown payload 硬拒绝；尚缺第 7.5 节其余完整 gate、admin activation、精确 qualification 和 operation matrix |
 | dependency closure | 已合并 kernel group、physical domain、reset estimate、multifunction 和 platform dependency；尚缺 requester alias、PF/VF、functional rule、member action 与 edge provenance |
 | Linux sysfs inventory | 已有只读 scanner，能区分普通 group、`noiommu-*` 反例和 ambiguous group；snapshot publish/CAS、health/generation 和 authoritative attach provider facts 尚未实现 |
@@ -3516,7 +3546,7 @@ capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP
 | K05 | BAR 必须按 4KB 或更大对齐；sub-4KB BAR 所在 host page 不得有其他资源 | inventory 同时检查 host resource start/size/page sharing 和 guest allocator 对齐；冲突则拒绝 | `SW-CLOSE` + `HW-QUAL` | host firmware 若将无关资源放入同页，QEMU 不能安全补救，R21 |
 | K06 | passthrough 不支持 Resizable BAR | 在 bind 前固定 effective BAR size，vfio-pci config policy 隐藏或只读 ReBAR control，guest 写入必须无效 | `BACKEND-GAP` | 只在 planner 记录 size 不够；stock vfio-pci 表面可见性需逐版验证，R22 |
 | K07 | legacy BIOS 受 below-4G/3.75GB 合计 BAR 限制；UEFI + 64-bit MMIO 支持大 BAR，host firmware 也需 above-4G mapping | SeaBIOS/OVMF 分 profile；parity legacy 显式实施 3.75GB ceiling；host admission 核对 above-4G 和 IOMMU/address-width 边界；对 selected BAR 逐级 bridge packing；OVMF 同时设置 firmware aperture 与 QEMU floor，SeaBIOS production profile 显式 pin floor，再核对 QOM runtime window、`_CRS`/BAR | `SW-CLOSE` | `pci-hole64-size` 是 floor 而非 cap；单边配置、隐式 auto-grow、对齐和机型拓扑可导致窗口不等价，R09/R36 |
-| K08 | passthrough device 上限随 ESXi 版本为 16/32/64；目标 8.0 U3 为 64 | Qman profile 硬限 64，预建稳定 root ports，在租约前试算 BDF、bus number、MMIO、IRQ 和 fd 预算 | `SW-CLOSE` | 未完成 1/16/32/64/65 真实启动矩阵前对外 limit 必须降到已验证值，R25 |
+| K08 | Broadcom 明确列出的 passthrough maximum pair 为：7.x/vHW13-19=16、8.0/vHW20=32、8.0 U1/vHW20=64、8.0 U2/vHW21=128；另有兼容矩阵证明 U2/U3 可运行 vHW20/21。本文冻结的 U3/vHW20 不直接对应一条 maximum 表行，因此先保守以 64 为 vendor ceiling 候选，并要求 runtime option query 与实际矩阵确认 | profile 同时保存 `documentedPairLimit`、`runtimeOptionLimit` 与 `qmanVerifiedLimit`，只有三者一致或有更保守裁决时才生成 `effectiveLimit=min(...)`；预建稳定 root ports，并在租约前试算 BDF、bus number、MMIO、IRQ 和 fd 预算 | `SW-CLOSE` | host 是 U3 不代表 vHW20 VM 可宣告 128；64 也是待运行时确认的保守候选，不是本仓库已验证能力；未完成 legacy/verified/vendor/limit+1 真实启动矩阵前，对外 limit 必须降到实际通过值，R25 |
 
 ### 24.3 Reset、拓扑与功能依赖
 
@@ -3597,7 +3627,7 @@ qualification DB 中的精确组合返回 true，绝不是风险豁免。
 | `qemuNativeRuntimeHotplug` | 超出 VMware fixed-device 合同的 QEMU 扩展 | 永久 false | Qman 不支持设备热插拔 | S13-S16/F09 |
 | `hostOwnerLiveActivation` | `--apply-now` owner transition | 条件支持 | planner/单测已有；executor 待实现 | K31、O00-O09、R39 |
 | `hostOwnerMaintenanceActivation` | desired/current 分离后 reboot 生效 | 条件支持；无 early-boot claim 时 false | ESXi 合同/证据已有；Qman boot agent 待实现 | K31、O03-O08、R39 |
-| `maxPassthroughDevices` | ESXi 8.0 U1+ 上限 64 | 目标 64，运行时不超过已验证值 | 完整 64-device Qman 矩阵未跑 | K08/R25 |
+| `maxPassthroughDevices` | 由 `(ESXi build, virtual hardware version)` 与 runtime config option 共同裁决；本文 U3/vHW20 暂以 64 为保守候选，vHW21/128 不在冻结基线 | `min(documentedPairLimit, runtimeOptionLimit, qmanVerifiedLimit)`；任一未知即不宣告该上限 | 完整 64-device Qman 矩阵和 U3/vHW20 runtime option query 未跑；vHW21/128 profile 未纳入当前基线 | K08/R25 |
 
 Qman 对外返回能力的唯一规则是：
 
@@ -3694,7 +3724,7 @@ flowchart TB
 | 设计章节 | 当前文件/证据 | 已有能力 | 下一实现单元 | 验收 |
 | --- | --- | --- | --- | --- |
 | 6.1-6.4 inventory | `pci_resource_model/linux_sysfs.py` | sysfs/config/topology/BAR 的只读采集 | immutable snapshot schema、atomic publish、health/generation/provider provenance | C10、C15、C18、F10 |
-| 7.2-7.8 capable | `pci_resource_model/capability.py` | role、isolation、reset policy、eligible/available/attachable 基线 | 拆出六 gate、前置 action/reset closure、稳定 reason、exact member-action qualification、operation matrix；保持纯函数 | C00-C15、C20 |
+| 7.2-7.8 capable | `pci_resource_model/capability.py` | role、isolation、reset policy、eligible/available/attachable 基线 | 拆出六 gate、前置 action/reset closure、逐设备 DMA provider gate、稳定 reason、exact member-action qualification、operation matrix；保持纯函数 | C00-C15、C20、C21 |
 | 8.4 physical domain | phase-1 kernel patch + `linux_sysfs.py::reconstruct_physical_isolation_domains` | ACS native/effective/source 与 userspace union-find estimate | 实现 kernel native shadow-domain ABI；estimate 改为 per-component 并仅作 differential evidence | C05、C06、C16、C19 |
 | 8.2 reset domain | 当前只有 sysfs parent `estimated` set | 可供 lab 展示，不是 production proof | 新增 VFIO cdev/legacy provider、两阶段 query、UAPI mode/ownership 负例 | C03、C04、C17、C18、S11、S12 |
 | 8.5 dependency bundle | `capability.py::_dependency_closure` | 五类集合的基础 closure | edge provenance、requester alias、PF/VF、functional rule、member action | C07、C13、D03、D14 |
@@ -3725,7 +3755,8 @@ flowchart TB
 - [vSphere 8.0 U3 API：HostPciPassthruInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruInfo.html)
 - [vSphere 8.0 U3 API：HostPciPassthruSystem](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruSystem.html)
 - [ESXCLI 8.0.3：`hardware pci pcipassthru set --apply-now`](https://developer.broadcom.com/xapis/esxcli-command-reference/8.0.3/namespace/esxcli_hardware.html)
-- [Broadcom KB 309986：Enabled/Active 与 reboot pending UI 状态](https://knowledge.broadcom.com/external/article/309986/configuring-vmdirectpath-io-passthrough.html)
+- [Broadcom KB 309986：按 ESXi/vHW 列出的 passthrough device 上限，以及 Enabled/Active 与 reboot pending UI 状态](https://knowledge.broadcom.com/external/article/309986/configuring-vmdirectpath-io-passthrough.html)
+- [Broadcom KB 312100：ESXi release 与 virtual hardware version 兼容矩阵](https://knowledge.broadcom.com/external/article/312100/esxi-hosts-and-compatible-virtual-machin.html)
 - [Broadcom KB 434815：busy native HBA driver 使 immediate unbind 失败](https://knowledge.broadcom.com/external/article/434815/hba-adapter-hba355i-registers-as-storage.html)
 - [vSphere 8.0 U3 API：HostAssignableHardwareManager](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.AssignableHardwareManager.html)
 - [vSphere 8.0 U3 API：DynamicBackingInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html)

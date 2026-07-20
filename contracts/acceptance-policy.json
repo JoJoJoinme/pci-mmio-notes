@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "sourceDocument": "qemu-static-dynamic-directpath-design.md",
+  "sourceSection": "19",
+  "expectedCaseCount": 101,
+  "caseDefinitionDirectory": "acceptance/cases",
+  "allowedStatuses": [
+    "EXECUTABLE",
+    "IMPLEMENTATION_BLOCKED",
+    "HARDWARE_BLOCKED",
+    "FEATURE_DISABLED"
+  ],
+  "note": "Every Case ID in design section 19 must have an explicit definition. Missing definitions block G0 and release."
+}

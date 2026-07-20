@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E3-MMIO-OBSERVED-001",
+  "observedAt": "2026-07-20T17:58:01Z",
+  "subject": "QEMU_FIRMWARE_REFERENCE",
+  "evidenceGrade": "E3",
+  "claimBoundary": "REFERENCE_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "1f46a2382430a06faa772f2711f4b08518a514ed",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qemu-q35-ovmf-dual-64g-validate.sh": "b3955921cadc04b8a28160f33f76c75b1c736b936af6ede1ec669bec40e0fefd",
+      "vmware-esxi8-lab/qemu-esxi8-monitor-command.py": "cb551246c51a267d8217acab169b4dbcc421f88264b57e43b045176d7fa8b9df"
+    }
+  },
+  "sut": {
+    "environment": "WSL2/KVM QEMU q35 with OVMF and two synthetic 64 GiB prefetchable BAR endpoints",
+    "components": [
+      {
+        "name": "QEMU",
+        "version": "11.0.2 pc-q35-11.0",
+        "sha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+      },
+      {
+        "name": "OVMF CODE",
+        "version": "2022.02",
+        "sha256": "ae38909179bebd3fff70a6ffbf568b6df0c8e63db8c2a1cdbac47cd0cc96f464"
+      },
+      {
+        "name": "large-BAR probe ISO",
+        "version": "VMOTION-HEARTBEAT probe",
+        "sha256": "5f9841920ff21affda2f73b879cd2faa016102843cfc799774a2c5af915e6c5a"
+      },
+      {
+        "name": "OVMF VARS template",
+        "version": "2022.02",
+        "sha256": "6ed987af3a3c155be71665f510eae3e007eda9b8b94afd59d45e91c4a11565cc"
+      }
+    ]
+  },
+  "hypotheses": [
+    "QEMU's pci-hole64-size is a floor, while OVMF's aperture is an independent input that must cover actual BAR demand.",
+    "A Qman plan must pair firmware aperture and QEMU floor and verify the observed BAR/window after start."
+  ],
+  "observations": [
+    {
+      "name": "default-32GiB-floor",
+      "result": {
+        "endpointCount": 2,
+        "barBytesEach": 68719476736,
+        "qomFloorBytes": 34359738368,
+        "assignedBarCount": 0,
+        "heartbeat": false,
+        "verdict": "pass-negative-control"
+      }
+    },
+    {
+      "name": "paired-128GiB-aperture-and-floor",
+      "result": {
+        "qomFloorBytes": 137438953472,
+        "runtimeWindow": "0x2000000000:0x4000000000",
+        "assignedBars": ["0x2000000000:0x3000000000", "0x3000000000:0x4000000000"],
+        "heartbeat": true,
+        "verdict": "pass"
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F4-01", "TS-F4-02", "TS-F4-04"],
+    "caseIds": ["M23"],
+    "riskIds": ["R09", "R33", "R34", "R36"]
+  },
+  "artifacts": [
+    {
+      "path": "/root/pci-evidence/20260721-qman-mmio-dual64-v1/results.tsv",
+      "sha256": "7d37a0f56a34807a74edaa8f773428fbea7ba3777b40f9af9af5aab0ae1dd3e3",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/root/pci-evidence/20260721-qman-mmio-dual64-v1/default/info-pci.log",
+      "sha256": "ea6723cef36dc2b5714d3861cac7082866e6c57ba944dbee878b13c3b22a118d",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/root/pci-evidence/20260721-qman-mmio-dual64-v1/explicit-128g/info-pci.log",
+      "sha256": "c54eac42c668c47e1289b8477a27bbd43ac8be5b7bd633883165fac5e43ec75c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/root/pci-evidence/20260721-qman-mmio-dual64-v1/explicit-128g/serial.log",
+      "sha256": "60821394a2d6981efd648c719a6130e948e862f4e60a167288f28890482a60a8",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "Synthetic pci-testdev BARs validate resource semantics but do not qualify a physical device or firmware platform.",
+    "The result proves QEMU/OVMF behavior; Qman has not yet persisted plan/observedPlan or implemented rollback on mismatch, so M23 is not a product pass.",
+    "The q35 alias was resolved to pc-q35-11.0 for this run and must be pinned in a production profile."
+  ]
+}

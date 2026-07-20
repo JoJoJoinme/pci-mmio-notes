@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "subject": "VMWARE_ESXI",
+  "retrievedAt": "2026-07-21",
+  "referenceBaseline": {
+    "product": "VMware ESXi",
+    "version": "8.0.3",
+    "build": "24280767",
+    "apiVersion": "8.0.3.0",
+    "virtualHardware": "20",
+    "note": "Latest official pages are used only for properties and contracts applicable to the frozen baseline; local experiments must record the exact runtime build."
+  },
+  "sources": [
+    {
+      "id": "VMW-SRC-001",
+      "type": "BROADCOM_KB",
+      "title": "vSphere VMDirectPath I/O and Dynamic DirectPath I/O: Requirements for Platforms and Devices",
+      "url": "https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html",
+      "claims": [
+        "IOMMU and PCIe ACS are platform prerequisites for safe DMA remapping.",
+        "BAR, multifunction dependency, legacy bridge, P2P, RMRR, interrupt, PCI error, lifecycle, and device-count constraints are profile-dependent.",
+        "Suspend/resume, snapshots, Fault Tolerance, and vMotion are unavailable for VMDirectPath VMs.",
+        "Server, device, Guest OS, Guest driver, and workload support must be checked against compatibility and vendor guidance."
+      ],
+      "limitations": "Requirements and recommendations do not disclose the internal capability, placement, transaction, or recovery implementation."
+    },
+    {
+      "id": "VMW-SRC-002",
+      "type": "BROADCOM_KB",
+      "title": "Configuring VMDirectPath I/O pass-through devices on an ESXi host",
+      "url": "https://knowledge.broadcom.com/external/article/309986/configuring-vmdirectpath-io-passthrough.html",
+      "claims": [
+        "Enabled and Active are distinct host states; an orange state may require reboot while green is enabled and active.",
+        "A VM with an assigned PCI device requires full configured-memory reservation.",
+        "Device-per-VM maximum depends on ESXi and virtual hardware version."
+      ],
+      "limitations": "UI and configuration guidance does not prove atomic owner transition or boot reconciliation internals."
+    },
+    {
+      "id": "VMW-SRC-003",
+      "type": "VSPHERE_API",
+      "title": "HostPciPassthruInfo",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruInfo.html",
+      "claims": [
+        "The API exposes id, dependentDevice, passthruEnabled, passthruCapable, passthruActive, and optional hardwareLabel.",
+        "passthruCapable means vmkctl decided passthrough is possible; it is not a hardware compatibility-list support decision."
+      ],
+      "limitations": "No reason code or internal capable algorithm is exposed."
+    },
+    {
+      "id": "VMW-SRC-004",
+      "type": "VSPHERE_API",
+      "title": "HostPciDevice",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciDevice.html",
+      "claims": [
+        "Host PCI inventory exposes BDF components, vendor/device/subsystem IDs, class, parent bridge, and device name with version-dependent additions."
+      ],
+      "limitations": "The API object is inventory, not an immutable snapshot or persistent physical-device fingerprint."
+    },
+    {
+      "id": "VMW-SRC-005",
+      "type": "VSPHERE_API",
+      "title": "VirtualPCIPassthroughDeviceBackingInfo",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo.html",
+      "claims": [
+        "Static backing identifies a physical PCI device with BDF id, vendorId, deviceId, and systemId."
+      ],
+      "limitations": "The public type does not prove how VMware detects same-BDF device replacement or stores a stronger fingerprint."
+    },
+    {
+      "id": "VMW-SRC-006",
+      "type": "VSPHERE_API",
+      "title": "HostAssignableHardwareManager",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareManager.html",
+      "claims": [
+        "The host API retrieves PCI devices usable for Dynamic DirectPath and updates assignable-hardware configuration."
+      ],
+      "limitations": "The API does not disclose global solver, reservation, lease, or fencing internals."
+    },
+    {
+      "id": "VMW-SRC-007",
+      "type": "VSPHERE_API",
+      "title": "VirtualMachineDynamicPassthroughInfo",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.DynamicPassthroughInfo.html",
+      "claims": [
+        "Dynamic candidate inventory exposes vendorId, deviceId, name, and optional customLabel."
+      ],
+      "limitations": "The object describes candidates, not selection order or atomicity."
+    },
+    {
+      "id": "VMW-SRC-008",
+      "type": "VSPHERE_API",
+      "title": "VirtualPCIPassthroughDynamicBackingInfo",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html",
+      "claims": [
+        "Dynamic backing contains allowedDevice selectors and optional customLabel.",
+        "assignedId is set to the selected physical device while powered on and is unset while powered off."
+      ],
+      "limitations": "No placement, fairness, retry, or multi-device transaction algorithm is exposed."
+    },
+    {
+      "id": "VMW-SRC-009",
+      "type": "VSPHERE_API",
+      "title": "VirtualPCIPassthroughAllowedDevice",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.AllowedDevice.html",
+      "claims": [
+        "Dynamic selectors can match vendorId/deviceId and optionally subVendorId/subDeviceId/revisionId using values retrieved from a host or cluster."
+      ],
+      "limitations": "Selector syntax does not prove candidate ranking, resource-envelope, or dependency behavior."
+    },
+    {
+      "id": "VMW-SRC-010",
+      "type": "COMPATIBILITY_GUIDE",
+      "title": "Broadcom Compatibility Guide - I/O Devices",
+      "url": "https://compatibilityguide.broadcom.com/search?persona=live&program=io",
+      "claims": [
+        "Production support is provided only for devices listed in the compatibility guide.",
+        "Listings represent devices physically tested or considered similar to tested devices."
+      ],
+      "limitations": "Listing status is a support contract and must not be treated as the runtime passthruCapable algorithm."
+    },
+    {
+      "id": "VMW-SRC-011",
+      "type": "BROADCOM_KB",
+      "title": "HBA355i active storage paths prevent live PCI passthrough",
+      "url": "https://knowledge.broadcom.com/external/article/434815/hba-adapter-hba355i-registers-as-storage.html",
+      "claims": [
+        "An active native storage consumer can make device detach Busy and prevent immediate owner transition.",
+        "Removing active paths, disabling the native driver, persisting configuration, and rebooting may be required for this exact profile."
+      ],
+      "limitations": "This device-specific consumer conflict must not be generalized into a universal reboot rule."
+    },
+    {
+      "id": "VMW-SRC-012",
+      "type": "BROADCOM_KB",
+      "title": "VM power-on failure caused by insufficient PCI passthrough MMIO",
+      "url": "https://knowledge.broadcom.com/external/article/323402/failed-to-power-on-virtual-machines-with.html",
+      "claims": [
+        "Insufficient PCI MMIO can fail VM power-on with a stable firmware error.",
+        "64-bit MMIO enablement and a power-of-two MMIO size are documented controls for large GPU BAR demand."
+      ],
+      "limitations": "The sizing example is operational guidance, not a complete general PCI topology allocator specification."
+    },
+    {
+      "id": "VMW-SRC-013",
+      "type": "BROADCOM_KB",
+      "title": "DirectPath VM lifecycle-operation restrictions",
+      "url": "https://knowledge.broadcom.com/external/article/401437",
+      "claims": [
+        "A VM with PCI DirectPath devices cannot live-vMotion, snapshot, suspend, or resume until the device is removed."
+      ],
+      "limitations": "The article does not describe internal lifecycle gating or Dynamic cold-relocation behavior."
+    },
+    {
+      "id": "VMW-SRC-014",
+      "type": "BROADCOM_KB",
+      "title": "ESXi 8.0.3 strict ACS capability check workaround",
+      "url": "https://knowledge.broadcom.com/external/article/391460",
+      "claims": [
+        "ESXi 8.0.3 can mark devices non-capable because of an overly strict ACS hierarchy sanity check.",
+        "disableACSCheck skips that strict check after reboot while ACS remains enabled."
+      ],
+      "limitations": "The workaround is not equivalent to Linux ACS override and does not prove a safe physical isolation domain."
+    },
+    {
+      "id": "VMW-SRC-015",
+      "type": "BROADCOM_KB",
+      "title": "Dynamic DirectPath Content Library clone limitation and fix",
+      "url": "https://knowledge.broadcom.com/external/article/378841/cloning-vm-with-dynamic-directpath-io-co.html",
+      "claims": [
+        "Some vCenter 7.0 U3 builds could not clone Dynamic DirectPath configurations to a Content Library template; the issue was fixed in a later patch."
+      ],
+      "limitations": "This version-specific defect is not a general Dynamic DirectPath architecture contract."
+    },
+    {
+      "id": "VMW-SRC-016",
+      "type": "ESXCLI_API",
+      "title": "ESXCLI hardware PCI passthrough command reference",
+      "url": "https://developer.broadcom.com/xapis/esxcli-command-reference/latest/namespace/esxcli_hardware.html",
+      "claims": [
+        "The supported host command surface exposes PCI passthrough inventory and configuration operations including immediate-apply behavior where available."
+      ],
+      "limitations": "Command syntax does not prove dependency atomicity, rollback, or boot reconciliation internals."
+    },
+    {
+      "id": "VMW-SRC-017",
+      "type": "VSPHERE_API",
+      "title": "HostPciPassthruConfig",
+      "url": "https://developer.broadcom.com/xapis/virtual-infrastructure-json-api/latest/data-structures/HostPciPassthruConfig/",
+      "claims": [
+        "Host passthrough configuration identifies a PCI device, desired enabled state, and optional apply-now behavior."
+      ],
+      "limitations": "The configuration request does not expose the internal owner-transition transaction."
+    },
+    {
+      "id": "VMW-SRC-018",
+      "type": "VSPHERE_API",
+      "title": "HostCapability",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.Capability.html",
+      "claims": [
+        "Host capability advertises platform support for passthrough and device rebind behavior."
+      ],
+      "limitations": "A host-level capability is not per-device qualification or HCL support."
+    },
+    {
+      "id": "VMW-SRC-019",
+      "type": "VSPHERE_API",
+      "title": "VirtualPCIControllerOption",
+      "url": "https://developer.broadcom.com/xapis/virtual-infrastructure-json-api/latest/data-structures/VirtualPCIControllerOption/",
+      "claims": [
+        "Virtual hardware configuration options expose runtime PCI passthrough device-count limits for the selected host and VM compatibility profile."
+      ],
+      "limitations": "The runtime query must be used for the exact ESXi/vHW pair; a documentation maximum must not be hard-coded as a universal limit."
+    },
+    {
+      "id": "VMW-SRC-020",
+      "type": "VSPHERE_API",
+      "title": "HostPciPassthruSystem",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruSystem.html",
+      "claims": [
+        "The host managed object exposes passthrough state and configuration methods under explicit privileges."
+      ],
+      "limitations": "The public object is an operational surface, not a durable assignment journal or audit manifest."
+    },
+    {
+      "id": "VMW-SRC-021",
+      "type": "VSPHERE_API",
+      "title": "HostAssignableHardwareBinding",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareBinding.html",
+      "claims": [
+        "Assignable Hardware exposes host-side bindings between dynamic device resources and VMs."
+      ],
+      "limitations": "The binding object does not disclose reservation linearizability, fencing tokens, or crash recovery."
+    },
+    {
+      "id": "VMW-SRC-022",
+      "type": "VMWARE_TECHNICAL_PAPER",
+      "title": "Best Practices for Performance Tuning of Latency-Sensitive Workloads in vSphere",
+      "url": "https://www.vmware.com/docs/best-transfer-for-mpi-in-vsphere-final",
+      "claims": [
+        "Dynamic DirectPath can participate in DRS initial placement and vSphere HA cold restart while live vMotion remains unavailable."
+      ],
+      "limitations": "The paper describes supported product behavior, not the placement, lease, consensus, or fencing implementation."
+    },
+    {
+      "id": "VMW-SRC-023",
+      "type": "VSPHERE_API",
+      "title": "VirtualMachineConfigInfo fixedPassthruHotPlugEnabled",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.ConfigInfo.html",
+      "claims": [
+        "The API exposes fixedPassthruHotPlugEnabled from vSphere API 8.0.1, indicating a fixed passthrough hot-plug capability distinct from Dynamic power-on selection."
+      ],
+      "limitations": "Presence of the property does not establish supported device profiles, lifecycle safety, or the exact runtime behavior on the frozen lab baseline."
+    },
+    {
+      "id": "VMW-SRC-024",
+      "type": "BROADCOM_KB",
+      "title": "ESXi hosts and compatible virtual machine hardware versions",
+      "url": "https://knowledge.broadcom.com/external/article/312100/esxi-hosts-and-compatible-virtual-machin.html",
+      "claims": [
+        "ESXi 8.0 U2/U3 can create, edit, and run virtual hardware version 21, while ESXi 8.0 and U1 cannot.",
+        "ESXi 8.0 U2/U3 can also create, edit, and run virtual hardware version 20."
+      ],
+      "limitations": "Compatibility with a virtual hardware version does not by itself establish the passthrough-device limit or Qman qualification for that ESXi/vHW pair."
+    }
+  ]
+}

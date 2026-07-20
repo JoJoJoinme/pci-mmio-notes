@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.local/schemas/qman-technical-evidence.schema.json",
+  "title": "Qman technical evidence result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "observedAt",
+    "subject",
+    "evidenceGrade",
+    "claimBoundary",
+    "verdict",
+    "sourceState",
+    "sut",
+    "hypotheses",
+    "observations",
+    "mapping",
+    "artifacts",
+    "closureEffect",
+    "limitations"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "pattern": "^QMAN-[A-Z0-9]+(?:-[A-Z0-9]+)*$"},
+    "observedAt": {"type": "string", "format": "date-time"},
+    "subject": {
+      "enum": [
+        "QMAN_REFERENCE_MODEL",
+        "QEMU_CONTROL_REFERENCE",
+        "QEMU_GUEST_VFIO_REFERENCE",
+        "QEMU_FIRMWARE_REFERENCE",
+        "QMAN_COMPONENT",
+        "QMAN_END_TO_END"
+      ]
+    },
+    "evidenceGrade": {"enum": ["E2", "E3", "E4"]},
+    "claimBoundary": {
+      "enum": [
+        "REFERENCE_ONLY",
+        "COMPONENT_ONLY",
+        "END_TO_END_PRODUCT",
+        "PHYSICAL_QUALIFICATION"
+      ]
+    },
+    "verdict": {"enum": ["PASS", "PARTIAL", "FAIL"]},
+    "sourceState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseCommit", "dirtyWorkingTree", "runnerHashes"],
+      "properties": {
+        "baseCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "dirtyWorkingTree": {"type": "boolean"},
+        "runnerHashes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "sut": {
+      "type": "object",
+      "required": ["environment", "components"],
+      "properties": {
+        "environment": {"type": "string", "minLength": 1},
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name", "version"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "version": {"type": "string", "minLength": 1},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          }
+        }
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "result"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "result": {"type": ["string", "number", "boolean", "object", "array"]}
+        }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["techStories", "caseIds", "riskIds"],
+      "properties": {
+        "techStories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^TS-F[1-8]-[0-9]{2}$"}
+        },
+        "caseIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Z][0-9]{2}$"}
+        },
+        "riskIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^R[0-9]{2}$"}
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "retention"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "retention": {"enum": ["COMMITTED", "LOCAL_RAW"]}
+        }
+      }
+    },
+    "closureEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["productCasesClosed", "risksClosed", "statusUpdated"],
+      "properties": {
+        "productCasesClosed": {"type": "array", "items": {"type": "string"}},
+        "risksClosed": {"type": "array", "items": {"type": "string"}},
+        "statusUpdated": {"type": "boolean"}
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

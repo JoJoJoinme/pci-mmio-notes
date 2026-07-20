@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "sourceDocument": "ipd/QMAN-TECHNICAL-EVIDENCE.md",
+  "resultSchema": "contracts/qman-technical-evidence.schema.json",
+  "grades": {
+    "E2": "Deterministic model, source, unit, schema, or pure-algorithm evidence.",
+    "E3": "Instrumented virtual integration evidence across real QEMU, firmware, guest kernel, VFIO, or a Qman component.",
+    "E4": "Target physical platform/device/firmware/guest/workload evidence eligible for qualification review."
+  },
+  "closurePolicy": {
+    "referenceSubjects": [
+      "QMAN_REFERENCE_MODEL",
+      "QEMU_CONTROL_REFERENCE",
+      "QEMU_GUEST_VFIO_REFERENCE",
+      "QEMU_FIRMWARE_REFERENCE"
+    ],
+    "invariants": [
+      "REFERENCE_SUBJECT_NEVER_CLOSES_PRODUCT_CASE",
+      "COMPONENT_SUBJECT_NEVER_CLOSES_PRODUCT_STATE",
+      "E2_NEVER_CLOSES_PRODUCT_CASE_OR_RISK",
+      "E3_NEVER_CLOSES_E4_REQUIRED_HARDWARE_RISK",
+      "SUPPORTED_REQUIRES_E4_PHYSICAL_QUALIFICATION_AND_PRODUCT_GATE",
+      "EVIDENCE_HASH_DRIFT_INVALIDATES_RECORD"
+    ],
+    "e4RequiredRisks": ["R01", "R02", "R03", "R07", "R12", "R13", "R14", "R15", "R20", "R21", "R22", "R23", "R24", "R27", "R28", "R29", "R35"]
+  },
+  "records": [
+    {
+      "id": "QMAN-E2-REFERENCE-MODEL-001",
+      "resultPath": "evidence/qman-reference-model-20260721-summary.json",
+      "resultSha256": "b19c8c348b23179448a0ae004efe916989106e4ffb2c1505e83b5765f158fb21",
+      "subject": "QMAN_REFERENCE_MODEL",
+      "evidenceGrade": "E2",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-02", "TS-F1-03", "TS-F1-04", "TS-F2-01", "TS-F2-02", "TS-F4-01"],
+      "caseIds": ["C05", "C06", "O09", "M22"],
+      "riskIds": ["R01", "R09", "R36", "R39"]
+    },
+    {
+      "id": "QMAN-QEMU-CONTROL-001",
+      "resultPath": "evidence/qman-qemu-control-20260721-summary.json",
+      "resultSha256": "86cf3c1d920c10938492a1a226e29e725091e983f61fa9deab1be7d9e694e297",
+      "subject": "QEMU_CONTROL_REFERENCE",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F3-01", "TS-F3-04", "TS-F4-05", "TS-F5-05"],
+      "caseIds": ["S01", "S15", "F09"],
+      "riskIds": ["R04", "R17", "R26", "R37"]
+    },
+    {
+      "id": "QMAN-E3-DMA-PROVIDER-001",
+      "resultPath": "evidence/qman-vfio-dma-provider-20260721-summary.json",
+      "resultSha256": "51a768d18d72dde941885a7b186098d7509dee4c420386c48eced12d7c3e7d4c",
+      "subject": "QEMU_GUEST_VFIO_REFERENCE",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-02", "TS-F3-03"],
+      "caseIds": ["C21"],
+      "riskIds": ["R27"]
+    },
+    {
+      "id": "QMAN-E3-MMIO-OBSERVED-001",
+      "resultPath": "evidence/qman-qemu-mmio-observed-20260721-summary.json",
+      "resultSha256": "56691db82a794f007eb6109bfa3771111ca66fc4b2e62a42748878361c889326",
+      "subject": "QEMU_FIRMWARE_REFERENCE",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F4-01", "TS-F4-02", "TS-F4-04"],
+      "caseIds": ["M23"],
+      "riskIds": ["R09", "R33", "R34", "R36"]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "O09",
+  "title": "Owner activation planner is pure and preserves desired/effective state separation",
+  "status": "EXECUTABLE",
+  "scope": "REFERENCE_MODEL",
+  "riskIds": [
+    "R39"
+  ],
+  "runner": {
+    "cwd": "pci-resource-model",
+    "argv": [
+      "{python}",
+      "-m",
+      "unittest",
+      "tests.test_activation"
+    ]
+  },
+  "assertions": [
+    "idle live-only request produces LIVE_APPLY",
+    "deferred request does not pretend desired owner is effective owner",
+    "persistent host use is denied",
+    "transient busy state requires proven boot claim before REBOOT_REQUIRED",
+    "planning has no host-side effects"
+  ],
+  "artifacts": {
+    "required": [
+      "exit-code",
+      "stdout",
+      "stderr"
+    ]
+  }
+}

@@ -1,0 +1,643 @@
+{
+  "schemaVersion": 2,
+  "state": "ACCEPTED",
+  "sourceDocument": "ipd/README.md",
+  "materialMap": "ipd/MATERIAL-MAP.md",
+  "productBoundary": {
+    "targetRelease": "V3",
+    "deliveryModel": "SINGLE_TARGET_MULTI_WAVE",
+    "technicalScope": "GENERIC_SAFE_PCI_PASSTHROUGH",
+    "productionSupportScope": "EXACT_COMPATIBILITY_PROFILE_ONLY",
+    "unqualifiedMode": "ISOLATED_ADMIN_LAB_ONLY",
+    "explicitlyUnsupportedOperations": [
+      "LIVE_MIGRATION",
+      "FAULT_TOLERANCE",
+      "SNAPSHOT",
+      "SUSPEND_RESUME",
+      "GUEST_RUNTIME_PCI_HOTPLUG"
+    ]
+  },
+  "capabilityDimensions": {
+    "TECHNICALLY_ATTACHABLE": "A safe attach plan exists for this device instance and immutable host snapshot.",
+    "ELIGIBLE": "The current VM request also satisfies availability, ownership, lease, fencing, resource, and policy constraints.",
+    "QUALIFIED": "An exact versioned platform/device/guest/workload profile passed Qman physical-hardware cases with evidence hashes.",
+    "SUPPORTED": "A qualified profile is admitted to the V3 compatibility catalog by product policy.",
+    "invariants": [
+      "PRODUCTION_ELIGIBLE_IMPLIES_SUPPORTED_PROFILE_MATCH",
+      "SUPPORTED_IMPLIES_QUALIFIED",
+      "ELIGIBLE_IMPLIES_TECHNICALLY_ATTACHABLE",
+      "TECHNICALLY_ATTACHABLE_DOES_NOT_IMPLY_QUALIFIED",
+      "VMWARE_OBSERVATION_DOES_NOT_IMPLY_QMAN_QUALIFIED_OR_SUPPORTED"
+    ]
+  },
+  "epic": {
+    "id": "EPIC-PCI-01",
+    "title": "Qman production-grade PCI DirectPath service",
+    "outcome": "Safely, manageably, and audibly assign qualified PCI devices to VMs without breaking host DPDK ownership.",
+    "featureIds": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6",
+      "F7",
+      "F8"
+    ]
+  },
+  "features": [
+    {
+      "id": "F1",
+      "title": "设备可见性与支持资格",
+      "outcome": "每块设备都有可解释、可复现、绑定精确 profile 的支持结论。",
+      "userStories": [
+        {
+          "id": "US-F1-01",
+          "title": "运维人员能看到设备身份、拓扑、当前 owner 与用途"
+        },
+        {
+          "id": "US-F1-02",
+          "title": "运维人员能得到 supported/conditional/unsupported 结论及原因"
+        },
+        {
+          "id": "US-F1-03",
+          "title": "产品负责人能冻结精确平台、设备、固件、Guest、驱动和 workload 范围"
+        }
+      ],
+      "techStories": [
+        {
+          "id": "TS-F1-01",
+          "title": "生成带 epoch/hash 的 immutable host snapshot",
+          "primaryUserStory": "US-F1-01",
+          "supports": ["US-F1-01", "US-F1-02", "US-F1-03"]
+        },
+        {
+          "id": "TS-F1-02",
+          "title": "建立逐设备 DMA provider 证明并隔离 DPDK/no-IOMMU 语义",
+          "primaryUserStory": "US-F1-01",
+          "supports": ["US-F1-01", "US-F1-02"]
+        },
+        {
+          "id": "TS-F1-03",
+          "title": "忽略 ACS override 重建 physical isolation domain",
+          "primaryUserStory": "US-F1-01",
+          "supports": ["US-F1-01", "US-F1-02"]
+        },
+        {
+          "id": "TS-F1-04",
+          "title": "计算 dependency bundle 与不可分割闭包",
+          "primaryUserStory": "US-F1-02",
+          "supports": ["US-F1-02"]
+        },
+        {
+          "id": "TS-F1-05",
+          "title": "建立版本化 qualification profile 与支持矩阵",
+          "primaryUserStory": "US-F1-03",
+          "supports": ["US-F1-02", "US-F1-03"]
+        }
+      ],
+      "supplements": [
+        {"kind": "NORMATIVE_DESIGN", "path": "qemu-static-dynamic-directpath-design.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
+        {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "vmware-esxi8-passthru-capable-observed-model.md"},
+        {"kind": "REFERENCE_MODEL", "path": "pci-resource-model/README.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "kernel-patches/README.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-directpath-20260714-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-vfio-dma-provider-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "ipd/QMAN-TECHNICAL-EVIDENCE.md"}
+      ]
+    },
+    {
+      "id": "F2",
+      "title": "设备池与宿主业务共存",
+      "outcome": "宿主、DPDK 与 VM 设备池之间的 owner 转换显式、可恢复且不越权。",
+      "userStories": [
+        {
+          "id": "US-F2-01",
+          "title": "运维人员能把设备标记为 host/DPDK 保留或 VM 可用池"
+        },
+        {
+          "id": "US-F2-02",
+          "title": "运维人员能看到期望 owner、实际 owner、待重启和维护状态"
+        },
+        {
+          "id": "US-F2-03",
+          "title": "设备被宿主业务占用时系统拒绝切换并说明原因"
+        }
+      ],
+      "techStories": [
+        {
+          "id": "TS-F2-01",
+          "title": "实现 admin/desired/effective/pending owner 状态模型",
+          "primaryUserStory": "US-F2-01",
+          "supports": ["US-F2-01", "US-F2-02", "US-F2-03"]
+        },
+        {
+          "id": "TS-F2-02",
+          "title": "owner 切换前完成 bundle、占用和维护预检",
+          "primaryUserStory": "US-F2-01",
+          "supports": ["US-F2-01", "US-F2-03"]
+        },
+        {
+          "id": "TS-F2-03",
+          "title": "bundle live rebind 必须全成或全量回滚",
+          "primaryUserStory": "US-F2-03",
+          "supports": ["US-F2-01", "US-F2-03"]
+        },
+        {
+          "id": "TS-F2-04",
+          "title": "为必须抢占的设备生成精确 early-boot claim",
+          "primaryUserStory": "US-F2-02",
+          "supports": ["US-F2-01", "US-F2-02"]
+        },
+        {
+          "id": "TS-F2-05",
+          "title": "重启后按身份、驱动和 owner 进行 reconcile",
+          "primaryUserStory": "US-F2-02",
+          "supports": ["US-F2-02"]
+        }
+      ],
+      "supplements": [
+        {"kind": "NORMATIVE_DESIGN", "path": "qemu-static-dynamic-directpath-design.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
+        {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-passthru-activation-20260718.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/qemu-vfio-noiommu-split-20260718.md"},
+        {"kind": "REFERENCE_MODEL", "path": "pci-resource-model/README.md"}
+      ]
+    },
+    {
+      "id": "F3",
+      "title": "Static 固定设备分配",
+      "outcome": "指定 VM 在完整生命周期内独占同一个经过资格认证的设备 bundle。",
+      "userStories": [
+        {
+          "id": "US-F3-01",
+          "title": "管理员能把一个精确设备分配给指定 VM"
+        },
+        {
+          "id": "US-F3-02",
+          "title": "VM 重启或重新开机后仍使用同一块物理设备"
+        },
+        {
+          "id": "US-F3-03",
+          "title": "同一设备不能被两个 VM 或宿主同时占用"
+        },
+        {
+          "id": "US-F3-04",
+          "title": "不可分割 function/dependency 必须作为一个 bundle 分配"
+        }
+      ],
+      "techStories": [
+        {
+          "id": "TS-F3-01",
+          "title": "用 deviceUid + fingerprint 持久化身份而不是只保存 BDF",
+          "primaryUserStory": "US-F3-02",
+          "supports": ["US-F3-01", "US-F3-02"]
+        },
+        {
+          "id": "TS-F3-02",
+          "title": "对 dependency bundle 获取 CAS durable lease",
+          "primaryUserStory": "US-F3-03",
+          "supports": ["US-F3-01", "US-F3-03", "US-F3-04"]
+        },
+        {
+          "id": "TS-F3-03",
+          "title": "在 lease 内完成 bind、IOMMUFD、reset 和 fd-only QEMU attach",
+          "primaryUserStory": "US-F3-01",
+          "supports": ["US-F3-01", "US-F3-03", "US-F3-04"]
+        },
+        {
+          "id": "TS-F3-04",
+          "title": "同 BDF 身份变化时 fail closed",
+          "primaryUserStory": "US-F3-02",
+          "supports": ["US-F3-02"]
+        },
+        {
+          "id": "TS-F3-05",
+          "title": "用单一事务 FSM 编排 Static 全生命周期",
+          "primaryUserStory": "US-F3-04",
+          "supports": ["US-F3-01", "US-F3-02", "US-F3-03", "US-F3-04"]
+        }
+      ],
+      "supplements": [
+        {"kind": "NORMATIVE_DESIGN", "path": "qemu-static-dynamic-directpath-design.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
+        {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "vmware-esxi8-directpath-local-results.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-directpath-summary.json"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-control-20260721-summary.json"}
+      ]
+    },
+    {
+      "id": "F4",
+      "title": "VM 启动准入与 Guest 兼容",
+      "outcome": "启动前确定资源可满足，启动后 Guest PCI/firmware/driver 表面稳定且可验证。",
+      "userStories": [
+        {
+          "id": "US-F4-01",
+          "title": "VM 启动前能校验设备、固件、内存、BAR/MMIO 和拓扑约束"
+        },
+        {
+          "id": "US-F4-02",
+          "title": "不兼容时用户能获得稳定、具体、可行动的拒绝原因"
+        },
+        {
+          "id": "US-F4-03",
+          "title": "成功启动后 Guest 获得稳定的 slot、BAR、IRQ/IOMMU 与驱动表面"
+        }
+      ],
+      "techStories": [
+        {
+          "id": "TS-F4-01",
+          "title": "规划完整 Guest PCI tree、bridge window、MMIO 与设备上限",
+          "primaryUserStory": "US-F4-01",
+          "supports": ["US-F4-01", "US-F4-02", "US-F4-03"]
+        },
+        {
+          "id": "TS-F4-02",
+          "title": "冻结版本化 Q35/OVMF/QEMU 配置 profile",
+          "primaryUserStory": "US-F4-03",
+          "supports": ["US-F4-01", "US-F4-03"]
+        },
+        {
+          "id": "TS-F4-03",
+          "title": "预留完整 Guest memory/address-space 资源",
+          "primaryUserStory": "US-F4-01",
+          "supports": ["US-F4-01", "US-F4-02"]
+        },
+        {
+          "id": "TS-F4-04",
+          "title": "启动后核验 BAR、bridge、IRQ 与 IOMMU 实际状态",
+          "primaryUserStory": "US-F4-03",
+          "supports": ["US-F4-02", "US-F4-03"]
+        },
+        {
+          "id": "TS-F4-05",
+          "title": "在 API、QMP 和进程边界阻止绕过准入的 raw QEMU 启动",
+          "primaryUserStory": "US-F4-02",
+          "supports": ["US-F4-01", "US-F4-02", "US-F4-03"]
+        }
+      ],
+      "supplements": [
+        {"kind": "NORMATIVE_DESIGN", "path": "qemu-static-dynamic-directpath-design.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
+        {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "vmware-firmware-layout-matrix.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "qemu-vmware-mmio-comparison.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "qemu-q35-firmware-dual-64g-results.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "qemu-vmdirectpath-nonbar-local-validation.md"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-mmio-observed-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-control-20260721-summary.json"}
+      ]
+    },
+    {
+      "id": "F5",
+      "title": "设备生命周期与故障恢复",
+      "outcome": "正常和异常路径都不会把仍可能 DMA 或状态未知的设备交给下一个 owner。",
+      "userStories": [
+        {
+          "id": "US-F5-01",
+          "title": "VM 正常关机后设备能安全释放"
+        },
+        {
+          "id": "US-F5-02",
+          "title": "VM 被强制关闭后设备不会在状态不明时直接复用"
+        },
+        {
+          "id": "US-F5-03",
+          "title": "QEMU 或控制器崩溃后系统能恢复或给出确定隔离状态"
+        },
+        {
+          "id": "US-F5-04",
+          "title": "无法证明设备干净时整个 bundle 被 quarantine"
+        }
+      ],
+      "techStories": [
+        {
+          "id": "TS-F5-01",
+          "title": "冻结 reset contract 并在执行前重检 affected set",
+          "primaryUserStory": "US-F5-02",
+          "supports": ["US-F5-02", "US-F5-03", "US-F5-04"]
+        },
+        {
+          "id": "TS-F5-02",
+          "title": "按 DMA/IRQ/map/reset/owner 顺序执行 teardown",
+          "primaryUserStory": "US-F5-01",
+          "supports": ["US-F5-01", "US-F5-02", "US-F5-04"]
+        },
+        {
+          "id": "TS-F5-03",
+          "title": "使用 durable journal 与 crash reconcile 恢复事务",
+          "primaryUserStory": "US-F5-03",
+          "supports": ["US-F5-03", "US-F5-04"]
+        },
+        {
+          "id": "TS-F5-04",
+          "title": "实现 whole-bundle quarantine 与人工恢复门",
+          "primaryUserStory": "US-F5-04",
+          "supports": ["US-F5-02", "US-F5-03", "US-F5-04"]
+        },
+        {
+          "id": "TS-F5-05",
+          "title": "在所有入口拒绝 snapshot、suspend、FT、live migration 和 runtime hotplug",
+          "primaryUserStory": "US-F5-04",
+          "supports": ["US-F5-01", "US-F5-02", "US-F5-03", "US-F5-04"]
+        }
+      ],
+      "supplements": [
+        {"kind": "NORMATIVE_DESIGN", "path": "qemu-static-dynamic-directpath-design.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
+        {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "vmware-esxi8-directpath-local-results.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-host-crash-20260711-summary.json"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-edu-dma-teardown-20260714-summary.json"}
+      ]
+    },
+    {
+      "id": "F6",
+      "title": "Dynamic 动态设备分配",
+      "outcome": "用户按能力申请设备，系统原子选择兼容 bundle，并在关机后归还池。",
+      "userStories": [
+        {
+          "id": "US-F6-01",
+          "title": "用户能按型号、属性或标签申请兼容设备而非指定 BDF"
+        },
+        {
+          "id": "US-F6-02",
+          "title": "VM 的多个设备需求必须整体可满足并原子获得"
+        },
+        {
+          "id": "US-F6-03",
+          "title": "VM 关机后设备归还池，下次可选择另一块等价设备"
+        }
+      ],
+      "techStories": [
+        {
+          "id": "TS-F6-01",
+          "title": "实现 selector 规范化与候选集生成",
+          "primaryUserStory": "US-F6-01",
+          "supports": ["US-F6-01", "US-F6-02"]
+        },
+        {
+          "id": "TS-F6-02",
+          "title": "对依赖、隔离、MMIO 和策略进行全局求解",
+          "primaryUserStory": "US-F6-02",
+          "supports": ["US-F6-01", "US-F6-02"]
+        },
+        {
+          "id": "TS-F6-03",
+          "title": "对多个 bundle 执行原子预留与冲突处理",
+          "primaryUserStory": "US-F6-02",
+          "supports": ["US-F6-02"]
+        },
+        {
+          "id": "TS-F6-04",
+          "title": "assignedId 只在运行期存在并在 power-off 清除",
+          "primaryUserStory": "US-F6-03",
+          "supports": ["US-F6-03"]
+        },
+        {
+          "id": "TS-F6-05",
+          "title": "复用 Static attach/release/rollback/quarantine 核心",
+          "primaryUserStory": "US-F6-03",
+          "supports": ["US-F6-01", "US-F6-02", "US-F6-03"]
+        }
+      ],
+      "supplements": [
+        {"kind": "NORMATIVE_DESIGN", "path": "qemu-static-dynamic-directpath-design.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
+        {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "vmware-esxi8-directpath-local-results.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-dynamic-envelope-20260711-summary.json"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-bar-aggregate-20260711-summary.json"}
+      ]
+    },
+    {
+      "id": "F7",
+      "title": "跨主机放置与冷恢复",
+      "outcome": "只有在旧 owner 已被可靠 fencing 后，VM 才能在目标主机重新求解并冷恢复。",
+      "userStories": [
+        {
+          "id": "US-F7-01",
+          "title": "调度器能看到各主机限定 profile 的能力与可用量"
+        },
+        {
+          "id": "US-F7-02",
+          "title": "VM 能冷迁移到另一主机并重新选择兼容设备"
+        },
+        {
+          "id": "US-F7-03",
+          "title": "主机故障后 VM 能在已证明安全的主机上冷重启"
+        },
+        {
+          "id": "US-F7-04",
+          "title": "旧主机未被证明失效时系统阻止设备重新分配"
+        }
+      ],
+      "techStories": [
+        {
+          "id": "TS-F7-01",
+          "title": "聚合 host capability、availability 与 qualification profile",
+          "primaryUserStory": "US-F7-01",
+          "supports": ["US-F7-01", "US-F7-02", "US-F7-03"]
+        },
+        {
+          "id": "TS-F7-02",
+          "title": "使用 consensus store 与单调 fencing token",
+          "primaryUserStory": "US-F7-04",
+          "supports": ["US-F7-03", "US-F7-04"]
+        },
+        {
+          "id": "TS-F7-03",
+          "title": "在目标主机重新求解，禁止复制源主机 BDF",
+          "primaryUserStory": "US-F7-02",
+          "supports": ["US-F7-02", "US-F7-03"]
+        },
+        {
+          "id": "TS-F7-04",
+          "title": "重新分配前要求 BMC/电源 fence proof",
+          "primaryUserStory": "US-F7-04",
+          "supports": ["US-F7-03", "US-F7-04"]
+        },
+        {
+          "id": "TS-F7-05",
+          "title": "覆盖 partition、旧 agent、store failover 与 power-loss 故障测试",
+          "primaryUserStory": "US-F7-03",
+          "supports": ["US-F7-01", "US-F7-02", "US-F7-03", "US-F7-04"]
+        }
+      ],
+      "supplements": [
+        {"kind": "NORMATIVE_DESIGN", "path": "qemu-static-dynamic-directpath-design.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
+        {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "vmware-esxi8-directpath-local-results.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-vmotion-20260711-summary.json"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-host-crash-20260711-summary.json"}
+      ]
+    },
+    {
+      "id": "F8",
+      "title": "可运维、可审计、可发布",
+      "outcome": "产品状态、决策、证据和能力声明可追溯，缺口会让发布门 fail closed。",
+      "userStories": [
+        {
+          "id": "US-F8-01",
+          "title": "运维人员能查看设备状态、owner、lease 与最近失败"
+        },
+        {
+          "id": "US-F8-02",
+          "title": "审计人员能回答谁在何时把哪块设备分配给哪个 VM"
+        },
+        {
+          "id": "US-F8-03",
+          "title": "发布人员能自动得到 supported/unsupported 能力报告"
+        },
+        {
+          "id": "US-F8-04",
+          "title": "每个 User Story 都能追溯到可执行 Case 和证据"
+        }
+      ],
+      "techStories": [
+        {
+          "id": "TS-F8-01",
+          "title": "建立 AssignmentManifest、状态事件与审计模型",
+          "primaryUserStory": "US-F8-01",
+          "supports": ["US-F8-01", "US-F8-02"]
+        },
+        {
+          "id": "TS-F8-02",
+          "title": "收集并 hash snapshot、decision、lease、QEMU、Guest、reset 和 IOMMU 证据",
+          "primaryUserStory": "US-F8-02",
+          "supports": ["US-F8-01", "US-F8-02", "US-F8-03", "US-F8-04"]
+        },
+        {
+          "id": "TS-F8-03",
+          "title": "建立 US → Case → Evidence 的机器可读追踪",
+          "primaryUserStory": "US-F8-04",
+          "supports": ["US-F8-04"]
+        },
+        {
+          "id": "TS-F8-04",
+          "title": "对 gap、open risk 和缺失 evidence 执行 fail-closed evaluator",
+          "primaryUserStory": "US-F8-03",
+          "supports": ["US-F8-03", "US-F8-04"]
+        }
+      ],
+      "supplements": [
+        {"kind": "STATUS_GATE", "path": "PROJECT-STATUS.md"},
+        {"kind": "NORMATIVE_DESIGN", "path": "qemu-static-dynamic-directpath-design.md"},
+        {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
+        {"kind": "STATUS_GATE", "path": "contracts/README.md"},
+        {"kind": "STATUS_GATE", "path": "tools/evaluate_release.py"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/O09.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C21.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "ipd/QMAN-TECHNICAL-EVIDENCE.md"},
+        {"kind": "STATUS_GATE", "path": "contracts/qman-evidence-index.json"},
+        {"kind": "STATUS_GATE", "path": "contracts/qman-technical-evidence.schema.json"}
+      ]
+    }
+  ],
+  "releaseSlices": [
+    {
+      "id": "V3",
+      "name": "Full DirectPath",
+      "status": "ACCEPTED",
+      "featureSlices": [
+        {"featureId": "F1", "scope": "通用设备发现、技术准入与 compatibility qualification"},
+        {"featureId": "F2", "scope": "完整 host/DPDK/VM owner lifecycle"},
+        {"featureId": "F3", "scope": "Static 全生命周期"},
+        {"featureId": "F4", "scope": "通用 PCI/MMIO admission 与 Guest compatibility"},
+        {"featureId": "F5", "scope": "正常和异常生命周期、reconcile 与 quarantine"},
+        {"featureId": "F6", "scope": "Dynamic selector、global solver、atomic reservation 与归还池"},
+        {"featureId": "F7", "scope": "跨主机放置、fencing、cold relocate 与 HA 冷恢复"},
+        {"featureId": "F8", "scope": "状态、审计、证据、HCL 与 fail-closed release gate"}
+      ]
+    }
+  ],
+  "implementationWaves": [
+    {
+      "id": "W0",
+      "milestone": "G0",
+      "name": "Contract Convergence",
+      "featureIds": ["F8"],
+      "outcome": "Product, VMware behavior, risk, acceptance, and evidence contracts converge."
+    },
+    {
+      "id": "W1",
+      "milestone": "G1",
+      "name": "Qualification Foundation",
+      "featureIds": ["F1", "F8"],
+      "outcome": "Generic inventory/capability engine and the first exact qualification profiles exist."
+    },
+    {
+      "id": "W2",
+      "milestone": "G2",
+      "name": "Static Core",
+      "featureIds": ["F2", "F3", "F4", "F5", "F8"],
+      "outcome": "Single-host Static admission, attach, release, rollback, and quarantine are executable."
+    },
+    {
+      "id": "W3",
+      "milestone": "G3",
+      "name": "Managed Owner",
+      "featureIds": ["F2", "F8"],
+      "outcome": "Live/deferred activation, early boot claim, and boot reconcile are recoverable."
+    },
+    {
+      "id": "W4",
+      "milestone": "G4",
+      "name": "Dynamic",
+      "featureIds": ["F4", "F6", "F8"],
+      "outcome": "Generic resource planning, selector solving, atomic reservation, and pool return close."
+    },
+    {
+      "id": "W5",
+      "milestone": "G5",
+      "name": "Cluster",
+      "featureIds": ["F5", "F7", "F8"],
+      "outcome": "Consensus, fencing, cold relocation, HA recovery, and failure injection close."
+    },
+    {
+      "id": "W6",
+      "milestone": "G6",
+      "name": "V3 Qualification and Release",
+      "featureIds": ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8"],
+      "outcome": "The first V3 compatibility profiles pass every applicable product gate."
+    }
+  ],
+  "crossCuttingMappings": {
+    "capabilities": {
+      "idRange": "K01-K31",
+      "sourceDocument": "qemu-static-dynamic-directpath-design.md"
+    },
+    "risks": {
+      "idRange": "R01-R39",
+      "sourceDocument": "qemu-static-dynamic-directpath-design.md",
+      "statusContract": "contracts/risk-status.json"
+    },
+    "acceptance": {
+      "idFamilies": ["C", "O", "S", "D", "M", "F"],
+      "sourceDocument": "qemu-static-dynamic-directpath-design.md",
+      "policyContract": "contracts/acceptance-policy.json",
+      "caseDirectory": "acceptance/cases"
+    },
+    "vmwareReference": {
+      "sourceDocument": "ipd/VMWARE-BEHAVIOR-MODEL.md",
+      "behaviorContract": "contracts/vmware-behavior-model.json",
+      "sourceRegister": "contracts/vmware-source-register.json",
+      "resultSchema": "contracts/vmware-experiment-result.schema.json"
+    },
+    "qmanTechnicalEvidence": {
+      "sourceDocument": "ipd/QMAN-TECHNICAL-EVIDENCE.md",
+      "evidenceIndex": "contracts/qman-evidence-index.json",
+      "resultSchema": "contracts/qman-technical-evidence.schema.json"
+    },
+    "evidence": {
+      "materialMap": "ipd/MATERIAL-MAP.md",
+      "artifactDirectory": "evidence"
+    }
+  }
+}

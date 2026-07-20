@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E2-REFERENCE-MODEL-001",
+  "observedAt": "2026-07-20T18:00:34Z",
+  "subject": "QMAN_REFERENCE_MODEL",
+  "evidenceGrade": "E2",
+  "claimBoundary": "REFERENCE_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "1f46a2382430a06faa772f2711f4b08518a514ed",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-lab/run_reference_model_tests.sh": "59783fe4d65c2bf91ac87eec0208f39ae20017c944375afce672b3f7e528e7c2"
+    }
+  },
+  "sut": {
+    "environment": "WSL2 Ubuntu-22.04 Python standard-library reference model",
+    "components": [
+      {"name": "Python", "version": "3.10.12"},
+      {"name": "pci-resource-model", "version": "working tree at recorded source state"}
+    ]
+  },
+  "hypotheses": [
+    "The current reference model preserves owner-state separation and fails closed for its implemented isolation, reset, MMIO and provider facts.",
+    "Reference-model success must not be treated as a Qman product controller pass."
+  ],
+  "observations": [
+    {
+      "name": "unittest-suite",
+      "result": {"tests": 87, "failures": 0, "errors": 0, "verdict": "pass"}
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F1-02", "TS-F1-03", "TS-F1-04", "TS-F2-01", "TS-F2-02", "TS-F4-01"],
+    "caseIds": ["C05", "C06", "O09", "M22"],
+    "riskIds": ["R01", "R09", "R36", "R39"]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-reference-model-v2/unittest.log",
+      "sha256": "1670cc3f55be4520ef142d1f39a8aee7db19e9c45164665f11ef359db626907c",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This is E2 reference-model evidence; there is no durable Qman controller, provider, lease store or launcher in the repository.",
+    "C20's complete fixed-point dependency/action/reset/qualification fixture is still missing and is explicitly not claimed by this record.",
+    "All mapped risks remain OPEN until their product and, where required, physical evidence is complete."
+  ]
+}

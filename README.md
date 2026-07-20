@@ -2,6 +2,24 @@
 
 Record date: 2026-07-18
 
+Project convergence status, current milestone, open decisions, and the fail-closed
+release command are maintained in [`PROJECT-STATUS.md`](PROJECT-STATUS.md). The
+current supported claim is **reference and qualification model only**, not a
+production DirectPath controller.
+
+The single product hierarchy is maintained in [`ipd/README.md`](ipd/README.md):
+`EPIC-PCI-01 → F1-F8 → User Story → Tech Story`. Existing design, acceptance,
+VMware/QEMU evidence, reference code, and historical inputs are attached without
+being promoted to product completion in [`ipd/MATERIAL-MAP.md`](ipd/MATERIAL-MAP.md).
+The VMware side is reconstructed as an official-contract plus observable-behavior
+model, mapped across all 39 Tech Stories, in
+[`ipd/VMWARE-BEHAVIOR-MODEL.md`](ipd/VMWARE-BEHAVIOR-MODEL.md).
+Qman/reference-side technical evidence is tracked separately in
+[`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md) and the
+machine-readable [`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json).
+The current four E2/E3 records explain and reproduce design premises; none closes
+a Qman product Case, physical Risk, or production support claim.
+
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
 secrets or lab credentials.
@@ -58,12 +76,15 @@ hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设�
 `vmware-esxi8-passthru-capable-observed-model.md`。2026-07-14 增量的机器可读索引为
 `evidence/esxi8-directpath-20260714-summary.json`。
 
-上述设计已有可运行实现，见 [`pci-resource-model/`](pci-resource-model/README.md)：包括
+上述设计中的部分纯函数与资源决策已有可运行参考实现，见
+[`pci-resource-model/`](pci-resource-model/README.md)：包括
 事务式 32/64 位 BAR sizing、Linux sysfs 只读 inventory、below/above-4G allocator、
 OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable evaluator。模型已将
 宿主 DPDK 的 unsafe no-IOMMU 允许位与 VM payload 的 per-device IOMMU gate 分离，并用
 `hostReservation` 把 dataplane BDF 排除出 Static/Dynamic 候选池。机器可读
-验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。
+验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。它不包含生产 attach
+executor、durable lease、rollback/quarantine、Dynamic solver 或 multi-host fencing；完整边界
+以 [`PROJECT-STATUS.md`](PROJECT-STATUS.md) 和详细设计第 22 节为准。
 
 上述 no-IOMMU 分流另有真实 QEMU/Linux provider A/B：两个 guest 都保持 unsafe switch=`Y`，
 无 vIOMMU 时得到 `/dev/vfio/noiommu-0`，有 Intel vIOMMU 时得到正常 group node 与 cdev。
@@ -467,13 +488,14 @@ This host does not support Intel VT-x.
 This host appears to be running in a virtual machine with VHV disabled.
 ```
 
-This is configuration proof, not a guest-runtime BAR map. It proves that a
-default ESXi 8 EFI VM does not silently add the documented passthrough 64-bit
-MMIO knobs. Combined with the Broadcom KBs below, the VMware-side statement is:
-64-bit MMIO for passthrough is opt-in through `pciPassthru.use64bitMMIO` and
-`pciPassthru.64bitMMIOSizeGB`; the default EFI VM config is the below-4G PCI-hole
-model plus ordinary PCIe root ports, not an implicit large 64-bit passthrough
-window.
+This is configuration proof, not a guest-runtime BAR map. It proves only that a
+default ESXi 8 EFI VM does not persist the documented passthrough 64-bit MMIO
+knobs. Knob absence does **not** prove a below-4G-only runtime layout: the active
+DirectPath tests below show ESXi creating a minimal high window for the tested
+2GB BAR even when `use64bitMMIO` was absent or false. Explicit
+`pciPassthru.use64bitMMIO` and `pciPassthru.64bitMMIOSizeGB` request a configured
+aperture; the effective root window must always be established from an active
+passthrough VM's `_CRS`, BAR map, and `vmware.log` evidence.
 
 ## Hyper-V nested ESXi low-version proof
 

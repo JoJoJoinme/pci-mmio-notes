@@ -1,0 +1,693 @@
+{
+  "schemaVersion": 1,
+  "subject": "VMWARE_ESXI",
+  "sourceDocument": "ipd/VMWARE-BEHAVIOR-MODEL.md",
+  "sourceRegister": "contracts/vmware-source-register.json",
+  "resultSchema": "contracts/vmware-experiment-result.schema.json",
+  "referenceBaseline": {
+    "esxiVersion": "8.0.3",
+    "build": "24280767",
+    "apiVersion": "8.0.3.0",
+    "virtualHardware": "20",
+    "environmentClass": "NESTED_INSTRUMENTED_REFERENCE"
+  },
+  "coverageStatuses": [
+    "VERIFIED",
+    "PARTIAL",
+    "UNKNOWN",
+    "NOT_APPLICABLE"
+  ],
+  "truthKinds": [
+    "OFFICIAL_CONTRACT",
+    "OBSERVED_BEHAVIOR",
+    "INFERRED_MECHANISM",
+    "QMAN_DECISION"
+  ],
+  "namespacePolicy": {
+    "canonicalPrefix": "VMW-",
+    "legacyIdsAreAliasesOnly": true,
+    "qmanProductCaseFamilies": ["C", "O", "S", "D", "M", "F"],
+    "exceptions": {
+      "D02-D03": "QEMU-CTL-D02-D03",
+      "D04-D05": "QMAN_PRODUCT_CASES",
+      "L06-L09": "QMAN-S13-S16",
+      "O09": "QMAN-O09",
+      "Q00-Q06": "QEMU-CTL-Q00-Q06"
+    }
+  },
+  "experiments": [
+    {
+      "id": "VMW-CAP-001",
+      "title": "Capability and topology matrix",
+      "executionState": "OBSERVED",
+      "legacyIds": ["A00-A06", "CAP00-CAP22"],
+      "evidencePaths": [
+        "evidence/esxi8-directpath-20260714-summary.json",
+        "vmware-esxi8-passthru-capable-observed-model.md"
+      ],
+      "evidenceSha256": {
+        "evidence/esxi8-directpath-20260714-summary.json": "665d586649c622324ca4953a9dd05df748af6db1fac47e349a42e4aa5db37714",
+        "vmware-esxi8-passthru-capable-observed-model.md": "ca74b93136405ec451234b9152b5d33dfc57038a76da2b5ecdbfbec5cd048213"
+      },
+      "runnerPaths": ["vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py"],
+      "limitations": ["nested-endpoints", "single-esxi-build", "not-physical-qualification"]
+    },
+    {
+      "id": "VMW-DMA-001",
+      "title": "IOMMU translation, teardown, and no-IOMMU negative controls",
+      "executionState": "PARTIAL",
+      "legacyIds": ["D00", "D01", "D06"],
+      "evidencePaths": [
+        "evidence/esxi8-edu-dma-teardown-20260714-summary.json",
+        "evidence/esxi8-workstation-noiommu-20260718-summary.json",
+        "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-physical-iommu-qualification", "no-real-dpdk-pmd-coexistence"]
+    },
+    {
+      "id": "VMW-ACS-001",
+      "title": "ACS strict, bypass, and peer-DMA policy matrix",
+      "executionState": "PARTIAL",
+      "legacyIds": ["A01", "S04"],
+      "evidencePaths": [
+        "evidence/esxi8-acs-check-bypass-20260714-summary.json",
+        "evidence/esxi8-directpath-20260714-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py"],
+      "limitations": ["nested-acs", "no-physical-rid-alias-proof"]
+    },
+    {
+      "id": "VMW-DEP-001",
+      "title": "Multifunction, legacy bridge, and owner dependency closure",
+      "executionState": "PARTIAL",
+      "legacyIds": ["A02-A05", "O05a", "O05b", "O10"],
+      "evidencePaths": [
+        "evidence/esxi8-directpath-20260714-summary.json",
+        "evidence/esxi8-passthru-activation-20260718-summary.json"
+      ],
+      "runnerPaths": [
+        "vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py",
+        "vmware-esxi8-lab/README.md"
+      ],
+      "limitations": ["no-physical-gpu-hba-pf-vf-matrix"]
+    },
+    {
+      "id": "VMW-QUAL-001",
+      "title": "Physical HCL qualification matrix",
+      "executionState": "BLOCKED_PHYSICAL",
+      "legacyIds": [],
+      "evidencePaths": [],
+      "runnerPaths": [],
+      "limitations": ["requires-hcl-listed-server-and-devices"]
+    },
+    {
+      "id": "VMW-OWNER-001",
+      "title": "Configured, active, live, deferred, and reboot owner states",
+      "executionState": "OBSERVED",
+      "legacyIds": ["O00-O03", "O07"],
+      "evidencePaths": [
+        "evidence/esxi8-passthru-activation-20260718.md",
+        "evidence/esxi8-passthru-activation-20260718-summary.json"
+      ],
+      "evidenceSha256": {
+        "evidence/esxi8-passthru-activation-20260718.md": "61f3dec52df9b6852b603cc0d9d0f123a53654e57eb06216d714e6cb353e184f",
+        "evidence/esxi8-passthru-activation-20260718-summary.json": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+      },
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["single-esxi-build"]
+    },
+    {
+      "id": "VMW-OWNER-002",
+      "title": "Busy consumer, dependency expansion, and exclusive owner admission",
+      "executionState": "PARTIAL",
+      "legacyIds": ["O04", "O05a", "O05b", "O10"],
+      "evidencePaths": ["evidence/esxi8-passthru-activation-20260718-summary.json"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["network-consumer-focused", "no-physical-hba-or-gpu"]
+    },
+    {
+      "id": "VMW-OWNER-003",
+      "title": "Mid-bundle owner transition fault and rollback",
+      "executionState": "PLANNED",
+      "legacyIds": [],
+      "evidencePaths": [],
+      "runnerPaths": [],
+      "limitations": ["fault-injection-not-yet-implemented"]
+    },
+    {
+      "id": "VMW-OWNER-004",
+      "title": "Persistent owner intent and early boot claim",
+      "executionState": "PARTIAL",
+      "legacyIds": ["O03", "O07"],
+      "evidencePaths": ["evidence/esxi8-passthru-activation-20260718-summary.json"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["bdf-stability-only", "no-device-replacement"]
+    },
+    {
+      "id": "VMW-OWNER-005",
+      "title": "Post-reboot identity and owner mismatch reconciliation",
+      "executionState": "PARTIAL",
+      "legacyIds": ["O07", "L03", "L05"],
+      "evidencePaths": ["evidence/esxi8-passthru-activation-20260718-summary.json"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-mismatch-to-quarantine-branch"]
+    },
+    {
+      "id": "VMW-STATIC-001",
+      "title": "Static exact backing and reboot persistence",
+      "executionState": "PARTIAL",
+      "legacyIds": ["STATIC-BACKING", "O03", "O07"],
+      "evidencePaths": [
+        "evidence/esxi8-directpath-summary.json",
+        "vmware-esxi8-directpath-local-results.md"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-strong-physical-fingerprint-proof"]
+    },
+    {
+      "id": "VMW-STATIC-002",
+      "title": "Exclusive assignment and release-before-reuse",
+      "executionState": "PARTIAL",
+      "legacyIds": ["O10", "X02"],
+      "evidencePaths": [
+        "evidence/esxi8-passthru-activation-20260718-summary.json",
+        "evidence/esxi8-dynamic-envelope-20260711-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-concurrent-power-on-race", "internal-lease-unknown"]
+    },
+    {
+      "id": "VMW-STATIC-IDENTITY-001",
+      "title": "Same-BDF physical identity replacement",
+      "executionState": "PLANNED",
+      "legacyIds": [],
+      "evidencePaths": [],
+      "runnerPaths": [],
+      "limitations": ["requires-controlled-device-replacement"]
+    },
+    {
+      "id": "VMW-STATIC-LIFE-001",
+      "title": "Static start, stop, forced-off, and retry lifecycle",
+      "executionState": "PARTIAL",
+      "legacyIds": ["R01-R03", "L04"],
+      "evidencePaths": [
+        "vmware-esxi8-directpath-local-results.md",
+        "evidence/esxi8-host-crash-20260711-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["private-transaction-fsm-not-observable"]
+    },
+    {
+      "id": "VMW-ADMISSION-001",
+      "title": "Firmware, PCI layout, BAR, MMIO, RMRR, and candidate envelope",
+      "executionState": "PARTIAL",
+      "legacyIds": ["LF00-LF06", "M00-M07", "S05", "X01"],
+      "evidencePaths": [
+        "evidence/esxi8-firmware-layout-20260715-summary.json",
+        "evidence/esxi8-large-mmio-4g-20260711-summary.json",
+        "evidence/esxi8-large-mmio-8g-20260712-summary.json",
+        "evidence/esxi8-large-mmio-32g-64g-20260712-summary.json",
+        "evidence/esxi8-bar-aggregate-20260711-summary.json",
+        "evidence/esxi8-dynamic-envelope-20260711-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-generic-multilevel-exact-solver-proof", "no-rebar-matrix"]
+    },
+    {
+      "id": "VMW-ADMISSION-002",
+      "title": "Full VM memory and address-space reservation",
+      "executionState": "PARTIAL",
+      "legacyIds": ["M04", "M07", "S05"],
+      "evidencePaths": [
+        "evidence/esxi8-large-mmio-4g-20260711-summary.json",
+        "evidence/esxi8-bar-aggregate-20260711-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-combined-ram-rom-rmrr-pressure-matrix"]
+    },
+    {
+      "id": "VMW-GUEST-VERIFY-001",
+      "title": "Post-start Guest BAR, bridge, IRQ, and IOMMU verification",
+      "executionState": "OBSERVED",
+      "legacyIds": ["LF00-LF06", "D00", "I00-I02"],
+      "evidencePaths": [
+        "evidence/esxi8-firmware-layout-20260715-summary.json",
+        "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json"
+      ],
+      "evidenceSha256": {
+        "evidence/esxi8-firmware-layout-20260715-summary.json": "0e0de5d6e6b6c7fb07b3e1674809f1c6cafbbffc3e51a9f9eea114ae4f11763c",
+        "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json": "f11efcd42d515a1c0d35d63c03085223a84c0093a3ba7ec79bffd23c822c7311"
+      },
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["verified-only-for-frozen-nested-profile"]
+    },
+    {
+      "id": "VMW-RESET-001",
+      "title": "Reset capability, affected dependency, and lifecycle reset",
+      "executionState": "PARTIAL",
+      "legacyIds": ["R00", "R04", "CAP-RESET"],
+      "evidencePaths": [
+        "evidence/esxi8-directpath-20260714-summary.json",
+        "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["virtual-flr", "no-physical-sbr-d3-state-cleanliness"]
+    },
+    {
+      "id": "VMW-TEARDOWN-001",
+      "title": "DMA translation teardown and return to host domain",
+      "executionState": "PARTIAL",
+      "legacyIds": ["D01", "R00"],
+      "evidencePaths": ["evidence/esxi8-edu-dma-teardown-20260714-summary.json"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["full-dma-irq-map-reset-owner-order-not-proven"]
+    },
+    {
+      "id": "VMW-CRASH-001",
+      "title": "Outer host crash and reconnect recovery",
+      "executionState": "PARTIAL",
+      "legacyIds": ["L04"],
+      "evidencePaths": ["evidence/esxi8-host-crash-20260711-summary.json"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["single-sigkill-path", "no-journal-observability"]
+    },
+    {
+      "id": "VMW-QUARANTINE-001",
+      "title": "Reset failure and whole-bundle quarantine",
+      "executionState": "PLANNED",
+      "legacyIds": [],
+      "evidencePaths": [],
+      "runnerPaths": [],
+      "limitations": ["reset-failure-injection-not-yet-implemented"]
+    },
+    {
+      "id": "VMW-LIFECYCLE-001",
+      "title": "Snapshot, suspend, FT, and migration restrictions",
+      "executionState": "PARTIAL",
+      "legacyIds": ["L00-L02"],
+      "evidencePaths": ["evidence/esxi8-vmotion-20260711-summary.json"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["fault-tolerance-not-locally-tested", "fixed-passthru-hotplug-not-tested"]
+    },
+    {
+      "id": "VMW-DYNAMIC-001",
+      "title": "Dynamic allowed-device and selector behavior",
+      "executionState": "PARTIAL",
+      "legacyIds": ["X00", "X01"],
+      "evidencePaths": [
+        "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+        "evidence/esxi8-directpath-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/test_esxi_dynamic_directpath.py"],
+      "limitations": ["no-subsystem-revision-custom-label-matrix"]
+    },
+    {
+      "id": "VMW-DYNAMIC-002",
+      "title": "Candidate resource envelope and exhaustion behavior",
+      "executionState": "PARTIAL",
+      "legacyIds": ["X01", "X02", "M07"],
+      "evidencePaths": [
+        "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+        "evidence/esxi8-bar-aggregate-20260711-summary.json"
+      ],
+      "runnerPaths": [
+        "vmware-esxi8-lab/test_esxi_dynamic_bar_envelope.py",
+        "vmware-esxi8-lab/test_esxi_dynamic_bar_aggregate.py"
+      ],
+      "limitations": ["no-global-optimality-proof", "no-heterogeneous-rmrr"]
+    },
+    {
+      "id": "VMW-DYNAMIC-003",
+      "title": "Atomic multi-device reservation and concurrent contention",
+      "executionState": "PARTIAL",
+      "legacyIds": ["X02", "O10"],
+      "evidencePaths": [
+        "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+        "evidence/esxi8-passthru-activation-20260718-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-concurrent-two-vm-fault-injection"]
+    },
+    {
+      "id": "VMW-DYNAMIC-004",
+      "title": "Runtime assignedId and target-host reselection",
+      "executionState": "OBSERVED",
+      "legacyIds": ["X00", "X03"],
+      "evidencePaths": [
+        "evidence/esxi8-vmotion-20260711-summary.json",
+        "evidence/esxi8-directpath-summary.json"
+      ],
+      "evidenceSha256": {
+        "evidence/esxi8-vmotion-20260711-summary.json": "ec0dd99124544055faa6b608becd53a7504d6af282b2638062ce0cf10806859c",
+        "evidence/esxi8-directpath-summary.json": "d27aa5ceba7f133d4649408e69835959f24984394ac574357d18d9680eaa3171"
+      },
+      "runnerPaths": ["vmware-esxi8-lab/test_esxi_dynamic_directpath.py"],
+      "limitations": ["homogeneous-two-host-lab"]
+    },
+    {
+      "id": "VMW-CLUSTER-001",
+      "title": "Cross-host Dynamic capability and initial placement",
+      "executionState": "PARTIAL",
+      "legacyIds": ["X02", "X03"],
+      "evidencePaths": ["evidence/esxi8-vmotion-20260711-summary.json"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-heterogeneous-hcl-capacity-change"]
+    },
+    {
+      "id": "VMW-CLUSTER-002",
+      "title": "Powered-off relocation and target-host re-solve",
+      "executionState": "OBSERVED",
+      "legacyIds": ["X03"],
+      "evidencePaths": ["evidence/esxi8-vmotion-20260711-summary.json"],
+      "evidenceSha256": {
+        "evidence/esxi8-vmotion-20260711-summary.json": "ec0dd99124544055faa6b608becd53a7504d6af282b2638062ce0cf10806859c"
+      },
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["homogeneous-two-host-lab"]
+    },
+    {
+      "id": "VMW-CLUSTER-FENCE-001",
+      "title": "Physical power fencing before HA cold restart",
+      "executionState": "BLOCKED_PHYSICAL",
+      "legacyIds": [],
+      "evidencePaths": [],
+      "runnerPaths": [],
+      "limitations": ["requires-bmc-controlled-two-host-lab"]
+    },
+    {
+      "id": "VMW-CLUSTER-FAILURE-001",
+      "title": "Partition, stale agent, store failover, and power-loss matrix",
+      "executionState": "PARTIAL",
+      "legacyIds": ["L04"],
+      "evidencePaths": ["evidence/esxi8-host-crash-20260711-summary.json"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["only-outer-qemu-sigkill-observed"]
+    },
+    {
+      "id": "VMW-OPS-001",
+      "title": "API, task, log, owner, VM, and device audit correlation",
+      "executionState": "PARTIAL",
+      "legacyIds": ["O00", "X00"],
+      "evidencePaths": [
+        "evidence/esxi8-passthru-activation-20260718-summary.json",
+        "evidence/esxi8-directpath-summary.json"
+      ],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["no-single-assignment-manifest", "no-complete-actor-chain"]
+    },
+    {
+      "id": "VMW-EVIDENCE-001",
+      "title": "Canonical result schema and artifact hashes",
+      "executionState": "PARTIAL",
+      "legacyIds": ["ALL-LEGACY-VMW-CASES"],
+      "evidencePaths": ["evidence"],
+      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "limitations": ["schema-and-hash-not-uniform-across-all-cases"]
+    },
+    {
+      "id": "VMW-TRACE-001",
+      "title": "Machine TS-to-case-to-run-to-artifact traceability",
+      "executionState": "PLANNED",
+      "legacyIds": [],
+      "evidencePaths": [],
+      "runnerPaths": [],
+      "limitations": ["run-result-index-not-yet-implemented"]
+    }
+  ],
+  "techStoryCoverage": [
+    {
+      "techStoryId": "TS-F1-01",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-003", "VMW-SRC-004"],
+      "experimentIds": ["VMW-CAP-001", "VMW-OPS-001"],
+      "observableContract": "Inventory and passthrough state are exposed, but immutable atomic snapshot semantics are not."
+    },
+    {
+      "techStoryId": "TS-F1-02",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001"],
+      "experimentIds": ["VMW-DMA-001"],
+      "observableContract": "IOMMU-backed DMA is required and observable; per-device production proof remains incomplete."
+    },
+    {
+      "techStoryId": "TS-F1-03",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-014"],
+      "experimentIds": ["VMW-ACS-001"],
+      "observableContract": "ACS capability checks are observable, while the safe physical isolation domain is not exposed."
+    },
+    {
+      "techStoryId": "TS-F1-04",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-003"],
+      "experimentIds": ["VMW-DEP-001"],
+      "observableContract": "dependentDevice and collective assignment expose part of the dependency closure."
+    },
+    {
+      "techStoryId": "TS-F1-05",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-010"],
+      "experimentIds": ["VMW-QUAL-001"],
+      "observableContract": "Compatibility listing is a support contract independent from runtime passthruCapable."
+    },
+    {
+      "techStoryId": "TS-F2-01",
+      "status": "VERIFIED",
+      "sourceIds": ["VMW-SRC-002", "VMW-SRC-003", "VMW-SRC-016", "VMW-SRC-017"],
+      "experimentIds": ["VMW-OWNER-001"],
+      "observableContract": "Configured/enabled and effective/active owner states are distinct and stable."
+    },
+    {
+      "techStoryId": "TS-F2-02",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-003", "VMW-SRC-011", "VMW-SRC-018"],
+      "experimentIds": ["VMW-OWNER-002"],
+      "observableContract": "Busy consumers and dependencies influence owner transition, with device-specific behavior."
+    },
+    {
+      "techStoryId": "TS-F2-03",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-011"],
+      "experimentIds": ["VMW-OWNER-002", "VMW-OWNER-003"],
+      "observableContract": "Successful group changes and preflight rejection are observed; mid-transition rollback is unknown."
+    },
+    {
+      "techStoryId": "TS-F2-04",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-002"],
+      "experimentIds": ["VMW-OWNER-004"],
+      "observableContract": "Persistent owner intent is applied after host reboot, currently proven only for stable BDF."
+    },
+    {
+      "techStoryId": "TS-F2-05",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-002", "VMW-SRC-003"],
+      "experimentIds": ["VMW-OWNER-005"],
+      "observableContract": "Post-reboot state can be read back; mismatch recovery semantics remain incomplete."
+    },
+    {
+      "techStoryId": "TS-F3-01",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-005"],
+      "experimentIds": ["VMW-STATIC-001", "VMW-OWNER-004"],
+      "observableContract": "Static backing persists host/device identifiers, but no strong fingerprint contract is public."
+    },
+    {
+      "techStoryId": "TS-F3-02",
+      "status": "PARTIAL",
+      "sourceIds": [],
+      "experimentIds": ["VMW-STATIC-002"],
+      "observableContract": "Exclusive assignment and release-before-reuse are observed; CAS and durable lease internals are unknown."
+    },
+    {
+      "techStoryId": "TS-F3-03",
+      "status": "NOT_APPLICABLE",
+      "sourceIds": ["VMW-SRC-001"],
+      "experimentIds": [],
+      "observableContract": "IOMMUFD and fd-only QEMU attachment are Qman implementation decisions."
+    },
+    {
+      "techStoryId": "TS-F3-04",
+      "status": "UNKNOWN",
+      "sourceIds": ["VMW-SRC-005"],
+      "experimentIds": ["VMW-STATIC-IDENTITY-001"],
+      "observableContract": "Same-BDF device replacement handling is not yet observed."
+    },
+    {
+      "techStoryId": "TS-F3-05",
+      "status": "PARTIAL",
+      "sourceIds": [],
+      "experimentIds": ["VMW-STATIC-LIFE-001"],
+      "observableContract": "External lifecycle behavior is observed, but VMware transaction and compensation internals are not."
+    },
+    {
+      "techStoryId": "TS-F4-01",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-002", "VMW-SRC-012", "VMW-SRC-019", "VMW-SRC-024"],
+      "experimentIds": ["VMW-ADMISSION-001"],
+      "observableContract": "Firmware, PCI layout, BAR/MMIO, RMRR, and device count participate in admission."
+    },
+    {
+      "techStoryId": "TS-F4-02",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-012"],
+      "experimentIds": ["VMW-ADMISSION-001"],
+      "observableContract": "Versioned vHW, firmware, layout, and MMIO knobs form an observable Guest profile."
+    },
+    {
+      "techStoryId": "TS-F4-03",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-002", "VMW-SRC-012"],
+      "experimentIds": ["VMW-ADMISSION-002"],
+      "observableContract": "Full VM memory reservation is required and address-space pressure affects power-on."
+    },
+    {
+      "techStoryId": "TS-F4-04",
+      "status": "VERIFIED",
+      "sourceIds": ["VMW-SRC-001"],
+      "experimentIds": ["VMW-GUEST-VERIFY-001"],
+      "observableContract": "BAR, bridge, IRQ, and IOMMU surfaces are correlated for the frozen nested profile."
+    },
+    {
+      "techStoryId": "TS-F4-05",
+      "status": "NOT_APPLICABLE",
+      "sourceIds": [],
+      "experimentIds": [],
+      "observableContract": "Qman API, launcher, and QMP bypass prevention must be proven by Qman."
+    },
+    {
+      "techStoryId": "TS-F5-01",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001"],
+      "experimentIds": ["VMW-RESET-001"],
+      "observableContract": "Reset and dependency capability are visible; authoritative affected-set recheck is not."
+    },
+    {
+      "techStoryId": "TS-F5-02",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001"],
+      "experimentIds": ["VMW-TEARDOWN-001"],
+      "observableContract": "DMA translation teardown is observed, while full ordered cleanup is incomplete."
+    },
+    {
+      "techStoryId": "TS-F5-03",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001"],
+      "experimentIds": ["VMW-CRASH-001"],
+      "observableContract": "One outer-host crash recovery path is observed; durable journal internals are not."
+    },
+    {
+      "techStoryId": "TS-F5-04",
+      "status": "UNKNOWN",
+      "sourceIds": [],
+      "experimentIds": ["VMW-QUARANTINE-001"],
+      "observableContract": "Whole-bundle quarantine after failed cleanup has no direct VMware observation."
+    },
+    {
+      "techStoryId": "TS-F5-05",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-013", "VMW-SRC-023"],
+      "experimentIds": ["VMW-LIFECYCLE-001"],
+      "observableContract": "Snapshot, suspend, and live migration rejection are observed; FT remains untested locally."
+    },
+    {
+      "techStoryId": "TS-F6-01",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-006", "VMW-SRC-007", "VMW-SRC-008", "VMW-SRC-009"],
+      "experimentIds": ["VMW-DYNAMIC-001"],
+      "observableContract": "Allowed-device and label selectors are public, with incomplete local selector coverage."
+    },
+    {
+      "techStoryId": "TS-F6-02",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-006", "VMW-SRC-008"],
+      "experimentIds": ["VMW-DYNAMIC-002"],
+      "observableContract": "Candidate selection, resource envelope, and exhaustion are visible; global optimality is not."
+    },
+    {
+      "techStoryId": "TS-F6-03",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-006"],
+      "experimentIds": ["VMW-DYNAMIC-003"],
+      "observableContract": "Some all-or-fail behavior is observed; concurrent atomic reservation remains incomplete."
+    },
+    {
+      "techStoryId": "TS-F6-04",
+      "status": "VERIFIED",
+      "sourceIds": ["VMW-SRC-008"],
+      "experimentIds": ["VMW-DYNAMIC-004"],
+      "observableContract": "assignedId is runtime-only and is reselected on the target host after powered-off relocation."
+    },
+    {
+      "techStoryId": "TS-F6-05",
+      "status": "NOT_APPLICABLE",
+      "sourceIds": ["VMW-SRC-008"],
+      "experimentIds": [],
+      "observableContract": "Private VMware code reuse is not observable and cannot prove Qman core reuse."
+    },
+    {
+      "techStoryId": "TS-F7-01",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-006", "VMW-SRC-007", "VMW-SRC-022"],
+      "experimentIds": ["VMW-CLUSTER-001"],
+      "observableContract": "Cross-host candidate information and initial placement are partially observable."
+    },
+    {
+      "techStoryId": "TS-F7-02",
+      "status": "NOT_APPLICABLE",
+      "sourceIds": [],
+      "experimentIds": [],
+      "observableContract": "Consensus store and fencing token are Qman design requirements, not VMware black-box claims."
+    },
+    {
+      "techStoryId": "TS-F7-03",
+      "status": "VERIFIED",
+      "sourceIds": ["VMW-SRC-008", "VMW-SRC-022"],
+      "experimentIds": ["VMW-CLUSTER-002"],
+      "observableContract": "Powered-off relocation re-solves the Dynamic device on the target host."
+    },
+    {
+      "techStoryId": "TS-F7-04",
+      "status": "UNKNOWN",
+      "sourceIds": [],
+      "experimentIds": ["VMW-CLUSTER-FENCE-001"],
+      "observableContract": "Physical fence proof before HA restart is not yet experimentally observed."
+    },
+    {
+      "techStoryId": "TS-F7-05",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-022"],
+      "experimentIds": ["VMW-CLUSTER-FAILURE-001"],
+      "observableContract": "One crash path is observed; partition, stale agent, store failover, and physical power loss remain."
+    },
+    {
+      "techStoryId": "TS-F8-01",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-003", "VMW-SRC-006", "VMW-SRC-020", "VMW-SRC-021"],
+      "experimentIds": ["VMW-OPS-001"],
+      "observableContract": "APIs, tasks, and logs expose distributed state but no unified assignment manifest."
+    },
+    {
+      "techStoryId": "TS-F8-02",
+      "status": "PARTIAL",
+      "sourceIds": [],
+      "experimentIds": ["VMW-EVIDENCE-001"],
+      "observableContract": "Some runs have artifact hashes, but the result schema is not uniform."
+    },
+    {
+      "techStoryId": "TS-F8-03",
+      "status": "UNKNOWN",
+      "sourceIds": [],
+      "experimentIds": ["VMW-TRACE-001"],
+      "observableContract": "Machine-readable TS-to-case-to-run-to-artifact traceability is not yet complete."
+    },
+    {
+      "techStoryId": "TS-F8-04",
+      "status": "NOT_APPLICABLE",
+      "sourceIds": [],
+      "experimentIds": [],
+      "observableContract": "Qman release-gate behavior must be proven by the Qman evaluator."
+    }
+  ]
+}
