@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import copy
 import errno
 import json
 import os
+import pickle
 import tempfile
 import unittest
 from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
+from unittest import mock
 
 from pci_resource_model import vfio_launch_handles as launch
 from pci_resource_model import vfio_provider as vfio
@@ -45,9 +48,7 @@ def request(observed=None, **changes):
         "bdf": BDF,
         "snapshot_epoch": 17,
         "topology_hash": TOPOLOGY_HASH,
-        "expected_identity_hash": vfio.compute_identity_hash(
-            BDF, observed.identity
-        ),
+        "expected_identity_hash": vfio.compute_identity_hash(BDF, observed.identity),
         "expected_group_hash": vfio.compute_group_hash(
             BDF, observed.iommu_group, observed.group_members
         ),
@@ -154,9 +155,7 @@ class VfioLaunchHandlesTests(unittest.TestCase):
         return raised.exception
 
     def test_fresh_cdev_and_iommufd_handles_are_rechecked_without_ioctl(self):
-        result, reader, kernel = opened(
-            launch_request=request(bdf=BDF.upper())
-        )
+        result, reader, kernel = opened(launch_request=request(bdf=BDF.upper()))
 
         self.assertEqual([BDF, BDF], reader.calls)
         self.assertEqual(
@@ -180,12 +179,172 @@ class VfioLaunchHandlesTests(unittest.TestCase):
         self.assertEqual("CALLER_CORRELATION_ONLY", result.metadata.snapshot_binding)
         self.assertEqual("PYTHON_SUBPROCESS_PASS_FDS", result.metadata.handoff_mode)
         self.assertTrue(result.handles_usable)
+        self.assertFalse(result.production_provenance)
 
         result.close()
         self.assertEqual([11, 10], kernel.close_attempts)
         self.assertFalse(result.handles_usable)
+        self.assertFalse(result.production_provenance)
         result.close()
         self.assertEqual([11, 10], kernel.close_attempts)
+
+    def test_result_rejects_direct_public_data_object_construction(self):
+        with self.assertRaisesRegex(
+            TypeError, "created only by open_vfio_launch_handles"
+        ):
+            launch.VfioLaunchResult(
+                request=request(),
+                device_fd=11,
+                iommufd_fd=10,
+                metadata=None,
+                _kernel=FakeKernel(),
+            )
+
+        class PropertyMasquerade(launch.VfioLaunchResult):
+            def __init__(self):
+                pass
+
+            @property
+            def production_provenance(self):
+                return True
+
+        forged = PropertyMasquerade()
+        self.assertTrue(forged.production_provenance)
+        self.assertFalse(launch.is_production_launch_result(forged))
+
+    def test_capability_object_rejects_alias_copy_replace_and_pickle(self):
+        result, _, kernel = opened()
+
+        for operation in (
+            lambda: copy.copy(result),
+            lambda: copy.deepcopy(result),
+            lambda: replace(result),
+            lambda: pickle.dumps(result),
+        ):
+            with self.subTest(operation=operation):
+                with self.assertRaises(TypeError):
+                    operation()
+
+        self.assertTrue(result.handles_usable)
+        self.assertEqual([], kernel.close_attempts)
+        result.close()
+
+    def test_pickle_build_and_blank_new_cannot_create_usable_result(self):
+        # Protocol-4 NEWOBJ + BUILD models a legacy/data-only pickle that tries
+        # to bypass __init__.  BUILD must reach the explicit rejecting
+        # __setstate__ rather than populate a capability object's __dict__.
+        legacy_pickle = (
+            b"\x80\x04"
+            b"cpci_resource_model.vfio_launch_handles\nVfioLaunchResult\n"
+            b")\x81}\x94b."
+        )
+        with self.assertRaisesRegex(TypeError, "cannot be unpickled"):
+            pickle.loads(legacy_pickle)
+
+        blank = object.__new__(launch.VfioLaunchResult)
+        self.assertFalse(blank.production_provenance)
+        self.assertFalse(launch.is_production_launch_result(blank))
+        self.assertFalse(blank.handles_usable)
+        self.assertTrue(blank.closed)
+        self.assert_reason(vfio.Reason.INVALID_ARGUMENT, lambda: blank.pass_fds)
+
+    def test_only_exact_fully_omitted_builtin_path_has_production_provenance(self):
+        observed = state()
+        capture_calls = []
+        fake_kernel = FakeKernel()
+
+        def capture(_reader, bdf):
+            capture_calls.append(bdf)
+            return observed
+
+        def open_char_node(
+            _kernel,
+            path,
+            *,
+            role,
+            failure_reason,
+            expected_device_number,
+            bdf,
+        ):
+            return fake_kernel.open_char_node(
+                path,
+                role=role,
+                failure_reason=failure_reason,
+                expected_device_number=expected_device_number,
+                bdf=bdf,
+            )
+
+        def close(_kernel, fd):
+            fake_kernel.close(fd)
+
+        with (
+            mock.patch.object(vfio.LinuxSysfsStateReader, "capture", capture),
+            mock.patch.object(
+                launch.PosixLaunchKernel, "open_char_node", open_char_node
+            ),
+            mock.patch.object(launch.PosixLaunchKernel, "close", close),
+        ):
+            production = launch.open_vfio_launch_handles(request(observed))
+            self.assertTrue(production.production_provenance)
+            self.assertTrue(launch.is_production_launch_result(production))
+            self.assertTrue(production.handles_usable)
+            production.close()
+            self.assertTrue(production.production_provenance)
+            self.assertTrue(launch.is_production_launch_result(production))
+            self.assertFalse(production.handles_usable)
+
+            explicit_none = launch.open_vfio_launch_handles(
+                request(observed), state_reader=None, kernel=None
+            )
+            self.assertFalse(explicit_none.production_provenance)
+            self.assertFalse(launch.is_production_launch_result(explicit_none))
+            explicit_none.close()
+
+        self.assertEqual([BDF, BDF, BDF, BDF], capture_calls)
+        self.assertFalse(fake_kernel.open_fds)
+
+    def test_injected_exact_builtin_instances_remain_test_lab_provenance(self):
+        observed = state()
+        fake_reader = FakeReader(observed, observed)
+        exact_reader = vfio.LinuxSysfsStateReader()
+        exact_reader.capture = fake_reader.capture
+        fake_kernel = FakeKernel()
+        exact_kernel = launch.PosixLaunchKernel()
+        exact_kernel.open_char_node = fake_kernel.open_char_node
+        exact_kernel.close = fake_kernel.close
+
+        result = launch.open_vfio_launch_handles(
+            request(observed),
+            state_reader=exact_reader,
+            kernel=exact_kernel,
+        )
+
+        self.assertFalse(result.production_provenance)
+        self.assertFalse(launch.is_production_launch_result(result))
+        result.close()
+        self.assertFalse(result.handles_usable)
+
+    def test_replaced_default_constructors_cannot_masquerade_as_production(self):
+        observed = state()
+
+        class ReplacementReader(FakeReader):
+            def __init__(self, *, sysfs_root, vfio_root):
+                self.sysfs_root = sysfs_root
+                self.vfio_root = vfio_root
+                super().__init__(observed, observed)
+
+        class ReplacementKernel(FakeKernel):
+            pass
+
+        with (
+            mock.patch.object(launch.vfio, "LinuxSysfsStateReader", ReplacementReader),
+            mock.patch.object(launch, "PosixLaunchKernel", ReplacementKernel),
+        ):
+            result = launch.open_vfio_launch_handles(request(observed))
+
+        self.assertFalse(result.production_provenance)
+        self.assertFalse(launch.is_production_launch_result(result))
+        result.close()
 
     def test_binding_hash_uses_immutable_inode_metadata_not_fd_numbers(self):
         first, _, first_kernel = opened(kernel=FakeKernel(next_fd=10))
@@ -336,9 +495,7 @@ class VfioLaunchHandlesTests(unittest.TestCase):
 
     def test_cdev_devt_from_sysfs_is_required_of_opened_inode(self):
         kernel = FakeKernel()
-        kernel.metadata_changes["vfio-cdev"] = {
-            "character_device_minor": 99
-        }
+        kernel.metadata_changes["vfio-cdev"] = {"character_device_minor": 99}
 
         self.assert_reason(
             vfio.Reason.VFIO_NODE_MISMATCH,
@@ -443,6 +600,37 @@ class VfioLaunchHandlesTests(unittest.TestCase):
 
         self.assertEqual([77], kernel.close_attempts)
         self.assertFalse(kernel.open_fds)
+
+    def test_malformed_injected_open_result_cannot_mask_prior_handle_cleanup(self):
+        class RaisingFd:
+            @property
+            def fd(self):
+                raise RuntimeError("injected malformed fd property")
+
+        malformed_values = (
+            object(),
+            launch.OpenedNode(fd="not-an-int", metadata=None),
+            RaisingFd(),
+        )
+
+        for malformed in malformed_values:
+            with self.subTest(malformed=type(malformed).__name__):
+
+                class MalformedSecondOpenKernel(FakeKernel):
+                    def open_char_node(self, path, **kwargs):
+                        if kwargs["role"] == "vfio-cdev":
+                            return malformed
+                        return super().open_char_node(path, **kwargs)
+
+                kernel = MalformedSecondOpenKernel()
+                self.assert_reason(
+                    vfio.Reason.VFIO_NODE_MISMATCH,
+                    lambda: launch.open_vfio_launch_handles(
+                        request(), state_reader=FakeReader(state()), kernel=kernel
+                    ),
+                )
+                self.assertEqual([10], kernel.close_attempts)
+                self.assertFalse(kernel.open_fds)
 
     def test_close_failure_is_surfaced_after_both_reverse_close_attempts(self):
         result, _, kernel = opened()

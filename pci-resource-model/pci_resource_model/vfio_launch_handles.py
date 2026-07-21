@@ -36,6 +36,22 @@ IOMMUFD_PATH = Path("/dev/iommu")
 HANDOFF_MODE = "PYTHON_SUBPROCESS_PASS_FDS"
 SNAPSHOT_BINDING = "CALLER_CORRELATION_ONLY"
 
+# Keep the production reader identity pinned even if a test/lab replaces the
+# public module attribute.  This is a provenance guard against accidentally
+# treating an injected seam as a product admission result; it is not intended
+# to defend against arbitrary code execution inside this Python process.
+_PRODUCTION_STATE_READER_TYPE = vfio.LinuxSysfsStateReader
+
+
+class _OmittedDependency:
+    __slots__ = ()
+
+
+_DEPENDENCY_OMITTED = _OmittedDependency()
+_RESULT_FACTORY_SEAL = object()
+_PRODUCTION_PROVENANCE = object()
+_TEST_LAB_PROVENANCE = object()
+
 
 @dataclass(frozen=True)
 class VfioLaunchRequest:
@@ -139,30 +155,64 @@ class _CloseState:
     cleanup_failed: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class VfioLaunchResult:
-    """Own a fresh raw cdev/IOMMUFD pair until explicit QEMU handoff."""
+    """Own a fresh raw cdev/IOMMUFD pair until explicit QEMU handoff.
+
+    Instances are returned only by :func:`open_vfio_launch_handles`.  The
+    private construction seal closes the former public data-object bypass; it
+    is deliberately not described as a security boundary against hostile code
+    already executing in this module's process.
+    """
 
     request: VfioLaunchRequest
     device_fd: int
     iommufd_fd: int
     metadata: VfioLaunchMetadata
     _kernel: LaunchKernelOps = field(repr=False, compare=False)
-    _close_state: _CloseState = field(
-        default_factory=_CloseState, repr=False, compare=False
-    )
+    _close_state: _CloseState = field(repr=False, compare=False)
+    _provenance: object = field(repr=False, compare=False)
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        del args, kwargs
+        raise TypeError(
+            "VfioLaunchResult instances are created only by open_vfio_launch_handles"
+        )
+
+    @property
+    def production_provenance(self) -> bool:
+        """Whether this came from the exact, fully-default production path.
+
+        Supplying either dependency (including an exact built-in instance),
+        explicitly passing ``None``, subclassing, or replacing a constructor
+        keeps the result in the TEST/LAB provenance class.
+        """
+
+        return (
+            type(self) is VfioLaunchResult
+            and getattr(self, "_provenance", None) is _PRODUCTION_PROVENANCE
+        )
 
     @property
     def closed(self) -> bool:
-        return self._close_state.closed
+        state = getattr(self, "_close_state", None)
+        return not isinstance(state, _CloseState) or state.closed
 
     @property
     def cleanup_failed(self) -> bool:
-        return self._close_state.cleanup_failed
+        state = getattr(self, "_close_state", None)
+        return isinstance(state, _CloseState) and state.cleanup_failed
 
     @property
     def handles_usable(self) -> bool:
-        return not self._close_state.closed
+        state = getattr(self, "_close_state", None)
+        return (
+            type(self) is VfioLaunchResult
+            and isinstance(state, _CloseState)
+            and getattr(self, "_provenance", None)
+            in (_PRODUCTION_PROVENANCE, _TEST_LAB_PROVENANCE)
+            and not state.closed
+        )
 
     @property
     def pass_fds(self) -> tuple[int, int]:
@@ -174,13 +224,35 @@ class VfioLaunchResult:
         them accidentally.
         """
 
-        if self._close_state.closed:
+        if not self.handles_usable:
+            metadata = getattr(self, "metadata", None)
             raise vfio.ProviderError(
                 vfio.Reason.INVALID_ARGUMENT,
-                bdf=self.metadata.bdf,
+                bdf=getattr(metadata, "bdf", None),
                 stage="pass-closed-launch-handles",
             )
         return (self.device_fd, self.iommufd_fd)
+
+    def __copy__(self) -> "VfioLaunchResult":
+        raise TypeError("VfioLaunchResult capability objects cannot be copied")
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> "VfioLaunchResult":
+        del memo
+        raise TypeError("VfioLaunchResult capability objects cannot be copied")
+
+    def __reduce__(self) -> Any:
+        raise TypeError("VfioLaunchResult capability objects cannot be pickled")
+
+    def __reduce_ex__(self, protocol: int) -> Any:
+        del protocol
+        raise TypeError("VfioLaunchResult capability objects cannot be pickled")
+
+    def __getstate__(self) -> Any:
+        raise TypeError("VfioLaunchResult capability objects cannot be pickled")
+
+    def __setstate__(self, state: Any) -> None:
+        del state
+        raise TypeError("VfioLaunchResult capability objects cannot be unpickled")
 
     def close(self) -> None:
         """Close in reverse-open order, attempting both descriptors once."""
@@ -212,6 +284,20 @@ class VfioLaunchResult:
         return False
 
 
+def is_production_launch_result(value: object) -> bool:
+    """Return the narrow product-admission provenance decision.
+
+    Consumers must use this exact-type check rather than trusting an
+    overridable property on a subclass.  Handle liveness remains a separate
+    requirement via :attr:`VfioLaunchResult.handles_usable`.
+    """
+
+    return (
+        type(value) is VfioLaunchResult
+        and getattr(value, "_provenance", None) is _PRODUCTION_PROVENANCE
+    )
+
+
 class PosixLaunchKernel:
     """Open one fixed character node with lstat/open/fstat substitution checks."""
 
@@ -241,11 +327,7 @@ class PosixLaunchKernel:
             ) from error
         self._validate_character_stat(before, expected_device_number, bdf)
 
-        flags = (
-            os.O_RDWR
-            | getattr(os, "O_CLOEXEC", 0)
-            | getattr(os, "O_NOFOLLOW", 0)
-        )
+        flags = os.O_RDWR | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
         fd: int | None = None
         try:
             fd = os.open(path, flags)
@@ -326,6 +408,36 @@ class PosixLaunchKernel:
         os.close(fd)
 
 
+_PRODUCTION_LAUNCH_KERNEL_TYPE = PosixLaunchKernel
+
+
+def _new_launch_result(
+    *,
+    request: VfioLaunchRequest,
+    device_fd: int,
+    iommufd_fd: int,
+    metadata: VfioLaunchMetadata,
+    kernel: LaunchKernelOps,
+    production: bool,
+    _seal: object,
+) -> VfioLaunchResult:
+    if _seal is not _RESULT_FACTORY_SEAL:
+        raise RuntimeError("invalid VfioLaunchResult factory seal")
+    result = object.__new__(VfioLaunchResult)
+    object.__setattr__(result, "request", request)
+    object.__setattr__(result, "device_fd", device_fd)
+    object.__setattr__(result, "iommufd_fd", iommufd_fd)
+    object.__setattr__(result, "metadata", metadata)
+    object.__setattr__(result, "_kernel", kernel)
+    object.__setattr__(result, "_close_state", _CloseState())
+    object.__setattr__(
+        result,
+        "_provenance",
+        _PRODUCTION_PROVENANCE if production else _TEST_LAB_PROVENANCE,
+    )
+    return result
+
+
 def _canonical_json_bytes(value: MappingValue) -> bytes:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=True
@@ -402,12 +514,10 @@ def _normalize_request(request: VfioLaunchRequest) -> VfioLaunchRequest:
         request.topology_hash.lower()
     ):
         raise vfio.ProviderError(vfio.Reason.INVALID_TOPOLOGY_HASH, bdf=bdf)
-    if not isinstance(request.expected_identity_hash, str) or not vfio.HASH_RE.fullmatch(
-        request.expected_identity_hash.lower()
-    ):
-        raise vfio.ProviderError(
-            vfio.Reason.INVALID_EXPECTED_IDENTITY_HASH, bdf=bdf
-        )
+    if not isinstance(
+        request.expected_identity_hash, str
+    ) or not vfio.HASH_RE.fullmatch(request.expected_identity_hash.lower()):
+        raise vfio.ProviderError(vfio.Reason.INVALID_EXPECTED_IDENTITY_HASH, bdf=bdf)
     if not isinstance(request.expected_group_hash, str) or not vfio.HASH_RE.fullmatch(
         request.expected_group_hash.lower()
     ):
@@ -422,7 +532,9 @@ def _normalize_request(request: VfioLaunchRequest) -> VfioLaunchRequest:
 
 
 def _valid_int(value: object, maximum: int) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= maximum
+    return (
+        isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= maximum
+    )
 
 
 def _validate_state(state: vfio.DeviceState, bdf: str) -> None:
@@ -461,10 +573,7 @@ def _validate_state(state: vfio.DeviceState, bdf: str) -> None:
         return
     if (
         state.cdev_device_number is None
-        or not all(
-            _valid_int(part, (1 << 32) - 1)
-            for part in state.cdev_device_number
-        )
+        or not all(_valid_int(part, (1 << 32) - 1) for part in state.cdev_device_number)
         or not vfio.VFIO_CDEV_RE.fullmatch(state.cdev_node.name)
         or state.cdev_node != VFIO_ROOT / "devices" / state.cdev_node.name
     ):
@@ -483,9 +592,7 @@ def _validate_recheck(before: vfio.DeviceState, after: vfio.DeviceState) -> None
     ):
         raise vfio.ProviderError(vfio.Reason.IOMMU_GROUP_STALE, bdf=bdf)
     if after.noiommu_node_present:
-        raise vfio.ProviderError(
-            vfio.Reason.DEVICE_NO_IOMMU_DMA_ISOLATION, bdf=bdf
-        )
+        raise vfio.ProviderError(vfio.Reason.DEVICE_NO_IOMMU_DMA_ISOLATION, bdf=bdf)
     if (
         after.group_node != before.group_node
         or after.cdev_node != before.cdev_node
@@ -521,27 +628,39 @@ def _validate_opened_node(
         or metadata.cloexec is not True
     ):
         raise vfio.ProviderError(vfio.Reason.VFIO_NODE_MISMATCH, bdf=bdf)
-    if expected_device_number is not None and (
-        metadata.character_device_major,
-        metadata.character_device_minor,
-    ) != expected_device_number:
+    if (
+        expected_device_number is not None
+        and (
+            metadata.character_device_major,
+            metadata.character_device_minor,
+        )
+        != expected_device_number
+    ):
         raise vfio.ProviderError(vfio.Reason.VFIO_NODE_MISMATCH, bdf=bdf)
 
 
 def _close_partial(
     kernel: LaunchKernelOps,
-    opened: list[OpenedNode],
+    opened: list[object],
     *,
     bdf: str,
 ) -> None:
     failures: list[BaseException] = []
     closed: set[int] = set()
     for item in reversed(opened):
-        if item.fd in closed:
-            continue
-        closed.add(item.fd)
         try:
-            kernel.close(item.fd)
+            fd = getattr(item, "fd")
+        except BaseException:
+            # A TEST/LAB kernel seam may return a malformed object.  Skip that
+            # object, but continue closing every earlier validated handle.
+            continue
+        if not isinstance(fd, int) or isinstance(fd, bool) or fd < 0:
+            continue
+        if fd in closed:
+            continue
+        closed.add(fd)
+        try:
+            kernel.close(fd)
         except BaseException as error:
             failures.append(error)
     if failures:
@@ -557,8 +676,8 @@ def _close_partial(
 def open_vfio_launch_handles(
     request: VfioLaunchRequest,
     *,
-    state_reader: vfio.StateReader | None = None,
-    kernel: LaunchKernelOps | None = None,
+    state_reader: vfio.StateReader | None | _OmittedDependency = _DEPENDENCY_OMITTED,
+    kernel: LaunchKernelOps | None | _OmittedDependency = _DEPENDENCY_OMITTED,
 ) -> VfioLaunchResult:
     """Open a fresh cdev/IOMMUFD pair without binding either descriptor.
 
@@ -568,10 +687,22 @@ def open_vfio_launch_handles(
     """
 
     normalized = _normalize_request(request)
-    reader = state_reader or vfio.LinuxSysfsStateReader(
-        sysfs_root=SYSFS_ROOT, vfio_root=VFIO_ROOT
+    reader_was_omitted = state_reader is _DEPENDENCY_OMITTED
+    kernel_was_omitted = kernel is _DEPENDENCY_OMITTED
+    if reader_was_omitted or state_reader is None:
+        reader = vfio.LinuxSysfsStateReader(sysfs_root=SYSFS_ROOT, vfio_root=VFIO_ROOT)
+    else:
+        reader = state_reader
+    if kernel_was_omitted or kernel is None:
+        kernel_ops = PosixLaunchKernel()
+    else:
+        kernel_ops = kernel
+    production = (
+        reader_was_omitted
+        and kernel_was_omitted
+        and type(reader) is _PRODUCTION_STATE_READER_TYPE
+        and type(kernel_ops) is _PRODUCTION_LAUNCH_KERNEL_TYPE
     )
-    kernel_ops = kernel or PosixLaunchKernel()
     before = reader.capture(normalized.bdf)
     _validate_state(before, normalized.bdf)
     identity_hash = vfio.compute_identity_hash(normalized.bdf, before.identity)
@@ -579,9 +710,7 @@ def open_vfio_launch_handles(
         normalized.bdf, before.iommu_group, before.group_members
     )
     if not hmac.compare_digest(identity_hash, normalized.expected_identity_hash):
-        raise vfio.ProviderError(
-            vfio.Reason.DEVICE_IDENTITY_STALE, bdf=normalized.bdf
-        )
+        raise vfio.ProviderError(vfio.Reason.DEVICE_IDENTITY_STALE, bdf=normalized.bdf)
     if not hmac.compare_digest(group_hash, normalized.expected_group_hash):
         raise vfio.ProviderError(vfio.Reason.IOMMU_GROUP_STALE, bdf=normalized.bdf)
     if before.noiommu_node_present:
@@ -589,12 +718,10 @@ def open_vfio_launch_handles(
             vfio.Reason.DEVICE_NO_IOMMU_DMA_ISOLATION, bdf=normalized.bdf
         )
     if before.cdev_node is None:
-        raise vfio.ProviderError(
-            vfio.Reason.VFIO_CDEV_UNAVAILABLE, bdf=normalized.bdf
-        )
+        raise vfio.ProviderError(vfio.Reason.VFIO_CDEV_UNAVAILABLE, bdf=normalized.bdf)
     assert before.cdev_device_number is not None
 
-    opened: list[OpenedNode] = []
+    opened: list[object] = []
     try:
         iommu_handle = kernel_ops.open_char_node(
             IOMMUFD_PATH,
@@ -631,7 +758,7 @@ def open_vfio_launch_handles(
                 vfio.Reason.VFIO_NODE_MISMATCH,
                 bdf=normalized.bdf,
                 stage="duplicate-launch-fd",
-        )
+            )
 
         after = reader.capture(normalized.bdf)
         _validate_recheck(before, after)
@@ -657,12 +784,14 @@ def open_vfio_launch_handles(
             iommufd=iommu_handle.metadata,
             fd_binding_hash=binding_hash,
         )
-        return VfioLaunchResult(
+        return _new_launch_result(
             request=normalized,
             device_fd=cdev_handle.fd,
             iommufd_fd=iommu_handle.fd,
             metadata=metadata,
-            _kernel=kernel_ops,
+            kernel=kernel_ops,
+            production=production,
+            _seal=_RESULT_FACTORY_SEAL,
         )
     except BaseException as primary:
         try:
