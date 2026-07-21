@@ -32,6 +32,10 @@
 发布门会同时校验产品树中的 ID、父子关系、资料路径和人机文档一致性。产品树节点存在只表示
 范围已定义，不表示实现或验收完成。
 
+仓库内受合同约束的 `*.py`、`*.json` 和 `*.md` 使用 Git blob 的原始 LF 字节计算 SHA-256；
+`.gitattributes` 固定 checkout 行尾，避免 Windows CRLF 工作树把同一仓库对象误报为 evidence drift。
+历史登记从 CRLF 工作树 hash 迁移到 LF blob 时必须在对应 limitation 中声明，不能冒充实验重跑。
+
 Qman 证据门另外执行以下不可绕过规则：reference/component subject 不关闭产品状态；E2 永不
 关闭产品 Case/Risk；E3 不得关闭要求物理验证的 Risk；`SUPPORTED` 必须同时具有目标真实硬件
 E4 qualification 和产品 gate。result、runner、可选的 `sourceState.inputHashes` 或 artifact hash

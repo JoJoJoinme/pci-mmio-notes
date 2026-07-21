@@ -237,10 +237,13 @@
       ],
       "evidenceSha256": {
         "evidence/esxi8-firmware-layout-20260715-summary.json": "0e0de5d6e6b6c7fb07b3e1674809f1c6cafbbffc3e51a9f9eea114ae4f11763c",
-        "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json": "f11efcd42d515a1c0d35d63c03085223a84c0093a3ba7ec79bffd23c822c7311"
+        "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json": "44f2510f224c45aa35ca5b35c846e9f02e3c112d5ca163fa8b6710deef4c8f99"
       },
       "runnerPaths": ["vmware-esxi8-lab/README.md"],
-      "limitations": ["verified-only-for-frozen-nested-profile"]
+      "limitations": [
+        "verified-only-for-frozen-nested-profile",
+        "repository-hash-metadata-migrated-to-canonical-lf-without-rerun"
+      ]
     },
     {
       "id": "VMW-RESET-001",
@@ -339,11 +342,14 @@
         "evidence/esxi8-directpath-summary.json"
       ],
       "evidenceSha256": {
-        "evidence/esxi8-vmotion-20260711-summary.json": "ec0dd99124544055faa6b608becd53a7504d6af282b2638062ce0cf10806859c",
-        "evidence/esxi8-directpath-summary.json": "d27aa5ceba7f133d4649408e69835959f24984394ac574357d18d9680eaa3171"
+        "evidence/esxi8-vmotion-20260711-summary.json": "00e4006789549a6e2860107ec1a01c56adfd0811da4ea5038db3d7b6f658cfba",
+        "evidence/esxi8-directpath-summary.json": "a2d45a6ad645892e0609a022b9c2b8a15cafa34f158b66a5c1ccad0ee6c220fe"
       },
       "runnerPaths": ["vmware-esxi8-lab/test_esxi_dynamic_directpath.py"],
-      "limitations": ["homogeneous-two-host-lab"]
+      "limitations": [
+        "homogeneous-two-host-lab",
+        "repository-hash-metadata-migrated-to-canonical-lf-without-rerun"
+      ]
     },
     {
       "id": "VMW-CLUSTER-001",
@@ -361,10 +367,13 @@
       "legacyIds": ["X03"],
       "evidencePaths": ["evidence/esxi8-vmotion-20260711-summary.json"],
       "evidenceSha256": {
-        "evidence/esxi8-vmotion-20260711-summary.json": "ec0dd99124544055faa6b608becd53a7504d6af282b2638062ce0cf10806859c"
+        "evidence/esxi8-vmotion-20260711-summary.json": "00e4006789549a6e2860107ec1a01c56adfd0811da4ea5038db3d7b6f658cfba"
       },
       "runnerPaths": ["vmware-esxi8-lab/README.md"],
-      "limitations": ["homogeneous-two-host-lab"]
+      "limitations": [
+        "homogeneous-two-host-lab",
+        "repository-hash-metadata-migrated-to-canonical-lf-without-rerun"
+      ]
     },
     {
       "id": "VMW-CLUSTER-FENCE-001",

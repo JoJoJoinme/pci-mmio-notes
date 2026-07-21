@@ -11,7 +11,7 @@
     "dirtyWorkingTree": true,
     "runnerHashes": {
       "qemu-q35-ovmf-dual-64g-validate.sh": "b3955921cadc04b8a28160f33f76c75b1c736b936af6ede1ec669bec40e0fefd",
-      "vmware-esxi8-lab/qemu-esxi8-monitor-command.py": "cb551246c51a267d8217acab169b4dbcc421f88264b57e43b045176d7fa8b9df"
+      "vmware-esxi8-lab/qemu-esxi8-monitor-command.py": "0bbebba742dc1ecff9d8d068e6637cb291071105af86848cab5addd24c22a977"
     }
   },
   "sut": {
@@ -101,6 +101,7 @@
   "limitations": [
     "Synthetic pci-testdev BARs validate resource semantics but do not qualify a physical device or firmware platform.",
     "The result proves QEMU/OVMF behavior; Qman has not yet persisted plan/observedPlan or implemented rollback on mismatch, so M23 is not a product pass.",
-    "The q35 alias was resolved to pc-q35-11.0 for this run and must be pinned in a production profile."
+    "The q35 alias was resolved to pc-q35-11.0 for this run and must be pinned in a production profile.",
+    "The runner digest was migrated from a Windows CRLF working-tree hash to the repository-canonical LF blob on 2026-07-21; this metadata correction is not an experiment rerun."
   ]
 }

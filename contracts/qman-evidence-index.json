@@ -83,7 +83,7 @@
     {
       "id": "QMAN-E3-MMIO-OBSERVED-001",
       "resultPath": "evidence/qman-qemu-mmio-observed-20260721-summary.json",
-      "resultSha256": "56691db82a794f007eb6109bfa3771111ca66fc4b2e62a42748878361c889326",
+      "resultSha256": "86047920fd4973c12692b4979c7db8ce287e73eb28d3763c60b08f42e00c9154",
       "subject": "QEMU_FIRMWARE_REFERENCE",
       "evidenceGrade": "E3",
       "verdict": "PASS",

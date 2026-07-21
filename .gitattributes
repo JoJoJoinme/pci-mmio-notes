@@ -1,3 +1,6 @@
 *.sh text eol=lf
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf
 kernel-patches/*.patch text eol=lf
 evidence/*.json text eol=lf
