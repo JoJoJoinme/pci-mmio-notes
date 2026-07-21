@@ -17,9 +17,10 @@ model, mapped across all 39 Tech Stories, in
 Qman/reference-side technical evidence is tracked separately in
 [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md) and the
    machine-readable [`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json).
-The current seven E2/E3 records—five `REFERENCE_ONLY` and two `COMPONENT_ONLY`—
+The current eight E2/E3 records—five `REFERENCE_ONLY` and three `COMPONENT_ONLY`—
 reproduce design premises, including the bounded C20 capability closure, and verify
-bounded default-deny QMP and per-device VFIO/IOMMUFD provider components. None
+bounded default-deny QMP, per-device VFIO/IOMMUFD provider, and host-local Static
+lease/FSM fault components. None
 closes a Qman product Case, physical Risk, or production support claim.
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
@@ -84,8 +85,9 @@ hot-reset ownership 公开源码、兼容 ACS override 部署的 QEMU 参考设�
 OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable evaluator。模型已将
 宿主 DPDK 的 unsafe no-IOMMU 允许位与 VM payload 的 per-device IOMMU gate 分离，并用
 `hostReservation` 把 dataplane BDF 排除出 Static/Dynamic 候选池。机器可读
-验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。它不包含生产 attach
-executor、durable lease、rollback/quarantine、Dynamic solver 或 multi-host fencing；完整边界
+验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。目录现已包含 standalone
+SQLite Static lease/FSM 组件，但仍不包含生产 attach/controller、真实 cleanup provider、
+Dynamic solver 或 multi-host fencing；完整边界
 以 [`PROJECT-STATUS.md`](PROJECT-STATUS.md) 和详细设计第 22 节为准。
 
 上述 no-IOMMU 分流另有真实 QEMU/Linux provider A/B：两个 guest 都保持 unsafe switch=`Y`，
@@ -97,6 +99,13 @@ executor、durable lease、rollback/quarantine、Dynamic solver 或 multi-host f
 [`evidence/qman-vfio-provider-gate-20260721-summary.json`](evidence/qman-vfio-provider-gate-20260721-summary.json)。
 该 standalone 结果的 snapshot 语义仅为 `CALLER_CORRELATION_ONLY`，且关闭 fd 后不冒充 QEMU
 handoff，因此仍不构成 C21、R27 或生产 launcher/lease 的完成证据。
+
+Static 事务另有独立的 host-local persistence/CAS/FSM fault 组件：WSL 原生文件系统上的 7 个
+真实 subprocess、`os._exit`、双进程争抢和 `SIGKILL` 场景证明 SQLite commit 前后不会产生
+部分 claim，并在 cleanup 不确定时保留 whole-bundle quarantine；见
+[`evidence/qman-static-lease-fault-20260721-summary.json`](evidence/qman-static-lease-fault-20260721-summary.json)。
+其中 bind/reset/QEMU 只是模拟阶段标签，`cleanup_verified` 是受信测试断言，故该证据不关闭
+S03/S04/S05/F00，也不替代生产 controller、pidfd、真实 DMA/IRQ/reset/owner clean-state 证明。
 ESXi 侧另有 Workstation 实际负控：vmkernel 明确记录 DMAR 缺失/IOMMU unavailable，45/45
 `HostPciPassthruInfo` 均 incapable，包括带 Function/Bridge reset 的 USB 与网卡；见
 [`evidence/esxi8-workstation-noiommu-20260718.md`](evidence/esxi8-workstation-noiommu-20260718.md)。

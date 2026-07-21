@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E3-STATIC-LEASE-FAULT-001",
+  "observedAt": "2026-07-21T04:10:39Z",
+  "subject": "QMAN_COMPONENT",
+  "evidenceGrade": "E3",
+  "claimBoundary": "COMPONENT_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "cb8654b870228690e6c38ff0842edbc3622b638e",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-lab/test_static_lease_faults.py": "26e72a269751ee740b9cbe028c8b75eacfeda876c196d0ff9e63db48e1681998"
+    },
+    "inputHashes": {
+      "pci-resource-model/pci_resource_model/static_lease.py": "5ff2b8dcce793a68517fb1a13026ff78591a4eee3d5577e5ba9c9a351e19c687"
+    }
+  },
+  "sut": {
+    "environment": "WSL2 Ubuntu 22.04 native ext4 state, Python 3.10.12, real subprocess/os._exit/SIGKILL faults, and retained checkpoint copies on DrvFS",
+    "components": [
+      {
+        "name": "Qman StaticLeaseStore component",
+        "version": "214467ccee4f057d0134b2a9cb52d3a35d029cbc schema-v3",
+        "sha256": "5ff2b8dcce793a68517fb1a13026ff78591a4eee3d5577e5ba9c9a351e19c687"
+      },
+      {
+        "name": "SQLite",
+        "version": "3.37.2 WAL synchronous=FULL"
+      },
+      {
+        "name": "Linux kernel",
+        "version": "6.6.123.2-microsoft-standard-WSL2+"
+      }
+    ]
+  },
+  "hypotheses": [
+    "A host-local Static lease component must atomically persist VM generation, complete-bundle claims, member claims, transaction state and journal before any external side effect.",
+    "A process death before SQLite commit must leave no partial begin or release state, while an uncertain post-prepare or post-attach outcome must retain the complete bundle claim and quarantine it.",
+    "Authority, host, bundle and device-generation namespaces must be durable CAS inputs so concurrent or stale requests cannot splice facts or double-allocate an overlapping member."
+  ],
+  "observations": [
+    {
+      "name": "component-contract-and-independent-audit",
+      "result": {
+        "windowsResourceModelTests": 165,
+        "windowsLinuxOnlySkips": 1,
+        "wslResourceModelTests": 165,
+        "staticLeaseFocusedTests": 26,
+        "independentP0Findings": 0,
+        "independentP1Findings": 0
+      }
+    },
+    {
+      "name": "native-state-provenance-and-source-pinning",
+      "result": {
+        "persistenceBoundary": "LOCAL_FILESYSTEM_COMPONENT_PERSISTENCE_ONLY",
+        "liveDatabaseUnderMnt": false,
+        "drvfsStateRootRejected": true,
+        "schemaVersion": 3,
+        "trustedHostAndAuthorityPersisted": true,
+        "sourceHashCheckedInEveryChild": true,
+        "retainedArtifactHashes": 37,
+        "retainedArtifactHashMismatches": 0,
+        "retainedSqliteIntegrityFailures": 0
+      }
+    },
+    {
+      "name": "precommit-process-death-is-atomic",
+      "result": {
+        "beginHardExitCode": 91,
+        "beginTransactionResidue": 0,
+        "beginJournalResidue": 0,
+        "beginClaimResidue": 0,
+        "beginVmGenerationAfterCrash": 0,
+        "releaseHardExitCode": 92,
+        "releaseStateClaimsJournalAndGenerationsUnchanged": true
+      }
+    },
+    {
+      "name": "overlapping-multiprocess-bundle-cas",
+      "result": {
+        "childProcesses": 2,
+        "successfulReservations": 1,
+        "deniedReservations": 1,
+        "denialReason": "MEMBER_BUSY",
+        "committedTransactions": 1,
+        "bundleClaims": 1
+      }
+    },
+    {
+      "name": "bounded-static-fault-premises",
+      "result": {
+        "S03": "simulated bind-failure label plus test-only cleanup assertion atomically advanced both generations and released claims",
+        "S04": "simulated reset-verification failure quarantined the complete bundle and retained claims",
+        "S05": "missing cleanup evidence after a simulated QEMU-start label quarantined the complete bundle and retained claims",
+        "F00": "a real SIGKILL of an ATTACHED Python owner left durable state; UNSAFE_OR_UNKNOWN reconcile quarantined the bundle and retained claims",
+        "actualBindResetVfioOrQemuOperations": false
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F3-02", "TS-F3-05", "TS-F5-03", "TS-F5-04"],
+    "caseIds": ["S03", "S04", "S05", "F00"],
+    "riskIds": ["R04", "R05", "R11"]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/summary.json",
+      "sha256": "a93f104b139f28431c1449c98566fd7f4148f2379e93eda25e521dde67cb2f55",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/hashes.json",
+      "sha256": "1bd5873193fe71c0daf32535da712ac1cab7b86555cd90e2972b6d4698021d7b",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/F00/lease.sqlite3",
+      "sha256": "c19881af4baee14c7f0ecdc35dba688d1876482ad8f589c4d0dea23c3f10d670",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/concurrent-overlap/lease.sqlite3",
+      "sha256": "067923c466708c9614f09dfb2a0de8aa1bbf0091412a2548a90e30df9099f4b5",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/release-hard-exit/lease.sqlite3",
+      "sha256": "2f8149cf14349f51d114faad59ee114a05b72c2d1a62ca5dd7aa3df41fe91f37",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This is a standalone persistence/CAS/FSM component, not a production Static controller or end-to-end launch path. S03, S04, S05 and F00 remain IMPLEMENTATION_BLOCKED.",
+    "Bind, reset, VFIO, QEMU start and cleanup-verification phases are simulated labels. The S03 cleanup_verified input is a trusted test assertion, not independently authenticated device-clean evidence.",
+    "The F00 SIGKILL target is a Python owner process, not QEMU. No pidfd identity, VFIO ownership, DMA/IRQ teardown, reset, driver restoration or physical-device clean state was proved.",
+    "The fixed lab authority traverses the schema-v3 trusted_authority_id gate, but the experiment does not prove the G1 authoritative inventory publisher or trust root.",
+    "SQLite WAL/FULL on an allowlisted local filesystem proves this component's transaction behavior; it does not prove end-to-end power-loss durability, storage-controller flush semantics or multi-host fencing.",
+    "No product Case, Risk, milestone, HCL entry or support claim is closed by this result."
+  ]
+}

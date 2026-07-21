@@ -12,10 +12,13 @@
     "TS-F5-04"
   ],
   "dependsOnCaseIds": ["S05"],
-  "blocker": "There is no production pidfd/systemd-scope identity, durable crash journal, kernel-owner reconciliation, verified DMA/IRQ teardown, release reset, or whole-bundle quarantine workflow wired to the Static controller. A component state machine or a QMP-channel test cannot prove SIGKILL recovery for a real assignment.",
+  "blocker": "A standalone durable journal/FSM now proves fail-closed reconciliation after SIGKILL of a Python owner proxy, but there is no production pidfd/systemd-scope identity, kernel-owner reconciliation, verified DMA/IRQ teardown, release reset, or whole-bundle recovery workflow wired to a real QEMU assignment.",
   "targetMilestone": "G2",
   "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
-  "referenceEvidenceIds": ["QMAN-E3-QMP-GATE-001"],
+  "referenceEvidenceIds": [
+    "QMAN-E3-QMP-GATE-001",
+    "QMAN-E3-STATIC-LEASE-FAULT-001"
+  ],
   "assertions": [
     "QEMU death is identified by a non-reusable process identity rather than a PID-only check",
     "process absence alone never proves that VFIO ownership, DMA or IRQ state is clean",

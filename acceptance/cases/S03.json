@@ -13,10 +13,13 @@
     "TS-F5-04"
   ],
   "dependsOnCaseIds": ["C21"],
-  "blocker": "C21 provides only component-level VFIO provider premises. A production Static controller has not yet proven durable whole-bundle lease CAS, mutation journaling, original-owner restoration, reverse compensation, or post-rollback identity/DMA/IRQ verification under an injected mid-bind failure.",
+  "blocker": "Standalone VFIO-provider and durable lease/FSM components now provide bounded premises, but a production Static controller has not integrated authoritative inventory, real bind/reset compensation, original-owner restoration, or post-rollback identity/DMA/IRQ verification under an injected mid-bind failure.",
   "targetMilestone": "G2",
   "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
-  "referenceEvidenceIds": ["QMAN-E3-VFIO-PROVIDER-GATE-001"],
+  "referenceEvidenceIds": [
+    "QMAN-E3-VFIO-PROVIDER-GATE-001",
+    "QMAN-E3-STATIC-LEASE-FAULT-001"
+  ],
   "assertions": [
     "the complete authoritative dependency bundle is leased before the first bind side effect",
     "an injected failure after any member bind runs compensations in reverse order",

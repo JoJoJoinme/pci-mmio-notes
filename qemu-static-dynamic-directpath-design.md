@@ -3301,12 +3301,14 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | `QMAN-E3-QMP-GATE-001` | E3 / Qman component | 27 个请求精确审计；独立 recorder 只见 3 次内部 capability 与 7 次只读 query，17 类拒绝未进入 backend；PCI tree、QEMU/gate fd 基线不变 | QMP 默认拒绝必须解析后重建、使用私有 backend ID、两阶段审计、拒绝 SCM_RIGHTS，并以外部 recorder 验证 | production launcher/controller/lease/generation/VFIO 与 API/CLI/storage/alternate-monitor 全入口；S15/F09、R17/R26/R37 |
 | `QMAN-E3-DMA-PROVIDER-001` | E3 / QEMU+Guest+VFIO reference | unsafe=`Y` 时 `noiommu-*` 与 IOMMU-backed group/cdev 仍可逐设备区分 | VM attach provider 必须逐设备证明 DMA provider；不能按全局 unsafe switch 整机放行或整机拒绝 | C21 产品场景、物理 IOMMU/IR/errata、IOMMUFD attach |
 | `QMAN-E3-VFIO-PROVIDER-GATE-001` | E3 / Qman component | 双 guest 中 no-IOMMU 稳定拒绝；IOMMU-backed cdev 真实完成 IOMMUFD bind、IOAS attach、identity/group hash 二次复核和 cleanup；snapshot/topology 为 caller correlation | 产品 launcher 不能复用已关闭/已 pre-attach session；必须传 fresh raw fd，由 stock QEMU 内部 bind/attach 并观察后提交 | authoritative snapshot、durable lease/launcher/generation、物理 IOMMU/IR/errata E4；C21/R27 |
+| `QMAN-E3-STATIC-LEASE-FAULT-001` | E3 / Qman component | WSL 原生 ext4 上 7/7 subprocess/SQLite 场景通过：begin/release commit 前硬退出原子回滚、重叠 bundle 单 winner、SIGKILL/unknown cleanup 保留 whole-bundle quarantine | host/authority namespace、bundle/member/VM/device generation CAS、journal 与 claim 必须在副作用前同事务持久化；进程消失永不等于 cleanup 证据 | bind/reset/QEMU/pidfd/DMA/IRQ/driver clean-state 和产品接线；S03/S04/S05/F00、R04/R05/R11 均未关闭 |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 / QEMU+firmware reference | QEMU 11/OVMF 双 64 GiB BAR：默认 0/2 分配；128 GiB firmware aperture 与 QEMU floor 配对后 2/2 且 heartbeat | 分开持久化 required span、firmware aperture、QEMU floor、observed runtime window；不把 floor 当 hard cap | M23 产品 post-start commit/rollback、物理 BAR qualification |
 
-七条结果中 5 条是 reference、2 条是 component，`closureEffect` 全部为空；Risk 状态继续保持
-`OPEN`，G0/release 继续 `BLOCKED`。该边界很重要：QMP/VFIO components 分别只证明受控 monitor
-端点和独立 provider probe，仓库中尚无完整 Qman controller/authoritative snapshot/durable lease/
-产品 launcher 与全入口隔离，不能据此宣告产品 QMP/CLI/storage 绕过已封堵、C21 已关闭、VFIO
+八条结果中 5 条是 reference、3 条是 component，`closureEffect` 全部为空；Risk 状态继续保持
+`OPEN`，G0/release 继续 `BLOCKED`。该边界很重要：QMP/VFIO/Static lease components 分别只证明
+受控 monitor 端点、独立 provider probe 和 host-local persistence/CAS/FSM；仓库中尚无完整 Qman
+controller/authoritative snapshot/真实 cleanup provider/产品 launcher 与全入口隔离，不能据此宣告
+产品 QMP/CLI/storage 绕过已封堵、C21 或 S03/S04/S05/F00 已关闭、VFIO
 Static attach 已安全或设备已进入兼容性列表。
 
 ## 19. 验收矩阵
@@ -3336,7 +3338,7 @@ Static attach 已安全或设备已进入兼容性列表。
 | C18 | stale `ResetContract` | epoch/topology/rule 任一变化即不可选择 | reference evaluator E2 已通过；产品 provider/执行前重检待实现 |
 | C19 | kernel native shadow domain | override-on shadow domain 是 override-off stock/alias constraint 的相等或保守超集；unknown component 拒绝 | phase-1 provenance patch 已构建；shadow ABI 待实现 |
 | C20 | capability closure 前置与 reset/action 固定点 | mandatory dependency 无 reset/action/qualification 时 target capable=false；同 bundle free/busy A/B 只改变 available，不改变 capable/bundle hash | `QMAN-E2-CLOSURE-001` / 22 个 reference Case 已通过；产品 publisher/verifier/controller 与 R38 仍未关闭 |
-| C21 | global unsafe switch 与逐设备 DMA provider A/B | 相同 device 在 unsafe=`Y` 时：`noiommu-*` 稳定拒绝；IOMMU-backed group/cdev 才可继续 attach admission；全局开关本身不改变设备 capable | QEMU/Guest/VFIO E3 A/B、Qman provider component 与 E3 component evidence 已有；仍缺 authoritative snapshot、durable lease/stock-QEMU 产品 launcher observation、产品集成证据和物理 E4，Case 保持 `IMPLEMENTATION_BLOCKED` |
+| C21 | global unsafe switch 与逐设备 DMA provider A/B | 相同 device 在 unsafe=`Y` 时：`noiommu-*` 稳定拒绝；IOMMU-backed group/cdev 才可继续 attach admission；全局开关本身不改变设备 capable | QEMU/Guest/VFIO E3 A/B、Qman provider 与 standalone lease components 已有；仍缺 authoritative snapshot、lease/stock-QEMU 产品 launcher observation 的集成证据和物理 E4，Case 保持 `IMPLEMENTATION_BLOCKED` |
 
 ### 19.2 Host owner activation
 
@@ -3362,9 +3364,9 @@ Static attach 已安全或设备已进入兼容性列表。
 | S00 | exact identity start/stop | 固定 backing、完整 lease、clean release | 部分已有 |
 | S01 | BDF 相同但 identity 变化 | fail-closed | 待实现 |
 | S02 | dependency busy | available=false，不改变 capable | 已有 evaluator |
-| S03 | bind 中途失败 | 原 driver/lease 全回滚 | 待实现 |
-| S04 | reset 失败 | quarantine，不回 free | 待实现 |
-| S05 | QEMU 启动失败 | fd/IOMMU/driver/lease 逆序清理 | 待实现 |
+| S03 | bind 中途失败 | 原 driver/lease 全回滚 | standalone lease 原子性前提已通过；真实 bind/owner restore/clean-state 产品集成待实现 |
+| S04 | reset 失败 | quarantine，不回 free | simulated failure label 的 whole-bundle quarantine 前提已通过；真实 reset executor/验证待实现 |
+| S05 | QEMU 启动失败 | fd/IOMMU/driver/lease 逆序清理 | missing-cleanup quarantine 前提已通过；真实 QEMU/fd/IOMMU/driver cleanup 待实现 |
 | S06 | guest reboot traffic | 同设备继续工作 | 已有 ESXi |
 | S07 | forced VM off | DMA/IRQ 清理后可复用 | 已有嵌套；controller 待实现 |
 | S08 | 十次复用 | 无 stale DMA/interrupt/state | 已有嵌套；物理待验收 |
@@ -3374,7 +3376,7 @@ Static attach 已安全或设备已进入兼容性列表。
 | S12 | reset 后 state probe 失败 | affected set 整体 quarantine，lease 不回 FREE | 待 controller/fault injection |
 | S13 | Qman API 设置 fixed-hotplug flag | `FEATURE_DISABLED/HOTPLUG_UNSUPPORTED`；VM definition 不变 | 产品决策冻结；API gate 待实现 |
 | S14 | Dynamic VM 运行中请求换 backing | 稳定拒绝；`assignedId`、lease、guest function 不变 | 产品决策冻结；controller gate 待实现 |
-| S15 | raw QMP `device_add`/`device_del` | QMP proxy/ACL 拒绝；QEMU device tree 和 VFIO fd 数不变 | QMP component negative gate 已通过；必须先完成 C21 + durable lease/fd-only Static，再验证 production launcher/lease/generation/VFIO 与唯一 monitor |
+| S15 | raw QMP `device_add`/`device_del` | QMP proxy/ACL 拒绝；QEMU device tree 和 VFIO fd 数不变 | QMP 与 standalone lease components 已通过；必须先完成 C21 + integrated fd-only Static，再验证 production launcher/lease/generation/VFIO 与唯一 monitor |
 | S16 | 并发/重复 hotplug 绕过请求 | 所有入口均失败，assignment generation、BAR window、DMA/IRQ owner 不变 | fault/bypass matrix 待实现 |
 
 ### 19.4 Dynamic matcher 与 solver
@@ -3430,7 +3432,7 @@ Static attach 已安全或设备已进入兼容性列表。
 
 | ID | 用例 | 通过条件 | 当前状态 |
 | --- | --- | --- | --- |
-| F00 | QEMU SIGKILL | cleanup 后复用或 quarantine | 待 controller；嵌套 host crash 已有 |
+| F00 | QEMU SIGKILL | cleanup 后复用或 quarantine | Python owner SIGKILL + durable quarantine 组件前提已通过；真实 QEMU/pidfd/cleanup controller 待实现 |
 | F01 | host agent SIGKILL | lease 保留，重启 reconcile | 待实现 |
 | F02 | lease store 短时不可用 | 不产生无租约 attach | 待实现 |
 | F03 | host power loss | 未 fence 不在其他 host 重启 | 待实现 |
@@ -3534,15 +3536,15 @@ Static run 上证明唯一 monitor 的 mutation 不改变 lease/VFIO/topology；
 | capable evaluator | `capability.py` 已有 role、per-device DMA mode、host dataplane reservation、isolation/reset-policy/availability/VM-fit 基线；全局 unsafe switch 只告警，no-IOMMU/unknown payload 硬拒绝；尚缺第 7.5 节其余完整 gate、admin activation、精确 qualification 和 operation matrix |
 | dependency closure | 已合并 kernel group、physical domain、reset estimate、multifunction 和 platform dependency；尚缺 requester alias、PF/VF、functional rule、member action 与 edge provenance |
 | Linux sysfs inventory | 已有只读 scanner，能区分普通 group、`noiommu-*` 反例和 ambiguous group；snapshot publish/CAS、health/generation 和 authoritative attach provider facts 尚未实现 |
-| VFIO DMA provider 分流 | `pci_resource_model/vfio_provider.py` 已实现 cdev/IOMMUFD bind+IOAS attach+二次复核、no-IOMMU 初始/竞态拒绝、fail-closed cleanup，以及显式 lab-only TYPE1v2/TYPE1；其 snapshot epoch/topology 仅为 caller correlation。尚缺 authoritative snapshot publisher、durable lease、stock-QEMU 产品 launcher/内部 attach observation 和物理 E4，因此 C21 未关闭 |
+| VFIO DMA provider 分流 | `pci_resource_model/vfio_provider.py` 已实现 cdev/IOMMUFD bind+IOAS attach+二次复核、no-IOMMU 初始/竞态拒绝、fail-closed cleanup，以及显式 lab-only TYPE1v2/TYPE1；其 snapshot epoch/topology 仅为 caller correlation。standalone lease component 已有但尚未接线；仍缺 authoritative snapshot publisher、stock-QEMU 产品 launcher/内部 attach observation 和物理 E4，因此 C21 未关闭 |
 | mandatory ACS override provenance | phase-1 native/effective/source patch 已完整构建但未运行；authoritative native shadow-domain ABI 尚未实现；当前 userspace estimate 还会在单点 provenance 缺失时全局失效，不能进入 production trusted sources |
 | reset affected set | 当前只按 sysfs parent 生成 `estimated` 集合，不能用于生产通过路径；`VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` discovery/re-query/execute provider 尚未实现 |
 | BAR sizing、root MMIO allocator | `allocator.py` 已实现 BAR 归一化、alignment、low/high root pool 和事务失败测试 |
 | 多级 bridge resource planner | 第 12.2 节完整树/精确 solver/renderer/observed-plan verifier 尚未实现；当前 root result 不能冒充完整 admission proof |
-| 静态 `eligible/available/attachable` | reference model 与独立 VFIO provider component 已实现并测试；第 9.5/9.6 节 durable bind/reset/fresh raw fd/stock-QEMU attach observation/rollback controller 尚未实现 |
+| 静态 `eligible/available/attachable` | reference model、独立 VFIO provider 与 host-local lease/FSM components 已实现并测试；第 9.5/9.6 节 authoritative snapshot、durable bind/reset/fresh raw fd/stock-QEMU attach observation/真实 rollback controller 尚未实现 |
 | Dynamic matcher/solver | 第 10 节详细算法已定，尚未实现 |
-| durable lease/host agent | 尚未实现；当前 provider CLI 是 acquire/recheck/cleanup probe，任何脚本运行结果都不是 durable ownership proof，也不能把已关闭或已 pre-attach session 交给 stock QEMU |
-| bind/reset rollback/quarantine | 尚未实现 |
+| durable lease/host agent | schema-v3 host-local SQLite lease/CAS/FSM component 与 subprocess crash gate 已实现；production authority/owner/pidfd/clean-state provider 和 host-agent 接线尚未实现。provider CLI 仍只是 probe，已关闭或已 pre-attach session 不能交给 stock QEMU |
+| bind/reset rollback/quarantine | journal/claim/generation/quarantine 的 persistence 语义已有；真实 bind/reset/driver restore/DMA/IRQ cleanup 与补偿执行器尚未实现 |
 | multi-host coordinator/fencing | 尚未实现 |
 | firmware/layout resolver | VMware LF00-LF06 与 QEMU 七 profile 已验证；产品化 resolver、持久 provenance 和稳定 Qman guest ABI profile 尚未实现；strict VMware topology 非产品目标 |
 | AER/PME/ROM QEMU parity | lab patch/验证已有，尚未产品化 |
@@ -3788,9 +3790,9 @@ flowchart TB
 | 8.5 dependency bundle | `capability.py::_dependency_closure` | 五类集合的基础 closure | edge provenance、requester alias、PF/VF、functional rule、member action | C07、C13、D03、D14 |
 | 3.4 host activation | `activation.py` + `test_activation.py` | desired/effective 分离、完整 bundle 四态 planner 与 fail-closed A/B 单测 | durable activation journal、live owner executor、exact early-boot claim/reconcile | O00-O09、R39 |
 | 12.2 allocator | `pci_resource_model/allocator.py` | root low/high pool、BAR alignment、事务失败、QEMU floor/runtime projection | 完整 guest tree、逐桥 window、exact solver、backend renderer、observed verifier | M00-M03、M18-M23 |
-| 9 static transaction | 设计/实验脚本 + VFIO/QMP components | provider probe 与单端点 QMP 负门 | durable controller、fresh raw cdev/IOMMUFD fd-only launch、stock-QEMU bind/attach observation、activation/rollback/quarantine、manifest commit；root-port 双属性关闭 hotplug | O00-O09、S00-S16、F00、F09 |
+| 9 static transaction | `static_lease.py` + fault runner + VFIO/QMP components | host-local schema-v3 lease/CAS/FSM、subprocess crash/quarantine、provider probe 与单端点 QMP 负门 | production controller、fresh raw cdev/IOMMUFD fd-only launch、stock-QEMU bind/attach observation、真实 activation/rollback/cleanup、manifest commit；root-port 双属性关闭 hotplug | O00-O09、S00-S16、F00、F09 |
 | 10 Dynamic | VMware 黑盒证据和本节伪代码 | matcher/assignedId 外部语义已知 | candidate builder、global solver、atomic reservation、runtime binding | D00-D14 |
-| 11/15 ownership/recovery | 尚无产品模块 | 状态机和风险合同已定 | SQLite/CAS 单 host lease、pidfd reconcile、generation、quarantine workflow | D09-D11、F00-F04 |
+| 11/15 ownership/recovery | `static_lease.py` component | SQLite/CAS 单 host lease、generation、journal、typed reconcile 与 whole-bundle quarantine 前提 | product authority/owner/pidfd/clean-state provider 接线、真实 recovery workflow 与 multi-host fencing | D09-D11、F00-F04 |
 | 12.3/13 profile surface | firmware 七 profile、AER/PME/ROM lab patch | 黑盒与 QEMU 分项证据 | versioned resolver/QOM policy/custom machine 或明确 backend gap | M05-M17、F09 |
 
 ### 25.4 建议的实现提交顺序
@@ -3803,14 +3805,14 @@ flowchart TB
    provenance 和 dependency edge/action manifest。
 4. 实现完整 guest tree 和 exact allocator，以 M18-M23 阻止 root-only/floor-as-cap 结果被误用；
    renderer 强制 DirectPath root-port 的两个 hotplug-off 属性。
-5. 实现单 host durable lease、owner activation executor 与 stock-QEMU fd-only Static：传 fresh raw
-   cdev/IOMMUFD fd，由 QEMU 内部 bind/attach，所有副作用接入统一 rollback 栈。
+5. 把已有单 host durable lease/FSM component 接到 owner activation executor 与 stock-QEMU fd-only
+   Static：传 fresh raw cdev/IOMMUFD fd，由 QEMU 内部 bind/attach，所有真实副作用接入统一 rollback 栈。
 6. 在 Static 正向/故障注入通过后先关闭 S15：唯一 monitor、QMP mutation 对 lease/VFIO/topology
    零变化；随后关闭 F09 的 API/CLI/QMP/storage/alternate-monitor/fd-injection 全入口矩阵。
 7. 再复用事务 core 实现 Dynamic matcher/solver，最后接入 multi-host fencing 和 parity surface；
    每一步都由第 18 节 risk gate 控制暴露。
 
-因此当前关键路径可简写为 `C21 -> durable lease/Static -> S15 -> F09`。任何 component-only 或
+因此当前关键路径可简写为 `C21 -> standalone lease premise -> integrated Static -> S15 -> F09`。任何 component-only 或
 单入口负例都不能越级关闭后续产品 Case。
 
 每个提交都必须保持尚未完成的 capability 为 `FEATURE_DISABLED`。不允许先开放 raw QEMU/VFIO

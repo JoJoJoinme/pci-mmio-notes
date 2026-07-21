@@ -164,7 +164,25 @@ claim 后才可接受该结果。Capability evaluator 默认拒绝一个 VM payl
 `--qualified-shared-attach-group <exact-group-id>` 精确列出，不存在全局 allow 开关。运行中 guest
 PCI hotplug 永久不在此模型范围内。
 
-## 5. CLI
+## 5. 有界 VFIO 与 Static components
+
+[`vfio_provider.py`](pci_resource_model/vfio_provider.py) 是独立的逐设备 provider gate：它对
+no-IOMMU node 稳定拒绝，并可在 lab/component 模式真实执行 VFIO cdev + IOMMUFD bind、IOAS
+attach 与逆序 cleanup。它不是产品 launcher；CLI probe 完成后会关闭 fd，pre-attached session
+也不能直接交给 stock QEMU。
+
+[`static_lease.py`](pci_resource_model/static_lease.py) 是 schema-v3 host-local SQLite lease/CAS/FSM
+component。数据库固定 `local_host_id` 与单一 `trusted_authority_id`，完整 bundle、member claim、
+VM/device generation、transaction 和 journal 使用 `BEGIN IMMEDIATE` 原子更新；只有上层声明
+`cleanup_verified=True` 并提供下一代 generation/authority epoch 时才释放，否则保留 whole-bundle
+quarantine。默认只接受 allowlist 中的本地文件系统；`/mnt/e`/9p、tmpfs、overlay、FUSE、NFS/CIFS
+等不作为 normal durable boundary。
+
+这两个 component 仍未互相接线，也未实现 production authoritative publisher、真实 bind/reset/
+driver restore、fresh raw fd-only stock-QEMU handoff、pidfd、DMA/IRQ clean-state provider 或多主机
+fencing。故它们只能提供组件前提，不能关闭 C21、S03/S04/S05/F00 或任何 Risk。
+
+## 6. CLI
 
 只读扫描当前 Linux host：
 
@@ -234,7 +252,7 @@ python3 -m pci_resource_model capable \
 所有地址范围的 `END` 都是 exclusive。对真实 QEMU VM，应从 machine/firmware 已保留的
 PCI root windows 构造这些输入，而不是把示例地址硬编码进生产。
 
-## 6. 测试
+## 7. 测试
 
 ```bash
 PYTHONPATH=pci-resource-model \
@@ -254,8 +272,15 @@ python3 -m unittest discover -v -s pci-resource-model/tests
 - desired/effective owner 分离、request-to-owner-group expansion、idle/transient/persistent busy A/B、
   shared attach collision、stale identity、foreign lease、host-critical、early-boot claim 和
   disable/rebind activation。
+- Static schema-v3 host/authority scope、bundle/member/VM/device generation CAS、同 epoch ABA、并发
+  winner、commit 前崩溃原子性、精确 replay、reconcile、whole-bundle quarantine 和 filesystem gate。
 
-## 7. 当前边界
+完整单元测试当前为 165 个（Windows 有 1 个 Linux-only tmpfs skip，WSL 为 165/165）。真实
+subprocess/`os._exit`/`SIGKILL` fault runner 位于
+[`../qman-lab/test_static_lease_faults.py`](../qman-lab/test_static_lease_faults.py)；它在 WSL 原生
+文件系统创建 live DB，并明确把 bind/reset/QEMU 标为模拟阶段标签。
+
+## 8. 当前边界
 
 - 直接探测只覆盖 standard BAR0-BAR5，不含 ROM、SR-IOV VF BAR和 Resizable BAR支持集合。
 - sysfs scanner 不执行 VFIO hot-reset ioctl；override physical domain 依赖定制内核 provenance，
@@ -265,7 +290,7 @@ python3 -m unittest discover -v -s pci-resource-model/tests
   qualification/policy store 发布 evidence object，并由产品 verifier 验证。
 - allocator 计算 root-level aperture demand，不复刻 OVMF 的完整多级 bridge window算法。
 - QEMU 参数是启动前需求；启动后仍必须核对 guest BAR、ACPI `_CRS`、IOMMU map 和中断。
-- activation 目前只有无副作用 planner；durable journal、live driver transition、exact early-boot
-  claim 和 boot reconcile 属于 Qman host agent 实现，不由本 reference model 执行。
+- activation 目前只有无副作用 planner；Static component 有独立 durable journal，但 live driver
+  transition、exact early-boot claim、可信 cleanup provider 和 boot reconcile 尚未接入 Qman host agent。
 - 本环境只有 WSL synthetic PCI，可验证只读扫描和算法，不能替代真实设备写全 1 sizing、
   电气 reset 或物理 ACS 验收。

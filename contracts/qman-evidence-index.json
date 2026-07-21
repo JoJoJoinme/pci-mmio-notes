@@ -101,6 +101,17 @@
       "techStories": ["TS-F4-05", "TS-F5-05"],
       "caseIds": ["S15", "F09"],
       "riskIds": ["R17", "R26", "R37"]
+    },
+    {
+      "id": "QMAN-E3-STATIC-LEASE-FAULT-001",
+      "resultPath": "evidence/qman-static-lease-fault-20260721-summary.json",
+      "resultSha256": "9e3301f708886a8ce6067e115f3de2665a6acf63045afc5b7e0cb173b2774bd6",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F3-02", "TS-F3-05", "TS-F5-03", "TS-F5-04"],
+      "caseIds": ["S03", "S04", "S05", "F00"],
+      "riskIds": ["R04", "R05", "R11"]
     }
   ]
 }

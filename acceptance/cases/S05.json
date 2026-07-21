@@ -12,12 +12,13 @@
     "TS-F5-04"
   ],
   "dependsOnCaseIds": ["S03", "S04"],
-  "blocker": "The repository has isolated VFIO-provider and QMP-gate component premises, but no production launcher/controller transaction proves fd, IOAS, DMA, IRQ, reset, driver and lease cleanup after failures at every QEMU spawn/readiness/realization boundary. Component success is not end-to-end product closure.",
+  "blocker": "The repository has isolated VFIO-provider, QMP-gate and durable lease/FSM premises, but no production launcher/controller transaction proves fd, IOAS, DMA, IRQ, reset, driver and lease cleanup after failures at every real QEMU spawn/readiness/realization boundary. Component success is not end-to-end product closure.",
   "targetMilestone": "G2",
   "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
   "referenceEvidenceIds": [
     "QMAN-E3-VFIO-PROVIDER-GATE-001",
-    "QMAN-E3-QMP-GATE-001"
+    "QMAN-E3-QMP-GATE-001",
+    "QMAN-E3-STATIC-LEASE-FAULT-001"
   ],
   "assertions": [
     "QEMU receives only inherited admitted fds and cannot reopen a host BDF during cleanup",

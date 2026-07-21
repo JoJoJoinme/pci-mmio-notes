@@ -11,9 +11,10 @@
     "TS-F5-04"
   ],
   "dependsOnCaseIds": ["S03"],
-  "blocker": "No production reset executor currently revalidates the authoritative affected set inside the durable Static transaction, injects reset failures, verifies clean state, and atomically retains every affected member in quarantine. Model or virtual callback results remain component/reference premises and cannot close physical reset safety.",
+  "blocker": "The standalone lease/FSM component retains a whole-bundle claim for a simulated reset-failure label, but no production reset executor revalidates the authoritative affected set, executes a real reset, proves clean state, and integrates that evidence with the Static transaction. Component results cannot close physical reset safety.",
   "targetMilestone": "G2",
   "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
+  "referenceEvidenceIds": ["QMAN-E3-STATIC-LEASE-FAULT-001"],
   "assertions": [
     "the reset contract and affected set are re-read after ownership is acquired and before reset",
     "a reset error or unverifiable post-reset state never transitions any affected member to FREE",

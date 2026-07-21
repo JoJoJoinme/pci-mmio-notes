@@ -40,6 +40,7 @@ artifact hash drift => evidence invalidated
 | `QMAN-E3-QMP-GATE-001` | E3 | 最小 gate 本地处理 capability，只转发五类只读 query；17 类拒绝均未被独立 backend recorder 观察到，PCI tree、QEMU/gate fd 基线不变 | TS-F4-05、F5-05；S15/F09 与 R17/R26/R37 前提 | production launcher/lease/generation/VFIO 或全入口绕过已封堵；S15/F09 与三项 Risk 均未关闭 |
 | `QMAN-E3-DMA-PROVIDER-001` | E3 | unsafe=`Y` 时，no-IOMMU 与 IOMMU-backed device 仍呈现不同 provider node | TS-F1-02、F3-03；C21 前提 | 物理 IOMMU/IR/errata、IOMMUFD IOAS attach、DPDK workload |
 | `QMAN-E3-VFIO-PROVIDER-GATE-001` | E3 | Qman component 对 no-IOMMU 稳定拒绝；对 cdev 真实执行 IOMMUFD bind、IOAS allocate/attach、身份/完整 group 复核与逆序清理 | TS-F1-02、F3-03；C21 / R27 前提 | 权威产品 snapshot、durable lease、stock-QEMU handoff、物理 E4；C21/R27 均未关闭 |
+| `QMAN-E3-STATIC-LEASE-FAULT-001` | E3 | WSL 原生 ext4 上 7/7 subprocess/SQLite 故障场景通过：begin/release commit 前硬退出无部分状态，重叠 bundle 双进程仅一胜，未知 cleanup 与 SIGKILL 后 reconcile 保留 whole-bundle quarantine | TS-F3-02/05、F5-03/04；S03/S04/S05/F00 与 R04/R05/R11 前提 | bind/reset/QEMU/cleanup 真实执行、pidfd/DMA/IRQ/owner clean state、产品 Case/Risk；四个 Case 仍 blocked |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 | QEMU floor 与 OVMF aperture 必须配对；双 64 GiB BAR 默认失败、128 GiB 配对成功 | TS-F4-01/02/04；M23 前提 | Qman observedPlan commit/rollback、物理 BAR qualification |
 
 当前所有 Risk 仍为 `OPEN`。这些结果增加“为什么要这样设计”的技术证据，不改变 G0 和
@@ -160,6 +161,31 @@ API/CLI/storage/alternate-monitor 封锁集成起来。因此结果是 `QMAN_COM
 
 证据：[`qman-qmp-gate-20260721-summary.json`](../evidence/qman-qmp-gate-20260721-summary.json)。
 
+### 3.7 Static lease/FSM 已有真实进程故障证据，但外部设备动作仍是边界
+
+`QMAN-E3-STATIC-LEASE-FAULT-001` 把 host-local persistence、CAS 和 recovery 语义从普通单测推进到
+WSL 原生 ext4 上的真实进程故障：
+
+- schema-v3 store 把 `local_host_id` 与单一 `trusted_authority_id` 固定进 metadata；bundle、每个 device
+  generation 和 transaction 必须来自同一 authority namespace，同 epoch ABA、stale VM/device generation
+  与跨 authority publisher 都 fail closed；
+- child 在 `BEGIN_BEFORE_COMMIT` 调用 `os._exit(91)` 后，transaction、journal、member/bundle claim 与
+  VM generation 均无残留；在 `RELEASE_CLEAN_BEFORE_COMMIT` 调用 `os._exit(92)` 后，原 state、claim、
+  journal 和 device generation 全部保留；
+- 两个独立进程同时争抢重叠 bundle，SQLite `BEGIN IMMEDIATE` + member CAS 只允许一个 transaction
+  commit，另一方稳定得到 `MEMBER_BUSY`；
+- 一个独立 Python owner 持久化到 `ATTACHED` 后被真实 `SIGKILL`；重开 store 时进程消失没有被当成
+  cleanup 证据，`UNSAFE_OR_UNKNOWN` 只会把完整 bundle 置为 `QUARANTINED` 并保留 claims；
+- 37 个留存 artifact hash 全部复算一致，7 个 checkpoint SQLite DB 均 `integrity_check=ok`；live DB
+  从不放在 `/mnt/e`，DrvFS 只保存 checkpoint 后的证据副本。
+
+S03/S04/S05/F00 在 runner 中只是产品场景的组件前提名称。bind/reset/QEMU 均为模拟阶段标签，
+S03 的 `cleanup_verified` 是受信测试断言，F00 杀死的是 Python 代理而不是真实 QEMU；因此该记录是
+`QMAN_COMPONENT / COMPONENT_ONLY`，不关闭 Case、Risk、G2，也不证明 power-loss、多主机 fencing、
+DMA/IRQ teardown、driver restoration 或物理设备 clean state。
+
+证据：[`qman-static-lease-fault-20260721-summary.json`](../evidence/qman-static-lease-fault-20260721-summary.json)。
+
 ## 4. 可复现入口
 
 实验复用了本地历史任务中沉淀的 WSL/QEMU 环境；可提交、可复现的权威环境说明为
@@ -190,6 +216,13 @@ wsl -d Ubuntu-22.04 -- python3 `
   --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
   --output /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-vfio-provider
 
+# Qman Static lease/FSM subprocess fault component
+# Live SQLite state stays under WSL-native /root; --output-dir may be retained on DrvFS.
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/qman-lab/test_static_lease_faults.py `
+  --state-root /root/.qman-static-lease-fault-state `
+  --output-dir /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-static-lease-fault
+
 # QEMU 11 + OVMF dual-64GiB BAR
 wsl -d Ubuntu-22.04 -- env `
   WORKDIR=/root/pci-evidence/RUN-ID-mmio `
@@ -218,9 +251,9 @@ wsl -d Ubuntu-22.04 -- bash `
 1. 冻结 ADR-002 等 G0 合同，并建立带 boot identity、epoch、full-topology hash 与 trust-root 的
    G1 权威 snapshot publisher；把 C21 component 接到唯一 launcher/lease 协议，验证 stock QEMU
    fd-only 自行 bind/attach 后的受信观察与提交。
-2. 先完成 durable lease/Static FSM 的 component crash gate，再执行 `QMAN-E3-STATIC-FAULT-001`：
-   QEMU pre-ready exit、SIGKILL、bind/reset 中途失败，验证 journal/lease/fd/mapping/driver rollback
-   与 whole-bundle quarantine。
+2. `QMAN-E3-STATIC-LEASE-FAULT-001` 已完成 standalone lease/FSM 的 component crash 前提；下一步把
+   真实 bind/reset/QEMU/pidfd/clean-state provider 接入同一事务，执行产品级 S03/S04/S05/F00，验证
+   journal/lease/fd/mapping/driver rollback 与 whole-bundle quarantine。
 3. 将已验证的 QMP component 接入 production launcher/controller/durable lease/generation/VFIO，
    并执行覆盖 API、CLI、storage、alternate monitor、fd injection、并发和 replay 的完整 S15/F09
    产品 bypass matrix。
