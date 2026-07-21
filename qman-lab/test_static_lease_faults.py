@@ -1247,7 +1247,7 @@ def public_main(arguments: Sequence[str]) -> int:
             "The S03 cleanup_verified value is a test assertion, not independently authenticated cleanup evidence.",
             "F00 SIGKILL targets a Python process standing in for an owner, not a QEMU process.",
             "SQLite WAL/FULL and the filesystem provenance gate do not prove end-to-end power-loss durability.",
-            "The fixed lab authority is passed through the schema-v3 trusted_authority_id gate; this runner does not prove a product inventory publisher.",
+            "The fixed lab authority is passed through the schema-v4 trusted_authority_id and store_instance_id gates; this runner does not prove a product inventory publisher.",
             "It does not close S03, S04, S05, F00 or any product risk.",
         ],
         "failures": failures,
