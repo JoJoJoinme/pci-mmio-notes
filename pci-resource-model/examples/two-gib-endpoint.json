@@ -1,11 +1,15 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "host": {
     "iommuPresent": true,
     "interruptRemapping": true,
     "unsafeNoIommuModeEnabled": false,
     "acsOverrideActive": false,
     "source": "controlled-example",
+    "hostId": "reference-example-host",
+    "kernelBootId": "reference-example-boot",
+    "inventoryEpoch": 1,
+    "topologyHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
     "metadata": {
       "description": "Type-0 endpoint with one 2 GiB 64-bit prefetchable BAR"
     }
@@ -39,12 +43,41 @@
       "resetDomain": ["0000:65:00.0"],
       "resetDomainSource": "pci-config-flr",
       "multifunctionAliases": ["0000:65:00.0"],
+      "multifunctionSource": "qualification-snapshot",
       "platformDependencies": [],
+      "platformDependencySource": "unknown",
+      "dependencyAction": "lock-only",
+      "qualifiedActions": ["assign-to-guest", "lock-only"],
+      "dependencyActionFact": {
+        "source": "qualification-snapshot",
+        "ruleId": "reference-dependency-action-v1",
+        "subjectHash": "2cd88b21cd11d27bd41710bd0ec9e57ac40fc7ed1b7b42d7b0a4a2a3621e6d87",
+        "evidenceHash": "7896461d9fc81468833223a2e3a0c3706cc9dd81de0e21ddb792b7333118ccfe",
+        "inventoryEpoch": 1,
+        "topologyHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "qualificationFact": {
+        "source": "qualification-snapshot",
+        "ruleId": "reference-member-action-qualification-v1",
+        "subjectHash": "fb9d007f77bb112cea9b681ef62055e031c7bfd8e8a2f1ce3bb352c89907c390",
+        "evidenceHash": "9031fb1fb5b5fa2fd52c3f0bd3b2653320de71bf3c9307eb254942dd7edbe657",
+        "inventoryEpoch": 1,
+        "topologyHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "resetContractFact": {
+        "source": "pci-config-flr",
+        "ruleId": "reference-reset-contract-v1",
+        "subjectHash": "8e0f515255f11f1c04b1b3fbedc6c8f8caf7262c6eac0dfdf5e25171c0d5220e",
+        "evidenceHash": "d453b842e66272d5695d2a1f5e76e62a337e442f959e53bbd1691a9bc0d82142",
+        "inventoryEpoch": 1,
+        "topologyHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "deviceGeneration": 0,
       "ownerActivationGroup": "conservative:0000:65:00.0",
       "exclusiveAttachGroup": "conservative:0000:65:00.0",
       "isolationProvenance": "kernel-group",
       "dmaIsolationMode": "iommu",
-      "dmaIsolationSource": "controlled-iommu-domain",
+      "dmaIsolationSource": "reference-iommu-provider",
       "hostReservation": null,
       "platformReserved": false,
       "errataDenied": false,

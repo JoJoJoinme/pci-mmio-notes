@@ -24,16 +24,26 @@ from .bar_probe import (
     probe_standard_bars,
     probe_unbound_linux_device,
 )
-from .capability import CapabilityPolicy, CapabilityResult, evaluate_passthrough
+from .capability import (
+    CapabilityPolicy,
+    CapabilityResult,
+    FactEvidenceVerifier,
+    REFERENCE_FACT_VERIFIER,
+    ReferenceFixtureFactVerifier,
+    evaluate_passthrough,
+    seal_reference_device_facts,
+)
 from .model import (
     AddressRange,
     Bar,
     BarSpace,
     DeviceInventory,
     DmaIsolationMode,
+    FactEvidence,
     FunctionRole,
     HostInventory,
     IsolationProvenance,
+    MemberAction,
 )
 
 __all__ = [
@@ -53,12 +63,17 @@ __all__ = [
     "DeviceInventory",
     "DeviceOwner",
     "DmaIsolationMode",
+    "FactEvidence",
+    "FactEvidenceVerifier",
     "FunctionRole",
     "HostInventory",
     "IsolationProvenance",
+    "MemberAction",
     "LinuxSysfsConfigSpace",
     "ProbeError",
     "QemuHole64Window",
+    "REFERENCE_FACT_VERIFIER",
+    "ReferenceFixtureFactVerifier",
     "QuiesceState",
     "evaluate_passthrough",
     "plan_activation",
@@ -66,4 +81,5 @@ __all__ = [
     "project_qemu_hole64_window",
     "probe_standard_bars",
     "probe_unbound_linux_device",
+    "seal_reference_device_facts",
 ]

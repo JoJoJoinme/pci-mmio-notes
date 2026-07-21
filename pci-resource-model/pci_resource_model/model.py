@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from types import MappingProxyType
 from typing import Any, Iterable, Mapping
 
 
@@ -38,6 +39,72 @@ class DmaIsolationMode(StringEnum):
     IOMMU = "iommu"
     NO_IOMMU = "no-iommu"
     UNKNOWN = "unknown"
+
+
+class MemberAction(StringEnum):
+    """Owner-independent action required for a dependency bundle member."""
+
+    NONE = "none"
+    LOCK_ONLY = "lock-only"
+    VFIO_HOLD_IN_SAME_IOAS = "vfio-hold-in-same-ioas"
+    ASSIGN_TO_GUEST = "assign-to-guest"
+    QUIESCE_HOST = "quiesce-host"
+    UNKNOWN = "unknown"
+
+
+@dataclass(frozen=True)
+class FactEvidence:
+    """Provenance envelope for one published capability fact.
+
+    ``subject_hash`` binds the fact to its canonical semantic subject.  The
+    ``evidence_hash`` identifies the signed/retained evidence object that
+    published it; signature verification remains a provider responsibility.
+    Reset contracts additionally carry the snapshot epoch and topology hash
+    against which their affected set was discovered.
+    """
+
+    source: str
+    rule_id: str
+    subject_hash: str
+    evidence_hash: str
+    inventory_epoch: int | None = None
+    topology_hash: str | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "source", self.source.lower())
+        object.__setattr__(self, "subject_hash", self.subject_hash.lower())
+        object.__setattr__(self, "evidence_hash", self.evidence_hash.lower())
+        if self.topology_hash is not None:
+            object.__setattr__(self, "topology_hash", self.topology_hash.lower())
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "source": self.source,
+            "ruleId": self.rule_id,
+            "subjectHash": self.subject_hash,
+            "evidenceHash": self.evidence_hash,
+            "inventoryEpoch": self.inventory_epoch,
+            "topologyHash": self.topology_hash,
+        }
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> FactEvidence:
+        return cls(
+            source=str(value.get("source", "unknown")),
+            rule_id=str(value.get("ruleId", "")),
+            subject_hash=str(value.get("subjectHash", "")),
+            evidence_hash=str(value.get("evidenceHash", "")),
+            inventory_epoch=(
+                None
+                if value.get("inventoryEpoch") is None
+                else parse_int(value.get("inventoryEpoch"))
+            ),
+            topology_hash=(
+                None
+                if value.get("topologyHash") is None
+                else str(value.get("topologyHash"))
+            ),
+        )
 
 
 def parse_int(value: int | str | None, default: int = 0) -> int:
@@ -231,6 +298,15 @@ class DeviceInventory:
     acs_effective_isolation: bool | None = None
     acs_override_source: str = "unknown"
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    # Appended fields preserve the positional constructor order of schema v1.
+    dependency_action: MemberAction = MemberAction.UNKNOWN
+    qualified_actions: tuple[MemberAction, ...] = ()
+    dependency_action_fact: FactEvidence | None = None
+    qualification_fact: FactEvidence | None = None
+    reset_contract_fact: FactEvidence | None = None
+    multifunction_source: str = "unknown"
+    platform_dependency_source: str = "unknown"
+    device_generation: int = 0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "bdf", self.bdf.lower())
@@ -252,8 +328,30 @@ class DeviceInventory:
         )
         object.__setattr__(
             self,
+            "dependency_action",
+            MemberAction(self.dependency_action),
+        )
+        object.__setattr__(
+            self,
+            "qualified_actions",
+            tuple(
+                sorted(
+                    {MemberAction(action) for action in self.qualified_actions},
+                    key=lambda action: action.value,
+                )
+            ),
+        )
+        object.__setattr__(
+            self,
             "physical_isolation_domain_source",
             self.physical_isolation_domain_source.lower(),
+        )
+        object.__setattr__(self, "reset_domain_source", self.reset_domain_source.lower())
+        object.__setattr__(self, "multifunction_source", self.multifunction_source.lower())
+        object.__setattr__(
+            self,
+            "platform_dependency_source",
+            self.platform_dependency_source.lower(),
         )
         object.__setattr__(
             self, "acs_override_source", self.acs_override_source.lower()
@@ -283,6 +381,26 @@ class DeviceInventory:
             "resetDomainSource": self.reset_domain_source,
             "multifunctionAliases": list(self.multifunction_aliases),
             "platformDependencies": list(self.platform_dependencies),
+            "dependencyAction": self.dependency_action.value,
+            "qualifiedActions": [action.value for action in self.qualified_actions],
+            "dependencyActionFact": (
+                None
+                if self.dependency_action_fact is None
+                else self.dependency_action_fact.to_dict()
+            ),
+            "qualificationFact": (
+                None
+                if self.qualification_fact is None
+                else self.qualification_fact.to_dict()
+            ),
+            "resetContractFact": (
+                None
+                if self.reset_contract_fact is None
+                else self.reset_contract_fact.to_dict()
+            ),
+            "multifunctionSource": self.multifunction_source,
+            "platformDependencySource": self.platform_dependency_source,
+            "deviceGeneration": self.device_generation,
             "ownerActivationGroup": self.owner_activation_group,
             "exclusiveAttachGroup": self.exclusive_attach_group,
             "isolationProvenance": self.isolation_provenance.value,
@@ -323,6 +441,32 @@ class DeviceInventory:
             reset_domain_source=str(value.get("resetDomainSource", "json")),
             multifunction_aliases=tuple(value.get("multifunctionAliases", ())),
             platform_dependencies=tuple(value.get("platformDependencies", ())),
+            dependency_action=MemberAction(
+                value.get("dependencyAction", MemberAction.UNKNOWN.value)
+            ),
+            qualified_actions=tuple(
+                MemberAction(action) for action in value.get("qualifiedActions", ())
+            ),
+            dependency_action_fact=(
+                None
+                if value.get("dependencyActionFact") is None
+                else FactEvidence.from_dict(value["dependencyActionFact"])
+            ),
+            qualification_fact=(
+                None
+                if value.get("qualificationFact") is None
+                else FactEvidence.from_dict(value["qualificationFact"])
+            ),
+            reset_contract_fact=(
+                None
+                if value.get("resetContractFact") is None
+                else FactEvidence.from_dict(value["resetContractFact"])
+            ),
+            multifunction_source=str(value.get("multifunctionSource", "unknown")),
+            platform_dependency_source=str(
+                value.get("platformDependencySource", "unknown")
+            ),
+            device_generation=parse_int(value.get("deviceGeneration"), 0),
             owner_activation_group=value.get("ownerActivationGroup"),
             exclusive_attach_group=value.get("exclusiveAttachGroup"),
             isolation_provenance=IsolationProvenance(
@@ -358,24 +502,45 @@ class HostInventory:
     leases: Mapping[str, str] = field(default_factory=dict)
     source: str = "unknown"
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    # Schema-v2 immutable snapshot identity.  Appended for Python API compatibility.
+    schema_version: int = 2
+    host_id: str = "unknown"
+    kernel_boot_id: str = "unknown"
+    inventory_epoch: int | None = None
+    topology_hash: str = "unknown"
 
     def __post_init__(self) -> None:
-        normalized_devices = {
-            bdf.lower(): device for bdf, device in self.devices.items()
-        }
+        if self.schema_version != 2:
+            raise ValueError(f"unsupported inventory schemaVersion: {self.schema_version}")
+        normalized_devices: dict[str, DeviceInventory] = {}
+        for raw_bdf, device in self.devices.items():
+            bdf = str(raw_bdf).lower()
+            if bdf != device.bdf:
+                raise ValueError(
+                    "inventory device key does not match embedded bdf: "
+                    f"{raw_bdf!r} != {device.bdf!r}"
+                )
+            if bdf in normalized_devices:
+                raise ValueError(f"duplicate inventory device bdf: {bdf}")
+            normalized_devices[bdf] = device
         normalized_leases = {bdf.lower(): owner for bdf, owner in self.leases.items()}
-        object.__setattr__(self, "devices", normalized_devices)
-        object.__setattr__(self, "leases", normalized_leases)
+        object.__setattr__(self, "devices", MappingProxyType(normalized_devices))
+        object.__setattr__(self, "leases", MappingProxyType(normalized_leases))
+        object.__setattr__(self, "topology_hash", self.topology_hash.lower())
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "schemaVersion": 1,
+            "schemaVersion": self.schema_version,
             "host": {
                 "iommuPresent": self.iommu_present,
                 "interruptRemapping": self.interrupt_remapping,
                 "unsafeNoIommuModeEnabled": self.no_iommu_mode,
                 "acsOverrideActive": self.acs_override_active,
                 "source": self.source,
+                "hostId": self.host_id,
+                "kernelBootId": self.kernel_boot_id,
+                "inventoryEpoch": self.inventory_epoch,
+                "topologyHash": self.topology_hash,
                 "metadata": dict(self.metadata),
             },
             "leases": dict(sorted(self.leases.items())),
@@ -384,18 +549,28 @@ class HostInventory:
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any]) -> HostInventory:
-        if parse_int(value.get("schemaVersion"), 1) != 1:
-            raise ValueError("unsupported inventory schemaVersion")
+        schema_version = parse_int(value.get("schemaVersion"), 1)
+        if schema_version != 2:
+            raise ValueError(
+                "inventory schemaVersion 1 predates capability fact provenance; "
+                "explicitly migrate it to schemaVersion 2"
+                if schema_version == 1
+                else f"unsupported inventory schemaVersion: {schema_version}"
+            )
         host = value.get("host", {})
         raw_devices = value.get("devices", ())
         if isinstance(raw_devices, Mapping):
             devices = {
-                str(bdf).lower(): DeviceInventory.from_dict(device)
+                str(bdf): DeviceInventory.from_dict(device)
                 for bdf, device in raw_devices.items()
             }
         else:
             parsed = [DeviceInventory.from_dict(device) for device in raw_devices]
-            devices = {device.bdf: device for device in parsed}
+            devices = {}
+            for device in parsed:
+                if device.bdf in devices:
+                    raise ValueError(f"duplicate inventory device bdf: {device.bdf}")
+                devices[device.bdf] = device
         return cls(
             iommu_present=bool(host.get("iommuPresent", False)),
             interrupt_remapping=host.get("interruptRemapping"),
@@ -410,4 +585,13 @@ class HostInventory:
             leases=dict(value.get("leases", {})),
             source=str(host.get("source", "json")),
             metadata=dict(host.get("metadata", {})),
+            schema_version=schema_version,
+            host_id=str(host.get("hostId", "unknown")),
+            kernel_boot_id=str(host.get("kernelBootId", "unknown")),
+            inventory_epoch=(
+                None
+                if host.get("inventoryEpoch") is None
+                else parse_int(host.get("inventoryEpoch"))
+            ),
+            topology_hash=str(host.get("topologyHash", "unknown")),
         )

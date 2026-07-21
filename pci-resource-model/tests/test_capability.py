@@ -1,8 +1,14 @@
 import unittest
-from dataclasses import replace
+from dataclasses import fields, replace
 
 from pci_resource_model.allocator import GIB
-from pci_resource_model.capability import CapabilityPolicy, evaluate_passthrough
+from pci_resource_model.capability import (
+    REFERENCE_FACT_VERIFIER,
+    CapabilityPolicy,
+    CapabilityResult,
+    evaluate_passthrough,
+    seal_reference_device_facts,
+)
 from pci_resource_model.model import (
     AddressRange,
     Bar,
@@ -11,10 +17,13 @@ from pci_resource_model.model import (
     FunctionRole,
     HostInventory,
     IsolationProvenance,
+    MemberAction,
 )
 
 
 TARGET = "0000:01:00.0"
+INVENTORY_EPOCH = 1
+TOPOLOGY_HASH = "b" * 64
 
 
 def endpoint(**changes):
@@ -28,16 +37,29 @@ def endpoint(**changes):
         "bars": (Bar(TARGET, 0, 2 * GIB, is_64=True),),
         "iommu_group": (TARGET,),
         "physical_isolation_domain": (TARGET,),
+        "physical_isolation_domain_source": "qualification-snapshot",
         "reset_methods": ("flr",),
         "reset_domain": (TARGET,),
+        "reset_domain_source": "pci-config-flr",
+        "multifunction_source": "qualification-snapshot",
+        "platform_dependency_source": "qualification-snapshot",
+        "dependency_action": MemberAction.LOCK_ONLY,
+        "qualified_actions": (
+            MemberAction.ASSIGN_TO_GUEST,
+            MemberAction.LOCK_ONLY,
+        ),
         "owner_activation_group": f"conservative:{TARGET}",
         "exclusive_attach_group": f"conservative:{TARGET}",
         "isolation_provenance": IsolationProvenance.KERNEL_GROUP,
         "dma_isolation_mode": DmaIsolationMode.IOMMU,
-        "dma_isolation_source": "test-iommu-domain",
+        "dma_isolation_source": "reference-iommu-provider",
     }
     values.update(changes)
-    return DeviceInventory(**values)
+    return seal_reference_device_facts(
+        DeviceInventory(**values),
+        inventory_epoch=INVENTORY_EPOCH,
+        topology_hash=TOPOLOGY_HASH,
+    )
 
 
 def host(device=None, **changes):
@@ -48,6 +70,10 @@ def host(device=None, **changes):
         "no_iommu_mode": False,
         "acs_override_active": False,
         "devices": {device.bdf: device},
+        "host_id": "reference-host",
+        "kernel_boot_id": "reference-boot",
+        "inventory_epoch": INVENTORY_EPOCH,
+        "topology_hash": TOPOLOGY_HASH,
     }
     values.update(changes)
     return HostInventory(**values)
@@ -55,8 +81,7 @@ def host(device=None, **changes):
 
 def dependency_device(bdf, members):
     group = "conservative:" + ",".join(sorted(members))
-    return replace(
-        endpoint(),
+    return endpoint(
         bdf=bdf,
         bars=(),
         iommu_group=tuple(members),
@@ -73,14 +98,51 @@ def evaluate(inventory, **changes):
         "high_windows": (AddressRange(0x100000000, 0x300000000),),
     }
     values.update(changes)
-    return evaluate_passthrough(inventory, TARGET, **values)
+    return evaluate_passthrough(
+        inventory,
+        TARGET,
+        fact_verifier=REFERENCE_FACT_VERIFIER,
+        **values,
+    )
 
 
 class CapabilityTests(unittest.TestCase):
-    def test_legacy_noiommu_host_field_round_trips_with_explicit_name(self):
+    def test_c20_fields_preserve_preexisting_python_constructor_order(self):
+        names = [item.name for item in fields(DeviceInventory)]
+        self.assertGreater(
+            names.index("dependency_action"),
+            names.index("metadata"),
+        )
+        legacy_result = CapabilityResult(
+            target=TARGET,
+            payload_devices=(),
+            eligible=False,
+            available=False,
+            attachable=False,
+            verdict="false",
+            required_lease=(),
+            reset_methods={},
+            reasons=(),
+            warnings=(),
+            allocation=None,
+        )
+        self.assertEqual(legacy_result.member_actions, {})
+        self.assertEqual(legacy_result.bundle_hash, "")
+
+    def test_schema_v1_requires_explicit_migration(self):
+        with self.assertRaisesRegex(ValueError, "explicitly migrate"):
+            HostInventory.from_dict(
+                {
+                    "schemaVersion": 1,
+                    "host": {"noIommuMode": True},
+                    "devices": [],
+                }
+            )
+
+    def test_legacy_noiommu_host_field_round_trips_in_schema_v2(self):
         inventory = HostInventory.from_dict(
             {
-                "schemaVersion": 1,
+                "schemaVersion": 2,
                 "host": {"noIommuMode": True},
                 "devices": [],
             }
@@ -226,7 +288,7 @@ class CapabilityTests(unittest.TestCase):
         result = evaluate(host(device))
 
         self.assertFalse(result.eligible)
-        self.assertIn("NO_ACCEPTED_RESET", [item.code for item in result.reasons])
+        self.assertIn("RESET_NOT_SUPPORTED", [item.code for item in result.reasons])
 
     def test_bus_reset_adds_complete_affected_set_to_lease(self):
         peer = "0000:01:00.1"
@@ -276,8 +338,7 @@ class CapabilityTests(unittest.TestCase):
         peer = "0000:01:00.1"
         group = "dependent:0000:00:08.0"
         device = endpoint(exclusive_attach_group=group)
-        peer_device = replace(
-            endpoint(),
+        peer_device = endpoint(
             bdf=peer,
             bars=(),
             iommu_group=(peer,),
@@ -301,8 +362,7 @@ class CapabilityTests(unittest.TestCase):
         peer = "0000:01:00.1"
         group = "dependent:0000:00:08.0"
         device = endpoint(exclusive_attach_group=group)
-        peer_device = replace(
-            endpoint(),
+        peer_device = endpoint(
             bdf=peer,
             bars=(),
             iommu_group=(peer,),
@@ -324,8 +384,7 @@ class CapabilityTests(unittest.TestCase):
         peer = "0000:01:00.1"
         actual_group = "dependent:0000:00:08.0"
         device = endpoint(exclusive_attach_group=actual_group)
-        peer_device = replace(
-            endpoint(),
+        peer_device = endpoint(
             bdf=peer,
             bars=(),
             iommu_group=(peer,),
@@ -445,7 +504,7 @@ class CapabilityTests(unittest.TestCase):
         self.assertFalse(result.eligible)
         self.assertIn("RESET_DOMAIN_UNVERIFIED", [item.code for item in result.reasons])
 
-    def test_missing_dependency_inventory_blocks_availability(self):
+    def test_missing_dependency_inventory_blocks_capability_closure(self):
         peer = "0000:02:00.0"
         device = endpoint(
             physical_isolation_domain=(TARGET, peer),
@@ -453,7 +512,7 @@ class CapabilityTests(unittest.TestCase):
 
         result = evaluate(host(device))
 
-        self.assertTrue(result.eligible)
+        self.assertFalse(result.eligible)
         self.assertFalse(result.available)
         self.assertIn(
             "DEPENDENCY_NOT_IN_INVENTORY",

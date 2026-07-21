@@ -43,6 +43,7 @@ class CliTests(unittest.TestCase):
                     "0x80000000:0xc0000000",
                     "--mmio64",
                     "0x100000000:0x200000000",
+                    "--accept-reference-fixture-evidence",
                     "--output",
                     str(output),
                 ]
@@ -65,6 +66,7 @@ class CliTests(unittest.TestCase):
                     "0000:01:00.0",
                     "--mmio32",
                     "0x80000000:0xc0000000",
+                    "--accept-reference-fixture-evidence",
                     "--output",
                     str(output),
                 ]
@@ -77,6 +79,33 @@ class CliTests(unittest.TestCase):
         self.assertEqual(
             result["requiredLease"],
             ["0000:00:01.0", "0000:01:00.0", "0000:01:00.1"],
+        )
+
+    def test_reference_fixture_evidence_is_fail_closed_without_lab_flag(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "result.json"
+            rc = main(
+                [
+                    "capable",
+                    "--inventory",
+                    str(EXAMPLE),
+                    "--target",
+                    "0000:65:00.0",
+                    "--mmio32",
+                    "0x80000000:0xc0000000",
+                    "--mmio64",
+                    "0x100000000:0x200000000",
+                    "--output",
+                    str(output),
+                ]
+            )
+            result = json.loads(output.read_text(encoding="utf-8"))
+
+        self.assertEqual(rc, 1)
+        self.assertFalse(result["passthroughCapable"])
+        self.assertIn(
+            "RESET_CONTRACT_PROVENANCE_UNTRUSTED",
+            [reason["code"] for reason in result["reasons"]],
         )
 
     def test_allocate_emits_linked_ovmf_and_qemu_sizes(self):

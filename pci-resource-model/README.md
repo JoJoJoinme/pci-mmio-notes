@@ -81,6 +81,7 @@ profile 显式输出已求解的 floor，并要求启动后核对 QOM start/end�
 
 ```text
 eligible   = per-device IOMMU-backed DMA + interrupt-remap + assignable Type-0 role
+           + fixed-point dependency action/reset closure + exact action qualification
            + accepted reset path + trustworthy isolation
            + no platform reservation or errata deny
 
@@ -111,11 +112,35 @@ attachable = available + BAR allocation + RMRR admission
   但必须从可信 provenance 重建 `physicalIsolationDomain` 并整域租用；可用
   `--deny-acs-override` 切回全拒绝策略。
 - dependency 中任何 BDF 未进入 inventory 时，报 `DEPENDENCY_NOT_IN_INVENTORY`，不会
-  默认为空闲。
+  默认为空闲，也不会把目标先标成 capable。
+- capability 查询先对 dependency action 与 reset affected set 求 owner-independent 固定点。
+  被提升为 `assign-to-guest` 的 dependency 必须拥有自己的 reset contract；action 为
+  `unknown`、reset 缺失或 action qualification 缺失分别以
+  `DEPENDENCY_ACTION_UNKNOWN`、`RESET_NOT_SUPPORTED`、`QUALIFICATION_MISSING` fail closed。
+- inventory 中的 `dependencyAction` 是 dependency 被闭包拉入时的保守 action fact，
+  `qualifiedActions` 是已解析的精确 member/action qualification；scanner 无法自行证明二者，
+  因而保持 `unknown`/空集合，必须由可信 policy/qualification snapshot 补齐。
+- inventory schema 已升级为 v2；v1 不会被静默按新语义解释，而是要求显式迁移。v2 的 host
+  snapshot 必须携带 `hostId/kernelBootId/inventoryEpoch/topologyHash`，action、qualification、
+  reset contract 必须各自携带 source、rule、subject hash 与 evidence hash。缺失、来源不可信、
+  未经外部 verifier 认证、identity/generation 漂移或任一 fact 的 epoch/topology 不一致，均在
+  capable gate fail closed。普通 JSON 不能靠自报 64 位十六进制 hash 进入可信边界。
+- dependency closure 同时受 `maxDependencyMembers/maxDependencyEdges` 约束，并在加入每个 member/edge
+  前增量检查，拒绝结果也不会携带超大依赖全集；初始 payload 被其他
+  dependency edge 再次引用时仍执行 action merge，不能跳过 `QUIESCE_HOST` 等冲突。
 - scanner 对 IOMMU、physical isolation、reset、multifunction 和 platform dependency 求传递闭包，
   生成保守的 `ownerActivationGroup`/`exclusiveAttachGroup`；外部 inventory 缺 group 时
   `attachable=false`，不会默认为 singleton。
 - BAR/MMIO 失败只让 `attachable=false`，不会篡改前面的静态 `eligible` 结论。
+- 结果输出 `snapshotHash`、`bundleHash`、`capabilityHash`、`policyHash` 与 `decisionHash`。
+  snapshot/bundle/capability hash 不读取
+  lease owner；同一闭包的 free/busy A/B 只改变 `available` 及其下游 `attachable`，不会改变
+  capable、member action、selected reset 或前四个 hash。`decisionHash` 单独绑定 lease/driver、
+  exact attach/activation group、
+  MMIO 输入、allocator policy/result 与最终 available/attachable，避免用 capability hash 冒充
+  一次可执行 attach decision。hash 只包含 reason code/details，不包含可本地化 message。
+- evaluator 仍是纯函数，不执行 bind、reset 或 lease write。C20 fixture 会重复查询并验证
+  inventory、driver、reset fact 与 lease/counter snapshot 完全不变。
 
 ## 4. Host owner activation
 
@@ -150,6 +175,11 @@ python3 -m pci_resource_model scan \
   --output inventory.json
 ```
 
+scanner 输出 schema v2、host/boot identity 与 topology hash，但故意不伪造 monotonic
+`inventoryEpoch`，也不签发 action/qualification/reset evidence。publisher/qualification provider
+补齐这些事实并原子发布前，`capable` 会以 `SNAPSHOT_IDENTITY_INCOMPLETE` 或 provenance reason
+拒绝；不能把裸 sysfs scan 当成生产 capability snapshot。
+
 必须启用 ACS override 的 host 应使用
 [`../kernel-patches/`](../kernel-patches/README.md) 中的 provenance patch。scanner 会读取
 `acs_native_isolation`、`acs_effective_isolation`、`acs_override_source`，把 patched
@@ -178,7 +208,8 @@ python3 -m pci_resource_model capable \
   --inventory pci-resource-model/examples/two-gib-endpoint.json \
   --target 0000:65:00.0 \
   --mmio32 0x80000000:0xc0000000 \
-  --mmio64 0x100000000:0x200000000
+  --mmio64 0x100000000:0x200000000 \
+  --accept-reference-fixture-evidence
 ```
 
 mandatory override 的整域租用样例：
@@ -188,8 +219,13 @@ PYTHONPATH=pci-resource-model \
 python3 -m pci_resource_model capable \
   --inventory pci-resource-model/examples/mandatory-acs-override.json \
   --target 0000:01:00.0 \
-  --mmio32 0x80000000:0xc0000000
+  --mmio32 0x80000000:0xc0000000 \
+  --accept-reference-fixture-evidence
 ```
+
+`--accept-reference-fixture-evidence` 只用于本仓库的确定性 E2 样例。它验证 envelope 与字段绑定，
+不提供签名、MAC 或 trust store，绝不能进入 Qman 产品启动路径。生产调用方必须注入真实的
+`FactEvidenceVerifier`，验证已留存的 policy/qualification/reset evidence；不提供 verifier 时默认拒绝。
 
 该例的 patched groups 都是 singleton，但输出为 `verdict=conditional`，且
 `requiredLease` 包含 non-isolating root port 与两个 endpoint。使用
@@ -211,6 +247,9 @@ python3 -m unittest discover -v -s pci-resource-model/tests
 - low/high placement、32 位优先、reserved range、对齐和事务失败。
 - Type-0 class A/B、Type-1+FLR 负例、IOMMU/reset/ACS override/dependency。
 - `eligible=true` 但 dependency busy 或 MMIO admission 失败的分层结果。
+- C20 四格：dependency qualified/free、同 bundle busy、dependency reset missing、dependency
+  action unknown；同时覆盖 qualification missing、初始 payload action conflict、closure 上限、
+  schema-v2 round-trip、identity/provenance/stale 反例、golden/扰动 hash、decision hash 与查询零副作用。
 - Linux resource、PCIe type、ACS extended capability 与 mandatory-override shadow domain。
 - desired/effective owner 分离、request-to-owner-group expansion、idle/transient/persistent busy A/B、
   shared attach collision、stale identity、foreign lease、host-critical、early-boot claim 和
@@ -221,6 +260,9 @@ python3 -m unittest discover -v -s pci-resource-model/tests
 - 直接探测只覆盖 standard BAR0-BAR5，不含 ROM、SR-IOV VF BAR和 Resizable BAR支持集合。
 - sysfs scanner 不执行 VFIO hot-reset ioctl；override physical domain 依赖定制内核 provenance，
   并采用可能过度合并的保守父拓扑算法。
+- `seal_reference_device_facts()` 与 `REFERENCE_FACT_VERIFIER` 只生成、验证确定性的 E2 fixture
+  envelope，不验证生产签名，也不能进入 Qman 产品路径；生产 provider 必须从签名
+  qualification/policy store 发布 evidence object，并由产品 verifier 验证。
 - allocator 计算 root-level aperture demand，不复刻 OVMF 的完整多级 bridge window算法。
 - QEMU 参数是启动前需求；启动后仍必须核对 guest BAR、ACPI `_CRS`、IOMMU map 和中断。
 - activation 目前只有无副作用 planner；durable journal、live driver transition、exact early-boot

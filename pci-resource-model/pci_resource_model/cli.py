@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from .allocator import AllocationPolicy, plan_mmio
-from .capability import CapabilityPolicy, evaluate_passthrough
+from .capability import (
+    REFERENCE_FACT_VERIFIER,
+    CapabilityPolicy,
+    evaluate_passthrough,
+)
 from .linux_sysfs import scan_linux_sysfs
 from .model import AddressRange, HostInventory
 
@@ -168,6 +172,11 @@ def _capable(args: argparse.Namespace) -> int:
             trust_domain=args.trust_domain,
         ),
         allocation_policy=_allocation_policy(args),
+        fact_verifier=(
+            REFERENCE_FACT_VERIFIER
+            if args.accept_reference_fixture_evidence
+            else None
+        ),
     )
     _write_json(
         result.to_dict(firmware=args.firmware, host_bridge=args.host_bridge),
@@ -246,6 +255,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="exact exclusive attach group qualified for same-VM co-assignment",
     )
     capable.add_argument("--trust-domain", default="untrusted-vm")
+    capable.add_argument(
+        "--accept-reference-fixture-evidence",
+        action="store_true",
+        help=(
+            "LAB ONLY: accept deterministic E2 fixture envelopes; "
+            "never use as a production trust provider"
+        ),
+    )
     capable.add_argument("--output", default="-")
     _add_mmio_arguments(capable)
     capable.set_defaults(handler=_capable)

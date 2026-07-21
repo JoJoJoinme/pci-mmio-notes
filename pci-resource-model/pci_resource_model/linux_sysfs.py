@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import platform
 import re
@@ -395,9 +397,13 @@ def _add_domains(devices: dict[str, DeviceInventory]) -> dict[str, DeviceInvento
         result[bdf] = replace(
             device,
             multifunction_aliases=aliases,
+            multifunction_source="linux-slot-scan",
             reset_domain=reset_domain,
             reset_domain_source=source,
             platform_dependencies=dependencies,
+            platform_dependency_source=(
+                "vfio-reset-parent" if dependencies else "unknown"
+            ),
         )
     return result
 
@@ -627,6 +633,9 @@ def scan_linux_sysfs(
     interrupt_remapping: bool | None = None,
     selected_bdfs: Iterable[str] | None = None,
     vfio_root: Path = Path("/dev/vfio"),
+    machine_id_path: Path = Path("/etc/machine-id"),
+    boot_id_path: Path = Path("/proc/sys/kernel/random/boot_id"),
+    inventory_epoch: int | None = None,
 ) -> HostInventory:
     """Build a read-only Linux PCI inventory from kernel-probed sysfs data."""
 
@@ -680,6 +689,25 @@ def scan_linux_sysfs(
         )
     else:
         physical_domain_rule = "stock-kernel-iommu-group"
+    topology_preimage = [
+        {
+            "bdf": bdf,
+            "parent": device.parent,
+            "iommuGroup": list(device.iommu_group),
+            "physicalIsolationDomain": list(device.physical_isolation_domain),
+            "multifunctionAliases": list(device.multifunction_aliases),
+            "platformDependencies": list(device.platform_dependencies),
+            "resetDomain": list(device.reset_domain),
+        }
+        for bdf, device in sorted(all_devices.items())
+    ]
+    topology_hash = hashlib.sha256(
+        json.dumps(
+            topology_preimage,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
     return HostInventory(
         iommu_present=iommu_present,
         interrupt_remapping=interrupt_remapping,
@@ -687,6 +715,10 @@ def scan_linux_sysfs(
         acs_override_active=acs_override_active,
         devices=devices,
         source="linux-sysfs-read-only",
+        host_id=_read_text(machine_id_path, "unknown"),
+        kernel_boot_id=_read_text(boot_id_path, "unknown"),
+        inventory_epoch=inventory_epoch,
+        topology_hash=topology_hash,
         metadata={
             "kernelRelease": platform.release(),
             "kernelCommandLine": cmdline,

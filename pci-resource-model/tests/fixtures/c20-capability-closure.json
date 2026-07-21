@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "id": "C20-capability-closure-before-availability",
+  "target": "0000:41:00.0",
+  "dependency": "0000:42:00.0",
+  "resetPeer": "0000:42:00.1",
+  "expectedHashes": {
+    "snapshotHash": "a7eefb4e441024f67422af7db4ae0b26da36bfa327f6acbc91a979000dc489be",
+    "bundleHash": "bb47d1f32622932266cc098277eefa09c9eaa4fd32102c853c2ccbb7c4a8a2ed",
+    "capabilityHash": "077e929802e17cc2542d3dc764b68dd1b9d3d9fcfc1c293eb265cf197c0025d8",
+    "policyHash": "bd23f5ca336762b3b4191b1bae7aaa9ba54d56fc0937d8dc368bcae23a5582ca"
+  },
+  "matrix": [
+    {
+      "name": "dependency-qualified-and-free",
+      "dependencyResetContract": "valid",
+      "dependencyActionFact": "valid",
+      "dependencyOwner": "free",
+      "expect": {
+        "capable": true,
+        "available": true
+      }
+    },
+    {
+      "name": "same-bundle-busy",
+      "dependencyResetContract": "valid",
+      "dependencyActionFact": "valid",
+      "dependencyOwner": "other-vm",
+      "expect": {
+        "capable": true,
+        "available": false,
+        "reason": "DEPENDENCY_BUSY"
+      }
+    },
+    {
+      "name": "dependency-reset-missing",
+      "dependencyResetContract": "missing",
+      "dependencyActionFact": "valid",
+      "dependencyOwner": "free",
+      "expect": {
+        "capable": false,
+        "available": false,
+        "reason": "RESET_NOT_SUPPORTED"
+      }
+    },
+    {
+      "name": "dependency-action-unknown",
+      "dependencyResetContract": "valid",
+      "dependencyActionFact": "unknown",
+      "dependencyOwner": "free",
+      "expect": {
+        "capable": false,
+        "available": false,
+        "reason": "DEPENDENCY_ACTION_UNKNOWN"
+      }
+    }
+  ],
+  "invariants": [
+    "first-two-cases-have-identical-bundle-hash",
+    "first-two-cases-have-identical-capability-and-policy-hash",
+    "owner-and-mmio-variation-change-decision-hash-only",
+    "identity-and-provenance-variation-invalidates-capability-hash",
+    "member-and-edge-limits-fail-closed",
+    "schema-v2-and-fact-envelopes-round-trip",
+    "query-has-no-bind-reset-or-lease-side-effect"
+  ]
+}
