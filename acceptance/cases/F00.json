@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "F00",
+  "title": "QEMU SIGKILL recovery never frees an unverified device",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R03", "R06", "R11"],
+  "requiredTechStories": [
+    "TS-F3-05",
+    "TS-F5-02",
+    "TS-F5-03",
+    "TS-F5-04"
+  ],
+  "dependsOnCaseIds": ["S05"],
+  "blocker": "There is no production pidfd/systemd-scope identity, durable crash journal, kernel-owner reconciliation, verified DMA/IRQ teardown, release reset, or whole-bundle quarantine workflow wired to the Static controller. A component state machine or a QMP-channel test cannot prove SIGKILL recovery for a real assignment.",
+  "targetMilestone": "G2",
+  "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
+  "referenceEvidenceIds": ["QMAN-E3-QMP-GATE-001"],
+  "assertions": [
+    "QEMU death is identified by a non-reusable process identity rather than a PID-only check",
+    "process absence alone never proves that VFIO ownership, DMA or IRQ state is clean",
+    "reconcile releases the bundle only after current-generation cleanup and clean-state evidence are committed",
+    "unknown kernel ownership, stale generation, reset failure or missing evidence retains the whole bundle in quarantine"
+  ]
+}

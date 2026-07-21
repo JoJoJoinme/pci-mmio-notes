@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "S03",
+  "title": "Partial bind failure rolls back the complete Static bundle",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R04", "R05", "R06"],
+  "requiredTechStories": [
+    "TS-F3-02",
+    "TS-F3-03",
+    "TS-F3-05",
+    "TS-F5-02",
+    "TS-F5-04"
+  ],
+  "dependsOnCaseIds": ["C21"],
+  "blocker": "C21 provides only component-level VFIO provider premises. A production Static controller has not yet proven durable whole-bundle lease CAS, mutation journaling, original-owner restoration, reverse compensation, or post-rollback identity/DMA/IRQ verification under an injected mid-bind failure.",
+  "targetMilestone": "G2",
+  "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
+  "referenceEvidenceIds": ["QMAN-E3-VFIO-PROVIDER-GATE-001"],
+  "assertions": [
+    "the complete authoritative dependency bundle is leased before the first bind side effect",
+    "an injected failure after any member bind runs compensations in reverse order",
+    "the original owners, identity, DMA and IRQ state are read back before a clean rollback releases the lease",
+    "uncertain compensation retains the whole-bundle claim and enters quarantine rather than FREE"
+  ]
+}

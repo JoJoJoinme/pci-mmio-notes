@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "S04",
+  "title": "Reset failure quarantines the complete affected bundle",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R02", "R03", "R05", "R29"],
+  "requiredTechStories": [
+    "TS-F3-05",
+    "TS-F5-01",
+    "TS-F5-04"
+  ],
+  "dependsOnCaseIds": ["S03"],
+  "blocker": "No production reset executor currently revalidates the authoritative affected set inside the durable Static transaction, injects reset failures, verifies clean state, and atomically retains every affected member in quarantine. Model or virtual callback results remain component/reference premises and cannot close physical reset safety.",
+  "targetMilestone": "G2",
+  "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
+  "assertions": [
+    "the reset contract and affected set are re-read after ownership is acquired and before reset",
+    "a reset error or unverifiable post-reset state never transitions any affected member to FREE",
+    "all functional, reset and hidden-dependency members remain under one quarantined claim",
+    "leaving quarantine requires an explicit audited recovery and qualification workflow"
+  ]
+}

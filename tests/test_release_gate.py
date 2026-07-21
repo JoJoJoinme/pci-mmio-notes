@@ -44,12 +44,12 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn("Risks: 39", result.stdout)
-        self.assertIn("Acceptance: 5/101 defined", result.stdout)
+        self.assertIn("Acceptance: 9/101 defined", result.stdout)
+        self.assertIn("92 unclassified", result.stdout)
         self.assertIn("EXECUTABLE=2", result.stdout)
-        self.assertIn("IMPLEMENTATION_BLOCKED=3", result.stdout)
-        self.assertIn("96 unclassified", result.stdout)
+        self.assertIn("IMPLEMENTATION_BLOCKED=7", result.stdout)
         self.assertIn(
-            "implementation-blocked acceptance cases: C21, F09, S15",
+            "implementation-blocked acceptance cases: C21, F00, F09, S03, S04, S05, S15",
             result.stdout,
         )
         self.assertIn(

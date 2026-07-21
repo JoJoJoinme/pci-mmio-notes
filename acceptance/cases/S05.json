@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "S05",
+  "title": "QEMU start failure performs verified reverse cleanup or quarantines",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R05", "R06", "R11", "R26"],
+  "requiredTechStories": [
+    "TS-F3-03",
+    "TS-F3-05",
+    "TS-F5-02",
+    "TS-F5-04"
+  ],
+  "dependsOnCaseIds": ["S03", "S04"],
+  "blocker": "The repository has isolated VFIO-provider and QMP-gate component premises, but no production launcher/controller transaction proves fd, IOAS, DMA, IRQ, reset, driver and lease cleanup after failures at every QEMU spawn/readiness/realization boundary. Component success is not end-to-end product closure.",
+  "targetMilestone": "G2",
+  "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
+  "referenceEvidenceIds": [
+    "QMAN-E3-VFIO-PROVIDER-GATE-001",
+    "QMAN-E3-QMP-GATE-001"
+  ],
+  "assertions": [
+    "QEMU receives only inherited admitted fds and cannot reopen a host BDF during cleanup",
+    "failure before QMP ready or topology verification executes the complete compensation stack in reverse order",
+    "DMA maps, IRQ eventfds, IOAS attachment, VFIO fds and driver ownership are independently read back before release",
+    "any uncertain teardown or reset result preserves the durable whole-bundle claim in quarantine"
+  ]
+}
