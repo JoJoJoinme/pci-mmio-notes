@@ -5,6 +5,8 @@
   "status": "IMPLEMENTATION_BLOCKED",
   "scope": "PRODUCT",
   "riskIds": ["R27"],
+  "requiredTechStories": ["TS-F1-02", "TS-F3-03"],
+  "dependsOnCaseIds": ["C10", "C20"],
   "blocker": "The repository now has a Qman component that rejects noiommu and performs a real cdev/IOMMUFD bind and IOAS attach, but it is not integrated with an authoritative G1 snapshot publisher, durable lease, production launcher/QEMU fd handoff, post-start verification, or physical E4 qualification.",
   "targetMilestone": "G2",
   "referenceEvidenceIds": [

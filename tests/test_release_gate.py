@@ -56,6 +56,19 @@ class ReleaseGateTests(unittest.TestCase):
             "reference-only executable cases do not close product gates: C20, O09",
             result.stdout,
         )
+        self.assertIn(
+            "acceptance dependency is not defined: C21 -> C10",
+            result.stdout,
+        )
+        self.assertIn(
+            "product acceptance dependency is reference-only: C21 -> C20",
+            result.stdout,
+        )
+        self.assertIn(
+            "acceptance dependency is not closure-ready: S15 -> C21 "
+            "(IMPLEMENTATION_BLOCKED)",
+            result.stdout,
+        )
         self.assertIn("Release: BLOCKED", result.stdout)
 
     def test_release_gate_fails_closed(self) -> None:
@@ -287,6 +300,131 @@ class QmanEvidenceClosurePolicyTests(unittest.TestCase):
                 )
 
         self.assertTrue(any("input hash drift" in item for item in errors))
+
+
+class AcceptanceDependencyPolicyTests(unittest.TestCase):
+    @staticmethod
+    def case(
+        case_id: str,
+        *,
+        dependencies: list[str],
+        status: str = "IMPLEMENTATION_BLOCKED",
+        scope: str = "PRODUCT",
+        tech_stories: list[str] | None = None,
+    ) -> dict[str, object]:
+        return {
+            "id": case_id,
+            "status": status,
+            "scope": scope,
+            "requiredTechStories": tech_stories or ["TS-F1-01"],
+            "dependsOnCaseIds": dependencies,
+        }
+
+    def validate(
+        self,
+        definitions: dict[str, dict[str, object]],
+        design_cases: set[str],
+        known_tech_stories: set[str] | None = None,
+    ) -> tuple[list[str], list[str]]:
+        errors: list[str] = []
+        blockers: list[str] = []
+        evaluate_release.validate_acceptance_dependencies(
+            definitions,
+            design_cases,
+            known_tech_stories or {"TS-F1-01"},
+            errors,
+            blockers,
+        )
+        return errors, blockers
+
+    def test_undefined_and_unready_design_dependencies_are_only_blockers(self) -> None:
+        definitions = {
+            "C21": self.case("C21", dependencies=["C10"]),
+            "S15": self.case("S15", dependencies=["C21"]),
+        }
+        errors, blockers = self.validate(definitions, {"C10", "C21", "S15"})
+
+        self.assertEqual(errors, [])
+        self.assertIn("acceptance dependency is not defined: C21 -> C10", blockers)
+        self.assertIn(
+            "acceptance dependency is not closure-ready: "
+            "S15 -> C21 (IMPLEMENTATION_BLOCKED)",
+            blockers,
+        )
+
+    def test_reference_executable_cannot_satisfy_product_dependency(self) -> None:
+        definitions = {
+            "C20": self.case(
+                "C20",
+                dependencies=[],
+                status="EXECUTABLE",
+                scope="REFERENCE_MODEL",
+            ),
+            "C21": self.case("C21", dependencies=["C20"]),
+        }
+        errors, blockers = self.validate(definitions, {"C20", "C21"})
+
+        self.assertEqual(errors, [])
+        self.assertIn(
+            "product acceptance dependency is reference-only: C21 -> C20",
+            blockers,
+        )
+
+    def test_unknown_ts_unknown_case_and_self_dependency_are_invalid(self) -> None:
+        definitions = {
+            "C21": self.case(
+                "C21",
+                dependencies=["C21", "C99"],
+                tech_stories=["TS-NOT-DEFINED"],
+            )
+        }
+        errors, _ = self.validate(definitions, {"C21"})
+
+        self.assertTrue(any("unknown tech stories" in item for item in errors))
+        self.assertTrue(any("cannot depend on itself" in item for item in errors))
+        self.assertTrue(any("unknown dependency cases" in item for item in errors))
+
+    def test_dependency_graph_cycle_is_invalid(self) -> None:
+        definitions = {
+            "C21": self.case(
+                "C21", dependencies=["S15"], status="EXECUTABLE"
+            ),
+            "S15": self.case(
+                "S15", dependencies=["C21"], status="EXECUTABLE"
+            ),
+        }
+        errors, blockers = self.validate(definitions, {"C21", "S15"})
+
+        self.assertTrue(any("dependency graph contains a cycle" in item for item in errors))
+        self.assertEqual(blockers, [])
+
+    def test_dependency_fields_are_required_even_when_empty(self) -> None:
+        definitions = {
+            "C20": {
+                "id": "C20",
+                "status": "EXECUTABLE",
+                "scope": "REFERENCE_MODEL",
+            }
+        }
+        errors, _ = self.validate(definitions, {"C20"})
+
+        self.assertTrue(any("requiredTechStories must be a string list" in item for item in errors))
+        self.assertTrue(any("dependsOnCaseIds must be a string list" in item for item in errors))
+
+    def test_dependency_arrays_may_be_empty(self) -> None:
+        definitions = {
+            "C20": {
+                "id": "C20",
+                "status": "EXECUTABLE",
+                "scope": "REFERENCE_MODEL",
+                "requiredTechStories": [],
+                "dependsOnCaseIds": [],
+            }
+        }
+        errors, blockers = self.validate(definitions, {"C20"})
+
+        self.assertEqual(errors, [])
+        self.assertEqual(blockers, [])
 
 
 class RiskEvidencePolicyTests(unittest.TestCase):

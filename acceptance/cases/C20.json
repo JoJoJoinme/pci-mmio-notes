@@ -5,6 +5,8 @@
   "status": "EXECUTABLE",
   "scope": "REFERENCE_MODEL",
   "riskIds": ["R38"],
+  "requiredTechStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+  "dependsOnCaseIds": [],
   "referenceEvidenceIds": ["QMAN-E2-CLOSURE-001"],
   "runner": {
     "cwd": "pci-resource-model",

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "sourceDocument": "qemu-static-dynamic-directpath-design.md",
   "sourceSection": "19",
   "expectedCaseCount": 101,
@@ -10,5 +10,18 @@
     "HARDWARE_BLOCKED",
     "FEATURE_DISABLED"
   ],
+  "dependencyPolicy": {
+    "requiredFields": [
+      "requiredTechStories",
+      "dependsOnCaseIds"
+    ],
+    "closeableStatuses": [
+      "EXECUTABLE",
+      "FEATURE_DISABLED"
+    ],
+    "productDependenciesRequireProductScope": true,
+    "undefinedOrUnreadyEffect": "RELEASE_BLOCKER",
+    "unknownReferenceOrCycleEffect": "CONTRACT_INVALID"
+  },
   "note": "Every Case ID in design section 19 must have an explicit definition. Missing definitions block G0 and release."
 }

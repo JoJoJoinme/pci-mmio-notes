@@ -210,6 +210,8 @@ V3 明确不以 live migration、FT、snapshot/suspend 或 guest runtime PCI hot
 - 101 个设计 Case：C20、O09 为 reference-scope executable；C21、F09、S15 为
   `PRODUCT / IMPLEMENTATION_BLOCKED`。VFIO provider 与 QMP component evidence 分别只作为
   C21 和 S15/F09 前提，不构成产品关闭；其余 96 个 Case 仍待分类。
+- 已定义 Case 通过 `requiredTechStories` 挂回本树，并用 `dependsOnCaseIds` 固定关闭顺序；
+  当前关键链由机器门约束为 `C21 → S15 → F09`，reference Case 不能替代产品前置。
 - 风险：R01-R39 当前全部未达到发布闭环。
 - 发布：`BLOCKED`。
 

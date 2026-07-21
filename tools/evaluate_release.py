@@ -45,6 +45,11 @@ CASE_STATES = {
     "HARDWARE_BLOCKED",
     "FEATURE_DISABLED",
 }
+CASE_DEPENDENCY_REQUIRED_FIELDS = {
+    "requiredTechStories",
+    "dependsOnCaseIds",
+}
+CASE_DEPENDENCY_CLOSEABLE_STATES = {"EXECUTABLE", "FEATURE_DISABLED"}
 MILESTONE_STATES = {"NOT_STARTED", "IN_PROGRESS", "BLOCKED", "DONE"}
 HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 FEATURE_ID_RE = re.compile(r"^F\d+$")
@@ -383,15 +388,155 @@ def validate_risks(
     return counts
 
 
+def collect_ipd_tech_story_ids(contract: dict[str, Any]) -> set[str]:
+    """Return the machine-defined TS IDs without assuming the IPD tree is valid."""
+
+    features = contract.get("features")
+    if not isinstance(features, list):
+        return set()
+    story_ids: set[str] = set()
+    for feature in features:
+        if not isinstance(feature, dict):
+            continue
+        tech_stories = feature.get("techStories")
+        if not isinstance(tech_stories, list):
+            continue
+        for story in tech_stories:
+            story_id = story.get("id") if isinstance(story, dict) else None
+            if isinstance(story_id, str):
+                story_ids.add(story_id)
+    return story_ids
+
+
+def validate_acceptance_dependencies(
+    definitions: dict[str, dict[str, Any]],
+    design_case_ids: set[str],
+    known_tech_story_ids: set[str],
+    errors: list[str],
+    blockers: list[str],
+) -> None:
+    """Validate dependency structure and report incomplete closure as blockers.
+
+    A dependency is structurally valid when it points at one of the 101 design
+    Case IDs, even if that Case has not been defined yet.  Undefined, blocked,
+    or reference-scope prerequisites therefore make release unready without
+    corrupting the contract.  Unknown IDs, unknown TS IDs, self-dependencies,
+    and cycles are contract errors.
+    """
+
+    graph: dict[str, list[str]] = {}
+    for case_id, case in definitions.items():
+        required_tech_stories = case.get("requiredTechStories")
+        if not isinstance(required_tech_stories, list) or any(
+            not isinstance(item, str) for item in required_tech_stories
+        ):
+            errors.append(
+                f"acceptance case {case_id} requiredTechStories must be a string list"
+            )
+        else:
+            if len(required_tech_stories) != len(set(required_tech_stories)):
+                errors.append(
+                    f"acceptance case {case_id} requiredTechStories must be unique"
+                )
+            unknown_tech_stories = sorted(
+                set(required_tech_stories) - known_tech_story_ids
+            )
+            if unknown_tech_stories:
+                errors.append(
+                    f"acceptance case {case_id} references unknown tech stories: "
+                    f"{unknown_tech_stories}"
+                )
+
+        dependencies = case.get("dependsOnCaseIds")
+        if not isinstance(dependencies, list) or any(
+            not isinstance(item, str) for item in dependencies
+        ):
+            errors.append(
+                f"acceptance case {case_id} dependsOnCaseIds must be a string list"
+            )
+            graph[case_id] = []
+            continue
+        if len(dependencies) != len(set(dependencies)):
+            errors.append(f"acceptance case {case_id} dependsOnCaseIds must be unique")
+        if case_id in dependencies:
+            errors.append(f"acceptance case {case_id} cannot depend on itself")
+        unknown_case_ids = sorted(set(dependencies) - design_case_ids)
+        if unknown_case_ids:
+            errors.append(
+                f"acceptance case {case_id} references unknown dependency cases: "
+                f"{unknown_case_ids}"
+            )
+        graph[case_id] = list(
+            dict.fromkeys(
+                dependency
+                for dependency in dependencies
+                if dependency in design_case_ids and dependency != case_id
+            )
+        )
+
+    colors: dict[str, int] = {}
+    stack: list[str] = []
+    reported_cycles: set[frozenset[str]] = set()
+
+    def visit(case_id: str) -> None:
+        colors[case_id] = 1
+        stack.append(case_id)
+        for dependency in graph.get(case_id, []):
+            if dependency not in graph:
+                continue
+            color = colors.get(dependency, 0)
+            if color == 0:
+                visit(dependency)
+            elif color == 1:
+                cycle_start = stack.index(dependency)
+                cycle = stack[cycle_start:] + [dependency]
+                cycle_key = frozenset(cycle)
+                if cycle_key not in reported_cycles:
+                    reported_cycles.add(cycle_key)
+                    errors.append(
+                        "acceptance dependency graph contains a cycle: "
+                        + " -> ".join(cycle)
+                    )
+        stack.pop()
+        colors[case_id] = 2
+
+    for case_id in sorted(graph):
+        if colors.get(case_id, 0) == 0:
+            visit(case_id)
+
+    for case_id, dependencies in sorted(graph.items()):
+        dependent = definitions[case_id]
+        for dependency_id in dependencies:
+            dependency = definitions.get(dependency_id)
+            if dependency is None:
+                blockers.append(
+                    f"acceptance dependency is not defined: {case_id} -> {dependency_id}"
+                )
+                continue
+            if dependent.get("scope") == "PRODUCT" and dependency.get("scope") != "PRODUCT":
+                blockers.append(
+                    "product acceptance dependency is reference-only: "
+                    f"{case_id} -> {dependency_id}"
+                )
+                continue
+            dependency_status = dependency.get("status")
+            if dependency_status not in CASE_DEPENDENCY_CLOSEABLE_STATES:
+                blockers.append(
+                    "acceptance dependency is not closure-ready: "
+                    f"{case_id} -> {dependency_id} ({dependency_status})"
+                )
+
+
 def validate_acceptance(
     policy: dict[str, Any],
     design: DesignContracts,
     known_risks: set[str],
+    known_tech_story_ids: set[str],
     errors: list[str],
     blockers: list[str],
 ) -> tuple[Counter[str], list[str], dict[str, dict[str, Any]]]:
-    if policy.get("schemaVersion") != 1:
-        errors.append("acceptance-policy.json schemaVersion must be 1")
+    if policy.get("schemaVersion") != 2:
+        errors.append("acceptance-policy.json schemaVersion must be 2")
     expected = policy.get("expectedCaseCount")
     if expected != len(design.cases):
         errors.append(
@@ -410,6 +555,43 @@ def validate_acceptance(
     allowed = set(policy.get("allowedStatuses", []))
     if allowed != CASE_STATES:
         errors.append(f"acceptance allowedStatuses must be {sorted(CASE_STATES)}")
+
+    dependency_policy = policy.get("dependencyPolicy")
+    if not isinstance(dependency_policy, dict):
+        errors.append("acceptance policy must declare dependencyPolicy")
+    else:
+        required_fields = dependency_policy.get("requiredFields")
+        if (
+            not isinstance(required_fields, list)
+            or any(not isinstance(item, str) for item in required_fields)
+            or set(required_fields) != CASE_DEPENDENCY_REQUIRED_FIELDS
+        ):
+            errors.append(
+                "acceptance dependencyPolicy requiredFields must be "
+                f"{sorted(CASE_DEPENDENCY_REQUIRED_FIELDS)}"
+            )
+        closeable_statuses = dependency_policy.get("closeableStatuses")
+        if (
+            not isinstance(closeable_statuses, list)
+            or any(not isinstance(item, str) for item in closeable_statuses)
+            or set(closeable_statuses) != CASE_DEPENDENCY_CLOSEABLE_STATES
+        ):
+            errors.append(
+                "acceptance dependencyPolicy closeableStatuses must be "
+                f"{sorted(CASE_DEPENDENCY_CLOSEABLE_STATES)}"
+            )
+        if dependency_policy.get("productDependenciesRequireProductScope") is not True:
+            errors.append(
+                "acceptance dependencyPolicy must require PRODUCT scope dependencies"
+            )
+        if dependency_policy.get("undefinedOrUnreadyEffect") != "RELEASE_BLOCKER":
+            errors.append(
+                "acceptance dependencyPolicy undefinedOrUnreadyEffect must be RELEASE_BLOCKER"
+            )
+        if dependency_policy.get("unknownReferenceOrCycleEffect") != "CONTRACT_INVALID":
+            errors.append(
+                "acceptance dependencyPolicy unknownReferenceOrCycleEffect must be CONTRACT_INVALID"
+            )
 
     definitions: dict[str, dict[str, Any]] = {}
     counts: Counter[str] = Counter()
@@ -468,6 +650,14 @@ def validate_acceptance(
                 )
         elif state == "HARDWARE_BLOCKED" and not case.get("blocker"):
             errors.append(f"hardware-blocked case {case_id} must describe its blocker")
+
+    validate_acceptance_dependencies(
+        definitions,
+        set(design.cases),
+        known_tech_story_ids,
+        errors,
+        blockers,
+    )
 
     missing = [case_id for case_id in design.cases if case_id not in definitions]
     if missing:
@@ -1778,7 +1968,12 @@ def evaluate() -> Evaluation:
         blockers,
     )
     acceptance_counts, missing_cases, executable = validate_acceptance(
-        acceptance_policy, design, set(design.risks), errors, blockers
+        acceptance_policy,
+        design,
+        set(design.risks),
+        collect_ipd_tech_story_ids(ipd_contract),
+        errors,
+        blockers,
     )
 
     return Evaluation(

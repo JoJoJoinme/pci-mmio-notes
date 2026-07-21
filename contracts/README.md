@@ -22,7 +22,9 @@
   `VERIFIED`/`FEATURE_DISABLED`，其已知产品 Case、E3/E4 等级和 artifact hash 还必须匹配
   Qman evidence index 中显式 `risksClosed` 的 end-to-end 结果。
 - `acceptance-policy.json`：从详细设计第 19 节提取 Case ID，并检查 `acceptance/cases/`
-  是否存在对应场景定义。
+  是否存在对应场景定义；schema v2 还要求每个 Case 声明 `requiredTechStories` 与
+  `dependsOnCaseIds`。未知 TS/Case、自依赖或环使合同无效；未定义/未关闭前置以及用 reference
+  Case 满足产品前置会保持 release blocked。
 
 发布门会同时校验产品树中的 ID、父子关系、资料路径和人机文档一致性。产品树节点存在只表示
 范围已定义，不表示实现或验收完成。

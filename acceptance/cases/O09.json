@@ -7,6 +7,8 @@
   "riskIds": [
     "R39"
   ],
+  "requiredTechStories": ["TS-F2-01", "TS-F2-02"],
+  "dependsOnCaseIds": [],
   "runner": {
     "cwd": "pci-resource-model",
     "argv": [

@@ -5,6 +5,8 @@
   "status": "IMPLEMENTATION_BLOCKED",
   "scope": "PRODUCT",
   "riskIds": ["R17", "R26", "R37"],
+  "requiredTechStories": ["TS-F4-05", "TS-F5-05"],
+  "dependsOnCaseIds": ["C21", "S13", "S14", "S15", "S16"],
   "blocker": "The E3 QMP component gate covers one command channel only; production API, raw QEMU CLI, storage or definition mutation, alternate monitor sockets, fd injection, launcher privilege separation and durable lease/admission integration remain unimplemented.",
   "targetMilestone": "G2",
   "referenceEvidenceIds": [
