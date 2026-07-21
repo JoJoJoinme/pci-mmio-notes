@@ -207,8 +207,10 @@ host-local component authority：完整 HostInventory 与精确 PCI identity/IOM
   loser 得到 `PUBLISH_CONFLICT`；
 - signature tamper、payload tamper、旧 snapshot、minimum epoch 与 boot drift 分别以稳定 reason
   fail closed；
-- 删除最新 epoch 2 后，同一 inode/store instance 中正确签名的 epoch 1 仍能授权；该 L01 反例明确
-  验证了外部单调 rollback anchor 的必要性，而不是把 inode/store UUID 误当作防回滚证明。
+- 删除最新 epoch 2 后，同一 inode/store instance 中正确签名的 epoch 1 仍会被 `current()` 接受为
+  当前 authority state；重开进程没有 process-local sealed capture provider，不能据此签发 launch
+  authorization。该 L01 反例明确验证了外部单调 rollback anchor 的必要性，而不是把 inode/store UUID
+  误当作防回滚证明。
 
 这只是 `QMAN_COMPONENT / COMPONENT_ONLY`。HMAC signer/verifier 共享组件 key，不是 TPM/HSM-backed
 生产 trust root；没有外部单调锚时，任何 earlier-valid SQLite 状态回放（含同 key 下原位/块级恢复或

@@ -2003,8 +2003,9 @@ VFIO provider split、QEMU/OVMF MMIO、最小 QMP default-deny component，以�
 `QMAN-E3-STATIC-LEASE-FAULT-001` 的 subprocess/SQLite crash/CAS 前提。
 `QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001` 又证明 component SQLite publisher 在 insert 后硬退出
 不会暴露部分 epoch、相同 CAS 只有一个 winner，以及 signature/payload/stale/minimum-epoch/boot
-负门；L01 删除最新 row 后 earlier-valid epoch 仍可授权，直接证明外部 rollback anchor 仍缺失，而非
-证明 inode/store UUID 能防回滚。它也不证明生产密钥治理。更新后的
+负门；L01 删除最新 row 后 earlier-valid epoch 仍会被 `current()` 接受为当前 authority state，但重开
+进程没有 process-local sealed capture provider，不能签发 launch authorization。该结果直接证明外部
+rollback anchor 仍缺失，而非证明 inode/store UUID 能防回滚；它也不证明生产密钥治理。更新后的
 `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` v5 把 sealed capture provider、signed full-host snapshot authorization、lease
 authorization、fresh raw fd、四次 live revalidation、stock-QEMU bind/IOAS/attach observation 与
 无 independent DMA receipt 时的 claims-retaining quarantine 串成同一个组件链。
