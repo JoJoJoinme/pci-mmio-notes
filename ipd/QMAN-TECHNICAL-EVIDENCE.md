@@ -34,7 +34,8 @@ artifact hash drift => evidence invalidated
 
 | Evidence | 等级 | 已实锤 | 影响的 TS / Case 前提 | 本轮没有宣告 |
 | --- | --- | --- | --- | --- |
-| `QMAN-E2-REFERENCE-MODEL-001` | E2 | WSL 下 87/87 reference-model tests pass | TS-F1-02/03/04、F2-01/02、F4-01；C05/C06/O09/M22 | controller、provider、lease store、C20 完整固定点 |
+| `QMAN-E2-REFERENCE-MODEL-001` | E2 | WSL 下历史基线 87/87 reference-model tests pass | TS-F1-02/03/04、F2-01/02、F4-01；C05/C06/O09/M22 | controller、provider、lease store；不追认后续 C20 |
+| `QMAN-E2-CLOSURE-001` | E2 | C20 定向 22/22、全量 112/112；四格固定点、严格 fact verifier、有界 closure、immutable inventory、owner-independent/decision hash A/B 与零副作用均通过 | TS-F1-01/04、F5-01；C20 / R38 前提 | 产品 inventory/evidence provider、controller/lease/attach、C20 产品 Case、R38、E4 |
 | `QMAN-QEMU-CONTROL-001` | E3 | 建机后可通过 QMP 向 QEMU device tree 加入 PCI endpoint（本次在 machine 暂停态）；同 guest BDF 可换 VID:DID；`device_del` reply 后设备仍存在 | TS-F3-01/04、F4-05、F5-05；S01/S15/F09 前提 | Guest 在线热插、Qman QMP ACL 已实现、S15/F09 已通过 |
 | `QMAN-E3-DMA-PROVIDER-001` | E3 | unsafe=`Y` 时，no-IOMMU 与 IOMMU-backed device 仍呈现不同 provider node | TS-F1-02、F3-03；C21 前提 | 物理 IOMMU/IR/errata、IOMMUFD IOAS attach、DPDK workload |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 | QEMU floor 与 OVMF aperture 必须配对；双 64 GiB BAR 默认失败、128 GiB 配对成功 | TS-F4-01/02/04；M23 前提 | Qman observedPlan commit/rollback、物理 BAR qualification |
@@ -91,6 +92,25 @@ ESXi 与 QEMU 实验都推翻了这种单值翻译。本轮在 QEMU 11.0.2/`pc-q
 
 证据：[`qman-qemu-control-20260721-summary.json`](../evidence/qman-qemu-control-20260721-summary.json)。
 
+### 3.4 C20 必须把依赖闭包放在 availability 之前
+
+`QMAN-E2-CLOSURE-001` 把实现蓝图中的 C20 四格变成可执行 reference Case：dependency
+qualified/free 与同一 bundle busy 拥有完全相同的 snapshot/bundle/capability/policy hash，仅
+availability 与 `decisionHash` 改变；dependency reset missing 或 action unknown 则在 capable gate
+直接失败。补充反例还验证了：
+
+- 无显式 verifier、伪造 evidence hash、旧 epoch/topology 和 BDF key/identity 替换全部 fail closed；
+- verifier 必须返回严格布尔 `True`，inventory devices/leases 构造后不可变；
+- 20,000-member 恶意 dependency domain 在加入 member/edge 前受限，拒绝结果不复制超大全集；
+- reason message 本地化不改变语义 hash，attach/activation group 与 MMIO 只绑定到最终 decision hash；
+- 查询不执行 bind、reset 或 lease write。
+
+这里使用的 `REFERENCE_FACT_VERIFIER` 是可重算的确定性 E2 fixture verifier，只证明字段绑定，
+不证明签名真实性。生产 Qman 必须注入版本化 trust-root/policy verifier，且其 identifier/digest 必须
+进入 policy hash；因此本结果不关闭 C20 产品 Case 或 R38。
+
+证据：[`qman-capability-closure-20260721-summary.json`](../evidence/qman-capability-closure-20260721-summary.json)。
+
 ## 4. 可复现入口
 
 实验复用了本地历史任务中沉淀的 WSL/QEMU 环境；可提交、可复现的权威环境说明为
@@ -120,6 +140,11 @@ wsl -d Ubuntu-22.04 -- env `
 wsl -d Ubuntu-22.04 -- bash `
   /mnt/e/Code/PCI/github-export/qman-lab/run_reference_model_tests.sh `
   /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-model/unittest.log
+
+# C20 bounded capability closure
+wsl -d Ubuntu-22.04 -- bash `
+  /mnt/e/Code/PCI/github-export/qman-lab/run_c20_capability_closure.sh `
+  /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-c20/unittest.log
 ```
 
 原始 Unix socket 必须放在 WSL 原生文件系统。把 monitor socket 放在 `/mnt/e` 会返回
@@ -129,13 +154,11 @@ wsl -d Ubuntu-22.04 -- bash `
 
 按依赖顺序继续：
 
-1. `QMAN-E2-CLOSURE-001`：补 C20 四格 fixture，证明 dependency/action/reset/qualification
-   固定点；busy 只能改变 available，不能改变 capable/bundle hash。
-2. `QMAN-E3-STATIC-FAULT-001`：QEMU pre-ready exit、SIGKILL、bind/reset 中途失败，验证
+1. `QMAN-E3-STATIC-FAULT-001`：QEMU pre-ready exit、SIGKILL、bind/reset 中途失败，验证
    journal/lease/fd/mapping/driver rollback 与 whole-bundle quarantine。
-3. `QMAN-E3-QMP-GATE-001`：实现最小 QMP proxy/ACL 后重跑 S15/F09，要求 raw
+2. `QMAN-E3-QMP-GATE-001`：实现最小 QMP proxy/ACL 后重跑 S15/F09，要求 raw
    `device_add/device_del` 被拒绝且 device tree/fd/generation 不变。
-4. E4：真实 NIC/GPU/HBA 上的 IOMMU/IR、ACS/RID alias、reset/state、INTx、P2P、RMRR、
+3. E4：真实 NIC/GPU/HBA 上的 IOMMU/IR、ACS/RID alias、reset/state、INTx、P2P、RMRR、
    SR-IOV、errata 和 workload qualification。
 
 Dynamic solver、cluster CAS/fencing 和 HA cold restart 在 Static safety core 的 component

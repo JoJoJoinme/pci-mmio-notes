@@ -59,6 +59,14 @@
             "type": "string",
             "pattern": "^[0-9a-f]{64}$"
           }
+        },
+        "inputHashes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
         }
       }
     },

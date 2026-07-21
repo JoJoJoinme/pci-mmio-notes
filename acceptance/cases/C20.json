@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "C20",
+  "title": "Capability closure is resolved before availability and attach admission",
+  "status": "EXECUTABLE",
+  "scope": "REFERENCE_MODEL",
+  "riskIds": ["R38"],
+  "referenceEvidenceIds": ["QMAN-E2-CLOSURE-001"],
+  "runner": {
+    "cwd": "pci-resource-model",
+    "argv": [
+      "{python}",
+      "-m",
+      "unittest",
+      "tests.test_c20_capability_closure"
+    ]
+  },
+  "assertions": [
+    "mandatory dependency action, exact qualification and reset contracts reach a bounded fixed point",
+    "same-bundle free and busy inputs preserve bundle/capability/policy/snapshot hashes while changing decision availability",
+    "missing or unauthenticated facts, stale snapshot identity, conflicts and closure overflow fail closed",
+    "capability query performs no modeled bind, reset or lease write"
+  ],
+  "artifacts": {
+    "required": [
+      "exit-code",
+      "stdout",
+      "stderr"
+    ]
+  }
+}

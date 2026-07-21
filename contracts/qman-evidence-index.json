@@ -37,6 +37,17 @@
       "riskIds": ["R01", "R09", "R36", "R39"]
     },
     {
+      "id": "QMAN-E2-CLOSURE-001",
+      "resultPath": "evidence/qman-capability-closure-20260721-summary.json",
+      "resultSha256": "87e6c93aa1bbbc194352a866b39fb40dc40fd8a5648af0b16d114b5a248cb445",
+      "subject": "QMAN_REFERENCE_MODEL",
+      "evidenceGrade": "E2",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+      "caseIds": ["C20"],
+      "riskIds": ["R38"]
+    },
+    {
       "id": "QMAN-QEMU-CONTROL-001",
       "resultPath": "evidence/qman-qemu-control-20260721-summary.json",
       "resultSha256": "86cf3c1d920c10938492a1a226e29e725091e983f61fa9deab1be7d9e694e297",

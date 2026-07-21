@@ -13,7 +13,7 @@
   预期、观察、verdict、limitations 和 artifact SHA-256 合同。
 - `qman-technical-evidence.schema.json`：Qman reference/component/end-to-end 结果的 subject、
   E2/E3/E4、SUT、TS/Case/Risk mapping、artifact hash、关闭效果和 limitations 合同。
-- `qman-evidence-index.json`：Qman 技术证据的权威索引；当前登记 4 条结果（E2=1、E3=3），
+- `qman-evidence-index.json`：Qman 技术证据的权威索引；当前登记 5 条结果（E2=2、E3=3），
   都是 `REFERENCE_ONLY`，因此不关闭产品 Case、Risk 或 milestone。人类可读入口为
   `ipd/QMAN-TECHNICAL-EVIDENCE.md`。
 - `project-status.json`：当前 milestone、能力声明、开放决策和冻结规则。
@@ -29,7 +29,8 @@
 
 Qman 证据门另外执行以下不可绕过规则：reference/component subject 不关闭产品状态；E2 永不
 关闭产品 Case/Risk；E3 不得关闭要求物理验证的 Risk；`SUPPORTED` 必须同时具有目标真实硬件
-E4 qualification 和产品 gate。result、runner 或 artifact hash 漂移会使证据失效。
+E4 qualification 和产品 gate。result、runner、可选的 `sourceState.inputHashes` 或 artifact hash
+漂移会使证据失效；`inputHashes` 用于把模型、fixture 与测试输入和 runner 分开固定。
 
 查看当前状态：
 

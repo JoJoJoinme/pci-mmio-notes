@@ -841,6 +841,41 @@ def repository_file(
     return candidate
 
 
+def validate_qman_input_hashes(
+    evidence_id: str,
+    input_hashes: Any,
+    errors: list[str],
+) -> None:
+    """Validate optional hashes for model, fixture and test inputs."""
+
+    if input_hashes is None:
+        return
+    if not isinstance(input_hashes, dict) or not input_hashes:
+        errors.append(
+            f"Qman evidence {evidence_id} inputHashes must be non-empty when present"
+        )
+        return
+    for input_relative, expected_input_hash in input_hashes.items():
+        input_path = repository_file(
+            input_relative,
+            f"Qman evidence {evidence_id} inputHashes path",
+            errors,
+        )
+        if not isinstance(expected_input_hash, str) or not HASH_RE.fullmatch(
+            expected_input_hash
+        ):
+            errors.append(
+                f"Qman evidence {evidence_id} has invalid input SHA-256: "
+                f"{input_relative!r}"
+            )
+        elif input_path is not None:
+            actual_input_hash = hashlib.sha256(input_path.read_bytes()).hexdigest()
+            if actual_input_hash != expected_input_hash:
+                errors.append(
+                    f"Qman evidence {evidence_id} input hash drift: {input_relative}"
+                )
+
+
 def validate_qman_closure_effect(
     evidence_id: str,
     result: dict[str, Any],
@@ -1251,6 +1286,12 @@ def validate_qman_evidence(
                             f"Qman evidence {evidence_id} runner hash drift: "
                             f"{runner_relative}"
                         )
+
+        validate_qman_input_hashes(
+            evidence_id,
+            source_state.get("inputHashes"),
+            errors,
+        )
 
         artifacts = result.get("artifacts")
         if not isinstance(artifacts, list) or not artifacts:

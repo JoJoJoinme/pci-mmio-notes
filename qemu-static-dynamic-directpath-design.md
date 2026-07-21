@@ -3260,12 +3260,13 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 
 | Evidence | 等级/subject | 已验证的设计前提 | 对实现的强制反馈 | 仍未关闭 |
 | --- | --- | --- | --- | --- |
-| `QMAN-E2-REFERENCE-MODEL-001` | E2 / reference model | 87/87 纯函数与 schema 单测通过 | 保持 capability、owner、allocator 查询无副作用且 hash 可复现 | C20 完整四格、产品 controller、任何 Risk |
+| `QMAN-E2-REFERENCE-MODEL-001` | E2 / reference model | 历史基线 87/87 纯函数与 schema 单测通过 | 保持 capability、owner、allocator 查询无副作用且 hash 可复现 | 后续 C20 不由该旧记录追认；产品 controller、任何 Risk |
+| `QMAN-E2-CLOSURE-001` | E2 / reference model | C20 22/22、全量 112/112；四格固定点、fact authenticity boundary、snapshot stale、closure limit、immutable inventory、golden/decision hash 与零副作用通过 | schema-v2 fact 全绑定 epoch/topology/subject/evidence；无 verifier 默认拒绝；member/edge 加入前增量限流；capability 与 executable decision hash 分离 | 产品 inventory/evidence provider、C20 产品 Case、R38、真实硬件 |
 | `QMAN-QEMU-CONTROL-001` | E3 / QEMU control reference | raw QMP 可在冷启动规划后、machine 暂停态添加 PCI endpoint；相同 guest BDF 可承载不同 VID:DID；`device_del` reply 不是 teardown 完成；未验证 Guest 在线热插 | Static 身份必须是 `deviceUid + fingerprint`；生产 QMP 必须 allowlist；release 必须等待 Guest/backend/IOMMU/reset 完成证据 | S15/F09、Qman QMP gate、lease/reconcile |
 | `QMAN-E3-DMA-PROVIDER-001` | E3 / QEMU+Guest+VFIO reference | unsafe=`Y` 时 `noiommu-*` 与 IOMMU-backed group/cdev 仍可逐设备区分 | VM attach provider 必须逐设备证明 DMA provider；不能按全局 unsafe switch 整机放行或整机拒绝 | C21 产品场景、物理 IOMMU/IR/errata、IOMMUFD attach |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 / QEMU+firmware reference | QEMU 11/OVMF 双 64 GiB BAR：默认 0/2 分配；128 GiB firmware aperture 与 QEMU floor 配对后 2/2 且 heartbeat | 分开持久化 required span、firmware aperture、QEMU floor、observed runtime window；不把 floor 当 hard cap | M23 产品 post-start commit/rollback、物理 BAR qualification |
 
-四条结果的 `closureEffect` 都为空，Risk 状态继续保持 `OPEN`，G0/release 继续 `BLOCKED`。
+五条结果的 `closureEffect` 都为空，Risk 状态继续保持 `OPEN`，G0/release 继续 `BLOCKED`。
 该边界很重要：这些实验把“为什么必须有控制”从推理提升为 E2/E3，但仓库中尚无完整 Qman
 controller，不能据此宣告 QMP 绕过已封堵、VFIO attach 已安全或设备已进入兼容性列表。
 
@@ -3293,9 +3294,9 @@ controller，不能据此宣告 QMP 绕过已封堵、VFIO attach 已安全或�
 | C15 | 重复 capable 查询 | driver、lease、reset counter、generation 全部不变，decision hash 稳定 | evaluator 纯函数已有；host 集成负例待实现 |
 | C16 | 一个 topology component 缺 ACS provenance | 仅该 component 为 unknown；无关 component 结论不变 | 当前实现会全局失效，待修正 |
 | C17 | VFIO cdev/legacy/mixed hot reset | cdev 要求 `DEV_ID_OWNED`；legacy 要求完整 group fds；mixed 拒绝 | UAPI 设计已定，provider 待实现 |
-| C18 | stale `ResetContract` | epoch/topology/rule 任一变化即不可选择 | 待实现 |
+| C18 | stale `ResetContract` | epoch/topology/rule 任一变化即不可选择 | reference evaluator E2 已通过；产品 provider/执行前重检待实现 |
 | C19 | kernel native shadow domain | override-on shadow domain 是 override-off stock/alias constraint 的相等或保守超集；unknown component 拒绝 | phase-1 provenance patch 已构建；shadow ABI 待实现 |
-| C20 | capability closure 前置与 reset/action 固定点 | mandatory dependency 无 reset/action/qualification 时 target capable=false；同 bundle free/busy A/B 只改变 available，不改变 capable/bundle hash | 设计已修正；reference evaluator/fixture 待实现 |
+| C20 | capability closure 前置与 reset/action 固定点 | mandatory dependency 无 reset/action/qualification 时 target capable=false；同 bundle free/busy A/B 只改变 available，不改变 capable/bundle hash | `QMAN-E2-CLOSURE-001` / 22 个 reference Case 已通过；产品 publisher/verifier/controller 与 R38 仍未关闭 |
 | C21 | global unsafe switch 与逐设备 DMA provider A/B | 相同 device 在 unsafe=`Y` 时：`noiommu-*` 稳定拒绝；IOMMU-backed group/cdev 才可继续 attach admission；全局开关本身不改变设备 capable | QEMU/Guest/VFIO E3 A/B 已通过；Qman attach provider 待实现，物理 E4 待验收 |
 
 ### 19.2 Host owner activation

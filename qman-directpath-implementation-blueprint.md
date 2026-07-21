@@ -1838,6 +1838,14 @@ invariants:
   - query_has_no_bind_reset_or_lease_side_effect
 ```
 
+当前 executable reference fixture 位于
+[`pci-resource-model/tests/fixtures/c20-capability-closure.json`](pci-resource-model/tests/fixtures/c20-capability-closure.json)，
+runner 为 [`qman-lab/run_c20_capability_closure.sh`](qman-lab/run_c20_capability_closure.sh)。
+`QMAN-E2-CLOSURE-001` 已在 Windows/WSL 通过 22 个 C20 定向测试和 112 个全量测试，并增加
+unauthenticated/stale fact、BDF identity substitution、immutable inventory、20,000-member bounded
+closure 与 decision-hash 扰动反例。该结果只完成 reference evaluator，不替代生产
+inventory publisher、签名 verifier、controller/lease/attach executor，也不关闭 C20 产品 Case 或 R38。
+
 无法稳定自动断言的场景不能标记 `VERIFIED`；它只能是 `CONTROL_IMPLEMENTED` 或对应功能
 `FEATURE_DISABLED`。
 

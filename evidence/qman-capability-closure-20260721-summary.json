@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E2-CLOSURE-001",
+  "observedAt": "2026-07-21T01:05:49Z",
+  "subject": "QMAN_REFERENCE_MODEL",
+  "evidenceGrade": "E2",
+  "claimBoundary": "REFERENCE_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "de414721d1227a177463cb3440b66ade62262f35",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-lab/run_c20_capability_closure.sh": "bfa4a403461a85115962b95fb2d83b3769adfbc1d8cde31e6f7396fe15e4c830"
+    },
+    "inputHashes": {
+      "pci-resource-model/pci_resource_model/__init__.py": "5e3aa5320cd473d3a0fa62c1da8f6232624e49fb2f56653063268ee57cf243b9",
+      "pci-resource-model/pci_resource_model/allocator.py": "ba4df35e42bd006a9b11b9234188ba59ade2da2fd9e1b1893ce5d898e62e6fb1",
+      "pci-resource-model/pci_resource_model/capability.py": "5f9dd13810e62f22b48eb4671b2de8aa13b615193fdd57b8899308bd86f45b13",
+      "pci-resource-model/pci_resource_model/model.py": "e6349f42d98f10fd3ba8c2e4f3128abac869b181dfad29ee25ebe8d4ed9491ec",
+      "pci-resource-model/tests/fixtures/c20-capability-closure.json": "5d5bda002de9f567cf7440759f756edcd30b58dcf0fc55be3619de98d0ba5ae9",
+      "pci-resource-model/tests/test_c20_capability_closure.py": "38893408c386f4a8e5b01b3c723f43dd9928afe4b1ea20e6867f5dafe35f9a55"
+    }
+  },
+  "sut": {
+    "environment": "WSL2 Ubuntu-22.04 Python standard-library C20 reference evaluator",
+    "components": [
+      {"name": "Python", "version": "3.10.12"},
+      {"name": "pci-resource-model", "version": "de414721d1227a177463cb3440b66ade62262f35"}
+    ]
+  },
+  "hypotheses": [
+    "Capability must resolve an owner-independent dependency/action/reset fixed point before availability or attach admission.",
+    "The same qualified bundle changing from free to busy may change availability and decisionHash, but must not change bundleHash, capabilityHash, policyHash or snapshotHash.",
+    "Missing, stale, unauthenticated, conflicting or over-limit facts must fail closed without bind, reset or lease side effects."
+  ],
+  "observations": [
+    {
+      "name": "focused-c20-suite",
+      "result": {"tests": 22, "failures": 0, "errors": 0, "verdict": "pass"}
+    },
+    {
+      "name": "full-reference-suite",
+      "result": {"tests": 112, "failures": 0, "errors": 0, "verdict": "pass"}
+    },
+    {
+      "name": "four-cell-fixed-point-matrix",
+      "result": {
+        "qualifiedFree": {"capable": true, "available": true},
+        "sameBundleBusy": {"capable": true, "available": false},
+        "dependencyResetMissing": {"capable": false, "reason": "RESET_NOT_SUPPORTED"},
+        "dependencyActionUnknown": {"capable": false, "reason": "DEPENDENCY_ACTION_UNKNOWN"},
+        "freeBusyOwnerIndependentHashesEqual": true,
+        "freeBusyDecisionHashesDifferent": true
+      }
+    },
+    {
+      "name": "golden-owner-independent-hashes",
+      "result": {
+        "snapshotHash": "a7eefb4e441024f67422af7db4ae0b26da36bfa327f6acbc91a979000dc489be",
+        "bundleHash": "bb47d1f32622932266cc098277eefa09c9eaa4fd32102c853c2ccbb7c4a8a2ed",
+        "capabilityHash": "077e929802e17cc2542d3dc764b68dd1b9d3d9fcfc1c293eb265cf197c0025d8",
+        "policyHash": "bd23f5ca336762b3b4191b1bae7aaa9ba54d56fc0937d8dc368bcae23a5582ca"
+      }
+    },
+    {
+      "name": "fail-closed-boundaries",
+      "result": {
+        "defaultWithoutVerifierRejected": true,
+        "forgedEvidenceHashRejected": true,
+        "oldEpochTopologyRejected": true,
+        "deviceKeyIdentitySubstitutionRejected": true,
+        "deviceAndLeaseMapsImmutable": true,
+        "dependencyDomain20000BoundedToConfiguredLimit": true,
+        "querySideEffectCountersChanged": false
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+    "caseIds": ["C20"],
+    "riskIds": ["R38"]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-c20-closure-v1/unittest.log",
+      "sha256": "8b4789f84e34c6e86b1964f0a2fc6172d1619e516683ed084addf1b1265fc0c2",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This is E2 reference-model evidence; C20 is executable only in REFERENCE_MODEL scope and does not close the product case or R38.",
+    "REFERENCE_FACT_VERIFIER is deterministic and forgeable by design; it proves fixture field binding, not a production signature, MAC or trust store.",
+    "There is no Qman inventory publisher, production evidence verifier, controller, durable lease store, attach executor or launcher in this result.",
+    "The source working tree also contained unrelated untracked work; the base commit plus runnerHashes and inputHashes pin every C20 input used by this record.",
+    "No physical PCI device or E4 qualification was exercised."
+  ]
+}

@@ -1,7 +1,9 @@
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,26 +37,36 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "Qman evidence: records=4 (E2=1, E3=3; reference=4, "
+            "Qman evidence: records=5 (E2=2, E3=3; reference=5, "
             "product_case_closures=0, risk_closures=0)",
             result.stdout,
         )
         self.assertIn("Risks: 39", result.stdout)
-        self.assertIn("Acceptance: 2/101 defined", result.stdout)
+        self.assertIn("Acceptance: 3/101 defined", result.stdout)
+        self.assertIn("EXECUTABLE=2", result.stdout)
         self.assertIn("IMPLEMENTATION_BLOCKED=1", result.stdout)
-        self.assertIn("reference-only executable cases do not close product gates: O09", result.stdout)
+        self.assertIn(
+            "reference-only executable cases do not close product gates: C20, O09",
+            result.stdout,
+        )
         self.assertIn("Release: BLOCKED", result.stdout)
 
     def test_release_gate_fails_closed(self) -> None:
         result = self.invoke("release")
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("Release: BLOCKED", result.stdout)
+        self.assertIn("Case C20: PASS", result.stdout)
         self.assertIn("Case O09: PASS", result.stdout)
 
     def test_o09_is_executable(self) -> None:
         result = self.invoke("run-cases", "--case", "O09")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Case O09: PASS", result.stdout)
+
+    def test_c20_is_executable_reference_scope(self) -> None:
+        result = self.invoke("run-cases", "--case", "C20")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Case C20: PASS", result.stdout)
 
 
 class QmanEvidenceClosurePolicyTests(unittest.TestCase):
@@ -179,6 +191,20 @@ class QmanEvidenceClosurePolicyTests(unittest.TestCase):
             )
         )
         self.assertEqual(errors, [])
+
+    def test_input_hash_drift_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "fixture.json").write_text("{}\n", encoding="utf-8")
+            errors: list[str] = []
+            with patch.object(evaluate_release, "ROOT", root):
+                evaluate_release.validate_qman_input_hashes(
+                    "QMAN-TEST-001",
+                    {"fixture.json": "0" * 64},
+                    errors,
+                )
+
+        self.assertTrue(any("input hash drift" in item for item in errors))
 
 
 class RiskEvidencePolicyTests(unittest.TestCase):

@@ -27,13 +27,14 @@ Dynamic、Cluster 和 qualification 的实现波次，不是多个独立产品�
 当前已确认的资产：
 
 - K01-K31、R01-R39、C/O/S/D/M/F 验收矩阵已经写入详细设计。
-- `pci-resource-model` 的 87 个单元测试在 2026-07-21 于 WSL 环境重跑通过。
+- `pci-resource-model` 的 112 个单元测试在 2026-07-21 于 Windows/WSL 环境重跑通过；
+  C20 固定点单独覆盖 22 个 fail-closed、hash 与零副作用场景。
 - VMware ESXi 8.0.3 和 QEMU/OVMF/SeaBIOS 已积累实验与规范化摘要。
 - VMware F1-F8/39 Tech Story 可观察模型已建立：4 `VERIFIED`、26 `PARTIAL`、4 `UNKNOWN`、
   5 `NOT_APPLICABLE`；这些状态只描述 VMware reference coverage。
 - owner activation 已有纯函数 planner 和 O09 可执行参考场景。
-- Qman 技术证据索引已登记 4 条 hash 固定结果：1 条 E2、3 条 E3，覆盖 reference model、
-  raw QMP/BDF、逐设备 DMA provider 和双 64 GiB BAR/OVMF A/B；4 条均为
+- Qman 技术证据索引已登记 5 条 hash 固定结果：2 条 E2、3 条 E3，覆盖 reference model、
+  C20 capability closure、raw QMP/BDF、逐设备 DMA provider 和双 64 GiB BAR/OVMF A/B；5 条均为
   `REFERENCE_ONLY`，产品 Case/Risk 关闭数仍为 0。
 
 当前仍不能宣告的能力：
@@ -82,7 +83,7 @@ Dynamic、Cluster 和 qualification 的实现波次，不是多个独立产品�
 2. 逐条治理 R01-R39；不能闭环的能力明确设为不可绕过的 `FEATURE_DISABLED`。
 3. 将现有脚本和单测映射到 101 个 Case，并为剩余 Case 标明硬件阻塞或实现缺口。
 
-4. 按 F1-F8 补证：先完成 C20 固定点 fixture、Static fault/QMP gate 的 Qman E2/E3；同时执行
+4. 按 F1-F8 补证：C20 E2 已完成，下一步完成 Static fault/QMP gate 的 Qman E3；同时执行
    `VMW-*` 缺口实验，并在首批 HCL 设备上建立物理 qualification、reset、IOMMU/ACS、owner
    与 cluster fencing E4 证据。
 
