@@ -70,6 +70,17 @@
       "riskIds": ["R27"]
     },
     {
+      "id": "QMAN-E3-VFIO-PROVIDER-GATE-001",
+      "resultPath": "evidence/qman-vfio-provider-gate-20260721-summary.json",
+      "resultSha256": "a068fbe901fb3d9c41ab3d69b8e75f947b5e2e30c9f33ba97bd2e521262c2fd8",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-02", "TS-F3-03"],
+      "caseIds": ["C21"],
+      "riskIds": ["R27"]
+    },
+    {
       "id": "QMAN-E3-MMIO-OBSERVED-001",
       "resultPath": "evidence/qman-qemu-mmio-observed-20260721-summary.json",
       "resultSha256": "56691db82a794f007eb6109bfa3771111ca66fc4b2e62a42748878361c889326",

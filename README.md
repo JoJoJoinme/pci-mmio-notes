@@ -17,10 +17,10 @@ model, mapped across all 39 Tech Stories, in
 Qman/reference-side technical evidence is tracked separately in
 [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md) and the
    machine-readable [`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json).
-The current six E2/E3 records—five `REFERENCE_ONLY` and one `COMPONENT_ONLY`—
+The current seven E2/E3 records—five `REFERENCE_ONLY` and two `COMPONENT_ONLY`—
 reproduce design premises, including the bounded C20 capability closure, and verify
-a bounded default-deny QMP component. None closes a Qman product Case, physical
-Risk, or production support claim.
+bounded default-deny QMP and per-device VFIO/IOMMUFD provider components. None
+closes a Qman product Case, physical Risk, or production support claim.
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local
@@ -92,6 +92,11 @@ executor、durable lease、rollback/quarantine、Dynamic solver 或 multi-host f
 无 vIOMMU 时得到 `/dev/vfio/noiommu-0`，有 Intel vIOMMU 时得到正常 group node 与 cdev。
 结果、hash 和复现入口见
 [`evidence/qemu-vfio-noiommu-split-20260718.md`](evidence/qemu-vfio-noiommu-split-20260718.md)。
+在此基础上，Qman component 已进一步执行逐设备 fail-closed gate：no-IOMMU 场景以稳定 reason
+拒绝，vIOMMU 场景真实完成 VFIO cdev 的 IOMMUFD bind、IOAS allocate/attach 与逆序清理；见
+[`evidence/qman-vfio-provider-gate-20260721-summary.json`](evidence/qman-vfio-provider-gate-20260721-summary.json)。
+该 standalone 结果的 snapshot 语义仅为 `CALLER_CORRELATION_ONLY`，且关闭 fd 后不冒充 QEMU
+handoff，因此仍不构成 C21、R27 或生产 launcher/lease 的完成证据。
 ESXi 侧另有 Workstation 实际负控：vmkernel 明确记录 DMAR 缺失/IOMMU unavailable，45/45
 `HostPciPassthruInfo` 均 incapable，包括带 Function/Bridge reset 的 USB 与网卡；见
 [`evidence/esxi8-workstation-noiommu-20260718.md`](evidence/esxi8-workstation-noiommu-20260718.md)。

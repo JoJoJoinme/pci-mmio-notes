@@ -77,16 +77,16 @@
       "asOf": "2026-07-21",
       "command": "python -m unittest discover -s pci-resource-model/tests -t pci-resource-model",
       "result": "PASS",
-      "testsRun": 112,
+      "testsRun": 139,
       "isReleaseEvidence": false
     },
     "qmanTechnicalEvidence": {
       "asOf": "2026-07-21",
-      "records": 6,
-      "grades": {"E2": 2, "E3": 4, "E4": 0},
+      "records": 7,
+      "grades": {"E2": 2, "E3": 5, "E4": 0},
       "claimBoundaries": {
         "REFERENCE_ONLY": 5,
-        "COMPONENT_ONLY": 1,
+        "COMPONENT_ONLY": 2,
         "END_TO_END_PRODUCT": 0,
         "PHYSICAL_QUALIFICATION": 0
       },

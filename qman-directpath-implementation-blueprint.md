@@ -60,8 +60,8 @@ no-IOMMU 使用 **按 owner 和设备分流**，而不是全局二选一：
 host unsafe-noiommu capability = enabled for explicitly reserved DPDK devices
 VM passthrough policy          = every payload must prove IOMMU-backed DMA
 DPDK BDF                       = hostReservation=dataplane-dpdk, never a VM candidate
-VM preferred provider          = VFIO cdev + IOMMUFD (no noiommu support)
-VM legacy fallback             = verified TYPE1/TYPE1v2 only
+VM product provider            = VFIO cdev + IOMMUFD (no noiommu support)
+VM legacy provider             = explicit lab-only TYPE1v2/TYPE1, never product fallback
 ```
 
 这一分流已由 QEMU/Linux 双 guest 实测：两边全局 unsafe switch 都为 `Y`，无 vIOMMU 的设备
@@ -168,8 +168,8 @@ Q35 + SeaBIOS 的双 64GiB BAR 结果用于理解 QEMU allocator，不会把 VMw
 host unsafe no-IOMMU switch      = enabled/allowed for trusted DPDK
 host DPDK device reservation     = explicit, excluded from VM candidates
 VM per-device IOMMU backing      = required, no-IOMMU/unknown hard reject
-VM VFIO cdev + IOMMUFD           = preferred and required where available
-VM legacy VFIO backend           = TYPE1/TYPE1v2 only, no noiommu group
+VM VFIO cdev + IOMMUFD           = required product backend
+VM legacy VFIO backend           = explicit lab-only TYPE1v2/TYPE1, no product fallback
 interrupt remapping             = required
 ACS override                    = allowed only with whole physical-domain lease
 ReBAR guest resize              = false
@@ -353,7 +353,8 @@ record Fact[T]:
 `unsafeNoIommuModeEnabled` 是宿主 kernel capability，不是某个设备的运行 backend；它为 true
 只产生审计 warning。`dmaIsolationMode` 才进入 VM hardware gate。仅由 sysfs 推断时，
 `/dev/vfio/noiommu-$GROUP` 是明确的 `NO_IOMMU` 反证；最终 `IOMMU` proof 必须来自 cdev 成功
-绑定 IOMMUFD/IOAS，或 legacy container 成功选择 TYPE1/TYPE1v2。DPDK 编排配置必须在快照
+绑定 IOMMUFD/IOAS，或显式 lab-only legacy container 成功选择 TYPE1v2/TYPE1。后者只验证
+component 分流，不构成产品 launcher backend。DPDK 编排配置必须在快照
 发布前覆盖 `hostReservation`，无法关联到准确 BDF/identity 时拒绝发布候选快照。
 
 ### 4.3 运行对象关系
@@ -1195,11 +1196,11 @@ sequenceDiagram
 | 0 | CAS lease 完整 bundle | token/version/members | 删除未产生副作用的 lease | 保留 lease，人工审计 store |
 | 1 | 核对 epoch、identity、generation | fresh snapshot delta=0 | 释放 lease，重新规划 | inventory unknown 时保留 lease |
 | 2 | 执行完整 bundle owner activation | 每个成员 current owner/driver 读回匹配 | 按 journal 恢复原 owner | quarantine bundle |
-| 3 | open VM VFIO provider | cdev fd，或非 `noiommu-*` legacy group；provider ID 与 BDF/identity 匹配 | close fd、恢复 owner | quarantine |
-| 4 | 创建 IOAS/attach device | cdev 成功 bind IOMMUFD，或 legacy 明确选择 TYPE1/TYPE1v2；domain/member/IOMMU evidence | detach/destroy IOAS | quarantine |
-| 5 | re-query 并执行 reset | affected set 相同、reset + state probe | release-side reset/rebind | quarantine affected set |
-| 6 | reset 后重新探测 BAR/plan | plan/ABI hash 与 admission 相容 | 逆序清理 | quarantine if BAR identity unstable |
-| 7 | 向 QEMU 传 fd 并启动 | pidfd、QMP machine/device realized | kill QEMU、等待 fd teardown | quarantine |
+| 3 | 执行产品 provider admission | expected identity/group hash、完整 members、`noiommu-*` 反证和 cdev devt 均匹配；这里只读，不预 bind/attach。legacy 不进入产品路径 | 恢复 owner | quarantine |
+| 4 | re-query 并执行 reset | affected set 相同、reset + state probe | release-side reset/rebind | quarantine affected set |
+| 5 | reset 后重新探测 BAR/plan | plan/ABI hash 与 admission 相容 | 逆序清理 | quarantine if BAR identity unstable |
+| 6 | launcher 再次核对并打开 raw fd | expected identity/group hash 匹配；精确 cdev devt 与 IOMMUFD fd；root-port 强制不可 hotplug | close fd | quarantine |
+| 7 | 启动 stock QEMU，由 QEMU bind/attach | pidfd、唯一 QMP、QEMU 内部 `VFIO_DEVICE_BIND_IOMMUFD` 与 IOAS/HWPT attach observation | kill QEMU、等待 fd teardown | quarantine |
 | 8 | observed plan/guest heartbeat | QMP+ACPI+BAR+IRQ/IOMMU assertions | kill QEMU、逆序清理 | quarantine |
 | 9 | commit manifest | store state `ATTACHED` | reconcile 依据 pidfd/fd state 决定 | 保持 PREPARING，禁止重分配 |
 
@@ -1233,17 +1234,21 @@ function attachStatic(vm, request, idempotencyKey):
         rollback.push(restoreActivationOrQuarantine(activation, lease))
         require activation.everyEffectiveOwnerMatches
 
-        provider = vfio.openVmIommuProvider()
-        handles = provider.openActivatedDevices(decision.bundle, activation)
-        rollback.push(closeAll(handles))
+        providerAdmission = vfio.validateProductAdmissionReadOnly(
+            decision.bundle,
+            expectedIdentityHashes=decision.identityHashes,
+            expectedGroupHashes=decision.groupHashes,
+            snapshotEpoch=snapshot.epoch,
+            topologyHash=snapshot.topologyHash)
+        require providerAdmission.everyPayloadHasCdev
+        require providerAdmission.noNoiommuNode
+        # 产品热路径不先 bind/attach；C21 component probe 是独立 lab/qualification 证据。
 
-        ioas = provider.createIoasAndAttach(handles)
-        rollback.push(detachAndDestroy(ioas, handles))
-        require provider.provesIommuTranslationForEvery(decision.bundle.payload)
-
-        freshReset = resetProvider.requeryAll(decision.resetContracts, handles)
-        require sameAffectedSets(freshReset, decision.resetContracts)
-        executeAndProbe(freshReset, lease, handles)
+        with resetProvider.openScopedHandles(decision.bundle, lease) as resetHandles:
+            freshReset = resetProvider.requeryAll(
+                decision.resetContracts, resetHandles)
+            require sameAffectedSets(freshReset, decision.resetContracts)
+            executeAndProbe(freshReset, lease, resetHandles)
 
         postReset = inventory.refreshBundle(decision.bundle)
         require noIdentityOrGenerationViolation(postReset, lease)
@@ -1251,10 +1256,20 @@ function attachStatic(vm, request, idempotencyKey):
         require finalPlan.success
         require finalPlan.guestAbiSignature == decision.plan.guestAbiSignature
 
-        qemu = launcher.startFdOnly(vm, finalPlan, handles, ioas, lease.token)
+        launchHandles = vfio.openVerifiedRawCdevAndIommufd(
+            decision.bundle, postReset,
+            expectedIdentityHashes=decision.identityHashes,
+            expectedGroupHashes=decision.groupHashes)
+        rollback.push(closeAll(launchHandles))
+
+        qemu = launcher.startStockQemuFdOnly(
+            vm, finalPlan, launchHandles, lease.token,
+            rootPortHotplug=false,
+            exposeNativeHotplugCapability=false)
         rollback.push(killAndWaitFdTeardown(qemu))
 
-        observed = verifier.collectAndVerify(qemu, vm, finalPlan, ioas)
+        observed = verifier.collectAndVerify(qemu, vm, finalPlan)
+        require observed.qemuPerformedIommufdBindAndIoasAttachForEveryPayload
         manifest = buildManifest(lease, decision, activation, finalPlan, observed)
         store.commitAttached(lease, manifest, expectedState=PREPARING)
         rollback.disarm()
@@ -1268,30 +1283,61 @@ function attachStatic(vm, request, idempotencyKey):
         raise stableAssignmentError(error, failures)
 ```
 
-VM provider 不能根据宿主全局 `unsafeNoIommuModeEnabled` 猜测结果，必须验证本次打开的 fd：
+VM provider 不能根据宿主全局 `unsafeNoIommuModeEnabled` 猜测结果，必须验证本次打开的 fd。
+下面是已经由 E3 runner 执行的 C21 component/probe 顺序；它用于 component/lab qualification，
+不由上面的 `attachStatic` 产品热路径先执行：
 
 ```python
-function openVmIommuProvider():
-    if kernel.supportsVfioCdevAndIommufd:
-        return CdevIommufdProvider(
-            rejectIfBindIommufdFails=true,
-            requireIoasAttachForEveryPayload=true)
+function acquireAuthoritativeProbe(request, allowLegacyLab=false):
+    before = captureExactBdfIdentityAndCompleteIommuGroup(request.bdf)
+    require hashIdentity(before) == request.expectedIdentityHash
+    require hashGroup(before) == request.expectedGroupHash
+    if exists("/dev/vfio/noiommu-" + before.groupId):
+        reject(DEVICE_NO_IOMMU_DMA_ISOLATION)
 
-    provider = LegacyVfioType1Provider()
-    for group in requestedOperationalGroups:
-        path = resolveVfioGroupNode(group)
-        if basename(path).startsWith("noiommu-"):
-            reject(DEVICE_NO_IOMMU_DMA_ISOLATION, group.members)
-        groupFd = open(path)
-        require ioctl(groupFd, VFIO_GROUP_GET_STATUS).viable
-        require container.checkExtension(VFIO_TYPE1v2_IOMMU) or \
-                container.checkExtension(VFIO_TYPE1_IOMMU)
-        selected = container.setIommu(prefer=VFIO_TYPE1v2_IOMMU,
-                                      fallback=VFIO_TYPE1_IOMMU)
-        require selected not in {VFIO_NOIOMMU_IOMMU, UNKNOWN}
-        provider.recordProof(group, selected, fdIdentity(groupFd))
-    return provider
+    if before.hasVfioCdev:
+        iommufd = openVerifiedCharDevice("/dev/iommu")
+        ioas = ioctl(iommufd, IOMMU_IOAS_ALLOC)
+        device = openCdevAfterDevtAndInodeCheck(before.cdev)
+        deviceId = ioctl(device, VFIO_DEVICE_BIND_IOMMUFD, iommufd)
+        hwptId = ioctl(device, VFIO_DEVICE_ATTACH_IOMMUFD_PT, ioas)
+        after = captureExactBdfIdentityAndCompleteIommuGroup(request.bdf)
+        require sameIdentityGroupOwnerAndNode(before, after)
+        return LiveProbeSession(device, iommufd, ioas, deviceId, hwptId)
+        # close: DETACH -> DESTROY IOAS -> close device/iommufd；全部 fd 都尝试关闭。
+
+    require allowLegacyLab == true
+    group = openVerifiedCharDevice("/dev/vfio/" + before.groupId)
+    require ioctl(group, VFIO_GROUP_GET_STATUS).viable
+    container = openVerifiedCharDevice("/dev/vfio/vfio")
+    require ioctl(container, VFIO_GET_API_VERSION) == VFIO_API_VERSION
+    ioctl(group, VFIO_GROUP_SET_CONTAINER, container)
+    selected = firstSupported(container, [VFIO_TYPE1v2_IOMMU,
+                                           VFIO_TYPE1_IOMMU])
+    require selected not in {VFIO_NOIOMMU_IOMMU, UNKNOWN}
+    ioctl(container, VFIO_SET_IOMMU, selected)
+    device = ioctl(group, VFIO_GROUP_GET_DEVICE_FD, request.bdf)
+    require sameIdentityGroupOwnerAndNode(before, captureAgain(request.bdf))
+    return LabOnlyLegacySession(device, group, container, selected)
+    # close: device -> UNSET_CONTAINER -> group/container；不进入产品 launcher。
 ```
+
+`snapshotEpoch` 和 `topologyHash` 在该 component 中是 `CALLER_CORRELATION_ONLY`：provider 会原样
+绑定到 proof，但不会据此宣告 kernel boot、ACS provenance 或整机 topology 已复核。真正的 stale
+gate 是 caller 必须提供的 canonical `expectedIdentityHash` 与 `expectedGroupHash`，二者在任何
+open/ioctl 前与当前 BDF identity、group ID 和排序后的完整 members 比较，attach 后再采集一次。
+standalone CLI 成功只表示本进程完成 acquire/recheck/cleanup，输出
+`lifecycle=ACQUIRED_AND_CLOSED`；其中的 IOAS/HWPT/device ID 已失效，不能交给 launcher。
+
+还必须区分 component probe 与 stock QEMU 产品路径。stock QEMU 11 的 `iommufd` object 和
+`vfio-pci,fd=` 会在 QEMU 内部执行 bind、IOAS 分配和 attach；一个已经 pre-attach 的 live probe
+session 不是可直接传给 stock QEMU 的产品接口，也不应为每次启动先做一次 bind/attach 再关闭。
+产品 launcher 必须在 durable lease 内重新核对
+identity/group/node，打开新的 raw cdev/IOMMUFD fd，以唯一、typed argv 继承给 QEMU，并在 QEMU
+完成内部 bind/attach 和 observed-plan 验证后才提交 `ATTACHED`。若产品坚持由 host agent 预先
+attach 后再移交，只能新增 QEMU/provider ABI 并单独验收，不能把当前 component proof 当作该能力。
+当前手写 `_IO` UAPI 编码只在 `x86_64/amd64/aarch64/arm64` 开放；其他架构必须先由目标 Linux
+headers 生成并验收 ioctl ABI，否则在读取 sysfs 或打开 fd 前返回 `UNSUPPORTED_IOCTL_ABI`。
 
 host DPDK 走另一个受限 service/provider API；Qman VM launcher 不接受它产生的 group fd、UIO
 fd 或 `/dev/vfio/noiommu-*`。二者还应使用不同 Unix 用户、device cgroup/SELinux policy 和
@@ -1341,6 +1387,10 @@ Qman 的 `fixedPassthruHotplug`、`dynamicRuntimeHotplug` 和 `qemuNativeRuntime
 false。API 设置该字段返回 `FEATURE_DISABLED/HOTPLUG_UNSUPPORTED`；scheduler 不创建 hotplug
 capacity；launcher 不创建可热拔 slot；QMP proxy 和 sandbox 无条件拒绝
 `device_add/device_del`。
+
+对 q35/PCIe profile，仅拒绝 QMP 还不够。每个承载 DirectPath endpoint 的 root-port 都必须由
+typed renderer 显式生成 `hotplug=off,x-do-not-expose-native-hotplug-cap=on`；缺少任一属性都使
+launch spec fail-closed，且不能由 raw argv 覆盖。
 
 S13-S16/F09 必须证明拒绝前后 VM definition、assignment、lease、VFIO fd、guest PCI tree、BAR
 window、DMA/IRQ owner 均不变。host owner 的 `LIVE_APPLY` 发生在 VM power-on 前，不改变运行中
@@ -1870,10 +1920,11 @@ TS/Case/Risk 引用和 `closureEffect`。reference/component subject 与 E2 不�
 R01/R03/R20/R27 等硬件风险提升为 E4。qualification key 至少包含 host model/BIOS、IOMMU、
 device VID:DID/revision/firmware、kernel/QEMU/firmware 和 guest driver/workload。
 
-截至 2026-07-21，索引中有 2 条 E2、4 条 E3：5 条为 `REFERENCE_ONLY`，1 条为
+截至 2026-07-21，索引中有 2 条 E2、5 条 E3：5 条为 `REFERENCE_ONLY`，2 条为
 `QMAN_COMPONENT / COMPONENT_ONLY`。它们固定 reference model、C20 closure、raw QMP/BDF、
-VFIO provider split、QEMU/OVMF MMIO 和最小 QMP default-deny component 的设计前提，所有
-`closureEffect` 均为空，产品 Case/Risk 关闭数为 0。
+VFIO provider split、QEMU/OVMF MMIO、最小 QMP default-deny component，以及
+`QMAN-E3-VFIO-PROVIDER-GATE-001` 的真实 cdev/IOMMUFD/no-IOMMU A/B。所有 `closureEffect` 仍为空，
+产品 Case/Risk 关闭数为 0；新增 component evidence 不改变 C21 的产品阻断状态。
 
 ## 17. 实施计划与提交边界
 
@@ -1887,7 +1938,10 @@ C10、C15、C16、C18、C20、F10。
 
 交付：kernel native shadow-domain ABI、VFIO cdev/IOMMUFD reset provider、per-component provenance、
 health/generation。完成门：C03-C07、C17-C19。
-逐设备 DMA provider gate 在本阶段实现，并以 C21 的 no-IOMMU 负控/IOMMU-backed 正控验收。
+逐设备 DMA provider component 已有 cdev/IOMMUFD 与显式 lab-only legacy 实现；它只关闭组件
+内部的 provider 分流和 cleanup 语义。C21 仍为 `IMPLEMENTATION_BLOCKED`：尚缺 authoritative
+snapshot publisher、durable lease 下的产品 launcher/stock-QEMU attach observation，以及物理
+IOMMU/interrupt-remapping/errata 的 E4 qualification。
 
 ### Phase 1B：完整资源 planner
 
@@ -1899,6 +1953,19 @@ M00-M04、M11、M18-M23。
 交付：desired/effective 四态 planner、完整 bundle live executor、exact early-boot claim/reconcile、
 SQLite/CAS lease、fd-only launcher、rollback journal、release/quarantine/reconcile、API/QMP bypass
 gate。完成门：O00-O09、S00-S16、F00、F09。
+
+Phase 1A/1C 的关闭顺序不是并列清单，而是严格依赖链：
+
+```text
+C21 component/provider
+  -> authoritative snapshot + durable lease + fd-only Static transaction
+  -> S15 production QMP boundary
+  -> F09 all-entry bypass matrix
+```
+
+S15 必须先在一个由产品 launcher 创建、只有唯一受控 monitor 的真实 Static run 上证明 QMP
+mutation 不改变 lease/generation/VFIO/topology；F09 才能在此基础上扩展到 API、raw CLI、storage、
+alternate monitor 和 fd injection。前一项未关闭时，不允许用后一项的局部负例反向追认。
 
 ### Phase 2：单 host Dynamic
 
@@ -1944,7 +2011,7 @@ capability 的机器可执行 release evaluator。重复 O00-O09、S13-S16/F09�
 | ADR-011 | guest runtime PCI hotplug | **已决定：**永久不支持，所有 DirectPath profile 四层拒绝 | 将来若改变必须新 ADR、新 profile 和独立安全审计，不能沿用本设计证明 |
 | ADR-012 | passthrough owner 激活策略 | bind-on-lease 为默认；显式维护模式才持久 early-boot VFIO claim；先扩 owner group 再逐成员预检；产品不自动重启 host | 自动重启、全局 VID:DID claim 或复制 VMware request-target 不对称都可能夺走管理/存储/网络设备 |
 | ADR-013 | owner/reset/attach domain 是否共用一个 bundle | **不共用：**分别持久化 ownerActivationGroup、resetDomain、exclusiveAttachGroup 和 physicalIsolationDomain；事务按所需闭包取并集 | 混用一个 key 会造成漏租、同 VM 双占、无关 sibling 误解绑或过度拒绝 |
-| ADR-014 | 宿主 DPDK no-IOMMU 与 VM 直通如何共存 | **已决定：**允许宿主全局 unsafe switch；DPDK BDF 显式 host-reserved；VM 逐设备要求 IOMMU，并只接受 cdev/IOMMUFD 或已验证 TYPE1/TYPE1v2 | 全局 hard reject 会误杀安全设备；全局放行会让 guest 获得无 DMA 隔离的设备 |
+| ADR-014 | 宿主 DPDK no-IOMMU 与 VM 直通如何共存 | **已决定：**允许宿主全局 unsafe switch；DPDK BDF 显式 host-reserved；VM 逐设备要求 IOMMU；产品 launcher 只接受 cdev/IOMMUFD，TYPE1v2/TYPE1 仅显式 lab component | 全局 hard reject 会误杀安全设备；全局放行或把 legacy lab probe 当产品 fallback 会让 guest 绕过目标隔离/launcher 合同 |
 
 仍希望产品/平台方补充的事实如下；它们不阻塞 reference model 与规范正文维护，但会阻塞
 G0 完成、生产实现范围冻结和 release：

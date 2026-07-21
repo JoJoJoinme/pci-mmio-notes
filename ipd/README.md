@@ -208,8 +208,8 @@ V3 明确不以 live migration、FT、snapshot/suspend 或 guest runtime PCI hot
 - 产品方向与树结构：`ACCEPTED`。
 - 产品实现：未因本树新增而推进。
 - 101 个设计 Case：C20、O09 为 reference-scope executable；C21、F09、S15 为
-  `PRODUCT / IMPLEMENTATION_BLOCKED`。QMP component evidence 只作为 S15/F09 前提，不构成
-  产品关闭；其余 96 个 Case 仍待分类。
+  `PRODUCT / IMPLEMENTATION_BLOCKED`。VFIO provider 与 QMP component evidence 分别只作为
+  C21 和 S15/F09 前提，不构成产品关闭；其余 96 个 Case 仍待分类。
 - 风险：R01-R39 当前全部未达到发布闭环。
 - 发布：`BLOCKED`。
 

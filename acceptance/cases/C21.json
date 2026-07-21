@@ -5,10 +5,13 @@
   "status": "IMPLEMENTATION_BLOCKED",
   "scope": "PRODUCT",
   "riskIds": ["R27"],
-  "blocker": "The repository has E3 QEMU/Guest/VFIO provider-node evidence but no Qman authoritative attach provider that consumes IOMMUFD or TYPE1/TYPE1v2 facts and rejects noiommu devices.",
+  "blocker": "The repository now has a Qman component that rejects noiommu and performs a real cdev/IOMMUFD bind and IOAS attach, but it is not integrated with an authoritative G1 snapshot publisher, durable lease, production launcher/QEMU fd handoff, post-start verification, or physical E4 qualification.",
   "targetMilestone": "G2",
-  "referenceEvidenceIds": ["QMAN-E3-DMA-PROVIDER-001"],
-  "referenceRunner": "vmware-esxi8-lab/test_qemu_vfio_noiommu_split.py",
+  "referenceEvidenceIds": [
+    "QMAN-E3-DMA-PROVIDER-001",
+    "QMAN-E3-VFIO-PROVIDER-GATE-001"
+  ],
+  "referenceRunner": "qman-lab/test_qman_vfio_provider.py",
   "assertions": [
     "host global unsafe mode does not by itself make the target ineligible",
     "a target backed by /dev/vfio/noiommu-N is rejected",

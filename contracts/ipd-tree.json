@@ -105,6 +105,7 @@
         {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "kernel-patches/README.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-directpath-20260714-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-vfio-dma-provider-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-vfio-provider-gate-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-capability-closure-20260721-summary.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/C20.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/C21.json"},
@@ -233,6 +234,7 @@
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-directpath-summary.json"},
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-control-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-vfio-provider-gate-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qmp-gate-20260721-summary.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/S15.json"}
       ]

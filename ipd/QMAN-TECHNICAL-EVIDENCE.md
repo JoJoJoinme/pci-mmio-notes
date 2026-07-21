@@ -39,6 +39,7 @@ artifact hash drift => evidence invalidated
 | `QMAN-QEMU-CONTROL-001` | E3 | 建机后可通过 QMP 向 QEMU device tree 加入 PCI endpoint（本次在 machine 暂停态）；同 guest BDF 可换 VID:DID；`device_del` reply 后设备仍存在 | TS-F3-01/04、F4-05、F5-05；S01/S15/F09 前提 | Guest 在线热插、Qman QMP ACL 已实现、S15/F09 已通过 |
 | `QMAN-E3-QMP-GATE-001` | E3 | 最小 gate 本地处理 capability，只转发五类只读 query；17 类拒绝均未被独立 backend recorder 观察到，PCI tree、QEMU/gate fd 基线不变 | TS-F4-05、F5-05；S15/F09 与 R17/R26/R37 前提 | production launcher/lease/generation/VFIO 或全入口绕过已封堵；S15/F09 与三项 Risk 均未关闭 |
 | `QMAN-E3-DMA-PROVIDER-001` | E3 | unsafe=`Y` 时，no-IOMMU 与 IOMMU-backed device 仍呈现不同 provider node | TS-F1-02、F3-03；C21 前提 | 物理 IOMMU/IR/errata、IOMMUFD IOAS attach、DPDK workload |
+| `QMAN-E3-VFIO-PROVIDER-GATE-001` | E3 | Qman component 对 no-IOMMU 稳定拒绝；对 cdev 真实执行 IOMMUFD bind、IOAS allocate/attach、身份/完整 group 复核与逆序清理 | TS-F1-02、F3-03；C21 / R27 前提 | 权威产品 snapshot、durable lease、stock-QEMU handoff、物理 E4；C21/R27 均未关闭 |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 | QEMU floor 与 OVMF aperture 必须配对；双 64 GiB BAR 默认失败、128 GiB 配对成功 | TS-F4-01/02/04；M23 前提 | Qman observedPlan commit/rollback、物理 BAR qualification |
 
 当前所有 Risk 仍为 `OPEN`。这些结果增加“为什么要这样设计”的技术证据，不改变 G0 和
@@ -73,7 +74,31 @@ ESXi 与 QEMU 实验都推翻了这种单值翻译。本轮在 QEMU 11.0.2/`pc-q
 
 证据：[`qman-vfio-dma-provider-20260721-summary.json`](../evidence/qman-vfio-dma-provider-20260721-summary.json)。
 
-### 3.3 BDF 不是稳定身份，raw QMP 是真实绕过面
+### 3.3 Qman provider 已执行真实 IOMMUFD attach，但只是组件闭环
+
+在 provider-node A/B 之上，`QMAN-E3-VFIO-PROVIDER-GATE-001` 把 C21 的关键判定变成了
+Qman component 代码和真实 Guest UAPI 调用：
+
+- 两个 QEMU Guest 使用相同 e1000e 和 `unsafe=Y`；独立 Guest sysfs reader 生成 canonical
+  identity/完整 IOMMU group preimage 与 SHA256，runner 又逐字固定实际执行的 provider 源码；
+- 无 vIOMMU 的 Guest 出现 `/dev/vfio/noiommu-0`，provider 在打开任何 DMA context 前以
+  `DEVICE_NO_IOMMU_DMA_ISOLATION`、exit 2 稳定拒绝；
+- Intel vIOMMU Guest 的 cdev 路径真实得到 `ioasId=1`、`deviceId=2`、`hwptId=3`，说明完成了
+  IOMMUFD IOAS allocate、`VFIO_DEVICE_BIND_IOMMUFD` 和 IOAS attach；attach 后再次复核身份、
+  driver、完整 group 与 node，standalone probe 最后逆序清理并报告 `ACQUIRED_AND_CLOSED`；
+- Windows/WSL 全量 resource-model 均为 139/139，provider 定向 27/27；identity/group stale、
+  no-IOMMU 竞态、node substitution、未知 ABI、所有 ioctl 失败和 cleanup 生命周期均 fail closed。
+
+这仍不是产品 C21。实验中的 `snapshotEpoch/topologyHash` 明确只有
+`CALLER_CORRELATION_ONLY`，独立 reader 不是 G1 权威 inventory publisher；CLI 也在验证后关闭 fd，
+没有把活 session 交给 QEMU。尤其 stock QEMU 会自行执行 VFIO cdev bind/attach，所以“agent 先
+attach，再把同一 session 直接交给 stock QEMU”不是可用的产品路径。后续必须选择并验证唯一的
+launcher 协议：控制面先完成身份/lease/节点授权，stock QEMU 通过 fd-only 参数自行 bind/attach，
+再用受信观察提交事务。物理 IOMMU/IR/errata/reset/workload 仍需 E4，故 C21 与 R27 不更新状态。
+
+证据：[`qman-vfio-provider-gate-20260721-summary.json`](../evidence/qman-vfio-provider-gate-20260721-summary.json)。
+
+### 3.4 BDF 不是稳定身份，raw QMP 是真实绕过面
 
 同一 QEMU machine address `0000:01:00.0` 在两次启动中分别承载：
 
@@ -93,7 +118,7 @@ ESXi 与 QEMU 实验都推翻了这种单值翻译。本轮在 QEMU 11.0.2/`pc-q
 
 证据：[`qman-qemu-control-20260721-summary.json`](../evidence/qman-qemu-control-20260721-summary.json)。
 
-### 3.4 C20 必须把依赖闭包放在 availability 之前
+### 3.5 C20 必须把依赖闭包放在 availability 之前
 
 `QMAN-E2-CLOSURE-001` 把实现蓝图中的 C20 四格变成可执行 reference Case：dependency
 qualified/free 与同一 bundle busy 拥有完全相同的 snapshot/bundle/capability/policy hash，仅
@@ -112,7 +137,7 @@ availability 与 `decisionHash` 改变；dependency reset missing 或 action unk
 
 证据：[`qman-capability-closure-20260721-summary.json`](../evidence/qman-capability-closure-20260721-summary.json)。
 
-### 3.5 QMP component 已证明“受控端点默认拒绝”，尚未证明产品无旁路
+### 3.6 QMP component 已证明“受控端点默认拒绝”，尚未证明产品无旁路
 
 `QMAN-QEMU-CONTROL-001` 是 raw QMP 能越过冷启动规划的威胁正控；本轮新增的
 `QMAN-E3-QMP-GATE-001` 是一个最小 Qman component 负控：
@@ -159,6 +184,12 @@ wsl -d Ubuntu-22.04 -- python3 `
   --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
   --output /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-vfio
 
+# Qman per-device VFIO/IOMMUFD provider component
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/qman-lab/test_qman_vfio_provider.py `
+  --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
+  --output /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-vfio-provider
+
 # QEMU 11 + OVMF dual-64GiB BAR
 wsl -d Ubuntu-22.04 -- env `
   WORKDIR=/root/pci-evidence/RUN-ID-mmio `
@@ -184,12 +215,16 @@ wsl -d Ubuntu-22.04 -- bash `
 
 按依赖顺序继续：
 
-1. `QMAN-E3-STATIC-FAULT-001`：QEMU pre-ready exit、SIGKILL、bind/reset 中途失败，验证
-   journal/lease/fd/mapping/driver rollback 与 whole-bundle quarantine。
-2. 将已验证的 QMP component 接入 production launcher/controller/durable lease/generation/VFIO，
+1. 冻结 ADR-002 等 G0 合同，并建立带 boot identity、epoch、full-topology hash 与 trust-root 的
+   G1 权威 snapshot publisher；把 C21 component 接到唯一 launcher/lease 协议，验证 stock QEMU
+   fd-only 自行 bind/attach 后的受信观察与提交。
+2. 先完成 durable lease/Static FSM 的 component crash gate，再执行 `QMAN-E3-STATIC-FAULT-001`：
+   QEMU pre-ready exit、SIGKILL、bind/reset 中途失败，验证 journal/lease/fd/mapping/driver rollback
+   与 whole-bundle quarantine。
+3. 将已验证的 QMP component 接入 production launcher/controller/durable lease/generation/VFIO，
    并执行覆盖 API、CLI、storage、alternate monitor、fd injection、并发和 replay 的完整 S15/F09
    产品 bypass matrix。
-3. E4：真实 NIC/GPU/HBA 上的 IOMMU/IR、ACS/RID alias、reset/state、INTx、P2P、RMRR、
+4. E4：真实 NIC/GPU/HBA 上的 IOMMU/IR、ACS/RID alias、reset/state、INTx、P2P、RMRR、
    SR-IOV、errata 和 workload qualification。
 
 Dynamic solver、cluster CAS/fencing 和 HA cold restart 在 Static safety core 的 component

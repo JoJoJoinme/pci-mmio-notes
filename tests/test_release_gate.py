@@ -38,7 +38,7 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "Qman evidence: records=6 (E2=2, E3=4; reference=5, component=1, "
+            "Qman evidence: records=7 (E2=2, E3=5; reference=5, component=2, "
             "end_to_end=0, "
             "product_case_closures=0, risk_closures=0)",
             result.stdout,
@@ -78,21 +78,21 @@ class ReleaseGateTests(unittest.TestCase):
     def test_project_evidence_snapshot_cannot_drift_from_index(self) -> None:
         counts = Counter(
             {
-                "records": 6,
+                "records": 7,
                 "E2": 2,
-                "E3": 4,
+                "E3": 5,
                 "reference": 5,
-                "component": 1,
+                "component": 2,
                 "boundary:REFERENCE_ONLY": 5,
-                "boundary:COMPONENT_ONLY": 1,
+                "boundary:COMPONENT_ONLY": 2,
             }
         )
         observed = {
-            "records": 6,
-            "grades": {"E2": 2, "E3": 4, "E4": 0},
+            "records": 7,
+            "grades": {"E2": 2, "E3": 5, "E4": 0},
             "claimBoundaries": {
                 "REFERENCE_ONLY": 5,
-                "COMPONENT_ONLY": 1,
+                "COMPONENT_ONLY": 2,
                 "END_TO_END_PRODUCT": 0,
                 "PHYSICAL_QUALIFICATION": 0,
             },

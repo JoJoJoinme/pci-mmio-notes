@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E3-VFIO-PROVIDER-GATE-001",
+  "observedAt": "2026-07-21T03:11:49Z",
+  "subject": "QMAN_COMPONENT",
+  "evidenceGrade": "E3",
+  "claimBoundary": "COMPONENT_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "436a2cdbf080945359136403b000777fb71881a9",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-lab/test_qman_vfio_provider.py": "d7a5f95d0016cd7640902e86ed73e7d50ecd904d16c87275489868ccadb829bb"
+    },
+    "inputHashes": {
+      "pci-resource-model/pci_resource_model/vfio_provider.py": "7927fb1bf72f05009729ee972233d115072b8c7853da33a8a60cc6db541cfdf4"
+    }
+  },
+  "sut": {
+    "environment": "Two QEMU Ubuntu guests on WSL2/KVM with the same emulated e1000e endpoint and unsafe=Y; only the positive guest has an Intel vIOMMU",
+    "components": [
+      {
+        "name": "Qman authoritative VFIO provider component",
+        "version": "436a2cdbf080945359136403b000777fb71881a9",
+        "sha256": "7927fb1bf72f05009729ee972233d115072b8c7853da33a8a60cc6db541cfdf4"
+      },
+      {
+        "name": "QEMU",
+        "version": "11.0.2 pc-q35-11.0",
+        "sha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+      },
+      {
+        "name": "Ubuntu guest kernel",
+        "version": "6.8.0-124-generic"
+      },
+      {
+        "name": "Ubuntu cloud image",
+        "version": "24.04.4 LTS",
+        "sha256": "5fa5b05e5ec239858c4531485d6023b0896448c2df7c63b34f8dae6ea6051a44"
+      },
+      {
+        "name": "OVMF CODE",
+        "version": "2022.02",
+        "sha256": "ae38909179bebd3fff70a6ffbf568b6df0c8e63db8c2a1cdbac47cd0cc96f464"
+      }
+    ]
+  },
+  "hypotheses": [
+    "A per-device Qman component must reject a vfio-pci device backed only by a noiommu-N node even when the global unsafe switch is enabled.",
+    "For an IOMMU-backed VFIO cdev, the component must bind a real IOMMUFD, allocate an IOAS, attach the device, revalidate exact identity and group facts, and retain the live session until explicit cleanup.",
+    "Snapshot epoch and topology hash are only caller correlation in this slice; the component must not claim an authoritative product snapshot binding."
+  ],
+  "observations": [
+    {
+      "name": "unit-contract-and-fail-closed-gates",
+      "result": {
+        "windowsResourceModelTests": 139,
+        "wslResourceModelTests": 139,
+        "providerFocusedTests": 27,
+        "releaseGateTests": 15,
+        "failures": 0,
+        "errors": 0
+      }
+    },
+    {
+      "name": "no-iommu-negative-control",
+      "result": {
+        "unsafeSwitch": "Y",
+        "preBindGroup": null,
+        "postBindGroup": "0",
+        "vfioNode": "/dev/vfio/noiommu-0",
+        "providerExitCode": 2,
+        "reasonCode": "DEVICE_NO_IOMMU_DMA_ISOLATION",
+        "runnerFailures": []
+      }
+    },
+    {
+      "name": "iommu-cdev-positive-control",
+      "result": {
+        "unsafeSwitch": "Y",
+        "preBindGroup": "7",
+        "postBindGroup": "7",
+        "vfioNode": "/dev/vfio/devices/vfio0",
+        "provider": "vfio-cdev-iommufd",
+        "ioasId": 1,
+        "deviceId": 2,
+        "hwptId": 3,
+        "snapshotBinding": "CALLER_CORRELATION_ONLY",
+        "lifecycle": "ACQUIRED_AND_CLOSED",
+        "handlesUsableAfterProbe": false,
+        "runnerFailures": []
+      }
+    },
+    {
+      "name": "independent-snapshot-preimages-and-source-pinning",
+      "result": {
+        "snapshotSource": "independent-guest-sysfs-reader",
+        "identityHashMatched": true,
+        "completeGroupHashMatched": true,
+        "providerSourceMatchedEmbeddedBytes": true,
+        "positiveGroupHash": "d1c3b1828db8c5da8914694246b5aed563e6ea3c0522729a91ea126c489c7d37",
+        "providerSourceSha256": "7927fb1bf72f05009729ee972233d115072b8c7853da33a8a60cc6db541cfdf4"
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F1-02", "TS-F3-03"],
+    "caseIds": ["C21"],
+    "riskIds": ["R27"]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-vfio-provider-c21-v2/summary.json",
+      "sha256": "1ccf102253de702cff97dd9b9a88692003d53a139eb8b985de2b93d69e01e427",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-vfio-provider-c21-v2/hashes.json",
+      "sha256": "4cb88b15441dd6c4874c34212fd95cdf638edbbcba8c05c817c1e53158ed448e",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-vfio-provider-c21-v2/no-iommu/serial.log",
+      "sha256": "9d14e362acd53faa771a093a77d8e7bf53d92629ca7670c79bd0e7205434351e",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-vfio-provider-c21-v2/iommu-with-unsafe-switch/serial.log",
+      "sha256": "9b1212f5eb7bc0237c8bb82bbf3724474617762a338892aed027715691b97f10",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-vfio-provider-c21-v2/iommu-with-unsafe-switch/provider-proof.json",
+      "sha256": "d2450efe1448f8bec7e2558fe52746fb21cacbc58150f9468a0094c17a8b5f62",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "The endpoint and IOMMU are virtual. R27 remains OPEN until target physical IOMMU, interrupt-remapping, platform errata, reset and workload qualification provide E4 evidence.",
+    "This is a standalone Qman component/probe, not an integrated product controller, durable lease, launcher or post-start verification path. C21 remains IMPLEMENTATION_BLOCKED.",
+    "The independent guest sysfs reader is an unsigned lab fixture. snapshotEpoch and topologyHash are explicitly CALLER_CORRELATION_ONLY and do not prove the authoritative G1 inventory publisher, boot identity or full physical topology.",
+    "The CLI intentionally closes the acquired session after proving bind and attach. It does not hand live descriptors to QEMU, and a pre-attached session is not a valid stock-QEMU product launch path because stock QEMU performs its own VFIO_DEVICE_BIND_IOMMUFD and IOAS attach.",
+    "The positive integration used the cdev/IOMMUFD path. TYPE1v2/TYPE1 remain explicit lab-only unit-tested fallbacks and the NOIOMMU extension is never accepted.",
+    "No production DPDK coexistence workload, physical device state validation, VF token flow, sPAPR path or multi-device dependency bundle was exercised."
+  ]
+}
