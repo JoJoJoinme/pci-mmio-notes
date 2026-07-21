@@ -19,6 +19,7 @@
       "COMPONENT_SUBJECT_NEVER_CLOSES_PRODUCT_STATE",
       "E2_NEVER_CLOSES_PRODUCT_CASE_OR_RISK",
       "E3_NEVER_CLOSES_E4_REQUIRED_HARDWARE_RISK",
+      "E4_REVIEW_ONLY_UNTIL_SIGNED_QUALIFICATION_APPROVAL_CONTRACT",
       "SUPPORTED_REQUIRES_E4_PHYSICAL_QUALIFICATION_AND_PRODUCT_GATE",
       "EVIDENCE_HASH_DRIFT_INVALIDATES_RECORD"
     ],
@@ -116,7 +117,7 @@
     {
       "id": "QMAN-E3-STATIC-LAUNCH-ENVELOPE-001",
       "resultPath": "evidence/qman-static-launch-envelope-20260721-summary.json",
-      "resultSha256": "5c7001aef3593ec3ca3530c2779b03c2d955d193ad41f9fa420267036c8799e5",
+      "resultSha256": "d84be0258f6935b1ca328f9be89268800b9f14a641b76132ffa3e68681c082b4",
       "subject": "QMAN_COMPONENT",
       "evidenceGrade": "E3",
       "verdict": "PASS",
@@ -127,7 +128,7 @@
     {
       "id": "QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001",
       "resultPath": "evidence/qman-authoritative-snapshot-fault-20260721-summary.json",
-      "resultSha256": "5a1ce30c6c56dc9f5d3f0502d681a329dea6237bbe61d7d53e2f74a142886bec",
+      "resultSha256": "f271d93f51925ee49c2926849c750ee64e2e7fac75a57bcf1d302b7eb63b2d30",
       "subject": "QMAN_COMPONENT",
       "evidenceGrade": "E3",
       "verdict": "PASS",

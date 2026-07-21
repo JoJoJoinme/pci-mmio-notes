@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260722-vmware-evidence-index-v1",
+  "observedAt": "2026-07-22",
+  "subject": "VMWARE_ESXI_REFERENCE_GOVERNANCE",
+  "verdict": "PARTIAL",
+  "statement": "The repository can mechanically trace every VMware experiment from Tech Story to representative run and hash-bound evidence, and can derive non-closing acceptance associations from requiredTechStories.",
+  "counts": {
+    "experiments": 36,
+    "evidenceBound": 28,
+    "noRun": 8,
+    "derivedAcceptanceLinks": 271
+  },
+  "closureAuthority": {
+    "acceptanceCases": "NONE",
+    "qmanImplementation": "NONE",
+    "qmanQualification": "NONE",
+    "release": "NONE"
+  },
+  "artifacts": [
+    {
+      "path": "tools/evaluate_release.py",
+      "sha256": "77385a23f412b100e0cf746641b8ccb3b91f54bb0c9d95f56360c0b405748122"
+    },
+    {
+      "path": "tools/generate_vmware_evidence_index.py",
+      "sha256": "9dd71317b4e2195bb448900ddedc08d85f80de049ec67406ca19a3eccbb44430"
+    },
+    {
+      "path": "tests/test_vmware_evidence_index.py",
+      "sha256": "aaf54df503aee5e1a1859a5652071fef37c8fe7e35deb3ebea2eb4b0864b400b"
+    }
+  ],
+  "limitations": [
+    "Historical pyVmomi task identifiers and initiating actors are not uniformly retained.",
+    "Historical VMware runs do not all conform to contracts/vmware-experiment-result.schema.json.",
+    "Representative run IDs do not imply that every legacy case has a canonical result.",
+    "This reference-governance result cannot close a Qman product case, risk, implementation milestone, qualification profile, or release gate."
+  ]
+}

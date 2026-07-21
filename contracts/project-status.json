@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-07-21",
+  "asOf": "2026-07-22",
   "project": "Qman DirectPath parity and PCI passthrough control plane",
   "targetRelease": "V3",
   "deliveryModel": "SINGLE_TARGET_MULTI_WAVE",
-  "currentMilestone": "G0",
+  "currentMilestone": "G1",
   "currentClaim": "REFERENCE_AND_QUALIFICATION_MODEL_ONLY",
   "authoritativeDocuments": {
     "humanStatus": "PROJECT-STATUS.md",
@@ -14,32 +14,31 @@
     "vmwareBehaviorContract": "contracts/vmware-behavior-model.json",
     "vmwareSourceRegister": "contracts/vmware-source-register.json",
     "vmwareResultSchema": "contracts/vmware-experiment-result.schema.json",
+    "vmwareEvidenceIndex": "contracts/vmware-evidence-index.json",
     "qmanTechnicalEvidence": "ipd/QMAN-TECHNICAL-EVIDENCE.md",
     "qmanEvidenceIndex": "contracts/qman-evidence-index.json",
     "qmanResultSchema": "contracts/qman-technical-evidence.schema.json",
     "authoritativeSnapshotSchema": "contracts/authoritative-snapshot.schema.json",
+    "productDecisionsContract": "contracts/product-decisions.json",
+    "compatibilityProfilePolicy": "contracts/compatibility-profile-policy.json",
+    "qemuVfioLaunchSurface": "contracts/qemu-vfio-launch-surface.json",
+    "architectureDecisions": "decisions/README.md",
     "detailedDesign": "qemu-static-dynamic-directpath-design.md",
     "implementationBlueprint": "qman-directpath-implementation-blueprint.md",
     "acceptancePlan": "vmware-directpath-acceptance-test-plan.md",
     "referenceModel": "pci-resource-model/README.md"
   },
-  "openDecisions": [
-    "ADR-002",
-    "ADR-003",
-    "ADR-005",
-    "ADR-007",
-    "ADR-010"
-  ],
+  "openDecisions": [],
   "milestones": [
     {
       "id": "G0",
       "name": "Design and contract convergence",
-      "status": "IN_PROGRESS"
+      "status": "DONE"
     },
     {
       "id": "G1",
       "name": "Host inventory and qualification baseline",
-      "status": "NOT_STARTED"
+      "status": "IN_PROGRESS"
     },
     {
       "id": "G2",
@@ -58,7 +57,7 @@
     },
     {
       "id": "G5",
-      "name": "Failure recovery and multi-host fencing",
+      "name": "Planned online-host cold relocation",
       "status": "NOT_STARTED"
     },
     {
@@ -74,19 +73,27 @@
     "Do not bypass OPEN, CONTROL_IMPLEMENTED, or INVALIDATED risk states."
   ],
   "observations": {
-    "referenceUnitTests": {
-      "asOf": "2026-07-21",
-      "command": "cd pci-resource-model && python -m pytest -q",
-      "result": "PASS",
-      "testsCollected": 293,
-      "windowsPassed": 288,
-      "windowsPlatformSkips": 5,
-      "windowsSubtestsPassed": 103,
-      "wslPassed": 293,
-      "isReleaseEvidence": false
+    "vmwareEvidenceTrace": {
+      "asOf": "2026-07-22",
+      "records": 36,
+      "evidenceBound": 28,
+      "noRun": 8,
+      "derivedAcceptanceLinks": 271,
+      "closureAuthority": "NONE"
     },
-    "qmanTechnicalEvidence": {
-      "asOf": "2026-07-21",
+      "referenceUnitTests": {
+        "asOf": "2026-07-22",
+        "command": "python -m unittest discover -s pci-resource-model/tests -t pci-resource-model",
+        "result": "PASS",
+        "testsCollected": 294,
+        "windowsPassed": 289,
+        "windowsPlatformSkips": 5,
+        "windowsSubtestsPassed": 109,
+        "wslPassed": 294,
+        "isReleaseEvidence": false
+      },
+      "qmanTechnicalEvidence": {
+        "asOf": "2026-07-22",
       "records": 10,
       "grades": {"E2": 2, "E3": 8, "E4": 0},
       "claimBoundaries": {

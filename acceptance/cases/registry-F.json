@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "id": "F01",
+      "title": "Host-agent SIGKILL preserves the lease and reconciles before reuse",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R10", "R11"],
+      "requiredTechStories": ["TS-F5-03", "TS-F5-04", "TS-F7-02"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "There is no production host-agent identity, durable recovery loop or clean-state provider proving an agent crash cannot free or duplicate a live lease.",
+      "targetMilestone": "G5"
+    },
+    {
+      "id": "F02",
+      "title": "Temporary ownership-store failure never permits an unleased attach",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R05", "R10"],
+      "requiredTechStories": ["TS-F3-02", "TS-F5-03", "TS-F7-02"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "The product controller is not wired to a fail-closed ownership authority with store-partition fault injection at reserve, attach, commit and release boundaries.",
+      "targetMilestone": "G5"
+    },
+    {
+      "id": "F03",
+      "title": "Source-host loss leaves the VM stopped and never triggers takeover",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R10"],
+      "requiredTechStories": ["TS-F5-03", "TS-F7-02", "TS-F7-05"],
+      "dependsOnCaseIds": ["F01", "F02"],
+      "blocker": "Host-failure HA is outside the product boundary, but no executable scheduler and ownership negative gate proves that source-host loss keeps the VM stopped and forbids cross-host reassignment.",
+      "targetMilestone": "G5"
+    },
+    {
+      "id": "F04",
+      "title": "Stale logical ownership epoch cannot commit, release or reassign",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R10"],
+      "requiredTechStories": ["TS-F7-02", "TS-F7-05", "TS-F8-01"],
+      "dependsOnCaseIds": ["F02"],
+      "blocker": "The multi-host authority does not yet issue monotonic logical epochs or reject every stale-agent commit, release and reassignment path without relying on BMC fencing.",
+      "targetMilestone": "G5"
+    },
+    {
+      "id": "F05",
+      "title": "Clean cold relocation requires both hosts online and source release before target reserve",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R06", "R08", "R10"],
+      "requiredTechStories": ["TS-F5-02", "TS-F6-04", "TS-F7-01", "TS-F7-02", "TS-F7-03", "TS-F7-05"],
+      "dependsOnCaseIds": ["D12", "F04", "S07"],
+      "blocker": "The product has no two-online-host protocol that stops the VM, proves source cleanup and release, advances the logical epoch, then performs a fresh target solve and reserve.",
+      "targetMilestone": "G5"
+    },
+    {
+      "id": "F06",
+      "title": "Cold-relocation target exhaustion keeps the VM stopped with a stable reason",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R05", "R08", "R10"],
+      "requiredTechStories": ["TS-F6-02", "TS-F7-01", "TS-F7-03", "TS-F7-05"],
+      "dependsOnCaseIds": ["F05"],
+      "blocker": "The planned relocation workflow does not yet prove target capacity exhaustion leaves the VM stopped, creates no target lease and reports a complete deterministic reason.",
+      "targetMilestone": "G5"
+    },
+    {
+      "id": "F07",
+      "title": "Live migration request is rejected for the baseline DirectPath profile",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R16", "R26"],
+      "requiredTechStories": ["TS-F4-05", "TS-F5-05"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "Live migration is outside the baseline boundary, but no product API, scheduler, launcher and backend negative gate proves rejection without assignment mutation.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "F08",
+      "title": "VFIO migration backend is disabled for Qman DirectPath",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R16", "R26"],
+      "requiredTechStories": ["TS-F4-05", "TS-F5-05"],
+      "dependsOnCaseIds": ["F07"],
+      "blocker": "The product has not implemented an executable negative gate proving VFIO migration capability, dirty tracking and state transfer remain disabled across API, scheduler, launcher and raw QEMU paths.",
+      "targetMilestone": "G2"
+    }
+  ]
+}

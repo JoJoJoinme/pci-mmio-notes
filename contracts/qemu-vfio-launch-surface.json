@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-07-22",
+  "purpose": "Freeze the version-specific QEMU qualification usage surface used by the Legacy-first decision.",
+  "devicePropertiesSemantics": {
+    "kind": "QUALIFICATION_PROFILE_ALLOWLIST",
+    "binarySurfaceComplete": false,
+    "externalDeviceFdPropertyMeaning": "PROFILE_ALLOWS_EXTERNAL_DEVICE_FD",
+    "rule": "deviceProperties lists only properties that this qualification usage profile permits Qman to render; it is not the complete vfio-pci help surface compiled into the QEMU binary. A binary-exposed property remains forbidden unless the selected profile lists it."
+  },
+  "profiles": [
+    {
+      "qemu": "5.0",
+      "backend": "LEGACY_VFIO_TYPE1",
+      "qualificationUsage": "CURRENT_PRODUCT",
+      "deviceProperties": ["host", "sysfsdev"],
+      "externalDeviceFdProperty": false,
+      "source": "https://gitlab.com/qemu-project/qemu/-/blob/v5.0.0/hw/vfio/pci.c",
+      "sourceObservation": "vfio-pci properties contain a TODO for passed vfiofd/vfiogroupfd and expose host/sysfsdev instead"
+    },
+    {
+      "qemu": "6.2",
+      "backend": "LEGACY_VFIO_TYPE1",
+      "qualificationUsage": "REFERENCE_COMPATIBILITY_PROBE",
+      "deviceProperties": ["host", "sysfsdev"],
+      "externalDeviceFdProperty": false,
+      "runtimeProbe": "/usr/bin/qemu-system-x86_64 -nodefaults -machine none -device vfio-pci,help"
+    },
+    {
+      "qemu": "10.2",
+      "backend": "LEGACY_VFIO_TYPE1",
+      "qualificationUsage": "CURRENT_PRODUCT",
+      "deviceProperties": ["host", "sysfsdev"],
+      "externalDeviceFdProperty": false,
+      "binaryMayExposeAdditionalProperties": ["iommufd", "fd"],
+      "binaryExposureCondition": "CONFIG_IOMMUFD",
+      "profileForbiddenProperties": ["iommufd", "fd"],
+      "source": "https://gitlab.com/qemu-project/qemu/-/blob/v10.2.0/hw/vfio/pci.c",
+      "sourceObservation": "The same QEMU 10.2 binary may expose iommufd/fd when built with CONFIG_IOMMUFD, but the current Legacy qualification profile permits only host/sysfsdev and forbids rendering iommufd/fd."
+    },
+    {
+      "qemu": "10.2",
+      "backend": "VFIO_CDEV_IOMMUFD",
+      "qualificationUsage": "FUTURE_QUALIFICATION_ONLY",
+      "deviceProperties": ["host", "sysfsdev", "iommufd", "fd"],
+      "externalDeviceFdProperty": true,
+      "fdPropertyCompileGuard": "CONFIG_IOMMUFD",
+      "source": "https://gitlab.com/qemu-project/qemu/-/blob/v10.2.0/hw/vfio/pci.c"
+    }
+  ],
+  "qmanDecision": {
+    "currentBackend": "LEGACY_VFIO_TYPE1",
+    "launchGrantKind": "AUTHORIZED_DEVICE_PATH",
+    "qemuArgument": "-device vfio-pci,host=<exact-bdf>",
+    "authorizationBoundary": "Host Agent creates a per-VM device/sysfs namespace and cgroup/LSM allowlist containing only the leased group before exec; it verifies QEMU proc fds and QMP/QOM after spawn.",
+    "forbidden": [
+      "CLAIM_LEGACY_FD_ONLY_ON_STOCK_QEMU_5_0",
+      "SHARED_QEMU_UID_WITH_BROAD_DEV_VFIO_ACCESS",
+      "SILENT_LEGACY_TO_IOMMUFD_FALLBACK",
+      "RAW_QEMU_OR_ALTERNATE_MONITOR_BYPASS"
+    ]
+  }
+}

@@ -1,3 +1,6 @@
+import copy
+import hashlib
+import json
 import subprocess
 import sys
 import tempfile
@@ -27,14 +30,15 @@ class ReleaseGateTests(unittest.TestCase):
         result = self.invoke("status")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Contract: VALID", result.stdout)
+        self.assertIn("Current milestone: G1", result.stdout)
         self.assertIn("Target release: V3 (SINGLE_TARGET_MULTI_WAVE)", result.stdout)
         self.assertIn(
             "IPD: epics=1, features=8, user_stories=28, tech_stories=39",
             result.stdout,
         )
         self.assertIn(
-            "VMware reference: sources=24, experiments=33, tech_stories=39 "
-            "(NOT_APPLICABLE=5, PARTIAL=26, UNKNOWN=4, VERIFIED=4)",
+            "VMware reference: sources=24, experiments=36, tech_stories=39 "
+            "(NOT_APPLICABLE=5, PARTIAL=27, UNKNOWN=3, VERIFIED=4)",
             result.stdout,
         )
         self.assertIn(
@@ -44,13 +48,17 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn("Risks: 39", result.stdout)
-        self.assertIn("Acceptance: 14/101 defined", result.stdout)
-        self.assertIn("87 unclassified", result.stdout)
+        self.assertIn("Acceptance: 101/101 defined", result.stdout)
+        self.assertIn("0 unclassified", result.stdout)
         self.assertIn("EXECUTABLE=2", result.stdout)
-        self.assertIn("IMPLEMENTATION_BLOCKED=12", result.stdout)
+        self.assertIn("IMPLEMENTATION_BLOCKED=93", result.stdout)
+        self.assertIn("HARDWARE_BLOCKED=6", result.stdout)
         self.assertIn(
-            "implementation-blocked acceptance cases: C10, C15, C16, C18, C21, "
-            "F00, F09, F10, S03, S04, S05, S15",
+            "implementation-blocked acceptance cases: C00, C01, C02, C03",
+            result.stdout,
+        )
+        self.assertIn(
+            "hardware-blocked acceptance cases: C12, M08, M12, M13, S06, S08",
             result.stdout,
         )
         self.assertIn(
@@ -71,7 +79,47 @@ class ReleaseGateTests(unittest.TestCase):
             "(IMPLEMENTATION_BLOCKED)",
             result.stdout,
         )
+        self.assertIn("Open decisions: 0", result.stdout)
+        self.assertIn("unfinished milestones: G1, G2, G3, G4, G5, G6", result.stdout)
         self.assertIn("Release: BLOCKED", result.stdout)
+
+        with patch.object(
+            evaluate_release,
+            "_evaluate_unchecked",
+            side_effect=TypeError("malformed membership value"),
+        ):
+            malformed = evaluate_release.evaluate()
+        self.assertTrue(malformed.errors)
+        self.assertIn("stopped safely", malformed.errors[0])
+        self.assertEqual({}, malformed.executable_cases)
+
+        with patch.object(
+            evaluate_release,
+            "_evaluate_unchecked",
+            side_effect=RecursionError("malformed nesting"),
+        ):
+            malformed = evaluate_release.evaluate()
+        self.assertTrue(malformed.errors)
+        self.assertIn("stopped safely", malformed.errors[0])
+
+        with tempfile.TemporaryDirectory() as directory:
+            temporary_root = Path(directory)
+            for name, payload in (
+                ("duplicate.json", '{"a": 1, "a": 2}\n'),
+                ("nan.json", '{"value": NaN}\n'),
+                ("infinity.json", '{"value": Infinity}\n'),
+                (
+                    "deeply-nested.json",
+                    '{"value":' + "[" * 5000 + "0" + "]" * 5000 + "}\n",
+                ),
+            ):
+                path = temporary_root / name
+                path.write_text(payload, encoding="utf-8")
+                with self.subTest(invalid_json=name), patch.object(
+                    evaluate_release, "ROOT", temporary_root
+                ):
+                    with self.assertRaisesRegex(ValueError, "invalid JSON"):
+                        evaluate_release.load_json(path)
 
     def test_release_gate_fails_closed(self) -> None:
         result = self.invoke("release")
@@ -154,6 +202,14 @@ class QmanEvidenceClosurePolicyTests(unittest.TestCase):
                 "caseIds": ["S15"],
                 "riskIds": ["R17", "R27"],
             },
+            "sourceState": {"dirtyWorkingTree": False},
+            "artifacts": [
+                {
+                    "path": "evidence/committed.json",
+                    "sha256": "0" * 64,
+                    "retention": "COMMITTED",
+                }
+            ],
             "closureEffect": {
                 "productCasesClosed": product_cases,
                 "risksClosed": risks,
@@ -205,6 +261,32 @@ class QmanEvidenceClosurePolicyTests(unittest.TestCase):
         )
         self.assertTrue(any("E4-required risks" in item for item in errors))
 
+        index = json.loads(
+            (ROOT / "contracts" / "qman-evidence-index.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        index["closurePolicy"]["e4RequiredRisks"].remove("R27")
+        schema = json.loads(
+            (ROOT / "contracts" / "qman-technical-evidence.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        ipd = json.loads(
+            (ROOT / "contracts" / "ipd-tree.json").read_text(encoding="utf-8")
+        )
+        design = evaluate_release.extract_design_contracts(
+            ROOT / "qemu-static-dynamic-directpath-design.md"
+        )
+        policy_errors: list[str] = []
+        evaluate_release.validate_qman_evidence(
+            index, schema, ipd, design, policy_errors
+        )
+        self.assertTrue(
+            any("frozen physical-risk set" in error for error in policy_errors),
+            policy_errors,
+        )
+
     def test_component_subject_cannot_close_product_state(self) -> None:
         errors = self.validate(
             self.result(
@@ -251,6 +333,46 @@ class QmanEvidenceClosurePolicyTests(unittest.TestCase):
         physical["claimBoundary"] = "PHYSICAL_QUALIFICATION"
         self.assertTrue(any("requires E4" in item for item in self.validate(physical)))
 
+        valid_result_path = ROOT / "evidence" / "qman-reference-model-20260721-summary.json"
+        valid_result = json.loads(valid_result_path.read_text(encoding="utf-8"))
+        shape_errors: list[str] = []
+        evaluate_release.validate_qman_result_shape(
+            valid_result["id"], valid_result, shape_errors
+        )
+        self.assertEqual([], shape_errors)
+
+        mutations = (
+            (("observedAt",), 123, "observedAt"),
+            (("sut",), [], "sut must be an object"),
+            (("hypotheses",), [], "hypotheses"),
+            (("observations",), [], "observations"),
+            (("limitations",), [], "limitations"),
+            (("artifacts", 0, "closureAuthority"), "FULL", "artifact fields"),
+            (("schemaVersion",), True, "integer 1"),
+        )
+        for path, value, expected_error in mutations:
+            with self.subTest(shape_path=path):
+                candidate = copy.deepcopy(valid_result)
+                target = candidate
+                for part in path[:-1]:
+                    target = target[part]
+                target[path[-1]] = value
+                errors = []
+                evaluate_release.validate_qman_result_shape(
+                    candidate["id"], candidate, errors
+                )
+                self.assertTrue(
+                    any(expected_error in error for error in errors), errors
+                )
+
+        candidate = copy.deepcopy(valid_result)
+        candidate["mapping"]["caseIds"] = ["O05a"]
+        errors = []
+        evaluate_release.validate_qman_result_shape(
+            candidate["id"], candidate, errors
+        )
+        self.assertFalse(any("mapping.caseIds" in error for error in errors), errors)
+
     def test_e4_risk_closure_requires_physical_claim_boundary(self) -> None:
         result = self.result(
             subject="QMAN_END_TO_END",
@@ -261,6 +383,20 @@ class QmanEvidenceClosurePolicyTests(unittest.TestCase):
         result["claimBoundary"] = "END_TO_END_PRODUCT"
         errors = self.validate(result)
         self.assertTrue(any("requires E4 physical qualification" in item for item in errors))
+
+        result["claimBoundary"] = "PHYSICAL_QUALIFICATION"
+        errors = self.validate(result)
+        self.assertTrue(any("review-only" in item for item in errors), errors)
+
+        e3_hardware = self.result(
+            subject="QMAN_END_TO_END",
+            grade="E3",
+            product_cases=["C12"],
+            risks=[],
+        )
+        e3_hardware["mapping"]["caseIds"] = ["C12"]
+        errors = self.validate(e3_hardware)
+        self.assertTrue(any("hardware-blocked cases" in item for item in errors))
 
     def test_risk_or_status_closure_requires_end_to_end_boundary(self) -> None:
         for risks, status_updated in ((["R17"], False), ([], True)):
@@ -465,13 +601,236 @@ class RiskEvidencePolicyTests(unittest.TestCase):
         evaluate_release.validate_risks(
             policy,
             self.design(),
-            {"records": []},
+            {},
             errors,
             blockers,
         )
         self.assertTrue(any("unknown product test IDs" in item for item in errors))
         self.assertTrue(any("invalid evidenceGrade" in item for item in errors))
         self.assertTrue(any("Qman-closure-evidence" in item for item in blockers))
+
+    def test_risks_consume_only_fully_validated_qman_receipts(self) -> None:
+        index = json.loads(
+            (ROOT / "contracts" / "qman-evidence-index.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        schema = json.loads(
+            (ROOT / "contracts" / "qman-technical-evidence.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        ipd = json.loads(
+            (ROOT / "contracts" / "ipd-tree.json").read_text(encoding="utf-8")
+        )
+        design = evaluate_release.extract_design_contracts(
+            ROOT / "qemu-static-dynamic-directpath-design.md"
+        )
+        record = copy.deepcopy(
+            next(
+                item
+                for item in index["records"]
+                if item["id"] == "QMAN-E3-QMP-GATE-001"
+            )
+        )
+        index["records"] = [record]
+        source_result_path = ROOT / record["resultPath"]
+        baseline = json.loads(source_result_path.read_text(encoding="utf-8"))
+        baseline["subject"] = "QMAN_END_TO_END"
+        baseline["claimBoundary"] = "END_TO_END_PRODUCT"
+        baseline["sourceState"]["dirtyWorkingTree"] = False
+        committed_path = ROOT / "tools" / "evaluate_release.py"
+        baseline["artifacts"] = [
+            {
+                "path": "tools/evaluate_release.py",
+                "sha256": hashlib.sha256(committed_path.read_bytes()).hexdigest(),
+                "retention": "COMMITTED",
+            }
+        ]
+        baseline["closureEffect"] = {
+            "productCasesClosed": [],
+            "risksClosed": ["R17"],
+            "statusUpdated": False,
+        }
+        record["subject"] = "QMAN_END_TO_END"
+
+        with tempfile.TemporaryDirectory(
+            prefix=".qman-receipt-", dir=ROOT / "evidence"
+        ) as temporary:
+            result_path = Path(temporary) / "result.json"
+            result_relative = result_path.relative_to(ROOT).as_posix()
+            record["resultPath"] = result_relative
+
+            def payload_for(candidate: dict) -> bytes:
+                return (
+                    json.dumps(candidate, sort_keys=True, separators=(",", ":"))
+                    + "\n"
+                ).encode("utf-8")
+
+            def produce(
+                result_mutation=None,
+                record_mutation=None,
+            ) -> tuple[
+                dict[str, list[evaluate_release.QmanRiskClosureReceipt]],
+                list[str],
+                str,
+            ]:
+                candidate = copy.deepcopy(baseline)
+                candidate_record = copy.deepcopy(record)
+                if result_mutation is not None:
+                    result_mutation(candidate)
+                payload = payload_for(candidate)
+                result_path.write_bytes(payload)
+                digest = hashlib.sha256(payload).hexdigest()
+                candidate_record["resultSha256"] = digest
+                if record_mutation is not None:
+                    record_mutation(candidate_record)
+                candidate_index = copy.deepcopy(index)
+                candidate_index["records"] = [candidate_record]
+                receipts: dict[
+                    str, list[evaluate_release.QmanRiskClosureReceipt]
+                ] = {}
+                evidence_errors: list[str] = []
+                evaluate_release.validate_qman_evidence(
+                    candidate_index,
+                    schema,
+                    ipd,
+                    design,
+                    evidence_errors,
+                    receipts,
+                )
+                return receipts, evidence_errors, digest
+
+            receipts, evidence_errors, expected_digest = produce()
+            self.assertEqual([], evidence_errors)
+            self.assertEqual(1, len(receipts["R17"]))
+            self.assertEqual(expected_digest, receipts["R17"][0].result_sha256)
+
+            invalid_mutations = (
+                (
+                    "component",
+                    lambda result: result.update(
+                        subject="QMAN_COMPONENT", claimBoundary="COMPONENT_ONLY"
+                    ),
+                    lambda item: item.update(subject="QMAN_COMPONENT"),
+                ),
+                (
+                    "fail-verdict",
+                    lambda result: result.update(verdict="FAIL"),
+                    lambda item: item.update(verdict="FAIL"),
+                ),
+                (
+                    "hash-drift",
+                    None,
+                    lambda item: item.update(resultSha256="0" * 64),
+                ),
+                (
+                    "e4-review-only",
+                    lambda result: (
+                        result.update(
+                            evidenceGrade="E4",
+                            claimBoundary="PHYSICAL_QUALIFICATION",
+                        ),
+                        result["mapping"].update(riskIds=["R27"]),
+                        result["closureEffect"].update(risksClosed=["R27"]),
+                    ),
+                    lambda item: item.update(
+                        evidenceGrade="E4", riskIds=["R27"]
+                    ),
+                ),
+            )
+            for name, result_mutation, record_mutation in invalid_mutations:
+                with self.subTest(invalid_qman_record=name):
+                    invalid_receipts, evidence_errors, _ = produce(
+                        result_mutation, record_mutation
+                    )
+                    self.assertTrue(evidence_errors)
+                    self.assertEqual({}, invalid_receipts)
+
+            safe_candidate = copy.deepcopy(baseline)
+            safe_candidate["closureEffect"] = {
+                "productCasesClosed": [],
+                "risksClosed": [],
+                "statusUpdated": False,
+            }
+            safe_payload = payload_for(safe_candidate)
+            malicious_payload = payload_for(baseline)
+            result_path.write_bytes(malicious_payload)
+            changing_record = copy.deepcopy(record)
+            changing_record["resultSha256"] = hashlib.sha256(
+                safe_payload
+            ).hexdigest()
+            changing_index = copy.deepcopy(index)
+            changing_index["records"] = [changing_record]
+            original_read_bytes = Path.read_bytes
+            result_reads = 0
+
+            def changing_read(path: Path) -> bytes:
+                nonlocal result_reads
+                if path.resolve() == result_path.resolve():
+                    result_reads += 1
+                    return safe_payload if result_reads == 1 else malicious_payload
+                return original_read_bytes(path)
+
+            changing_receipts: dict[
+                str, list[evaluate_release.QmanRiskClosureReceipt]
+            ] = {}
+            changing_errors: list[str] = []
+            with patch.object(Path, "read_bytes", autospec=True, side_effect=changing_read):
+                evaluate_release.validate_qman_evidence(
+                    changing_index,
+                    schema,
+                    ipd,
+                    design,
+                    changing_errors,
+                    changing_receipts,
+                )
+            self.assertEqual([], changing_errors)
+            self.assertEqual(1, result_reads)
+            self.assertEqual({}, changing_receipts)
+
+            policy = {
+                "schemaVersion": 1,
+                "expectedRiskCount": 1,
+                "records": [
+                    {
+                        "id": "R17",
+                        "status": "VERIFIED",
+                        "owner": "Security Owner",
+                        "containmentRecovery": "disable runtime eject",
+                        "testIds": ["S15"],
+                        "evidenceGrade": "E3",
+                        "artifactHashes": [expected_digest],
+                    }
+                ],
+            }
+            receipt_errors: list[str] = []
+            receipt_blockers: list[str] = []
+            counts = evaluate_release.validate_risks(
+                policy,
+                self.design(),
+                receipts,
+                receipt_errors,
+                receipt_blockers,
+            )
+            self.assertEqual([], receipt_errors)
+            self.assertEqual([], receipt_blockers)
+            self.assertEqual(1, counts["VERIFIED"])
+
+            no_receipt_blockers: list[str] = []
+            evaluate_release.validate_risks(
+                policy,
+                self.design(),
+                {},
+                [],
+                no_receipt_blockers,
+            )
+            self.assertTrue(
+                any(
+                    "Qman-closure-evidence" in item
+                    for item in no_receipt_blockers
+                )
+            )
 
 
 if __name__ == "__main__":

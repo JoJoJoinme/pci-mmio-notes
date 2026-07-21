@@ -1,8 +1,8 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-18
+Record date: 2026-07-22
 
-Project convergence status, current milestone, open decisions, and the fail-closed
+Project convergence status, current milestone, frozen decisions, and the fail-closed
 release command are maintained in [`PROJECT-STATUS.md`](PROJECT-STATUS.md). The
 current supported claim is **reference and qualification model only**, not a
 production DirectPath controller.
@@ -14,10 +14,18 @@ being promoted to product completion in [`ipd/MATERIAL-MAP.md`](ipd/MATERIAL-MAP
 The VMware side is reconstructed as an official-contract plus observable-behavior
 model, mapped across all 39 Tech Stories, in
 [`ipd/VMWARE-BEHAVIOR-MODEL.md`](ipd/VMWARE-BEHAVIOR-MODEL.md).
+Its 36 experiments are also registered in the hash-checked
+[`contracts/vmware-evidence-index.json`](contracts/vmware-evidence-index.json):
+executed reference work binds representative run IDs and evidence files, while
+planned/physical items remain explicit no-run records. Derived acceptance links
+have no Qman closure authority.
+The accepted platform/backend/control-plane/HCL/cluster choices are machine-readable in
+[`contracts/product-decisions.json`](contracts/product-decisions.json) and
+[`contracts/compatibility-profile-policy.json`](contracts/compatibility-profile-policy.json).
 Qman/reference-side technical evidence is tracked separately in
 [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md) and the
-   machine-readable [`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json).
-The current eight E2/E3 records—five `REFERENCE_ONLY` and three `COMPONENT_ONLY`—
+[`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json).
+The current ten E2/E3 records—five `REFERENCE_ONLY` and five `COMPONENT_ONLY`—
 reproduce design premises, including the bounded C20 capability closure, and verify
 bounded default-deny QMP, per-device VFIO/IOMMUFD provider, and host-local Static
 lease/FSM fault components. None
@@ -55,9 +63,9 @@ For the executable VMware implementation acceptance goals, evidence grades,
 test matrix, artifact contract, and QEMU equivalence checklist, see
 `vmware-directpath-acceptance-test-plan.md`.
 
-QEMU 平台完整复刻静态 VMDirectPath 与 Dynamic DirectPath 的控制平面设计，包括 capability
-分层、dependency bundle、候选求解、durable lease、IOMMUFD fd passing、rollback、
-quarantine、multi-host fencing、KB 312208/API K01-K31 全量能力对标、R01-R39 风险清单，
+QEMU 平台完整实现静态 VMDirectPath 与 Dynamic DirectPath 外部核心语义的控制平面设计，包括
+capability 分层、dependency bundle、候选求解、durable lease、Legacy-first backend adapter、
+rollback、quarantine、双在线主机 cold relocation、KB 312208/API K01-K31 全量能力对标、R01-R39 风险清单，
 并给出 capable、dependency/reset domain、静态/动态事务和多级 MMIO allocator 的分层图、
 数据合同、可实现伪代码和分阶段验收，见
 [`qemu-static-dynamic-directpath-design.md`](qemu-static-dynamic-directpath-design.md)。
@@ -86,8 +94,8 @@ OVMF/QEMU 参数生成，以及 `eligible/available/attachable` 三层 capable e
 宿主 DPDK 的 unsafe no-IOMMU 允许位与 VM payload 的 per-device IOMMU gate 分离，并用
 `hostReservation` 把 dataplane BDF 排除出 Static/Dynamic 候选池。机器可读
 验收摘要为 `evidence/pci-resource-model-20260714-summary.json`。目录现已包含 standalone
-SQLite Static lease/FSM 组件，但仍不包含生产 attach/controller、真实 cleanup provider、
-Dynamic solver 或 multi-host fencing；完整边界
+SQLite Static lease/FSM 组件，但仍不包含生产 Legacy attach/controller、真实 cleanup provider、
+Dynamic solver 或 online cold-relocation coordinator；完整边界
 以 [`PROJECT-STATUS.md`](PROJECT-STATUS.md) 和详细设计第 22 节为准。
 
 上述 no-IOMMU 分流另有真实 QEMU/Linux provider A/B：两个 guest 都保持 unsafe switch=`Y`，
@@ -99,6 +107,11 @@ Dynamic solver 或 multi-host fencing；完整边界
 [`evidence/qman-vfio-provider-gate-20260721-summary.json`](evidence/qman-vfio-provider-gate-20260721-summary.json)。
 该 standalone 结果的 snapshot 语义仅为 `CALLER_CORRELATION_ONLY`，且关闭 fd 后不冒充 QEMU
 handoff，因此仍不构成 C21、R27 或生产 launcher/lease 的完成证据。
+
+当前产品使用 Legacy VFIO TYPE1 family，而不是把上述 cdev/IOMMUFD 组件直接升级为产品路径。
+QEMU 5.0 legacy `vfio-pci` 没有外部 group/device fd property，因此 Qman 的 Legacy launch
+合同是 exact BDF + 每 VM device/sysfs namespace/cgroup/LSM + post-spawn proc-fd/QMP receipt；
+版本化依据见 [`evidence/qemu-legacy-launch-surface-20260722.md`](evidence/qemu-legacy-launch-surface-20260722.md)。
 
 Static 事务另有独立的 host-local persistence/CAS/FSM fault 组件：WSL 原生文件系统上的 7 个
 真实 subprocess、`os._exit`、双进程争抢和 `SIGKILL` 场景证明 SQLite commit 前后不会产生

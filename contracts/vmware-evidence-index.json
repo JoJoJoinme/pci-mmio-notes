@@ -1,0 +1,1268 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-07-22",
+  "subject": "VMWARE_ESXI",
+  "sourceModel": "contracts/vmware-behavior-model.json",
+  "hashAlgorithm": "SHA-256",
+  "recordCount": 36,
+  "tracePolicy": {
+    "techStoryAssociation": "EXACT_FROM_VMWARE_BEHAVIOR_MODEL",
+    "acceptanceCaseAssociation": "DERIVED_FROM_ACCEPTANCE_REQUIRED_TECH_STORIES",
+    "acceptanceClosureAuthority": "NONE",
+    "qmanImplementationClosureAuthority": "NONE",
+    "qmanQualificationClosureAuthority": "NONE",
+    "noRunStates": [
+      "BLOCKED_PHYSICAL",
+      "PLANNED"
+    ]
+  },
+  "records": [
+    {
+      "experimentId": "VMW-CAP-001",
+      "executionState": "OBSERVED",
+      "techStoryIds": [
+        "TS-F1-01"
+      ],
+      "legacyCaseIds": [
+        "A00-A06",
+        "CAP00-CAP22"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C00",
+        "C01",
+        "C02",
+        "C08",
+        "C10",
+        "C11",
+        "C12",
+        "C15",
+        "C16",
+        "C18",
+        "C20",
+        "D10",
+        "O06",
+        "S01"
+      ],
+      "runIds": [
+        "20260714-esxi8-passthru-capability-matrix-v4"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-directpath-20260714-summary.json",
+          "sha256": "665d586649c622324ca4953a9dd05df748af6db1fac47e349a42e4aa5db37714"
+        },
+        {
+          "path": "vmware-esxi8-passthru-capable-observed-model.md",
+          "sha256": "ca74b93136405ec451234b9152b5d33dfc57038a76da2b5ecdbfbec5cd048213"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "nested-endpoints",
+        "single-esxi-build",
+        "not-physical-qualification"
+      ]
+    },
+    {
+      "experimentId": "VMW-DMA-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F1-02"
+      ],
+      "legacyCaseIds": [
+        "D00",
+        "D01",
+        "D06"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C21",
+        "M08",
+        "M10",
+        "M13"
+      ],
+      "runIds": [
+        "20260714-esxi8-edu-dma-teardown-v5"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-edu-dma-teardown-20260714-summary.json",
+          "sha256": "f5ed02b5e2f414c4f789ba56d94f1fc38c5da04621396675f08720d9186f2196"
+        },
+        {
+          "path": "evidence/esxi8-workstation-noiommu-20260718-summary.json",
+          "sha256": "85779efde52324f014709657f170cd8b33d603c910b5f2f89274ab452bde4874"
+        },
+        {
+          "path": "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json",
+          "sha256": "44f2510f224c45aa35ca5b35c846e9f02e3c112d5ca163fa8b6710deef4c8f99"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-physical-iommu-qualification",
+        "no-real-dpdk-pmd-coexistence"
+      ]
+    },
+    {
+      "experimentId": "VMW-ACS-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F1-03"
+      ],
+      "legacyCaseIds": [
+        "A01",
+        "S04"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C05",
+        "C06",
+        "C07",
+        "C16",
+        "C19"
+      ],
+      "runIds": [
+        "20260714-esxi8-no-acs-global-bypass-v1"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-acs-check-bypass-20260714-summary.json",
+          "sha256": "0105172607bc79c552f0e8c5d22129b300acd6a8ffd4203c250aba962ff54cc2"
+        },
+        {
+          "path": "evidence/esxi8-directpath-20260714-summary.json",
+          "sha256": "665d586649c622324ca4953a9dd05df748af6db1fac47e349a42e4aa5db37714"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "nested-acs",
+        "no-physical-rid-alias-proof"
+      ]
+    },
+    {
+      "experimentId": "VMW-DEP-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F1-04"
+      ],
+      "legacyCaseIds": [
+        "A02-A05",
+        "O05a",
+        "O05b",
+        "O10"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C00",
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C07",
+        "C12",
+        "C13",
+        "C16",
+        "C17",
+        "C20",
+        "D03",
+        "D14",
+        "O05a",
+        "O05b",
+        "O10",
+        "S02"
+      ],
+      "runIds": [
+        "20260718-esxi8-owner-activation-legacy-v2"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-directpath-20260714-summary.json",
+          "sha256": "665d586649c622324ca4953a9dd05df748af6db1fac47e349a42e4aa5db37714"
+        },
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718-summary.json",
+          "sha256": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-physical-gpu-hba-pf-vf-matrix"
+      ]
+    },
+    {
+      "experimentId": "VMW-QUAL-001",
+      "executionState": "BLOCKED_PHYSICAL",
+      "techStoryIds": [
+        "TS-F1-05"
+      ],
+      "legacyCaseIds": [],
+      "derivedAcceptanceCaseIds": [
+        "C08",
+        "C09",
+        "C10",
+        "D01",
+        "D02",
+        "D13",
+        "F10",
+        "M05",
+        "M09",
+        "M12",
+        "M17"
+      ],
+      "runIds": [],
+      "evidence": [],
+      "noRunReason": "Physical GPU, HBA and accelerator qualification evidence is not available in the nested-QEMU laboratory.",
+      "limitations": [
+        "requires-representative-consumer-gpu-professional-gpu-hba-and-accelerator-specimens"
+      ]
+    },
+    {
+      "experimentId": "VMW-OWNER-001",
+      "executionState": "OBSERVED",
+      "techStoryIds": [
+        "TS-F2-01"
+      ],
+      "legacyCaseIds": [
+        "O00-O03",
+        "O07"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "O00",
+        "O01",
+        "O02",
+        "O03",
+        "O09"
+      ],
+      "runIds": [
+        "20260718-esxi8-owner-activation-v1"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718.md",
+          "sha256": "61f3dec52df9b6852b603cc0d9d0f123a53654e57eb06216d714e6cb353e184f"
+        },
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718-summary.json",
+          "sha256": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "single-esxi-build"
+      ]
+    },
+    {
+      "experimentId": "VMW-OWNER-002",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F2-02",
+        "TS-F2-03"
+      ],
+      "legacyCaseIds": [
+        "O04",
+        "O05a",
+        "O05b",
+        "O10"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "O01",
+        "O02",
+        "O04",
+        "O05a",
+        "O05b",
+        "O06",
+        "O08",
+        "O09",
+        "O10"
+      ],
+      "runIds": [
+        "20260718-esxi8-owner-reproducer-v3"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718-summary.json",
+          "sha256": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "network-consumer-focused",
+        "no-physical-hba-or-gpu"
+      ]
+    },
+    {
+      "experimentId": "VMW-OWNER-003",
+      "executionState": "PLANNED",
+      "techStoryIds": [
+        "TS-F2-03"
+      ],
+      "legacyCaseIds": [],
+      "derivedAcceptanceCaseIds": [
+        "O01",
+        "O02",
+        "O04",
+        "O05a",
+        "O05b",
+        "O08"
+      ],
+      "runIds": [],
+      "evidence": [],
+      "noRunReason": "No deterministic mid-bundle owner-transition failure injection exists.",
+      "limitations": [
+        "fault-injection-not-yet-implemented"
+      ]
+    },
+    {
+      "experimentId": "VMW-OWNER-004",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F2-04",
+        "TS-F3-01"
+      ],
+      "legacyCaseIds": [
+        "O03",
+        "O07"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "M15",
+        "O03",
+        "O06",
+        "O07",
+        "S00",
+        "S01"
+      ],
+      "runIds": [
+        "20260718-esxi8-owner-activation-v1"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718-summary.json",
+          "sha256": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "bdf-stability-only",
+        "no-device-replacement"
+      ]
+    },
+    {
+      "experimentId": "VMW-OWNER-005",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F2-05"
+      ],
+      "legacyCaseIds": [
+        "O07",
+        "L03",
+        "L05"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "O07"
+      ],
+      "runIds": [
+        "20260718-esxi8-owner-activation-legacy-v2"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718-summary.json",
+          "sha256": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-mismatch-to-quarantine-branch"
+      ]
+    },
+    {
+      "experimentId": "VMW-STATIC-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F3-01"
+      ],
+      "legacyCaseIds": [
+        "STATIC-BACKING",
+        "O03",
+        "O07"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "M15",
+        "O06",
+        "S00",
+        "S01"
+      ],
+      "runIds": [
+        "20260711-lifecycle"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-directpath-summary.json",
+          "sha256": "a2d45a6ad645892e0609a022b9c2b8a15cafa34f158b66a5c1ccad0ee6c220fe"
+        },
+        {
+          "path": "vmware-esxi8-directpath-local-results.md",
+          "sha256": "a8a167899f60b7556349f15e0be78c0492c4dc03a9b0c18a71b73547ffc69ef5"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-strong-physical-fingerprint-proof"
+      ]
+    },
+    {
+      "experimentId": "VMW-STATIC-002",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F3-02"
+      ],
+      "legacyCaseIds": [
+        "O10",
+        "X02"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "D09",
+        "F02",
+        "O10",
+        "S00",
+        "S02",
+        "S03"
+      ],
+      "runIds": [
+        "20260711-dynamic-envelope-isolated"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718-summary.json",
+          "sha256": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+        },
+        {
+          "path": "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+          "sha256": "c2b299371c1ad932425f503a1d2e543cf2af78fd3af65585ba9e1687c40a20ed"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-concurrent-power-on-race",
+        "internal-lease-unknown"
+      ]
+    },
+    {
+      "experimentId": "VMW-STATIC-IDENTITY-001",
+      "executionState": "PLANNED",
+      "techStoryIds": [
+        "TS-F3-04"
+      ],
+      "legacyCaseIds": [],
+      "derivedAcceptanceCaseIds": [
+        "O06",
+        "S01"
+      ],
+      "runIds": [],
+      "evidence": [],
+      "noRunReason": "No controlled same-BDF device, subsystem or ROM identity replacement run exists.",
+      "limitations": [
+        "requires-controlled-device-replacement"
+      ]
+    },
+    {
+      "experimentId": "VMW-STATIC-LIFE-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F3-05"
+      ],
+      "legacyCaseIds": [
+        "R01-R03",
+        "L04"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "D11",
+        "F00",
+        "M21",
+        "S00",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S11"
+      ],
+      "runIds": [
+        "20260711-host-crash"
+      ],
+      "evidence": [
+        {
+          "path": "vmware-esxi8-directpath-local-results.md",
+          "sha256": "a8a167899f60b7556349f15e0be78c0492c4dc03a9b0c18a71b73547ffc69ef5"
+        },
+        {
+          "path": "evidence/esxi8-host-crash-20260711-summary.json",
+          "sha256": "d978f0e16e65acba47ab1d4eb36342aa25aee0d1a6199df37134324544346709"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "private-transaction-fsm-not-observable"
+      ]
+    },
+    {
+      "experimentId": "VMW-ADMISSION-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F4-01",
+        "TS-F4-02"
+      ],
+      "legacyCaseIds": [
+        "LF00-LF06",
+        "M00-M07",
+        "S05",
+        "X01"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C14",
+        "D04",
+        "D13",
+        "M00",
+        "M01",
+        "M02",
+        "M03",
+        "M05",
+        "M06",
+        "M07",
+        "M08",
+        "M09",
+        "M10",
+        "M11",
+        "M12",
+        "M14",
+        "M15",
+        "M16",
+        "M17",
+        "M18",
+        "M19",
+        "M20",
+        "M22",
+        "M23"
+      ],
+      "runIds": [
+        "20260715-firmware-layout-matrix-final"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-firmware-layout-20260715-summary.json",
+          "sha256": "0e0de5d6e6b6c7fb07b3e1674809f1c6cafbbffc3e51a9f9eea114ae4f11763c"
+        },
+        {
+          "path": "evidence/esxi8-large-mmio-4g-20260711-summary.json",
+          "sha256": "229f28a9dc96870b0cc6048924ccb29f2def2eba48216bbe1b527522ea97c0d7"
+        },
+        {
+          "path": "evidence/esxi8-large-mmio-8g-20260712-summary.json",
+          "sha256": "4d76953247d43b1d0c2f052d0aa4bf4c3d92564563276218d4ce5b0c9d62e220"
+        },
+        {
+          "path": "evidence/esxi8-large-mmio-32g-64g-20260712-summary.json",
+          "sha256": "5953f5fdd51ea55d0e3bd707f5c319f1ca7116596bc5ba7c6ca2a9cb57d8cd68"
+        },
+        {
+          "path": "evidence/esxi8-bar-aggregate-20260711-summary.json",
+          "sha256": "6053407971d3496afff4935d2e9fb3253dee888c542b2d0759f7cc3857197f18"
+        },
+        {
+          "path": "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+          "sha256": "c2b299371c1ad932425f503a1d2e543cf2af78fd3af65585ba9e1687c40a20ed"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-generic-multilevel-exact-solver-proof",
+        "no-rebar-matrix"
+      ]
+    },
+    {
+      "experimentId": "VMW-ADMISSION-002",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F4-03"
+      ],
+      "legacyCaseIds": [
+        "M04",
+        "M07",
+        "S05"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C11",
+        "D04",
+        "D05",
+        "M00",
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M12",
+        "M13",
+        "M18",
+        "M19",
+        "M20"
+      ],
+      "runIds": [
+        "20260711-single-4g-true-size4"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-large-mmio-4g-20260711-summary.json",
+          "sha256": "229f28a9dc96870b0cc6048924ccb29f2def2eba48216bbe1b527522ea97c0d7"
+        },
+        {
+          "path": "evidence/esxi8-bar-aggregate-20260711-summary.json",
+          "sha256": "6053407971d3496afff4935d2e9fb3253dee888c542b2d0759f7cc3857197f18"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-combined-ram-rom-rmrr-pressure-matrix"
+      ]
+    },
+    {
+      "experimentId": "VMW-GUEST-VERIFY-001",
+      "executionState": "OBSERVED",
+      "techStoryIds": [
+        "TS-F4-04"
+      ],
+      "legacyCaseIds": [
+        "LF00-LF06",
+        "D00",
+        "I00-I02"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "M03",
+        "M05",
+        "M06",
+        "M07",
+        "M08",
+        "M12",
+        "M13",
+        "M14",
+        "M16",
+        "M17",
+        "M21",
+        "M22",
+        "M23"
+      ],
+      "runIds": [
+        "20260712-esxi8-edu-msi-dma-reset-v4"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-firmware-layout-20260715-summary.json",
+          "sha256": "0e0de5d6e6b6c7fb07b3e1674809f1c6cafbbffc3e51a9f9eea114ae4f11763c"
+        },
+        {
+          "path": "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json",
+          "sha256": "44f2510f224c45aa35ca5b35c846e9f02e3c112d5ca163fa8b6710deef4c8f99"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "verified-only-for-frozen-nested-profile",
+        "repository-hash-metadata-migrated-to-canonical-lf-without-rerun"
+      ]
+    },
+    {
+      "experimentId": "VMW-RESET-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F5-01"
+      ],
+      "legacyCaseIds": [
+        "R00",
+        "R04",
+        "CAP-RESET"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C00",
+        "C03",
+        "C04",
+        "C12",
+        "C13",
+        "C17",
+        "C18",
+        "C20",
+        "D11",
+        "S04",
+        "S11",
+        "S12"
+      ],
+      "runIds": [
+        "20260712-esxi8-edu-msi-dma-reset-v4"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-directpath-20260714-summary.json",
+          "sha256": "665d586649c622324ca4953a9dd05df748af6db1fac47e349a42e4aa5db37714"
+        },
+        {
+          "path": "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json",
+          "sha256": "44f2510f224c45aa35ca5b35c846e9f02e3c112d5ca163fa8b6710deef4c8f99"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "virtual-flr",
+        "no-physical-sbr-d3-state-cleanliness"
+      ]
+    },
+    {
+      "experimentId": "VMW-TEARDOWN-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F5-02",
+        "TS-F7-05"
+      ],
+      "legacyCaseIds": [
+        "D01",
+        "R00"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "F00",
+        "F03",
+        "F04",
+        "F05",
+        "F06",
+        "M09",
+        "O08",
+        "S00",
+        "S03",
+        "S05",
+        "S06",
+        "S07",
+        "S08"
+      ],
+      "runIds": [
+        "20260714-esxi8-edu-dma-teardown-v5"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-edu-dma-teardown-20260714-summary.json",
+          "sha256": "f5ed02b5e2f414c4f789ba56d94f1fc38c5da04621396675f08720d9186f2196"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "full-dma-irq-map-reset-owner-order-not-proven"
+      ]
+    },
+    {
+      "experimentId": "VMW-CRASH-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F5-03"
+      ],
+      "legacyCaseIds": [
+        "L04"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "F00",
+        "F01",
+        "F02",
+        "F03",
+        "S07",
+        "S08"
+      ],
+      "runIds": [
+        "20260711-host-crash"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-host-crash-20260711-summary.json",
+          "sha256": "d978f0e16e65acba47ab1d4eb36342aa25aee0d1a6199df37134324544346709"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "single-sigkill-path",
+        "no-journal-observability"
+      ]
+    },
+    {
+      "experimentId": "VMW-QUARANTINE-001",
+      "executionState": "PLANNED",
+      "techStoryIds": [
+        "TS-F5-04"
+      ],
+      "legacyCaseIds": [],
+      "derivedAcceptanceCaseIds": [
+        "C09",
+        "D11",
+        "F00",
+        "F01",
+        "O08",
+        "S03",
+        "S04",
+        "S05",
+        "S07",
+        "S12"
+      ],
+      "runIds": [],
+      "evidence": [],
+      "noRunReason": "No deterministic reset or clean-state failure injection exists.",
+      "limitations": [
+        "reset-failure-injection-not-yet-implemented"
+      ]
+    },
+    {
+      "experimentId": "VMW-LIFECYCLE-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F5-05"
+      ],
+      "legacyCaseIds": [
+        "L00-L02"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "F07",
+        "F08",
+        "F09",
+        "S09",
+        "S10",
+        "S13",
+        "S14",
+        "S15",
+        "S16"
+      ],
+      "runIds": [
+        "20260711-vmotion"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-vmotion-20260711-summary.json",
+          "sha256": "00e4006789549a6e2860107ec1a01c56adfd0811da4ea5038db3d7b6f658cfba"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "fault-tolerance-not-locally-tested",
+        "fixed-passthru-hotplug-not-tested"
+      ]
+    },
+    {
+      "experimentId": "VMW-DYNAMIC-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F6-01"
+      ],
+      "legacyCaseIds": [
+        "X00",
+        "X01"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "D00",
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06",
+        "D13"
+      ],
+      "runIds": [
+        "20260711-dynamic-envelope-isolated"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+          "sha256": "c2b299371c1ad932425f503a1d2e543cf2af78fd3af65585ba9e1687c40a20ed"
+        },
+        {
+          "path": "evidence/esxi8-directpath-summary.json",
+          "sha256": "a2d45a6ad645892e0609a022b9c2b8a15cafa34f158b66a5c1ccad0ee6c220fe"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-subsystem-revision-custom-label-matrix"
+      ]
+    },
+    {
+      "experimentId": "VMW-DYNAMIC-002",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F6-02"
+      ],
+      "legacyCaseIds": [
+        "X01",
+        "X02",
+        "M07"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "D04",
+        "D05",
+        "D06",
+        "D07",
+        "D08",
+        "D14",
+        "F06",
+        "M04",
+        "M10"
+      ],
+      "runIds": [
+        "20260711-dynamic-aggregate-2x1g"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+          "sha256": "c2b299371c1ad932425f503a1d2e543cf2af78fd3af65585ba9e1687c40a20ed"
+        },
+        {
+          "path": "evidence/esxi8-bar-aggregate-20260711-summary.json",
+          "sha256": "6053407971d3496afff4935d2e9fb3253dee888c542b2d0759f7cc3857197f18"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-global-optimality-proof",
+        "no-heterogeneous-rmrr"
+      ]
+    },
+    {
+      "experimentId": "VMW-DYNAMIC-003",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F6-03"
+      ],
+      "legacyCaseIds": [
+        "X02",
+        "O10"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "D06",
+        "D07",
+        "D08",
+        "D09",
+        "D10",
+        "D14"
+      ],
+      "runIds": [
+        "20260718-esxi8-owner-reproducer-v3"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+          "sha256": "c2b299371c1ad932425f503a1d2e543cf2af78fd3af65585ba9e1687c40a20ed"
+        },
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718-summary.json",
+          "sha256": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-concurrent-two-vm-fault-injection"
+      ]
+    },
+    {
+      "experimentId": "VMW-DYNAMIC-004",
+      "executionState": "OBSERVED",
+      "techStoryIds": [
+        "TS-F6-04"
+      ],
+      "legacyCaseIds": [
+        "X00",
+        "X03"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "D00",
+        "D12",
+        "F05",
+        "S14"
+      ],
+      "runIds": [
+        "20260711-vmotion"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-vmotion-20260711-summary.json",
+          "sha256": "00e4006789549a6e2860107ec1a01c56adfd0811da4ea5038db3d7b6f658cfba"
+        },
+        {
+          "path": "evidence/esxi8-directpath-summary.json",
+          "sha256": "a2d45a6ad645892e0609a022b9c2b8a15cafa34f158b66a5c1ccad0ee6c220fe"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "homogeneous-two-host-lab",
+        "repository-hash-metadata-migrated-to-canonical-lf-without-rerun"
+      ]
+    },
+    {
+      "experimentId": "VMW-CLUSTER-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F7-01"
+      ],
+      "legacyCaseIds": [
+        "X02",
+        "X03"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "D12",
+        "F05",
+        "F06"
+      ],
+      "runIds": [
+        "20260711-vmotion"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-vmotion-20260711-summary.json",
+          "sha256": "00e4006789549a6e2860107ec1a01c56adfd0811da4ea5038db3d7b6f658cfba"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-heterogeneous-hcl-capacity-change"
+      ]
+    },
+    {
+      "experimentId": "VMW-CLUSTER-002",
+      "executionState": "OBSERVED",
+      "techStoryIds": [
+        "TS-F7-03",
+        "TS-F7-05"
+      ],
+      "legacyCaseIds": [
+        "X03"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "D12",
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
+      "runIds": [
+        "20260711-vmotion"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-vmotion-20260711-summary.json",
+          "sha256": "00e4006789549a6e2860107ec1a01c56adfd0811da4ea5038db3d7b6f658cfba"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "homogeneous-two-host-lab",
+        "repository-hash-metadata-migrated-to-canonical-lf-without-rerun",
+        "source-clean-release-not-correlated-in-one-transaction"
+      ]
+    },
+    {
+      "experimentId": "VMW-COLD-CLEAN-001",
+      "executionState": "PLANNED",
+      "techStoryIds": [
+        "TS-F7-05"
+      ],
+      "legacyCaseIds": [],
+      "derivedAcceptanceCaseIds": [
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
+      "runIds": [],
+      "evidence": [],
+      "noRunReason": "Existing source teardown and target reselection observations are separate runs, not one correlated clean relocation transaction.",
+      "limitations": [
+        "requires-one-run-correlation-of-teardown-and-relocation"
+      ]
+    },
+    {
+      "experimentId": "VMW-COLD-NOCLEAN-001",
+      "executionState": "PLANNED",
+      "techStoryIds": [
+        "TS-F7-05"
+      ],
+      "legacyCaseIds": [],
+      "derivedAcceptanceCaseIds": [
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
+      "runIds": [],
+      "evidence": [],
+      "noRunReason": "No deterministic dirty-device or reset-failure relocation hook exists.",
+      "limitations": [
+        "requires-controlled-teardown-or-reset-failure-injection"
+      ]
+    },
+    {
+      "experimentId": "VMW-COLD-EXHAUST-001",
+      "executionState": "PLANNED",
+      "techStoryIds": [
+        "TS-F7-05"
+      ],
+      "legacyCaseIds": [
+        "X02",
+        "X03"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
+      "runIds": [],
+      "evidence": [],
+      "noRunReason": "Existing exhaustion occurs on the target after another case, not during one source-release to target-reservation relocation transaction.",
+      "limitations": [
+        "existing-X02-and-X03-results-are-not-one-relocation-case"
+      ]
+    },
+    {
+      "experimentId": "VMW-CLUSTER-FENCE-001",
+      "executionState": "BLOCKED_PHYSICAL",
+      "techStoryIds": [
+        "TS-F7-04"
+      ],
+      "legacyCaseIds": [],
+      "derivedAcceptanceCaseIds": [],
+      "runIds": [],
+      "evidence": [],
+      "noRunReason": "Physical host fencing is outside the online-host-only nested cluster scope.",
+      "limitations": [
+        "requires-bmc-controlled-two-host-lab"
+      ]
+    },
+    {
+      "experimentId": "VMW-CLUSTER-FAILURE-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [],
+      "legacyCaseIds": [
+        "L04"
+      ],
+      "derivedAcceptanceCaseIds": [],
+      "runIds": [
+        "20260711-host-crash"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-host-crash-20260711-summary.json",
+          "sha256": "d978f0e16e65acba47ab1d4eb36342aa25aee0d1a6199df37134324544346709"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "only-outer-qemu-sigkill-observed"
+      ]
+    },
+    {
+      "experimentId": "VMW-OPS-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F1-01",
+        "TS-F8-01"
+      ],
+      "legacyCaseIds": [
+        "O00",
+        "X00"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C00",
+        "C01",
+        "C02",
+        "C08",
+        "C10",
+        "C11",
+        "C12",
+        "C15",
+        "C16",
+        "C18",
+        "C20",
+        "D10",
+        "F04",
+        "M15",
+        "M21",
+        "O06",
+        "O07",
+        "S01"
+      ],
+      "runIds": [
+        "20260718-esxi8-owner-activation-v1"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-passthru-activation-20260718-summary.json",
+          "sha256": "fd66097053a83f35f4adf86015267f94ff906bda1cb5b30e993fba2012863436"
+        },
+        {
+          "path": "evidence/esxi8-directpath-summary.json",
+          "sha256": "a2d45a6ad645892e0609a022b9c2b8a15cafa34f158b66a5c1ccad0ee6c220fe"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "no-single-assignment-manifest",
+        "no-complete-actor-chain"
+      ]
+    },
+    {
+      "experimentId": "VMW-EVIDENCE-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F8-02"
+      ],
+      "legacyCaseIds": [
+        "ALL-LEGACY-VMW-CASES"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "C06",
+        "C15",
+        "C19",
+        "F10",
+        "S08",
+        "S16"
+      ],
+      "runIds": [
+        "20260714-esxi8-edu-dma-teardown-v5"
+      ],
+      "evidence": [
+        {
+          "path": "contracts/vmware-experiment-result.schema.json",
+          "sha256": "3918eba3ad766517e5d8d68fde477093cab495d2891185359d213c5ad6575d1e"
+        },
+        {
+          "path": "evidence/esxi8-edu-dma-teardown-20260714-summary.json",
+          "sha256": "f5ed02b5e2f414c4f789ba56d94f1fc38c5da04621396675f08720d9186f2196"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "schema-and-hash-not-uniform-across-all-cases"
+      ]
+    },
+    {
+      "experimentId": "VMW-TRACE-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F8-03"
+      ],
+      "legacyCaseIds": [],
+      "derivedAcceptanceCaseIds": [],
+      "runIds": [
+        "20260722-vmware-evidence-index-v1"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/vmware-trace-index-20260722-summary.json",
+          "sha256": "bc8c950c4d5fb9b6baa3e4ad0cb7746664dbb5dbf1a37f1d44d64541febab854"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "pyvmomi-task-id-and-actor-chain-incomplete",
+        "historical-run-result-schema-not-uniform",
+        "reference-index-has-no-qman-closure-authority"
+      ]
+    }
+  ]
+}

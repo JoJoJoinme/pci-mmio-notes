@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "id": "C00",
+      "title": "Type-0 FLR endpoint is technically attachable only with a complete domain",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R38"],
+      "requiredTechStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+      "dependsOnCaseIds": [],
+      "blocker": "The product inventory, reset provider and capability publisher do not yet emit one authoritative complete-domain decision for a Type-0 FLR endpoint.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C01",
+      "title": "Type-1 bridge is rejected as a VM payload even when FLR is present",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R29", "R38"],
+      "requiredTechStories": ["TS-F1-01", "TS-F1-04"],
+      "dependsOnCaseIds": [],
+      "blocker": "The production role gate and publisher do not yet prove that bridge functions are excluded from payload selection while their dependencies remain in the closure.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C02",
+      "title": "Class code does not override the Type-0 role conclusion",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R38"],
+      "requiredTechStories": ["TS-F1-01", "TS-F1-04"],
+      "dependsOnCaseIds": ["C00"],
+      "blocker": "The product capability path lacks an end-to-end A/B gate proving header type and topology, rather than class code alone, determine payload eligibility.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C03",
+      "title": "Root-complex endpoint without a safe reset contract is rejected",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R03"],
+      "requiredTechStories": ["TS-F1-04", "TS-F5-01"],
+      "dependsOnCaseIds": ["C00"],
+      "blocker": "The authoritative product reset provider and pre-attach denial path for endpoints without FLR or a qualified D3 reset are not implemented.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C04",
+      "title": "Bridge reset affected set is leased as one indivisible bundle",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R02", "R38"],
+      "requiredTechStories": ["TS-F1-04", "TS-F5-01"],
+      "dependsOnCaseIds": ["C03"],
+      "blocker": "VFIO hot-reset discovery, affected-set re-query and bundle lease integration are not connected to the product controller.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C05",
+      "title": "No-ACS strict and conditional profiles preserve physical isolation",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R01", "R15"],
+      "requiredTechStories": ["TS-F1-03", "TS-F1-04"],
+      "dependsOnCaseIds": ["C00"],
+      "blocker": "The product has no authoritative physical-domain evaluator and no supported-profile gate distinguishing strict rejection from a qualified conditional mode.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C06",
+      "title": "ACS override never shrinks the physical isolation domain",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R01", "R35"],
+      "requiredTechStories": ["TS-F1-03", "TS-F8-02"],
+      "dependsOnCaseIds": ["C05"],
+      "blocker": "The kernel-native shadow-domain ABI and runtime override-on/off product evidence are not implemented; the existing build is only a premise.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C07",
+      "title": "Requester-ID aliases and legacy subtrees are allocated together",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R28"],
+      "requiredTechStories": ["TS-F1-03", "TS-F1-04"],
+      "dependsOnCaseIds": ["C05"],
+      "blocker": "Requester-ID alias discovery and conservative legacy-subtree closure are not available from an authoritative product inventory source.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C08",
+      "title": "Narrow errata denial uses exact identity and revision",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R19", "R27"],
+      "requiredTechStories": ["TS-F1-01", "TS-F1-05"],
+      "dependsOnCaseIds": ["C10"],
+      "blocker": "The signed compatibility catalog, exact revision matcher and stable product reason code are not implemented.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C09",
+      "title": "Unhealthy or quarantined devices never enter the candidate pool",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R13"],
+      "requiredTechStories": ["TS-F1-05", "TS-F5-04"],
+      "dependsOnCaseIds": ["C10"],
+      "blocker": "Health ingestion, durable quarantine state and candidate-pool exclusion are not wired into the product capability publisher.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C11",
+      "title": "Sub-page BARs require exclusive host-page ownership",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R21"],
+      "requiredTechStories": ["TS-F1-01", "TS-F4-03"],
+      "dependsOnCaseIds": ["C00"],
+      "blocker": "The host resource-page provenance collector and shared-page fail-closed admission rule are not implemented in the product path.",
+      "targetMilestone": "G1"
+    },
+    {
+      "id": "C12",
+      "title": "RCiEP regular-function and VF behavior is qualified on supported hardware",
+      "status": "HARDWARE_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R03", "R23", "R29"],
+      "requiredTechStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+      "dependsOnCaseIds": ["C03"],
+      "blocker": "Final RCiEP regular-function versus VF reset and isolation behavior requires a supported physical RCiEP/VF platform; synthetic topology cannot establish the hardware result.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "C13",
+      "title": "SR-IOV PF, VF and reset dependencies form one qualified closure",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R02", "R23", "R29", "R38"],
+      "requiredTechStories": ["TS-F1-04", "TS-F5-01"],
+      "dependsOnCaseIds": ["C04", "C05"],
+      "blocker": "PF/VF lifecycle discovery, ARI-aware dependency closure and per-member reset qualification are not implemented in the product provider.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "C14",
+      "title": "Guest PF cannot mutate host-managed SR-IOV VF lifecycle",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R23", "R26"],
+      "requiredTechStories": ["TS-F4-02", "TS-F4-05"],
+      "dependsOnCaseIds": ["C13"],
+      "blocker": "The product QEMU profile and bypass gate do not yet filter or deny guest writes to VF Enable and NumVFs.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "C17",
+      "title": "VFIO cdev, legacy and mixed hot-reset ownership modes fail closed",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R02", "R38"],
+      "requiredTechStories": ["TS-F1-04", "TS-F3-03", "TS-F5-01"],
+      "dependsOnCaseIds": ["C04", "C21"],
+      "blocker": "The selected product backend lacks authoritative ownership-mode discovery, mixed-mode rejection and execution-time affected-set verification.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "C19",
+      "title": "Kernel-native shadow domain is equal to or more conservative than stock isolation",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R01", "R28", "R35"],
+      "requiredTechStories": ["TS-F1-03", "TS-F8-02"],
+      "dependsOnCaseIds": ["C06"],
+      "blocker": "The native shadow-domain ABI, per-component unknown handling and override-off/on differential runner are not available in a production kernel profile.",
+      "targetMilestone": "G1"
+    }
+  ]
+}

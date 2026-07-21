@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "id": "O00",
+      "title": "Configured owner and effective owner remain separate states",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R39"],
+      "requiredTechStories": ["TS-F2-01"],
+      "dependsOnCaseIds": [],
+      "blocker": "The product API, persistent state and host read-back path do not yet expose desired, effective and pending owner independently.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O01",
+      "title": "Idle complete bundle can be switched live as one transaction",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R39"],
+      "requiredTechStories": ["TS-F2-01", "TS-F2-02", "TS-F2-03"],
+      "dependsOnCaseIds": ["C21", "O00"],
+      "blocker": "The product host-owner controller has no all-member live rebind transaction with driver and owner read-back commit.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O02",
+      "title": "Live activation is committed only after effective-owner read-back",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R39"],
+      "requiredTechStories": ["TS-F2-01", "TS-F2-03"],
+      "dependsOnCaseIds": ["O01"],
+      "blocker": "No product API/read-back test proves that Active is derived from current driver ownership rather than reboot history or desired configuration.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O03",
+      "title": "Deferred owner change preserves current owner and reports reboot required",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R39"],
+      "requiredTechStories": ["TS-F2-01", "TS-F2-04"],
+      "dependsOnCaseIds": ["O00"],
+      "blocker": "The product does not persist a pending boot claim while leaving effective owner unchanged and returning the exact reboot disposition.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O04",
+      "title": "Busy host consumer prevents partial owner conversion",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R05", "R39"],
+      "requiredTechStories": ["TS-F2-02", "TS-F2-03"],
+      "dependsOnCaseIds": ["O01"],
+      "blocker": "Persistent and transient host-consumer detection is not integrated with atomic apply-now/deferred rejection and subsequent clean retry.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O05a",
+      "title": "Independent sibling can switch without disturbing a busy sibling",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R29", "R39"],
+      "requiredTechStories": ["TS-F1-04", "TS-F2-02", "TS-F2-03"],
+      "dependsOnCaseIds": ["O01"],
+      "blocker": "The product lacks an authoritative dependent-device boundary and a live-rebind A/B test proving an unrelated busy sibling remains untouched.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O05b",
+      "title": "Shared dependent-device siblings are expanded and prechecked together",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R05", "R29", "R39"],
+      "requiredTechStories": ["TS-F1-04", "TS-F2-02", "TS-F2-03"],
+      "dependsOnCaseIds": ["O01"],
+      "blocker": "The product controller does not yet expand a shared dependency before busy-state precheck and reject the whole request without partial rebind.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O06",
+      "title": "Stale physical identity is denied rather than repaired by reboot advice",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R39"],
+      "requiredTechStories": ["TS-F1-01", "TS-F2-02", "TS-F3-01", "TS-F3-04"],
+      "dependsOnCaseIds": ["C15"],
+      "blocker": "The owner activation API is not connected to immutable identity and physical-path comparison with a stable ACTIVATION_IDENTITY_MISMATCH result.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O07",
+      "title": "Early-boot claim commits Active only after boot-time reconciliation",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R39"],
+      "requiredTechStories": ["TS-F2-04", "TS-F2-05", "TS-F8-01"],
+      "dependsOnCaseIds": ["O03", "O06"],
+      "blocker": "There is no production early-boot agent that validates identity, group, driver and effective owner before committing Active.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O08",
+      "title": "Disabling an active bundle is all-or-nothing and lease aware",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R03", "R05", "R39"],
+      "requiredTechStories": ["TS-F2-02", "TS-F2-03", "TS-F5-02", "TS-F5-04"],
+      "dependsOnCaseIds": ["O01"],
+      "blocker": "The product has no lease-aware quiesce and host-driver restore transaction that keeps the entire bundle out of partial owner states.",
+      "targetMilestone": "G3"
+    },
+    {
+      "id": "O10",
+      "title": "Shared dependency collision blocks a second VM until complete release",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R29", "R39"],
+      "requiredTechStories": ["TS-F1-04", "TS-F2-02", "TS-F3-02"],
+      "dependsOnCaseIds": ["O01"],
+      "blocker": "VM admission does not yet enforce one durable owner for a shared dependent-device bundle across functions and VMs.",
+      "targetMilestone": "G3"
+    }
+  ]
+}

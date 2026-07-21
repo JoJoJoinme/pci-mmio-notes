@@ -1,22 +1,22 @@
 {
   "schemaVersion": 1,
   "id": "QMAN-E3-STATIC-LAUNCH-ENVELOPE-001",
-  "observedAt": "2026-07-21T14:50:06Z",
+  "observedAt": "2026-07-21T18:15:42Z",
   "subject": "QMAN_COMPONENT",
   "evidenceGrade": "E3",
   "claimBoundary": "COMPONENT_ONLY",
   "verdict": "PASS",
   "sourceState": {
-    "baseCommit": "a648e9f78082a200d5e942453652198a023a6d4f",
+    "baseCommit": "cb34675dd6bfa7f499ed75f091f840c8f501435c",
     "dirtyWorkingTree": true,
     "runnerHashes": {
-      "qman-lab/test_qman_static_launch.py": "d379b00b08d4a4616655f3e375ac8fd50863e7c661dcfdb4eaa574d37180a030"
+      "qman-lab/test_qman_static_launch.py": "e9230df462f964d0dada5c3a561815346e93a4f0793d88d4445248393168de70"
     },
     "inputHashes": {
       "pci-resource-model/pci_resource_model/vfio_provider.py": "7927fb1bf72f05009729ee972233d115072b8c7853da33a8a60cc6db541cfdf4",
       "pci-resource-model/pci_resource_model/model.py": "e6349f42d98f10fd3ba8c2e4f3128abac869b181dfad29ee25ebe8d4ed9491ec",
       "pci-resource-model/pci_resource_model/linux_sysfs.py": "faa3ba31cd2ecf06ab6c5149494e3168b38ff3bab556120c4f246e56f40acaca",
-      "pci-resource-model/pci_resource_model/authoritative_snapshot.py": "d3437a8167d967c4a6537218aa11cd07216221c8c3252d13650aa82aa0224ce0",
+      "pci-resource-model/pci_resource_model/authoritative_snapshot.py": "7c07d59fdae69d5712a9c533132194304d94e6c296e0ede14b9bbeac56352a42",
       "pci-resource-model/pci_resource_model/vfio_launch_handles.py": "29638ce69b4df9d817d9c2bf94feef4530ee721ec65ce72110b90c189a7bf42f",
       "pci-resource-model/pci_resource_model/static_lease.py": "4904b6698de301a37570cc7f28282054d6523782a0574e72e313ddab0acf0ca5",
       "pci-resource-model/pci_resource_model/static_launch_envelope.py": "9b85574971e466c99e92dcb58b44278a39fa142282fb55908475cdfecfab97c5",
@@ -29,7 +29,7 @@
       {
         "name": "Qman AuthoritativeSnapshotStore and sealed launch authorization",
         "version": "working-tree component schema-v1",
-        "sha256": "d3437a8167d967c4a6537218aa11cd07216221c8c3252d13650aa82aa0224ce0"
+        "sha256": "7c07d59fdae69d5712a9c533132194304d94e6c296e0ede14b9bbeac56352a42"
       },
       {
         "name": "Qman StaticLeaseStore",
@@ -72,18 +72,12 @@
     {
       "name": "component-contract-and-governance-audit",
       "result": {
-        "windowsResourceModelCollected": 293,
-        "windowsResourceModelPassed": 288,
+        "windowsResourceModelCollected": 294,
+        "windowsResourceModelPassed": 289,
         "windowsLinuxOnlySkips": 5,
-        "windowsSubtestsPassed": 103,
-        "wslResourceModelPassed": 293,
-        "rootGovernanceTests": 28,
-        "authoritativeSnapshotAndAdapterFocusedTests": 25,
-        "authoritativeSnapshotFocusedSubtests": 21,
-        "rawLaunchHandleFocusedTests": 26,
-        "qemuLaunchContractFocusedTests": 32,
-        "launchEnvelopeFocusedTests": 30,
-        "runnerTransportContractTests": 3
+        "wslResourceModelCollected": 294,
+        "wslResourceModelPassed": 294,
+        "runnerTransportContractTests": 10
       }
     },
     {
@@ -110,7 +104,7 @@
         "returnedDeviceCountPerCapture": 12,
         "stableTopologyHash": "34f630c261f593bb19a7a39c598d31293fe1655a9e810ce20d1fb437897b0bc7",
         "captureProviderBoundary": "COMPONENT_CAPTURE_PROVIDER",
-        "captureProviderBindingHash": "15cd5626c5dcc75e2d5471ad25477208c5506998c7a622cd93337052e8d0855b",
+        "captureProviderBindingHash": "421cd1eb6d8698811d61c84a2c11c79d8566daf9c4a22000c7d33257ad993f44",
         "authorizedBdfs": ["0000:01:00.0"],
         "authorizedScopeEqualsCompleteIommuGroup": true,
         "preOpenLiveValidated": true,
@@ -174,6 +168,17 @@
       "result": {
         "bootConsole": "ttyS0",
         "evidenceConsole": "ttyS1",
+        "evidenceTransportBaud": 115200,
+        "framedTransportVersion": 1,
+        "framedArtifactCount": 7,
+        "framedChunkCount": 328,
+        "framedSequenceErrors": 0,
+        "framedSizeErrors": 0,
+        "framedSha256Errors": 0,
+        "evidenceSerialLineCount": 353,
+        "evidenceSerialMaxLineLength": 843,
+        "returnCodeZeroMarkerObserved": true,
+        "transportEndMarkerObserved": true,
         "artifactDecodeErrors": 0,
         "runnerFailures": 0,
         "retainedArtifactHashesVerified": 22,
@@ -188,33 +193,33 @@
   },
   "artifacts": [
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/summary.json",
-      "sha256": "7250b23b8033e055d21378076ea7351de797d99832aa75458dac1581c150f0b7",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260722-static-launch-envelope-framed-115200/summary.json",
+      "sha256": "40f30563a029d95aa60d1ae3ff357d4cfd702f9a46ecea3fe5147f211ce019de",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/hashes.json",
-      "sha256": "3bf7f05f4ca4ed6341fea892155dc67af082d17449067fe1b0dfa50d20f579e7",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260722-static-launch-envelope-framed-115200/hashes.json",
+      "sha256": "d99339bbedde0f0d0573aa8bd42a13c77fc5ce78d9e0af98d447b0e546293046",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/guest-result.json",
-      "sha256": "28da1340ad274a0b0eb5dafbe3714976c15adc3ef724a6fbf202739318eb892e",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260722-static-launch-envelope-framed-115200/guest-result.json",
+      "sha256": "e83b77c1cedc5d1d2c660fc57fb12a3f51cb5d091a393f4a14298a4a8ecd95ba",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/qmp-transcript.json",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260722-static-launch-envelope-framed-115200/qmp-transcript.json",
       "sha256": "14c6da5f79920add20ed745939144fcfba2bdcd67e7e58dbea51b35a5669d0ad",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/ioctl-trace.log",
-      "sha256": "3cdc78045d21bbeae982b84be931079f8cd9ad86c0f32ebcd9c28172ac12732a",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260722-static-launch-envelope-framed-115200/ioctl-trace.log",
+      "sha256": "cf3076739bd55eda69d75d6977b2ad6dc744da53102efb65d241b8e5be780911",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/evidence-serial.log",
-      "sha256": "7e2913805049f37714ba5105667f4decbf2238f176791615cce70420500c8418",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260722-static-launch-envelope-framed-115200/evidence-serial.log",
+      "sha256": "f4c0d1eb2f6eb1e3f6cc914849b9752dceaa2e48896c583e6315a8b56a4ea87b",
       "retention": "LOCAL_RAW"
     }
   ],
@@ -230,6 +235,8 @@
     "The host-local SQLite authority has no external monotonic rollback anchor, so any earlier still-valid database state may be replayed, including same-key in-place/block restoration or deletion of the newest rows; inode and store UUID checks are not anti-rollback proof.",
     "Reset execution and verification, driver restoration, pidfd ownership, crash/power-loss recovery, DMA/IRQ teardown, multi-host fencing, and physical clean state were not proved.",
     "The bounded snapshot component does not implement the production qualification signer/catalog, host-agent/controller integration, kernel atomic topology generation, or physical-device qualification required by G1 and later milestones.",
-    "No product Case, Risk, milestone, HCL entry, qualification profile, or support claim is closed by this result; C10, C15, C21, and S05 remain IMPLEMENTATION_BLOCKED and G0 remains current."
+    "The exercised fd-only IOMMUFD/cdev launch surface is a future-backend component experiment; it does not validate the Legacy VFIO TYPE1 authorized-device-path launch profile selected for the current product.",
+    "The framed 115200-baud evidence transport proves complete, hash-bound extraction of this run's component artifacts; it does not strengthen the underlying DMA, interrupt-isolation, physical-device, or production-platform claims.",
+    "No product Case, Risk, milestone, HCL entry, qualification profile, support claim, or release gate is closed by this result."
   ]
 }

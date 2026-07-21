@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "id": "D00",
+      "title": "VID:DID Dynamic request selects at power-on and clears assignedId at power-off",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R08"],
+      "requiredTechStories": ["TS-F6-01", "TS-F6-04", "TS-F6-05"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "The product has no Dynamic request schema, runtime assignedId state or power-off clearing path connected to the Static transaction core.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D01",
+      "title": "Subsystem and revision constraints are exact optional Dynamic matches",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R08", "R19"],
+      "requiredTechStories": ["TS-F1-05", "TS-F6-01"],
+      "dependsOnCaseIds": ["D00"],
+      "blocker": "The selector normalization and exact subsystem/revision matcher are not implemented against the signed compatibility profile.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D02",
+      "title": "Custom labels match exactly and invalid labels return a stable reason",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R19", "R20"],
+      "requiredTechStories": ["TS-F1-05", "TS-F6-01"],
+      "dependsOnCaseIds": ["D00"],
+      "blocker": "There is no product label catalog, normalized matcher or invalid-label reason contract.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D03",
+      "title": "Candidates sharing one dependency domain deduplicate to one bundle",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R38"],
+      "requiredTechStories": ["TS-F1-04", "TS-F6-01"],
+      "dependsOnCaseIds": ["D00"],
+      "blocker": "The Dynamic candidate builder is not implemented on top of authoritative dependency-bundle identity and hash deduplication.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D04",
+      "title": "Selected candidate drives its exact BAR and bridge-window plan",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R08", "R09", "R33", "R36"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-03", "TS-F6-01", "TS-F6-02"],
+      "dependsOnCaseIds": ["D00", "M01"],
+      "blocker": "The Dynamic solver and full-tree resource planner are not connected, so heterogeneous candidates do not produce candidate-specific BAR plans.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D05",
+      "title": "Heterogeneous RMRR candidates use one safe envelope or fail with a conflict",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R07", "R08"],
+      "requiredTechStories": ["TS-F4-03", "TS-F6-01", "TS-F6-02"],
+      "dependsOnCaseIds": ["D00", "M04"],
+      "blocker": "The selector-wide reserved-memory envelope and candidate conflict reason are not implemented in the product solver.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D06",
+      "title": "Candidate exhaustion is an all-or-nothing PROFILE_NO_MATCH result",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R05", "R08"],
+      "requiredTechStories": ["TS-F6-01", "TS-F6-02", "TS-F6-03"],
+      "dependsOnCaseIds": ["D00"],
+      "blocker": "No product solver transaction proves an unsatisfied requirement leaves every candidate and VM definition unchanged.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D07",
+      "title": "Multiple requirements choose a deterministic non-overlapping solution",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R05"],
+      "requiredTechStories": ["TS-F6-02", "TS-F6-03"],
+      "dependsOnCaseIds": ["D03"],
+      "blocker": "The global multi-requirement matcher, deterministic tie-break and disjoint-bundle constraint are not implemented.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D08",
+      "title": "Exact search finds a valid assignment that greedy selection misses",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R05"],
+      "requiredTechStories": ["TS-F6-02", "TS-F6-03"],
+      "dependsOnCaseIds": ["D07"],
+      "blocker": "The production solver has no bounded backtracking implementation or deterministic greedy-failure fixture.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D09",
+      "title": "Two VMs racing for one bundle produce exactly one CAS winner",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04"],
+      "requiredTechStories": ["TS-F3-02", "TS-F6-03"],
+      "dependsOnCaseIds": ["D03"],
+      "blocker": "Dynamic prepare and reservation are not connected to a product authority that can prove a single winner under concurrent processes.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D10",
+      "title": "Inventory change after prepare invalidates and recomputes the entire solution",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04"],
+      "requiredTechStories": ["TS-F1-01", "TS-F6-03"],
+      "dependsOnCaseIds": ["D07"],
+      "blocker": "The Dynamic reservation path lacks immutable snapshot binding, epoch CAS and full-solution retry after inventory drift.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D11",
+      "title": "Partial Dynamic bind or reset failure rolls back or quarantines every bundle",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R02", "R03", "R05", "R06"],
+      "requiredTechStories": ["TS-F3-05", "TS-F5-01", "TS-F5-04", "TS-F6-05"],
+      "dependsOnCaseIds": ["D07", "S05", "S12"],
+      "blocker": "The Dynamic controller does not reuse a product-complete Static rollback/quarantine core across multiple selected bundles.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D12",
+      "title": "Powered-off relocation resolves a new target-host assignedId",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R08"],
+      "requiredTechStories": ["TS-F6-04", "TS-F7-01", "TS-F7-03"],
+      "dependsOnCaseIds": ["D00"],
+      "blocker": "Cross-host capability aggregation and target-side re-solve are not implemented; copying the source BDF is not an acceptable substitute.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D13",
+      "title": "Candidate with an incompatible guest ABI class is excluded",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R08", "R20"],
+      "requiredTechStories": ["TS-F1-05", "TS-F4-02", "TS-F6-01"],
+      "dependsOnCaseIds": ["D01"],
+      "blocker": "The compatibility catalog and Dynamic selector do not yet compare a versioned guest ABI class for every candidate.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "D14",
+      "title": "Functional device group is selected and reserved as one unit",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R23", "R29", "R38"],
+      "requiredTechStories": ["TS-F1-04", "TS-F6-02", "TS-F6-03"],
+      "dependsOnCaseIds": ["C13", "D03"],
+      "blocker": "Functional-group discovery, exact qualification and all-member global reservation are not implemented for the product solver.",
+      "targetMilestone": "G4"
+    }
+  ]
+}

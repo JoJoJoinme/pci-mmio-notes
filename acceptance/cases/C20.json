@@ -7,6 +7,8 @@
   "riskIds": ["R38"],
   "requiredTechStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
   "dependsOnCaseIds": [],
+  "blocker": "This executable reference-model case proves the closure algorithm only; production inventory publishers, qualification providers and product consumers remain gated by dependent PRODUCT cases.",
+  "targetMilestone": "G1",
   "referenceEvidenceIds": ["QMAN-E2-CLOSURE-001"],
   "runner": {
     "cwd": "pci-resource-model",

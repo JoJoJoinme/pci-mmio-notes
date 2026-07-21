@@ -2,7 +2,7 @@
 
 状态：`ACCEPTED PRODUCT DIRECTION / NOT IMPLEMENTED`
 当前产品声明：`REFERENCE_AND_QUALIFICATION_MODEL_ONLY`
-当前里程碑：`G0-DESIGN-CONVERGENCE`
+当前里程碑：`G1-HOST-INVENTORY-AND-QUALIFICATION-BASELINE`（G0 已 `DONE`）
 最终目标：`V3-FULL-DIRECTPATH`
 
 本文档是项目在 **Epic → Feature → User Story → Tech Story** 层级上的唯一产品树入口。
@@ -45,7 +45,7 @@ owner、MMIO/拓扑和 Guest 约束，引擎原则上都应能生成安全计划
 | 维度 | 判断对象 | 定义 |
 | --- | --- | --- |
 | `TECHNICALLY_ATTACHABLE` | 设备实例 + host snapshot | 通用引擎能生成不违反硬安全约束的 attach plan；QEMU 能启动本身不等于成立 |
-| `ELIGIBLE` | 当前 VM 分配请求 | technically attachable，且设备此刻可用、健康、未被租用，owner/fence/资源和策略均满足 |
+| `ELIGIBLE` | 当前 VM 分配请求 | technically attachable，且设备此刻可用、健康、未被租用，owner/lease/资源和策略均满足 |
 | `QUALIFIED` | 精确版本化 profile | platform/BIOS/kernel/QEMU/firmware/device firmware/Guest/driver/workload/feature 组合通过 Qman 真实硬件 Case，并绑定 evidence hash |
 | `SUPPORTED` | 产品支持合同 | qualified profile 被当前 V3 compatibility catalog 正式纳入支持范围 |
 
@@ -62,6 +62,28 @@ VMware observation      != Qman QUALIFIED / SUPPORTED
 
 非兼容性列表设备可以进入显式、隔离的 `UNQUALIFIED_LAB` 验证流程，以检验通用机制；它不能
 进入生产调度、不能产生支持承诺，也不能用一次成功开机升级为 `SUPPORTED`。
+
+### 已冻结的平台、后端和控制面边界
+
+完整机器合同见 [`compatibility-profile-policy.json`](../contracts/compatibility-profile-policy.json)，
+正式决策见 [`decisions/`](../decisions/README.md)。这里给出产品树依赖的最小摘要：
+
+| 交付线 | OS / arch | Kernel / QEMU | machine / firmware | VFIO backend |
+| --- | --- | --- | --- | --- |
+| 小规模测试 | Kylin V10 ARM | 4.19 / 5.0 | `virt + UEFI` | Legacy TYPE1 profile |
+| 小规模测试 | Kylin V10 C86 | 4.19 / 5.0 | `q35/i440fx × UEFI/SeaBIOS` | Legacy TYPE1 profile |
+| 小规模测试 | RH-family x86 | 4.18 / 5.0 | `q35/i440fx × UEFI/SeaBIOS` | Legacy TYPE1 profile |
+| 主线 | Kylin V11 ARM | 6.6 / 10.2 | `virt + UEFI` | Legacy TYPE1 profile |
+| 主线 | Kylin V11 C86 | 6.6 / 10.2 | `q35/i440fx × UEFI/SeaBIOS` | Legacy TYPE1 profile |
+| 主线 | openEuler x86 | 6.6 / 10.2 | `q35/i440fx × UEFI/SeaBIOS` | Legacy TYPE1 profile |
+
+每一行都以完整 V3 为能力目标。TYPE1v2/TYPE1 必须由精确 profile 固定，运行时不得静默
+fallback；IOMMUFD/cdev 是未来可选 backend profile，不是当前产品依赖。Qman 不修改 BIOS 或
+kernel boot args，而是在运行时探测逐设备 IOMMU 与中断隔离，无法证明即 fail closed。
+
+控制面始终只有一套：Qman API → 单 active DirectPath Controller → 全局事务 repository →
+逐主机 Host Agent → backend adapter → 非特权 QEMU。PostgreSQL 是全局 store 参考实现，Host
+Agent 的 SQLite 仅作 journal/cache；Legacy 和未来 IOMMUFD 只允许 adapter、renderer、receipt 不同。
 
 ## 2. 产品树
 
@@ -92,7 +114,7 @@ EPIC-PCI-01  Qman 生产级 PCI DirectPath 服务
 │
 ├─ F3 Static 固定设备分配
 │  ├─ US-F3-01 管理员能把一个精确设备分配给指定 VM
-│  │  └─ TS-F3-03 在 lease 内完成 bind、IOMMUFD、reset 和 fd-only QEMU attach
+│  │  └─ TS-F3-03 在 lease 内完成 bind、reset、选定 VFIO backend 和 backend-specific QEMU attach
 │  ├─ US-F3-02 VM 重启或重新开机后仍使用同一块物理设备
 │  │  ├─ TS-F3-01 用 deviceUid + fingerprint 持久化身份而不是只保存 BDF
 │  │  └─ TS-F3-04 同 BDF 身份变化时 fail closed
@@ -132,16 +154,16 @@ EPIC-PCI-01  Qman 生产级 PCI DirectPath 服务
 │     ├─ TS-F6-04 assignedId 只在运行期存在并在 power-off 清除
 │     └─ TS-F6-05 复用 Static attach/release/rollback/quarantine 核心
 │
-├─ F7 跨主机放置与冷恢复
+├─ F7 在线主机间的放置与计划性冷搬迁
 │  ├─ US-F7-01 调度器能看到各主机限定 profile 的能力与可用量
 │  │  └─ TS-F7-01 聚合 host capability、availability 与 qualification profile
-│  ├─ US-F7-02 VM 能冷迁移到另一主机并重新选择兼容设备
+│  ├─ US-F7-02 源、目标都在线时 VM 能冷搬迁并重新选择兼容设备
 │  │  └─ TS-F7-03 在目标主机重新求解，禁止复制源主机 BDF
-│  ├─ US-F7-03 主机故障后 VM 能在已证明安全的主机上冷重启
-│  │  └─ TS-F7-05 覆盖 partition、旧 agent、store failover 与 power-loss 故障测试
-│  └─ US-F7-04 旧主机未被证明失效时系统阻止设备重新分配
-│     ├─ TS-F7-02 使用 consensus store 与单调 fencing token
-│     └─ TS-F7-04 重新分配前要求 BMC/电源 fence proof
+│  ├─ US-F7-03 目标 attach 前能证明源端已经 clean release
+│  │  ├─ TS-F7-02 以全局 CAS、run generation 和 host epoch 串联搬迁事务
+│  │  └─ TS-F7-05 覆盖 stop、release receipt、target solve/attach 的正负故障矩阵
+│  └─ US-F7-04 源主机失联时 VM 保持停止且设备不在别处接管
+│     └─ TS-F7-04 保留 lease，等待源主机返回并 reconcile；拒绝 stale mutation
 │
 └─ F8 可运维、可审计、可发布
    ├─ US-F8-01 运维人员能查看设备状态、owner、lease 与最近失败
@@ -163,8 +185,9 @@ EPIC-PCI-01  Qman 生产级 PCI DirectPath 服务
 Owner、Dynamic 和 Cluster 不是四个独立发布版本，而是降低实现风险的内部波次；中间波次
 可以形成实验或工程演示，但不能对外宣告为完整产品发布。
 
-V3 包含：Static、Dynamic、宿主 owner lifecycle、通用 PCI/MMIO planner、跨主机放置、
-可靠 fencing、cold relocate、HA 冷恢复，以及完整 qualification/audit/release gate。
+V3 包含：Static、Dynamic、宿主 owner lifecycle、通用 PCI/MMIO planner、双在线主机的计划性
+cold relocation，以及完整 qualification/audit/release gate。源主机失联时保留 lease、VM 保持
+stopped 且不在目标接管；BMC/电源 fencing 与 host-failure 自动 HA restart 不属于 V3。
 
 V3 明确不以 live migration、FT、snapshot/suspend 或 guest runtime PCI hotplug 为完成条件；
 这些操作默认作为必须 fail-closed 的产品限制。未来若要支持，需要单独扩展 Feature、风险合同
@@ -179,7 +202,7 @@ V3 明确不以 live migration、FT、snapshot/suspend 或 guest runtime PCI hot
 | W2 Static Core | G2 | F2 最小 reservation/bind-on-lease + F3/F4/F5/F8 | Static 单机事务、准入、释放、rollback/quarantine 可执行 |
 | W3 Managed Owner | G3 | F2 + F8 | live/deferred activation、early-boot claim、boot reconcile 可恢复 |
 | W4 Dynamic | G4 | F4 通用 planner + F6 + F8 | selector、全局求解、多设备原子 reservation 和归还池闭环 |
-| W5 Cluster | G5 | F5 高阶恢复 + F7 + F8 | consensus、fencing、cold relocate、HA 冷恢复及故障注入通过 |
+| W5 Online Cold Relocation | G5 | F5 clean release + F7 + F8 | 双在线主机 stop/release/re-solve/attach 与失联不接管负向门通过 |
 | W6 V3 Qualification/Release | G6 | F1-F8 | 首批 compatibility profile 的产品 Case、风险和真实硬件证据全部闭环 |
 
 通用 planner 是 V3 必需能力，但允许先用首批 compatibility profile 驱动 W2/W3 的增量实现；
@@ -207,19 +230,19 @@ V3 明确不以 live migration、FT、snapshot/suspend 或 guest runtime PCI hot
 
 - 产品方向与树结构：`ACCEPTED`。
 - 产品实现：未因本树新增而推进。
-- 101 个设计 Case：C20、O09 为 reference-scope executable；C10、C15、C16、C18、C21、F00、F09、
-  F10、S03、S04、S05、S15 为 `PRODUCT / IMPLEMENTATION_BLOCKED`。VFIO provider、QMP gate、
-  authoritative snapshot、Static lease/FSM 与 lease→fresh raw fd→stock-QEMU→receipt/quarantine
-  的 launch-envelope evidence 只作为这些 Case 的组件前提，不构成产品关闭，也不推进
-  F1/F3/F5/F8 状态；其余 87 个 Case 仍待分类。
-- 已定义 Case 通过 `requiredTechStories` 挂回本树，并用 `dependsOnCaseIds` 固定关闭顺序；
+- 101/101 个设计 Case 已机器分类：C20、O09 为 2 个 reference-scope `EXECUTABLE`；
+  93 个为 `IMPLEMENTATION_BLOCKED`；C12、M08、M12、M13、S06、S08 为 6 个
+  `HARDWARE_BLOCKED`；未分类数为 0。VFIO provider、QMP gate、authoritative snapshot、
+  Static lease/FSM 与 future-cdev launch-envelope evidence 只是产品 Case 的组件前提，
+  不构成产品关闭，也不推进 F1/F3/F5/F8 状态。
+- 所有 Case 通过 `requiredTechStories` 挂回本树，并用 `dependsOnCaseIds` 固定关闭顺序；
   当前关键链由机器门约束为 `C10 + C20 → C21 → S03 → S04 → S05 → F00`，以及
   `C21 → S15 → F09`、`C10 → F10`；C20 仍是 reference scope，不能替代 C21 的 PRODUCT
   前置，任何 reference/component Case 都不能关闭产品依赖。
-- 风险：R01-R39 当前全部未达到发布闭环。
+- 风险：R01-R39 的治理字段已补齐，但 39 条状态仍全部为 `OPEN`，产品关闭数为 0。
 - 发布：`BLOCKED`。
 
-## 5. 已决事项与仍需产品输入
+## 5. 已决事项与后续可补事实
 
 已经根据本轮意见冻结，不再要求用户处理：
 
@@ -227,17 +250,18 @@ V3 明确不以 live migration、FT、snapshot/suspend 或 guest runtime PCI hot
 - Static、Owner、Dynamic、Cluster 是实现波次，不是独立产品版本。
 - 底层机制追求通用安全 PCI 直通；生产支持只服务 compatibility catalog。
 - Case 命名、证据 schema 和文档权威冲突属于工程治理，由项目直接修复。
+- ADR-002/003/005/007/010 已由用户输入或委托的 reference default 正式冻结，见
+  [`product-decisions.json`](../contracts/product-decisions.json)。
+- 当前产品 Legacy-first；IOMMUFD/cdev 只作为未来独立 profile，控制面代码不分叉。
+- 集群只服务在线主机间的计划性 cold relocation；不依赖 BMC，也不承诺 host-failure HA。
+- HCL 先按消费 GPU、专业 GPU、HBA、加速卡四类技术 trait 设计，精确 SKU 在 G6 补录。
 
-当前 G0 发布门真正需要产品/平台 owner 提供事实或确认责任人的，是 5 个开放 ADR：
+后续允许补充且不回退已完成 G0 的事实包括：现有 Qman 服务名与 owner、实际数据库部署方式、
+精确 versioned machine 名、开源 OVMF/SeaBIOS package/hash，以及首批物理 specimen。补充事实如改变
+事务、安全或支持边界，必须新建 ADR，不能在实现中静默漂移。
 
-1. 首批受控 host/kernel/QEMU/firmware 基线（ADR-002）。
-2. 现有 cluster control plane、状态存储、leader 与 host agent 的集成边界（ADR-003）。
-3. 首批进入物理 qualification 的现实设备清单（ADR-005）。
-4. host failure 的 RTO、BMC/电源 fencing 能力与 SLA（ADR-007）。
-5. qualification profile 由谁签发、谁批准进入 `SUPPORTED` catalog（ADR-010）。
-
-下面两项已有 fail-closed 默认值，不阻塞 G0；审核者只有不同意默认值时才需要改：
+下面两项已有 fail-closed 默认值，不重新打开 G0；审核者只有不同意默认值时才需要改：
 
 - `UNQUALIFIED_LAB` 默认不作为生产能力，只允许管理员在隔离实验环境显式开启。
-- ESXi 8.0.1+ 的 `fixedPassthruHotPlugEnabled` 暂不进入 V3 基线；等独立实验和生命周期
-  合同完成后，再作为扩展 Feature 审核。
+- ESXi 8.0.1+ 的 `fixedPassthruHotPlugEnabled` 不进入 V3；snapshot、suspend、FT、live migration
+  和 guest runtime hotplug 均由产品负向 gate 拒绝，未来支持必须新建 Feature/ADR/qualification。

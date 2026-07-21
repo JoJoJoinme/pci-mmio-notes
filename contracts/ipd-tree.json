@@ -14,12 +14,14 @@
       "FAULT_TOLERANCE",
       "SNAPSHOT",
       "SUSPEND_RESUME",
-      "GUEST_RUNTIME_PCI_HOTPLUG"
+      "GUEST_RUNTIME_PCI_HOTPLUG",
+      "BMC_OR_POWER_FENCING",
+      "HOST_FAILURE_AUTOMATIC_HA_RESTART"
     ]
   },
   "capabilityDimensions": {
     "TECHNICALLY_ATTACHABLE": "A safe attach plan exists for this device instance and immutable host snapshot.",
-    "ELIGIBLE": "The current VM request also satisfies availability, ownership, lease, fencing, resource, and policy constraints.",
+    "ELIGIBLE": "The current VM request also satisfies availability, health, ownership, lease, resource, and policy constraints.",
     "QUALIFIED": "An exact versioned platform/device/guest/workload profile passed Qman physical-hardware cases with evidence hashes.",
     "SUPPORTED": "A qualified profile is admitted to the V3 compatibility catalog by product policy.",
     "invariants": [
@@ -216,7 +218,7 @@
         },
         {
           "id": "TS-F3-03",
-          "title": "在 lease 内完成 bind、IOMMUFD、reset 和 fd-only QEMU attach",
+          "title": "在 lease 内完成 bind、reset、选定 VFIO backend 和 fd-only QEMU attach",
           "primaryUserStory": "US-F3-01",
           "supports": ["US-F3-01", "US-F3-03", "US-F3-04"]
         },
@@ -444,8 +446,8 @@
     },
     {
       "id": "F7",
-      "title": "跨主机放置与冷恢复",
-      "outcome": "只有在旧 owner 已被可靠 fencing 后，VM 才能在目标主机重新求解并冷恢复。",
+      "title": "在线主机间的放置与计划性冷搬迁",
+      "outcome": "源、目标主机均在线且源端提交权威 clean-release receipt 后，目标端才重新求解并 attach；源主机失联时保留 lease、VM 保持 stopped 且禁止接管。",
       "userStories": [
         {
           "id": "US-F7-01",
@@ -453,15 +455,15 @@
         },
         {
           "id": "US-F7-02",
-          "title": "VM 能冷迁移到另一主机并重新选择兼容设备"
+          "title": "源、目标都在线时 VM 能冷搬迁并重新选择兼容设备"
         },
         {
           "id": "US-F7-03",
-          "title": "主机故障后 VM 能在已证明安全的主机上冷重启"
+          "title": "目标 attach 前能证明源端已经 clean release"
         },
         {
           "id": "US-F7-04",
-          "title": "旧主机未被证明失效时系统阻止设备重新分配"
+          "title": "源主机失联时 VM 保持停止且设备不在别处接管"
         }
       ],
       "techStories": [
@@ -473,7 +475,7 @@
         },
         {
           "id": "TS-F7-02",
-          "title": "使用 consensus store 与单调 fencing token",
+          "title": "以全局 CAS、run generation 和 host epoch 串联搬迁事务",
           "primaryUserStory": "US-F7-04",
           "supports": ["US-F7-03", "US-F7-04"]
         },
@@ -485,13 +487,13 @@
         },
         {
           "id": "TS-F7-04",
-          "title": "重新分配前要求 BMC/电源 fence proof",
+          "title": "保留 lease，等待源主机返回并 reconcile；拒绝 stale mutation",
           "primaryUserStory": "US-F7-04",
           "supports": ["US-F7-03", "US-F7-04"]
         },
         {
           "id": "TS-F7-05",
-          "title": "覆盖 partition、旧 agent、store failover 与 power-loss 故障测试",
+          "title": "覆盖 stop、release receipt、target solve/attach 的正负故障矩阵",
           "primaryUserStory": "US-F7-03",
           "supports": ["US-F7-01", "US-F7-02", "US-F7-03", "US-F7-04"]
         }
@@ -586,7 +588,7 @@
         {"featureId": "F4", "scope": "通用 PCI/MMIO admission 与 Guest compatibility"},
         {"featureId": "F5", "scope": "正常和异常生命周期、reconcile 与 quarantine"},
         {"featureId": "F6", "scope": "Dynamic selector、global solver、atomic reservation 与归还池"},
-        {"featureId": "F7", "scope": "跨主机放置、fencing、cold relocate 与 HA 冷恢复"},
+        {"featureId": "F7", "scope": "双在线主机的计划性 cold relocation、源端 clean release 与失联不接管"},
         {"featureId": "F8", "scope": "状态、审计、证据、HCL 与 fail-closed release gate"}
       ]
     }
@@ -630,9 +632,9 @@
     {
       "id": "W5",
       "milestone": "G5",
-      "name": "Cluster",
+      "name": "Online Cold Relocation",
       "featureIds": ["F5", "F7", "F8"],
-      "outcome": "Consensus, fencing, cold relocation, HA recovery, and failure injection close."
+      "outcome": "Global CAS, run generation, host epoch, source clean-release receipt, target re-solve/attach, and source-unreachable no-takeover gates close."
     },
     {
       "id": "W6",
@@ -668,6 +670,11 @@
       "sourceDocument": "ipd/QMAN-TECHNICAL-EVIDENCE.md",
       "evidenceIndex": "contracts/qman-evidence-index.json",
       "resultSchema": "contracts/qman-technical-evidence.schema.json"
+    },
+    "productScope": {
+      "sourceDocument": "ipd/README.md",
+      "decisionRegister": "contracts/product-decisions.json",
+      "policyContract": "contracts/compatibility-profile-policy.json"
     },
     "evidence": {
       "materialMap": "ipd/MATERIAL-MAP.md",

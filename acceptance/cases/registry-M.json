@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "id": "M00",
+      "title": "BAR sizes from 1 GiB through 64 GiB produce profile-consistent placement or rejection",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R33", "R36"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-03"],
+      "dependsOnCaseIds": [],
+      "blocker": "The product lacks a versioned full-tree MMIO planner and admission API that returns exact profile-specific placement or failure reasons.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M01",
+      "title": "Aggregate BAR demand and alignment produce correct bridge and root windows",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R33"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-03"],
+      "dependsOnCaseIds": ["M00"],
+      "blocker": "Only root-level premises exist; recursive bridge packing, alignment, containment and product golden outputs are not implemented.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M02",
+      "title": "Firmware-only and host-hole-only large-BAR configurations fail closed",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R34", "R36"],
+      "requiredTechStories": ["TS-F4-02", "TS-F4-03"],
+      "dependsOnCaseIds": ["M00"],
+      "blocker": "The product resolver does not jointly pin firmware aperture and QEMU host window or reject either incomplete configuration before launch.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M03",
+      "title": "SeaBIOS profile has independent below-4G, ROM, count and large-BAR limits",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R12", "R25", "R34", "R36"],
+      "requiredTechStories": ["TS-F4-02", "TS-F4-03", "TS-F4-04"],
+      "dependsOnCaseIds": ["M02"],
+      "blocker": "The product profile resolver and post-boot verifier do not independently enforce every SeaBIOS resource and ROM constraint.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M04",
+      "title": "RMRR compatibility creates an exact hole or an exact denial",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R07"],
+      "requiredTechStories": ["TS-F4-03", "TS-F6-02"],
+      "dependsOnCaseIds": ["M00"],
+      "blocker": "Synthetic observations exist, but the product memory planner does not consume authoritative reserved regions and emit deterministic compatible/overlap results.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M05",
+      "title": "Expansion ROM is hidden by default and explicit ROM is hash-pinned",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R12"],
+      "requiredTechStories": ["TS-F1-05", "TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "The product profile, signer and launcher do not yet enforce rombar-off by default or an explicit ROM hash and marker contract.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M06",
+      "title": "AER correctable and nonfatal events follow the selected host and guest surface policy",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R13"],
+      "requiredTechStories": ["TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "The versioned product QEMU profile and paired host/guest AER observation runner are not implemented.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M07",
+      "title": "PME and _OSC ownership produce the qualified interrupt behavior",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R24"],
+      "requiredTechStories": ["TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "The product ACPI/QEMU profile and controlled PME injection runner do not establish host versus guest ownership and IRQ behavior.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M08",
+      "title": "MSI-X, MSI and qualified INTx operate with interrupt remapping",
+      "status": "HARDWARE_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R06", "R27"],
+      "requiredTechStories": ["TS-F1-02", "TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["C21", "S00"],
+      "blocker": "Final interrupt-remapping, vector and shared-line INTx behavior requires a qualified bare-metal platform and physical device; nested MSI observations cannot close it.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M09",
+      "title": "ATS, PRI and PASID stay hidden unless an advanced profile is fully qualified",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R14"],
+      "requiredTechStories": ["TS-F1-05", "TS-F4-02", "TS-F5-02"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "The default capability filter, optional advanced profile and complete invalidate/reset/teardown path are not implemented; hardware qualification alone would not fix this software gap.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M10",
+      "title": "Peer-to-peer DMA is denied unless the exact backend profile supports it",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R01", "R15", "R27"],
+      "requiredTechStories": ["TS-F1-02", "TS-F4-02", "TS-F6-02"],
+      "dependsOnCaseIds": ["C21"],
+      "blocker": "The product backend profile and admission path do not yet provide a non-bypassable default P2P denial or a qualified allow path.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M11",
+      "title": "Guest ReBAR writes cannot change the admitted BAR plan",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R22", "R26"],
+      "requiredTechStories": ["TS-F4-02", "TS-F4-05"],
+      "dependsOnCaseIds": ["M00"],
+      "blocker": "The product QEMU profile and raw-launch bypass gate do not yet filter or make the effective ReBAR size immutable.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M12",
+      "title": "Verified device-count ceiling passes at the limit and rejects limit plus one",
+      "status": "HARDWARE_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R18", "R25", "R33", "R36"],
+      "requiredTechStories": ["TS-F1-05", "TS-F4-01", "TS-F4-03", "TS-F4-04"],
+      "dependsOnCaseIds": ["M01"],
+      "blocker": "The final effective ceiling and locality/performance envelope require the exact supported bare-metal platform, firmware, device population and workload at limit and limit plus one.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M13",
+      "title": "Physical RMRR identity mapping preserves reserved pages and post-reset DMA",
+      "status": "HARDWARE_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R07", "R27"],
+      "requiredTechStories": ["TS-F1-02", "TS-F4-03", "TS-F4-04"],
+      "dependsOnCaseIds": ["M04", "S00"],
+      "blocker": "The final identity-mapping, guest-hole and reset-DMA result requires physical firmware RMRR and a qualified DMA-capable device; synthetic DMAR is insufficient.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M14",
+      "title": "Firmware and motherboard layout matrix accepts three valid combinations and rejects acpi plus bios",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R30", "R31", "R34"],
+      "requiredTechStories": ["TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["M02"],
+      "blocker": "Reference observations exist, but the Qman create API, schema and launcher do not enforce one stable resolved layout and the invalid-combination negative gate.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M15",
+      "title": "Create and direct-register paths persist the same resolved layout provenance",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R30", "R31"],
+      "requiredTechStories": ["TS-F3-01", "TS-F4-02", "TS-F8-01"],
+      "dependsOnCaseIds": ["M14"],
+      "blocker": "The product does not persist requested and resolved layout plus resolver provenance across create, register and power-cycle paths.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M16",
+      "title": "Seven QEMU firmware and topology profiles are asserted through the product launcher",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R32", "R36"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["M00"],
+      "blocker": "The lab matrix passes, but no product resolver, launcher and evidence collector reproduces the seven profile assertions.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M17",
+      "title": "Strict VMware guest machine ABI is either custom-implemented or explicitly rejected",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R32"],
+      "requiredTechStories": ["TS-F1-05", "TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["M16"],
+      "blocker": "Stock QEMU cannot satisfy the strict topology contract, and Qman has neither a custom machine implementation nor a product negative gate for this profile.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "M18",
+      "title": "Exact-hole plus auxiliary demand rejects 2 GiB and succeeds at 4 GiB",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R33", "R36"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-03"],
+      "dependsOnCaseIds": ["M01"],
+      "blocker": "The product planner lacks the full-tree exact-hole fixture and recursive bridge containment proof.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M19",
+      "title": "Exact MMIO solver succeeds where first-fit or greedy placement fails",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R33"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-03"],
+      "dependsOnCaseIds": ["M18"],
+      "blocker": "The production planner has no bounded exact placement solver or deterministic greedy-failure regression.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M20",
+      "title": "Exact solver timeout fails closed without greedy fallback",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R33"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-03"],
+      "dependsOnCaseIds": ["M19"],
+      "blocker": "No product solver deadline, stable MMIO_PLANNER_TIMEOUT result or test proving fallback placement is impossible exists.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M21",
+      "title": "Observed BAR or window drift prevents VM commit and invalidates the backend profile",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R09", "R19", "R22", "R33"],
+      "requiredTechStories": ["TS-F3-05", "TS-F4-04", "TS-F8-01"],
+      "dependsOnCaseIds": ["M18", "S05"],
+      "blocker": "The product lacks a post-boot BAR/window observer and rollback transaction that invalidates the exact backend profile before assignment commit.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M22",
+      "title": "Q35 SeaBIOS dual-64-GiB BAR floor matrix is reproduced by the product profile",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R36"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["M01"],
+      "blocker": "Reference QEMU observations exist, but the product resolver, launcher and runtime-window verifier do not reproduce the floor matrix.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "M23",
+      "title": "Q35 OVMF dual-64-GiB BAR aperture is explicitly provisioned and observed",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R09", "R36"],
+      "requiredTechStories": ["TS-F4-01", "TS-F4-02", "TS-F4-04"],
+      "dependsOnCaseIds": ["M22"],
+      "blocker": "The product path does not pin matching fw_cfg aperture and QEMU floor values or verify both BARs and guest heartbeat after launch.",
+      "targetMilestone": "G2"
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "id": "S00",
+      "title": "Static assignment starts and stops with exact identity and a complete lease",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R06"],
+      "requiredTechStories": ["TS-F3-01", "TS-F3-02", "TS-F3-03", "TS-F3-05", "TS-F5-02"],
+      "dependsOnCaseIds": ["C21"],
+      "blocker": "The product controller does not yet connect immutable identity, whole-bundle lease, selected VFIO backend, fd-only QEMU attach and verified clean release.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S01",
+      "title": "Static start fails closed when a reused BDF has a different identity",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R19"],
+      "requiredTechStories": ["TS-F1-01", "TS-F3-01", "TS-F3-04"],
+      "dependsOnCaseIds": ["C10", "C21"],
+      "blocker": "The persisted assignment and launch admission do not yet compare current fingerprint, topology and qualification dependencies before side effects.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S02",
+      "title": "Busy dependency changes availability without changing capability",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R38"],
+      "requiredTechStories": ["TS-F1-04", "TS-F3-02"],
+      "dependsOnCaseIds": ["C21"],
+      "blocker": "The product publisher and lease store lack an end-to-end A/B test separating owner-independent capability from current bundle availability.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S06",
+      "title": "Guest reboot preserves function on a qualified physical device",
+      "status": "HARDWARE_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R03", "R06"],
+      "requiredTechStories": ["TS-F3-03", "TS-F3-05", "TS-F5-02"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "Final guest-reboot continuity and post-reboot device function require a qualified physical device and workload; emulated or nested devices are not sufficient.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "S07",
+      "title": "Forced VM power-off completes verified teardown before reuse",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R06", "R11"],
+      "requiredTechStories": ["TS-F5-02", "TS-F5-03", "TS-F5-04"],
+      "dependsOnCaseIds": ["S05"],
+      "blocker": "Forced-off notification, independent DMA/IRQ cleanup receipt, release reset and product quarantine decisions are not integrated.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S08",
+      "title": "Ten physical-device reuse cycles leave no stale DMA, interrupt or state",
+      "status": "HARDWARE_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R03", "R06", "R11"],
+      "requiredTechStories": ["TS-F5-02", "TS-F5-03", "TS-F8-02"],
+      "dependsOnCaseIds": ["S06", "S07"],
+      "blocker": "The final repeated-reuse gate requires a qualified physical device, independent DMA/IRQ observation and a real workload across ten complete cycles.",
+      "targetMilestone": "G6"
+    },
+    {
+      "id": "S09",
+      "title": "Snapshot and suspend requests are denied without changing assignment state",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R16", "R26"],
+      "requiredTechStories": ["TS-F4-05", "TS-F5-05"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "Snapshot and suspend are outside the DirectPath boundary, but the product API, scheduler and launcher negative gate does not yet exist; the case cannot be marked FEATURE_DISABLED.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S10",
+      "title": "Fault Tolerance requests are denied for DirectPath VMs",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R10", "R16", "R26"],
+      "requiredTechStories": ["TS-F4-05", "TS-F5-05"],
+      "dependsOnCaseIds": ["S00"],
+      "blocker": "Fault Tolerance is outside scope, but no executable product gate yet proves every API, scheduler and launch path rejects it without changing the VM or lease.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S11",
+      "title": "Changed reset affected set invalidates the attach plan before reset",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R02", "R04"],
+      "requiredTechStories": ["TS-F3-05", "TS-F5-01"],
+      "dependsOnCaseIds": ["C18", "S00"],
+      "blocker": "The product reset executor lacks an execution-time affected-set re-query and fault injection proving no reset or QEMU start occurs after drift.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S12",
+      "title": "Failed post-reset state probe quarantines the whole affected set",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R02", "R03", "R06"],
+      "requiredTechStories": ["TS-F5-01", "TS-F5-04"],
+      "dependsOnCaseIds": ["S11"],
+      "blocker": "No production reset probe and quarantine transaction proves that a failed state check prevents every affected member from returning to FREE.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S13",
+      "title": "Qman fixed-hotplug API remains disabled and immutable",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R17", "R26", "R37"],
+      "requiredTechStories": ["TS-F4-05", "TS-F5-05"],
+      "dependsOnCaseIds": [],
+      "blocker": "Runtime PCI hotplug is outside scope, but the API negative gate and unchanged-definition proof are not implemented; policy text alone is not FEATURE_DISABLED evidence.",
+      "targetMilestone": "G2"
+    },
+    {
+      "id": "S14",
+      "title": "Running Dynamic VM cannot replace its selected backing",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R17", "R37"],
+      "requiredTechStories": ["TS-F4-05", "TS-F5-05", "TS-F6-04"],
+      "dependsOnCaseIds": ["D00"],
+      "blocker": "The Dynamic controller does not yet reject runtime backing replacement while proving assignedId, lease, guest function and generation remain unchanged.",
+      "targetMilestone": "G4"
+    },
+    {
+      "id": "S16",
+      "title": "Concurrent hotplug bypass attempts cannot mutate ownership or guest topology",
+      "status": "IMPLEMENTATION_BLOCKED",
+      "scope": "PRODUCT",
+      "riskIds": ["R04", "R17", "R26", "R37"],
+      "requiredTechStories": ["TS-F4-05", "TS-F5-05", "TS-F8-02"],
+      "dependsOnCaseIds": ["S13", "S14", "S15"],
+      "blocker": "The product-wide concurrent API, scheduler, launcher and QMP bypass matrix does not exist, so no negative gate proves all generations and DMA/IRQ owners remain unchanged.",
+      "targetMilestone": "G4"
+    }
+  ]
+}

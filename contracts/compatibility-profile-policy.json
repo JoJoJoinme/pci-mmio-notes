@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-07-22",
+  "capabilityTarget": "V3_FULL_DIRECTPATH",
+  "backendPolicy": {
+    "currentProductFamily": "LEGACY_VFIO_TYPE1",
+    "allowedConfiguredTypes": ["VFIO_TYPE1V2_IOMMU", "VFIO_TYPE1_IOMMU"],
+    "selection": "EXACT_PROFILE_PIN",
+    "silentFallback": false,
+    "noIommu": "HARD_REJECT",
+    "futureFamilies": ["VFIO_CDEV_IOMMUFD"],
+    "sharedControlPlane": true,
+    "adapterOnlyDifferences": [
+      "backendKind",
+      "dmaDomainIdentity",
+      "launchGrant",
+      "qemuRenderer",
+      "attachReceipt"
+    ],
+    "legacyLaunchAuthorization": {
+      "qemuDeviceSelector": "EXACT_HOST_BDF",
+      "preopenedDeviceFdPassing": false,
+      "reason": "Stock QEMU 5.0 legacy vfio-pci has no passed group/device fd property; QEMU 10.2 fd is an IOMMUFD/cdev property.",
+      "requiredIsolation": [
+        "PER_VM_TRANSIENT_IDENTITY",
+        "PER_VM_MOUNT_NAMESPACE_WITH_ONLY_AUTHORIZED_VFIO_GROUP_NODES",
+        "DEVICE_CGROUP_OR_LSM_ALLOWLIST",
+        "READ_ONLY_SYSFS_VIEW_BOUND_TO_AUTHORIZED_BDFS",
+        "NO_ALTERNATE_QMP_OR_RAW_LAUNCH_ENTRYPOINT"
+      ],
+      "postSpawnReceipt": [
+        "QEMU_PID_STARTTIME",
+        "QEMU_ARGV_HASH",
+        "AUTHORIZED_BDF_AND_GROUP",
+        "PROC_FD_DEVICE_IDENTITY",
+        "QMP_QOM_DEVICE_IDENTITY",
+        "LEASE_AND_RUN_GENERATION"
+      ]
+    }
+  },
+  "hostConfigurationPolicy": {
+    "modifiesBios": false,
+    "modifiesKernelCommandLine": false,
+    "iommuProbe": "RUNTIME_FAIL_CLOSED",
+    "interruptIsolationProbe": "RUNTIME_FAIL_CLOSED",
+    "acsOverride": "NEVER_TRUST_AS_PHYSICAL_ISOLATION_PROOF"
+  },
+  "platforms": [
+    {
+      "id": "TEST-KYLIN-V10-ARM",
+      "deliveryClass": "SMALL_SCALE_TEST_SHIPMENT",
+      "os": "Kylin V10",
+      "architecture": "ARM64",
+      "kernel": "4.19",
+      "qemu": "5.0",
+      "machineFirmware": [{"machine": "virt", "firmware": "UEFI"}],
+      "capabilityModel": "V3_FULL_DIRECTPATH",
+      "backendFamily": "LEGACY_VFIO_TYPE1"
+    },
+    {
+      "id": "TEST-KYLIN-V10-C86",
+      "deliveryClass": "SMALL_SCALE_TEST_SHIPMENT",
+      "os": "Kylin V10",
+      "architecture": "C86",
+      "kernel": "4.19",
+      "qemu": "5.0",
+      "machineFirmware": [
+        {"machine": "q35", "firmware": "UEFI"},
+        {"machine": "q35", "firmware": "SeaBIOS"},
+        {"machine": "i440fx", "firmware": "UEFI"},
+        {"machine": "i440fx", "firmware": "SeaBIOS"}
+      ],
+      "capabilityModel": "V3_FULL_DIRECTPATH",
+      "backendFamily": "LEGACY_VFIO_TYPE1"
+    },
+    {
+      "id": "TEST-RH-X86",
+      "deliveryClass": "SMALL_SCALE_TEST_SHIPMENT",
+      "os": "RH-family",
+      "architecture": "X86_64",
+      "kernel": "4.18",
+      "qemu": "5.0",
+      "machineFirmware": [
+        {"machine": "q35", "firmware": "UEFI"},
+        {"machine": "q35", "firmware": "SeaBIOS"},
+        {"machine": "i440fx", "firmware": "UEFI"},
+        {"machine": "i440fx", "firmware": "SeaBIOS"}
+      ],
+      "capabilityModel": "V3_FULL_DIRECTPATH",
+      "backendFamily": "LEGACY_VFIO_TYPE1"
+    },
+    {
+      "id": "MAIN-KYLIN-V11-ARM",
+      "deliveryClass": "MAINLINE",
+      "os": "Kylin V11",
+      "architecture": "ARM64",
+      "kernel": "6.6",
+      "qemu": "10.2",
+      "machineFirmware": [{"machine": "virt", "firmware": "UEFI"}],
+      "capabilityModel": "V3_FULL_DIRECTPATH",
+      "backendFamily": "LEGACY_VFIO_TYPE1"
+    },
+    {
+      "id": "MAIN-KYLIN-V11-C86",
+      "deliveryClass": "MAINLINE",
+      "os": "Kylin V11",
+      "architecture": "C86",
+      "kernel": "6.6",
+      "qemu": "10.2",
+      "machineFirmware": [
+        {"machine": "q35", "firmware": "UEFI"},
+        {"machine": "q35", "firmware": "SeaBIOS"},
+        {"machine": "i440fx", "firmware": "UEFI"},
+        {"machine": "i440fx", "firmware": "SeaBIOS"}
+      ],
+      "capabilityModel": "V3_FULL_DIRECTPATH",
+      "backendFamily": "LEGACY_VFIO_TYPE1"
+    },
+    {
+      "id": "MAIN-OPENEULER-X86",
+      "deliveryClass": "MAINLINE",
+      "os": "openEuler",
+      "architecture": "X86_64",
+      "kernel": "6.6",
+      "qemu": "10.2",
+      "machineFirmware": [
+        {"machine": "q35", "firmware": "UEFI"},
+        {"machine": "q35", "firmware": "SeaBIOS"},
+        {"machine": "i440fx", "firmware": "UEFI"},
+        {"machine": "i440fx", "firmware": "SeaBIOS"}
+      ],
+      "capabilityModel": "V3_FULL_DIRECTPATH",
+      "backendFamily": "LEGACY_VFIO_TYPE1"
+    }
+  ],
+  "hclPolicy": {
+    "engineScope": "GENERIC_PCI",
+    "productionRequiresExactCatalogMatch": true,
+    "wildcardSupportEntryAllowed": false,
+    "unqualifiedLabProductionEligible": false,
+    "archetypes": [
+      {
+        "id": "CONSUMER_GPU",
+        "requiredTraitCoverage": ["large-or-resizable-bar", "multifunction-audio", "option-rom", "reset", "guest-workload"]
+      },
+      {
+        "id": "PROFESSIONAL_GPU",
+        "requiredTraitCoverage": ["large-bar", "msix", "long-workload", "reset", "optional-p2p-policy"]
+      },
+      {
+        "id": "HBA",
+        "requiredTraitCoverage": ["host-storage-dependency", "boot-critical-deny", "downstream-device-scope", "reset", "driver-restore"]
+      },
+      {
+        "id": "ACCELERATOR",
+        "requiredTraitCoverage": ["large-bar", "dma-queues", "msix", "reset", "ats-pri-pasid-policy"]
+      }
+    ],
+    "qualificationIssuer": "Qualification Engineering",
+    "supportedCatalogApprover": "Product Release",
+    "catalogLifecycle": ["SIGNED", "VERSIONED", "REVOCABLE", "HASH_BOUND"]
+  },
+  "clusterPolicy": {
+    "supportedRelocation": "PLANNED_COLD_RELOCATION_BETWEEN_ONLINE_HOSTS",
+    "requiresSourceCleanReleaseReceipt": true,
+    "targetMustResolveAgain": true,
+    "sourceUnreachableAction": "HOLD_LEASE_KEEP_VM_STOPPED_NO_REASSIGNMENT",
+    "hostFailureAutomaticRestart": false,
+    "bmcOrPowerFenceIntegration": false,
+    "logicalEpochPurpose": "REJECT_STALE_CONTROL_MUTATIONS_ONLY"
+  }
+}

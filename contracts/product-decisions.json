@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-07-22",
+  "requiredDecisionIds": [
+    "ADR-002",
+    "ADR-003",
+    "ADR-005",
+    "ADR-007",
+    "ADR-010"
+  ],
+  "records": [
+    {
+      "id": "ADR-002",
+      "title": "受控平台基线与 VFIO 后端策略",
+      "status": "ACCEPTED",
+      "owner": "Platform Architecture",
+      "decidedAt": "2026-07-22",
+      "source": "USER_CONFIRMED",
+      "decision": "小规模测试线使用 Kylin V10 ARM/C86 Kernel 4.19 与 RH-family x86 Kernel 4.18，均配 QEMU 5.0；主线使用 Kylin V11 ARM/C86 与 openEuler x86 Kernel 6.6，均配 QEMU 10.2。所有平台交付相同 V3 能力语义。x86/C86 支持 q35/i440fx 与 UEFI/SeaBIOS 的同一矩阵，ARM 支持 virt+UEFI。当前所有产品 profile 固定 Legacy VFIO TYPE1 family；IOMMUFD/cdev 仅作为未来独立 qualification profile，禁止运行时静默 fallback。Qman 不修改 BIOS 或 kernel 启动项，运行时探测 IOMMU 与中断隔离能力，缺失或不明即拒绝 VM 直通。",
+      "consequences": [
+        "Legacy-first 是当前产品实现路线，不再把已有 cdev/IOMMUFD E3 证据冒充产品 backend 关闭证据。",
+        "TYPE1v2 与 TYPE1 的精确选择由版本化 profile 固定；配置值不可用时 fail closed。",
+        "固件和 machine 的精确版本名、软件包来源与 hash 由 qualification 自动采集，不再作为产品决策输入。"
+      ],
+      "techStories": ["TS-F1-02", "TS-F3-03", "TS-F4-02", "TS-F8-03"],
+      "caseIds": ["C17", "C21", "M03", "M16", "F10"],
+      "riskIds": ["R04", "R06", "R14", "R15", "R26", "R27"]
+    },
+    {
+      "id": "ADR-003",
+      "title": "单一 Qman 控制面与持久状态边界",
+      "status": "ACCEPTED",
+      "owner": "Qman Control Plane",
+      "decidedAt": "2026-07-22",
+      "source": "USER_DELEGATED_REFERENCE_DEFAULT",
+      "decision": "使用一套 backend-neutral Qman API、DirectPath Controller、全局事务存储和逐主机特权 Host Agent。参考实现采用单 active Controller 加 standby、PostgreSQL 事务/CAS repository、Host Agent 本地 SQLite journal/cache；SQLite 不承担跨主机协调。全局存储持有 assignedId、bundle lease、run generation 与 host epoch；QEMU 保持非特权，只接收 Host Agent 生成的 backend-specific launch grant：当前 Legacy 为受控 device path，未来 IOMMUFD/cdev 才为预打开 fd。Legacy 与未来 IOMMUFD 只在 Host Agent backend adapter、QEMU renderer 和 attach receipt 上分叉。",
+      "consequences": [
+        "inventory、qualification、selector、FSM、错误码、审计和数据库模型不得按 VFIO backend 复制两套。",
+        "现有 Qman 服务边界可在接入时替换参考组件，但必须维持相同事务和权限不变量。",
+        "local journal 是恢复证据，不是全局 lease 真相源。"
+      ],
+      "techStories": ["TS-F3-02", "TS-F3-03", "TS-F3-05", "TS-F5-03", "TS-F6-05", "TS-F8-02"],
+      "caseIds": ["S03", "S05", "D09", "F00", "F01", "F02", "F09"],
+      "riskIds": ["R04", "R05", "R10", "R11", "R26"]
+    },
+    {
+      "id": "ADR-005",
+      "title": "通用 PCI 引擎与 HCL 支持边界",
+      "status": "ACCEPTED",
+      "owner": "Qualification Engineering",
+      "decidedAt": "2026-07-22",
+      "source": "USER_CONFIRMED",
+      "decision": "实现设备类型无关的 PCI DirectPath 引擎；原理上对所有满足 IOMMU、dependency、reset、owner、MMIO/拓扑和 Guest 条件的设备生成安全计划。生产 support 只服务签名且版本化的 compatibility catalog。首批技术 archetype 为消费级 GPU、专业级 GPU、HBA 与加速卡；具体 VID:DID、firmware、Guest driver 与 workload profile 在 G6 qualification 中产生，不作为 G0 架构分支。",
+      "consequences": [
+        "非 HCL 设备只能进入隔离的 UNQUALIFIED_LAB，不能进入生产调度或产生支持承诺。",
+        "设备专属处理通过 profile/rule/provider 扩展，禁止在主 FSM 中按设备类别分叉。",
+        "nested synthetic 证据只能验证通用机制，不能替代四类设备的 E4 物理 qualification。"
+      ],
+      "techStories": ["TS-F1-04", "TS-F1-05", "TS-F4-01", "TS-F5-01", "TS-F8-03"],
+      "caseIds": ["C04", "C10", "C13", "D14", "M09", "M13"],
+      "riskIds": ["R02", "R03", "R19", "R20", "R23", "R27", "R29"]
+    },
+    {
+      "id": "ADR-007",
+      "title": "集群边界为在线主机间的计划性冷搬迁",
+      "status": "ACCEPTED",
+      "owner": "Qman Control Plane",
+      "decidedAt": "2026-07-22",
+      "source": "USER_CONFIRMED",
+      "decision": "V3 只承诺源主机和目标主机都在线时的受控 cold relocation。源 Host Agent 必须停止 VM，证明 DMA/IRQ teardown、reset、owner restore 和 lease release，目标端才可重新求解并 attach。源主机失联、断电或网络分区时保留 lease、VM 保持 stopped、状态为 HOST_UNREACHABLE，不在其他主机重新分配，直到源主机返回并完成 reconcile。BMC/Redfish/IPMI、电源 fencing、host-failure 自动 HA restart 不属于产品范围。",
+      "consequences": [
+        "logical generation/host epoch 只拒绝 stale control request，不宣称能物理停止失联主机 DMA。",
+        "cold relocation 失败时不回退为复制源 BDF，也不允许目标少配启动。",
+        "VMware host-failure/BMC 行为只保留为 reference extra，不再阻断 Qman V3。"
+      ],
+      "techStories": ["TS-F5-02", "TS-F7-01", "TS-F7-02", "TS-F7-03", "TS-F7-04", "TS-F7-05"],
+      "caseIds": ["F03", "F04", "F05", "F06", "D12"],
+      "riskIds": ["R04", "R06", "R10"]
+    },
+    {
+      "id": "ADR-010",
+      "title": "Qualification 与 SUPPORTED catalog 审批责任",
+      "status": "ACCEPTED",
+      "owner": "Product Release",
+      "decidedAt": "2026-07-22",
+      "source": "USER_DELEGATED_REFERENCE_DEFAULT",
+      "decision": "Qualification Engineering 对精确平台、device firmware、Guest、driver、workload 与 feature 组合运行自动化并签发 QUALIFIED profile；Product Release 审核证据、风险与支持承诺后，才可把该 profile 提升为 SUPPORTED。撤销、过期或依赖 hash 变化必须在调度和 attach 前传播失效。具体人员姓名可在组织接入时替换角色，但不得合并签发与发布责任。",
+      "consequences": [
+        "一次成功启动、VMware 观察或 synthetic E3 结果不能进入 SUPPORTED catalog。",
+        "catalog 必须签名、版本化、可撤销，并记录审批 actor 与 evidence hash。",
+        "HCL 维护数据可以后补，但发布责任和 fail-closed 生命周期已经冻结。"
+      ],
+      "techStories": ["TS-F1-05", "TS-F8-03", "TS-F8-04"],
+      "caseIds": ["C10", "F10"],
+      "riskIds": ["R19", "R20", "R27"]
+    }
+  ]
+}

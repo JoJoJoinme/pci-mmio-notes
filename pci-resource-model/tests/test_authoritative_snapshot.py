@@ -645,7 +645,7 @@ class AuthoritativeSnapshotStoreTests(unittest.TestCase):
                     )
                     self.assertEqual(LiveCapturePhase.PRE_SPAWN, error.phase)
 
-    def test_live_fact_coordinate_only_drift_fails_closed(self) -> None:
+    def test_live_fact_coordinates_are_independently_bound_and_fail_closed(self) -> None:
         baseline = make_capture()
         old_fact = FactEvidence(
             source="reset-provider",
@@ -656,48 +656,88 @@ class AuthoritativeSnapshotStoreTests(unittest.TestCase):
             topology_hash="c" * 64,
         )
         first = baseline.inventory.devices[BDF1]
-        published = SnapshotCapture(
+        fact_fields = (
+            "dependency_action_fact",
+            "qualification_fact",
+            "reset_contract_fact",
+        )
+        coordinate_changes = {
+            "inventoryEpoch": {"inventory_epoch": 999},
+            "topologyHash": {"topology_hash": "d" * 64},
+        }
+        expected_current_hash = None
+
+        for fact_field in fact_fields:
+            for coordinate, changes in coordinate_changes.items():
+                with self.subTest(fact_field=fact_field, coordinate=coordinate):
+                    published = SnapshotCapture(
+                        inventory=replace(
+                            baseline.inventory,
+                            devices={
+                                **baseline.inventory.devices,
+                                BDF1: replace(first, **{fact_field: old_fact}),
+                            },
+                        ),
+                        launch_facts=baseline.launch_facts,
+                    )
+                    current = self.publish(
+                        expected=expected_current_hash,
+                        capture=published,
+                    )
+                    expected_current_hash = current.snapshot_hash
+                    changed_fact = replace(old_fact, **changes)
+                    changed = SnapshotCapture(
+                        inventory=replace(
+                            baseline.inventory,
+                            devices={
+                                **baseline.inventory.devices,
+                                BDF1: replace(first, **{fact_field: changed_fact}),
+                            },
+                        ),
+                        launch_facts=baseline.launch_facts,
+                    )
+                    self.assertNotEqual(
+                        compute_full_topology_hash(published),
+                        compute_full_topology_hash(changed),
+                    )
+                    with self.store.authorize_launch(
+                        current.snapshot_hash, (BDF1, BDF2)
+                    ) as authorization:
+                        self.capture_provider.select(changed)
+                        error = self.assert_reason(
+                            SnapshotReason.TOPOLOGY_CHANGED,
+                            lambda: authorization.revalidate_live(
+                                LiveCapturePhase.PRE_SPAWN
+                            ),
+                        )
+                    self.assertEqual(LiveCapturePhase.PRE_SPAWN, error.phase)
+
+    def test_fact_evidence_preimage_canonical_hash_remains_stable(self) -> None:
+        baseline = make_capture()
+        first = baseline.inventory.devices[BDF1]
+        fact = FactEvidence(
+            source="reset-provider",
+            rule_id="reset-rule-v1",
+            subject_hash="a" * 64,
+            evidence_hash="b" * 64,
+            inventory_epoch=1,
+            topology_hash="c" * 64,
+        )
+        capture = SnapshotCapture(
             inventory=replace(
                 baseline.inventory,
                 devices={
                     **baseline.inventory.devices,
-                    BDF1: replace(first, reset_contract_fact=old_fact),
+                    BDF1: replace(first, reset_contract_fact=fact),
                 },
             ),
             launch_facts=baseline.launch_facts,
         )
-        self.capture_provider.select(published)
-        current = self.publish()
-        changed_fact = replace(
-            old_fact,
-            inventory_epoch=999,
-            topology_hash="d" * 64,
+
+        self.assertEqual(
+            "a5661ef533d145fe5f599399d12e5179678d921b0c1707b4df65c9d363b7499f",
+            compute_full_topology_hash(capture),
         )
-        changed = SnapshotCapture(
-            inventory=replace(
-                baseline.inventory,
-                devices={
-                    **baseline.inventory.devices,
-                    BDF1: replace(first, reset_contract_fact=changed_fact),
-                },
-            ),
-            launch_facts=baseline.launch_facts,
-        )
-        self.assertNotEqual(
-            compute_full_topology_hash(published),
-            compute_full_topology_hash(changed),
-        )
-        with self.store.authorize_launch(
-            current.snapshot_hash, (BDF1, BDF2)
-        ) as authorization:
-            self.capture_provider.select(changed)
-            error = self.assert_reason(
-                SnapshotReason.TOPOLOGY_CHANGED,
-                lambda: authorization.revalidate_live(
-                    LiveCapturePhase.PRE_SPAWN
-                ),
-            )
-            self.assertEqual(LiveCapturePhase.PRE_SPAWN, error.phase)
 
     def test_authorized_bundle_derives_requests_and_retains_snapshot_guard(self) -> None:
         current = self.publish()

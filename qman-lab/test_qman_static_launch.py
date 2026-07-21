@@ -1517,6 +1517,15 @@ set -u
 # ttyS0 is the boot/system console.  A dedicated second serial port prevents
 # systemd/kernel output from corrupting long, hash-checked Base64 evidence lines.
 exec >/dev/ttyS1 2>&1
+if ! stty -F /dev/ttyS1 115200 cs8 -cstopb -parenb \
+    -ixon -ixoff -crtscts; then
+    echo QMAN_STATIC_LAUNCH_TRANSPORT_SETUP_FAILED
+    sync
+    sleep 2
+    poweroff -f
+    exit 97
+fi
+echo QMAN_STATIC_LAUNCH_TRANSPORT_BAUD=115200
 
 echo QMAN_STATIC_LAUNCH_BEGIN
 echo QMAN_STATIC_LAUNCH_KERNEL="$(uname -r)"
@@ -1568,6 +1577,26 @@ print(json.dumps({
 PY
 fi
 
+emit_evidence_frame() {
+    marker=$1
+    file=$2
+    encoded_file="/run/qman-static-launch-frame-${marker}.$$"
+    raw_size=$(wc -c < "$file" | tr -d '[:space:]')
+    raw_sha256=$(sha256sum "$file" | awk '{print $1}')
+    base64 -w 768 "$file" > "$encoded_file"
+
+    printf 'QMAN_STATIC_LAUNCH_FRAME_BEGIN|%s|1|%s|%s\n' \
+        "$marker" "$raw_size" "$raw_sha256"
+    sequence=0
+    while IFS= read -r chunk || [ -n "$chunk" ]; do
+        printf 'QMAN_STATIC_LAUNCH_FRAME_CHUNK|%s|%08d|%s\n' \
+            "$marker" "$sequence" "$chunk"
+        sequence=$((sequence + 1))
+    done < "$encoded_file"
+    printf 'QMAN_STATIC_LAUNCH_FRAME_END|%s|%08d\n' "$marker" "$sequence"
+    rm -f "$encoded_file"
+}
+
 for specification in \
     "QMAN_STATIC_LAUNCH_RESULT_B64:/run/qman-static-launch-result.json" \
     "QMAN_STATIC_LAUNCH_COMMANDS_B64:/run/qman-static-launch-commands.json" \
@@ -1579,14 +1608,15 @@ for specification in \
     marker=${specification%%:*}
     file=${specification#*:}
     if [ -f "$file" ]; then
-        echo "$marker=$(base64 -w0 "$file")"
+        emit_evidence_frame "$marker" "$file"
     else
-        echo "$marker="
+        emit_evidence_frame "$marker" /dev/null
     fi
 done
 echo QMAN_STATIC_LAUNCH_RC="$orchestrator_rc"
 echo QMAN_STATIC_LAUNCH_END
 sync
+sleep 2
 poweroff -f
 '''
 
@@ -1850,7 +1880,98 @@ def extract_marker(log: str, marker: str) -> str | None:
     return matches[-1] if matches else None
 
 
+def _decode_framed_marker(
+    log: str,
+    marker: str,
+) -> tuple[bytes, str | None, bool]:
+    prefixes = {
+        "begin": "QMAN_STATIC_LAUNCH_FRAME_BEGIN|",
+        "chunk": "QMAN_STATIC_LAUNCH_FRAME_CHUNK|",
+        "end": "QMAN_STATIC_LAUNCH_FRAME_END|",
+    }
+    relevant_prefix = marker + "|"
+    found = False
+    active = False
+    completed = False
+    declared_size: int | None = None
+    declared_sha256: str | None = None
+    chunks: list[str] = []
+
+    for raw_line in log.splitlines():
+        line = raw_line.strip()
+        for kind, prefix in prefixes.items():
+            position = line.find(prefix)
+            if position < 0:
+                continue
+            payload = line[position + len(prefix) :].strip()
+            if not payload.startswith(relevant_prefix):
+                continue
+            found = True
+            fields = payload.split("|")
+            if kind == "begin":
+                if len(fields) != 4:
+                    return b"", f"invalid {marker} frame begin", True
+                _, version, size_text, sha256_text = fields
+                if active or completed:
+                    return b"", f"duplicate {marker} frame begin", True
+                if version != "1":
+                    return b"", f"unsupported {marker} frame version: {version}", True
+                if not size_text.isdigit():
+                    return b"", f"invalid {marker} frame size: {size_text}", True
+                if not re.fullmatch(r"[0-9a-f]{64}", sha256_text):
+                    return b"", f"invalid {marker} frame sha256", True
+                declared_size = int(size_text)
+                declared_sha256 = sha256_text
+                active = True
+            elif kind == "chunk":
+                if len(fields) != 3:
+                    return b"", f"invalid {marker} frame chunk", True
+                _, sequence_text, encoded = fields
+                if not active or completed:
+                    return b"", f"{marker} frame chunk outside active frame", True
+                if not sequence_text.isdigit():
+                    return b"", f"invalid {marker} frame sequence", True
+                expected = len(chunks)
+                if int(sequence_text) != expected:
+                    return (
+                        b"",
+                        f"{marker} frame sequence mismatch: "
+                        f"expected {expected}, got {sequence_text}",
+                        True,
+                    )
+                if len(encoded) > 768:
+                    return b"", f"oversized {marker} frame chunk", True
+                chunks.append(encoded)
+            else:
+                if len(fields) != 2:
+                    return b"", f"invalid {marker} frame end", True
+                _, count_text = fields
+                if not active or completed:
+                    return b"", f"{marker} frame end outside active frame", True
+                if not count_text.isdigit() or int(count_text) != len(chunks):
+                    return b"", f"{marker} frame chunk count mismatch", True
+                active = False
+                completed = True
+
+    if not found:
+        return b"", None, False
+    if active or not completed:
+        return b"", f"incomplete {marker} frame", True
+    try:
+        decoded = base64.b64decode("".join(chunks), validate=True)
+    except ValueError as error:
+        return b"", f"invalid {marker} frame base64: {error}", True
+    if declared_size is None or len(decoded) != declared_size:
+        return b"", f"{marker} frame size mismatch", True
+    if declared_sha256 is None or sha256_bytes(decoded) != declared_sha256:
+        return b"", f"{marker} frame sha256 mismatch", True
+    return decoded, None, True
+
+
 def decode_marker(log: str, marker: str) -> tuple[bytes, str | None]:
+    decoded, error, framed = _decode_framed_marker(log, marker)
+    if framed:
+        return decoded, error
     encoded = extract_marker(log, marker)
     if encoded is None:
         return b"", f"missing {marker}"
@@ -2188,6 +2309,10 @@ def main() -> None:
         else ""
     )
     parse_errors: list[str] = []
+    if "QMAN_STATIC_LAUNCH_TRANSPORT_SETUP_FAILED" in evidence_log:
+        parse_errors.append("guest evidence serial setup failed")
+    if "QMAN_STATIC_LAUNCH_TRANSPORT_BAUD=115200" not in evidence_log:
+        parse_errors.append("guest evidence serial did not confirm 115200 baud")
     outputs = (
         ("QMAN_STATIC_LAUNCH_RESULT_B64", "guest-result.json"),
         ("QMAN_STATIC_LAUNCH_COMMANDS_B64", "guest-commands.json"),

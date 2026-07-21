@@ -23,6 +23,67 @@
     "INFERRED_MECHANISM",
     "QMAN_DECISION"
   ],
+  "factLayerPolicy": {
+    "OFFICIAL_CONTRACT": {
+      "subject": "VMWARE_ESXI",
+      "authority": "Broadcom KB, Compatibility Guide, and vSphere API schema",
+      "proves": "Published VMware fields, requirements, and restrictions.",
+      "doesNotProve": "Private implementation, Qman implementation, or Qman qualification."
+    },
+    "OBSERVED_BEHAVIOR": {
+      "subject": "VMWARE_ESXI_FROZEN_PROFILE",
+      "authority": "VMX, API, task/event, vmkernel/vmware.log, Guest, and L0 trace artifacts",
+      "proves": "Inputs and outputs directly observed on the frozen ESXi reference profile.",
+      "doesNotProve": "Other ESXi builds, physical device classes, Qman backends, ARM, or product support."
+    },
+    "INFERRED_MECHANISM": {
+      "subject": "VMWARE_ESXI_HYPOTHESIS",
+      "authority": "The smallest model that explains multiple official or observed facts",
+      "proves": "A testable hypothesis and the next discriminating experiment.",
+      "doesNotProve": "VMware private source behavior or any Qman release gate."
+    },
+    "QMAN_DECISION": {
+      "subject": "QMAN",
+      "authority": "Versioned Qman ADR, product contract, and Qman acceptance evidence",
+      "proves": "Only the Qman behavior closed by its own executable Case and evidence.",
+      "doesNotProve": "VMware behavior unless separately supported by OFFICIAL_CONTRACT or OBSERVED_BEHAVIOR."
+    }
+  },
+  "nonTransferencePolicy": {
+    "vmwareEvidenceNeverClosesQmanImplementation": true,
+    "vmwareEvidenceNeverClosesQmanQualification": true,
+    "nestedEvidenceNeverClosesPhysicalE4": true,
+    "verifiedMeaning": "VERIFIED is VMware reference coverage for the frozen subject only; it is never Qman implementation or support status."
+  },
+  "parityClassifications": [
+    "MUST_MATCH",
+    "ACCEPTABLE_DIFFERENCE",
+    "OUT_OF_SCOPE"
+  ],
+  "qmanV3Scope": {
+    "platformPolicy": "Every supported Qman platform and software line provides the complete V3 external capability set through one control-plane contract; no VMware result transfers proof between Qman profiles.",
+    "implementationOrder": "LEGACY_FIRST_SINGLE_CONTROL_PLANE",
+    "guestProfiles": [
+      "x86-q35-uefi",
+      "x86-q35-seabios",
+      "x86-i440fx-uefi",
+      "x86-i440fx-seabios",
+      "arm-virt-uefi"
+    ],
+    "deviceTraitFamilies": [
+      "consumer-gpu",
+      "professional-gpu",
+      "hba",
+      "accelerator"
+    ],
+    "multiHostBoundary": "Source and target hosts are online and cooperative; target attach is permitted only after an authoritative source clean-release result. Host-failure restart is not provided.",
+    "outOfScopeCapabilities": [
+      "host-failure-ha-restart",
+      "bmc-or-power-fencing",
+      "fault-tolerance",
+      "runtime-pci-hotplug"
+    ]
+  },
   "namespacePolicy": {
     "canonicalPrefix": "VMW-",
     "legacyIdsAreAliasesOnly": true,
@@ -35,6 +96,155 @@
       "Q00-Q06": "QEMU-CTL-Q00-Q06"
     }
   },
+  "coreParity": [
+    {
+      "id": "PARITY-CAPABILITY-DEPENDENCY",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "experimentIds": ["VMW-CAP-001", "VMW-DMA-001", "VMW-ACS-001", "VMW-DEP-001"],
+      "minimalOpenExperimentIds": ["VMW-CAP-TRAIT-001", "VMW-DEP-MIXED-001"],
+      "requiredQmanMeaning": "IOMMU, physical isolation, dependency, reset, owner, and policy facts produce conservative capability and stable reasons on every Qman platform."
+    },
+    {
+      "id": "PARITY-OWNER-STATE",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "VERIFIED",
+      "experimentIds": ["VMW-OWNER-001"],
+      "minimalOpenExperimentIds": [],
+      "qmanSelfProofCaseIds": ["QMAN-BACKEND-CONFORMANCE-001"],
+      "requiredQmanMeaning": "Configured intent and effective owner remain distinct across live, deferred, reboot, and failure states."
+    },
+    {
+      "id": "PARITY-OWNER-ROLLBACK-RECONCILE",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "experimentIds": ["VMW-OWNER-002", "VMW-OWNER-003", "VMW-OWNER-004", "VMW-OWNER-005"],
+      "minimalOpenExperimentIds": ["VMW-OWNER-003", "VMW-OWNER-MISMATCH-001"],
+      "requiredQmanMeaning": "A bundle cannot remain partially activated, and stale boot identity cannot silently become the effective passthrough owner."
+    },
+    {
+      "id": "PARITY-STATIC",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "experimentIds": ["VMW-STATIC-001", "VMW-STATIC-002", "VMW-STATIC-IDENTITY-001", "VMW-STATIC-LIFE-001"],
+      "minimalOpenExperimentIds": ["VMW-STATIC-IDENTITY-001", "VMW-STATIC-CONCURRENT-001"],
+      "requiredQmanMeaning": "Static backing is stable, exclusive, identity checked, and released before reuse."
+    },
+    {
+      "id": "PARITY-DYNAMIC",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "verifiedSlices": ["runtime-assigned-id", "powered-off-target-reselection"],
+      "experimentIds": ["VMW-DYNAMIC-001", "VMW-DYNAMIC-002", "VMW-DYNAMIC-003", "VMW-DYNAMIC-004"],
+      "minimalOpenExperimentIds": ["VMW-DYN-SELECTOR-001", "VMW-DYN-ATOMIC-001"],
+      "requiredQmanMeaning": "Selectors, complete-bundle solving, all-or-nothing reservation, runtime-only assignedId, and release-before-retry share the Static transaction core."
+    },
+    {
+      "id": "PARITY-GUEST-PROFILE-ADMISSION",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "verifiedSlices": ["frozen-profile-post-start-bar-bridge-irq-iommu-correlation"],
+      "experimentIds": ["VMW-ADMISSION-001", "VMW-ADMISSION-002", "VMW-GUEST-VERIFY-001"],
+      "minimalOpenExperimentIds": ["VMW-MMIO-TOPO-001"],
+      "qmanSelfProofCaseIds": ["QMAN-ARM-VIRT-UEFI-001"],
+      "requiredQmanMeaning": "Firmware, machine profile, BAR/MMIO, reserved ranges, and full-memory requirements are versioned admission inputs with post-start verification."
+    },
+    {
+      "id": "PARITY-EXACT-CHIPSET-ADDRESS-IDENTITY",
+      "classification": "ACCEPTABLE_DIFFERENCE",
+      "vmwareReferenceStatus": "NOT_APPLICABLE",
+      "experimentIds": ["VMW-ADMISSION-001"],
+      "minimalOpenExperimentIds": [],
+      "requiredQmanMeaning": "Q35/i440fx/virt, OVMF/SeaBIOS, exact bridge topology, and exact BAR addresses may differ from VMware if the Qman guest ABI is versioned and its admission result is equivalent."
+    },
+    {
+      "id": "PARITY-DMA-RESET-CLEAN-RELEASE",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "experimentIds": ["VMW-DMA-001", "VMW-RESET-001", "VMW-TEARDOWN-001", "VMW-QUARANTINE-001"],
+      "minimalOpenExperimentIds": ["VMW-CLEAN-RELEASE-001", "VMW-QUARANTINE-001"],
+      "requiredQmanMeaning": "Old guest DMA and IRQ state is unreachable after release; reset uncertainty retains the whole bundle and blocks reuse."
+    },
+    {
+      "id": "PARITY-LIFECYCLE-REJECTION",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "VERIFIED",
+      "referenceSlice": ["snapshot-rejected", "suspend-resume-rejected", "live-migration-rejected"],
+      "experimentIds": ["VMW-LIFECYCLE-001"],
+      "minimalOpenExperimentIds": [],
+      "qmanSelfProofCaseIds": ["QMAN-LIFECYCLE-DENY-001"],
+      "requiredQmanMeaning": "The in-scope Qman API, scheduler, launcher, and runtime control paths reject snapshot, suspend/resume, and live migration for DirectPath VMs.",
+      "nonTransference": "The verified VMware rejection slice is a reference contract only and does not prove the Qman denial implementation."
+    },
+    {
+      "id": "PARITY-ONLINE-CLEAN-RELEASE-COLD-RELOCATION",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "verifiedSlices": ["powered-off-target-reselection"],
+      "unverifiedSlices": ["one-transaction-source-clean-release-gate", "no-clean-target-denial", "relocation-candidate-exhaustion"],
+      "experimentIds": ["VMW-TEARDOWN-001", "VMW-CLUSTER-002", "VMW-COLD-CLEAN-001", "VMW-COLD-NOCLEAN-001", "VMW-COLD-EXHAUST-001"],
+      "minimalOpenExperimentIds": ["VMW-COLD-CLEAN-001", "VMW-COLD-NOCLEAN-001", "VMW-COLD-EXHAUST-001"],
+      "requiredQmanMeaning": "Both hosts remain online and cooperative; source stop, assignedId clear, DMA/IRQ teardown, reset/owner readback, and durable run revocation precede target attach and re-solve."
+    },
+    {
+      "id": "PARITY-DEVICE-TRAIT-FAMILIES",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "UNKNOWN",
+      "experimentIds": ["VMW-QUAL-001", "VMW-DEP-001", "VMW-OWNER-002"],
+      "minimalOpenExperimentIds": ["VMW-TYPE-CGPU-001", "VMW-TYPE-PGPU-001", "VMW-TYPE-HBA-001", "VMW-TYPE-ACCEL-001"],
+      "requiredQmanMeaning": "Consumer GPU, professional GPU, HBA, and accelerator traits are admitted by technical properties and conservative errata gates; exact specimens remain evidence metadata rather than the public HCL key."
+    },
+    {
+      "id": "PARITY-VMWARE-SKU-HCL",
+      "classification": "ACCEPTABLE_DIFFERENCE",
+      "vmwareReferenceStatus": "PARTIAL",
+      "experimentIds": ["VMW-QUAL-001"],
+      "minimalOpenExperimentIds": [],
+      "requiredQmanMeaning": "Qman does not reproduce the VMware SKU compatibility catalog; it separates technical attachability from its type/trait support policy."
+    },
+    {
+      "id": "PARITY-BACKEND-CONTROL-PLANE-IMPLEMENTATION",
+      "classification": "ACCEPTABLE_DIFFERENCE",
+      "vmwareReferenceStatus": "NOT_APPLICABLE",
+      "experimentIds": [],
+      "minimalOpenExperimentIds": [],
+      "qmanSelfProofCaseIds": ["QMAN-BACKEND-CONFORMANCE-001"],
+      "requiredQmanMeaning": "Legacy and modern VFIO backends use one Qman control-plane contract; VMware private implementation is not a parity target."
+    },
+    {
+      "id": "PARITY-OPS-AUDIT",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "experimentIds": ["VMW-OPS-001", "VMW-EVIDENCE-001", "VMW-TRACE-001"],
+      "minimalOpenExperimentIds": ["VMW-TRACE-001"],
+      "requiredQmanMeaning": "Operator-visible owner, VM, source/target host, device, assignedId, action, result, and evidence identity remain correlated across Static, Dynamic, and cold relocation."
+    },
+    {
+      "id": "PARITY-HOST-FAILURE-HA-BMC",
+      "classification": "OUT_OF_SCOPE",
+      "vmwareReferenceStatus": "NOT_APPLICABLE",
+      "experimentIds": ["VMW-CLUSTER-FENCE-001", "VMW-CLUSTER-FAILURE-001"],
+      "minimalOpenExperimentIds": [],
+      "requiredQmanMeaning": "An unreachable or failed source host is never treated as cleanly released; Qman does not restart the VM elsewhere and does not integrate BMC or power fencing."
+    },
+    {
+      "id": "PARITY-FAULT-TOLERANCE-CAPABILITY",
+      "classification": "OUT_OF_SCOPE",
+      "vmwareReferenceStatus": "NOT_APPLICABLE",
+      "experimentIds": ["VMW-LIFECYCLE-001"],
+      "minimalOpenExperimentIds": [],
+      "requiredQmanMeaning": "Qman does not provide FT for DirectPath VMs; absence of a local VMware FT run is not a V3 blocker."
+    },
+    {
+      "id": "PARITY-RUNTIME-PCI-HOTPLUG-CAPABILITY",
+      "classification": "OUT_OF_SCOPE",
+      "vmwareReferenceStatus": "NOT_APPLICABLE",
+      "experimentIds": ["VMW-LIFECYCLE-001"],
+      "minimalOpenExperimentIds": [],
+      "qmanSelfProofCaseIds": ["QMAN-LIFECYCLE-DENY-001"],
+      "requiredQmanMeaning": "Qman does not provide fixed or Dynamic runtime PCI hotplug; all Qman mutation paths must reject it."
+    }
+  ],
   "experiments": [
     {
       "id": "VMW-CAP-001",
@@ -94,12 +304,12 @@
     },
     {
       "id": "VMW-QUAL-001",
-      "title": "Physical HCL qualification matrix",
+      "title": "Physical device-trait qualification matrix",
       "executionState": "BLOCKED_PHYSICAL",
       "legacyIds": [],
       "evidencePaths": [],
       "runnerPaths": [],
-      "limitations": ["requires-hcl-listed-server-and-devices"]
+      "limitations": ["requires-representative-consumer-gpu-professional-gpu-hba-and-accelerator-specimens"]
     },
     {
       "id": "VMW-OWNER-001",
@@ -264,7 +474,13 @@
       "legacyIds": ["D01", "R00"],
       "evidencePaths": ["evidence/esxi8-edu-dma-teardown-20260714-summary.json"],
       "runnerPaths": ["vmware-esxi8-lab/README.md"],
-      "limitations": ["full-dma-irq-map-reset-owner-order-not-proven"]
+      "limitations": ["full-dma-irq-map-reset-owner-order-not-proven"],
+      "qmanParity": {
+        "classification": "MUST_MATCH",
+        "vmwareReferenceSliceStatus": "PARTIAL",
+        "qmanImplementationStatus": "NOT_EVALUATED_BY_THIS_CONTRACT",
+        "requiredSlice": "source-clean-release"
+      }
     },
     {
       "id": "VMW-CRASH-001",
@@ -291,7 +507,21 @@
       "legacyIds": ["L00-L02"],
       "evidencePaths": ["evidence/esxi8-vmotion-20260711-summary.json"],
       "runnerPaths": ["vmware-esxi8-lab/README.md"],
-      "limitations": ["fault-tolerance-not-locally-tested", "fixed-passthru-hotplug-not-tested"]
+      "limitations": ["fault-tolerance-not-locally-tested", "fixed-passthru-hotplug-not-tested"],
+      "qmanParity": {
+        "classification": "MUST_MATCH",
+        "vmwareReferenceSliceStatus": "VERIFIED",
+        "qmanImplementationStatus": "NOT_EVALUATED_BY_THIS_CONTRACT",
+        "includedReferenceSlice": [
+          "snapshot-rejected",
+          "suspend-resume-rejected",
+          "live-migration-rejected"
+        ],
+        "outOfScopeCapabilities": [
+          "fault-tolerance",
+          "runtime-pci-hotplug"
+        ]
+      }
     },
     {
       "id": "VMW-DYNAMIC-001",
@@ -372,8 +602,58 @@
       "runnerPaths": ["vmware-esxi8-lab/README.md"],
       "limitations": [
         "homogeneous-two-host-lab",
-        "repository-hash-metadata-migrated-to-canonical-lf-without-rerun"
-      ]
+        "repository-hash-metadata-migrated-to-canonical-lf-without-rerun",
+        "source-clean-release-not-correlated-in-one-transaction"
+      ],
+      "qmanParity": {
+        "classification": "MUST_MATCH",
+        "vmwareReferenceSliceStatus": "PARTIAL",
+        "qmanImplementationStatus": "NOT_EVALUATED_BY_THIS_CONTRACT",
+        "verifiedSlice": "powered-off-target-reselection",
+        "missingSlice": "online-source-clean-release-before-target-attach"
+      }
+    },
+    {
+      "id": "VMW-COLD-CLEAN-001",
+      "title": "Online cooperative cold relocation after correlated source clean release",
+      "executionState": "PLANNED",
+      "legacyIds": [],
+      "evidencePaths": [],
+      "runnerPaths": ["vmware-esxi8-lab/test_esxi_vmotion_matrix.py", "vmware-esxi8-lab/test_esxi_edu.py"],
+      "limitations": ["requires-one-run-correlation-of-teardown-and-relocation"],
+      "qmanParity": {
+        "classification": "MUST_MATCH",
+        "vmwareReferenceSliceStatus": "UNKNOWN",
+        "qmanImplementationStatus": "NOT_EVALUATED_BY_THIS_CONTRACT"
+      }
+    },
+    {
+      "id": "VMW-COLD-NOCLEAN-001",
+      "title": "Target start is denied when the online source cannot prove clean release",
+      "executionState": "PLANNED",
+      "legacyIds": [],
+      "evidencePaths": [],
+      "runnerPaths": [],
+      "limitations": ["requires-controlled-teardown-or-reset-failure-injection"],
+      "qmanParity": {
+        "classification": "MUST_MATCH",
+        "vmwareReferenceSliceStatus": "UNKNOWN",
+        "qmanImplementationStatus": "NOT_EVALUATED_BY_THIS_CONTRACT"
+      }
+    },
+    {
+      "id": "VMW-COLD-EXHAUST-001",
+      "title": "Online cold relocation candidate exhaustion remains all-or-nothing and stopped",
+      "executionState": "PLANNED",
+      "legacyIds": ["X02", "X03"],
+      "evidencePaths": [],
+      "runnerPaths": ["vmware-esxi8-lab/test_esxi_vmotion_matrix.py"],
+      "limitations": ["existing-X02-and-X03-results-are-not-one-relocation-case"],
+      "qmanParity": {
+        "classification": "MUST_MATCH",
+        "vmwareReferenceSliceStatus": "UNKNOWN",
+        "qmanImplementationStatus": "NOT_EVALUATED_BY_THIS_CONTRACT"
+      }
     },
     {
       "id": "VMW-CLUSTER-FENCE-001",
@@ -382,7 +662,13 @@
       "legacyIds": [],
       "evidencePaths": [],
       "runnerPaths": [],
-      "limitations": ["requires-bmc-controlled-two-host-lab"]
+      "limitations": ["requires-bmc-controlled-two-host-lab"],
+      "qmanParity": {
+        "classification": "OUT_OF_SCOPE",
+        "vmwareReferenceSliceStatus": "NOT_APPLICABLE",
+        "qmanImplementationStatus": "NOT_APPLICABLE",
+        "reason": "Qman V3 does not restart on an unreachable or failed source host and does not integrate BMC or power fencing."
+      }
     },
     {
       "id": "VMW-CLUSTER-FAILURE-001",
@@ -391,7 +677,13 @@
       "legacyIds": ["L04"],
       "evidencePaths": ["evidence/esxi8-host-crash-20260711-summary.json"],
       "runnerPaths": ["vmware-esxi8-lab/README.md"],
-      "limitations": ["only-outer-qemu-sigkill-observed"]
+      "limitations": ["only-outer-qemu-sigkill-observed"],
+      "qmanParity": {
+        "classification": "OUT_OF_SCOPE",
+        "vmwareReferenceSliceStatus": "NOT_APPLICABLE",
+        "qmanImplementationStatus": "NOT_APPLICABLE",
+        "reason": "Partition, stale unreachable agent, store failover, power loss, and host-failure HA restart are outside the Qman V3 multi-host boundary."
+      }
     },
     {
       "id": "VMW-OPS-001",
@@ -410,18 +702,31 @@
       "title": "Canonical result schema and artifact hashes",
       "executionState": "PARTIAL",
       "legacyIds": ["ALL-LEGACY-VMW-CASES"],
-      "evidencePaths": ["evidence"],
+      "evidencePaths": [
+        "contracts/vmware-experiment-result.schema.json",
+        "evidence/esxi8-edu-dma-teardown-20260714-summary.json"
+      ],
       "runnerPaths": ["vmware-esxi8-lab/README.md"],
       "limitations": ["schema-and-hash-not-uniform-across-all-cases"]
     },
     {
       "id": "VMW-TRACE-001",
       "title": "Machine TS-to-case-to-run-to-artifact traceability",
-      "executionState": "PLANNED",
+      "executionState": "PARTIAL",
       "legacyIds": [],
-      "evidencePaths": [],
-      "runnerPaths": [],
-      "limitations": ["run-result-index-not-yet-implemented"]
+      "evidencePaths": ["evidence/vmware-trace-index-20260722-summary.json"],
+      "evidenceSha256": {
+        "evidence/vmware-trace-index-20260722-summary.json": "bc8c950c4d5fb9b6baa3e4ad0cb7746664dbb5dbf1a37f1d44d64541febab854"
+      },
+      "runnerPaths": [
+        "tools/generate_vmware_evidence_index.py",
+        "tools/evaluate_release.py"
+      ],
+      "limitations": [
+        "pyvmomi-task-id-and-actor-chain-incomplete",
+        "historical-run-result-schema-not-uniform",
+        "reference-index-has-no-qman-closure-authority"
+      ]
     }
   ],
   "techStoryCoverage": [
@@ -458,7 +763,11 @@
       "status": "PARTIAL",
       "sourceIds": ["VMW-SRC-001", "VMW-SRC-010"],
       "experimentIds": ["VMW-QUAL-001"],
-      "observableContract": "Compatibility listing is a support contract independent from runtime passthruCapable."
+      "observableContract": "Compatibility listing is a support contract independent from runtime passthruCapable.",
+      "qmanScope": {
+        "classification": "ACCEPTABLE_DIFFERENCE",
+        "policy": "Qman uses consumer-GPU, professional-GPU, HBA, and accelerator trait profiles instead of reproducing the VMware SKU HCL; exact specimens remain evidence metadata."
+      }
     },
     {
       "techStoryId": "TS-F2-01",
@@ -514,7 +823,7 @@
       "status": "NOT_APPLICABLE",
       "sourceIds": ["VMW-SRC-001"],
       "experimentIds": [],
-      "observableContract": "IOMMUFD and fd-only QEMU attachment are Qman implementation decisions."
+      "observableContract": "Legacy group/container, IOMMUFD/cdev, fd handoff, and QEMU attachment are Qman implementation decisions; VMware evidence cannot choose or prove either backend."
     },
     {
       "techStoryId": "TS-F3-04",
@@ -598,7 +907,27 @@
       "status": "PARTIAL",
       "sourceIds": ["VMW-SRC-001", "VMW-SRC-013", "VMW-SRC-023"],
       "experimentIds": ["VMW-LIFECYCLE-001"],
-      "observableContract": "Snapshot, suspend, and live migration rejection are observed; FT remains untested locally."
+      "observableContract": "Snapshot, suspend, and live migration rejection are observed. FT and runtime hotplug capabilities remain part of the wider VMware reference surface but are not Qman V3 capabilities.",
+      "scopeSlices": [
+        {
+          "id": "snapshot-suspend-live-migration-rejection",
+          "qmanParityClassification": "MUST_MATCH",
+          "vmwareReferenceStatus": "VERIFIED",
+          "qmanImplementationStatus": "NOT_EVALUATED_BY_THIS_CONTRACT"
+        },
+        {
+          "id": "fault-tolerance-capability",
+          "qmanParityClassification": "OUT_OF_SCOPE",
+          "vmwareReferenceStatus": "NOT_APPLICABLE",
+          "qmanImplementationStatus": "NOT_APPLICABLE"
+        },
+        {
+          "id": "runtime-pci-hotplug-capability",
+          "qmanParityClassification": "OUT_OF_SCOPE",
+          "vmwareReferenceStatus": "NOT_APPLICABLE",
+          "qmanImplementationStatus": "NOT_APPLICABLE"
+        }
+      ]
     },
     {
       "techStoryId": "TS-F6-01",
@@ -647,28 +976,45 @@
       "status": "NOT_APPLICABLE",
       "sourceIds": [],
       "experimentIds": [],
-      "observableContract": "Consensus store and fencing token are Qman design requirements, not VMware black-box claims."
+      "observableContract": "Control-plane storage, monotonic operation generation, and backend reuse are Qman design requirements, not VMware black-box claims; host-failure fencing is outside the Qman V3 boundary."
     },
     {
       "techStoryId": "TS-F7-03",
       "status": "VERIFIED",
       "sourceIds": ["VMW-SRC-008", "VMW-SRC-022"],
       "experimentIds": ["VMW-CLUSTER-002"],
-      "observableContract": "Powered-off relocation re-solves the Dynamic device on the target host."
+      "observableContract": "Powered-off relocation re-solves the Dynamic device on the target host.",
+      "qmanScope": {
+        "classification": "MUST_MATCH",
+        "vmwareReferenceStatus": "PARTIAL",
+        "verifiedSlice": "powered-off-target-reselection",
+        "missingSlice": "online-source-clean-release-before-target-attach",
+        "minimalOpenExperimentIds": ["VMW-COLD-CLEAN-001", "VMW-COLD-NOCLEAN-001", "VMW-COLD-EXHAUST-001"]
+      }
     },
     {
       "techStoryId": "TS-F7-04",
       "status": "UNKNOWN",
       "sourceIds": [],
       "experimentIds": ["VMW-CLUSTER-FENCE-001"],
-      "observableContract": "Physical fence proof before HA restart is not yet experimentally observed."
+      "observableContract": "Physical fence proof before VMware HA restart is not yet experimentally observed, but BMC/power fencing and host-failure restart are outside Qman V3.",
+      "qmanScope": {
+        "classification": "OUT_OF_SCOPE",
+        "status": "NOT_APPLICABLE",
+        "isCoreGap": false
+      }
     },
     {
       "techStoryId": "TS-F7-05",
       "status": "PARTIAL",
       "sourceIds": ["VMW-SRC-001", "VMW-SRC-022"],
-      "experimentIds": ["VMW-CLUSTER-FAILURE-001"],
-      "observableContract": "One crash path is observed; partition, stale agent, store failover, and physical power loss remain."
+      "experimentIds": ["VMW-TEARDOWN-001", "VMW-CLUSTER-002", "VMW-COLD-CLEAN-001", "VMW-COLD-NOCLEAN-001", "VMW-COLD-EXHAUST-001"],
+      "observableContract": "The Qman-relevant failure slice is limited to an online cooperative cold relocation: a target must not start without source clean release, and exhaustion remains all-or-nothing. Host partition, stale unreachable agent, power loss, and host-failure HA are outside scope.",
+      "qmanScope": {
+        "classification": "MUST_MATCH",
+        "status": "PARTIAL",
+        "minimalOpenExperimentIds": ["VMW-COLD-CLEAN-001", "VMW-COLD-NOCLEAN-001", "VMW-COLD-EXHAUST-001"]
+      }
     },
     {
       "techStoryId": "TS-F8-01",
@@ -686,10 +1032,10 @@
     },
     {
       "techStoryId": "TS-F8-03",
-      "status": "UNKNOWN",
+      "status": "PARTIAL",
       "sourceIds": [],
       "experimentIds": ["VMW-TRACE-001"],
-      "observableContract": "Machine-readable TS-to-case-to-run-to-artifact traceability is not yet complete."
+      "observableContract": "All VMware experiments now have a hash-checked machine index from Tech Story through experiment, representative run, and evidence artifact; historical pyVmomi task/actor chains and uniform canonical run results remain incomplete."
     },
     {
       "techStoryId": "TS-F8-04",

@@ -176,6 +176,9 @@ component 范围的权威快照发布与 launch authorization。它执行两次�
 host/boot identity、设备数量、full-host safety topology 与所有可分组设备的精确 launch facts 在两次采集间
 稳定；随后在同一个 SQLite 事务中分配单调 `inventoryEpoch`、写入 canonical payload、
 `topologyHash`、HMAC envelope 和 current record。数据库是 authority，导出的 JSON 只是 cache/evidence。
+完整 topology preimage 复用 `FactEvidence` 的 canonical representation，并明确绑定 provider 输入的
+`inventoryEpoch/topologyHash`；即使设备事实内容不变，只有 evidence 坐标漂移，
+`PRE_OPEN/POST_OPEN/PRE_SPAWN` 也会以 topology drift fail closed。
 持久层使用 WAL + `synchronous=FULL`，校验固定 schema、store instance、文件系统 provenance 和
 数据库文件 identity；[`../contracts/authoritative-snapshot.schema.json`](../contracts/authoritative-snapshot.schema.json)
 给出跨组件 envelope contract。
@@ -339,7 +342,7 @@ python3 -m unittest discover -v -s pci-resource-model/tests
   VFIO result 到 QEMU admission/fd/plan hash 的绑定、snapshot/lease scope 或 generation 漂移拒绝，以及
   envelope 的 lease/store/process/receipt/commit ordering。
 
-完整测试当前收集 293 项；2026-07-21 Windows 为 288 passed / 5 platform skips，WSL 为 293 passed。
+完整测试当前收集 294 项；2026-07-22 Windows 为 289 passed / 5 platform skips，WSL 为 294 passed。
 平台相关用例在运行条件不满足时保持显式 skip。真实
 subprocess/`os._exit`/`SIGKILL` fault runner 位于
 [`../qman-lab/test_static_lease_faults.py`](../qman-lab/test_static_lease_faults.py)；它在 WSL 原生

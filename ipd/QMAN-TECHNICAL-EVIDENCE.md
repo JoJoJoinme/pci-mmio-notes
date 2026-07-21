@@ -2,7 +2,8 @@
 
 状态：`TECHNICAL EVIDENCE / PRODUCT NOT IMPLEMENTED`
 项目 claim：`REFERENCE_AND_QUALIFICATION_MODEL_ONLY`
-治理快照：G0 `IN_PROGRESS`；G1-G6 `NOT_STARTED`；Acceptance `14/101` 已定义、`87/101` 未分类；R01-R39 全部 `OPEN`
+治理快照：G0 `DONE`；G1 `IN_PROGRESS`；G2-G6 `NOT_STARTED`；Acceptance `101/101` 已分类
+（2 `EXECUTABLE` reference、93 `IMPLEMENTATION_BLOCKED`、6 `HARDWARE_BLOCKED`）；R01-R39 全部 `OPEN`
 实验日期：`2026-07-21 Asia/Shanghai`
 环境：`WSL2 Ubuntu-22.04 + KVM + QEMU 11.0.2 + OVMF 2022.02`
 
@@ -20,6 +21,9 @@
 | E2 | 单元、纯函数、schema、源码或模型证据 | 算法语义与 fail-closed 规则 | 产品 Case、物理 Risk、qualification |
 | E3 | 实际 QEMU、firmware、Guest、VFIO 或 Qman component 的虚拟集成 | control/backend 行为与故障前提 | E4 硬件 Risk、HCL、`SUPPORTED` |
 | E4 | 目标 server/device/firmware/Guest/driver/workload 的物理证据 | qualification review 输入 | 未通过产品 gate 的 release claim |
+
+在独立、签名的 qualification approval contract 落地前，E4 仅是评审输入；单份 result
+不得自授 Case、Risk 或状态关闭权限。
 
 强制不变量：
 
@@ -44,11 +48,11 @@ artifact hash drift => evidence invalidated
 | `QMAN-E3-VFIO-PROVIDER-GATE-001` | E3 | Qman component 对 no-IOMMU 稳定拒绝；对 cdev 真实执行 IOMMUFD bind、IOAS allocate/attach、身份/完整 group 复核与逆序清理 | TS-F1-02、F3-03；C21 / R27 前提 | 权威产品 snapshot、durable lease、stock-QEMU handoff、物理 E4；C21/R27 均未关闭 |
 | `QMAN-E3-STATIC-LEASE-FAULT-001` | E3 | WSL 原生 ext4 上 7/7 subprocess/SQLite 故障场景通过：begin/release commit 前硬退出无部分状态，重叠 bundle 双进程仅一胜，未知 cleanup 与 SIGKILL 后 reconcile 保留 whole-bundle quarantine | TS-F3-02/05、F5-03/04；S03/S04/S05/F00 与 R04/R05/R11 前提 | bind/reset/QEMU/cleanup 真实执行、pidfd/DMA/IRQ/owner clean state、产品 Case/Risk；四个 Case 仍 blocked |
 | `QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001` | E3 | host-local SQLite snapshot component 的未提交 epoch 不可见、并发 CAS 单胜与严格递增 epoch 已通过真实 subprocess/并发故障注入；signature/payload/stale/minimum-epoch/boot drift 均 fail closed；删除最新行后 earlier-valid 状态仍可被接受，实验证实外部单调锚是必要边界 | TS-F1-01、F8-02；R04 前提 | G1 产品 publisher、生产 trust root、外部单调防回滚锚、power-loss durability；不关闭 Case/R04/G1 |
-| `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` | E3 | v5 将 sealed capture provider、签名 full-host snapshot、完整 group 授权范围、6 次一致的 live full scan、lease authorization、production-provenance raw cdev/IOMMUFD 与 fd-only stock QEMU 串成一条链；QMP/QOM 看到 realized `vfio-pci`，trace 中 bind、IOAS allocate、attach 均返回 0；无独立 DMA receipt 时不提交 `ATTACHED`，保留 claims 并 quarantine | TS-F1-01、F3-02/03/05、F5-04、F8-02；C21/S05 与 R04/R05/R26/R27 前提 | 生产 G1 authority/trust/rollback anchor、真实 reset/driver restore、独立 DMA/IRQ observer、pidfd/产品 controller、物理 E4；Case/Risk/G1/G2 均未关闭 |
+| `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` | E3 | v5 将 sealed capture provider、签名 full-host snapshot、完整 group 授权范围、6 次一致的 live full scan、lease authorization、production-provenance raw cdev/IOMMUFD 与 fd-only stock QEMU 串成一条链；QMP/QOM 看到 realized `vfio-pci`，trace 中 bind、IOAS allocate、attach 均返回 0；无独立 DMA receipt 时不提交 `ATTACHED`，保留 claims 并 quarantine | TS-F1-01、F3-02/03/05、F5-04、F8-02；C21/S05 与 R04/R05/R26/R27 前提 | 该结果只是未来 cdev backend 前提；当前 Legacy path grant/sandbox/receipt、生产 G1 authority/trust/rollback anchor、真实 reset/driver restore、独立 DMA/IRQ observer、pidfd/产品 controller、物理 E4 仍缺；Case/Risk/G1/G2 均未关闭 |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 | QEMU floor 与 OVMF aperture 必须配对；双 64 GiB BAR 默认失败、128 GiB 配对成功 | TS-F4-01/02/04；M23 前提 | Qman observedPlan commit/rollback、物理 BAR qualification |
 
-当前 Acceptance 仍是 `14/101` 已定义、`87/101` 未分类，所有 Risk 仍为 `OPEN`。这些结果增加
-“为什么要这样设计”的技术证据，不改变 G0 `IN_PROGRESS`、G1-G6 `NOT_STARTED`、claim
+当前 Acceptance 已 `101/101` 分类，所有 Risk 仍为 `OPEN`。这些结果增加
+“为什么要这样设计”的技术证据，不改变 G0 `DONE`、G1 `IN_PROGRESS`、G2-G6 `NOT_STARTED`、claim
 `REFERENCE_AND_QUALIFICATION_MODEL_ONLY` 和 release `BLOCKED` 状态。
 
 ## 3. 被实验修正或强化的设计判断
@@ -98,9 +102,11 @@ Qman component 代码和真实 Guest UAPI 调用：
 这仍不是产品 C21。实验中的 `snapshotEpoch/topologyHash` 明确只有
 `CALLER_CORRELATION_ONLY`，独立 reader 不是 G1 权威 inventory publisher；CLI 也在验证后关闭 fd，
 没有把活 session 交给 QEMU。尤其 stock QEMU 会自行执行 VFIO cdev bind/attach，所以“agent 先
-attach，再把同一 session 直接交给 stock QEMU”不是可用的产品路径。后续必须选择并验证唯一的
-launcher 协议：控制面先完成身份/lease/节点授权，stock QEMU 通过 fd-only 参数自行 bind/attach，
-再用受信观察提交事务。物理 IOMMU/IR/errata/reset/workload 仍需 E4，故 C21 与 R27 不更新状态。
+attach，再把同一 session 直接交给 stock QEMU”不是可用的产品路径。后续必须按已冻结
+backend profile 验证唯一 launcher 协议：当前 Legacy TYPE1 路径从 sealed authorization
+生成 `AUTHORIZED_DEVICE_PATH`，用受限 namespace/cgroup/LSM 和 `host=<BDF>` 启动，再以
+`/proc/<pid>/fd` + QMP/QOM 收据提交；未来 cdev/IOMMUFD profile 才通过 fd-only 参数由
+stock QEMU 自行 bind/attach。物理 IOMMU/IR/errata/reset/workload 仍需 E4，故 C21 与 R27 不更新状态。
 
 证据：[`qman-vfio-provider-gate-20260721-summary.json`](../evidence/qman-vfio-provider-gate-20260721-summary.json)。
 
@@ -118,7 +124,8 @@ launcher 协议：控制面先完成身份/lease/节点授权，stock QEMU 通�
 完成。这支持以下设计要求：
 
 1. Static manifest 不能只保存 BDF，必须保存并重验稳定 fingerprint。
-2. 冷启动 admission 不能只靠 launcher；QMP proxy/ACL、sandbox 和 fd-only attach 都是安全边界。
+2. 冷启动 admission 不能只靠 launcher；QMP proxy/ACL、sandbox 和 backend-specific attach
+   authorization（当前 Legacy path、未来 cdev fd）都是安全边界。
 3. `device_del` 返回成功后，设备一秒后仍在 `query-pci`，所以 teardown 必须等待 Guest/backend/
    IOMMU/reset 的完成证据，不能以 QMP reply 提交 lease release。
 
@@ -160,7 +167,8 @@ availability 与 `decisionHash` 改变；dependency reset missing 或 action unk
   回到基线，socket 权限为 `0600`、私有目录为 `0700`，非授权用户得到 `EACCES`，gate 正常退出。
 
 这只证明一个 emulated QEMU 进程的受控 monitor 端点。实验中的 observer monitor 和 recorder 是
-测试专用旁路；生产还没有把 gate 与 controller、durable lease/generation、fd-only VFIO launcher、
+测试专用旁路；生产还没有把 gate 与 controller、durable lease/generation、当前 Legacy
+path-authorized launcher、
 API/CLI/storage/alternate-monitor 封锁集成起来。因此结果是 `QMAN_COMPONENT / COMPONENT_ONLY`，
 不能关闭 S15/F09 或 R17/R26/R37。
 
@@ -215,7 +223,7 @@ host-local component authority：完整 HostInventory 与精确 PCI identity/IOM
 这只是 `QMAN_COMPONENT / COMPONENT_ONLY`。HMAC signer/verifier 共享组件 key，不是 TPM/HSM-backed
 生产 trust root；没有外部单调锚时，任何 earlier-valid SQLite 状态回放（含同 key 下原位/块级恢复或
 删除最新行）都可能被接受，inode/store UUID 不是 anti-rollback 证明；WAL/FULL
-也不等于端到端 power-loss durability。它不启动 G1，不关闭 R04 或任何 Case。
+也不等于端到端 power-loss durability。它不完成 G1，不关闭 R04 或任何 Case。
 
 证据：[`qman-authoritative-snapshot-fault-20260721-summary.json`](../evidence/qman-authoritative-snapshot-fault-20260721-summary.json)。
 
@@ -226,7 +234,8 @@ host-local component authority：完整 HostInventory 与精确 PCI identity/IOM
 `COMPONENT_CAPTURE_PROVIDER` 双扫描并发布 HMAC 签名的 full-host snapshot，再由 sealed snapshot
 authorization 派生完整 IOMMU group request；只有 snapshot
 authorization 与 schema-v4 lease authorization 同时有效时，Qman component 才打开 fresh raw cdev 与
-`/dev/iommu`，typed renderer 才生成 `env={}`、`cwd=/`、`shell=false` 的 fd-only stock-QEMU spawn：
+`/dev/iommu`，typed renderer 才生成 `env={}`、`cwd=/`、`shell=false` 的 fd-only stock-QEMU spawn。
+这条链明确是未来 cdev/IOMMUFD backend 的 component evidence，不是当前 Legacy 产品路径：
 
 ```text
 signed full snapshot (double stable scan, epoch 1)
@@ -262,9 +271,13 @@ ATTACHED was never committed
   IOMMUFD、任一 child close 关闭整个 ownership unit”的合同；正式 nested run 只有单成员 group，
   不能冒充多设备或物理平台验证。
 
-正式登记的是 `v5-provider-scope` artifact，raw 目录为
-`E:/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope`，summary verdict 为
-`pass`，22/22 个保留工件哈希独立复核一致。v1-v3 保留为历史工程反馈：v1 暴露 QEMU greeting 后
+正式登记的仍是 v5 provider/snapshot 语义，最新 raw 目录为
+`E:/Code/PCI/_artifacts/qman-wsl-qemu/20260722-static-launch-envelope-framed-115200`，summary verdict 为
+`pass`，22/22 个保留工件哈希独立复核一致。证据回传使用独立 `ttyS1` 和
+`BEGIN/CHUNK/END` framing；7 个 artifact、328 个 chunk 均通过连续序号、声明长度和 raw SHA-256
+校验，并明确确认 115200、`RC=0` 与 completion marker。此前一次显式 `--timeout 420` 的复验虽然
+guest 已 PASS，却在 ioctl trace 回传中途被外层超时终止；该不完整结果未登记，也没有被解释成
+VFIO/Qman 功能失败。v1-v3 保留为历史工程反馈：v1 暴露 QEMU greeting 后
 3 秒 command timeout 的误判，v2 的 guest 已 PASS 但长 Base64 证据与 ttyS0 systemd 日志交织，v3
 修复 transport，却仍是 snapshot caller correlation；v4 接入 bounded signed publisher 与 6 次 full
 scan；v5 再封存 capture provider 并强制 authorization/QEMU plan 的完整 group 范围一致。
@@ -349,17 +362,19 @@ wsl -d Ubuntu-22.04 -- bash `
 
 按依赖顺序继续：
 
-1. 冻结 ADR-002 等 G0 合同；把现有带 boot identity、epoch、full-topology hash 的 bounded snapshot
-   component 收敛为 G1 产品 publisher，补齐生产 trust root、key lifecycle、外部单调防回滚锚、
-   power-loss durability 与唯一 product controller 接线。完成这些产品合同前，G1 仍是 `NOT_STARTED`。
-2. stock-QEMU fd-only bind/attach 与 fail-closed envelope 前提已经可执行；下一步加入真实
-   reset/driver restore、pidfd owner 和独立 DMA/IRQ/clean-state observer，执行产品级
-   S03/S04/S05/F00，验证 journal/lease/fd/mapping/driver rollback 与 whole-bundle quarantine。
+1. G0 合同已冻结，当前 G1 `IN_PROGRESS`；把现有带 boot identity、epoch、full-topology
+   hash 的 bounded snapshot component 收敛为 G1 产品 publisher，补齐生产 trust root、key lifecycle、
+   外部单调防回滚锚、power-loss durability 与唯一 product controller 接线。
+2. 未来 cdev backend 的 stock-QEMU fd-only bind/attach 与 fail-closed envelope 前提已可执行；
+   当前产品优先实现 Legacy exact TYPE1 profile、`AUTHORIZED_DEVICE_PATH` sandbox 与
+   post-spawn proc-fd/QMP receipt，然后加入真实 reset/driver restore、pidfd owner 和独立
+   DMA/IRQ/clean-state observer，执行产品级 S03/S04/S05/F00。
 3. 将已验证的 QMP component 接入 production launcher/controller/durable lease/generation/VFIO，
    并执行覆盖 API、CLI、storage、alternate monitor、fd injection、并发和 replay 的完整 S15/F09
    产品 bypass matrix。
 4. E4：真实 NIC/GPU/HBA 上的 IOMMU/IR、ACS/RID alias、reset/state、INTx、P2P、RMRR、
    SR-IOV、errata 和 workload qualification。
 
-Dynamic solver、cluster CAS/fencing 和 HA cold restart 在 Static safety core 的 component
-证据之后推进；真实 BMC/power fence 仍必须由 E4 环境证明。
+Dynamic solver 完成后再推进双在线主机的计划性 cold relocation：必须有 global CAS、
+source clean-release receipt、target re-solve/attach 和失联不接管负向门。BMC/power fencing、
+host-failure 自动 HA restart 不在 V3 范围，不再作为 Qman 证据缺口。

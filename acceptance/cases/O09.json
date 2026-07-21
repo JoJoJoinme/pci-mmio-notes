@@ -9,6 +9,8 @@
   ],
   "requiredTechStories": ["TS-F2-01", "TS-F2-02"],
   "dependsOnCaseIds": [],
+  "blocker": "This executable reference-model planner does not prove the product host-owner controller, live rebind, read-back commit or boot reconciliation paths.",
+  "targetMilestone": "G3",
   "runner": {
     "cwd": "pci-resource-model",
     "argv": [

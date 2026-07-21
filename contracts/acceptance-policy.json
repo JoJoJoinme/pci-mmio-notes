@@ -4,6 +4,11 @@
   "sourceSection": "19",
   "expectedCaseCount": 101,
   "caseDefinitionDirectory": "acceptance/cases",
+  "definitionFileForms": [
+    "SINGLE_CASE_OBJECT",
+    "EXPLICIT_RECORDS_ARRAY"
+  ],
+  "wildcardsAllowed": false,
   "allowedStatuses": [
     "EXECUTABLE",
     "IMPLEMENTATION_BLOCKED",
@@ -23,5 +28,5 @@
     "undefinedOrUnreadyEffect": "RELEASE_BLOCKER",
     "unknownReferenceOrCycleEffect": "CONTRACT_INVALID"
   },
-  "note": "Every Case ID in design section 19 must have an explicit definition. Missing definitions block G0 and release."
+  "note": "Every Case ID in design section 19 must have an explicit definition, either as one case object or one object inside an explicit records array. Wildcards and range-only declarations are forbidden. Missing definitions block G0 and release."
 }

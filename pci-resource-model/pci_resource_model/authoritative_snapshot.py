@@ -501,14 +501,10 @@ def _fact_evidence_preimage(value: FactEvidence | None) -> dict[str, Any] | None
     # These are provider-issued input coordinates, not this snapshot's output
     # epoch/hash.  They must remain in the preimage so a stale reset,
     # qualification, or dependency fact cannot survive live revalidation.
-    return {
-        "evidenceHash": value.evidence_hash,
-        "inventoryEpoch": value.inventory_epoch,
-        "ruleId": value.rule_id,
-        "source": value.source,
-        "subjectHash": value.subject_hash,
-        "topologyHash": value.topology_hash,
-    }
+    # Reuse the model's complete canonical representation rather than keeping
+    # a second field allowlist here: a future decision-fact field must not be
+    # silently omitted from the signed topology preimage.
+    return value.to_dict()
 
 
 def _safety_metadata_preimage(

@@ -22,6 +22,16 @@
 | `INFERRED_MECHANISM` | 为解释多组观察而建立的最小机制模型 | 可生成新实验假设；反例出现时必须修改 |
 | `QMAN_DECISION` | Qman 为安全性、可运维性或通用性选择的实现 | 只能由 Qman 自身 Case 证明，不能借 VMware 黑盒关闭 |
 
+四层事实不得相互冒充。特别是：
+
+- `OFFICIAL_CONTRACT` 与 `OBSERVED_BEHAVIOR` 的 subject 是 VMware；它们可以定义对标输入，不能把
+  Qman Case、Risk、milestone 或 compatibility 状态改成完成。
+- `OBSERVED_BEHAVIOR=VERIFIED` 只表示冻结的 ESXi nested profile 已直接观察到该外部切片；不能外推
+  到真实 GPU/HBA/加速卡、其他 ESXi build、Qman legacy/modern backend 或 ARM。
+- `INFERRED_MECHANISM` 只产生可证伪假设，不能当作 VMware 私有实现说明。
+- `QMAN_DECISION` 必须由 Qman 自己的可执行 Case 和证据关闭；VMware E3、官方 KB 或 API schema
+  都不能转授为 Qman implementation、E4 qualification 或 `SUPPORTED`。
+
 旧文档中两套互相冲突的 E1-E4 不再作为主分类。新实验至少记录：
 
 ```text
@@ -43,23 +53,55 @@ Host PCI inventory
   → host placement + VM memory/PCI/MMIO admission
   → power-on assignedId / IOMMU / reset / Guest PCI surface
   → power-off cleanup / owner state / lifecycle restrictions
-  → powered-off relocate 或 HA cold restart
+  → powered-off relocate / target-host re-solve
 ```
 
 官方 API 的 `passthruCapable` 只表示 vmkctl 判断“可能直通”；Compatibility Guide 则单独规定
-生产支持只覆盖列表设备。官方材料没有证明 HCL 参与 `passthruCapable` 算法。因此 Qman 采用
-“通用 technical attachability + 精确 compatibility support”两轴模型，不复制一个混合布尔值。
+VMware 的 SKU 支持列表。官方材料没有证明 HCL 参与 `passthruCapable` 算法。因此 Qman 保留
+“通用 technical attachability + support policy”两轴模型，但不复制 VMware SKU HCL：Qman 支持
+策略按消费 GPU、专业 GPU、HBA 和加速卡的技术 trait 定义。真实实验仍必须记录准确 specimen、
+firmware、host 和 Guest/driver/workload 以便复现；这些字段是证据元数据，不自动成为公开 HCL key。
 
 当前 39 个 Tech Story 的 VMware 观察覆盖为：
 
 ```text
 VERIFIED       4   当前冻结 nested profile 已直接观察到完整外部语义
-PARTIAL       26   有观察，但缺物理设备、并发、故障或更广 profile
-UNKNOWN        4   尚无直接 VMware 实验
+PARTIAL       27   有观察，但缺物理设备、并发、故障或更广 profile
+UNKNOWN        3   尚无直接 VMware 实验
 NOT_APPLICABLE 5   Qman 内部机制，不能由 VMware 黑盒证明
 ```
 
 `VERIFIED` 不是 Qman implementation done，也不是物理硬件 qualification。
+
+### 2.1 Qman V3 core parity 分类
+
+Qman V3 的平台范围是：legacy-first、单一控制面合同，所有受支持软件线均提供完整 V3；x86
+使用 versioned q35/i440fx + UEFI/SeaBIOS profile，ARM 使用 versioned virt + UEFI profile。
+VMware 只提供外部语义参考，不能证明这些 Qman profile。
+
+| Core parity | 分类 | VMware reference 覆盖 | 最小未闭环实验 / Qman 自证 |
+| --- | --- | --- | --- |
+| capability、IOMMU/ACS、dependency 与保守 reason | `MUST_MATCH` | `PARTIAL` | `VMW-CAP-001`、`VMW-DMA-001`、`VMW-ACS-001`、`VMW-DEP-001`、`VMW-QUAL-001` |
+| configured/effective owner 分离 | `MUST_MATCH` | `VERIFIED` | Qman `QMAN-BACKEND-CONFORMANCE-001` 自证两后端 |
+| owner rollback、boot reconcile | `MUST_MATCH` | `PARTIAL` | `VMW-OWNER-003`、`VMW-OWNER-005` |
+| Static identity、排他与 release-before-reuse | `MUST_MATCH` | `PARTIAL` | `VMW-STATIC-IDENTITY-001`、`VMW-STATIC-002` |
+| Dynamic selector、全量求解、原子 reservation、runtime assignedId | `MUST_MATCH` | 整体 `PARTIAL`；assignedId 切片 `VERIFIED` | `VMW-DYNAMIC-001`、`VMW-DYNAMIC-003`、`VMW-DYNAMIC-004` |
+| firmware/MMIO/full reservation/post-start verify | `MUST_MATCH` | 整体 `PARTIAL`；冻结 profile 的 post-start 切片 `VERIFIED` | `VMW-ADMISSION-001/002`、`VMW-GUEST-VERIFY-001`；ARM 由 `QMAN-ARM-VIRT-UEFI-001` 自证 |
+| VMware 与 Qman 的精确 chipset、bridge identity、BAR 地址相同 | `ACCEPTABLE_DIFFERENCE` | `NOT_APPLICABLE` | Qman 只需冻结自身 guest ABI 并证明等价准入结果 |
+| legacy group/container、IOMMUFD/cdev、fd handoff 与单控制面内部实现 | `ACCEPTABLE_DIFFERENCE` | `NOT_APPLICABLE` | `QMAN-BACKEND-CONFORMANCE-001` |
+| DMA/IRQ teardown、reset 与 clean release | `MUST_MATCH` | `PARTIAL` | `VMW-TEARDOWN-001`、`VMW-QUARANTINE-001` |
+| snapshot、suspend/resume、live migration 拒绝 | `MUST_MATCH` | 适用拒绝切片 `VERIFIED` | Qman `QMAN-LIFECYCLE-DENY-001`；VMware 结果不转授 |
+| source/target 在线、source clean release 后 cold relocation | `MUST_MATCH` | `PARTIAL`；仅 target re-solve `VERIFIED` | `VMW-COLD-CLEAN-001`、`VMW-COLD-NOCLEAN-001`、`VMW-COLD-EXHAUST-001` |
+| 消费 GPU、专业 GPU、HBA、加速卡技术 trait | `MUST_MATCH` | `UNKNOWN`，仅有 synthetic 前提 | `VMW-QUAL-001`；四类 specimen 作为其物理 qualification 子矩阵 |
+| 复制 VMware SKU HCL | `ACCEPTABLE_DIFFERENCE` | `PARTIAL` | Qman 使用 trait policy；不宣称继承 VMware 支持合同 |
+| owner/VM/source-target/device/assignedId 的可审计关联 | `MUST_MATCH` | `PARTIAL` | `VMW-TRACE-001`；Qman manifest 另行自证 |
+| host-failure HA restart、BMC/power fencing | `OUT_OF_SCOPE` | Qman `NOT_APPLICABLE` | 不进入 V3 release gate；失联 source 永不视为 clean release |
+| Fault Tolerance capability | `OUT_OF_SCOPE` | Qman `NOT_APPLICABLE` | 未做本地 FT 实验不是 V3 缺口 |
+| fixed/Dynamic runtime PCI hotplug capability | `OUT_OF_SCOPE` | Qman `NOT_APPLICABLE` | Qman 所有 mutation 入口仍须稳定拒绝 |
+
+这里的 `MUST_MATCH` 指外部安全/生命周期语义，不要求复制 VMware 私有算法、API 形状或 guest
+chipset identity。`OUT_OF_SCOPE` 指 Qman 不提供该能力；对于 runtime hotplug 等入口，仍需要 Qman
+负向 Case 证明请求被拒绝，但不需要实现正向能力。
 
 ## 3. F1-F8 / Tech Story 映射
 
@@ -71,7 +113,7 @@ NOT_APPLICABLE 5   Qman 内部机制，不能由 VMware 黑盒证明
 | TS-F1-02 DMA provider proof | IOMMU 是必要条件；已有 VT-d requester/domain trace 与无 DMAR 负控 | `PARTIAL` | `VMW-D00/D01/D06`；补裸机 IOMMU/IR 和真实 DPDK PMD + VM 共存 |
 | TS-F1-03 physical isolation domain | ACS 是必要条件；8.0.3 `disableACSCheck` 仅跳过过严检查，不能证明隔离 | `PARTIAL` | `VMW-A01`、`VMW-S04`；补物理 ACS/RID alias 和 Linux override shadow-domain 对照 |
 | TS-F1-04 dependency closure | dependentDevice、multifunction 与 legacy bridge 集体分配可观察 | `PARTIAL` | `VMW-A02..A05`、`VMW-O05A/B/O10`；补真实 GPU/HBA、PF/VF 和任意拓扑闭包 |
-| TS-F1-05 qualification profile | Compatibility Guide 定义支持清单，运行 capability 与 HCL 是两轴 | `PARTIAL` | CAP/LF/MMIO 已有；补服务器×BIOS×设备固件×Guest×驱动×workload 的物理矩阵 |
+| TS-F1-05 qualification profile | Compatibility Guide 定义 VMware SKU 支持清单，运行 capability 与支持策略是两轴 | `PARTIAL` | Qman 不复制 SKU HCL；按消费/专业 GPU、HBA、加速卡 trait 建 Case，run 中仍冻结 specimen/firmware/host/Guest/driver/workload |
 
 ### F2 设备池与宿主业务共存
 
@@ -89,7 +131,7 @@ NOT_APPLICABLE 5   Qman 内部机制，不能由 VMware 黑盒证明
 | --- | --- | --- | --- |
 | TS-F3-01 stable identity | Static backing 保存 id/vendor/device/systemId；未公开更强物理 fingerprint | `PARTIAL` | 同 BDF reboot 已有；增加同 BDF 换设备和 physical-path 漂移 |
 | TS-F3-02 durable exclusive lease | 跨 VM 排他、释放后复用和不重复分配可观察；CAS/epoch 未公开 | `PARTIAL` | `VMW-O10`、`VMW-X02`；补并发 power-on、lease persistence 与 stale owner |
-| TS-F3-03 IOMMUFD/fd-only attach | IOMMU/DMA/reset 外部语义可参考；IOMMUFD 与 fd-only 是 Qman 技术选择 | `NOT_APPLICABLE` | 由 Qman attach/launcher Case 自证 |
+| TS-F3-03 backend attach | IOMMU/DMA/reset 外部语义可参考；legacy group/container、IOMMUFD/cdev 与 fd handoff 都是 Qman 技术选择 | `NOT_APPLICABLE` | `QMAN-BACKEND-CONFORMANCE-001` 由 Qman 在 legacy/modern 两条产品线自证，VMware 不能代证 |
 | TS-F3-04 same-BDF replacement | VMware 如何检测同 BDF 身份替换尚无直接证据 | `UNKNOWN` | 新建 `VMW-STATIC-IDENTITY-001`，替换 outer endpoint 身份但保留 BDF |
 | TS-F3-05 Static transaction FSM | start/stop/forced-off 外部生命周期已覆盖，内部 FSM/补偿不可见 | `PARTIAL` | O/R/L 系列；补每个外部阶段的 crash/fault injection |
 
@@ -98,9 +140,9 @@ NOT_APPLICABLE 5   Qman 内部机制，不能由 VMware 黑盒证明
 | Tech Story | VMware 官方/可观察模型 | 覆盖 | 现有实验与下一缺口 |
 | --- | --- | --- | --- |
 | TS-F4-01 PCI/MMIO planner | firmware、BAR、RMRR、device count 和 root layout 参与 power-on admission | `PARTIAL` | `VMW-LF00..06`、`VMW-M00..07`、X01；补多级桥 exact solver、ReBAR、sub-4K 和上限探测 |
-| TS-F4-02 versioned Guest profile | vHW/firmware/motherboardLayout/MMIO knobs 形成稳定配置表面 | `PARTIAL` | LF 与 QEMU 对照已有；冻结 Qman Q35/OVMF/QEMU profile 并量化 ABI gap |
+| TS-F4-02 versioned Guest profile | vHW/firmware/motherboardLayout/MMIO knobs 形成稳定配置表面 | `PARTIAL` | LF 与 QEMU 对照已有；Qman 分别冻结 x86 q35/i440fx + UEFI/SeaBIOS 与 ARM virt + UEFI，精确 chipset identity 属可接受差异 |
 | TS-F4-03 full reservation | 全 VM 内存 reservation 是官方要求，page budget/RMRR 会影响 admission | `PARTIAL` | M04/M07/S05；补多桥、RAM pressure、ROM/aux BAR/RMRR 组合 |
-| TS-F4-04 post-start verification | Guest BAR/root window、bridge、IRQ 与 VT-d mapping 已在每轮关联 | `VERIFIED` | LF/M/D/I 当前 profile 已闭环；物理 HCL profile 仍须单独 qualification |
+| TS-F4-04 post-start verification | Guest BAR/root window、bridge、IRQ 与 VT-d mapping 已在每轮关联 | `VERIFIED` | LF/M/D/I 当前 nested profile 已闭环；物理 device-trait profile 仍须单独 qualification |
 | TS-F4-05 raw QEMU/QMP gate | VMware task/API 负例可参考，QMP/launcher ACL 是 Qman 自身安全边界 | `NOT_APPLICABLE` | 由 Qman API/launcher/QMP 攻击 Case 自证 |
 
 ### F5 设备生命周期与故障恢复
@@ -111,12 +153,12 @@ NOT_APPLICABLE 5   Qman 内部机制，不能由 VMware 黑盒证明
 | TS-F5-02 ordered teardown | guest translation 在关机后失效并切回 host domain，虚拟 FLR callback 已见 | `PARTIAL` | `VMW-D01/R00`；补完整 DMA→IRQ→map→reset→owner 顺序和 stale DMA 负控 |
 | TS-F5-03 crash reconcile | outer host SIGKILL 后 host/owner/VM 可恢复；journal 内部不可见 | `PARTIAL` | `VMW-L04`；补 hostd/vCenter/agent 各阶段 crash |
 | TS-F5-04 whole-bundle quarantine | 没有 reset-failure 后 quarantine 的直接 VMware 观察 | `UNKNOWN` | 新建 `VMW-QUARANTINE-001`，覆盖 reset/state-probe/半组故障和人工恢复 |
-| TS-F5-05 lifecycle restriction | snapshot、suspend、Classic/Dynamic live vMotion 均被拒绝 | `PARTIAL` | `VMW-L00/L01/L02`；补 FT；Qman runtime hotplug 另由自身负向门验证 |
+| TS-F5-05 lifecycle restriction | snapshot、suspend/resume、Classic/Dynamic live vMotion 拒绝切片已观察；FT 与 runtime hotplug 正向能力不在 Qman V3 | VMware composite=`PARTIAL`；Qman 适用参考切片=`VERIFIED` | `VMW-L00/L01/L02`；不再以 FT/hotplug 正向实验阻塞 V3；Qman 仍由 `QMAN-LIFECYCLE-DENY-001` 自证所有入口拒绝 |
 
 注意：vSphere API 8.0.1 起出现 `fixedPassthruHotPlugEnabled`。它是 fixed passthrough 的独立
-runtime hot-plug 能力，不等于 Dynamic DirectPath 的 power-on 选卡。当前实验尚未验证其设备
-范围、Guest 表面、reset/rollback 和失败恢复，因此 Qman V3 暂时保持 runtime hotplug
-fail-closed，并把是否对标该能力保留为单独产品决策。
+runtime hot-plug 能力，不等于 Dynamic DirectPath 的 power-on 选卡。Qman V3 已将其正向能力标为
+`OUT_OF_SCOPE/NOT_APPLICABLE`；这不会取消负向安全门，API、scheduler、launcher 与 QMP 仍须稳定
+拒绝运行中 PCI add/remove。
 
 ### F6 Dynamic 动态设备分配
 
@@ -128,15 +170,21 @@ fail-closed，并把是否对标该能力保留为单独产品决策。
 | TS-F6-04 runtime assignedId | assignedId 开机设置、关机清空、目标 host 重新选择已官方定义并观察 | `VERIFIED` | `VMW-X00/X03`；Qman 仍需实现等价 manifest/lease |
 | TS-F6-05 reuse Static core | VMware 私有代码是否复用不可观察 | `NOT_APPLICABLE` | 用 Qman 单一 attach/release core 的代码和测试证明 |
 
-### F7 跨主机放置与冷恢复
+### F7 跨主机放置与在线 clean-release 冷迁移
 
 | Tech Story | VMware 官方/可观察模型 | 覆盖 | 现有实验与下一缺口 |
 | --- | --- | --- | --- |
-| TS-F7-01 host capability aggregate | vCenter 可读取各 host Dynamic candidates 并进行 initial placement | `PARTIAL` | 双主机/X02/X03 已有；补异构 HCL/profile、容量变化和 scheduler snapshot |
-| TS-F7-02 consensus/fencing token | VMware 内部 store/token 无公开可观察合同 | `NOT_APPLICABLE` | Qman 自测 linearizability、generation 与 stale token |
-| TS-F7-03 target-host re-solve | powered-off relocate 后在目标 host 重新产生 assignedId，而非复制源 BDF | `VERIFIED` | `VMW-X03`；当前仅同构两主机 |
-| TS-F7-04 BMC/power fence proof | VMware 对旧 host 的 fencing 条件没有当前直接实验 | `UNKNOWN` | 新建 `VMW-CLUSTER-FENCE-001`：真实 BMC power-off 与未 fence 拒绝 A/B |
-| TS-F7-05 failure matrix | 已有一次 outer host SIGKILL 和 reconnect，分区/store/真实断电未覆盖 | `PARTIAL` | `VMW-L04`；补 management partition、old agent、store failover、HA cold restart |
+| TS-F7-01 host capability aggregate | vCenter 可读取各 host Dynamic candidates 并进行 initial placement | `PARTIAL` | 双主机/X02/X03 已有；补异构 trait/profile、容量变化和 scheduler snapshot |
+| TS-F7-02 control-plane generation/backend reuse | VMware 内部 store、token 与代码复用无公开可观察合同 | `NOT_APPLICABLE` | 由 Qman 单控制面和 `QMAN-BACKEND-CONFORMANCE-001` 自证；host-failure fencing 不在范围 |
+| TS-F7-03 target-host re-solve | powered-off relocate 后在目标 host 重新产生 assignedId，而非复制源 BDF | VMware target re-solve=`VERIFIED`；完整 Qman contract=`PARTIAL` | `VMW-X03` 仅覆盖同构双主机；尚未把 source clean release 与 target attach 串成一次事务 |
+| TS-F7-04 BMC/host-failure HA | VMware 可能支持 HA cold restart，但当前无 power-fence 直接实验 | Qman=`OUT_OF_SCOPE / NOT_APPLICABLE` | `VMW-CLUSTER-FENCE-001` 不再是 Qman V3 缺口；source 失联时保持 VM stopped |
+| TS-F7-05 online relocation failure matrix | Qman 只要求 source/target 在线协作；无 source clean release 时 target 不得启动，候选耗尽不得少配 | `PARTIAL` | `VMW-COLD-CLEAN-001`、`VMW-COLD-NOCLEAN-001`、`VMW-COLD-EXHAUST-001` |
+
+`VMW-X03` 已证明关机态 `assignedId=null`、迁到目标后重新选择并成功运行；`VMW-D01` 已独立
+证明旧 Guest DMA translation 在关机后不再可达。两份分离的结果不能自动合并成 source clean
+release gate。完整 Case 必须在同一个 run 中关联：source stop、assignedId clear、DMA/IRQ teardown、
+reset/owner readback、durable run revocation，然后才允许 target re-solve/attach。任一步未知都保持
+VM stopped。host crash、unreachable source、BMC/power fence 和 HA restart 不进入该 Case。
 
 ### F8 可运维、可审计、可发布
 
@@ -144,7 +192,7 @@ fail-closed，并把是否对标该能力保留为单独产品决策。
 | --- | --- | --- | --- |
 | TS-F8-01 manifest/events/audit | API/task/log/ESXCLI 提供分散状态；没有统一 assignment manifest/lease timeline | `PARTIAL` | activation/Dynamic runners；增加 actor+task+VM+host+device 关联实验 |
 | TS-F8-02 evidence/hash | 部分 summary 已有 artifact hash，但 schema 和覆盖不统一 | `PARTIAL` | 迁移所有 `VMW-*` 到统一 result schema，缺 hash 时不升级状态 |
-| TS-F8-03 US→Case→Evidence | 旧资料只有人工索引且 Case ID 与 Qman 冲突 | `UNKNOWN` | 本矩阵先建立 TS→VMW Case；下一步为每次 run 生成机器 result/index |
+| TS-F8-03 US→Case→Evidence | 36 个实验已有 hash-checked TS→experiment→代表 run→artifact 索引；acceptance Case 只从 `requiredTechStories` 派生且无关闭权限 | `PARTIAL` | 历史 pyVmomi task ID/actor 链和统一 canonical run result 尚未补齐，不能升级为 `VERIFIED` |
 | TS-F8-04 Qman fail-closed evaluator | VMware 观察不能证明 Qman release gate | `NOT_APPLICABLE` | 由 Qman risk/case/evidence evaluator 自证 |
 
 ## 4. 独立实验命名空间
@@ -172,35 +220,57 @@ C/O/S/D/M/F Case 共用权威命名空间。
 
 现有 artifact 不重命名；canonical result 通过 `legacyIds` 指向旧路径，避免破坏 hash 和复现脚本。
 
-## 5. 实验优先级
+## 5. 最小未闭环实验与优先级
 
-### P0：建立 compatibility catalog 的物理 qualification
+### P0：先关闭 V3 事务语义
 
-1. `VMW-PHY-QUAL-*`：选 HCL 内 NIC、NVMe/HBA、GPU，冻结 server/BIOS/device firmware/
-   ESXi/Guest/driver/workload。
-2. `VMW-PHY-RESET-*`：FLR、SBR、D3 在正常关机、forced-off、VM crash、host power loss 后的
-   寄存器、队列、DMA、IRQ 和外部链路清理。
-3. `VMW-PHY-IOMMU-*`：真实 ACS、RID alias、IOMMU/interrupt remapping、P2P 与 strict/bypass。
-4. `VMW-PHY-OWNER-*`：HBA storage path、NIC vSwitch、GPU/multifunction busy，外加换卡、换槽、
-   同 BDF 身份变化。
-5. `VMW-PHY-PROFILE-*`：INTx、可执行 Option ROM、SR-IOV PF/VF、RMRR、ReBAR 负例。
+| ID | 最小输入与断言 | 当前 WSL/QEMU nested ESXi |
+| --- | --- | --- |
+| `VMW-COLD-CLEAN-001` | A/B 在线；A 上运行 DMA/IRQ，关机后在同一 run 证明 assignedId clear、旧 IOVA 不可达、IRQ/reset/owner clean，再迁移并由 B 重新选卡启动 | 可扩展 `test_esxi_vmotion_matrix.py` + `test_esxi_edu.py`；尚未串成一次 run |
+| `VMW-COLD-NOCLEAN-001` | A 在线但 teardown/reset 注入失败；B power-on 必须拒绝且 VM stopped | 需要新增 outer endpoint fault hook |
+| `VMW-COLD-EXHAUST-001` | A clean release 后 B 候选不足；不得少配或留下 partial assignedId | 可扩展现有 X02/X03 runner |
+| `VMW-DYN-ATOMIC-001` | 两 VM 并发申请同一多设备集合；exactly one 完整成功，loser 全空，释放后可重试 | 当前 synthetic 多 endpoint 环境可做 |
+| `VMW-OWNER-003` | 两成员 owner transition 在第 N 个 member 失败；不得留下 partial active | 需要新增可控 mid-transition fault |
+| `VMW-QUARANTINE-001` | reset/clean-state 失败后完整 dependency bundle 不得被复用，显式 recovery 后才恢复 | 需要新增 reset/state-probe fault |
 
-### P1：补全 Dynamic 与通用 PCI 语义
+Qman 同时必须优先执行 `QMAN-BACKEND-CONFORMANCE-001`：同一 API、selector、plan、FSM、reason
+与 manifest 分别跑 legacy 与 modern backend，只允许 adapter/evidence 字段不同。该 Case 是 Qman
+自证，不属于 `VMW-*`，也不能用 nested ESXi 代替。
 
-- subsystem/revision/customLabel 精确 selector。
-- 两 requirement 的 greedy-fail/global-success 与双 VM 并发竞争。
-- reservation 后 inventory/identity 变化和中途 fault。
-- 异构 RMRR/BAR/reset dependency candidate。
-- 多级桥、辅助 BAR、sub-4KB、ReBAR 和运行时设备上限。
-- reset/owner 中途故障与 whole-bundle quarantine。
+### P1：设备技术 trait 与 identity
 
-### P2：补齐 V3 Cluster
+物理 run 选择可获得的准确 specimen 并记录全部版本，但 support key 使用技术 trait，不使用具体 SKU：
 
-- 异构主机 capability/profile 聚合和 initial placement。
-- 真实 host 断电后的 HA cold restart。
-- 未完成 power fence 时保持 stopped 的负例。
-- candidate exhaustion、management partition、old agent、vCenter/store failover。
-- Static host-affine 与 Dynamic target-host re-solve 对照。
+1. `VMW-TYPE-CGPU-001`：display/boot owner、multifunction audio、ROM、large/ReBAR BAR、reset 和
+   Guest workload。
+2. `VMW-TYPE-PGPU-001`：large BAR、MSI-X、vendor reset、多 function；ATS/P2P 默认关闭仍能工作，
+   否则明确拒绝。
+3. `VMW-TYPE-HBA-001`：active storage path 必须 Busy 拒绝；drain 后 assign、Guest I/O、clean
+   release，SBR affected set 不影响其他 path。
+4. `VMW-TYPE-ACCEL-001`：vendor class、大 BAR、DMA/MSI、firmware/reset sentinel；未 qualification
+   的 ATS/PRI/PASID/P2P 依赖稳定拒绝。
+5. `VMW-STATIC-IDENTITY-001`：保留 BDF 并改变 device/subsystem/ROM/identity，观察 Static backing
+   是否明确拒绝或审计重绑定，禁止静默替换。
+6. `VMW-STATIC-CONCURRENT-001`：两个 VM 并发 power-on 同一 backing，exactly one 成功且释放后复用。
+
+当前 nested synthetic endpoint 可提供 trait 逻辑的前置正负对照，不能把它升级为四类真实设备的
+物理 qualification。
+
+### P2：profile、通用 PCI 与证据治理
+
+- `VMW-CAP-TRAIT-001`、`VMW-DEP-MIXED-001`：IOMMU/ACS/reset/dependency 正负 A/B 和整组 Busy。
+- `VMW-DYN-SELECTOR-001`：subsystem/revision/customLabel 与非法 selector A/B。
+- `VMW-MMIO-TOPO-001`：多级桥、辅助 BAR、sub-4KB、ReBAR、alignment 与 limit+1。
+- `QMAN-ARM-VIRT-UEFI-001`：ARM virt/UEFI 的 PCIe、BAR/window、MSI/ITS、DMA/IOMMU、reset 与
+  clean release；这是 Qman E3/E4，不是 VMware 实验。
+- `VMW-TRACE-001` 已通过 `contracts/vmware-evidence-index.json` 完成 36/36 实验登记，并固定已执行
+  reference evidence 的文件 hash；当前仍是 `PARTIAL`。下一步把 actor、pyVmomi task、VM、
+  source/target host、device、assignedId 与 canonical result 串成同一次 run，不能用现有派生索引
+  冒充完整审计链。
+
+不再为 Qman V3 安排 BMC、真实 host 断电 HA restart、unreachable-source recovery、FT 正向能力或
+runtime hotplug 正向能力实验。若未来产品范围改变，必须新增 ADR/core parity 项，不能复用本轮
+`NOT_APPLICABLE` 结论静默开启。
 
 ## 6. 实验关闭规则
 
@@ -212,3 +282,5 @@ C/O/S/D/M/F Case 共用权威命名空间。
 4. 至少一个负向或边界对照，证明不是“VM 恰好开机”。
 5. `limitations` 明确 nested、synthetic、single-build 或缺物理设备等外推边界。
 6. 结果只更新 VMware reference coverage，不更新 Qman milestone、qualification 或 support state。
+7. `MUST_MATCH` 的 VMware reference 即使升级为 `VERIFIED`，仍须由独立的 Qman Case 证明每个
+   versioned backend、architecture 与 firmware profile；禁止证据转授。
