@@ -17,7 +17,8 @@ profile 生效。VMware 参考模型和实验缺口见
 [`ipd/VMWARE-BEHAVIOR-MODEL.md`](ipd/VMWARE-BEHAVIOR-MODEL.md)。
 当前 Qman/reference-side 的 WSL/QEMU 结果、runner/hash、E2/E3/E4 边界见
 [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md)。这些结果用于冻结实现约束，
-不代表下述 controller、QMP gate、lease 或 recovery 已经存在。
+最小 default-deny QMP component 已验证，但不代表下述 production controller、launcher 集成、
+lease、VFIO attach 或 recovery 已经存在。
 
 ## 0. 五分钟读懂系统
 
@@ -1763,6 +1764,10 @@ verdict、文件 SHA256 和工具版本。只保存“最终 pass”不足以复
 `QMAN-QEMU-CONTROL-001` 已在未受控 QEMU 的 machine 暂停态证明 raw `device_add` 可以越过
 冷启动设备规划，且 `device_del` 成功 reply 后设备仍可能存在。它不证明 Guest 在线热插已
 成功；它是上述控制面威胁的 E3 正控，不是“阻断已实现”的负例。
+`QMAN-E3-QMP-GATE-001` 又在最小 Qman component 上证明：客户端 capability 可在本地处理，
+独立 backend recorder 只观察到内部 capability 与五类只读 query，17 类拒绝未进入 backend，
+且 PCI tree、QEMU fd 与 SCM_RIGHTS 后的 gate fd 基线不变。实验 observer/recorder 是 test-only
+旁路，也没有 assignment、lease、generation 或 VFIO，因此它只验证一个受控端点，不是产品闭环。
 只有 Qman QMP proxy/ACL 上相同命令稳定拒绝，并同时证明 device tree、fd、generation 和 lease
 均未改变后，S15/F09 才能进入产品关闭评审。
 
@@ -1865,8 +1870,10 @@ TS/Case/Risk 引用和 `closureEffect`。reference/component subject 与 E2 不�
 R01/R03/R20/R27 等硬件风险提升为 E4。qualification key 至少包含 host model/BIOS、IOMMU、
 device VID:DID/revision/firmware、kernel/QEMU/firmware 和 guest driver/workload。
 
-截至 2026-07-21，索引中 1 条 E2、3 条 E3 都是 `REFERENCE_ONLY`：它们分别固定 reference
-model、raw QMP/BDF、VFIO provider split、QEMU/OVMF MMIO 的设计前提，产品 Case/Risk 关闭数为 0。
+截至 2026-07-21，索引中有 2 条 E2、4 条 E3：5 条为 `REFERENCE_ONLY`，1 条为
+`QMAN_COMPONENT / COMPONENT_ONLY`。它们固定 reference model、C20 closure、raw QMP/BDF、
+VFIO provider split、QEMU/OVMF MMIO 和最小 QMP default-deny component 的设计前提，所有
+`closureEffect` 均为空，产品 Case/Risk 关闭数为 0。
 
 ## 17. 实施计划与提交边界
 

@@ -78,12 +78,12 @@ coverage，不更新 Qman implementation/qualification 状态。
 | --- | --- | --- | --- | --- |
 | F1 设备可见性与支持资格 | 详细设计 inventory/capability/dependency；实现蓝图 snapshot/provider/qualification | 设计 C00-C21；C20 reference executable | `vmware-esxi8-passthru-capable-observed-model.md`、`evidence/esxi8-directpath-20260714-summary.json`、`QMAN-E2-REFERENCE-MODEL-001`、`QMAN-E2-CLOSURE-001`、`QMAN-E3-DMA-PROVIDER-001`、`kernel-patches/` | C20 仅为 E2 reference；没有生产 inventory/evidence provider 和首批真实设备 qualification profile |
 | F2 设备池与宿主业务共存 | 详细设计 trust/owner；蓝图 owner activation/attach lease | 设计 O00-O10；当前仅 O09 已定义 | `evidence/esxi8-passthru-activation-20260718.md`、no-IOMMU A/B、activation reference model | O09 是 reference scope；live/deferred executor、boot reconcile 未实现 |
-| F3 Static 固定设备分配 | 详细设计 Static；蓝图 Static transaction/compensation | 设计 S00-S16 | `vmware-esxi8-directpath-local-results.md`、DMA/reset/reboot summaries、`QMAN-QEMU-CONTROL-001` 的 BDF/QMP 威胁前提 | durable lease、生产 attach executor、QMP gate、rollback/quarantine 未实现 |
-| F4 VM 准入与 Guest 兼容 | 详细设计 BAR/MMIO/Guest ABI；蓝图 planner/guest surface | 设计 M00-M23 | firmware layout、MMIO comparison、`QMAN-E3-MMIO-OBSERVED-001`、`QMAN-QEMU-CONTROL-001` | 通用多级 planner、QMP gate、版本化首批 profile 和产品 post-start verify 未实现 |
-| F5 生命周期与故障恢复 | 详细设计 rollback/crash/quarantine；蓝图 compensation/reconcile | 设计 F00-F02，并复用 S03-S12 | host-crash、DMA teardown、MSI/reset、reboot/INTx summaries | durable journal、crash reconcile、真实硬件 clean-state 证明未实现 |
+| F3 Static 固定设备分配 | 详细设计 Static；蓝图 Static transaction/compensation | 设计 S00-S16；S15 product blocked | `vmware-esxi8-directpath-local-results.md`、DMA/reset/reboot summaries、`QMAN-QEMU-CONTROL-001` 的威胁正控、`QMAN-E3-QMP-GATE-001` 的 component 负控 | durable lease、生产 attach executor、QMP gate 与 launcher/VFIO 集成、rollback/quarantine 未实现 |
+| F4 VM 准入与 Guest 兼容 | 详细设计 BAR/MMIO/Guest ABI；蓝图 planner/guest surface | 设计 M00-M23；复用 F09 bypass gate | firmware layout、MMIO comparison、`QMAN-E3-MMIO-OBSERVED-001`、`QMAN-QEMU-CONTROL-001`、`QMAN-E3-QMP-GATE-001` | 通用多级 planner、生产 API/CLI/storage/QMP 全入口 gate、版本化首批 profile 和产品 post-start verify 未实现 |
+| F5 生命周期与故障恢复 | 详细设计 rollback/crash/quarantine；蓝图 compensation/reconcile | 设计 F00-F02/F09，并复用 S03-S12 | host-crash、DMA teardown、MSI/reset、reboot/INTx summaries、`QMAN-E3-QMP-GATE-001` | durable journal、crash reconcile、生产全入口 bypass matrix 和真实硬件 clean-state 证明未实现 |
 | F6 Dynamic 动态分配 | 详细设计 Dynamic；蓝图 Dynamic transaction | 设计 D00-D14 | `vmware-esxi8-directpath-local-results.md`、dynamic-envelope/directpath summaries | matcher/global solver/atomic multi-reservation 未实现 |
 | F7 跨主机放置与冷恢复 | 详细设计 multi-host；蓝图 cold relocate/fencing | 设计 F03-F08 | vMotion rejection、host-crash、Dynamic cold-relocate 观察 | consensus store、fencing token、BMC fence proof 和 Qman cluster 实现均缺失 |
-| F8 可运维、审计、发布 | 详细设计 API/audit/risk/gate；蓝图 audit/evidence | F09-F10 + 全部 Case/Risk 的追踪和发布门 | `PROJECT-STATUS.md`、`contracts/qman-evidence-index.json`、`tools/evaluate_release.py`、5 条已登记 Qman E2/E3 结果 | US→Case→Evidence 尚未完整；98/101 Case 未分类；当前 5 条均为 reference-only，产品 Case 仍需补齐 |
+| F8 可运维、审计、发布 | 详细设计 API/audit/risk/gate；蓝图 audit/evidence | F09-F10 + 全部 Case/Risk 的追踪和发布门 | `PROJECT-STATUS.md`、`contracts/qman-evidence-index.json`、`tools/evaluate_release.py`、6 条已登记 Qman E2/E3 结果 | US→Case→Evidence 尚未完整；96/101 Case 未分类；当前为 5 reference + 1 component，产品 closure 仍为 0 |
 
 ### 主要材料的具体定位
 
@@ -101,7 +101,7 @@ coverage，不更新 Qman implementation/qualification 状态。
 | `vmware-directpath-acceptance-test-plan.md` | `ACCEPTANCE` + `REFERENCE_OBSERVATION` | 旧实验计划；原 Case ID 只作 legacy alias，canonical ID 由 VMware 行为模型定义 |
 | `vmware-esxi8-directpath-local-results.md` | `REFERENCE_OBSERVATION` | VMware 黑盒主报告；不是 Qman 产品证据 |
 | `vmware-esxi8-passthru-capable-observed-model.md` | `REFERENCE_OBSERVATION` | 实验归纳；不是 qualification 算法合同 |
-| `pci-resource-model/` | `REFERENCE_MODEL` | 纯函数/资源决策参考；87 个单测不等于生产 controller |
+| `pci-resource-model/` | `REFERENCE_MODEL` | 纯函数/资源决策参考；当前 112 个单测不等于生产 controller |
 | `kernel-patches/` | `IMPLEMENTATION_BLUEPRINT` | ACS provenance 参考方案；构建成功不等于运行时验收 |
 | `vmware-esxi8-lab/` | `ACCEPTANCE` | harness/复现入口；必须由 Case 引用 |
 | `evidence/*.json`、`evidence/*.md` | 依 subject 分类 | 需携带 Case、Risk、环境和 hash，不能直接挂 Feature 宣告完成 |

@@ -79,6 +79,17 @@
       "techStories": ["TS-F4-01", "TS-F4-02", "TS-F4-04"],
       "caseIds": ["M23"],
       "riskIds": ["R09", "R33", "R34", "R36"]
+    },
+    {
+      "id": "QMAN-E3-QMP-GATE-001",
+      "resultPath": "evidence/qman-qmp-gate-20260721-summary.json",
+      "resultSha256": "6cd59b5bf4d69a8b5d203190334060b03b8c7f6abd6e8296985c694991a5e7fc",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F4-05", "TS-F5-05"],
+      "caseIds": ["S15", "F09"],
+      "riskIds": ["R17", "R26", "R37"]
     }
   ]
 }

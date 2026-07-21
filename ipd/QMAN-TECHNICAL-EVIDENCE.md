@@ -37,6 +37,7 @@ artifact hash drift => evidence invalidated
 | `QMAN-E2-REFERENCE-MODEL-001` | E2 | WSL 下历史基线 87/87 reference-model tests pass | TS-F1-02/03/04、F2-01/02、F4-01；C05/C06/O09/M22 | controller、provider、lease store；不追认后续 C20 |
 | `QMAN-E2-CLOSURE-001` | E2 | C20 定向 22/22、全量 112/112；四格固定点、严格 fact verifier、有界 closure、immutable inventory、owner-independent/decision hash A/B 与零副作用均通过 | TS-F1-01/04、F5-01；C20 / R38 前提 | 产品 inventory/evidence provider、controller/lease/attach、C20 产品 Case、R38、E4 |
 | `QMAN-QEMU-CONTROL-001` | E3 | 建机后可通过 QMP 向 QEMU device tree 加入 PCI endpoint（本次在 machine 暂停态）；同 guest BDF 可换 VID:DID；`device_del` reply 后设备仍存在 | TS-F3-01/04、F4-05、F5-05；S01/S15/F09 前提 | Guest 在线热插、Qman QMP ACL 已实现、S15/F09 已通过 |
+| `QMAN-E3-QMP-GATE-001` | E3 | 最小 gate 本地处理 capability，只转发五类只读 query；17 类拒绝均未被独立 backend recorder 观察到，PCI tree、QEMU/gate fd 基线不变 | TS-F4-05、F5-05；S15/F09 与 R17/R26/R37 前提 | production launcher/lease/generation/VFIO 或全入口绕过已封堵；S15/F09 与三项 Risk 均未关闭 |
 | `QMAN-E3-DMA-PROVIDER-001` | E3 | unsafe=`Y` 时，no-IOMMU 与 IOMMU-backed device 仍呈现不同 provider node | TS-F1-02、F3-03；C21 前提 | 物理 IOMMU/IR/errata、IOMMUFD IOAS attach、DPDK workload |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 | QEMU floor 与 OVMF aperture 必须配对；双 64 GiB BAR 默认失败、128 GiB 配对成功 | TS-F4-01/02/04；M23 前提 | Qman observedPlan commit/rollback、物理 BAR qualification |
 
@@ -111,6 +112,29 @@ availability 与 `decisionHash` 改变；dependency reset missing 或 action unk
 
 证据：[`qman-capability-closure-20260721-summary.json`](../evidence/qman-capability-closure-20260721-summary.json)。
 
+### 3.5 QMP component 已证明“受控端点默认拒绝”，尚未证明产品无旁路
+
+`QMAN-QEMU-CONTROL-001` 是 raw QMP 能越过冷启动规划的威胁正控；本轮新增的
+`QMAN-E3-QMP-GATE-001` 是一个最小 Qman component 负控：
+
+- gate 解析后重建 JSON，客户端 `qmp_capabilities` 在本地处理；进入 backend 的业务命令只可能是
+  `query-version/status/kvm/name/pci`，客户端 ID 不进入 backend namespace；
+- 27 个客户端请求产生 34 条精确审计事件：3 个 local capability、7 个 forward attempt、
+  7 个 success outcome 和 17 个 deny；每条都绑定连接、顺序、peer credential、policy hash 与
+  request digest，未知命令字符串不写入 audit；
+- 位于 gate 之外的 test-only recorder 实际只看到 3 个内部 capability 协商和 7 个只读 query，
+  `device_add/device_del`、HMP、QOM、fd、畸形 JSON、OOB、超长帧和 SCM_RIGHTS 共 17 类负例中，
+  进入 QEMU backend 的数量为 0；
+- 拒绝矩阵前后 PCI tree hash 相同，QEMU fd multiset 无变化；SCM_RIGHTS 后 gate 自身 fd multiset
+  回到基线，socket 权限为 `0600`、私有目录为 `0700`，非授权用户得到 `EACCES`，gate 正常退出。
+
+这只证明一个 emulated QEMU 进程的受控 monitor 端点。实验中的 observer monitor 和 recorder 是
+测试专用旁路；生产还没有把 gate 与 controller、durable lease/generation、fd-only VFIO launcher、
+API/CLI/storage/alternate-monitor 封锁集成起来。因此结果是 `QMAN_COMPONENT / COMPONENT_ONLY`，
+不能关闭 S15/F09 或 R17/R26/R37。
+
+证据：[`qman-qmp-gate-20260721-summary.json`](../evidence/qman-qmp-gate-20260721-summary.json)。
+
 ## 4. 可复现入口
 
 实验复用了本地历史任务中沉淀的 WSL/QEMU 环境；可提交、可复现的权威环境说明为
@@ -122,6 +146,12 @@ availability 与 `decisionHash` 改变；dependency reset missing 或 action unk
 wsl -d Ubuntu-22.04 -- python3 `
   /mnt/e/Code/PCI/github-export/qman-lab/test_qemu_control_boundary.py `
   --output /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-qmp
+
+# Qman default-deny QMP component
+wsl -d Ubuntu-22.04 -- env `
+  QMAN_QEMU_BINARY=/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
+  bash /mnt/e/Code/PCI/github-export/qman-lab/run_qmp_gate.sh `
+  /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-qmp-gate
 
 # VFIO no-IOMMU / IOMMU provider A/B
 wsl -d Ubuntu-22.04 -- python3 `
@@ -156,8 +186,9 @@ wsl -d Ubuntu-22.04 -- bash `
 
 1. `QMAN-E3-STATIC-FAULT-001`：QEMU pre-ready exit、SIGKILL、bind/reset 中途失败，验证
    journal/lease/fd/mapping/driver rollback 与 whole-bundle quarantine。
-2. `QMAN-E3-QMP-GATE-001`：实现最小 QMP proxy/ACL 后重跑 S15/F09，要求 raw
-   `device_add/device_del` 被拒绝且 device tree/fd/generation 不变。
+2. 将已验证的 QMP component 接入 production launcher/controller/durable lease/generation/VFIO，
+   并执行覆盖 API、CLI、storage、alternate monitor、fd injection、并发和 replay 的完整 S15/F09
+   产品 bypass matrix。
 3. E4：真实 NIC/GPU/HBA 上的 IOMMU/IR、ACS/RID alias、reset/state、INTx、P2P、RMRR、
    SR-IOV、errata 和 workload qualification。
 

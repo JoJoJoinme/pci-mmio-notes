@@ -17,9 +17,10 @@ model, mapped across all 39 Tech Stories, in
 Qman/reference-side technical evidence is tracked separately in
 [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md) and the
    machine-readable [`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json).
-The current five E2/E3 records explain and reproduce design premises, including the
-bounded C20 capability-closure fixture; none closes
-a Qman product Case, physical Risk, or production support claim.
+The current six E2/E3 records—five `REFERENCE_ONLY` and one `COMPONENT_ONLY`—
+reproduce design premises, including the bounded C20 capability closure, and verify
+a bounded default-deny QMP component. None closes a Qman product Case, physical
+Risk, or production support claim.
 
 This repository records the evidence gathered for comparing VMware ESXi EFI VM
 MMIO behavior with QEMU/OVMF MMIO controls. It intentionally contains no local

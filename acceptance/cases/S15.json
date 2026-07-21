@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "S15",
+  "title": "Production QMP boundary rejects runtime PCI mutation",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R17", "R26", "R37"],
+  "blocker": "The E3 component gate proves a default-deny QMP boundary around one emulated QEMU process, but the production launcher, durable assignment/lease/generation state, VFIO fd handoff, privilege boundary and DirectPath profile integration do not yet exist.",
+  "targetMilestone": "G2",
+  "referenceEvidenceIds": [
+    "QMAN-QEMU-CONTROL-001",
+    "QMAN-E3-QMP-GATE-001"
+  ],
+  "referenceRunner": "qman-lab/run_qmp_gate.sh",
+  "assertions": [
+    "device_add and device_del return one stable product denial without reaching the QEMU backend",
+    "repeated, concurrent and pipelined attempts leave the guest PCI tree and BAR plan unchanged",
+    "VFIO fds, assignment generation, durable lease and DMA/IRQ ownership remain unchanged",
+    "the production QEMU process exposes no alternate unrestricted monitor or host-BDF attach path"
+  ]
+}

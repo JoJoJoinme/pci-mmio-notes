@@ -2,6 +2,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 from unittest.mock import patch
 
@@ -37,14 +38,20 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "Qman evidence: records=5 (E2=2, E3=3; reference=5, "
+            "Qman evidence: records=6 (E2=2, E3=4; reference=5, component=1, "
+            "end_to_end=0, "
             "product_case_closures=0, risk_closures=0)",
             result.stdout,
         )
         self.assertIn("Risks: 39", result.stdout)
-        self.assertIn("Acceptance: 3/101 defined", result.stdout)
+        self.assertIn("Acceptance: 5/101 defined", result.stdout)
         self.assertIn("EXECUTABLE=2", result.stdout)
-        self.assertIn("IMPLEMENTATION_BLOCKED=1", result.stdout)
+        self.assertIn("IMPLEMENTATION_BLOCKED=3", result.stdout)
+        self.assertIn("96 unclassified", result.stdout)
+        self.assertIn(
+            "implementation-blocked acceptance cases: C21, F09, S15",
+            result.stdout,
+        )
         self.assertIn(
             "reference-only executable cases do not close product gates: C20, O09",
             result.stdout,
@@ -68,6 +75,44 @@ class ReleaseGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Case C20: PASS", result.stdout)
 
+    def test_project_evidence_snapshot_cannot_drift_from_index(self) -> None:
+        counts = Counter(
+            {
+                "records": 6,
+                "E2": 2,
+                "E3": 4,
+                "reference": 5,
+                "component": 1,
+                "boundary:REFERENCE_ONLY": 5,
+                "boundary:COMPONENT_ONLY": 1,
+            }
+        )
+        observed = {
+            "records": 6,
+            "grades": {"E2": 2, "E3": 4, "E4": 0},
+            "claimBoundaries": {
+                "REFERENCE_ONLY": 5,
+                "COMPONENT_ONLY": 1,
+                "END_TO_END_PRODUCT": 0,
+                "PHYSICAL_QUALIFICATION": 0,
+            },
+            "productCasesClosed": 0,
+            "risksClosed": 0,
+            "statusUpdated": False,
+        }
+        project = {"observations": {"qmanTechnicalEvidence": observed}}
+        errors: list[str] = []
+        evaluate_release.validate_project_qman_evidence_observation(
+            project, counts, errors
+        )
+        self.assertEqual(errors, [])
+
+        observed["records"] = 5
+        evaluate_release.validate_project_qman_evidence_observation(
+            project, counts, errors
+        )
+        self.assertTrue(any("records drift" in item for item in errors))
+
 
 class QmanEvidenceClosurePolicyTests(unittest.TestCase):
     @staticmethod
@@ -79,14 +124,16 @@ class QmanEvidenceClosurePolicyTests(unittest.TestCase):
         risks: list[str],
         status_updated: bool = True,
     ) -> dict[str, object]:
+        if subject.endswith("REFERENCE") or subject == "QMAN_REFERENCE_MODEL":
+            claim_boundary = "REFERENCE_ONLY"
+        elif subject == "QMAN_COMPONENT":
+            claim_boundary = "COMPONENT_ONLY"
+        else:
+            claim_boundary = "END_TO_END_PRODUCT"
         return {
             "subject": subject,
             "evidenceGrade": grade,
-            "claimBoundary": (
-                "REFERENCE_ONLY"
-                if subject.endswith("REFERENCE") or subject == "QMAN_REFERENCE_MODEL"
-                else "END_TO_END_PRODUCT"
-            ),
+            "claimBoundary": claim_boundary,
             "verdict": "PASS",
             "mapping": {
                 "caseIds": ["S15"],

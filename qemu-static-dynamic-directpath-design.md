@@ -3262,13 +3262,15 @@ INVALIDATED           # 依赖变更使旧证据失效；立即撤销能力并�
 | --- | --- | --- | --- | --- |
 | `QMAN-E2-REFERENCE-MODEL-001` | E2 / reference model | 历史基线 87/87 纯函数与 schema 单测通过 | 保持 capability、owner、allocator 查询无副作用且 hash 可复现 | 后续 C20 不由该旧记录追认；产品 controller、任何 Risk |
 | `QMAN-E2-CLOSURE-001` | E2 / reference model | C20 22/22、全量 112/112；四格固定点、fact authenticity boundary、snapshot stale、closure limit、immutable inventory、golden/decision hash 与零副作用通过 | schema-v2 fact 全绑定 epoch/topology/subject/evidence；无 verifier 默认拒绝；member/edge 加入前增量限流；capability 与 executable decision hash 分离 | 产品 inventory/evidence provider、C20 产品 Case、R38、真实硬件 |
-| `QMAN-QEMU-CONTROL-001` | E3 / QEMU control reference | raw QMP 可在冷启动规划后、machine 暂停态添加 PCI endpoint；相同 guest BDF 可承载不同 VID:DID；`device_del` reply 不是 teardown 完成；未验证 Guest 在线热插 | Static 身份必须是 `deviceUid + fingerprint`；生产 QMP 必须 allowlist；release 必须等待 Guest/backend/IOMMU/reset 完成证据 | S15/F09、Qman QMP gate、lease/reconcile |
+| `QMAN-QEMU-CONTROL-001` | E3 / QEMU control reference | raw QMP 可在冷启动规划后、machine 暂停态添加 PCI endpoint；相同 guest BDF 可承载不同 VID:DID；`device_del` reply 不是 teardown 完成；未验证 Guest 在线热插 | Static 身份必须是 `deviceUid + fingerprint`；生产 QMP 必须 allowlist；release 必须等待 Guest/backend/IOMMU/reset 完成证据 | S15/F09 产品 gate、lease/reconcile |
+| `QMAN-E3-QMP-GATE-001` | E3 / Qman component | 27 个请求精确审计；独立 recorder 只见 3 次内部 capability 与 7 次只读 query，17 类拒绝未进入 backend；PCI tree、QEMU/gate fd 基线不变 | QMP 默认拒绝必须解析后重建、使用私有 backend ID、两阶段审计、拒绝 SCM_RIGHTS，并以外部 recorder 验证 | production launcher/controller/lease/generation/VFIO 与 API/CLI/storage/alternate-monitor 全入口；S15/F09、R17/R26/R37 |
 | `QMAN-E3-DMA-PROVIDER-001` | E3 / QEMU+Guest+VFIO reference | unsafe=`Y` 时 `noiommu-*` 与 IOMMU-backed group/cdev 仍可逐设备区分 | VM attach provider 必须逐设备证明 DMA provider；不能按全局 unsafe switch 整机放行或整机拒绝 | C21 产品场景、物理 IOMMU/IR/errata、IOMMUFD attach |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 / QEMU+firmware reference | QEMU 11/OVMF 双 64 GiB BAR：默认 0/2 分配；128 GiB firmware aperture 与 QEMU floor 配对后 2/2 且 heartbeat | 分开持久化 required span、firmware aperture、QEMU floor、observed runtime window；不把 floor 当 hard cap | M23 产品 post-start commit/rollback、物理 BAR qualification |
 
-五条结果的 `closureEffect` 都为空，Risk 状态继续保持 `OPEN`，G0/release 继续 `BLOCKED`。
-该边界很重要：这些实验把“为什么必须有控制”从推理提升为 E2/E3，但仓库中尚无完整 Qman
-controller，不能据此宣告 QMP 绕过已封堵、VFIO attach 已安全或设备已进入兼容性列表。
+六条结果中 5 条是 reference、1 条是 component，`closureEffect` 全部为空；Risk 状态继续保持
+`OPEN`，G0/release 继续 `BLOCKED`。该边界很重要：最小 QMP component 只证明受控 monitor
+端点，仓库中尚无完整 Qman controller/launcher/lease/VFIO 和全入口隔离，不能据此宣告产品
+QMP/CLI/storage 绕过已封堵、VFIO attach 已安全或设备已进入兼容性列表。
 
 ## 19. 验收矩阵
 
@@ -3335,7 +3337,7 @@ controller，不能据此宣告 QMP 绕过已封堵、VFIO attach 已安全或�
 | S12 | reset 后 state probe 失败 | affected set 整体 quarantine，lease 不回 FREE | 待 controller/fault injection |
 | S13 | Qman API 设置 fixed-hotplug flag | `FEATURE_DISABLED/HOTPLUG_UNSUPPORTED`；VM definition 不变 | 产品决策冻结；API gate 待实现 |
 | S14 | Dynamic VM 运行中请求换 backing | 稳定拒绝；`assignedId`、lease、guest function 不变 | 产品决策冻结；controller gate 待实现 |
-| S15 | raw QMP `device_add`/`device_del` | QMP proxy/ACL 拒绝；QEMU device tree 和 VFIO fd 数不变 | F09 bypass gate 待实现 |
+| S15 | raw QMP `device_add`/`device_del` | QMP proxy/ACL 拒绝；QEMU device tree 和 VFIO fd 数不变 | component negative gate 已通过；production launcher/lease/generation/VFIO 集成待实现 |
 | S16 | 并发/重复 hotplug 绕过请求 | 所有入口均失败，assignment generation、BAR window、DMA/IRQ owner 不变 | fault/bypass matrix 待实现 |
 
 ### 19.4 Dynamic matcher 与 solver
@@ -3400,7 +3402,7 @@ controller，不能据此宣告 QMP 绕过已封堵、VFIO attach 已安全或�
 | F06 | HA candidate exhaustion | VM 保持 stopped，reason 完整 | 待实现 |
 | F07 | live migration request | parity profile 明确拒绝 | 已有 ESXi；QEMU gate 待实现 |
 | F08 | optional VFIO migration | feature/P2P/dirty tracking 全满足才通过 | 待支持硬件 |
-| F09 | raw CLI/QMP/storage API bypass | 无 lease/未验证设备无法附加，限制操作无法绕过 | 待实现 |
+| F09 | raw CLI/QMP/storage API bypass | 无 lease/未验证设备无法附加，限制操作无法绕过 | QMP component 已覆盖一个受控端点；raw CLI/storage/API/alternate monitor 与 end-to-end lease gate 待实现 |
 | F10 | QEMU/kernel/firmware/policy 升级 | 依赖风险自动 invalidated，重验收前关闭 | 待实现 |
 
 ## 20. 实施路线
@@ -3490,11 +3492,11 @@ controller，不能据此宣告 QMP 绕过已封堵、VFIO attach 已安全或�
 | firmware/layout resolver | VMware LF00-LF06 与 QEMU 七 profile 已验证；产品化 resolver、持久 provenance 和稳定 Qman guest ABI profile 尚未实现；strict VMware topology 非产品目标 |
 | AER/PME/ROM QEMU parity | lab patch/验证已有，尚未产品化 |
 | host owner activation | ESXi desired/effective 与 apply-now 证据已固化；纯函数 planner 和 O09 单测已有；owner executor/boot agent 尚未实现 |
-| fixed passthrough hotplug | VMware API 事实已确认；Qman 产品决策为永久 `FEATURE_DISABLED`，S13-S16/F09 负门待产品化 |
+| fixed passthrough hotplug | VMware API 事实已确认；Qman 产品决策为永久 `FEATURE_DISABLED`；QMP component 已验证，S13-S16/F09 的产品四层负门仍待集成 |
 | VFIO migration extension | 尚未实现；只能属于不含 hotplug 的独立 native profile |
 
-在 Phase 1-4 和对应风险闭环完成前，本仓库的产物是 reference/qualification model，
-不是可上生产的 DirectPath 控制器。未实现或仅 synthetic 验证的能力必须在对外
+在 Phase 1-4 和对应风险闭环完成前，本仓库可宣告的产品范围仍是 reference/qualification
+model；已验证的最小 QMP component 也不是可上生产的 DirectPath 控制器。未实现或仅 synthetic 验证的能力必须在对外
 capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP 路径绕过。
 
 当前可执行参考实现为 [`pci-resource-model/`](pci-resource-model/README.md)，现有 VMware

@@ -1194,11 +1194,14 @@ def validate_qman_evidence(
             errors.append(f"Qman evidence {evidence_id} has invalid verdict: {verdict!r}")
         else:
             counts[verdict] += 1
-        if result.get("claimBoundary") not in QMAN_CLAIM_BOUNDARIES:
+        claim_boundary = result.get("claimBoundary")
+        if claim_boundary not in QMAN_CLAIM_BOUNDARIES:
             errors.append(
                 f"Qman evidence {evidence_id} has invalid claimBoundary: "
-                f"{result.get('claimBoundary')!r}"
+                f"{claim_boundary!r}"
             )
+        else:
+            counts[f"boundary:{claim_boundary}"] += 1
 
         for field in ("subject", "evidenceGrade", "verdict"):
             if result.get(field) != record.get(field):
@@ -1352,10 +1355,54 @@ def validate_qman_evidence(
                 counts["product_case_closures"] += len(cases_closed)
             if isinstance(risks_closed, list):
                 counts["risk_closures"] += len(risks_closed)
+            if closure.get("statusUpdated") is True:
+                counts["status_updates"] += 1
         if subject in reference_subjects:
             counts["reference"] += 1
+        elif subject == "QMAN_COMPONENT":
+            counts["component"] += 1
+        elif subject == "QMAN_END_TO_END":
+            counts["end_to_end"] += 1
 
     return counts
+
+
+def validate_project_qman_evidence_observation(
+    project: dict[str, Any],
+    counts: Counter[str],
+    errors: list[str],
+) -> None:
+    """Prevent the human-facing project snapshot from drifting from the evidence index."""
+
+    observations = project.get("observations")
+    if not isinstance(observations, dict):
+        errors.append("project-status observations must be an object")
+        return
+    observed = observations.get("qmanTechnicalEvidence")
+    if not isinstance(observed, dict):
+        errors.append("project-status must summarize qmanTechnicalEvidence")
+        return
+
+    expected_grades = {grade: counts[grade] for grade in sorted(QMAN_EVIDENCE_GRADES)}
+    expected_boundaries = {
+        boundary: counts[f"boundary:{boundary}"]
+        for boundary in sorted(QMAN_CLAIM_BOUNDARIES)
+    }
+    expected = {
+        "records": counts["records"],
+        "grades": expected_grades,
+        "claimBoundaries": expected_boundaries,
+        "productCasesClosed": counts["product_case_closures"],
+        "risksClosed": counts["risk_closures"],
+        "statusUpdated": counts["status_updates"] > 0,
+    }
+    for field, expected_value in expected.items():
+        if observed.get(field) != expected_value:
+            errors.append(
+                "project-status qmanTechnicalEvidence "
+                f"{field} drift: expected {expected_value!r}, "
+                f"observed {observed.get(field)!r}"
+            )
 
 
 def validate_vmware_reference(
@@ -1704,6 +1751,11 @@ def evaluate() -> Evaluation:
         design,
         errors,
     )
+    validate_project_qman_evidence_observation(
+        project,
+        qman_evidence_counts,
+        errors,
+    )
     risk_counts = validate_risks(
         risk_policy,
         design,
@@ -1778,6 +1830,8 @@ def print_report(result: Evaluation) -> None:
         f"records={result.qman_evidence_counts['records']} "
         f"({format_counts(qman_grade_counts)}; "
         f"reference={result.qman_evidence_counts['reference']}, "
+        f"component={result.qman_evidence_counts['component']}, "
+        f"end_to_end={result.qman_evidence_counts['end_to_end']}, "
         "product_case_closures="
         f"{result.qman_evidence_counts['product_case_closures']}, "
         f"risk_closures={result.qman_evidence_counts['risk_closures']})"

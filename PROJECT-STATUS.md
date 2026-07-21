@@ -33,9 +33,12 @@ Dynamic、Cluster 和 qualification 的实现波次，不是多个独立产品�
 - VMware F1-F8/39 Tech Story 可观察模型已建立：4 `VERIFIED`、26 `PARTIAL`、4 `UNKNOWN`、
   5 `NOT_APPLICABLE`；这些状态只描述 VMware reference coverage。
 - owner activation 已有纯函数 planner 和 O09 可执行参考场景。
-- Qman 技术证据索引已登记 5 条 hash 固定结果：2 条 E2、3 条 E3，覆盖 reference model、
-  C20 capability closure、raw QMP/BDF、逐设备 DMA provider 和双 64 GiB BAR/OVMF A/B；5 条均为
-  `REFERENCE_ONLY`，产品 Case/Risk 关闭数仍为 0。
+- Qman 技术证据索引已登记 6 条 hash 固定结果：2 条 E2、4 条 E3，覆盖 reference model、
+  C20 capability closure、raw QMP/BDF、逐设备 DMA provider、双 64 GiB BAR/OVMF A/B 和最小
+  default-deny QMP gate；其中 5 条为 `REFERENCE_ONLY`、1 条为 `COMPONENT_ONLY`，产品
+  Case/Risk 关闭数仍为 0。
+- 101 个设计 Case 中已有 5 个机器定义：C20/O09 为 reference executable，C21/F09/S15 为
+  `PRODUCT / IMPLEMENTATION_BLOCKED`；其余 96 个仍未分类。
 
 当前仍不能宣告的能力：
 
@@ -43,6 +46,7 @@ Dynamic、Cluster 和 qualification 的实现波次，不是多个独立产品�
 - durable lease、rollback、quarantine 和 crash reconcile。
 - Dynamic matcher/solver 与多级 bridge resource planner。
 - host boot agent、multi-host fencing 和 production qualification DB。
+- 生产 launcher/controller 与 QMP gate 的 privilege、lease、generation、VFIO 和全入口集成。
 - 任何没有通过机器发布门的 supported capability。
 
 ## 2. G0 退出条件
@@ -81,11 +85,12 @@ Dynamic、Cluster 和 qualification 的实现波次，不是多个独立产品�
 
 1. 为 ADR-002/003/005/007/010 指定产品/平台 owner 并冻结决策。
 2. 逐条治理 R01-R39；不能闭环的能力明确设为不可绕过的 `FEATURE_DISABLED`。
-3. 将现有脚本和单测映射到 101 个 Case，并为剩余 Case 标明硬件阻塞或实现缺口。
+3. 将现有脚本和单测映射到 101 个 Case，并为剩余 96 个 Case 标明硬件阻塞或实现缺口。
 
-4. 按 F1-F8 补证：C20 E2 已完成，下一步完成 Static fault/QMP gate 的 Qman E3；同时执行
-   `VMW-*` 缺口实验，并在首批 HCL 设备上建立物理 qualification、reset、IOMMU/ACS、owner
-   与 cluster fencing E4 证据。
+4. 按 F1-F8 补证：C20 E2 和最小 QMP component E3 已完成；下一步把 QMP gate 接入生产
+   launcher/controller/lease/VFIO 边界并完成完整 S15/F09 bypass matrix，同时推进 Static fault
+   E3、`VMW-*` 缺口实验，以及首批 HCL 设备的 qualification、reset、IOMMU/ACS、owner 与
+   cluster fencing E4 证据。
 
 完成前不新增与 V3 无关的设计主题。发现新事实时，先判断它修改哪个 ADR、risk 或 acceptance case；
 如果三者都不属于，就先进入待分类队列，而不是直接展开实现。

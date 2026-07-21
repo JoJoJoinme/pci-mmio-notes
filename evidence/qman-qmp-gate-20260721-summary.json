@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E3-QMP-GATE-001",
+  "observedAt": "2026-07-21T01:47:33Z",
+  "subject": "QMAN_COMPONENT",
+  "evidenceGrade": "E3",
+  "claimBoundary": "COMPONENT_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "e1837636b26438ab491e91d277d9d36cd1478a6b",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-lab/run_qmp_gate.sh": "b903f25d5fb8d835706c0bf85336ee4de9f4e5014878d04b17f41f2db24dd0dd"
+    },
+    "inputHashes": {
+      "qman-lab/qman_qmp_gate.py": "9cdfe23580488bf77e57d3fbc4f2ab67d63c9d33153a9d53bfd8ddb3b8ab5bc0",
+      "qman-lab/qmp-gate-policy-v1.json": "d75697f25d2de9d99ec315d2a615920f6a9213f4806703e1db4cddee4e5ca56d",
+      "qman-lab/test_qman_qmp_gate.py": "35842e2b46695155ab582b3b72ca8974657f380aecc14932049aae439d281c4e"
+    }
+  },
+  "sut": {
+    "environment": "WSL2 Ubuntu-22.04 with KVM enabled; QEMU q35 with one emulated PCI endpoint, one gated monitor, and test-only recorder/observer monitors",
+    "components": [
+      {
+        "name": "Qman QMP observation gate",
+        "version": "e1837636b26438ab491e91d277d9d36cd1478a6b",
+        "sha256": "9cdfe23580488bf77e57d3fbc4f2ab67d63c9d33153a9d53bfd8ddb3b8ab5bc0"
+      },
+      {
+        "name": "QEMU",
+        "version": "11.0.2 pc-q35-11.0",
+        "sha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+      },
+      {
+        "name": "Python",
+        "version": "3.10.12"
+      },
+      {
+        "name": "WSL kernel",
+        "version": "6.6.123.2-microsoft-standard-WSL2+"
+      }
+    ]
+  },
+  "hypotheses": [
+    "A parsed and reconstructed QMP boundary can expose an exact observation-only allowlist while handling client qmp_capabilities locally and default-denying every other command.",
+    "Mutation, fd-injection, malformed JSON, OOB, oversized-frame and SCM_RIGHTS attempts must not reach the QEMU backend or change the PCI tree or process fd state.",
+    "Every client request must have a bounded audit record tied to peer credentials, policy hash and request digest, while every backend send has separate attempt and outcome records.",
+    "This component result is only a premise for the production S15/F09 bypass gates and cannot close product state without launcher, lease, VFIO and alternate-channel integration."
+  ],
+  "observations": [
+    {
+      "name": "unit-and-parser-gates",
+      "result": {
+        "windowsTests": 14,
+        "wslTests": 14,
+        "failures": 0,
+        "errors": 0
+      }
+    },
+    {
+      "name": "exact-client-audit",
+      "result": {
+        "clientRequests": 27,
+        "auditEvents": 34,
+        "localCapabilities": 3,
+        "forwardAttempts": 7,
+        "forwardSuccesses": 7,
+        "denials": 17,
+        "allRequestsExactlyMatched": true,
+        "peerCredentialPolicyAndDigestMatched": true
+      }
+    },
+    {
+      "name": "independent-backend-recorder",
+      "result": {
+        "backendRequests": 10,
+        "internalCapabilities": 3,
+        "queryVersion": 1,
+        "queryStatus": 2,
+        "queryKvm": 1,
+        "queryName": 1,
+        "queryPci": 2,
+        "deniedOrMalformedRequestsObserved": 0,
+        "privateBackendIdsOnly": true
+      }
+    },
+    {
+      "name": "stable-default-deny-matrix",
+      "result": {
+        "denialClasses": 17,
+        "stableErrorClass": "GenericError",
+        "deviceAddAndDeleteRejected": true,
+        "hmpQomAndFdCommandsRejected": true,
+        "duplicateInvalidUnicodeOobAndOversizeRejected": true,
+        "scmRightsRejectedAndConnectionClosed": true
+      }
+    },
+    {
+      "name": "state-and-fd-invariants",
+      "result": {
+        "pciTreeHashBefore": "267f70e395597ade625a32d7c688ac4d0e459df5a647336e986397b96cc6d755",
+        "pciTreeHashAfter": "267f70e395597ade625a32d7c688ac4d0e459df5a647336e986397b96cc6d755",
+        "qemuFdMultisetsUnchanged": true,
+        "gateFdMultisetReturnedToBaselineAfterScmRights": true,
+        "staticEndpointRemainedOnRp1": true,
+        "rp2RemainedEmpty": true
+      }
+    },
+    {
+      "name": "socket-and-process-boundary",
+      "result": {
+        "backendDirectoryMode": "0700",
+        "clientSocketMode": "0600",
+        "unauthorizedConnectErrno": 13,
+        "qmpCapabilitiesHandledLocally": true,
+        "gateExitCode": 0,
+        "gateLogClean": true
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F4-05", "TS-F5-05"],
+    "caseIds": ["S15", "F09"],
+    "riskIds": ["R17", "R26", "R37"]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/summary.json",
+      "sha256": "cc2afda26300733d24d7938240d9467951bb241d0c40e83b3e3e7915aac28592",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1.runner.log",
+      "sha256": "a4cca84c81e0864471c407c228fba571f9011a0c9abf6ea4a0eb757bbe1ff4b4",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/audit.jsonl",
+      "sha256": "ca6622812590e22430702dc591ef1e00da96289344aaf51522668f35f1174c4b",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/backend-recording.jsonl",
+      "sha256": "0eee1a6fc4d2fbb76a3bc9ef16742afd5c4ff9f59e445a903f15445fce4324b2",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/denial-results.json",
+      "sha256": "3e10c56685194c2b97a57a2f13e6a2a8e1c8066866c5b27c83d3f148e152470f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/pci-before.json",
+      "sha256": "c242139cebd994725169ee21c44e5226da72414b0952b8aaa0064606083fad1d",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/pci-after.json",
+      "sha256": "c242139cebd994725169ee21c44e5226da72414b0952b8aaa0064606083fad1d",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/gate-fd-before.json",
+      "sha256": "dc5cf1c97e144d2a40215c817c105c418dfd3f989addf481f43af6629e3cafea",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/gate-fd-after.json",
+      "sha256": "dc5cf1c97e144d2a40215c817c105c418dfd3f989addf481f43af6629e3cafea",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-qmp-gate-v1/gate-exit.json",
+      "sha256": "8171f8e5aaf0dde61526c9e8c6b3982963c04c9765115a52db932e82b5b09f0c",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This proves one Qman lab component around one emulated QEMU process; the observer monitor and backend recorder are test-only bypass paths and must not exist in production.",
+    "No VFIO or physical PCI device was used, so physical DMA isolation, reset, IRQ, device state and compatibility qualification remain unproven.",
+    "There is no production controller, launcher, durable assignment/lease/generation store, VFIO fd handoff or DirectPath profile integration in this result.",
+    "Raw QEMU CLI, alternate monitors, libvirt, storage or definition APIs and host APIs remain outside this component proof.",
+    "Listener and audit-parent lifecycle/ownership, backend socket inode pinning, backend PID identity and full daemon hardening remain production work.",
+    "The source working tree contained uncommitted acceptance definitions and unrelated untracked work; the base commit plus exact runner and input hashes pin every component input used by this record.",
+    "S15, F09, R17, R26 and R37 remain open because a QMAN_COMPONENT result cannot close product state."
+  ]
+}

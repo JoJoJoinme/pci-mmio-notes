@@ -105,6 +105,9 @@
         {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "kernel-patches/README.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-directpath-20260714-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-vfio-dma-provider-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-capability-closure-20260721-summary.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C20.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C21.json"},
         {"kind": "QMAN_VERIFICATION", "path": "ipd/QMAN-TECHNICAL-EVIDENCE.md"}
       ]
     },
@@ -164,7 +167,8 @@
         {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-passthru-activation-20260718.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/qemu-vfio-noiommu-split-20260718.md"},
-        {"kind": "REFERENCE_MODEL", "path": "pci-resource-model/README.md"}
+        {"kind": "REFERENCE_MODEL", "path": "pci-resource-model/README.md"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/O09.json"}
       ]
     },
     {
@@ -228,7 +232,9 @@
         {"kind": "REFERENCE_OBSERVATION", "path": "vmware-esxi8-directpath-local-results.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-directpath-summary.json"},
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-edu-msi-dma-reset-20260712-summary.json"},
-        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-control-20260721-summary.json"}
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-control-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qmp-gate-20260721-summary.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/S15.json"}
       ]
     },
     {
@@ -290,7 +296,8 @@
         {"kind": "REFERENCE_OBSERVATION", "path": "qemu-q35-firmware-dual-64g-results.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "qemu-vmdirectpath-nonbar-local-validation.md"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-mmio-observed-20260721-summary.json"},
-        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-control-20260721-summary.json"}
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-control-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qmp-gate-20260721-summary.json"}
       ]
     },
     {
@@ -353,7 +360,9 @@
         {"kind": "ACCEPTANCE", "path": "vmware-directpath-acceptance-test-plan.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "vmware-esxi8-directpath-local-results.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-host-crash-20260711-summary.json"},
-        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-edu-dma-teardown-20260714-summary.json"}
+        {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-edu-dma-teardown-20260714-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qmp-gate-20260721-summary.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/F09.json"}
       ]
     },
     {
@@ -532,8 +541,11 @@
         {"kind": "IMPLEMENTATION_BLUEPRINT", "path": "qman-directpath-implementation-blueprint.md"},
         {"kind": "STATUS_GATE", "path": "contracts/README.md"},
         {"kind": "STATUS_GATE", "path": "tools/evaluate_release.py"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C20.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/O09.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/C21.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/F09.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/S15.json"},
         {"kind": "QMAN_VERIFICATION", "path": "ipd/QMAN-TECHNICAL-EVIDENCE.md"},
         {"kind": "STATUS_GATE", "path": "contracts/qman-evidence-index.json"},
         {"kind": "STATUS_GATE", "path": "contracts/qman-technical-evidence.schema.json"}

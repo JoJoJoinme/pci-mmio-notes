@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "F09",
+  "title": "All unmanaged attach and runtime mutation paths fail closed",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R17", "R26", "R37"],
+  "blocker": "The E3 QMP component gate covers one command channel only; production API, raw QEMU CLI, storage or definition mutation, alternate monitor sockets, fd injection, launcher privilege separation and durable lease/admission integration remain unimplemented.",
+  "targetMilestone": "G2",
+  "referenceEvidenceIds": [
+    "QMAN-QEMU-CONTROL-001",
+    "QMAN-E3-QMP-GATE-001"
+  ],
+  "referenceRunner": "qman-lab/run_qmp_gate.sh",
+  "assertions": [
+    "an unmanaged request cannot launch or mutate a DirectPath QEMU process without an admitted durable lease",
+    "API, CLI, QMP, storage, alternate-monitor and fd-injection bypass attempts fail before backend mutation",
+    "replay and concurrency do not change assignment generation, lease, VFIO fds or guest topology",
+    "every production denial is tied to peer identity, policy hash and request digest without logging raw secrets"
+  ]
+}
