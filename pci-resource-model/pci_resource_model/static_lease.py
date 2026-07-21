@@ -20,10 +20,11 @@ import sys
 import threading
 import uuid
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
+from types import MappingProxyType
 from typing import Callable, Iterator, Mapping, Sequence
 
 
@@ -84,6 +85,9 @@ class Reason(str, Enum):
     CLEANUP_EVIDENCE_REQUIRED = "CLEANUP_EVIDENCE_REQUIRED"
     RECONCILE_OBSERVATION_INVALID = "RECONCILE_OBSERVATION_INVALID"
     RECOVERY_REQUIRED = "RECOVERY_REQUIRED"
+    LAUNCH_AUTHORIZATION_INACTIVE = "LAUNCH_AUTHORIZATION_INACTIVE"
+    LAUNCH_AUTHORIZATION_ACTIVE = "LAUNCH_AUTHORIZATION_ACTIVE"
+    STORE_TRANSACTION_ACTIVE = "STORE_TRANSACTION_ACTIVE"
 
 
 class LeaseStoreError(RuntimeError):
@@ -132,6 +136,74 @@ class LeaseRecord:
     cleanup_request_hash: str | None
     created_at: str
     updated_at: str
+
+
+@dataclass
+class _LaunchAuthorizationGuard:
+    active: bool = True
+
+
+_LAUNCH_AUTHORIZATION_PROVENANCE = object()
+
+
+@dataclass(frozen=True, init=False)
+class LeaseLaunchAuthorization:
+    """Store-issued authority to cross the QEMU spawn boundary.
+
+    The issuing :class:`StaticLeaseStore` keeps its SQLite ``BEGIN IMMEDIATE``
+    transaction open for the complete lifetime of this object.  Consequently,
+    another connection cannot roll back, quarantine, or otherwise mutate the
+    lease between the final durable check and ``Popen``.  This is an in-process
+    trusted-coordinator boundary; the private provenance token is not intended
+    to defend against malicious code in the same Python process.
+    """
+
+    record: LeaseRecord
+    store_instance_id: str
+    binding_hash: str
+    _guard: _LaunchAuthorizationGuard = field(repr=False, compare=False)
+    _provenance: object = field(repr=False, compare=False)
+
+    def __init__(self, *_: object, **__: object) -> None:
+        raise TypeError("LeaseLaunchAuthorization is issued only by StaticLeaseStore")
+
+    @classmethod
+    def _issue(
+        cls,
+        *,
+        record: LeaseRecord,
+        store_instance_id: str,
+        binding_hash: str,
+        provenance: object,
+    ) -> "LeaseLaunchAuthorization":
+        if provenance is not _LAUNCH_AUTHORIZATION_PROVENANCE:
+            raise TypeError("invalid launch authorization provenance")
+        authorization = object.__new__(cls)
+        object.__setattr__(authorization, "record", record)
+        object.__setattr__(authorization, "store_instance_id", store_instance_id)
+        object.__setattr__(authorization, "binding_hash", binding_hash)
+        object.__setattr__(authorization, "_guard", _LaunchAuthorizationGuard())
+        object.__setattr__(authorization, "_provenance", provenance)
+        return authorization
+
+    @property
+    def is_active(self) -> bool:
+        return (
+            getattr(self, "_provenance", None) is _LAUNCH_AUTHORIZATION_PROVENANCE
+            and getattr(getattr(self, "_guard", None), "active", False) is True
+        )
+
+    def require_active(self) -> None:
+        if not self.is_active:
+            raise LeaseStoreError(
+                Reason.LAUNCH_AUTHORIZATION_INACTIVE,
+                "launch authorization is outside its store transaction",
+            )
+
+    def _deactivate(self, provenance: object) -> None:
+        if provenance is not _LAUNCH_AUTHORIZATION_PROVENANCE:
+            raise TypeError("invalid launch authorization provenance")
+        self._guard.active = False
 
 
 @dataclass(frozen=True)
@@ -185,7 +257,7 @@ class StaticLeaseStore:
     component persistence; WAL/FULL does not prove end-to-end power-loss safety.
     """
 
-    SCHEMA_VERSION = 3
+    SCHEMA_VERSION = 4
 
     def __init__(
         self,
@@ -223,6 +295,10 @@ class StaticLeaseStore:
         self._clock = clock or (lambda: datetime.now(timezone.utc))
         self._fault_hook = fault_hook
         self._lock = threading.RLock()
+        self._transaction_state_lock = threading.Lock()
+        self._transaction_owner: int | None = None
+        self._transaction_kind: str | None = None
+        self._active_launch_authorization: LeaseLaunchAuthorization | None = None
         try:
             self._connection = sqlite3.connect(
                 self.path,
@@ -246,6 +322,10 @@ class StaticLeaseStore:
             if hasattr(self, "_connection"):
                 self._connection.close()
             raise LeaseStoreError(Reason.STORE_UNAVAILABLE, str(error)) from error
+        except BaseException:
+            if hasattr(self, "_connection"):
+                self._connection.close()
+            raise
 
     @staticmethod
     def _linux_filesystem_magic(path: Path) -> int:
@@ -319,9 +399,47 @@ class StaticLeaseStore:
             return "LAB_UNVERIFIED_FILESYSTEM_COMPONENT_PERSISTENCE_ONLY"
         raise LeaseStoreError(Reason.STORE_NOT_DURABLE, detail)
 
+    def _claim_store_transaction(self, kind: str) -> None:
+        owner = threading.get_ident()
+        with self._transaction_state_lock:
+            if self._transaction_kind is not None:
+                reason = (
+                    Reason.LAUNCH_AUTHORIZATION_ACTIVE
+                    if self._transaction_kind == "LAUNCH_AUTHORIZATION"
+                    else Reason.STORE_TRANSACTION_ACTIVE
+                )
+                raise LeaseStoreError(
+                    reason,
+                    f"{self._transaction_kind} transaction owned by "
+                    f"thread {self._transaction_owner}; rejected {kind}",
+                )
+            self._transaction_owner = owner
+            self._transaction_kind = kind
+
+    def _release_store_transaction(self, kind: str) -> None:
+        owner = threading.get_ident()
+        with self._transaction_state_lock:
+            if self._transaction_owner != owner or self._transaction_kind != kind:
+                raise RuntimeError("store transaction ownership invariant violated")
+            self._active_launch_authorization = None
+            self._transaction_owner = None
+            self._transaction_kind = None
+
+    @contextmanager
+    def _store_transaction_ownership(self, kind: str) -> Iterator[None]:
+        self._claim_store_transaction(kind)
+        try:
+            yield
+        finally:
+            self._release_store_transaction(kind)
+
     def close(self) -> None:
-        with self._lock:
-            self._connection.close()
+        self._claim_store_transaction("CLOSE")
+        try:
+            with self._lock:
+                self._connection.close()
+        finally:
+            self._release_store_transaction("CLOSE")
 
     def __enter__(self) -> "StaticLeaseStore":
         return self
@@ -329,9 +447,39 @@ class StaticLeaseStore:
     def __exit__(self, *_: object) -> None:
         self.close()
 
+    @staticmethod
+    def _schema_signature(connection: sqlite3.Connection) -> tuple[tuple[str, ...], ...]:
+        rows = connection.execute(
+            """SELECT type,name,tbl_name,sql FROM sqlite_master
+               WHERE type IN ('table','index','view','trigger')
+                 AND name NOT LIKE 'sqlite_%'
+               ORDER BY type,name"""
+        ).fetchall()
+        return tuple(
+            (
+                str(row[0]),
+                str(row[1]),
+                str(row[2]),
+                " ".join(str(row[3]).split()),
+            )
+            for row in rows
+        )
+
+    @classmethod
+    def _expected_schema_signature(cls, schema_sql: str) -> tuple[tuple[str, ...], ...]:
+        # This in-memory database is only a parser for the fixed DDL.  It never
+        # stores lease state and is deliberately separate from the durable DB.
+        expected = sqlite3.connect(":memory:", isolation_level=None)
+        try:
+            for statement in schema_sql.split(";"):
+                if statement.strip():
+                    expected.execute(statement)
+            return cls._schema_signature(expected)
+        finally:
+            expected.close()
+
     def _initialize_schema(self) -> None:
-        self._connection.executescript(
-            """
+        schema_sql = """
             CREATE TABLE IF NOT EXISTS metadata (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
@@ -416,54 +564,96 @@ class StaticLeaseStore:
                 ON transactions(host_id, run_id)
                 WHERE state != 'RELEASED';
             """
-        )
-        row = self._connection.execute(
-            "SELECT value FROM metadata WHERE key='schema_version'"
-        ).fetchone()
-        if row is None:
-            self._connection.execute(
-                "INSERT INTO metadata(key, value) VALUES('schema_version', ?)",
-                (str(self.SCHEMA_VERSION),),
-            )
-        elif row["value"] != str(self.SCHEMA_VERSION):
-            raise LeaseStoreError(
-                Reason.STORE_UNAVAILABLE,
-                f"unsupported schema version {row['value']}",
-            )
-        host_row = self._connection.execute(
-            "SELECT value FROM metadata WHERE key='local_host_id'"
-        ).fetchone()
-        if host_row is None:
-            self._connection.execute(
-                "INSERT INTO metadata(key, value) VALUES('local_host_id', ?)",
-                (self.local_host_id,),
-            )
-        elif host_row["value"] != self.local_host_id:
-            raise LeaseStoreError(
-                Reason.HOST_SCOPE_MISMATCH,
-                f"database={host_row['value']}, requested={self.local_host_id}",
-            )
-        authority_row = self._connection.execute(
-            "SELECT value FROM metadata WHERE key='trusted_authority_id'"
-        ).fetchone()
-        if authority_row is None:
-            self._connection.execute(
-                "INSERT INTO metadata(key, value) VALUES('trusted_authority_id', ?)",
-                (self.trusted_authority_id,),
-            )
-        elif authority_row["value"] != self.trusted_authority_id:
-            raise LeaseStoreError(
-                Reason.AUTHORITY_SCOPE_MISMATCH,
-                f"database={authority_row['value']}, requested={self.trusted_authority_id}",
-            )
+        expected_signature = self._expected_schema_signature(schema_sql)
+        expected_metadata_keys = {
+            "schema_version",
+            "local_host_id",
+            "trusted_authority_id",
+            "store_instance_id",
+        }
 
-    @contextmanager
-    def _write(self) -> Iterator[None]:
-        with self._lock:
+        with self._store_transaction_ownership("SCHEMA_INIT"), self._lock:
             try:
                 self._connection.execute("BEGIN IMMEDIATE")
-                yield
+                actual_signature = self._schema_signature(self._connection)
+                if not actual_signature:
+                    # ``executescript`` commits implicitly.  Execute each fixed
+                    # statement separately so all DDL and identity metadata are
+                    # covered by this one BEGIN IMMEDIATE transaction.
+                    for statement in schema_sql.split(";"):
+                        if statement.strip():
+                            self._connection.execute(statement)
+                    created_signature = self._schema_signature(self._connection)
+                    if created_signature != expected_signature:
+                        raise LeaseStoreError(
+                            Reason.STORE_UNAVAILABLE,
+                            "new schema does not match fixed DDL signature",
+                        )
+                    self._fault("SCHEMA_AFTER_DDL")
+                    store_instance_id = str(uuid.uuid4())
+                    self._connection.executemany(
+                        "INSERT INTO metadata(key,value) VALUES(?,?)",
+                        (
+                            ("schema_version", str(self.SCHEMA_VERSION)),
+                            ("local_host_id", self.local_host_id),
+                            ("trusted_authority_id", self.trusted_authority_id),
+                            ("store_instance_id", store_instance_id),
+                        ),
+                    )
+                    self._fault("SCHEMA_BEFORE_COMMIT")
+                else:
+                    if actual_signature != expected_signature:
+                        raise LeaseStoreError(
+                            Reason.STORE_UNAVAILABLE,
+                            "schema signature mismatch; "
+                            f"expected={self._hash(expected_signature)}, "
+                            f"actual={self._hash(actual_signature)}",
+                        )
+                    metadata_rows = self._connection.execute(
+                        "SELECT key,value FROM metadata"
+                    ).fetchall()
+                    metadata = {row["key"]: row["value"] for row in metadata_rows}
+                    actual_keys = set(metadata)
+                    if metadata.get("schema_version") != str(self.SCHEMA_VERSION):
+                        raise LeaseStoreError(
+                            Reason.STORE_UNAVAILABLE,
+                            f"unsupported schema version {metadata.get('schema_version')}",
+                        )
+                    if actual_keys != expected_metadata_keys:
+                        missing = sorted(expected_metadata_keys - actual_keys)
+                        extra = sorted(actual_keys - expected_metadata_keys)
+                        raise LeaseStoreError(
+                            Reason.STORE_UNAVAILABLE,
+                            f"metadata keys mismatch; missing={missing}, extra={extra}",
+                        )
+                    if metadata["local_host_id"] != self.local_host_id:
+                        raise LeaseStoreError(
+                            Reason.HOST_SCOPE_MISMATCH,
+                            f"database={metadata['local_host_id']}, requested={self.local_host_id}",
+                        )
+                    if metadata["trusted_authority_id"] != self.trusted_authority_id:
+                        raise LeaseStoreError(
+                            Reason.AUTHORITY_SCOPE_MISMATCH,
+                            "database="
+                            f"{metadata['trusted_authority_id']}, "
+                            f"requested={self.trusted_authority_id}",
+                        )
+                    store_instance_id = metadata["store_instance_id"]
+                    try:
+                        parsed_store_id = uuid.UUID(store_instance_id)
+                    except (AttributeError, TypeError, ValueError) as error:
+                        raise LeaseStoreError(
+                            Reason.STORE_UNAVAILABLE,
+                            "store_instance_id is not a canonical UUIDv4",
+                        ) from error
+                    if parsed_store_id.version != 4 or str(parsed_store_id) != store_instance_id:
+                        raise LeaseStoreError(
+                            Reason.STORE_UNAVAILABLE,
+                            "store_instance_id is not a canonical UUIDv4",
+                        )
                 self._connection.execute("COMMIT")
+                self.store_instance_id = store_instance_id
+                self._pinned_schema_signature = expected_signature
             except LeaseStoreError:
                 if self._connection.in_transaction:
                     self._connection.execute("ROLLBACK")
@@ -476,6 +666,33 @@ class StaticLeaseStore:
                 if self._connection.in_transaction:
                     self._connection.execute("ROLLBACK")
                 raise
+
+    @contextmanager
+    def _write(self) -> Iterator[None]:
+        transaction_kind = "WRITE"
+        self._claim_store_transaction(transaction_kind)
+        try:
+            with self._lock:
+                try:
+                    self._connection.execute("BEGIN IMMEDIATE")
+                    self._require_pinned_schema()
+                    self._require_pinned_metadata()
+                    yield
+                    self._connection.execute("COMMIT")
+                except LeaseStoreError:
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise
+                except sqlite3.Error as error:
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise LeaseStoreError(Reason.STORE_UNAVAILABLE, str(error)) from error
+                except BaseException:
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise
+        finally:
+            self._release_store_transaction(transaction_kind)
 
     def _now(self) -> str:
         return self._clock().astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -936,6 +1153,310 @@ class StaticLeaseStore:
             raise LeaseStoreError(Reason.BUNDLE_MEMBERS_MISMATCH, row["bundle_id"])
         if bundle["authority_epoch"] != row["inventory_epoch"]:
             raise LeaseStoreError(Reason.BUNDLE_SNAPSHOT_MISMATCH, row["bundle_id"])
+
+    def _require_pinned_schema(self) -> None:
+        actual = self._schema_signature(self._connection)
+        if actual != self._pinned_schema_signature:
+            raise LeaseStoreError(
+                Reason.RECOVERY_REQUIRED,
+                "lease store schema changed after open",
+            )
+
+    def _require_pinned_metadata(self) -> None:
+        rows = self._connection.execute("SELECT key,value FROM metadata").fetchall()
+        metadata = {row["key"]: row["value"] for row in rows}
+        expected = {
+            "schema_version": str(self.SCHEMA_VERSION),
+            "local_host_id": self.local_host_id,
+            "trusted_authority_id": self.trusted_authority_id,
+            "store_instance_id": self.store_instance_id,
+        }
+        if metadata != expected:
+            raise LeaseStoreError(
+                Reason.RECOVERY_REQUIRED,
+                "lease store identity metadata changed after open",
+            )
+
+    def _require_launch_claims(self, row: sqlite3.Row) -> None:
+        members = tuple(json.loads(row["members_json"]))
+        bundle_claims = self._connection.execute(
+            """SELECT host_id,bundle_id,members_hash,transaction_id,vm_generation
+               FROM bundle_claims WHERE transaction_id=?""",
+            (row["transaction_id"],),
+        ).fetchall()
+        if len(bundle_claims) != 1:
+            raise LeaseStoreError(
+                Reason.RECOVERY_REQUIRED,
+                "launch transaction must own exactly one bundle claim",
+            )
+        bundle_claim = bundle_claims[0]
+        if (
+            bundle_claim["host_id"] != row["host_id"]
+            or bundle_claim["bundle_id"] != row["bundle_id"]
+            or bundle_claim["members_hash"] != row["bundle_members_hash"]
+            or bundle_claim["transaction_id"] != row["transaction_id"]
+            or bundle_claim["vm_generation"] != row["vm_generation"]
+        ):
+            raise LeaseStoreError(
+                Reason.RECOVERY_REQUIRED,
+                "bundle claim no longer matches launch transaction",
+            )
+
+        member_claims = self._connection.execute(
+            """SELECT host_id,bdf,transaction_id,vm_generation
+               FROM member_claims WHERE transaction_id=? ORDER BY bdf""",
+            (row["transaction_id"],),
+        ).fetchall()
+        if tuple(claim["bdf"] for claim in member_claims) != members:
+            raise LeaseStoreError(
+                Reason.RECOVERY_REQUIRED,
+                "member claims no longer exactly cover launch bundle",
+            )
+        for claim in member_claims:
+            if (
+                claim["host_id"] != row["host_id"]
+                or claim["transaction_id"] != row["transaction_id"]
+                or claim["vm_generation"] != row["vm_generation"]
+            ):
+                raise LeaseStoreError(
+                    Reason.RECOVERY_REQUIRED,
+                    f"member claim no longer matches launch transaction: {claim['bdf']}",
+                )
+
+    @staticmethod
+    def _immutable_record(row: sqlite3.Row) -> LeaseRecord:
+        return replace(
+            StaticLeaseStore._record(row),
+            device_generations=MappingProxyType(
+                dict(json.loads(row["device_generations_json"]))
+            ),
+        )
+
+    def _validated_state_snapshot(
+        self,
+        transaction_id: str,
+        vm_generation: int,
+        expected_revision: int,
+        *,
+        expected_state: LeaseState,
+        require_current_facts: bool,
+        require_claims: bool,
+    ) -> LeaseRecord:
+        row = self._row_by_id(transaction_id)
+        self._require_generation(row, vm_generation, require_current=True)
+        if LeaseState(row["state"]) is not expected_state:
+            raise LeaseStoreError(
+                Reason.INVALID_STATE_TRANSITION,
+                f"expected {expected_state.value}, current {row['state']}",
+            )
+        if isinstance(expected_revision, bool) or row["revision"] != expected_revision:
+            raise LeaseStoreError(
+                Reason.LEASE_REVISION_MISMATCH,
+                f"expected {expected_revision}, current {row['revision']}",
+            )
+        if require_current_facts:
+            self._require_transaction_facts(row)
+        if require_claims:
+            self._require_launch_claims(row)
+        return self._immutable_record(row)
+
+    def _current_thread_launch_authorization(
+        self,
+    ) -> LeaseLaunchAuthorization | None:
+        with self._transaction_state_lock:
+            if (
+                self._transaction_kind == "LAUNCH_AUTHORIZATION"
+                and self._transaction_owner == threading.get_ident()
+            ):
+                authorization = self._active_launch_authorization
+                if authorization is None or not authorization.is_active:
+                    raise RuntimeError("active launch authorization guard is inconsistent")
+                return authorization
+        return None
+
+    @contextmanager
+    def authorize_state_snapshot(
+        self,
+        transaction_id: str,
+        vm_generation: int,
+        expected_revision: int,
+        *,
+        expected_state: LeaseState,
+        require_current_facts: bool,
+        require_claims: bool,
+    ) -> Iterator[LeaseRecord]:
+        """Hold an exact lease snapshot while another durable store commits.
+
+        This narrow guard exists for the launch-envelope store.  Lock ordering
+        is lease store first, envelope store second.  It yields only an immutable
+        :class:`LeaseRecord`, never launch authority.  When called by the same
+        thread inside :meth:`authorize_launch`, it reuses and verifies that
+        transaction rather than nesting ``BEGIN`` or changing authorization
+        lifetime.
+        """
+
+        transaction_id = self._required_text("transaction_id", transaction_id)
+        if not isinstance(expected_state, LeaseState):
+            raise LeaseStoreError(
+                Reason.INVALID_ARGUMENT,
+                "expected_state must be LeaseState",
+            )
+        if not isinstance(require_current_facts, bool) or not isinstance(
+            require_claims, bool
+        ):
+            raise LeaseStoreError(
+                Reason.INVALID_ARGUMENT,
+                "snapshot fact and claim requirements must be bool",
+            )
+
+        launch_authorization = self._current_thread_launch_authorization()
+        if launch_authorization is not None:
+            with self._lock:
+                record = self._validated_state_snapshot(
+                    transaction_id,
+                    vm_generation,
+                    expected_revision,
+                    expected_state=expected_state,
+                    require_current_facts=require_current_facts,
+                    require_claims=require_claims,
+                )
+                if record != launch_authorization.record:
+                    raise LeaseStoreError(
+                        Reason.RECOVERY_REQUIRED,
+                        "snapshot does not match active launch authorization",
+                    )
+                yield record
+            return
+
+        transaction_kind = "STATE_SNAPSHOT"
+        self._claim_store_transaction(transaction_kind)
+        try:
+            with self._lock:
+                try:
+                    self._connection.execute("BEGIN IMMEDIATE")
+                    self._require_pinned_schema()
+                    self._require_pinned_metadata()
+                    record = self._validated_state_snapshot(
+                        transaction_id,
+                        vm_generation,
+                        expected_revision,
+                        expected_state=expected_state,
+                        require_current_facts=require_current_facts,
+                        require_claims=require_claims,
+                    )
+                    yield record
+                    self._connection.execute("COMMIT")
+                except LeaseStoreError:
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise
+                except sqlite3.Error as error:
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise LeaseStoreError(Reason.STORE_UNAVAILABLE, str(error)) from error
+                except BaseException:
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise
+        finally:
+            self._release_store_transaction(transaction_kind)
+
+    def _launch_binding_hash(self, record: LeaseRecord) -> str:
+        return self._hash(
+            {
+                "authorityId": record.authority_id,
+                "bundleId": record.bundle_id,
+                "bundleMembersHash": record.bundle_members_hash,
+                "decisionHash": record.decision_hash,
+                "deviceGenerations": dict(sorted(record.device_generations.items())),
+                "domain": "qman.static-lease.launch-authorization.v1",
+                "hostId": record.host_id,
+                "inventoryEpoch": record.inventory_epoch,
+                "members": list(record.members),
+                "policyHash": record.policy_hash,
+                "revision": record.revision,
+                "runId": record.run_id,
+                "state": record.state.value,
+                "storeInstanceId": self.store_instance_id,
+                "transactionId": record.transaction_id,
+                "vmGeneration": record.vm_generation,
+                "vmId": record.vm_id,
+            }
+        )
+
+    @contextmanager
+    def authorize_launch(
+        self,
+        transaction_id: str,
+        vm_generation: int,
+        expected_revision: int,
+    ) -> Iterator[LeaseLaunchAuthorization]:
+        """Hold the durable lease invariant continuously through QEMU spawn.
+
+        The caller must render, revalidate and start QEMU *inside* this context.
+        The yielded authorization becomes inactive before the database lock is
+        released and cannot be reused for a later spawn.
+        """
+
+        transaction_id = self._required_text("transaction_id", transaction_id)
+        transaction_kind = "LAUNCH_AUTHORIZATION"
+        authorization: LeaseLaunchAuthorization | None = None
+        self._claim_store_transaction(transaction_kind)
+        try:
+            with self._lock:
+                try:
+                    self._connection.execute("BEGIN IMMEDIATE")
+                    self._require_pinned_schema()
+                    self._require_pinned_metadata()
+                    record = self._validated_state_snapshot(
+                        transaction_id,
+                        vm_generation,
+                        expected_revision,
+                        expected_state=LeaseState.PREPARING,
+                        require_current_facts=True,
+                        require_claims=True,
+                    )
+                    authorization = LeaseLaunchAuthorization._issue(
+                        record=record,
+                        store_instance_id=self.store_instance_id,
+                        binding_hash=self._launch_binding_hash(record),
+                        provenance=_LAUNCH_AUTHORIZATION_PROVENANCE,
+                    )
+                    with self._transaction_state_lock:
+                        if (
+                            self._transaction_owner != threading.get_ident()
+                            or self._transaction_kind != transaction_kind
+                            or self._active_launch_authorization is not None
+                        ):
+                            raise RuntimeError(
+                                "launch authorization ownership invariant violated"
+                            )
+                        self._active_launch_authorization = authorization
+                    try:
+                        yield authorization
+                    finally:
+                        authorization._deactivate(_LAUNCH_AUTHORIZATION_PROVENANCE)
+                    self._connection.execute("COMMIT")
+                except LeaseStoreError:
+                    if authorization is not None and authorization.is_active:
+                        authorization._deactivate(_LAUNCH_AUTHORIZATION_PROVENANCE)
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise
+                except sqlite3.Error as error:
+                    if authorization is not None and authorization.is_active:
+                        authorization._deactivate(_LAUNCH_AUTHORIZATION_PROVENANCE)
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise LeaseStoreError(Reason.STORE_UNAVAILABLE, str(error)) from error
+                except BaseException:
+                    if authorization is not None and authorization.is_active:
+                        authorization._deactivate(_LAUNCH_AUTHORIZATION_PROVENANCE)
+                    if self._connection.in_transaction:
+                        self._connection.execute("ROLLBACK")
+                    raise
+        finally:
+            self._release_store_transaction(transaction_kind)
 
     def _journal(
         self,

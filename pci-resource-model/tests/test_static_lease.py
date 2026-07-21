@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 import tempfile
 import threading
 import unittest
+import uuid
+from contextlib import closing
 from dataclasses import replace
 from pathlib import Path
 
 from pci_resource_model.static_lease import (
     BeginRequest,
+    LeaseLaunchAuthorization,
     LeaseState,
     LeaseStoreError,
     Reason,
@@ -195,6 +199,173 @@ class StaticLeaseStoreTest(unittest.TestCase):
             ),
         )
 
+    def test_store_instance_uuid_is_canonical_and_persists_across_reopen(self) -> None:
+        store_instance_id = self.store.store_instance_id
+        self.assertEqual(4, uuid.UUID(store_instance_id).version)
+        self.assertEqual(store_instance_id, str(uuid.UUID(store_instance_id)))
+        self.reopen()
+        self.assertEqual(store_instance_id, self.store.store_instance_id)
+
+    def test_metadata_missing_extra_or_tampered_is_never_repaired_or_repinned(self) -> None:
+        mutations = {
+            "missing": ("DELETE FROM metadata WHERE key='store_instance_id'", ()),
+            "extra": (
+                "INSERT INTO metadata(key,value) VALUES('unexpected_key','unexpected')",
+                (),
+            ),
+            "old-schema": (
+                "UPDATE metadata SET value='3' WHERE key='schema_version'",
+                (),
+            ),
+            "invalid-store-id": (
+                "UPDATE metadata SET value='not-a-uuid' WHERE key='store_instance_id'",
+                (),
+            ),
+        }
+        for name, (statement, parameters) in mutations.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                db = Path(temp) / "lease.sqlite3"
+                store = StaticLeaseStore(
+                    db,
+                    local_host_id=HOST,
+                    trusted_authority_id=AUTHORITY,
+                )
+                original_store_id = store.store_instance_id
+                store.close()
+                with closing(sqlite3.connect(db)) as connection:
+                    connection.execute(statement, parameters)
+                    connection.commit()
+                error = self.assert_reason(
+                    Reason.STORE_UNAVAILABLE,
+                    lambda: StaticLeaseStore(
+                        db,
+                        local_host_id=HOST,
+                        trusted_authority_id=AUTHORITY,
+                    ),
+                )
+                with closing(sqlite3.connect(db)) as connection:
+                    metadata = dict(connection.execute("SELECT key,value FROM metadata"))
+                if name == "missing":
+                    self.assertNotIn("store_instance_id", metadata)
+                elif name == "extra":
+                    self.assertEqual("unexpected", metadata["unexpected_key"])
+                    self.assertEqual(original_store_id, metadata["store_instance_id"])
+                elif name == "old-schema":
+                    self.assertIn("unsupported schema version 3", error.detail)
+                else:
+                    self.assertEqual("not-a-uuid", metadata["store_instance_id"])
+
+    def test_initial_schema_fault_rolls_back_all_schema_and_identity_metadata(self) -> None:
+        for fault_point in ("SCHEMA_AFTER_DDL", "SCHEMA_BEFORE_COMMIT"):
+            with self.subTest(fault_point=fault_point), tempfile.TemporaryDirectory() as temp:
+                db = Path(temp) / "lease.sqlite3"
+
+                def fault(point: str) -> None:
+                    if point == fault_point:
+                        raise RuntimeError("schema initialization fault")
+
+                with self.assertRaisesRegex(RuntimeError, "schema initialization fault"):
+                    StaticLeaseStore(
+                        db,
+                        local_host_id=HOST,
+                        trusted_authority_id=AUTHORITY,
+                        fault_hook=fault,
+                    )
+                with closing(sqlite3.connect(db)) as connection:
+                    objects = connection.execute(
+                        """SELECT type,name FROM sqlite_master
+                           WHERE type IN ('table','index') AND name NOT LIKE 'sqlite_%'"""
+                    ).fetchall()
+                self.assertEqual([], objects)
+                reopened = StaticLeaseStore(
+                    db,
+                    local_host_id=HOST,
+                    trusted_authority_id=AUTHORITY,
+                )
+                self.assertEqual(4, uuid.UUID(reopened.store_instance_id).version)
+                reopened.close()
+
+    def test_schema_signature_rejects_constraint_and_extra_object_drift(self) -> None:
+        mutations = {
+            "partial-unique-index": """
+                DROP INDEX one_active_transaction_per_run;
+                CREATE UNIQUE INDEX one_active_transaction_per_run
+                    ON transactions(host_id,run_id);
+            """,
+            "extra-column": """
+                ALTER TABLE transactions ADD COLUMN injected_value TEXT;
+            """,
+            "missing-primary-key-and-not-null": """
+                ALTER TABLE metadata RENAME TO metadata_old;
+                CREATE TABLE metadata (key TEXT, value TEXT);
+                INSERT INTO metadata SELECT key,value FROM metadata_old;
+                DROP TABLE metadata_old;
+            """,
+            "missing-foreign-key": """
+                ALTER TABLE member_claims RENAME TO member_claims_old;
+                CREATE TABLE member_claims (
+                    host_id TEXT NOT NULL,
+                    bdf TEXT NOT NULL,
+                    transaction_id TEXT NOT NULL,
+                    vm_generation INTEGER NOT NULL,
+                    PRIMARY KEY (host_id,bdf)
+                );
+                DROP TABLE member_claims_old;
+            """,
+            "missing-check": """
+                ALTER TABLE vm_generations RENAME TO vm_generations_old;
+                CREATE TABLE vm_generations (
+                    host_id TEXT NOT NULL,
+                    vm_id TEXT NOT NULL,
+                    generation INTEGER NOT NULL,
+                    PRIMARY KEY (host_id,vm_id)
+                );
+                DROP TABLE vm_generations_old;
+            """,
+            "extra-index": """
+                CREATE INDEX unexpected_index ON transactions(vm_id);
+            """,
+            "extra-view": """
+                CREATE VIEW unexpected_view AS SELECT key FROM metadata;
+            """,
+            "extra-trigger": """
+                CREATE TRIGGER unexpected_trigger AFTER INSERT ON metadata
+                BEGIN SELECT 1; END;
+            """,
+        }
+        for name, statements in mutations.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                db = Path(temp) / "lease.sqlite3"
+                store = StaticLeaseStore(
+                    db,
+                    local_host_id=HOST,
+                    trusted_authority_id=AUTHORITY,
+                )
+                store.close()
+                with closing(sqlite3.connect(db)) as connection:
+                    connection.executescript(statements)
+                    connection.commit()
+                error = self.assert_reason(
+                    Reason.STORE_UNAVAILABLE,
+                    lambda: StaticLeaseStore(
+                        db,
+                        local_host_id=HOST,
+                        trusted_authority_id=AUTHORITY,
+                    ),
+                )
+                self.assertIn("schema signature mismatch", error.detail)
+
+    def test_live_schema_drift_is_rejected_before_any_store_write(self) -> None:
+        with closing(sqlite3.connect(self.db)) as connection:
+            connection.execute("DROP INDEX one_active_transaction_per_run")
+            connection.commit()
+        self.assert_reason(
+            Reason.RECOVERY_REQUIRED,
+            lambda: self.store.begin(request()),
+        )
+        self.assertEqual({}, self.store.claimed_members(HOST))
+        self.assertEqual(0, self.store.current_vm_generation(HOST, "vm-1"))
+
     @unittest.skipUnless(os.name == "posix" and Path("/dev/shm").is_dir(), "Linux tmpfs only")
     def test_tmpfs_is_not_accepted_as_durable(self) -> None:
         path = Path("/dev/shm") / f"qman-static-lease-{os.getpid()}.sqlite3"
@@ -291,6 +462,35 @@ class StaticLeaseStoreTest(unittest.TestCase):
         self.assertEqual({}, self.store.claimed_members(HOST))
         self.assertEqual({}, self.store.claimed_bundles(HOST))
         self.assertEqual((), self.store.recovery_required())
+
+    def test_nested_write_and_close_cannot_rollback_an_outer_store_transaction(self) -> None:
+        rejected: list[Reason] = []
+
+        def fault(point: str) -> None:
+            if point != "BEGIN_BEFORE_COMMIT":
+                return
+            for operation in (
+                lambda: self.store.prepare("nested-write", 1, 0),
+                self.store.close,
+            ):
+                try:
+                    operation()
+                except LeaseStoreError as error:
+                    rejected.append(error.reason)
+                else:  # pragma: no cover - explicit fail path
+                    self.fail("reentrant store mutation unexpectedly succeeded")
+
+        self.reopen(fault_hook=fault)
+        reserved = self.store.begin(request())
+        self.assertEqual(
+            [Reason.STORE_TRANSACTION_ACTIVE, Reason.STORE_TRANSACTION_ACTIVE],
+            rejected,
+        )
+        self.assertEqual(LeaseState.RESERVED, self.store.get(reserved.transaction_id).state)
+        self.assertEqual(
+            {member: reserved.transaction_id for member in MEMBERS},
+            self.store.claimed_members(HOST),
+        )
 
     def test_begin_requires_authoritative_device_and_complete_bundle_facts(self) -> None:
         missing = ("0000:68:00.0",)
@@ -546,6 +746,158 @@ class StaticLeaseStoreTest(unittest.TestCase):
         )
         self.assertEqual(preparing, self.store.get(reserved.transaction_id))
 
+    def test_launch_authorization_requires_preparing_and_is_active_only_in_context(self) -> None:
+        reserved = self.store.begin(request())
+        self.assert_reason(
+            Reason.INVALID_STATE_TRANSITION,
+            lambda: self.store.authorize_launch(
+                reserved.transaction_id,
+                reserved.vm_generation,
+                reserved.revision,
+            ).__enter__(),
+        )
+        preparing = self.store.prepare(
+            reserved.transaction_id,
+            reserved.vm_generation,
+            reserved.revision,
+        )
+        self.assert_reason(
+            Reason.LEASE_REVISION_MISMATCH,
+            lambda: self.store.authorize_launch(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision - 1,
+            ).__enter__(),
+        )
+        with self.assertRaises(TypeError):
+            LeaseLaunchAuthorization(preparing)
+        self.assertNotIsInstance(preparing, LeaseLaunchAuthorization)
+
+        with self.store.authorize_launch(
+            preparing.transaction_id,
+            preparing.vm_generation,
+            preparing.revision,
+        ) as authorization:
+            self.assertTrue(authorization.is_active)
+            authorization.require_active()
+            self.assertEqual(preparing, authorization.record)
+            self.assertEqual(self.store.store_instance_id, authorization.store_instance_id)
+            self.assertRegex(authorization.binding_hash, r"^sha256:[0-9a-f]{64}$")
+            with self.assertRaises(TypeError):
+                authorization.record.device_generations[MEMBERS[0]] = 999  # type: ignore[index]
+
+        self.assertFalse(authorization.is_active)
+        self.assert_reason(
+            Reason.LAUNCH_AUTHORIZATION_INACTIVE,
+            authorization.require_active,
+        )
+
+    def test_state_snapshot_reuses_active_launch_transaction_without_granting_launch(self) -> None:
+        preparing = self.store.prepare(self.store.begin(request()).transaction_id, 1, 0)
+        with self.store.authorize_launch(
+            preparing.transaction_id,
+            preparing.vm_generation,
+            preparing.revision,
+        ) as launch_authorization:
+            with self.store.authorize_state_snapshot(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision,
+                expected_state=LeaseState.PREPARING,
+                require_current_facts=True,
+                require_claims=True,
+            ) as snapshot:
+                self.assertEqual(launch_authorization.record, snapshot)
+                self.assertNotIsInstance(snapshot, LeaseLaunchAuthorization)
+                self.assertTrue(launch_authorization.is_active)
+                with self.assertRaises(TypeError):
+                    snapshot.device_generations[MEMBERS[0]] = 999  # type: ignore[index]
+
+            self.assertTrue(launch_authorization.is_active)
+            self.assert_reason(
+                Reason.INVALID_STATE_TRANSITION,
+                lambda: self.store.authorize_state_snapshot(
+                    preparing.transaction_id,
+                    preparing.vm_generation,
+                    preparing.revision,
+                    expected_state=LeaseState.ATTACHED,
+                    require_current_facts=True,
+                    require_claims=True,
+                ).__enter__(),
+            )
+            self.assertTrue(launch_authorization.is_active)
+
+        self.assertFalse(launch_authorization.is_active)
+
+    def test_launch_authorization_rejects_superseded_vm_generation(self) -> None:
+        preparing = self.store.prepare(self.store.begin(request()).transaction_id, 1, 0)
+        with closing(sqlite3.connect(self.db)) as connection:
+            connection.execute(
+                "UPDATE vm_generations SET generation=2 WHERE host_id=? AND vm_id=?",
+                (HOST, preparing.vm_id),
+            )
+            connection.commit()
+        self.assert_reason(
+            Reason.VM_GENERATION_SUPERSEDED,
+            lambda: self.store.authorize_launch(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision,
+            ).__enter__(),
+        )
+
+    def test_launch_authorization_rejects_stale_authoritative_facts(self) -> None:
+        preparing = self.store.prepare(self.store.begin(request()).transaction_id, 1, 0)
+        with closing(sqlite3.connect(self.db)) as connection:
+            connection.execute(
+                """UPDATE device_generations SET generation=generation+1
+                   WHERE host_id=? AND bdf=?""",
+                (HOST, MEMBERS[0]),
+            )
+            connection.commit()
+        self.assert_reason(
+            Reason.DEVICE_GENERATION_MISMATCH,
+            lambda: self.store.authorize_launch(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision,
+            ).__enter__(),
+        )
+
+    def test_launch_authorization_rejects_missing_member_claim(self) -> None:
+        preparing = self.store.prepare(self.store.begin(request()).transaction_id, 1, 0)
+        with closing(sqlite3.connect(self.db)) as connection:
+            connection.execute(
+                "DELETE FROM member_claims WHERE host_id=? AND bdf=?",
+                (HOST, MEMBERS[0]),
+            )
+            connection.commit()
+        self.assert_reason(
+            Reason.RECOVERY_REQUIRED,
+            lambda: self.store.authorize_launch(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision,
+            ).__enter__(),
+        )
+
+    def test_launch_authorization_rejects_stale_bundle_claim(self) -> None:
+        preparing = self.store.prepare(self.store.begin(request()).transaction_id, 1, 0)
+        with closing(sqlite3.connect(self.db)) as connection:
+            connection.execute(
+                "UPDATE bundle_claims SET vm_generation=99 WHERE transaction_id=?",
+                (preparing.transaction_id,),
+            )
+            connection.commit()
+        self.assert_reason(
+            Reason.RECOVERY_REQUIRED,
+            lambda: self.store.authorize_launch(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision,
+            ).__enter__(),
+        )
+
     def test_s03_clean_bind_failure_advances_device_generation_before_reuse(self) -> None:
         reserved = self.store.begin(request())
         preparing = self.store.prepare(reserved.transaction_id, 1, 0)
@@ -738,6 +1090,232 @@ class StaticLeaseStoreTest(unittest.TestCase):
 
 
 class StaticLeaseConcurrencyTest(unittest.TestCase):
+    def test_state_snapshot_blocks_quarantine_until_guard_exits(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            db = Path(temp) / "lease.sqlite3"
+            first = StaticLeaseStore(
+                db,
+                local_host_id=HOST,
+                trusted_authority_id=AUTHORITY,
+                timeout_seconds=10,
+            )
+            first.publish_authoritative_device_generations(
+                HOST,
+                ALL_GENERATIONS,
+                expected_current={bdf: None for bdf in ALL_GENERATIONS},
+                authority_id=AUTHORITY,
+                authority_epoch=EPOCH,
+            )
+            first.publish_authoritative_bundle(
+                HOST,
+                "bundle-a",
+                MEMBERS,
+                expected_current_hash=None,
+                authority_id=AUTHORITY,
+                authority_epoch=EPOCH,
+            )
+            preparing = first.prepare(first.begin(request()).transaction_id, 1, 0)
+            second = StaticLeaseStore(
+                db,
+                local_host_id=HOST,
+                trusted_authority_id=AUTHORITY,
+                timeout_seconds=10,
+            )
+            attempted = threading.Event()
+            completed = threading.Event()
+            outcomes: list[LeaseState | BaseException] = []
+
+            def quarantine() -> None:
+                attempted.set()
+                try:
+                    result = second.quarantine(
+                        preparing.transaction_id,
+                        preparing.vm_generation,
+                        preparing.revision,
+                        reason_code="CONCURRENT_QUARANTINE",
+                    )
+                    outcomes.append(result.state)
+                except BaseException as error:  # pragma: no cover - assertion reports it
+                    outcomes.append(error)
+                finally:
+                    completed.set()
+
+            with first.authorize_state_snapshot(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision,
+                expected_state=LeaseState.PREPARING,
+                require_current_facts=True,
+                require_claims=True,
+            ) as snapshot:
+                self.assertNotIsInstance(snapshot, LeaseLaunchAuthorization)
+                thread = threading.Thread(target=quarantine)
+                thread.start()
+                self.assertTrue(attempted.wait(2))
+                self.assertFalse(completed.wait(0.25))
+                self.assertEqual(
+                    LeaseState.PREPARING,
+                    first.get(preparing.transaction_id).state,
+                )
+
+            self.assertTrue(completed.wait(10))
+            thread.join(1)
+            self.assertFalse(thread.is_alive())
+            self.assertEqual([LeaseState.QUARANTINED], outcomes)
+            first.close()
+            second.close()
+
+    def test_launch_callback_exception_invalidates_authorization_and_releases_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            db = Path(temp) / "lease.sqlite3"
+            first = StaticLeaseStore(
+                db,
+                local_host_id=HOST,
+                trusted_authority_id=AUTHORITY,
+                timeout_seconds=10,
+            )
+            first.publish_authoritative_device_generations(
+                HOST,
+                ALL_GENERATIONS,
+                expected_current={bdf: None for bdf in ALL_GENERATIONS},
+                authority_id=AUTHORITY,
+                authority_epoch=EPOCH,
+            )
+            first.publish_authoritative_bundle(
+                HOST,
+                "bundle-a",
+                MEMBERS,
+                expected_current_hash=None,
+                authority_id=AUTHORITY,
+                authority_epoch=EPOCH,
+            )
+            preparing = first.prepare(first.begin(request()).transaction_id, 1, 0)
+            second = StaticLeaseStore(
+                db,
+                local_host_id=HOST,
+                trusted_authority_id=AUTHORITY,
+                timeout_seconds=10,
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "launch callback failed"):
+                with first.authorize_launch(
+                    preparing.transaction_id,
+                    preparing.vm_generation,
+                    preparing.revision,
+                ) as authorization:
+                    self.assertTrue(authorization.is_active)
+                    raise RuntimeError("launch callback failed")
+
+            self.assertFalse(authorization.is_active)
+            quarantined = second.rollback(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision,
+                cleanup_verified=False,
+                reason_code="QEMU_START_FAILED",
+            )
+            self.assertEqual(LeaseState.QUARANTINED, quarantined.state)
+            first.close()
+            second.close()
+
+    def test_concurrent_rollback_waits_for_launch_authorization_to_exit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            db = Path(temp) / "lease.sqlite3"
+            first = StaticLeaseStore(
+                db,
+                local_host_id=HOST,
+                trusted_authority_id=AUTHORITY,
+                timeout_seconds=10,
+            )
+            first.publish_authoritative_device_generations(
+                HOST,
+                ALL_GENERATIONS,
+                expected_current={bdf: None for bdf in ALL_GENERATIONS},
+                authority_id=AUTHORITY,
+                authority_epoch=EPOCH,
+            )
+            first.publish_authoritative_bundle(
+                HOST,
+                "bundle-a",
+                MEMBERS,
+                expected_current_hash=None,
+                authority_id=AUTHORITY,
+                authority_epoch=EPOCH,
+            )
+            preparing = first.prepare(first.begin(request()).transaction_id, 1, 0)
+            second = StaticLeaseStore(
+                db,
+                local_host_id=HOST,
+                trusted_authority_id=AUTHORITY,
+                timeout_seconds=10,
+            )
+            attempted = threading.Event()
+            completed = threading.Event()
+            outcomes: list[LeaseState | BaseException] = []
+
+            def rollback() -> None:
+                attempted.set()
+                try:
+                    result = second.rollback(
+                        preparing.transaction_id,
+                        preparing.vm_generation,
+                        preparing.revision,
+                        cleanup_verified=False,
+                        reason_code="QEMU_START_FAILED",
+                    )
+                    outcomes.append(result.state)
+                except BaseException as error:  # pragma: no cover - assertion reports it
+                    outcomes.append(error)
+                finally:
+                    completed.set()
+
+            with first.authorize_launch(
+                preparing.transaction_id,
+                preparing.vm_generation,
+                preparing.revision,
+            ) as authorization:
+                thread = threading.Thread(target=rollback)
+                thread.start()
+                self.assertTrue(attempted.wait(2))
+                self.assertFalse(completed.wait(0.25))
+                self.assertTrue(authorization.is_active)
+                reentrant_operations = (
+                    lambda: first.quarantine(
+                        preparing.transaction_id,
+                        preparing.vm_generation,
+                        preparing.revision,
+                        reason_code="MUST_NOT_REENTER",
+                    ),
+                    lambda: first.authorize_launch(
+                        preparing.transaction_id,
+                        preparing.vm_generation,
+                        preparing.revision,
+                    ).__enter__(),
+                    first.close,
+                )
+                for operation in reentrant_operations:
+                    with self.assertRaises(LeaseStoreError) as caught:
+                        operation()
+                    self.assertEqual(
+                        Reason.LAUNCH_AUTHORIZATION_ACTIVE,
+                        caught.exception.reason,
+                    )
+                    self.assertTrue(authorization.is_active)
+                    authorization.require_active()
+                    self.assertFalse(completed.wait(0.05))
+                self.assertEqual(
+                    LeaseState.PREPARING,
+                    first.get(preparing.transaction_id).state,
+                )
+
+            self.assertTrue(completed.wait(10))
+            thread.join(1)
+            self.assertFalse(thread.is_alive())
+            self.assertEqual([LeaseState.QUARANTINED], outcomes)
+            self.assertFalse(authorization.is_active)
+            first.close()
+            second.close()
+
     def test_concurrent_begin_has_one_winner_for_shared_member(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             db = Path(temp) / "lease.sqlite3"
