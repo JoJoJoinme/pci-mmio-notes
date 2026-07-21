@@ -942,6 +942,20 @@ def validate_qman_closure_effect(
             errors.append(
                 f"Qman evidence {evidence_id} reference subject cannot close product cases/risks"
             )
+    elif subject == "QMAN_COMPONENT":
+        if claim_boundary != "COMPONENT_ONLY":
+            errors.append(
+                f"Qman evidence {evidence_id} component subject must use COMPONENT_ONLY"
+            )
+    elif subject == "QMAN_END_TO_END":
+        if claim_boundary not in {"END_TO_END_PRODUCT", "PHYSICAL_QUALIFICATION"}:
+            errors.append(
+                f"Qman evidence {evidence_id} end-to-end subject must use an end-to-end claim boundary"
+            )
+    if claim_boundary == "PHYSICAL_QUALIFICATION" and grade != "E4":
+        errors.append(
+            f"Qman evidence {evidence_id} physical qualification boundary requires E4"
+        )
     if grade == "E2" and attempts_closure:
         errors.append(
             f"Qman evidence {evidence_id} E2 cannot close product cases/risks"

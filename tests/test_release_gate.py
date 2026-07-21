@@ -201,6 +201,41 @@ class QmanEvidenceClosurePolicyTests(unittest.TestCase):
         )
         self.assertTrue(any("non-end-to-end subject" in item for item in errors))
 
+    def test_subject_and_claim_boundary_must_be_compatible(self) -> None:
+        component = self.result(
+            subject="QMAN_COMPONENT",
+            grade="E3",
+            product_cases=[],
+            risks=[],
+            status_updated=False,
+        )
+        component["claimBoundary"] = "END_TO_END_PRODUCT"
+        self.assertTrue(
+            any("component subject must use COMPONENT_ONLY" in item for item in self.validate(component))
+        )
+
+        end_to_end = self.result(
+            subject="QMAN_END_TO_END",
+            grade="E3",
+            product_cases=[],
+            risks=[],
+            status_updated=False,
+        )
+        end_to_end["claimBoundary"] = "COMPONENT_ONLY"
+        self.assertTrue(
+            any("end-to-end subject" in item for item in self.validate(end_to_end))
+        )
+
+        physical = self.result(
+            subject="QMAN_END_TO_END",
+            grade="E3",
+            product_cases=[],
+            risks=[],
+            status_updated=False,
+        )
+        physical["claimBoundary"] = "PHYSICAL_QUALIFICATION"
+        self.assertTrue(any("requires E4" in item for item in self.validate(physical)))
+
     def test_e4_risk_closure_requires_physical_claim_boundary(self) -> None:
         result = self.result(
             subject="QMAN_END_TO_END",
