@@ -16,6 +16,7 @@ from pci_resource_model import vfio_provider as vfio
 
 
 BDF = "0000:65:00.0"
+BDF2 = "0000:65:00.1"
 TOPOLOGY_HASH = "1" * 64
 
 
@@ -51,6 +52,22 @@ def request(observed=None, **changes):
         "expected_identity_hash": vfio.compute_identity_hash(BDF, observed.identity),
         "expected_group_hash": vfio.compute_group_hash(
             BDF, observed.iommu_group, observed.group_members
+        ),
+    }
+    values.update(changes)
+    return launch.VfioLaunchRequest(**values)
+
+
+def request_for_state(observed, **changes):
+    values = {
+        "bdf": observed.bdf,
+        "snapshot_epoch": 17,
+        "topology_hash": TOPOLOGY_HASH,
+        "expected_identity_hash": vfio.compute_identity_hash(
+            observed.bdf, observed.identity
+        ),
+        "expected_group_hash": vfio.compute_group_hash(
+            observed.bdf, observed.iommu_group, observed.group_members
         ),
     }
     values.update(changes)
@@ -187,6 +204,193 @@ class VfioLaunchHandlesTests(unittest.TestCase):
         self.assertFalse(result.production_provenance)
         result.close()
         self.assertEqual([11, 10], kernel.close_attempts)
+
+    def test_bundle_opens_complete_group_on_one_iommufd_and_closes_atomically(self):
+        members = (BDF, BDF2)
+        first = state(group_members=members)
+        second = state(
+            bdf=BDF2,
+            group_members=members,
+            cdev_node=Path("/dev/vfio/devices/vfio1"),
+            cdev_device_number=(241, 1),
+        )
+        reader = FakeReader(first, second, first, second)
+        kernel = FakeKernel()
+
+        bundle = launch.open_vfio_launch_bundle(
+            [request_for_state(second), request_for_state(first)],
+            state_reader=reader,
+            kernel=kernel,
+        )
+
+        self.assertEqual([BDF, BDF2, BDF, BDF2], reader.calls)
+        self.assertEqual([BDF, BDF2], [item.metadata.bdf for item in bundle.results])
+        self.assertEqual(3, len(kernel.opens))
+        self.assertEqual(1, sum(item["role"] == "iommufd" for item in kernel.opens))
+        self.assertEqual(
+            bundle.results[0].iommufd_fd, bundle.results[1].iommufd_fd
+        )
+        self.assertIs(bundle.results[0]._close_state, bundle.results[1]._close_state)
+        self.assertEqual((11, 12, 10), bundle.pass_fds)
+        self.assertTrue(bundle.handles_usable)
+        self.assertTrue(all(result.handles_usable for result in bundle.results))
+
+        bundle.results[0].close()
+        self.assertEqual([12, 11, 10], kernel.close_attempts)
+        self.assertTrue(bundle.closed)
+        self.assertFalse(bundle.handles_usable)
+        self.assertTrue(all(result.closed for result in bundle.results))
+        self.assertTrue(all(not result.handles_usable for result in bundle.results))
+        bundle.close()
+        bundle.results[1].close()
+        self.assertEqual([12, 11, 10], kernel.close_attempts)
+        self.assert_reason(vfio.Reason.INVALID_ARGUMENT, lambda: bundle.pass_fds)
+
+    def test_bundle_rejects_partial_group_before_open_and_recheck_drift_cleans_all(self):
+        members = (BDF, BDF2)
+        first = state(group_members=members)
+        second = state(
+            bdf=BDF2,
+            group_members=members,
+            cdev_node=Path("/dev/vfio/devices/vfio1"),
+            cdev_device_number=(241, 1),
+        )
+        kernel = FakeKernel()
+        error = self.assert_reason(
+            vfio.Reason.IOMMU_GROUP_STALE,
+            lambda: launch.open_vfio_launch_bundle(
+                [request_for_state(first)],
+                state_reader=FakeReader(first),
+                kernel=kernel,
+            ),
+        )
+        self.assertEqual("incomplete-launch-bundle-iommu-group", error.stage)
+        self.assertEqual([], kernel.opens)
+
+        stale_second = state(
+            bdf=BDF2,
+            iommu_group="8",
+            group_members=(BDF2,),
+            group_node=Path("/dev/vfio/8"),
+            cdev_node=Path("/dev/vfio/devices/vfio1"),
+            cdev_device_number=(241, 1),
+        )
+        kernel = FakeKernel()
+        self.assert_reason(
+            vfio.Reason.IOMMU_GROUP_STALE,
+            lambda: launch.open_vfio_launch_bundle(
+                [request_for_state(first), request_for_state(second)],
+                state_reader=FakeReader(first, second, first, stale_second),
+                kernel=kernel,
+            ),
+        )
+        self.assertEqual([12, 11, 10], kernel.close_attempts)
+        self.assertFalse(kernel.open_fds)
+
+    def test_bundle_rejects_mixed_snapshot_duplicate_and_capability_forgery(self):
+        observed = state()
+        kernel = FakeKernel()
+        self.assert_reason(
+            vfio.Reason.INVALID_ARGUMENT,
+            lambda: launch.open_vfio_launch_bundle(
+                [request_for_state(observed), request_for_state(observed)],
+                state_reader=FakeReader(observed),
+                kernel=kernel,
+            ),
+        )
+        other = state(
+            bdf=BDF2,
+            iommu_group="8",
+            group_members=(BDF2,),
+            group_node=Path("/dev/vfio/8"),
+            cdev_node=Path("/dev/vfio/devices/vfio1"),
+            cdev_device_number=(241, 1),
+        )
+        self.assert_reason(
+            vfio.Reason.INVALID_SNAPSHOT_EPOCH,
+            lambda: launch.open_vfio_launch_bundle(
+                [
+                    request_for_state(observed),
+                    request_for_state(other, snapshot_epoch=18),
+                ],
+                state_reader=FakeReader(observed),
+                kernel=kernel,
+            ),
+        )
+        self.assertEqual([], kernel.opens)
+        with self.assertRaisesRegex(TypeError, "created only"):
+            launch.VfioLaunchBundle()
+        blank = object.__new__(launch.VfioLaunchBundle)
+        self.assertFalse(blank.production_provenance)
+        self.assertFalse(blank.handles_usable)
+        self.assertFalse(launch.is_production_launch_bundle(blank))
+        self.assertTrue(blank.closed)
+        self.assert_reason(vfio.Reason.INVALID_ARGUMENT, lambda: blank.pass_fds)
+
+    def test_bundle_default_path_is_production_and_explicit_dependencies_are_lab(self):
+        members = (BDF, BDF2)
+        first = state(group_members=members)
+        second = state(
+            bdf=BDF2,
+            group_members=members,
+            cdev_node=Path("/dev/vfio/devices/vfio1"),
+            cdev_device_number=(241, 1),
+        )
+        states = {BDF: first, BDF2: second}
+        capture_calls = []
+        fake_kernel = FakeKernel()
+
+        def capture(_reader, bdf):
+            capture_calls.append(bdf)
+            return states[bdf]
+
+        def open_char_node(
+            _kernel,
+            path,
+            *,
+            role,
+            failure_reason,
+            expected_device_number,
+            bdf,
+        ):
+            return fake_kernel.open_char_node(
+                path,
+                role=role,
+                failure_reason=failure_reason,
+                expected_device_number=expected_device_number,
+                bdf=bdf,
+            )
+
+        def close(_kernel, fd):
+            fake_kernel.close(fd)
+
+        launch_requests = [request_for_state(first), request_for_state(second)]
+        with (
+            mock.patch.object(vfio.LinuxSysfsStateReader, "capture", capture),
+            mock.patch.object(
+                launch.PosixLaunchKernel, "open_char_node", open_char_node
+            ),
+            mock.patch.object(launch.PosixLaunchKernel, "close", close),
+        ):
+            production = launch.open_vfio_launch_bundle(launch_requests)
+            self.assertTrue(production.production_provenance)
+            self.assertTrue(launch.is_production_launch_bundle(production))
+            self.assertTrue(
+                all(
+                    launch.is_production_launch_result(result)
+                    for result in production.results
+                )
+            )
+            production.close()
+
+            explicit_none = launch.open_vfio_launch_bundle(
+                launch_requests, state_reader=None, kernel=None
+            )
+            self.assertFalse(explicit_none.production_provenance)
+            self.assertFalse(launch.is_production_launch_bundle(explicit_none))
+            explicit_none.close()
+        self.assertEqual([BDF, BDF2, BDF, BDF2] * 2, capture_calls)
+        self.assertFalse(fake_kernel.open_fds)
 
     def test_result_rejects_direct_public_data_object_construction(self):
         with self.assertRaisesRegex(

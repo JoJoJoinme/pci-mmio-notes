@@ -1042,6 +1042,117 @@ class QemuLaunchContractTests(unittest.TestCase):
             )
             injected.close()
 
+    @unittest.skipUnless(hasattr(os, "major"), "provider fd adapter is POSIX-only")
+    def test_complete_group_bundle_adapts_to_one_qemu_iommufd_object(self) -> None:
+        from pci_resource_model import vfio_launch_handles as handles
+        from pci_resource_model import vfio_provider as vfio
+
+        bdfs = ("0000:65:00.0", "0000:66:00.0")
+        identity = vfio.PciIdentity(
+            vendor_id=0x8086,
+            device_id=0x10D3,
+            subsystem_vendor_id=0x8086,
+            subsystem_device_id=0xA01F,
+            class_code=0x020000,
+            revision=2,
+        )
+        states = {
+            bdf: vfio.DeviceState(
+                bdf=bdf,
+                identity=identity,
+                driver="vfio-pci",
+                iommu_group="7",
+                group_members=bdfs,
+                noiommu_node_present=False,
+                group_node=Path("/dev/vfio/7"),
+                cdev_node=Path(f"/dev/vfio/devices/vfio{index}"),
+                cdev_device_number=(
+                    os.major(self.fd_stats[11 + index].st_rdev),
+                    os.minor(self.fd_stats[11 + index].st_rdev),
+                ),
+            )
+            for index, bdf in enumerate(bdfs)
+        }
+        requests = [
+            handles.VfioLaunchRequest(
+                bdf=bdf,
+                snapshot_epoch=17,
+                topology_hash="a" * 64,
+                expected_identity_hash=vfio.compute_identity_hash(bdf, identity),
+                expected_group_hash=vfio.compute_group_hash(bdf, "7", bdfs),
+            )
+            for bdf in bdfs
+        ]
+
+        def capture(_reader, captured_bdf: str):
+            return states[captured_bdf]
+
+        def opened(role: str, path: Path, fd: int) -> handles.OpenHandleMetadata:
+            observed = self.fd_stats[fd]
+            return handles.OpenHandleMetadata(
+                role=role,
+                path=path,
+                inode=observed.st_ino,
+                filesystem_device=observed.st_dev,
+                character_device_major=os.major(observed.st_rdev),
+                character_device_minor=os.minor(observed.st_rdev),
+                cloexec=True,
+            )
+
+        def open_node(
+            _kernel,
+            path: Path,
+            *,
+            role: str,
+            failure_reason: str,
+            expected_device_number,
+            bdf: str,
+        ) -> handles.OpenedNode:
+            del failure_reason, expected_device_number
+            fd = 21 if role == "iommufd" else 11 + bdfs.index(bdf)
+            return handles.OpenedNode(fd=fd, metadata=opened(role, Path(path), fd))
+
+        with (
+            mock.patch.object(vfio.LinuxSysfsStateReader, "capture", capture),
+            mock.patch.object(handles.PosixLaunchKernel, "open_char_node", open_node),
+            mock.patch.object(handles.PosixLaunchKernel, "close", return_value=None),
+        ):
+            bundle = handles.open_vfio_launch_bundle(requests)
+            self.assertTrue(handles.is_production_launch_bundle(bundle))
+            bindings = tuple(
+                launch.device_binding_from_vfio_launch_result(
+                    result,
+                    launch.GuestSlot(index=index, root_port_address=2 + index),
+                    self.lease,
+                    fstat=self.fstat,
+                )
+                for index, result in enumerate(bundle.results)
+            )
+            spec = self.render(self.plan(devices=bindings))
+            self.assertEqual((11, 12, 21), spec.pass_fds)
+            self.assertEqual(
+                1,
+                sum(
+                    token.startswith("iommufd,id=iommufd0,fd=21")
+                    for token in spec.argv
+                ),
+            )
+            self.assertEqual(
+                2,
+                sum("iommufd=iommufd0" in token for token in spec.argv),
+            )
+            bundle.results[0].close()
+            self.assertFalse(bundle.results[1].handles_usable)
+            self.assert_reason(
+                launch.Reason.INVALID_PROVIDER_ADMISSION,
+                lambda: launch.device_binding_from_vfio_launch_result(
+                    bundle.results[1],
+                    launch.GuestSlot(index=1, root_port_address=3),
+                    self.lease,
+                    fstat=self.fstat,
+                ),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

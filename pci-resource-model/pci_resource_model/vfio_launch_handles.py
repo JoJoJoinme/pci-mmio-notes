@@ -18,9 +18,10 @@ import hmac
 import json
 import os
 import stat
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, Sequence
 
 from . import vfio_provider as vfio
 
@@ -49,6 +50,7 @@ class _OmittedDependency:
 
 _DEPENDENCY_OMITTED = _OmittedDependency()
 _RESULT_FACTORY_SEAL = object()
+_BUNDLE_FACTORY_SEAL = object()
 _PRODUCTION_PROVENANCE = object()
 _TEST_LAB_PROVENANCE = object()
 
@@ -151,8 +153,12 @@ class VfioLaunchMetadata:
 
 @dataclass
 class _CloseState:
+    close_plan: tuple[int, ...]
+    bdf: str
+    stage: str
     closed: bool = False
     cleanup_failed: bool = False
+    lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
 
 @dataclass(frozen=True, init=False)
@@ -255,26 +261,9 @@ class VfioLaunchResult:
         raise TypeError("VfioLaunchResult capability objects cannot be unpickled")
 
     def close(self) -> None:
-        """Close in reverse-open order, attempting both descriptors once."""
+        """Close the complete ownership unit exactly once in reverse-open order."""
 
-        if self._close_state.closed:
-            return
-        self._close_state.closed = True
-        failures: list[BaseException] = []
-        for fd in (self.device_fd, self.iommufd_fd):
-            try:
-                self._kernel.close(fd)
-            except BaseException as error:
-                failures.append(error)
-        if failures:
-            self._close_state.cleanup_failed = True
-            first = failures[0]
-            raise vfio.ProviderError(
-                vfio.Reason.PROVIDER_CLEANUP_FAILED,
-                bdf=self.metadata.bdf,
-                stage="launch-handle-close",
-                os_errno=first.errno if isinstance(first, OSError) else None,
-            ) from first
+        _close_owned_handles(self._kernel, self._close_state)
 
     def __enter__(self) -> "VfioLaunchResult":
         return self
@@ -282,6 +271,123 @@ class VfioLaunchResult:
     def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> bool:
         self.close()
         return False
+
+
+@dataclass(frozen=True, init=False)
+class VfioLaunchBundle:
+    """Atomic ownership unit for one or more cdevs sharing one IOMMUFD.
+
+    Every child is an exact :class:`VfioLaunchResult`, but all children share a
+    single close state.  Closing the bundle or any child invalidates every child
+    and closes all cdevs followed by the one shared IOMMUFD descriptor.
+    """
+
+    results: tuple[VfioLaunchResult, ...]
+    _kernel: LaunchKernelOps = field(repr=False, compare=False)
+    _close_state: _CloseState = field(repr=False, compare=False)
+    _provenance: object = field(repr=False, compare=False)
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        del args, kwargs
+        raise TypeError(
+            "VfioLaunchBundle instances are created only by open_vfio_launch_bundle"
+        )
+
+    @property
+    def production_provenance(self) -> bool:
+        return (
+            type(self) is VfioLaunchBundle
+            and getattr(self, "_provenance", None) is _PRODUCTION_PROVENANCE
+        )
+
+    @property
+    def closed(self) -> bool:
+        state = getattr(self, "_close_state", None)
+        return not isinstance(state, _CloseState) or state.closed
+
+    @property
+    def cleanup_failed(self) -> bool:
+        state = getattr(self, "_close_state", None)
+        return isinstance(state, _CloseState) and state.cleanup_failed
+
+    @property
+    def handles_usable(self) -> bool:
+        state = getattr(self, "_close_state", None)
+        results = getattr(self, "results", None)
+        return (
+            type(self) is VfioLaunchBundle
+            and isinstance(state, _CloseState)
+            and isinstance(results, tuple)
+            and bool(results)
+            and getattr(self, "_provenance", None)
+            in (_PRODUCTION_PROVENANCE, _TEST_LAB_PROVENANCE)
+            and not state.closed
+            and all(result.handles_usable for result in results)
+        )
+
+    @property
+    def pass_fds(self) -> tuple[int, ...]:
+        if not self.handles_usable:
+            raise vfio.ProviderError(
+                vfio.Reason.INVALID_ARGUMENT,
+                bdf=getattr(getattr(self, "_close_state", None), "bdf", None),
+                stage="pass-closed-launch-bundle",
+            )
+        iommufd_fd = self.results[0].iommufd_fd
+        return tuple(result.device_fd for result in self.results) + (iommufd_fd,)
+
+    def __copy__(self) -> "VfioLaunchBundle":
+        raise TypeError("VfioLaunchBundle capability objects cannot be copied")
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> "VfioLaunchBundle":
+        del memo
+        raise TypeError("VfioLaunchBundle capability objects cannot be copied")
+
+    def __reduce__(self) -> Any:
+        raise TypeError("VfioLaunchBundle capability objects cannot be pickled")
+
+    def __reduce_ex__(self, protocol: int) -> Any:
+        del protocol
+        raise TypeError("VfioLaunchBundle capability objects cannot be pickled")
+
+    def __getstate__(self) -> Any:
+        raise TypeError("VfioLaunchBundle capability objects cannot be pickled")
+
+    def __setstate__(self, state: Any) -> None:
+        del state
+        raise TypeError("VfioLaunchBundle capability objects cannot be unpickled")
+
+    def close(self) -> None:
+        _close_owned_handles(self._kernel, self._close_state)
+
+    def __enter__(self) -> "VfioLaunchBundle":
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> bool:
+        self.close()
+        return False
+
+
+def _close_owned_handles(kernel: LaunchKernelOps, state: _CloseState) -> None:
+    with state.lock:
+        if state.closed:
+            return
+        state.closed = True
+        failures: list[BaseException] = []
+        for fd in state.close_plan:
+            try:
+                kernel.close(fd)
+            except BaseException as error:
+                failures.append(error)
+        if failures:
+            state.cleanup_failed = True
+            first = failures[0]
+            raise vfio.ProviderError(
+                vfio.Reason.PROVIDER_CLEANUP_FAILED,
+                bdf=state.bdf,
+                stage=state.stage,
+                os_errno=first.errno if isinstance(first, OSError) else None,
+            ) from first
 
 
 def is_production_launch_result(value: object) -> bool:
@@ -295,6 +401,19 @@ def is_production_launch_result(value: object) -> bool:
     return (
         type(value) is VfioLaunchResult
         and getattr(value, "_provenance", None) is _PRODUCTION_PROVENANCE
+    )
+
+
+def is_production_launch_bundle(value: object) -> bool:
+    """Return the exact product-admission provenance for an atomic bundle."""
+
+    results = getattr(value, "results", None)
+    return (
+        type(value) is VfioLaunchBundle
+        and getattr(value, "_provenance", None) is _PRODUCTION_PROVENANCE
+        and isinstance(results, tuple)
+        and bool(results)
+        and all(is_production_launch_result(result) for result in results)
     )
 
 
@@ -419,6 +538,7 @@ def _new_launch_result(
     metadata: VfioLaunchMetadata,
     kernel: LaunchKernelOps,
     production: bool,
+    close_state: _CloseState | None = None,
     _seal: object,
 ) -> VfioLaunchResult:
     if _seal is not _RESULT_FACTORY_SEAL:
@@ -429,13 +549,44 @@ def _new_launch_result(
     object.__setattr__(result, "iommufd_fd", iommufd_fd)
     object.__setattr__(result, "metadata", metadata)
     object.__setattr__(result, "_kernel", kernel)
-    object.__setattr__(result, "_close_state", _CloseState())
+    object.__setattr__(
+        result,
+        "_close_state",
+        close_state
+        or _CloseState(
+            close_plan=(device_fd, iommufd_fd),
+            bdf=request.bdf,
+            stage="launch-handle-close",
+        ),
+    )
     object.__setattr__(
         result,
         "_provenance",
         _PRODUCTION_PROVENANCE if production else _TEST_LAB_PROVENANCE,
     )
     return result
+
+
+def _new_launch_bundle(
+    *,
+    results: tuple[VfioLaunchResult, ...],
+    kernel: LaunchKernelOps,
+    close_state: _CloseState,
+    production: bool,
+    _seal: object,
+) -> VfioLaunchBundle:
+    if _seal is not _BUNDLE_FACTORY_SEAL:
+        raise RuntimeError("invalid VfioLaunchBundle factory seal")
+    bundle = object.__new__(VfioLaunchBundle)
+    object.__setattr__(bundle, "results", results)
+    object.__setattr__(bundle, "_kernel", kernel)
+    object.__setattr__(bundle, "_close_state", close_state)
+    object.__setattr__(
+        bundle,
+        "_provenance",
+        _PRODUCTION_PROVENANCE if production else _TEST_LAB_PROVENANCE,
+    )
+    return bundle
 
 
 def _canonical_json_bytes(value: MappingValue) -> bytes:
@@ -671,6 +822,245 @@ def _close_partial(
             stage="partial-launch-open-cleanup",
             os_errno=first.errno if isinstance(first, OSError) else None,
         ) from first
+
+
+def _validate_complete_bundle_groups(
+    states: dict[str, vfio.DeviceState], request_bdfs: frozenset[str]
+) -> None:
+    groups: dict[str, tuple[str, ...]] = {}
+    member_owner: dict[str, str] = {}
+    requested_by_group: dict[str, set[str]] = {}
+    for bdf, device_state in states.items():
+        group = device_state.iommu_group
+        members = device_state.group_members
+        previous = groups.setdefault(group, members)
+        if previous != members:
+            raise vfio.ProviderError(vfio.Reason.IOMMU_GROUP_STALE, bdf=bdf)
+        requested_by_group.setdefault(group, set()).add(bdf)
+        for member in members:
+            owner = member_owner.setdefault(member, group)
+            if owner != group:
+                raise vfio.ProviderError(vfio.Reason.IOMMU_GROUP_STALE, bdf=bdf)
+    for group, members in groups.items():
+        if frozenset(members) != frozenset(requested_by_group[group]):
+            representative = min(requested_by_group[group])
+            raise vfio.ProviderError(
+                vfio.Reason.IOMMU_GROUP_STALE,
+                bdf=representative,
+                stage="incomplete-launch-bundle-iommu-group",
+            )
+    if frozenset(states) != request_bdfs:
+        raise vfio.ProviderError(
+            vfio.Reason.IOMMU_GROUP_STALE,
+            stage="launch-bundle-state-coverage",
+        )
+
+
+def open_vfio_launch_bundle(
+    requests: Sequence[VfioLaunchRequest],
+    *,
+    state_reader: vfio.StateReader | None | _OmittedDependency = _DEPENDENCY_OMITTED,
+    kernel: LaunchKernelOps | None | _OmittedDependency = _DEPENDENCY_OMITTED,
+) -> VfioLaunchBundle:
+    """Open complete IOMMU-group cdev sets on one shared IOMMUFD.
+
+    All requests must belong to one inventory snapshot.  Every referenced IOMMU
+    group must be represented by its complete, exact member set.  The function
+    captures all devices before opening anything, opens exactly one IOMMUFD and
+    one cdev per BDF, then rechecks the complete set.  Any failure closes every
+    opened descriptor in reverse order and returns no partial capability.
+    """
+
+    if (
+        not isinstance(requests, Sequence)
+        or isinstance(requests, (str, bytes))
+        or not requests
+    ):
+        raise vfio.ProviderError(
+            vfio.Reason.INVALID_ARGUMENT, stage="launch-bundle-requests"
+        )
+    normalized = tuple(
+        sorted(
+            (_normalize_request(item) for item in requests),
+            key=lambda item: item.bdf,
+        )
+    )
+    request_bdfs = frozenset(item.bdf for item in normalized)
+    if len(request_bdfs) != len(normalized):
+        raise vfio.ProviderError(
+            vfio.Reason.INVALID_ARGUMENT, stage="duplicate-launch-bundle-bdf"
+        )
+    if len({item.snapshot_epoch for item in normalized}) != 1:
+        raise vfio.ProviderError(
+            vfio.Reason.INVALID_SNAPSHOT_EPOCH,
+            stage="mixed-launch-bundle-snapshot",
+        )
+    if len({item.topology_hash for item in normalized}) != 1:
+        raise vfio.ProviderError(
+            vfio.Reason.INVALID_TOPOLOGY_HASH,
+            stage="mixed-launch-bundle-topology",
+        )
+
+    reader_was_omitted = state_reader is _DEPENDENCY_OMITTED
+    kernel_was_omitted = kernel is _DEPENDENCY_OMITTED
+    if reader_was_omitted or state_reader is None:
+        reader = vfio.LinuxSysfsStateReader(sysfs_root=SYSFS_ROOT, vfio_root=VFIO_ROOT)
+    else:
+        reader = state_reader
+    if kernel_was_omitted or kernel is None:
+        kernel_ops = PosixLaunchKernel()
+    else:
+        kernel_ops = kernel
+    production = (
+        reader_was_omitted
+        and kernel_was_omitted
+        and type(reader) is _PRODUCTION_STATE_READER_TYPE
+        and type(kernel_ops) is _PRODUCTION_LAUNCH_KERNEL_TYPE
+    )
+
+    before_states: dict[str, vfio.DeviceState] = {}
+    identity_hashes: dict[str, str] = {}
+    group_hashes: dict[str, str] = {}
+    by_bdf = {item.bdf: item for item in normalized}
+    for item in normalized:
+        observed = reader.capture(item.bdf)
+        _validate_state(observed, item.bdf)
+        identity_hash = vfio.compute_identity_hash(item.bdf, observed.identity)
+        group_hash = vfio.compute_group_hash(
+            item.bdf, observed.iommu_group, observed.group_members
+        )
+        if not hmac.compare_digest(identity_hash, item.expected_identity_hash):
+            raise vfio.ProviderError(
+                vfio.Reason.DEVICE_IDENTITY_STALE, bdf=item.bdf
+            )
+        if not hmac.compare_digest(group_hash, item.expected_group_hash):
+            raise vfio.ProviderError(vfio.Reason.IOMMU_GROUP_STALE, bdf=item.bdf)
+        if observed.noiommu_node_present:
+            raise vfio.ProviderError(
+                vfio.Reason.DEVICE_NO_IOMMU_DMA_ISOLATION, bdf=item.bdf
+            )
+        if observed.cdev_node is None:
+            raise vfio.ProviderError(
+                vfio.Reason.VFIO_CDEV_UNAVAILABLE, bdf=item.bdf
+            )
+        before_states[item.bdf] = observed
+        identity_hashes[item.bdf] = identity_hash
+        group_hashes[item.bdf] = group_hash
+    _validate_complete_bundle_groups(before_states, request_bdfs)
+
+    opened: list[object] = []
+    first_bdf = normalized[0].bdf
+    try:
+        iommu_handle = kernel_ops.open_char_node(
+            IOMMUFD_PATH,
+            role="iommufd",
+            failure_reason=vfio.Reason.IOMMUFD_OPEN_FAILED,
+            expected_device_number=None,
+            bdf=first_bdf,
+        )
+        opened.append(iommu_handle)
+        _validate_opened_node(
+            iommu_handle,
+            role="iommufd",
+            path=IOMMUFD_PATH,
+            expected_device_number=None,
+            bdf=first_bdf,
+        )
+        used_fds = {iommu_handle.fd}
+        cdev_handles: dict[str, OpenedNode] = {}
+        for item in normalized:
+            before = before_states[item.bdf]
+            assert before.cdev_node is not None
+            assert before.cdev_device_number is not None
+            cdev_handle = kernel_ops.open_char_node(
+                before.cdev_node,
+                role="vfio-cdev",
+                failure_reason=vfio.Reason.VFIO_CDEV_OPEN_FAILED,
+                expected_device_number=before.cdev_device_number,
+                bdf=item.bdf,
+            )
+            opened.append(cdev_handle)
+            _validate_opened_node(
+                cdev_handle,
+                role="vfio-cdev",
+                path=before.cdev_node,
+                expected_device_number=before.cdev_device_number,
+                bdf=item.bdf,
+            )
+            if cdev_handle.fd in used_fds:
+                raise vfio.ProviderError(
+                    vfio.Reason.VFIO_NODE_MISMATCH,
+                    bdf=item.bdf,
+                    stage="duplicate-launch-bundle-fd",
+                )
+            used_fds.add(cdev_handle.fd)
+            cdev_handles[item.bdf] = cdev_handle
+
+        after_states: dict[str, vfio.DeviceState] = {}
+        for item in normalized:
+            after = reader.capture(item.bdf)
+            _validate_recheck(before_states[item.bdf], after)
+            _validate_state(after, item.bdf)
+            after_states[item.bdf] = after
+        _validate_complete_bundle_groups(after_states, request_bdfs)
+
+        close_state = _CloseState(
+            close_plan=tuple(
+                [cdev_handles[item.bdf].fd for item in reversed(normalized)]
+                + [iommu_handle.fd]
+            ),
+            bdf=first_bdf,
+            stage="launch-bundle-close",
+        )
+        results: list[VfioLaunchResult] = []
+        for item in normalized:
+            after = after_states[item.bdf]
+            cdev_handle = cdev_handles[item.bdf]
+            metadata = VfioLaunchMetadata(
+                bdf=item.bdf,
+                snapshot_epoch=item.snapshot_epoch,
+                topology_hash=item.topology_hash,
+                identity=after.identity,
+                identity_hash=identity_hashes[item.bdf],
+                iommu_group=after.iommu_group,
+                group_members=after.group_members,
+                group_hash=group_hashes[item.bdf],
+                cdev=cdev_handle.metadata,
+                iommufd=iommu_handle.metadata,
+                fd_binding_hash=compute_fd_binding_hash(
+                    request=by_bdf[item.bdf],
+                    state=after,
+                    identity_hash=identity_hashes[item.bdf],
+                    group_hash=group_hashes[item.bdf],
+                    cdev=cdev_handle.metadata,
+                    iommufd=iommu_handle.metadata,
+                ),
+            )
+            results.append(
+                _new_launch_result(
+                    request=by_bdf[item.bdf],
+                    device_fd=cdev_handle.fd,
+                    iommufd_fd=iommu_handle.fd,
+                    metadata=metadata,
+                    kernel=kernel_ops,
+                    production=production,
+                    close_state=close_state,
+                    _seal=_RESULT_FACTORY_SEAL,
+                )
+            )
+        return _new_launch_bundle(
+            results=tuple(results),
+            kernel=kernel_ops,
+            close_state=close_state,
+            production=production,
+            _seal=_BUNDLE_FACTORY_SEAL,
+        )
+    except BaseException as primary:
+        try:
+            _close_partial(kernel_ops, opened, bdf=first_bdf)
+        except vfio.ProviderError as cleanup_error:
+            raise cleanup_error from primary
+        raise
 
 
 def open_vfio_launch_handles(
