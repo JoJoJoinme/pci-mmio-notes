@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "C10",
+  "title": "Qualification version changes invalidate every dependent capability",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R19"],
+  "requiredTechStories": ["TS-F1-01", "TS-F1-05", "TS-F8-04"],
+  "dependsOnCaseIds": [],
+  "blocker": "The repository has deterministic capability hashes and a component snapshot authority, but no production qualification signer, trust-root rotation/revocation workflow, compatibility catalog, or product consumer that invalidates cached decisions across all entry points.",
+  "targetMilestone": "G1",
+  "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
+  "assertions": [
+    "a capability records the exact publisher snapshot, qualification profile, policy version and verifier identity it consumed",
+    "changing any referenced qualification content or signer version invalidates the old capability before scheduling or attach",
+    "an unrelated profile change does not invalidate capabilities whose dependency set is disjoint",
+    "revoked, unknown or stale signer identities fail closed without a runtime override"
+  ]
+}

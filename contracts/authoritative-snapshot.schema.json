@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/authoritative-snapshot.schema.json",
+  "title": "Qman authoritative host snapshot component envelope",
+  "description": "Schema for the bounded COMPONENT_AUTHENTICITY_ONLY snapshot envelope. Cross-field hashes, signatures, current-boot checks, monotonic epoch, and SQLite authority identity are verified by authoritative_snapshot.py and are not asserted by JSON Schema alone.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "algorithm",
+    "authorityId",
+    "capture",
+    "capturedAt",
+    "hostId",
+    "inventoryEpoch",
+    "kernelBootId",
+    "keyId",
+    "kind",
+    "schemaVersion",
+    "signature",
+    "snapshotHash",
+    "storeInstanceId",
+    "topologyHash",
+    "trustBoundary",
+    "trustRootDigest"
+  ],
+  "properties": {
+    "algorithm": {"const": "HMAC-SHA256"},
+    "authorityId": {"$ref": "#/$defs/id"},
+    "capture": {"$ref": "#/$defs/capture"},
+    "capturedAt": {"type": "string", "format": "date-time"},
+    "hostId": {"$ref": "#/$defs/id"},
+    "inventoryEpoch": {"type": "integer", "minimum": 1, "maximum": 9223372036854775807},
+    "kernelBootId": {"$ref": "#/$defs/id"},
+    "keyId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "kind": {"const": "qman-authoritative-host-snapshot-v1"},
+    "schemaVersion": {"const": 1},
+    "signature": {"$ref": "#/$defs/hash"},
+    "snapshotHash": {"$ref": "#/$defs/hash"},
+    "storeInstanceId": {"type": "string", "format": "uuid"},
+    "topologyHash": {"$ref": "#/$defs/hash"},
+    "trustBoundary": {"const": "COMPONENT_AUTHENTICITY_ONLY"},
+    "trustRootDigest": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "bdf": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\\.[0-7]$"
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inventory", "launchFacts", "scope"],
+      "properties": {
+        "inventory": {"$ref": "#/$defs/inventory"},
+        "launchFacts": {
+          "type": "object",
+          "propertyNames": {"$ref": "#/$defs/bdf"},
+          "additionalProperties": {"$ref": "#/$defs/launchFact"}
+        },
+        "scope": {"const": "FULL_HOST"}
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "host", "leases", "devices"],
+      "properties": {
+        "schemaVersion": {"const": 2},
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "iommuPresent",
+            "interruptRemapping",
+            "unsafeNoIommuModeEnabled",
+            "acsOverrideActive",
+            "source",
+            "hostId",
+            "kernelBootId",
+            "inventoryEpoch",
+            "topologyHash",
+            "metadata"
+          ],
+          "properties": {
+            "iommuPresent": {"type": "boolean"},
+            "interruptRemapping": {"type": ["boolean", "null"]},
+            "unsafeNoIommuModeEnabled": {"type": "boolean"},
+            "acsOverrideActive": {"type": "boolean"},
+            "source": {"type": "string"},
+            "hostId": {"$ref": "#/$defs/id"},
+            "kernelBootId": {"$ref": "#/$defs/id"},
+            "inventoryEpoch": {"type": "integer", "minimum": 1},
+            "topologyHash": {"$ref": "#/$defs/hash"},
+            "metadata": {"type": "object"}
+          }
+        },
+        "leases": {
+          "type": "object",
+          "propertyNames": {"$ref": "#/$defs/bdf"},
+          "additionalProperties": {"type": "string"}
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["bdf"],
+            "properties": {"bdf": {"$ref": "#/$defs/bdf"}}
+          }
+        }
+      }
+    },
+    "launchFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bdf",
+        "deviceGeneration",
+        "groupHash",
+        "groupMembers",
+        "identity",
+        "identityHash",
+        "iommuGroup"
+      ],
+      "properties": {
+        "bdf": {"$ref": "#/$defs/bdf"},
+        "deviceGeneration": {"type": "integer", "minimum": 0, "maximum": 9223372036854775807},
+        "groupHash": {"$ref": "#/$defs/hash"},
+        "groupMembers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/bdf"}
+        },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "vendorId",
+            "deviceId",
+            "subsystemVendorId",
+            "subsystemDeviceId",
+            "classCode",
+            "revision"
+          ],
+          "properties": {
+            "vendorId": {"type": "string", "pattern": "^0x[0-9a-f]{4}$"},
+            "deviceId": {"type": "string", "pattern": "^0x[0-9a-f]{4}$"},
+            "subsystemVendorId": {"type": "string", "pattern": "^0x[0-9a-f]{4}$"},
+            "subsystemDeviceId": {"type": "string", "pattern": "^0x[0-9a-f]{4}$"},
+            "classCode": {"type": "string", "pattern": "^0x[0-9a-f]{6}$"},
+            "revision": {"type": "string", "pattern": "^0x[0-9a-f]{2}$"}
+          }
+        },
+        "identityHash": {"$ref": "#/$defs/hash"},
+        "iommuGroup": {"type": "string", "pattern": "^[0-9]+$"}
+      }
+    }
+  }
+}

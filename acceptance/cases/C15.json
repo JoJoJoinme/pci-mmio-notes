@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "C15",
+  "title": "Repeated capability reads are deterministic and have no device side effects",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R04", "R19"],
+  "requiredTechStories": ["TS-F1-01", "TS-F8-02"],
+  "dependsOnCaseIds": [],
+  "blocker": "Pure evaluator and snapshot-store component tests cover deterministic reads, but the production API, cache, inventory publisher and host agent are not integrated under live counter, driver, lease and reset observations.",
+  "targetMilestone": "G1",
+  "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
+  "assertions": [
+    "repeated reads of one immutable publisher snapshot produce the same semantic and decision hashes",
+    "capability reads do not bind, unbind, reset, open exclusive VFIO handles, mutate leases or increment device generations",
+    "availability changes may change the executable decision while leaving the hardware capability projection unchanged",
+    "a concurrent complete snapshot publication yields either the old complete epoch or the new complete epoch, never a mixed view"
+  ]
+}

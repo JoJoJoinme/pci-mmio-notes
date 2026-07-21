@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "C18",
+  "title": "Stale reset contracts are rejected before execution",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R02", "R03", "R29"],
+  "requiredTechStories": ["TS-F1-01", "TS-F5-01"],
+  "dependsOnCaseIds": [],
+  "blocker": "The reference evaluator rejects stale reset fact envelopes, but there is no production reset provider or pre-execution re-query bound to the active publisher snapshot, lease and live ownership context.",
+  "targetMilestone": "G2",
+  "proofBoundary": "REFERENCE_AND_COMPONENT_PREMISE_NOT_PRODUCT_CLOSURE",
+  "assertions": [
+    "inventory epoch, topology hash, reset rule version and affected-set provenance are all bound into the selected reset contract",
+    "a change in any bound value makes the old contract unselectable and unexecutable",
+    "the provider re-queries the affected set after ownership preparation and immediately before reset",
+    "unknown or expanded affected sets retain the whole bundle claim and fail closed"
+  ]
+}

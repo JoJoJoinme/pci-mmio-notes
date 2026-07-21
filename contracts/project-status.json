@@ -17,6 +17,7 @@
     "qmanTechnicalEvidence": "ipd/QMAN-TECHNICAL-EVIDENCE.md",
     "qmanEvidenceIndex": "contracts/qman-evidence-index.json",
     "qmanResultSchema": "contracts/qman-technical-evidence.schema.json",
+    "authoritativeSnapshotSchema": "contracts/authoritative-snapshot.schema.json",
     "detailedDesign": "qemu-static-dynamic-directpath-design.md",
     "implementationBlueprint": "qman-directpath-implementation-blueprint.md",
     "acceptancePlan": "vmware-directpath-acceptance-test-plan.md",
@@ -75,18 +76,22 @@
   "observations": {
     "referenceUnitTests": {
       "asOf": "2026-07-21",
-      "command": "python -m unittest discover -s pci-resource-model/tests -t pci-resource-model",
+      "command": "cd pci-resource-model && python -m pytest -q",
       "result": "PASS",
-      "testsRun": 268,
+      "testsCollected": 293,
+      "windowsPassed": 288,
+      "windowsPlatformSkips": 5,
+      "windowsSubtestsPassed": 103,
+      "wslPassed": 293,
       "isReleaseEvidence": false
     },
     "qmanTechnicalEvidence": {
       "asOf": "2026-07-21",
-      "records": 9,
-      "grades": {"E2": 2, "E3": 7, "E4": 0},
+      "records": 10,
+      "grades": {"E2": 2, "E3": 8, "E4": 0},
       "claimBoundaries": {
         "REFERENCE_ONLY": 5,
-        "COMPONENT_ONLY": 4,
+        "COMPONENT_ONLY": 5,
         "END_TO_END_PRODUCT": 0,
         "PHYSICAL_QUALIFICATION": 0
       },

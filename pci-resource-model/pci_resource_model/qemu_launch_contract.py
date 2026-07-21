@@ -8,11 +8,11 @@ the returned :class:`SpawnSpec` with their process launcher.
 P2 boundary: the QEMU hash covers the executable ELF file, not its dynamic
 loader, shared-library, firmware/ROM closure.  A narrow path TOCTOU also remains
 between final validation and ``exec``; the trusted coordinator must execute
-immediately from read-only deployment paths.  In addition, today's raw opener
-returns one result per device and cannot productively share one IOMMUFD file
-description across multiple cdevs in the same IOMMU group.  Such bundles must
-remain unsupported until an upstream group-aware opener exists; this renderer
-does not turn test-only bindings into a production-positive claim.
+immediately from read-only deployment paths.  The authoritative component path
+opens every cdev in the authorized scope, shares one IOMMUFD across each complete
+IOMMU group, and requires the rendered BDF set to equal the retained snapshot
+authorization scope.  Legacy caller-correlated adapters remain compatibility-only;
+these component checks do not constitute a production-positive support claim.
 """
 
 from __future__ import annotations
@@ -35,6 +35,9 @@ GROUP_RE = re.compile(r"^[0-9]+$")
 SAFE_ID_RE = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{0,126}[a-z0-9])?$")
 Q35_MACHINE_RE = re.compile(r"^(?:q35|pc-q35-[0-9]+(?:\.[0-9]+)*)$")
 QMP_NONCE_RE = re.compile(r"^[0-9a-f]{32}$")
+
+CALLER_CORRELATION_SNAPSHOT_BINDING = "CALLER_CORRELATION_ONLY"
+AUTHORITATIVE_COMPONENT_SNAPSHOT_BINDING = "AUTHORITATIVE_COMPONENT_SNAPSHOT_V1"
 
 MIN_MEMORY_MIB = 256
 MAX_MEMORY_MIB = 1_048_576
@@ -819,6 +822,18 @@ class ProviderAdmission:
     group_members: tuple[str, ...]
     lease_binding_hash: str
     handoff_mode: str = "PYTHON_SUBPROCESS_PASS_FDS"
+    snapshot_binding: str = CALLER_CORRELATION_SNAPSHOT_BINDING
+    snapshot_hash: str | None = None
+    snapshot_authority_id: str | None = None
+    snapshot_store_instance_id: str | None = None
+    snapshot_key_id: str | None = None
+    snapshot_boot_id: str | None = None
+    snapshot_authorization_hash: str | None = None
+    _snapshot_result: object | None = dataclass_field(
+        default=None,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self) -> None:
         _require_plain_int(
@@ -857,8 +872,112 @@ class ProviderAdmission:
         if self.handoff_mode != "PYTHON_SUBPROCESS_PASS_FDS":
             _reject(Reason.INVALID_PROVIDER_ADMISSION, "provider handoff mode is unsupported")
 
+        publisher_values = (
+            self.snapshot_hash,
+            self.snapshot_authority_id,
+            self.snapshot_store_instance_id,
+            self.snapshot_key_id,
+            self.snapshot_boot_id,
+            self.snapshot_authorization_hash,
+        )
+        if self.snapshot_binding == CALLER_CORRELATION_SNAPSHOT_BINDING:
+            if any(value is not None for value in publisher_values):
+                _reject(
+                    Reason.INVALID_PROVIDER_ADMISSION,
+                    "caller-correlated admission cannot claim publisher snapshot fields",
+                )
+            if self._snapshot_result is not None:
+                _reject(
+                    Reason.INVALID_PROVIDER_ADMISSION,
+                    "caller-correlated admission cannot retain a snapshot capability",
+                )
+            return
+        if self.snapshot_binding != AUTHORITATIVE_COMPONENT_SNAPSHOT_BINDING:
+            _reject(Reason.INVALID_PROVIDER_ADMISSION, "snapshot binding is unsupported")
+        for field_name in (
+            "snapshot_hash",
+            "snapshot_authorization_hash",
+        ):
+            _require_hash(
+                getattr(self, field_name),
+                reason_code=Reason.INVALID_PROVIDER_ADMISSION,
+                field=field_name,
+            )
+        for field_name in (
+            "snapshot_authority_id",
+            "snapshot_store_instance_id",
+            "snapshot_key_id",
+            "snapshot_boot_id",
+        ):
+            _require_text(
+                getattr(self, field_name),
+                reason_code=Reason.INVALID_PROVIDER_ADMISSION,
+                field=field_name,
+            )
+        self.require_snapshot_current(live=False)
+
+    def require_snapshot_current(self, *, live: bool) -> None:
+        """Require the retained publisher capability, optionally checking live hardware."""
+
+        if self.snapshot_binding == CALLER_CORRELATION_SNAPSHOT_BINDING:
+            return
+        from . import vfio_launch_handles as handles
+
+        result = self._snapshot_result
+        if not handles.is_authoritative_snapshot_launch_result(result):
+            _reject(
+                Reason.INVALID_PROVIDER_ADMISSION,
+                "live authoritative VfioLaunchResult capability is required",
+            )
+        metadata = result.metadata
+        expected = (
+            (metadata.snapshot_hash, self.snapshot_hash, "snapshot hash"),
+            (
+                metadata.snapshot_authority_id,
+                self.snapshot_authority_id,
+                "snapshot authority",
+            ),
+            (
+                metadata.snapshot_store_instance_id,
+                self.snapshot_store_instance_id,
+                "snapshot store",
+            ),
+            (metadata.snapshot_key_id, self.snapshot_key_id, "snapshot key"),
+            (metadata.snapshot_boot_id, self.snapshot_boot_id, "snapshot boot"),
+            (
+                metadata.snapshot_authorization_hash,
+                self.snapshot_authorization_hash,
+                "snapshot authorization",
+            ),
+        )
+        for provider_value, admission_value, field_name in expected:
+            normalized = provider_value
+            if field_name in {"snapshot hash", "snapshot authorization"}:
+                normalized = _normalize_external_hash(
+                    provider_value,
+                    field=field_name,
+                )
+            if normalized != admission_value:
+                _reject(
+                    Reason.INVALID_PROVIDER_ADMISSION,
+                    f"retained result changed {field_name}",
+                )
+        try:
+            result.require_snapshot_authorization_current()
+            if live:
+                from .authoritative_snapshot import LiveCapturePhase
+
+                result.revalidate_snapshot_live(LiveCapturePhase.PRE_SPAWN)
+        except LaunchContractError:
+            raise
+        except Exception as error:
+            _reject(
+                Reason.INVALID_PROVIDER_ADMISSION,
+                f"snapshot authorization is no longer current: {error}",
+            )
+
     def to_json(self) -> dict[str, Any]:
-        return {
+        result = {
             "fdBindingHash": self.fd_binding_hash,
             "handoffMode": self.handoff_mode,
             "groupMembers": list(self.group_members),
@@ -867,6 +986,17 @@ class ProviderAdmission:
             "snapshotEpoch": self.snapshot_epoch,
             "topologyHash": self.topology_hash,
         }
+        if self.snapshot_binding == AUTHORITATIVE_COMPONENT_SNAPSHOT_BINDING:
+            result["snapshotBinding"] = self.snapshot_binding
+            result["publisherSnapshot"] = {
+                "authorityId": self.snapshot_authority_id,
+                "authorizationHash": self.snapshot_authorization_hash,
+                "bootId": self.snapshot_boot_id,
+                "keyId": self.snapshot_key_id,
+                "snapshotHash": self.snapshot_hash,
+                "storeInstanceId": self.snapshot_store_instance_id,
+            }
+        return result
 
 
 _VERIFIED_DEVICE_PROVENANCE = object()
@@ -1026,6 +1156,7 @@ class DirectPathLaunchPlan:
             if device._verified_provenance is not _VERIFIED_DEVICE_PROVENANCE:
                 _reject(Reason.INVALID_PROVIDER_ADMISSION, "device provenance is not verified")
             admission = device.provider_admission
+            admission.require_snapshot_current(live=False)
             if not set(admission.group_members).issubset(lease_members):
                 _reject(
                     Reason.LEASE_DEVICE_SCOPE_MISMATCH,
@@ -1063,6 +1194,10 @@ def _validate_device_set(devices: tuple[DeviceFdBinding, ...]) -> None:
     provider_epochs: set[int] = set()
     provider_topologies: set[str] = set()
     provider_binding_hashes: set[str] = set()
+    provider_snapshot_bindings: set[str] = set()
+    publisher_snapshots: set[tuple[object, ...]] = set()
+    authoritative_authorization_scopes: set[frozenset[str]] = set()
+    authoritative_group_members: dict[str, tuple[str, ...]] = {}
     fd_identities: dict[tuple[int, int, int], tuple[int, str]] = {}
     group_contracts: dict[str, tuple[tuple[str, ...], int, FdStatToken]] = {}
     member_groups: dict[str, str] = {}
@@ -1130,6 +1265,37 @@ def _validate_device_set(devices: tuple[DeviceFdBinding, ...]) -> None:
         provider_epochs.add(device.provider_admission.snapshot_epoch)
         provider_topologies.add(device.provider_admission.topology_hash)
         provider_binding_hashes.add(device.provider_admission.fd_binding_hash)
+        provider_snapshot_bindings.add(device.provider_admission.snapshot_binding)
+        if (
+            device.provider_admission.snapshot_binding
+            == AUTHORITATIVE_COMPONENT_SNAPSHOT_BINDING
+        ):
+            from .authoritative_snapshot import validate_launch_authorization
+
+            result = device.provider_admission._snapshot_result
+            try:
+                snapshot_authorization = validate_launch_authorization(
+                    getattr(result, "_snapshot_authorization", None)
+                )
+            except Exception as error:
+                _reject(
+                    Reason.INVALID_PROVIDER_ADMISSION,
+                    f"retained snapshot authorization is no longer current: {error}",
+                )
+            authoritative_authorization_scopes.add(
+                frozenset(snapshot_authorization.authorized_bdfs)
+            )
+            authoritative_group_members.setdefault(group_id, group_members)
+            publisher_snapshots.add(
+                (
+                    device.provider_admission.snapshot_hash,
+                    device.provider_admission.snapshot_authority_id,
+                    device.provider_admission.snapshot_store_instance_id,
+                    device.provider_admission.snapshot_key_id,
+                    device.provider_admission.snapshot_boot_id,
+                    device.provider_admission.snapshot_authorization_hash,
+                )
+            )
         group_contracts.setdefault(
             group_id,
             (group_members, device.iommufd_fd, device.iommufd_stat),
@@ -1141,6 +1307,58 @@ def _validate_device_set(devices: tuple[DeviceFdBinding, ...]) -> None:
             Reason.INVALID_PROVIDER_ADMISSION,
             "all device admissions must share one inventory snapshot",
         )
+    if (
+        len(provider_snapshot_bindings) != 1
+        or len(publisher_snapshots) > 1
+        or len(authoritative_authorization_scopes) > 1
+    ):
+        _reject(
+            Reason.INVALID_PROVIDER_ADMISSION,
+            "device admissions mix snapshot authorities, scopes, or binding modes",
+        )
+    if provider_snapshot_bindings == {AUTHORITATIVE_COMPONENT_SNAPSHOT_BINDING}:
+        planned_bdfs = frozenset(bdfs)
+        for group_members in authoritative_group_members.values():
+            if not set(group_members).issubset(planned_bdfs):
+                _reject(
+                    Reason.INVALID_PROVIDER_ADMISSION,
+                    "authoritative launch plan must include every admitted IOMMU group member",
+                )
+        if len(authoritative_authorization_scopes) != 1:
+            _reject(
+                Reason.INVALID_PROVIDER_ADMISSION,
+                "authoritative launch plan lacks one exact retained authorization scope",
+            )
+        authorized_bdfs = next(iter(authoritative_authorization_scopes))
+        if planned_bdfs != authorized_bdfs:
+            _reject(
+                Reason.INVALID_PROVIDER_ADMISSION,
+                "authoritative launch plan BDFs differ from retained authorization scope",
+            )
+
+
+def _require_plan_snapshot_current(
+    plan: DirectPathLaunchPlan,
+    *,
+    live: bool,
+) -> None:
+    """Recheck each distinct retained publisher authorization once."""
+
+    seen_authorizations: set[int] = set()
+    for device in plan.devices:
+        admission = device.provider_admission
+        admission.require_snapshot_current(live=False)
+        if not live:
+            continue
+        result = admission._snapshot_result
+        authorization = getattr(result, "_snapshot_authorization", None)
+        if authorization is None:
+            continue
+        authorization_identity = id(authorization)
+        if authorization_identity in seen_authorizations:
+            continue
+        admission.require_snapshot_current(live=True)
+        seen_authorizations.add(authorization_identity)
 
 
 @dataclass(frozen=True)
@@ -1198,6 +1416,7 @@ class SpawnSpec:
     def popen_kwargs(self) -> dict[str, Any]:
         _validate_spawn_spec_canonical(self)
         self.plan.lease.require_active()
+        _require_plan_snapshot_current(self.plan, live=True)
         return {
             "args": self.argv,
             "close_fds": self.close_fds,
@@ -1330,6 +1549,54 @@ def device_binding_from_vfio_launch_result(
     *,
     fstat: Fstat = os.fstat,
 ) -> DeviceFdBinding:
+    """Adapt one legacy caller-correlated raw VFIO result for rendering.
+
+    This compatibility path deliberately accepts only
+    ``CALLER_CORRELATION_ONLY`` results.  Product launch code must use
+    :func:`device_binding_from_authorized_vfio_launch_result` so caller input
+    cannot masquerade as a publisher-issued inventory capability.
+    """
+
+    return _device_binding_from_vfio_launch_result(
+        result,
+        guest_slot,
+        lease,
+        fstat=fstat,
+        authoritative=False,
+    )
+
+
+def device_binding_from_authorized_vfio_launch_result(
+    result: object,
+    guest_slot: GuestSlot,
+    lease: LeaseBinding,
+    *,
+    fstat: Fstat = os.fstat,
+) -> DeviceFdBinding:
+    """Adapt one publisher-authorized raw VFIO capability for product launch.
+
+    The exact live ``VfioLaunchResult`` is retained through ``Popen``.  Its
+    sealed publisher authorization must match the lease host, authority,
+    inventory epoch, authorized member scope, and device generations.
+    """
+
+    return _device_binding_from_vfio_launch_result(
+        result,
+        guest_slot,
+        lease,
+        fstat=fstat,
+        authoritative=True,
+    )
+
+
+def _device_binding_from_vfio_launch_result(
+    result: object,
+    guest_slot: GuestSlot,
+    lease: LeaseBinding,
+    *,
+    fstat: Fstat,
+    authoritative: bool,
+) -> DeviceFdBinding:
     """Snapshot and verify one admitted raw VFIO result for rendering.
 
     This adapter is the supported bridge from ``vfio_launch_handles``.  It
@@ -1344,6 +1611,11 @@ def device_binding_from_vfio_launch_result(
             Reason.INVALID_PROVIDER_ADMISSION,
             "live production-provenance VfioLaunchResult is required",
         )
+    if authoritative and not handles.is_authoritative_snapshot_launch_result(result):
+        _reject(
+            Reason.INVALID_PROVIDER_ADMISSION,
+            "publisher-authorized VfioLaunchResult capability is required",
+        )
     if not isinstance(guest_slot, GuestSlot):
         _reject(Reason.INVALID_DEVICE_BINDING, "guest_slot must be a GuestSlot")
     if (
@@ -1353,6 +1625,11 @@ def device_binding_from_vfio_launch_result(
         _reject(Reason.INVALID_LEASE_BINDING, "verified lease binding is required")
     metadata = result.metadata
     request = result.request
+    expected_snapshot_binding = (
+        handles.AUTHORITATIVE_SNAPSHOT_BINDING
+        if authoritative
+        else handles.CALLER_SNAPSHOT_BINDING
+    )
     if (
         metadata.bdf != request.bdf
         or metadata.snapshot_epoch != request.snapshot_epoch
@@ -1360,7 +1637,7 @@ def device_binding_from_vfio_launch_result(
         or metadata.identity_hash != request.expected_identity_hash
         or metadata.group_hash != request.expected_group_hash
         or metadata.handoff_mode != handles.HANDOFF_MODE
-        or metadata.snapshot_binding != handles.SNAPSHOT_BINDING
+        or metadata.snapshot_binding != expected_snapshot_binding
         or metadata.cdev.role != "vfio-cdev"
         or metadata.iommufd.role != "iommufd"
     ):
@@ -1372,6 +1649,73 @@ def device_binding_from_vfio_launch_result(
             Reason.LEASE_DEVICE_SCOPE_MISMATCH,
             "provider result is outside the lease inventory/member scope",
         )
+
+    snapshot_authorization = None
+    if authoritative:
+        from .authoritative_snapshot import validate_launch_authorization
+
+        try:
+            snapshot_authorization = validate_launch_authorization(
+                getattr(result, "_snapshot_authorization", None)
+            )
+        except Exception as error:
+            _reject(
+                Reason.INVALID_PROVIDER_ADMISSION,
+                f"publisher snapshot authorization is invalid: {error}",
+            )
+        assert snapshot_authorization is not None
+        expected_publisher_metadata = (
+            (metadata.snapshot_hash, snapshot_authorization.snapshot_hash),
+            (metadata.snapshot_authority_id, snapshot_authorization.authority_id),
+            (
+                metadata.snapshot_store_instance_id,
+                snapshot_authorization.store_instance_id,
+            ),
+            (metadata.snapshot_key_id, snapshot_authorization.key_id),
+            (metadata.snapshot_boot_id, snapshot_authorization.kernel_boot_id),
+            (
+                metadata.snapshot_authorization_hash,
+                snapshot_authorization.binding_hash,
+            ),
+        )
+        if any(observed != expected for observed, expected in expected_publisher_metadata):
+            _reject(
+                Reason.INVALID_PROVIDER_ADMISSION,
+                "provider metadata differs from its publisher authorization",
+            )
+        if (
+            snapshot_authorization.host_id != lease.host_id
+            or snapshot_authorization.authority_id != lease.authority_id
+            or snapshot_authorization.inventory_epoch != lease.inventory_epoch
+            or not set(snapshot_authorization.authorized_bdfs).issubset(lease.members)
+        ):
+            _reject(
+                Reason.LEASE_DEVICE_SCOPE_MISMATCH,
+                "lease host, authority, epoch, or member scope differs from publisher snapshot",
+            )
+        if (
+            metadata.snapshot_epoch != snapshot_authorization.inventory_epoch
+            or not hmac.compare_digest(
+                metadata.topology_hash,
+                snapshot_authorization.topology_hash,
+            )
+            or tuple(metadata.group_members)
+            != tuple(snapshot_authorization.launch_facts[metadata.bdf].group_members)
+        ):
+            _reject(
+                Reason.INVALID_PROVIDER_ADMISSION,
+                "provider admission differs from authorized launch facts",
+            )
+        lease_generations = dict(lease.device_generations)
+        if any(
+            lease_generations.get(bdf)
+            != snapshot_authorization.launch_facts[bdf].device_generation
+            for bdf in snapshot_authorization.authorized_bdfs
+        ):
+            _reject(
+                Reason.LEASE_DEVICE_SCOPE_MISMATCH,
+                "lease device generations differ from publisher snapshot",
+            )
 
     identity_hash = handles.vfio.compute_identity_hash(metadata.bdf, metadata.identity)
     group_hash = handles.vfio.compute_group_hash(
@@ -1393,6 +1737,9 @@ def device_binding_from_vfio_launch_result(
             metadata.cdev.character_device_minor,
         ),
     )
+    binding_kwargs: dict[str, object] = {}
+    if authoritative:
+        binding_kwargs["snapshot_authorization"] = snapshot_authorization
     fd_binding_hash = handles.compute_fd_binding_hash(
         request=request,
         state=verification_state,
@@ -1400,6 +1747,7 @@ def device_binding_from_vfio_launch_result(
         group_hash=group_hash,
         cdev=metadata.cdev,
         iommufd=metadata.iommufd,
+        **binding_kwargs,
     )
     if (
         not hmac.compare_digest(identity_hash, metadata.identity_hash)
@@ -1427,6 +1775,25 @@ def device_binding_from_vfio_launch_result(
         ):
             _reject(Reason.FD_IDENTITY_MISMATCH, f"{role} fd disagrees with provider metadata")
 
+    publisher_admission: dict[str, object] = {}
+    if authoritative:
+        publisher_admission = {
+            "snapshot_binding": metadata.snapshot_binding,
+            "snapshot_hash": _normalize_external_hash(
+                metadata.snapshot_hash,
+                field="snapshot_hash",
+            ),
+            "snapshot_authority_id": metadata.snapshot_authority_id,
+            "snapshot_store_instance_id": metadata.snapshot_store_instance_id,
+            "snapshot_key_id": metadata.snapshot_key_id,
+            "snapshot_boot_id": metadata.snapshot_boot_id,
+            "snapshot_authorization_hash": _normalize_external_hash(
+                metadata.snapshot_authorization_hash,
+                field="snapshot_authorization_hash",
+            ),
+            "_snapshot_result": result,
+        }
+
     return DeviceFdBinding._from_verified(
         bdf=metadata.bdf,
         guest_slot=guest_slot,
@@ -1447,6 +1814,7 @@ def device_binding_from_vfio_launch_result(
             group_members=tuple(metadata.group_members),
             lease_binding_hash=lease.binding_hash,
             handoff_mode=metadata.handoff_mode,
+            **publisher_admission,
         ),
     )
 
@@ -1643,6 +2011,7 @@ def render_launch(
     if not isinstance(plan, DirectPathLaunchPlan):
         _reject(Reason.INVALID_ARGUMENT, "plan must be a DirectPathLaunchPlan")
     plan.lease.require_active()
+    _require_plan_snapshot_current(plan, live=False)
     _verify_binary(
         plan.qemu,
         stat_path=stat_path,
@@ -1688,6 +2057,7 @@ def validate_before_spawn(
             Reason.UNSUPPORTED_SPAWN_PLATFORM,
             "subprocess pass_fds handoff is POSIX-only",
         )
+    _require_plan_snapshot_current(spec.plan, live=True)
     _verify_binary(
         spec.qemu_identity,
         stat_path=stat_path,
@@ -1704,7 +2074,9 @@ def validate_before_spawn(
 
 
 __all__ = [
+    "AUTHORITATIVE_COMPONENT_SNAPSHOT_BINDING",
     "BinaryStatToken",
+    "CALLER_CORRELATION_SNAPSHOT_BINDING",
     "DeviceFdBinding",
     "DirectPathLaunchPlan",
     "DirectoryStatToken",
@@ -1721,6 +2093,7 @@ __all__ = [
     "SpawnSpec",
     "capture_fd_stat",
     "capture_qemu_binary_identity",
+    "device_binding_from_authorized_vfio_launch_result",
     "device_binding_from_vfio_launch_result",
     "lease_binding_from_launch_authorization",
     "render_launch",

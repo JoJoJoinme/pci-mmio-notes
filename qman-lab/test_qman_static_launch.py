@@ -42,6 +42,9 @@ DEFAULT_OVMF_VARS = Path("/usr/share/OVMF/OVMF_VARS.fd")
 
 EVIDENCE_ID = "QMAN-E3-STATIC-LAUNCH-ENVELOPE-001"
 SOURCE_NAMES = (
+    "model.py",
+    "linux_sysfs.py",
+    "authoritative_snapshot.py",
     "static_lease.py",
     "vfio_provider.py",
     "vfio_launch_handles.py",
@@ -133,6 +136,7 @@ from pci_resource_model import static_launch_envelope as envelope
 from pci_resource_model import static_lease as leases
 from pci_resource_model import vfio_launch_handles as handles
 from pci_resource_model import vfio_provider as vfio
+from pci_resource_model import authoritative_snapshot as snapshots
 
 
 CONFIG_PATH = Path("/etc/qman-static-launch.json")
@@ -143,9 +147,9 @@ INNER_LOG_PATH = Path("/run/qman-inner-qemu.log")
 QMP_TRANSCRIPT_PATH = Path("/run/qman-qmp-transcript.json")
 TRACE_PATH = Path("/run/qman-ioctl-trace.log")
 
-HOST_ID = "qman-nested-host"
 AUTHORITY_ID = "qman-lab-inventory-v1"
-INVENTORY_EPOCH = 2026072101
+SNAPSHOT_KEY_ID = "qman-snapshot-component-key-v1"
+SNAPSHOT_KEY = b"qman-snapshot-component-hmac-key-v1-20260721"
 QMP_OBSERVER = "qmp-component-observer-v1"
 DMA_OBSERVER = "dma-component-observer-unused-v1"
 QMP_KEY = b"qman-qmp-component-observer-key-v1-20260721"
@@ -184,6 +188,8 @@ def json_write(path: Path, value: Any) -> None:
 class Context:
     def __init__(self) -> None:
         self.commands: list[dict[str, Any]] = []
+        self.snapshot_store = None
+        self.snapshot_record = None
         self.lease_store = None
         self.envelope_store = None
         self.lease_record = None
@@ -254,11 +260,14 @@ def base_result(config: dict[str, Any]) -> dict[str, Any]:
         "sourceHashes": {},
         "actualNodes": {},
         "productionProvenance": False,
+        "publisherSnapshot": {},
         "innerSpawn": {},
         "final": {},
         "limitations": [
             "No independent DMA observer is available in this nested lab.",
             "The HMAC QMP receipt authenticates a component observer only.",
+            "The HMAC publisher signature authenticates a component snapshot only.",
+            "The snapshot SQLite store has no external monotonic rollback anchor.",
             "QMP plus QEMU source semantics infer bind/attach but cannot prove DMA isolation.",
             "No product Case or Risk closure is claimed by this artifact.",
         ],
@@ -874,17 +883,122 @@ def execute_component(
     verify_embedded_sources(result)
     qemu = install_qemu_runtime(context, config)
     bdf, state = bind_target_to_vfio(context)
-    identity_hash = vfio.compute_identity_hash(bdf, state.identity)
-    group_hash = vfio.compute_group_hash(
-        bdf,
-        state.iommu_group,
-        state.group_members,
+    boot_id = result["kernel"]["bootId"]
+    host_id = Path("/etc/machine-id").read_text(encoding="ascii").strip()
+    if not host_id or host_id == "unknown":
+        raise EnvironmentBlocked("native guest machine-id is unavailable")
+    work_root = Path("/var/lib/qman-static-launch") / boot_id
+    work_root.mkdir(parents=True, exist_ok=False)
+    # AF_UNIX sun_path is only 108 bytes including the terminator.  Keep the
+    # authoritative databases under /var/lib, but put the nonce-bound runtime
+    # directory under the short-lived /run namespace.
+    nonce = secrets.token_hex(16)
+    runtime = Path("/run") / f"qm-{nonce[:12]}"
+    runtime.mkdir(mode=0o700)
+    runtime.chmod(0o700)
+    qmp_path = runtime / f"backend-{nonce}.qmp"
+
+    capture_observations: list[dict[str, Any]] = []
+
+    def capture_full_host() -> snapshots.SnapshotCapture:
+        capture = snapshots.capture_linux_full_snapshot(
+            interrupt_remapping=True,
+        )
+        capture_observations.append(
+            {
+                "sequence": len(capture_observations) + 1,
+                "hostId": capture.inventory.host_id,
+                "bootId": capture.inventory.kernel_boot_id,
+                "scannedDeviceCount": capture.inventory.metadata.get(
+                    "scannedDeviceCount"
+                ),
+                "returnedDeviceCount": capture.inventory.metadata.get(
+                    "returnedDeviceCount"
+                ),
+                "interruptRemapping": capture.inventory.interrupt_remapping,
+                "topologyHash": snapshots.compute_full_topology_hash(capture),
+            }
+        )
+        return capture
+
+    snapshot_authenticator = snapshots.ComponentHmacAuthenticator(
+        {SNAPSHOT_KEY_ID: SNAPSHOT_KEY}
     )
+    snapshot_store = snapshots.AuthoritativeSnapshotStore(
+        work_root / "authoritative-snapshot.sqlite3",
+        local_host_id=host_id,
+        trusted_authority_id=AUTHORITY_ID,
+        authenticator=snapshot_authenticator,
+    )
+    context.snapshot_store = snapshot_store
+    snapshot_record = snapshot_store.capture_and_publish(
+        capture_full_host,
+        key_id=SNAPSHOT_KEY_ID,
+        expected_current_hash=None,
+    )
+    context.snapshot_record = snapshot_record
+    if len(capture_observations) != 2:
+        raise RuntimeError("authoritative publisher did not perform exactly two scans")
+    published_capture = snapshot_record.envelope.capture
+    try:
+        target_fact = published_capture.launch_facts[bdf]
+    except KeyError as error:
+        raise EnvironmentBlocked(
+            f"published snapshot has no launch facts for {bdf}"
+        ) from error
+    if (
+        target_fact.identity != state.identity
+        or target_fact.iommu_group != state.iommu_group
+        or target_fact.group_members != state.group_members
+    ):
+        raise RuntimeError("published target facts differ from VFIO bind observation")
+    members = target_fact.group_members
+    try:
+        member_facts = {
+            member: published_capture.launch_facts[member] for member in members
+        }
+    except KeyError as error:
+        raise EnvironmentBlocked(
+            f"published snapshot lacks complete IOMMU group launch facts: {error}"
+        ) from error
+    if any(fact.group_members != members for fact in member_facts.values()):
+        raise RuntimeError("published IOMMU group facts are internally inconsistent")
+    generations = {
+        member: fact.device_generation for member, fact in member_facts.items()
+    }
+    identity_hash = target_fact.identity_hash
+    group_hash = target_fact.group_hash
+    result["publisherSnapshot"] = {
+        "snapshotBinding": handles.AUTHORITATIVE_SNAPSHOT_BINDING,
+        "trustBoundary": snapshot_record.envelope.trust_boundary,
+        "algorithm": snapshot_record.envelope.algorithm,
+        "authorityId": snapshot_record.envelope.authority_id,
+        "storeInstanceId": snapshot_record.envelope.store_instance_id,
+        "keyId": snapshot_record.envelope.key_id,
+        "trustRootDigest": snapshot_record.envelope.trust_root_digest,
+        "hostId": snapshot_record.envelope.host_id,
+        "bootId": snapshot_record.envelope.kernel_boot_id,
+        "inventoryEpoch": snapshot_record.inventory_epoch,
+        "snapshotHash": snapshot_record.snapshot_hash,
+        "topologyHash": snapshot_record.topology_hash,
+        "signature": snapshot_record.envelope.signature,
+        "signedEnvelope": snapshot_record.envelope.to_json(),
+        "persistenceBoundary": snapshot_store.persistence_boundary,
+        "publishDoubleScanVerified": True,
+        "publishCaptureCount": len(capture_observations),
+        "captureObservations": capture_observations,
+        "interruptRemappingInput": "outer-qemu-intel-iommu-intremap-on",
+        "rollbackAnchor": "NONE_COMPONENT_LIMITATION",
+        "preOpenLiveValidated": False,
+        "postOpenLiveValidated": False,
+        "validateBeforeSpawnLiveValidated": False,
+        "popenKwargsLiveValidated": False,
+    }
     result["actualNodes"] = {
         "bdf": bdf,
         "driver": state.driver,
-        "iommuGroup": state.iommu_group,
-        "groupMembers": list(state.group_members),
+        "iommuGroup": target_fact.iommu_group,
+        "groupMembers": list(target_fact.group_members),
         "vfioCdev": str(state.cdev_node),
         "vfioCdevIsCharacterDevice": bool(
             state.cdev_node and state.cdev_node.is_char_device()
@@ -899,55 +1013,41 @@ def execute_component(
     }
     result["sourceSemantics"] = source_semantics(config)
 
-    boot_id = result["kernel"]["bootId"]
-    work_root = Path("/var/lib/qman-static-launch") / boot_id
-    work_root.mkdir(parents=True, exist_ok=False)
-    # AF_UNIX sun_path is only 108 bytes including the terminator.  Keep the
-    # authoritative databases under /var/lib, but put the nonce-bound runtime
-    # directory under the short-lived /run namespace.
-    nonce = secrets.token_hex(16)
-    runtime = Path("/run") / f"qm-{nonce[:12]}"
-    runtime.mkdir(mode=0o700)
-    runtime.chmod(0o700)
-    qmp_path = runtime / f"backend-{nonce}.qmp"
-
-    members = tuple(state.group_members)
-    generations = {member: 1 for member in members}
     bundle_id = "bundle-e1000e-iommu-group"
     decision_hash = qman_hash("qman-static-launch-lab-decision-v1")
     policy_hash = qman_hash("qman-static-launch-lab-policy-v1")
     lease_store = leases.StaticLeaseStore(
         work_root / "static-lease.sqlite3",
-        local_host_id=HOST_ID,
+        local_host_id=host_id,
         trusted_authority_id=AUTHORITY_ID,
         transaction_id_factory=lambda: "tx-static-launch-e1000e-v1",
     )
     context.lease_store = lease_store
     lease_store.publish_authoritative_device_generations(
-        HOST_ID,
+        host_id,
         generations,
         expected_current={member: None for member in members},
         authority_id=AUTHORITY_ID,
-        authority_epoch=INVENTORY_EPOCH,
+        authority_epoch=snapshot_record.inventory_epoch,
     )
     bundle_hash = lease_store.publish_authoritative_bundle(
-        HOST_ID,
+        host_id,
         bundle_id,
         members,
         expected_current_hash=None,
         authority_id=AUTHORITY_ID,
-        authority_epoch=INVENTORY_EPOCH,
+        authority_epoch=snapshot_record.inventory_epoch,
     )
     reserved = lease_store.begin(
         leases.BeginRequest(
             idempotency_key="idem-static-launch-e1000e-v1",
-            host_id=HOST_ID,
+            host_id=host_id,
             vm_id="vm-static-launch-v1",
             run_id="run-static-launch-e1000e-v1",
             bundle_id=bundle_id,
             expected_bundle_hash=bundle_hash,
             members=members,
-            inventory_epoch=INVENTORY_EPOCH,
+            inventory_epoch=snapshot_record.inventory_epoch,
             expected_vm_generation=0,
             expected_device_generations=generations,
             decision_hash=decision_hash,
@@ -958,7 +1058,7 @@ def execute_component(
 
     envelope_store = envelope.StaticLaunchEnvelopeStore(
         work_root / "static-launch-envelope.sqlite3",
-        local_host_id=HOST_ID,
+        local_host_id=host_id,
         trusted_authority_id=AUTHORITY_ID,
         authoritative_lease_store=lease_store,
         verifier_keys={
@@ -994,23 +1094,6 @@ def execute_component(
     )
     context.envelope_record = prepared_envelope
 
-    raw = handles.open_vfio_launch_handles(
-        handles.VfioLaunchRequest(
-            bdf=bdf,
-            snapshot_epoch=INVENTORY_EPOCH,
-            topology_hash=group_hash,
-            expected_identity_hash=identity_hash,
-            expected_group_hash=group_hash,
-        )
-    )
-    context.raw_handles = raw
-    result["productionProvenance"] = handles.is_production_launch_result(raw)
-    if not result["productionProvenance"]:
-        raise RuntimeError("raw VFIO launch result lacks production provenance")
-    result["rawHandleMetadata"] = raw.metadata.to_json()
-
-    trace_status = start_ioctl_trace(context)
-    result["ioctlTrace"] = trace_status
     qemu_identity = launch.capture_qemu_binary_identity(qemu)
     runtime_stat = launch.DirectoryStatToken.from_stat(os.stat(runtime))
     qmp_binding = launch.QmpSocketBinding(
@@ -1026,75 +1109,163 @@ def execute_component(
         vcpu_count=1,
     )
 
-    with lease_store.authorize_launch(
-        preparing.transaction_id,
-        preparing.vm_generation,
-        preparing.revision,
-    ) as authorization:
-        lease_binding = launch.lease_binding_from_launch_authorization(
-            authorization
-        )
-        device_binding = launch.device_binding_from_vfio_launch_result(
-            raw,
-            launch.GuestSlot(index=0, root_port_address=2),
-            lease_binding,
-        )
-        plan = launch.DirectPathLaunchPlan(
-            qemu=qemu_identity,
-            lease=lease_binding,
-            profile=profile,
-            qmp=qmp_binding,
-            devices=(device_binding,),
-        )
-        spec = launch.render_launch(plan)
-        context.envelope_record = envelope_store.mark_handles_open(
-            prepared_envelope.transaction_id,
-            prepared_envelope.revision,
-            fd_binding_hash=spec.fd_binding_hash,
-            launch_plan_hash=spec.plan_hash,
-        )
-        launch.validate_before_spawn(spec)
-        kwargs = spec.popen_kwargs()
-        if kwargs.get("env") != {} or kwargs.get("cwd") != "/":
-            raise RuntimeError("SpawnSpec did not preserve env={} and cwd=/")
-        result["innerSpawn"] = {
-            "argv": list(spec.argv),
-            "argvHash": spec.argv_hash,
-            "fdBindingHash": spec.fd_binding_hash,
-            "launchPlanHash": spec.plan_hash,
-            "passFds": list(spec.pass_fds),
-            "environment": kwargs["env"],
-            "cwd": kwargs["cwd"],
-            "closeFds": kwargs["close_fds"],
-            "shell": kwargs["shell"],
-            "qemuBinarySha256": spec.qemu_binary_hash,
-            "leaseAuthorizationActiveAtSpawn": authorization.is_active,
-        }
-        context.commands.append(
+    with snapshot_store.authorize_launch(
+        snapshot_record.snapshot_hash,
+        members,
+    ) as snapshot_authorization:
+        result["publisherSnapshot"].update(
             {
-                "argv": list(spec.argv),
-                "cwd": kwargs["cwd"],
-                "env": kwargs["env"],
-                "passFds": list(spec.pass_fds),
-                "source": "canonical SpawnSpec",
+                "authorizationHash": snapshot_authorization.binding_hash,
+                "authorizedBdfs": list(snapshot_authorization.authorized_bdfs),
+                "captureProviderBoundary": (
+                    snapshot_authorization.capture_provider_boundary
+                ),
+                "captureProviderBindingHash": (
+                    snapshot_authorization.capture_provider_binding_hash
+                ),
             }
         )
-        context.inner_log = INNER_LOG_PATH.open("wb")
-        process = subprocess.Popen(
-            **kwargs,
-            stdout=context.inner_log,
-            stderr=subprocess.STDOUT,
-        )
-        context.process = process
-        start_token = envelope.StaticLaunchEnvelopeStore.capture_linux_process_start_token(
-            process.pid
-        )
-        context.envelope_record = envelope_store.mark_qemu_running(
-            context.envelope_record.transaction_id,
-            context.envelope_record.revision,
-            qemu_pid=process.pid,
-            qemu_start_token=start_token,
-        )
+        with lease_store.authorize_launch(
+            preparing.transaction_id,
+            preparing.vm_generation,
+            preparing.revision,
+        ) as authorization:
+            lease_binding = launch.lease_binding_from_launch_authorization(
+                authorization
+            )
+            captures_before_open = len(capture_observations)
+            raw = handles.open_authorized_vfio_launch_bundle(
+                snapshot_authorization,
+            )
+            context.raw_handles = raw
+            if len(capture_observations) != captures_before_open + 2:
+                raise RuntimeError(
+                    "authorized opener did not perform pre-open and post-open scans"
+                )
+            result["publisherSnapshot"]["preOpenLiveValidated"] = True
+            result["publisherSnapshot"]["postOpenLiveValidated"] = True
+            result["productionProvenance"] = (
+                handles.is_authoritative_snapshot_launch_bundle(raw)
+            )
+            if not result["productionProvenance"]:
+                raise RuntimeError(
+                    "raw VFIO bundle lacks authoritative component binding or production raw-handle provenance"
+                )
+            by_bdf = {item.metadata.bdf: item for item in raw.results}
+            if set(by_bdf) != set(members) or bdf not in by_bdf:
+                raise RuntimeError(
+                    "raw authoritative bundle differs from the published IOMMU group"
+                )
+            result["rawHandleMetadata"] = by_bdf[bdf].metadata.to_json()
+            result["rawHandleBundleMetadata"] = [
+                by_bdf[member].metadata.to_json() for member in members
+            ]
+            ordered_bdfs = (bdf,) + tuple(member for member in members if member != bdf)
+            if len(ordered_bdfs) > 29:
+                raise EnvironmentBlocked(
+                    "authorized IOMMU group exceeds the q35 root-port slot budget"
+                )
+            device_bindings = tuple(
+                launch.device_binding_from_authorized_vfio_launch_result(
+                    by_bdf[member],
+                    launch.GuestSlot(
+                        index=index,
+                        root_port_address=2 + index,
+                    ),
+                    lease_binding,
+                )
+                for index, member in enumerate(ordered_bdfs)
+            )
+            plan = launch.DirectPathLaunchPlan(
+                qemu=qemu_identity,
+                lease=lease_binding,
+                profile=profile,
+                qmp=qmp_binding,
+                devices=device_bindings,
+            )
+            trace_status = start_ioctl_trace(context)
+            result["ioctlTrace"] = trace_status
+            spec = launch.render_launch(plan)
+            context.envelope_record = envelope_store.mark_handles_open(
+                prepared_envelope.transaction_id,
+                prepared_envelope.revision,
+                fd_binding_hash=spec.fd_binding_hash,
+                launch_plan_hash=spec.plan_hash,
+            )
+            captures_before_validate = len(capture_observations)
+            launch.validate_before_spawn(spec)
+            if len(capture_observations) != captures_before_validate + 1:
+                raise RuntimeError(
+                    "validate_before_spawn did not perform one live full-host scan"
+                )
+            result["publisherSnapshot"][
+                "validateBeforeSpawnLiveValidated"
+            ] = True
+            captures_before_kwargs = len(capture_observations)
+            kwargs = spec.popen_kwargs()
+            if len(capture_observations) != captures_before_kwargs + 1:
+                raise RuntimeError(
+                    "popen_kwargs did not perform one final live full-host scan"
+                )
+            result["publisherSnapshot"]["popenKwargsLiveValidated"] = True
+            result["publisherSnapshot"]["captureObservations"] = list(
+                capture_observations
+            )
+            result["publisherSnapshot"]["totalCaptureCountAtSpawn"] = len(
+                capture_observations
+            )
+            if kwargs.get("env") != {} or kwargs.get("cwd") != "/":
+                raise RuntimeError("SpawnSpec did not preserve env={} and cwd=/")
+            result["innerSpawn"] = {
+                "argv": list(spec.argv),
+                "argvHash": spec.argv_hash,
+                "fdBindingHash": spec.fd_binding_hash,
+                "launchPlanHash": spec.plan_hash,
+                "passFds": list(spec.pass_fds),
+                "environment": kwargs["env"],
+                "cwd": kwargs["cwd"],
+                "closeFds": kwargs["close_fds"],
+                "shell": kwargs["shell"],
+                "qemuBinarySha256": spec.qemu_binary_hash,
+                "leaseAuthorizationActiveAtSpawn": authorization.is_active,
+                "snapshotAuthorizationActiveAtSpawn": (
+                    snapshot_authorization.is_active
+                ),
+                "snapshotBinding": handles.AUTHORITATIVE_SNAPSHOT_BINDING,
+                "snapshotHash": snapshot_authorization.snapshot_hash,
+                "snapshotAuthorizationHash": (
+                    snapshot_authorization.binding_hash
+                ),
+                "validateBeforeSpawnLiveValidated": True,
+                "popenKwargsLiveValidated": True,
+            }
+            context.commands.append(
+                {
+                    "argv": list(spec.argv),
+                    "cwd": kwargs["cwd"],
+                    "env": kwargs["env"],
+                    "passFds": list(spec.pass_fds),
+                    "source": "canonical authoritative-snapshot SpawnSpec",
+                }
+            )
+            context.inner_log = INNER_LOG_PATH.open("wb")
+            process = subprocess.Popen(
+                **kwargs,
+                stdout=context.inner_log,
+                stderr=subprocess.STDOUT,
+            )
+            context.process = process
+            start_token = (
+                envelope.StaticLaunchEnvelopeStore.capture_linux_process_start_token(
+                    process.pid
+                )
+            )
+            context.envelope_record = envelope_store.mark_qemu_running(
+                context.envelope_record.transaction_id,
+                context.envelope_record.revision,
+                qemu_pid=process.pid,
+                qemu_start_token=start_token,
+            )
 
     process = context.process
     if process is None:
@@ -1233,8 +1404,8 @@ def execute_component(
     )
     context.envelope_record = quarantined_envelope
 
-    member_claims = dict(lease_store.claimed_members(HOST_ID))
-    bundle_claims = dict(lease_store.claimed_bundles(HOST_ID))
+    member_claims = dict(lease_store.claimed_members(host_id))
+    bundle_claims = dict(lease_store.claimed_bundles(host_id))
     claims_retained = (
         all(member_claims.get(member) == preparing.transaction_id for member in members)
         and bundle_claims.get(bundle_id) == preparing.transaction_id
@@ -1325,6 +1496,11 @@ def main() -> int:
                 context.lease_store.close()
             except Exception as error:
                 result["failures"].append(f"lease close failed: {error}")
+        if context.snapshot_store is not None:
+            try:
+                context.snapshot_store.close()
+            except Exception as error:
+                result["failures"].append(f"snapshot close failed: {error}")
         json_write(COMMANDS_PATH, context.commands)
         json_write(RESULT_PATH, result)
     return return_code
@@ -1727,6 +1903,86 @@ def evaluate_guest(
         failures.append("Static ATTACHED was committed or omitted")
     if guest.get("productionProvenance") is not True:
         failures.append("production raw-handle provenance is absent")
+    publisher = guest.get("publisherSnapshot")
+    if not isinstance(publisher, dict):
+        failures.append("authoritative publisher snapshot facts are absent")
+        publisher = {}
+    if publisher.get("snapshotBinding") != "AUTHORITATIVE_COMPONENT_SNAPSHOT_V1":
+        failures.append("launch is not bound to the authoritative component snapshot")
+    if publisher.get("trustBoundary") != "COMPONENT_AUTHENTICITY_ONLY":
+        failures.append("snapshot trust boundary is not component-only")
+    if publisher.get("captureProviderBoundary") != "COMPONENT_CAPTURE_PROVIDER":
+        failures.append("snapshot capture provider boundary is absent or overstated")
+    if publisher.get("publishDoubleScanVerified") is not True or publisher.get(
+        "publishCaptureCount"
+    ) != 2:
+        failures.append("snapshot publication did not retain an exact double scan")
+    for field in (
+        "snapshotHash",
+        "topologyHash",
+        "signature",
+        "authorizationHash",
+        "captureProviderBindingHash",
+    ):
+        if re.fullmatch(r"[0-9a-f]{64}", str(publisher.get(field))) is None:
+            failures.append(f"publisher snapshot {field} is absent or noncanonical")
+    signed_envelope = publisher.get("signedEnvelope")
+    if (
+        not isinstance(signed_envelope, dict)
+        or signed_envelope.get("snapshotHash") != publisher.get("snapshotHash")
+        or signed_envelope.get("signature") != publisher.get("signature")
+        or signed_envelope.get("topologyHash") != publisher.get("topologyHash")
+    ):
+        failures.append("retained signed publisher envelope is absent or inconsistent")
+    if not isinstance(publisher.get("inventoryEpoch"), int) or isinstance(
+        publisher.get("inventoryEpoch"), bool
+    ):
+        failures.append("publisher inventory epoch is absent or noncanonical")
+    for field in (
+        "preOpenLiveValidated",
+        "postOpenLiveValidated",
+        "validateBeforeSpawnLiveValidated",
+        "popenKwargsLiveValidated",
+    ):
+        if publisher.get(field) is not True:
+            failures.append(f"publisher snapshot phase was not validated: {field}")
+    if not isinstance(publisher.get("totalCaptureCountAtSpawn"), int) or publisher.get(
+        "totalCaptureCountAtSpawn", 0
+    ) < 6:
+        failures.append("full-host capture count does not cover publish/open/spawn gates")
+    observations = publisher.get("captureObservations")
+    if not isinstance(observations, list) or len(observations) != publisher.get(
+        "totalCaptureCountAtSpawn"
+    ):
+        failures.append("retained full-host capture observations are incomplete")
+    elif any(
+        not isinstance(item, dict)
+        or item.get("hostId") != publisher.get("hostId")
+        or item.get("bootId") != publisher.get("bootId")
+        or item.get("topologyHash") != publisher.get("topologyHash")
+        or item.get("interruptRemapping") is not True
+        for item in observations
+    ):
+        failures.append("retained full-host captures differ from the published snapshot")
+    spawn = guest.get("innerSpawn")
+    if not isinstance(spawn, dict):
+        failures.append("canonical inner spawn facts are absent")
+        spawn = {}
+    if spawn.get("snapshotBinding") != "AUTHORITATIVE_COMPONENT_SNAPSHOT_V1":
+        failures.append("inner SpawnSpec is not publisher-snapshot bound")
+    if spawn.get("snapshotAuthorizationActiveAtSpawn") is not True:
+        failures.append("snapshot authorization was inactive at Popen")
+    if spawn.get("leaseAuthorizationActiveAtSpawn") is not True:
+        failures.append("lease authorization was inactive at Popen")
+    if spawn.get("validateBeforeSpawnLiveValidated") is not True or spawn.get(
+        "popenKwargsLiveValidated"
+    ) is not True:
+        failures.append("PRE_SPAWN live validation was not retained")
+    raw_metadata = guest.get("rawHandleMetadata")
+    if not isinstance(raw_metadata, dict) or raw_metadata.get(
+        "snapshotBinding"
+    ) != "AUTHORITATIVE_COMPONENT_SNAPSHOT_V1":
+        failures.append("raw VFIO metadata lacks authoritative snapshot binding")
     nodes = guest.get("actualNodes")
     if not isinstance(nodes, dict):
         failures.append("actual character-device facts are absent")
@@ -2029,6 +2285,8 @@ def main() -> None:
             "dmaReceiptSubmitted": False,
             "attachedCommitted": False,
             "qmpReceiptSemantics": "COMPONENT_AUTHENTICITY_ONLY",
+            "snapshotPublisherSemantics": "COMPONENT_AUTHENTICITY_ONLY",
+            "snapshotRollbackAnchor": "NONE_COMPONENT_LIMITATION",
             "traceSemantics": (
                 "Successful bind/attach ioctl pairs, when available, are strong "
                 "stock-QEMU component observations but not an independent DMA receipt."

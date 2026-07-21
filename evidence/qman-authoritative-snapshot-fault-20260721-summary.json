@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001",
+  "observedAt": "2026-07-21T14:40:57Z",
+  "subject": "QMAN_COMPONENT",
+  "evidenceGrade": "E3",
+  "claimBoundary": "COMPONENT_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "a648e9f78082a200d5e942453652198a023a6d4f",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-lab/test_authoritative_snapshot_faults.py": "209210a244b3fee2a45488af3c2a38a1d19ea6822d9d1a7f500f7475a7c41505"
+    },
+    "inputHashes": {
+      "pci-resource-model/pci_resource_model/__init__.py": "5e3aa5320cd473d3a0fa62c1da8f6232624e49fb2f56653063268ee57cf243b9",
+      "pci-resource-model/pci_resource_model/authoritative_snapshot.py": "d3437a8167d967c4a6537218aa11cd07216221c8c3252d13650aa82aa0224ce0",
+      "pci-resource-model/pci_resource_model/model.py": "e6349f42d98f10fd3ba8c2e4f3128abac869b181dfad29ee25ebe8d4ed9491ec",
+      "pci-resource-model/pci_resource_model/vfio_provider.py": "7927fb1bf72f05009729ee972233d115072b8c7853da33a8a60cc6db541cfdf4"
+    }
+  },
+  "sut": {
+    "environment": "Ubuntu-22.04 under WSL2, Linux-native host-local SQLite WAL/FULL state, and real concurrent/subprocess hard-exit fault injection",
+    "components": [
+      {
+        "name": "Qman AuthoritativeSnapshotStore",
+        "version": "component schema-v1",
+        "sha256": "d3437a8167d967c4a6537218aa11cd07216221c8c3252d13650aa82aa0224ce0"
+      },
+      {
+        "name": "pinned pci_resource_model Python source tree",
+        "version": "working-tree snapshot",
+        "sha256": "2bf75f0f29ccbf3b3fad76243a53c3bdb8d72c2fb18b15f0f885d28b5b8accbc"
+      }
+    ]
+  },
+  "hypotheses": [
+    "A hard process exit after inserting an uncommitted snapshot cannot expose a partial or advanced epoch after the SQLite authority is reopened.",
+    "Two publishers using the same current snapshot hash have exactly one CAS winner and produce a strictly monotonic committed epoch sequence.",
+    "Within the component HMAC and host-boot boundary, signature, payload, stale-snapshot, minimum-epoch, and boot replay failures are rejected before launch authorization.",
+    "Without an external monotonic anchor, deleting the newest row leaves an earlier correctly signed SQLite state acceptable even when the inode and store UUID remain unchanged."
+  ],
+  "observations": [
+    {
+      "name": "publish-after-insert-hard-exit",
+      "result": {
+        "childExitCode": 91,
+        "committedEpochsAfterReopen": [1],
+        "oldCommittedSnapshotRetained": true,
+        "partialEpochVisible": false,
+        "sqliteIntegrityCheck": "ok"
+      }
+    },
+    {
+      "name": "concurrent-cas-single-winner",
+      "result": {
+        "attemptCount": 2,
+        "publishWinnerCount": 1,
+        "conflictCount": 1,
+        "committedEpochs": [1, 2],
+        "staleCasReason": "PUBLISH_CONFLICT",
+        "strictlyMonotonicEpoch": true
+      }
+    },
+    {
+      "name": "authenticity-replay-and-boot-negative-gates",
+      "result": {
+        "signatureTamperReason": "SNAPSHOT_SIGNATURE_INVALID",
+        "payloadTamperReason": "SNAPSHOT_HASH_MISMATCH",
+        "oldSnapshotAuthorizationReason": "SNAPSHOT_STALE",
+        "minimumEpochReason": "SNAPSHOT_STALE",
+        "bootDriftReason": "BOOT_ID_CHANGED"
+      }
+    },
+    {
+      "name": "source-and-persistence-provenance",
+      "result": {
+        "sourceTreeStableThroughCompletion": true,
+        "pinnedSourceTreeSha256": "2bf75f0f29ccbf3b3fad76243a53c3bdb8d72c2fb18b15f0f885d28b5b8accbc",
+        "persistenceBoundary": "LOCAL_FILESYSTEM_COMPONENT_PERSISTENCE_ONLY",
+        "liveDatabaseUnderMnt": false,
+        "claimScope": "COMPONENT_ONLY"
+      }
+    },
+    {
+      "name": "earlier-valid-state-replay-boundary",
+      "result": {
+        "acceptedInventoryEpoch": 1,
+        "deletedNewestInventoryEpoch": 2,
+        "earlierValidStateAccepted": true,
+        "externalMonotonicRollbackAnchorPresent": false,
+        "sameDatabaseInode": true,
+        "sameStoreInstanceId": true
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": ["TS-F1-01", "TS-F8-02"],
+    "caseIds": [],
+    "riskIds": ["R04"]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-authoritative-snapshot-fault-v4-provider/summary.json",
+      "sha256": "48552f007f3730b78724523f0727676054490f87139ffc42665033c5a4c11836",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-authoritative-snapshot-fault-v4-provider/hashes.json",
+      "sha256": "96d48fa20a6b424f9d3551739bcaace5a9f7182447721173bc79e81ed2db410d",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-authoritative-snapshot-fault-v4-provider/F01/result.json",
+      "sha256": "85fb23ed9a677801a5c0fc7f00778739d93e77a85ea220873e2b824ebaf5508c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-authoritative-snapshot-fault-v4-provider/C01/result.json",
+      "sha256": "085ed0be6b6db5e4a782bd29629b3dc1794e09bc34c623c66aa0a82203fca46a",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-authoritative-snapshot-fault-v4-provider/N01/result.json",
+      "sha256": "4a31e424f5befac0dc6334fba87a760bda420909b25fc1391d6a49f664021f2f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-authoritative-snapshot-fault-v4-provider/L01/result.json",
+      "sha256": "21fe8aaa879537cade4bc7cc2636f8d26bc23f35a64aeeebd597a00c8defc6ef",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This is component evidence for one host-local SQLite snapshot authority; it is not an end-to-end product controller or physical qualification result.",
+    "The HMAC signer and verifier share one component key; this is not a production trust root, TPM-backed signer, catalog approval workflow, or key-rotation/revocation proof.",
+    "Without an external monotonic rollback anchor, any replay of an earlier still-valid SQLite state can be accepted, including same-key in-place/block restoration or deletion of the newest rows; inode and store UUID checks are not anti-rollback proof.",
+    "SQLite WAL/FULL and the filesystem provenance gate do not prove end-to-end power-loss durability.",
+    "The synthetic PCI capture performs no VFIO bind, reset, DMA, IRQ, or QEMU operation; those observations belong to the separate Static launch-chain experiment.",
+    "No acceptance Case, product Risk, milestone, HCL entry, qualification profile, support claim, or release gate is closed by this result."
+  ]
+}

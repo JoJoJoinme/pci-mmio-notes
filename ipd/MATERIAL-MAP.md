@@ -74,16 +74,21 @@ E2/E3/E4 表达证据强度；它不能代替 `basis_kind` 或 `subject`。旧�
 [`VMWARE-BEHAVIOR-MODEL.md`](VMWARE-BEHAVIOR-MODEL.md)；该映射只更新 VMware reference
 coverage，不更新 Qman implementation/qualification 状态。
 
+本次挂接后的治理快照仍为：Acceptance 已定义 `14/101`、未分类 `87/101`，R01-R39 全部
+`OPEN`；G0 `IN_PROGRESS`，G1-G6 `NOT_STARTED`；当前 claim 仍是
+`REFERENCE_AND_QUALIFICATION_MODEL_ONLY`。下表新增的 authoritative snapshot 与 Static launch
+结果均为 `QMAN_COMPONENT / COMPONENT_ONLY`，不关闭任何 Case、Risk 或 milestone。
+
 | Feature | 规范/实现补充 | 验收入口 | 当前依据与证据 | 当前缺口 |
 | --- | --- | --- | --- | --- |
-| F1 设备可见性与支持资格 | 详细设计 inventory/capability/dependency；实现蓝图 snapshot/provider/qualification | 设计 C00-C21；C20 reference executable | `vmware-esxi8-passthru-capable-observed-model.md`、`evidence/esxi8-directpath-20260714-summary.json`、`QMAN-E2-REFERENCE-MODEL-001`、`QMAN-E2-CLOSURE-001`、`QMAN-E3-DMA-PROVIDER-001`、`QMAN-E3-VFIO-PROVIDER-GATE-001`、`kernel-patches/` | C20 仅为 E2 reference；VFIO provider 仅为 component，仍无权威产品 snapshot publisher 和首批真实设备 qualification profile |
+| F1 设备可见性与支持资格 | 详细设计 inventory/capability/dependency；实现蓝图 snapshot/provider/qualification | 设计 C00-C21；C20 reference executable；C10/C15/C16/C18/C21 product blocked | `vmware-esxi8-passthru-capable-observed-model.md`、`evidence/esxi8-directpath-20260714-summary.json`、`QMAN-E2-REFERENCE-MODEL-001`、`QMAN-E2-CLOSURE-001`、`QMAN-E3-DMA-PROVIDER-001`、`QMAN-E3-VFIO-PROVIDER-GATE-001`、`QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001`、`kernel-patches/` | host-local signed full-snapshot publisher/CAS/fault gate 仅为 bounded component；仍无 G1 产品 publisher、生产 trust root、外部单调防回滚锚和首批真实设备 qualification profile |
 | F2 设备池与宿主业务共存 | 详细设计 trust/owner；蓝图 owner activation/attach lease | 设计 O00-O10；当前仅 O09 已定义 | `evidence/esxi8-passthru-activation-20260718.md`、no-IOMMU A/B、activation reference model | O09 是 reference scope；live/deferred executor、boot reconcile 未实现 |
-| F3 Static 固定设备分配 | 详细设计 Static；蓝图 Static transaction/compensation | 设计 S00-S16；S03/S04/S05/S15 product blocked | `vmware-esxi8-directpath-local-results.md`、DMA/reset/reboot summaries、`QMAN-QEMU-CONTROL-001` 威胁正控、VFIO/QMP/Static lease fault components 与 `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` | lease→fresh raw fd→stock-QEMU→QMP/trace→quarantine 的 component chain 已有；仍缺 authoritative snapshot、真实 reset/driver restore、独立 DMA/IRQ observer 与唯一 product controller 接线 |
+| F3 Static 固定设备分配 | 详细设计 Static；蓝图 Static transaction/compensation | 设计 S00-S16；S03/S04/S05/S15 product blocked | `vmware-esxi8-directpath-local-results.md`、DMA/reset/reboot summaries、`QMAN-QEMU-CONTROL-001` 威胁正控、VFIO/QMP/Static lease fault components、`QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001` 与 `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` | signed full snapshot→6 次 live full scan→lease→fresh raw fd→stock-QEMU→QMP/trace→quarantine 的 component chain 已有；仍缺生产 authority/trust/rollback anchor、真实 reset/driver restore、独立 DMA/IRQ observer 与唯一 product controller 接线 |
 | F4 VM 准入与 Guest 兼容 | 详细设计 BAR/MMIO/Guest ABI；蓝图 planner/guest surface | 设计 M00-M23；复用 F09 bypass gate | firmware layout、MMIO comparison、`QMAN-E3-MMIO-OBSERVED-001`、`QMAN-QEMU-CONTROL-001`、`QMAN-E3-QMP-GATE-001` | 通用多级 planner、生产 API/CLI/storage/QMP 全入口 gate、版本化首批 profile 和产品 post-start verify 未实现 |
-| F5 生命周期与故障恢复 | 详细设计 rollback/crash/quarantine；蓝图 compensation/reconcile | 设计 F00-F02/F09，并复用 S03-S12；F00 product blocked | host-crash、DMA teardown、MSI/reset、reboot/INTx summaries、QMP/Static lease fault 与 Static launch-envelope components | 无 DMA receipt 时保留 claims 的 quarantine 已执行；仍缺真实 QEMU pidfd owner、reset/driver restore、独立 DMA/IRQ cleanup、生产全入口 bypass matrix 和物理 clean-state 证明 |
+| F5 生命周期与故障恢复 | 详细设计 rollback/crash/quarantine；蓝图 compensation/reconcile | 设计 F00-F02/F09，并复用 S03-S12；F00 product blocked | host-crash、DMA teardown、MSI/reset、reboot/INTx summaries、snapshot publish fault、QMP/Static lease fault 与 Static launch-envelope components | snapshot 未提交 epoch 不可见、CAS 单胜和无 DMA receipt 时保留 claims 的 quarantine 已执行；仍缺端到端 power-loss、真实 QEMU pidfd owner、reset/driver restore、独立 DMA/IRQ cleanup、生产全入口 bypass matrix 和物理 clean-state 证明 |
 | F6 Dynamic 动态分配 | 详细设计 Dynamic；蓝图 Dynamic transaction | 设计 D00-D14 | `vmware-esxi8-directpath-local-results.md`、dynamic-envelope/directpath summaries | matcher/global solver/atomic multi-reservation 未实现 |
 | F7 跨主机放置与冷恢复 | 详细设计 multi-host；蓝图 cold relocate/fencing | 设计 F03-F08 | vMotion rejection、host-crash、Dynamic cold-relocate 观察 | consensus store、fencing token、BMC fence proof 和 Qman cluster 实现均缺失 |
-| F8 可运维、审计、发布 | 详细设计 API/audit/risk/gate；蓝图 audit/evidence | F09-F10 + 全部 Case/Risk 的追踪和发布门 | `PROJECT-STATUS.md`、`contracts/qman-evidence-index.json`、`tools/evaluate_release.py`、9 条已登记 Qman E2/E3 结果 | US→Case→Evidence 尚未完整；92/101 Case 未分类；当前为 5 reference + 4 component，产品 closure 仍为 0 |
+| F8 可运维、审计、发布 | 详细设计 API/audit/risk/gate；蓝图 audit/evidence | F09-F10 + 全部 Case/Risk 的追踪和发布门 | `PROJECT-STATUS.md`、`contracts/qman-evidence-index.json`、`tools/evaluate_release.py`、10 条已登记 Qman E2/E3 结果 | US→Case→Evidence 尚未完整；14/101 Case 已定义、87/101 未分类；当前为 5 reference + 5 component，产品 closure 仍为 0 |
 
 ### 主要材料的具体定位
 
@@ -98,12 +103,14 @@ coverage，不更新 Qman implementation/qualification 状态。
 | `ipd/QMAN-TECHNICAL-EVIDENCE.md` | `QMAN_VERIFICATION` 导航 | Qman/参考 subject 的证据等级、结论、限制和复现入口；不直接改变 milestone |
 | `contracts/qman-evidence-index.json` | `STATUS_GATE` | TS→Case→Risk→result/hash 机器索引；由 evaluator 检查关闭权限和 hash 漂移 |
 | `contracts/qman-technical-evidence.schema.json` | `ACCEPTANCE` | Qman E2/E3/E4 result 的 subject、SUT、mapping、artifact、limitation 和 closure 合同 |
-| `evidence/qman-static-launch-envelope-20260721-summary.json` | `QMAN_VERIFICATION / COMPONENT_ONLY` | F3/F5 的 stock-QEMU launch 与 fail-closed quarantine 前提；不关闭 C21/S05、Risk、G2 或 HCL |
+| `contracts/authoritative-snapshot.schema.json` | `ACCEPTANCE` | bounded snapshot envelope/capture 的结构合同；不是 G1 产品 publisher 或生产 trust-root 证明 |
+| `evidence/qman-authoritative-snapshot-fault-20260721-summary.json` | `QMAN_VERIFICATION / COMPONENT_ONLY` | F1/F8 的 host-local publish atomicity、CAS 单胜及 signature/payload/stale/boot 负门；不关闭 Case、R04、G1 或 release gate |
+| `evidence/qman-static-launch-envelope-20260721-summary.json` | `QMAN_VERIFICATION / COMPONENT_ONLY` | F1/F3/F5 的 v5 sealed capture provider、signed full snapshot、完整 group 授权范围、6 次 live full scan、stock-QEMU launch 与 fail-closed quarantine 前提；不关闭 C21/S05、Risk、G1/G2 或 HCL |
 | `qman-lab/test_qman_static_launch.py` | `ACCEPTANCE` harness | WSL nested-QEMU 复现入口；raw artifacts 由上条 summary 的 hash 间接引用 |
 | `vmware-directpath-acceptance-test-plan.md` | `ACCEPTANCE` + `REFERENCE_OBSERVATION` | 旧实验计划；原 Case ID 只作 legacy alias，canonical ID 由 VMware 行为模型定义 |
 | `vmware-esxi8-directpath-local-results.md` | `REFERENCE_OBSERVATION` | VMware 黑盒主报告；不是 Qman 产品证据 |
 | `vmware-esxi8-passthru-capable-observed-model.md` | `REFERENCE_OBSERVATION` | 实验归纳；不是 qualification 算法合同 |
-| `pci-resource-model/` | `REFERENCE_MODEL` + bounded component code | 纯函数/资源决策参考与 bounded VFIO/Static components；当前 268 个单测不等于生产 controller |
+| `pci-resource-model/` | `REFERENCE_MODEL` + bounded component code | 纯函数/资源决策参考与 bounded snapshot/VFIO/Static components；当前 293 个收集用例不等于生产 controller |
 | `kernel-patches/` | `IMPLEMENTATION_BLUEPRINT` | ACS provenance 参考方案；构建成功不等于运行时验收 |
 | `vmware-esxi8-lab/` | `ACCEPTANCE` | harness/复现入口；必须由 Case 引用 |
 | `evidence/*.json`、`evidence/*.md` | 依 subject 分类 | 需携带 Case、Risk、环境和 hash，不能直接挂 Feature 宣告完成 |

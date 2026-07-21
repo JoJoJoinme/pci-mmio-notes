@@ -1,28 +1,36 @@
 {
   "schemaVersion": 1,
   "id": "QMAN-E3-STATIC-LAUNCH-ENVELOPE-001",
-  "observedAt": "2026-07-21T12:11:36Z",
+  "observedAt": "2026-07-21T14:50:06Z",
   "subject": "QMAN_COMPONENT",
   "evidenceGrade": "E3",
   "claimBoundary": "COMPONENT_ONLY",
   "verdict": "PASS",
   "sourceState": {
-    "baseCommit": "fe1c4999875bd516bff86442bde2440dc3237d2d",
+    "baseCommit": "a648e9f78082a200d5e942453652198a023a6d4f",
     "dirtyWorkingTree": true,
     "runnerHashes": {
-      "qman-lab/test_qman_static_launch.py": "51b4ee3b9db67a6438902863f9d5cec388d6f928d4aa886d45a92b2b4fa77122"
+      "qman-lab/test_qman_static_launch.py": "d379b00b08d4a4616655f3e375ac8fd50863e7c661dcfdb4eaa574d37180a030"
     },
     "inputHashes": {
       "pci-resource-model/pci_resource_model/vfio_provider.py": "7927fb1bf72f05009729ee972233d115072b8c7853da33a8a60cc6db541cfdf4",
-      "pci-resource-model/pci_resource_model/vfio_launch_handles.py": "3db55eecf648141761ec54b582021d6ca42d048814790ef9b52a0328e34d8694",
+      "pci-resource-model/pci_resource_model/model.py": "e6349f42d98f10fd3ba8c2e4f3128abac869b181dfad29ee25ebe8d4ed9491ec",
+      "pci-resource-model/pci_resource_model/linux_sysfs.py": "faa3ba31cd2ecf06ab6c5149494e3168b38ff3bab556120c4f246e56f40acaca",
+      "pci-resource-model/pci_resource_model/authoritative_snapshot.py": "d3437a8167d967c4a6537218aa11cd07216221c8c3252d13650aa82aa0224ce0",
+      "pci-resource-model/pci_resource_model/vfio_launch_handles.py": "29638ce69b4df9d817d9c2bf94feef4530ee721ec65ce72110b90c189a7bf42f",
       "pci-resource-model/pci_resource_model/static_lease.py": "4904b6698de301a37570cc7f28282054d6523782a0574e72e313ddab0acf0ca5",
       "pci-resource-model/pci_resource_model/static_launch_envelope.py": "9b85574971e466c99e92dcb58b44278a39fa142282fb55908475cdfecfab97c5",
-      "pci-resource-model/pci_resource_model/qemu_launch_contract.py": "b4590d11c50a62f2de0ae2725e849582a9262e279dd3b761529ebf963761b423"
+      "pci-resource-model/pci_resource_model/qemu_launch_contract.py": "f9728ed6903df29e509955c279f432f3c3d26e9394db3d526f316ff1ec7507b1"
     }
   },
   "sut": {
     "environment": "WSL2/KVM outer QEMU 11.0.2 -> Ubuntu 24.04 Intel-vIOMMU guest -> real VFIO cdev/IOMMUFD -> paused stock inner QEMU 11.0.2",
     "components": [
+      {
+        "name": "Qman AuthoritativeSnapshotStore and sealed launch authorization",
+        "version": "working-tree component schema-v1",
+        "sha256": "d3437a8167d967c4a6537218aa11cd07216221c8c3252d13650aa82aa0224ce0"
+      },
       {
         "name": "Qman StaticLeaseStore",
         "version": "3397b8b4bc0cbe7f56ff8afe3a6b94ef99426db5 schema-v4",
@@ -36,7 +44,12 @@
       {
         "name": "Qman raw VFIO launch handle and fd-only render components",
         "version": "working-tree",
-        "sha256": "3db55eecf648141761ec54b582021d6ca42d048814790ef9b52a0328e34d8694"
+        "sha256": "29638ce69b4df9d817d9c2bf94feef4530ee721ec65ce72110b90c189a7bf42f"
+      },
+      {
+        "name": "Qman authoritative QEMU launch adapter",
+        "version": "working-tree",
+        "sha256": "f9728ed6903df29e509955c279f432f3c3d26e9394db3d526f316ff1ec7507b1"
       },
       {
         "name": "stock QEMU system emulator",
@@ -50,7 +63,8 @@
     ]
   },
   "hypotheses": [
-    "An active durable lease authorization, a fresh exact-node raw VFIO cdev/IOMMUFD capability, and an immutable fd-only render are sufficient for stock QEMU to perform its own IOMMUFD bind and IOAS attach without reparsing a host BDF.",
+    "A signed, stable full-host publisher snapshot can be sealed into a launch authorization and revalidated across pre-open, post-open, pre-spawn validation, and final Popen preparation without accepting caller-supplied PCI identity or topology authority.",
+    "An active sealed snapshot authorization, an active durable lease authorization, a fresh complete-group raw VFIO cdev/IOMMUFD capability, and an immutable fd-only render are sufficient for stock QEMU to perform its own IOMMUFD bind and IOAS attach without reparsing a host BDF.",
     "A paused QMP/QOM observation and successful VFIO/IOMMUFD ioctl trace are strong stock-QEMU component observations, but neither is an independent proof of DMA or interrupt isolation.",
     "Without a receipt from a DMA observer independent of the QMP observer, the launch transaction must never commit ATTACHED and must retain the complete lease claims in quarantine."
   ],
@@ -58,10 +72,14 @@
     {
       "name": "component-contract-and-governance-audit",
       "result": {
-        "windowsResourceModelTests": 268,
+        "windowsResourceModelCollected": 293,
+        "windowsResourceModelPassed": 288,
         "windowsLinuxOnlySkips": 5,
-        "wslResourceModelTests": 268,
+        "windowsSubtestsPassed": 103,
+        "wslResourceModelPassed": 293,
         "rootGovernanceTests": 28,
+        "authoritativeSnapshotAndAdapterFocusedTests": 25,
+        "authoritativeSnapshotFocusedSubtests": 21,
         "rawLaunchHandleFocusedTests": 26,
         "qemuLaunchContractFocusedTests": 32,
         "launchEnvelopeFocusedTests": 30,
@@ -71,7 +89,7 @@
     {
       "name": "source-and-real-node-provenance",
       "result": {
-        "embeddedSourceHashesMatched": 5,
+        "embeddedSourceHashesMatched": 8,
         "productionRawHandleProvenance": true,
         "targetBdf": "0000:01:00.0",
         "vfioCdev": "/dev/vfio/devices/vfio0",
@@ -81,10 +99,34 @@
       }
     },
     {
+      "name": "signed-full-host-snapshot-and-live-revalidation",
+      "result": {
+        "snapshotBinding": "AUTHORITATIVE_COMPONENT_SNAPSHOT_V1",
+        "authorityId": "qman-lab-inventory-v1",
+        "inventoryEpoch": 1,
+        "publishDoubleScanVerified": true,
+        "publishCaptureCount": 2,
+        "totalCaptureCountAtSpawn": 6,
+        "returnedDeviceCountPerCapture": 12,
+        "stableTopologyHash": "34f630c261f593bb19a7a39c598d31293fe1655a9e810ce20d1fb437897b0bc7",
+        "captureProviderBoundary": "COMPONENT_CAPTURE_PROVIDER",
+        "captureProviderBindingHash": "15cd5626c5dcc75e2d5471ad25477208c5506998c7a622cd93337052e8d0855b",
+        "authorizedBdfs": ["0000:01:00.0"],
+        "authorizedScopeEqualsCompleteIommuGroup": true,
+        "preOpenLiveValidated": true,
+        "postOpenLiveValidated": true,
+        "validateBeforeSpawnLiveValidated": true,
+        "popenKwargsLiveValidated": true,
+        "trustBoundary": "COMPONENT_AUTHENTICITY_ONLY",
+        "rollbackAnchor": "NONE_COMPONENT_LIMITATION"
+      }
+    },
+    {
       "name": "authorized-fd-only-stock-qemu-spawn",
       "result": {
+        "snapshotAuthorizationActiveAtSpawn": true,
         "leaseAuthorizationActiveAtSpawn": true,
-        "passFds": [9, 10],
+        "passFds": [12, 13],
         "environment": {},
         "cwd": "/",
         "shell": false,
@@ -133,44 +175,46 @@
         "bootConsole": "ttyS0",
         "evidenceConsole": "ttyS1",
         "artifactDecodeErrors": 0,
-        "runnerFailures": 0
+        "runnerFailures": 0,
+        "retainedArtifactHashesVerified": 22,
+        "retainedArtifactHashMismatches": 0
       }
     }
   ],
   "mapping": {
-    "techStories": ["TS-F3-02", "TS-F3-03", "TS-F3-05", "TS-F5-04"],
+    "techStories": ["TS-F1-01", "TS-F3-02", "TS-F3-03", "TS-F3-05", "TS-F5-04", "TS-F8-02"],
     "caseIds": ["C21", "S05"],
     "riskIds": ["R04", "R05", "R26", "R27"]
   },
   "artifacts": [
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v3/summary.json",
-      "sha256": "daab62ddeccb6fdba953208a2e05d8794269210437ff4a067f4c49edbddef28f",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/summary.json",
+      "sha256": "7250b23b8033e055d21378076ea7351de797d99832aa75458dac1581c150f0b7",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v3/hashes.json",
-      "sha256": "d0b845b20b37f58e0ba975472b10f12775d47ad54d73d813953574ae8fba6f44",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/hashes.json",
+      "sha256": "3bf7f05f4ca4ed6341fea892155dc67af082d17449067fe1b0dfa50d20f579e7",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v3/guest-result.json",
-      "sha256": "3fa27586ba4ce31b3e4dee2c8c72faaac26ebebe7fcd35ef0f918013d4906960",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/guest-result.json",
+      "sha256": "28da1340ad274a0b0eb5dafbe3714976c15adc3ef724a6fbf202739318eb892e",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v3/qmp-transcript.json",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/qmp-transcript.json",
       "sha256": "14c6da5f79920add20ed745939144fcfba2bdcd67e7e58dbea51b35a5669d0ad",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v3/ioctl-trace.log",
-      "sha256": "556bc0c6acba50e67ca1954a91dbf60ebc1f38376d80fc657ca66bd0add32b77",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/ioctl-trace.log",
+      "sha256": "3cdc78045d21bbeae982b84be931079f8cd9ad86c0f32ebcd9c28172ac12732a",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v3/evidence-serial.log",
-      "sha256": "3aec9884976c612b25fc2d24f66dfcb7b89f0dffb0164c7bf01e097ae9f1a99c",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope/evidence-serial.log",
+      "sha256": "7e2913805049f37714ba5105667f4decbf2238f176791615cce70420500c8418",
       "retention": "LOCAL_RAW"
     }
   ],
@@ -182,9 +226,10 @@
   "limitations": [
     "This is one nested virtual e1000e in a one-member IOMMU group. It does not validate a multi-device group, a physical NIC/GPU/HBA, or a production compatibility profile.",
     "The syscall trace observes successful stock-QEMU bind/IOAS/attach calls in the same guest kernel; it does not independently prove DMA or interrupt-remapping isolation.",
-    "The QMP receipt is HMAC-authenticated by a component observer in the same lab process. It is not a production trust root, and no independent DMA observer or receipt was available.",
+    "The snapshot publisher and QMP observer use component HMAC keys. They are not a production trust root, TPM-backed signer, or key-rotation/revocation proof, and no independent DMA observer or receipt was available.",
+    "The host-local SQLite authority has no external monotonic rollback anchor, so any earlier still-valid database state may be replayed, including same-key in-place/block restoration or deletion of the newest rows; inode and store UUID checks are not anti-rollback proof.",
     "Reset execution and verification, driver restoration, pidfd ownership, crash/power-loss recovery, DMA/IRQ teardown, multi-host fencing, and physical clean state were not proved.",
-    "The inventory epoch/topology hash remain caller-correlation inputs and the fixed lab authority does not implement the G1 authoritative snapshot publisher.",
-    "No product Case, Risk, milestone, HCL entry, qualification profile, or support claim is closed by this result; C21 and S05 remain IMPLEMENTATION_BLOCKED and G0 remains current."
+    "The bounded snapshot component does not implement the production qualification signer/catalog, host-agent/controller integration, kernel atomic topology generation, or physical-device qualification required by G1 and later milestones.",
+    "No product Case, Risk, milestone, HCL entry, qualification profile, or support claim is closed by this result; C10, C15, C21, and S05 remain IMPLEMENTATION_BLOCKED and G0 remains current."
   ]
 }

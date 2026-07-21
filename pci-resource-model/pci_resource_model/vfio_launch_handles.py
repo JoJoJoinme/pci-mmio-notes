@@ -19,9 +19,9 @@ import json
 import os
 import stat
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any, Protocol, Sequence
+from typing import Any, Callable, Protocol, Sequence
 
 from . import vfio_provider as vfio
 
@@ -35,7 +35,11 @@ SYSFS_ROOT = Path("/sys/bus/pci/devices")
 VFIO_ROOT = Path("/dev/vfio")
 IOMMUFD_PATH = Path("/dev/iommu")
 HANDOFF_MODE = "PYTHON_SUBPROCESS_PASS_FDS"
-SNAPSHOT_BINDING = "CALLER_CORRELATION_ONLY"
+CALLER_SNAPSHOT_BINDING = "CALLER_CORRELATION_ONLY"
+AUTHORITATIVE_SNAPSHOT_BINDING = "AUTHORITATIVE_COMPONENT_SNAPSHOT_V1"
+# Backward-compatible name for the legacy caller-correlation contract.  New
+# product-facing code must explicitly require AUTHORITATIVE_SNAPSHOT_BINDING.
+SNAPSHOT_BINDING = CALLER_SNAPSHOT_BINDING
 
 # Keep the production reader identity pinned even if a test/lab replaces the
 # public module attribute.  This is a provenance guard against accidentally
@@ -131,9 +135,15 @@ class VfioLaunchMetadata:
     fd_binding_hash: str
     snapshot_binding: str = SNAPSHOT_BINDING
     handoff_mode: str = HANDOFF_MODE
+    snapshot_hash: str | None = None
+    snapshot_authority_id: str | None = None
+    snapshot_store_instance_id: str | None = None
+    snapshot_key_id: str | None = None
+    snapshot_boot_id: str | None = None
+    snapshot_authorization_hash: str | None = None
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        result = {
             "bdf": self.bdf,
             "cdev": self.cdev.canonical(),
             "fdBindingHash": self.fd_binding_hash,
@@ -149,6 +159,16 @@ class VfioLaunchMetadata:
             "snapshotEpoch": self.snapshot_epoch,
             "topologyHash": self.topology_hash,
         }
+        if self.snapshot_binding == AUTHORITATIVE_SNAPSHOT_BINDING:
+            result["publisherSnapshot"] = {
+                "authorityId": self.snapshot_authority_id,
+                "authorizationHash": self.snapshot_authorization_hash,
+                "bootId": self.snapshot_boot_id,
+                "keyId": self.snapshot_key_id,
+                "snapshotHash": self.snapshot_hash,
+                "storeInstanceId": self.snapshot_store_instance_id,
+            }
+        return result
 
 
 @dataclass
@@ -178,6 +198,7 @@ class VfioLaunchResult:
     _kernel: LaunchKernelOps = field(repr=False, compare=False)
     _close_state: _CloseState = field(repr=False, compare=False)
     _provenance: object = field(repr=False, compare=False)
+    _snapshot_authorization: object | None = field(repr=False, compare=False)
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         del args, kwargs
@@ -192,6 +213,10 @@ class VfioLaunchResult:
         Supplying either dependency (including an exact built-in instance),
         explicitly passing ``None``, subclassing, or replacing a constructor
         keeps the result in the TEST/LAB provenance class.
+
+        This flag covers only raw launch-handle construction.  It does not
+        promote the publisher's ``COMPONENT_CAPTURE_PROVIDER`` or component
+        HMAC into a production inventory trust root.
         """
 
         return (
@@ -264,6 +289,37 @@ class VfioLaunchResult:
         """Close the complete ownership unit exactly once in reverse-open order."""
 
         _close_owned_handles(self._kernel, self._close_state)
+
+    def require_snapshot_authorization_current(self) -> None:
+        """Recheck the sealed publisher capability retained through spawn."""
+
+        from .authoritative_snapshot import validate_launch_authorization
+
+        if self.metadata.snapshot_binding != AUTHORITATIVE_SNAPSHOT_BINDING:
+            raise vfio.ProviderError(
+                vfio.Reason.INVALID_ARGUMENT,
+                bdf=self.metadata.bdf,
+                stage="authoritative-snapshot-required",
+            )
+        validate_launch_authorization(self._snapshot_authorization)
+
+    def revalidate_snapshot_live(self, phase: object) -> None:
+        """Re-capture the full host at an explicit launch-side-effect boundary."""
+
+        from .authoritative_snapshot import (
+            LiveCapturePhase,
+            SnapshotError,
+            SnapshotReason,
+            validate_launch_authorization,
+        )
+
+        authorization = validate_launch_authorization(self._snapshot_authorization)
+        if not isinstance(phase, LiveCapturePhase):
+            raise SnapshotError(
+                SnapshotReason.INVALID_ARGUMENT,
+                "authoritative launch result lacks a valid live-capture contract",
+            )
+        authorization.revalidate_live(phase)
 
     def __enter__(self) -> "VfioLaunchResult":
         return self
@@ -417,6 +473,30 @@ def is_production_launch_bundle(value: object) -> bool:
     )
 
 
+def is_authoritative_snapshot_launch_result(value: object) -> bool:
+    """Return true only for a live default-opener result bound to a snapshot guard."""
+
+    if not is_production_launch_result(value) or not value.handles_usable:
+        return False
+    if value.metadata.snapshot_binding != AUTHORITATIVE_SNAPSHOT_BINDING:
+        return False
+    try:
+        value.require_snapshot_authorization_current()
+    except BaseException:
+        return False
+    return True
+
+
+def is_authoritative_snapshot_launch_bundle(value: object) -> bool:
+    results = getattr(value, "results", None)
+    return (
+        is_production_launch_bundle(value)
+        and isinstance(results, tuple)
+        and bool(results)
+        and all(is_authoritative_snapshot_launch_result(result) for result in results)
+    )
+
+
 class PosixLaunchKernel:
     """Open one fixed character node with lstat/open/fstat substitution checks."""
 
@@ -539,6 +619,7 @@ def _new_launch_result(
     kernel: LaunchKernelOps,
     production: bool,
     close_state: _CloseState | None = None,
+    snapshot_authorization: object | None = None,
     _seal: object,
 ) -> VfioLaunchResult:
     if _seal is not _RESULT_FACTORY_SEAL:
@@ -564,6 +645,7 @@ def _new_launch_result(
         "_provenance",
         _PRODUCTION_PROVENANCE if production else _TEST_LAB_PROVENANCE,
     )
+    object.__setattr__(result, "_snapshot_authorization", snapshot_authorization)
     return result
 
 
@@ -606,24 +688,42 @@ def canonical_fd_binding_preimage(
     group_hash: str,
     cdev: OpenHandleMetadata,
     iommufd: OpenHandleMetadata,
+    snapshot_authorization: object | None = None,
 ) -> bytes:
     """Bind caller facts to opened inodes/devts without trusting fd integers."""
 
-    return _canonical_json_bytes(
-        {
-            "bdf": request.bdf,
-            "cdev": cdev.canonical(),
-            "groupHash": group_hash,
-            "groupMembers": list(state.group_members),
-            "handoffMode": HANDOFF_MODE,
-            "identityHash": identity_hash,
-            "iommuGroup": state.iommu_group,
-            "iommufd": iommufd.canonical(),
-            "kind": "qman-vfio-launch-fd-binding-v1",
-            "snapshotEpoch": request.snapshot_epoch,
-            "topologyHash": request.topology_hash,
-        }
-    )
+    value: dict[str, Any] = {
+        "bdf": request.bdf,
+        "cdev": cdev.canonical(),
+        "groupHash": group_hash,
+        "groupMembers": list(state.group_members),
+        "handoffMode": HANDOFF_MODE,
+        "identityHash": identity_hash,
+        "iommuGroup": state.iommu_group,
+        "iommufd": iommufd.canonical(),
+        "kind": "qman-vfio-launch-fd-binding-v1",
+        "snapshotEpoch": request.snapshot_epoch,
+        "topologyHash": request.topology_hash,
+    }
+    if snapshot_authorization is not None:
+        from .authoritative_snapshot import validate_launch_authorization
+
+        authorization = validate_launch_authorization(snapshot_authorization)
+        value.update(
+            {
+                "kind": "qman-vfio-launch-fd-binding-v2",
+                "publisherSnapshot": {
+                    "authorityId": authorization.authority_id,
+                    "authorizationHash": authorization.binding_hash,
+                    "bootId": authorization.kernel_boot_id,
+                    "keyId": authorization.key_id,
+                    "snapshotHash": authorization.snapshot_hash,
+                    "storeInstanceId": authorization.store_instance_id,
+                },
+                "snapshotBinding": AUTHORITATIVE_SNAPSHOT_BINDING,
+            }
+        )
+    return _canonical_json_bytes(value)
 
 
 def compute_fd_binding_hash(
@@ -634,6 +734,7 @@ def compute_fd_binding_hash(
     group_hash: str,
     cdev: OpenHandleMetadata,
     iommufd: OpenHandleMetadata,
+    snapshot_authorization: object | None = None,
 ) -> str:
     return hashlib.sha256(
         canonical_fd_binding_preimage(
@@ -643,6 +744,7 @@ def compute_fd_binding_hash(
             group_hash=group_hash,
             cdev=cdev,
             iommufd=iommufd,
+            snapshot_authorization=snapshot_authorization,
         )
     ).hexdigest()
 
@@ -1189,3 +1291,180 @@ def open_vfio_launch_handles(
         except vfio.ProviderError as cleanup_error:
             raise cleanup_error from primary
         raise
+
+
+def _verification_state_from_metadata(metadata: VfioLaunchMetadata) -> vfio.DeviceState:
+    """Reconstruct only the already-observed fields used by the binding hash."""
+
+    return vfio.DeviceState(
+        bdf=metadata.bdf,
+        identity=metadata.identity,
+        driver="vfio-pci",
+        iommu_group=metadata.iommu_group,
+        group_members=metadata.group_members,
+        noiommu_node_present=False,
+        group_node=VFIO_ROOT / metadata.iommu_group,
+        cdev_node=metadata.cdev.path,
+        cdev_device_number=(
+            metadata.cdev.character_device_major,
+            metadata.cdev.character_device_minor,
+        ),
+    )
+
+
+def open_authorized_vfio_launch_bundle(
+    authorization: object,
+    capture_fn: Callable[[], Any] | None = None,
+    *,
+    state_reader: vfio.StateReader | None | _OmittedDependency = _DEPENDENCY_OMITTED,
+    kernel: LaunchKernelOps | None | _OmittedDependency = _DEPENDENCY_OMITTED,
+) -> VfioLaunchBundle:
+    """Open one complete group set derived only from a sealed publisher capability.
+
+    The caller does not supply BDF identity, group, epoch, or topology hashes.
+    Those values are derived from the active store authorization, then the full
+    host is re-captured immediately before and after the raw character-device
+    opens.  The returned capability remains valid only while the authorization
+    context is active and retains the sealed publisher authorization for the
+    pre-spawn recheck.
+
+    ``capture_fn`` is a compatibility witness for the former API only.  If
+    supplied, it must be the exact callable sealed by ``capture_and_publish``;
+    validation always invokes the provider capability carried by the
+    authorization.  New callers should omit it.
+    """
+
+    from .authoritative_snapshot import (
+        LiveCapturePhase,
+        SnapshotError,
+        SnapshotReason,
+        validate_launch_authorization,
+    )
+
+    verified = validate_launch_authorization(authorization)
+    verified._require_bound_capture_provider(capture_fn)
+    verified.revalidate_live(LiveCapturePhase.PRE_OPEN)
+    requests = tuple(
+        VfioLaunchRequest(
+            bdf=bdf,
+            snapshot_epoch=verified.inventory_epoch,
+            topology_hash=verified.topology_hash,
+            expected_identity_hash=verified.launch_facts[bdf].identity_hash,
+            expected_group_hash=verified.launch_facts[bdf].group_hash,
+        )
+        for bdf in verified.authorized_bdfs
+    )
+
+    dependencies: dict[str, object] = {}
+    if state_reader is not _DEPENDENCY_OMITTED:
+        dependencies["state_reader"] = state_reader
+    if kernel is not _DEPENDENCY_OMITTED:
+        dependencies["kernel"] = kernel
+    bundle = open_vfio_launch_bundle(requests, **dependencies)
+    try:
+        verified.revalidate_live(LiveCapturePhase.POST_OPEN)
+        by_bdf = {result.metadata.bdf: result for result in bundle.results}
+        if set(by_bdf) != set(verified.authorized_bdfs):
+            raise SnapshotError(
+                SnapshotReason.LAUNCH_FACTS_CHANGED,
+                "raw launch result coverage differs from snapshot authorization",
+                phase=LiveCapturePhase.POST_OPEN,
+            )
+
+        upgraded: list[VfioLaunchResult] = []
+        for bdf in verified.authorized_bdfs:
+            legacy = by_bdf[bdf]
+            fact = verified.launch_facts[bdf]
+            metadata = legacy.metadata
+            if (
+                metadata.identity != fact.identity
+                or metadata.iommu_group != fact.iommu_group
+                or metadata.group_members != fact.group_members
+                or not hmac.compare_digest(metadata.identity_hash, fact.identity_hash)
+                or not hmac.compare_digest(metadata.group_hash, fact.group_hash)
+            ):
+                raise SnapshotError(
+                    SnapshotReason.LAUNCH_FACTS_CHANGED,
+                    f"opened VFIO facts differ from publisher facts for {bdf}",
+                    phase=LiveCapturePhase.POST_OPEN,
+                )
+            binding_hash = compute_fd_binding_hash(
+                request=legacy.request,
+                state=_verification_state_from_metadata(metadata),
+                identity_hash=metadata.identity_hash,
+                group_hash=metadata.group_hash,
+                cdev=metadata.cdev,
+                iommufd=metadata.iommufd,
+                snapshot_authorization=verified,
+            )
+            authoritative_metadata = replace(
+                metadata,
+                fd_binding_hash=binding_hash,
+                snapshot_binding=AUTHORITATIVE_SNAPSHOT_BINDING,
+                snapshot_hash=verified.snapshot_hash,
+                snapshot_authority_id=verified.authority_id,
+                snapshot_store_instance_id=verified.store_instance_id,
+                snapshot_key_id=verified.key_id,
+                snapshot_boot_id=verified.kernel_boot_id,
+                snapshot_authorization_hash=verified.binding_hash,
+            )
+            upgraded.append(
+                _new_launch_result(
+                    request=legacy.request,
+                    device_fd=legacy.device_fd,
+                    iommufd_fd=legacy.iommufd_fd,
+                    metadata=authoritative_metadata,
+                    kernel=bundle._kernel,
+                    production=bundle.production_provenance,
+                    close_state=bundle._close_state,
+                    snapshot_authorization=verified,
+                    _seal=_RESULT_FACTORY_SEAL,
+                )
+            )
+        return _new_launch_bundle(
+            results=tuple(upgraded),
+            kernel=bundle._kernel,
+            close_state=bundle._close_state,
+            production=bundle.production_provenance,
+            _seal=_BUNDLE_FACTORY_SEAL,
+        )
+    except BaseException as primary:
+        try:
+            bundle.close()
+        except vfio.ProviderError as cleanup_error:
+            raise cleanup_error from primary
+        raise
+
+
+def open_authorized_vfio_launch_handles(
+    authorization: object,
+    capture_fn: Callable[[], Any] | None = None,
+    *,
+    state_reader: vfio.StateReader | None | _OmittedDependency = _DEPENDENCY_OMITTED,
+    kernel: LaunchKernelOps | None | _OmittedDependency = _DEPENDENCY_OMITTED,
+) -> VfioLaunchResult:
+    """Singleton convenience wrapper; complete multi-function groups use the bundle API."""
+
+    from .authoritative_snapshot import (
+        SnapshotError,
+        SnapshotReason,
+        validate_launch_authorization,
+    )
+
+    verified = validate_launch_authorization(authorization)
+    if len(verified.authorized_bdfs) != 1:
+        raise SnapshotError(
+            SnapshotReason.INCOMPLETE_IOMMU_GROUP,
+            "singleton opener requires an authorization containing exactly one BDF",
+        )
+    dependencies: dict[str, object] = {}
+    if state_reader is not _DEPENDENCY_OMITTED:
+        dependencies["state_reader"] = state_reader
+    if kernel is not _DEPENDENCY_OMITTED:
+        dependencies["kernel"] = kernel
+    bundle = open_authorized_vfio_launch_bundle(
+        verified,
+        capture_fn,
+        **dependencies,
+    )
+    return bundle.results[0]

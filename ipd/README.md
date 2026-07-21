@@ -207,13 +207,15 @@ V3 明确不以 live migration、FT、snapshot/suspend 或 guest runtime PCI hot
 
 - 产品方向与树结构：`ACCEPTED`。
 - 产品实现：未因本树新增而推进。
-- 101 个设计 Case：C20、O09 为 reference-scope executable；C21、F00、F09、S03、S04、S05、
-  S15 为 `PRODUCT / IMPLEMENTATION_BLOCKED`。VFIO provider、QMP gate、Static lease/FSM 与
-  lease→fresh raw fd→stock-QEMU→receipt/quarantine 的 launch-envelope evidence 只作为这些 Case
-  的组件前提，不构成产品关闭；其余 92 个 Case 仍待分类。
+- 101 个设计 Case：C20、O09 为 reference-scope executable；C10、C15、C16、C18、C21、F00、F09、
+  F10、S03、S04、S05、S15 为 `PRODUCT / IMPLEMENTATION_BLOCKED`。VFIO provider、QMP gate、
+  authoritative snapshot、Static lease/FSM 与 lease→fresh raw fd→stock-QEMU→receipt/quarantine
+  的 launch-envelope evidence 只作为这些 Case 的组件前提，不构成产品关闭，也不推进
+  F1/F3/F5/F8 状态；其余 87 个 Case 仍待分类。
 - 已定义 Case 通过 `requiredTechStories` 挂回本树，并用 `dependsOnCaseIds` 固定关闭顺序；
-  当前关键链由机器门约束为 `C21 → S03 → S04 → S05 → F00`，以及
-  `C21 → S15 → F09`；reference/component Case 不能替代产品前置。
+  当前关键链由机器门约束为 `C10 + C20 → C21 → S03 → S04 → S05 → F00`，以及
+  `C21 → S15 → F09`、`C10 → F10`；C20 仍是 reference scope，不能替代 C21 的 PRODUCT
+  前置，任何 reference/component Case 都不能关闭产品依赖。
 - 风险：R01-R39 当前全部未达到发布闭环。
 - 发布：`BLOCKED`。
 

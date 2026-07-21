@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "F10",
+  "title": "Dependency upgrades invalidate qualification until re-verification",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R19", "R20", "R27"],
+  "requiredTechStories": ["TS-F1-05", "TS-F8-02", "TS-F8-04"],
+  "dependsOnCaseIds": ["C10"],
+  "blocker": "There is no production compatibility catalog and release workflow that binds and monitors exact kernel, QEMU, firmware, policy, device firmware, guest and driver digests.",
+  "targetMilestone": "G6",
+  "assertions": [
+    "every supported profile binds exact dependency versions and retained qualification evidence hashes",
+    "an observed dependency digest or signer change invalidates all affected supported claims",
+    "invalidated profiles are denied by API, scheduler, host agent and launcher until re-qualified",
+    "unrelated profiles remain available when their complete dependency set is unchanged"
+  ]
+}

@@ -107,6 +107,13 @@
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-vfio-dma-provider-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-vfio-provider-gate-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-capability-closure-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-authoritative-snapshot-fault-20260721-summary.json"},
+        {"kind": "STATUS_GATE", "path": "contracts/authoritative-snapshot.schema.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C10.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C15.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C16.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C18.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/F10.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/C20.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/C21.json"},
         {"kind": "QMAN_VERIFICATION", "path": "ipd/QMAN-TECHNICAL-EVIDENCE.md"}
@@ -371,6 +378,7 @@
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qmp-gate-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-static-lease-fault-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-static-launch-envelope-20260721-summary.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C18.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/F00.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/F09.json"}
       ]
@@ -554,8 +562,12 @@
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/C20.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/O09.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/C21.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C10.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/C15.json"},
+        {"kind": "ACCEPTANCE", "path": "acceptance/cases/F10.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/F09.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/S15.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-authoritative-snapshot-fault-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "ipd/QMAN-TECHNICAL-EVIDENCE.md"},
         {"kind": "STATUS_GATE", "path": "contracts/qman-evidence-index.json"},
         {"kind": "STATUS_GATE", "path": "contracts/qman-technical-evidence.schema.json"}

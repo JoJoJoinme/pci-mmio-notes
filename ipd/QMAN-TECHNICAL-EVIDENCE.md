@@ -1,6 +1,8 @@
 # Qman 技术证据树与 WSL/QEMU 验证结果
 
 状态：`TECHNICAL EVIDENCE / PRODUCT NOT IMPLEMENTED`
+项目 claim：`REFERENCE_AND_QUALIFICATION_MODEL_ONLY`
+治理快照：G0 `IN_PROGRESS`；G1-G6 `NOT_STARTED`；Acceptance `14/101` 已定义、`87/101` 未分类；R01-R39 全部 `OPEN`
 实验日期：`2026-07-21 Asia/Shanghai`
 环境：`WSL2 Ubuntu-22.04 + KVM + QEMU 11.0.2 + OVMF 2022.02`
 
@@ -41,11 +43,13 @@ artifact hash drift => evidence invalidated
 | `QMAN-E3-DMA-PROVIDER-001` | E3 | unsafe=`Y` 时，no-IOMMU 与 IOMMU-backed device 仍呈现不同 provider node | TS-F1-02、F3-03；C21 前提 | 物理 IOMMU/IR/errata、IOMMUFD IOAS attach、DPDK workload |
 | `QMAN-E3-VFIO-PROVIDER-GATE-001` | E3 | Qman component 对 no-IOMMU 稳定拒绝；对 cdev 真实执行 IOMMUFD bind、IOAS allocate/attach、身份/完整 group 复核与逆序清理 | TS-F1-02、F3-03；C21 / R27 前提 | 权威产品 snapshot、durable lease、stock-QEMU handoff、物理 E4；C21/R27 均未关闭 |
 | `QMAN-E3-STATIC-LEASE-FAULT-001` | E3 | WSL 原生 ext4 上 7/7 subprocess/SQLite 故障场景通过：begin/release commit 前硬退出无部分状态，重叠 bundle 双进程仅一胜，未知 cleanup 与 SIGKILL 后 reconcile 保留 whole-bundle quarantine | TS-F3-02/05、F5-03/04；S03/S04/S05/F00 与 R04/R05/R11 前提 | bind/reset/QEMU/cleanup 真实执行、pidfd/DMA/IRQ/owner clean state、产品 Case/Risk；四个 Case 仍 blocked |
-| `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` | E3 | production-provenance raw cdev/IOMMUFD 在有效 lease authorization 内通过 fd-only argv 交给 stock QEMU；QMP/QOM 看到 realized `vfio-pci`，trace 中 bind、IOAS allocate、attach 三个 ioctl 均返回 0；无独立 DMA receipt 时不提交 `ATTACHED`，保留 claims 并 quarantine | TS-F3-02/03/05、F5-04；C21/S05 与 R04/R05/R26/R27 前提 | G1 权威 snapshot、真实 reset/driver restore、独立 DMA/IRQ observer、pidfd/产品 controller、物理 E4；Case/Risk/G2 均未关闭 |
+| `QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001` | E3 | host-local SQLite snapshot component 的未提交 epoch 不可见、并发 CAS 单胜与严格递增 epoch 已通过真实 subprocess/并发故障注入；signature/payload/stale/minimum-epoch/boot drift 均 fail closed；删除最新行后 earlier-valid 状态仍可被接受，实验证实外部单调锚是必要边界 | TS-F1-01、F8-02；R04 前提 | G1 产品 publisher、生产 trust root、外部单调防回滚锚、power-loss durability；不关闭 Case/R04/G1 |
+| `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` | E3 | v5 将 sealed capture provider、签名 full-host snapshot、完整 group 授权范围、6 次一致的 live full scan、lease authorization、production-provenance raw cdev/IOMMUFD 与 fd-only stock QEMU 串成一条链；QMP/QOM 看到 realized `vfio-pci`，trace 中 bind、IOAS allocate、attach 均返回 0；无独立 DMA receipt 时不提交 `ATTACHED`，保留 claims 并 quarantine | TS-F1-01、F3-02/03/05、F5-04、F8-02；C21/S05 与 R04/R05/R26/R27 前提 | 生产 G1 authority/trust/rollback anchor、真实 reset/driver restore、独立 DMA/IRQ observer、pidfd/产品 controller、物理 E4；Case/Risk/G1/G2 均未关闭 |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 | QEMU floor 与 OVMF aperture 必须配对；双 64 GiB BAR 默认失败、128 GiB 配对成功 | TS-F4-01/02/04；M23 前提 | Qman observedPlan commit/rollback、物理 BAR qualification |
 
-当前所有 Risk 仍为 `OPEN`。这些结果增加“为什么要这样设计”的技术证据，不改变 G0 和
-release 的 `BLOCKED` 状态。
+当前 Acceptance 仍是 `14/101` 已定义、`87/101` 未分类，所有 Risk 仍为 `OPEN`。这些结果增加
+“为什么要这样设计”的技术证据，不改变 G0 `IN_PROGRESS`、G1-G6 `NOT_STARTED`、claim
+`REFERENCE_AND_QUALIFICATION_MODEL_ONLY` 和 release `BLOCKED` 状态。
 
 ## 3. 被实验修正或强化的设计判断
 
@@ -187,16 +191,48 @@ DMA/IRQ teardown、driver restoration 或物理设备 clean state。
 
 证据：[`qman-static-lease-fault-20260721-summary.json`](../evidence/qman-static-lease-fault-20260721-summary.json)。
 
-### 3.8 Static launch 已跨过 stock-QEMU attach 前提，但故意没有越过 DMA 证据门
+### 3.8 Authoritative snapshot 已有 bounded publisher 与故障门，但不是 G1 产品权威
+
+`QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001` 把 snapshot 从 caller supplied correlation 推进为
+host-local component authority：完整 HostInventory 与精确 PCI identity/IOMMU group facts 被 canonicalize，
+以 boot identity、单调 epoch、full-topology hash 和 HMAC-SHA256 envelope 一起持久化到 WSL 原生文件系统。
+发布使用双次稳定 full scan、SQLite `BEGIN IMMEDIATE`/CAS 与 WAL/FULL；launch authorization 只接受
+当前 boot、当前 snapshot、满足 minimum epoch 且签名/内容/hash 一致的记录。
+
+真实故障实验验证了：
+
+- child 在 insert 后、commit 前 `os._exit(91)`，重开后只看见旧的 epoch 1，SQLite
+  `integrity_check=ok`，未提交 epoch 不可见；
+- 两个独立 publisher 对同一 current hash 并发 CAS，严格只有一个 winner；提交序列为 epoch 1、2，
+  loser 得到 `PUBLISH_CONFLICT`；
+- signature tamper、payload tamper、旧 snapshot、minimum epoch 与 boot drift 分别以稳定 reason
+  fail closed；
+- 删除最新 epoch 2 后，同一 inode/store instance 中正确签名的 epoch 1 仍能授权；该 L01 反例明确
+  验证了外部单调 rollback anchor 的必要性，而不是把 inode/store UUID 误当作防回滚证明。
+
+这只是 `QMAN_COMPONENT / COMPONENT_ONLY`。HMAC signer/verifier 共享组件 key，不是 TPM/HSM-backed
+生产 trust root；没有外部单调锚时，任何 earlier-valid SQLite 状态回放（含同 key 下原位/块级恢复或
+删除最新行）都可能被接受，inode/store UUID 不是 anti-rollback 证明；WAL/FULL
+也不等于端到端 power-loss durability。它不启动 G1，不关闭 R04 或任何 Case。
+
+证据：[`qman-authoritative-snapshot-fault-20260721-summary.json`](../evidence/qman-authoritative-snapshot-fault-20260721-summary.json)。
+
+### 3.9 Static launch 已接上 signed snapshot，但故意没有越过 DMA 证据门
 
 `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` 在 WSL2/KVM 外层 QEMU 11 中启动 Ubuntu + Intel vIOMMU，
-把虚拟 e1000e bind 到真实 `/dev/vfio/devices/vfio0`，再由 Qman component 打开 fresh raw cdev 与
-`/dev/iommu`。只有在 schema-v4 lease authorization 有效时，typed renderer 才生成 `env={}`、
-`cwd=/`、`shell=false` 的 fd-only stock-QEMU spawn：
+把虚拟 e1000e bind 到真实 `/dev/vfio/devices/vfio0`。v5 先在 WSL 原生文件系统用同一个
+`COMPONENT_CAPTURE_PROVIDER` 双扫描并发布 HMAC 签名的 full-host snapshot，再由 sealed snapshot
+authorization 派生完整 IOMMU group request；只有 snapshot
+authorization 与 schema-v4 lease authorization 同时有效时，Qman component 才打开 fresh raw cdev 与
+`/dev/iommu`，typed renderer 才生成 `env={}`、`cwd=/`、`shell=false` 的 fd-only stock-QEMU spawn：
 
 ```text
+signed full snapshot (double stable scan, epoch 1)
+  -> sealed snapshot authorization
 lease RESERVED -> PREPARING
+  -> PRE_OPEN full scan -> raw VFIO bundle -> POST_OPEN full scan
 envelope INTENT_PERSISTED -> LEASE_PREPARED -> HANDLES_OPEN -> QEMU_RUNNING
+  -> validate_before_spawn full scan -> popen_kwargs full scan -> Popen
 QMP/QOM realized vfio-pci -> QMP_RECEIPT_VERIFIED
 independent DMA receipt absent
   -> CLEANING -> stop QEMU -> close raw fds
@@ -207,6 +243,12 @@ ATTACHED was never committed
 
 本次观测到：
 
+- publisher 的 2 次 publish scan，加上 PRE_OPEN、POST_OPEN、`validate_before_spawn` 和
+  `popen_kwargs` 的 4 次 live revalidation，共 6 次 full-host scan；12 个 PCI device 的 boot/host、
+  device count 与 full-topology hash 全部一致；
+- snapshot authority/store/key/boot/epoch/hash/authorization 与 capture-provider binding 被绑定进
+  raw-handle metadata、fd binding 与 launch plan；plan BDF 集合等于 `authorized_bdfs` 并覆盖完整
+  IOMMU group；snapshot authorization 和 lease authorization 在最终 Popen 时仍处于 active；
 - QMP 为 `prelaunch/running=false`，KVM enabled/present，`/machine/peripheral` 中存在
   `dp0 child<vfio-pci>` 且 `realized=true`；
 - tracefs 将 255 个 QEMU ioctl 配对，其中 `VFIO_DEVICE_BIND_IOMMUFD (0x3b76)`、
@@ -218,9 +260,17 @@ ATTACHED was never committed
   IOMMUFD、任一 child close 关闭整个 ownership unit”的合同；正式 nested run 只有单成员 group，
   不能冒充多设备或物理平台验证。
 
-正式登记的是 `v3` artifact。此前未登记的失败也保留了工程反馈：`v1` 暴露 QEMU greeting 后
-3 秒 command timeout 的误判，`v2` 的 guest 已 PASS，但长 Base64 证据与 ttyS0 systemd 日志交织。
-runner 因此改为有界 90/60 秒 QMP 等待，并把证据迁到独占 ttyS1；v3 的附件解析错误为 0。
+正式登记的是 `v5-provider-scope` artifact，raw 目录为
+`E:/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-launch-envelope-v5-provider-scope`，summary verdict 为
+`pass`，22/22 个保留工件哈希独立复核一致。v1-v3 保留为历史工程反馈：v1 暴露 QEMU greeting 后
+3 秒 command timeout 的误判，v2 的 guest 已 PASS 但长 Base64 证据与 ttyS0 systemd 日志交织，v3
+修复 transport，却仍是 snapshot caller correlation；v4 接入 bounded signed publisher 与 6 次 full
+scan；v5 再封存 capture provider 并强制 authorization/QEMU plan 的完整 group 范围一致。
+
+v5 的 snapshot authenticity 仍只是 component HMAC，不是生产 trust root；没有外部单调 rollback
+anchor，无法检测任意 earlier-valid SQLite 状态回放，也没有证明真实 power-loss、物理设备 DMA/IRQ
+isolation。因此
+结果仍是 `QMAN_COMPONENT / COMPONENT_ONLY`，不关闭 C21/S05、任何 Risk、G1/G2 或 HCL。
 
 证据：[`qman-static-launch-envelope-20260721-summary.json`](../evidence/qman-static-launch-envelope-20260721-summary.json)。
 
@@ -261,6 +311,11 @@ wsl -d Ubuntu-22.04 -- python3 `
   --state-root /root/.qman-static-lease-fault-state `
   --output-dir /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-static-lease-fault
 
+# Qman authoritative snapshot publish/CAS/replay fault component
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/qman-lab/test_authoritative_snapshot_faults.py `
+  --output-dir /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-authoritative-snapshot-fault
+
 # Qman lease -> fresh raw VFIO fd -> stock-QEMU -> receipt/quarantine component
 wsl -d Ubuntu-22.04 -- python3 `
   /mnt/e/Code/PCI/github-export/qman-lab/test_qman_static_launch.py `
@@ -292,9 +347,9 @@ wsl -d Ubuntu-22.04 -- bash `
 
 按依赖顺序继续：
 
-1. 冻结 ADR-002 等 G0 合同，并建立带 boot identity、epoch、full-topology hash 与 trust-root 的
-   G1 权威 snapshot publisher；把本轮 component chain 接入唯一 product controller，而不是继续扩大
-   standalone launcher surface。
+1. 冻结 ADR-002 等 G0 合同；把现有带 boot identity、epoch、full-topology hash 的 bounded snapshot
+   component 收敛为 G1 产品 publisher，补齐生产 trust root、key lifecycle、外部单调防回滚锚、
+   power-loss durability 与唯一 product controller 接线。完成这些产品合同前，G1 仍是 `NOT_STARTED`。
 2. stock-QEMU fd-only bind/attach 与 fail-closed envelope 前提已经可执行；下一步加入真实
    reset/driver restore、pidfd owner 和独立 DMA/IRQ/clean-state observer，执行产品级
    S03/S04/S05/F00，验证 journal/lease/fd/mapping/driver rollback 与 whole-bundle quarantine。

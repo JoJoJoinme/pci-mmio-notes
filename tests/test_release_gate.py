@@ -38,18 +38,19 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "Qman evidence: records=9 (E2=2, E3=7; reference=5, component=4, "
+            "Qman evidence: records=10 (E2=2, E3=8; reference=5, component=5, "
             "end_to_end=0, "
             "product_case_closures=0, risk_closures=0)",
             result.stdout,
         )
         self.assertIn("Risks: 39", result.stdout)
-        self.assertIn("Acceptance: 9/101 defined", result.stdout)
-        self.assertIn("92 unclassified", result.stdout)
+        self.assertIn("Acceptance: 14/101 defined", result.stdout)
+        self.assertIn("87 unclassified", result.stdout)
         self.assertIn("EXECUTABLE=2", result.stdout)
-        self.assertIn("IMPLEMENTATION_BLOCKED=7", result.stdout)
+        self.assertIn("IMPLEMENTATION_BLOCKED=12", result.stdout)
         self.assertIn(
-            "implementation-blocked acceptance cases: C21, F00, F09, S03, S04, S05, S15",
+            "implementation-blocked acceptance cases: C10, C15, C16, C18, C21, "
+            "F00, F09, F10, S03, S04, S05, S15",
             result.stdout,
         )
         self.assertIn(
@@ -57,7 +58,8 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "acceptance dependency is not defined: C21 -> C10",
+            "acceptance dependency is not closure-ready: C21 -> C10 "
+            "(IMPLEMENTATION_BLOCKED)",
             result.stdout,
         )
         self.assertIn(

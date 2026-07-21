@@ -27,27 +27,31 @@ Dynamic、Cluster 和 qualification 的实现波次，不是多个独立产品�
 当前已确认的资产：
 
 - K01-K31、R01-R39、C/O/S/D/M/F 验收矩阵已经写入详细设计。
-- `pci-resource-model` 的 268 个单元测试在 2026-07-21 于 Windows/WSL 环境重跑通过；
+- `pci-resource-model` 的 293 个收集用例在 2026-07-21 重跑：Windows 288 passed / 5 platform skips，WSL 293 passed；
   C20 固定点覆盖 22 个场景，VFIO provider 定向覆盖 27 个场景，Static lease/FSM 定向覆盖
-  41 个场景；raw launch handle、QEMU render 与 launch envelope 分别定向覆盖 26、32、30 个场景。
+  41 个场景；raw launch handle、QEMU render 与 launch envelope 分别定向覆盖 26、32、30 个场景；
+  authoritative snapshot 与 QEMU authorization binding 另有 25 个定向测试和 21 个 subtests。
 - VMware ESXi 8.0.3 和 QEMU/OVMF/SeaBIOS 已积累实验与规范化摘要。
 - VMware F1-F8/39 Tech Story 可观察模型已建立：4 `VERIFIED`、26 `PARTIAL`、4 `UNKNOWN`、
   5 `NOT_APPLICABLE`；这些状态只描述 VMware reference coverage。
 - owner activation 已有纯函数 planner 和 O09 可执行参考场景。
-- Qman 技术证据索引已登记 9 条 hash 固定结果：2 条 E2、7 条 E3，覆盖 reference model、
+- Qman 技术证据索引已登记 10 条 hash 固定结果：2 条 E2、8 条 E3，覆盖 reference model、
   C20 capability closure、raw QMP/BDF、逐设备 DMA provider、双 64 GiB BAR/OVMF A/B 和最小
-  default-deny QMP gate；其中 5 条为 `REFERENCE_ONLY`、4 条为 `COMPONENT_ONLY`。VFIO 组件在
+  default-deny QMP gate；其中 5 条为 `REFERENCE_ONLY`、5 条为 `COMPONENT_ONLY`。VFIO 组件在
   双 QEMU Guest 中稳定拒绝 no-IOMMU，并真实完成 VFIO cdev/IOMMUFD bind、IOAS attach 与清理；
   Static lease/FSM 组件在 WSL 原生文件系统上通过 7 个真实 subprocess/SIGKILL/SQLite 故障场景；
   Static launch-envelope 组件还把有效 lease、fresh raw fd、stock-QEMU、QMP/QOM 与 bind/IOAS/attach
   trace 串起来，并在无独立 DMA receipt 时不提交 `ATTACHED`、保留 claims 后 quarantine；
+  bounded authoritative snapshot 组件已通过真实 subprocess hard-exit、并发 CAS、签名/载荷/重放/
+  boot 负向门，并把 sealed authorization 保持到 VFIO/QEMU 启动边界；
   产品 Case/Risk 关闭数仍为 0。
-- 101 个设计 Case 中已有 9 个机器定义：C20/O09 为 reference executable，C21/F00/F09/S03/S04/
-  S05/S15 为 `PRODUCT / IMPLEMENTATION_BLOCKED`；其余 92 个仍未分类。
+- 101 个设计 Case 中已有 14 个机器定义：C20/O09 为 reference executable，C10/C15/C16/C18/C21/
+  F00/F09/F10/S03/S04/S05/S15 为 `PRODUCT / IMPLEMENTATION_BLOCKED`；其余 87 个仍未分类。
 
 当前仍不能宣告的能力：
 
-- 与权威 snapshot、真实 reset/driver restore、独立 DMA/IRQ observer 和 stock-QEMU launch path 集成的生产 VFIO cdev/IOMMUFD controller。
+- 把现有 bounded snapshot publisher 替换为生产 signer/trust root、qualification catalog、外部 rollback
+  anchor、kernel atomic generation，并接入唯一产品 host-agent/controller 的生产 VFIO cdev/IOMMUFD 路径。
 - 与真实 pidfd/clean-state provider 集成的生产 lease、rollback、quarantine 和 crash reconcile。
 - Dynamic matcher/solver 与多级 bridge resource planner。
 - host boot agent、multi-host fencing 和 production qualification DB。
@@ -90,11 +94,12 @@ Dynamic、Cluster 和 qualification 的实现波次，不是多个独立产品�
 
 1. 为 ADR-002/003/005/007/010 指定产品/平台 owner 并冻结决策。
 2. 逐条治理 R01-R39；不能闭环的能力明确设为不可绕过的 `FEATURE_DISABLED`。
-3. 将现有脚本和单测映射到 101 个 Case，并为剩余 92 个 Case 标明硬件阻塞或实现缺口。
+3. 将现有脚本和单测映射到 101 个 Case，并为剩余 87 个 Case 标明硬件阻塞或实现缺口。
 
 4. 按依赖补证：C20 E2、最小 QMP gate E3、VFIO provider、Static lease/FSM fault 与
-   lease→fresh raw fd→stock-QEMU→QMP/trace→quarantine 的 component E3 已完成；下一步把权威 snapshot、
-   真实 reset/driver restore、独立 DMA/IRQ clean-state、pidfd、QMP gate、generation 与唯一 product
+   authoritative snapshot fault 与 lease→fresh raw fd→stock-QEMU→QMP/trace→quarantine 的 component E3
+   已完成；下一步把 production snapshot authority/catalog、真实 reset/driver restore、独立 DMA/IRQ
+   clean-state、pidfd、QMP gate、generation 与唯一 product
    controller 接入同一事务，再执行 S03/S04/S05/F00 与完整 S15/F09 产品矩阵。并行保留
    `VMW-*` 缺口实验和首批 HCL 设备 qualification、reset、IOMMU/ACS、owner、cluster fencing E4。
 

@@ -116,13 +116,24 @@
     {
       "id": "QMAN-E3-STATIC-LAUNCH-ENVELOPE-001",
       "resultPath": "evidence/qman-static-launch-envelope-20260721-summary.json",
-      "resultSha256": "9242bcf77c2464407500dff2a3d49da92f9a8473823022f04c6eaad50d8ebcc6",
+      "resultSha256": "5c7001aef3593ec3ca3530c2779b03c2d955d193ad41f9fa420267036c8799e5",
       "subject": "QMAN_COMPONENT",
       "evidenceGrade": "E3",
       "verdict": "PASS",
-      "techStories": ["TS-F3-02", "TS-F3-03", "TS-F3-05", "TS-F5-04"],
+      "techStories": ["TS-F1-01", "TS-F3-02", "TS-F3-03", "TS-F3-05", "TS-F5-04", "TS-F8-02"],
       "caseIds": ["C21", "S05"],
       "riskIds": ["R04", "R05", "R26", "R27"]
+    },
+    {
+      "id": "QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001",
+      "resultPath": "evidence/qman-authoritative-snapshot-fault-20260721-summary.json",
+      "resultSha256": "5a1ce30c6c56dc9f5d3f0502d681a329dea6237bbe61d7d53e2f74a142886bec",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-01", "TS-F8-02"],
+      "caseIds": [],
+      "riskIds": ["R04"]
     }
   ]
 }

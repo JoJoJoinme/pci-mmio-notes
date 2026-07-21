@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "C16",
+  "title": "Missing topology provenance is isolated to the affected component",
+  "status": "IMPLEMENTATION_BLOCKED",
+  "scope": "PRODUCT",
+  "riskIds": ["R01", "R35"],
+  "requiredTechStories": ["TS-F1-01", "TS-F1-03", "TS-F1-04"],
+  "dependsOnCaseIds": [],
+  "blocker": "The current scanner can conservatively invalidate all physical domains when any ACS provenance is incomplete; component-local invalidation and the kernel native shadow-domain ABI are not implemented or physically qualified.",
+  "targetMilestone": "G1",
+  "proofBoundary": "REFERENCE_MODEL_PREMISE_NOT_PRODUCT_CLOSURE",
+  "assertions": [
+    "missing or inconsistent provenance makes the complete affected topology component unknown",
+    "no member of an unknown component can become production eligible",
+    "a disjoint component with complete provenance retains its prior capability and hashes",
+    "publisher snapshot and reasons identify the exact missing source and affected component"
+  ]
+}

@@ -171,6 +171,49 @@ no-IOMMU node 稳定拒绝，并可在 lab/component 模式真实执行 VFIO cde
 attach 与逆序 cleanup。它不是产品 launcher；CLI probe 完成后会关闭 fd，pre-attached session
 也不能直接交给 stock QEMU。
 
+[`authoritative_snapshot.py`](pci_resource_model/authoritative_snapshot.py) 提供 host-local、
+component 范围的权威快照发布与 launch authorization。它执行两次完整 host capture，并要求
+host/boot identity、设备数量、full-host safety topology 与所有可分组设备的精确 launch facts 在两次采集间
+稳定；随后在同一个 SQLite 事务中分配单调 `inventoryEpoch`、写入 canonical payload、
+`topologyHash`、HMAC envelope 和 current record。数据库是 authority，导出的 JSON 只是 cache/evidence。
+持久层使用 WAL + `synchronous=FULL`，校验固定 schema、store instance、文件系统 provenance 和
+数据库文件 identity；[`../contracts/authoritative-snapshot.schema.json`](../contracts/authoritative-snapshot.schema.json)
+给出跨组件 envelope contract。
+
+发布成功时，store 把执行双扫描的同一个 capture provider 封存为
+`COMPONENT_CAPTURE_PROVIDER` capability，并将其 binding hash 写入 launch authorization；后续
+`PRE_OPEN/POST_OPEN/PRE_SPAWN` 只能调用该 capability，launch caller 不能替换采集函数。
+`AuthoritativeSnapshotStore.authorize_launch()` 签发不可自行构造、不可复制、不可 pickle 的 sealed
+authorization，并在 context 生命周期内持有 `BEGIN IMMEDIATE`。进入 context 时，它要求 snapshot
+仍是 current、boot ID 仍有效、请求恰好覆盖完整且互相一致的 IOMMU group；退出 context 后
+authorization 立即失效。该读锁的目的，是防止最终校验与 QEMU spawn 之间被并发 publisher 切换
+current snapshot，而不是把任意较旧 snapshot 重新解释为可启动依据。
+
+component launch 的强制顺序是：
+
+```text
+stable full-host capture x2
+  -> atomic signed snapshot publish
+  -> sealed snapshot authorization + capture provider capability (outer lock)
+  -> lease authorization
+  -> PRE_OPEN full-host revalidation
+  -> open complete VFIO group with fresh fds
+  -> POST_OPEN full-host revalidation
+  -> authoritative VFIO result -> QEMU fd/plan binding
+  -> PRE_SPAWN revalidation at validate_before_spawn()
+  -> PRE_SPAWN revalidation again at popen_kwargs()
+  -> Popen while snapshot/lease authorizations remain active
+```
+
+因此，QEMU 适配器不是从 caller JSON 重建可信事实：
+`open_authorized_vfio_launch_bundle()` 只从 sealed authorization 派生请求和完整 group，且 QEMU plan
+中的 BDF 集合必须等于 authorization 的 `authorized_bdfs` 并覆盖每个 group member，
+`device_binding_from_authorized_vfio_launch_result()` 要求 live、production-provenance 的 VFIO result，
+并把 snapshot authority/store/key、boot/epoch、topology、identity/group/device generation 与 fd/plan hash
+一起绑定。任一阶段发现 current snapshot、完整拓扑、launch facts、lease scope 或 generation 漂移，都会
+在 spawn 前 fail closed；VFIO open/revalidation 的失败路径会按整个 bundle 逆序关闭已打开句柄。锁顺序
+固定为 snapshot -> lease -> launch envelope，避免把持有关系倒置成另一条隐式 authority。
+
 [`vfio_launch_handles.py`](pci_resource_model/vfio_launch_handles.py) 在 spawn 前重新采集 identity、
 完整 IOMMU group 与字符设备 inode，打开 fresh raw cdev/IOMMUFD，并在全部 fd 打开后再次复核。
 `open_vfio_launch_bundle()` 要求每个涉及的 IOMMU group 成员完整，使用一个共享 IOMMUFD，并把
@@ -189,9 +232,11 @@ ordering component：它把 envelope 数据库、权威 lease store、进程 ide
 与 DMA 两个相互独立的签名 observer 固定在同一状态机中。只有 QMP 与 DMA receipt 都验证并持久化
 commit intent 后才能确认 `ATTACHED`；任一证据缺失只能清理或保留 claims 后 quarantine。
 
-这些 component 已能组成可执行的单机 Static launch 前提，但仍不是 production controller；还缺
-authoritative publisher、真实 reset/driver restore、独立 DMA/IRQ clean-state observer、pidfd owner、
-产品入口接线和多主机 fencing。故它们不能关闭 C21、S03/S04/S05/F00 或任何 Risk。
+这些 component 已能组成可执行的单机 Static launch 前提，并补上了 component-level snapshot
+publisher -> VFIO -> QEMU 的可验证链路，但仍不是 production controller 或 production authority；
+还缺生产 key/catalog/rotation、外部 rollback anchor、真实 reset/driver restore、独立 DMA/IRQ
+clean-state observer、pidfd owner、产品入口接线和多主机 fencing。故它们不表示 Feature/Milestone
+完成，也不能关闭 C10/C15/C16/C18/C21、S03/S04/S05/F00 或任何 Risk。
 
 ## 6. CLI
 
@@ -285,14 +330,23 @@ python3 -m unittest discover -v -s pci-resource-model/tests
   disable/rebind activation。
 - Static schema-v4 host/authority/store-instance scope、bundle/member/VM/device generation CAS、同 epoch ABA、并发
   winner、commit 前崩溃原子性、精确 replay、reconcile、whole-bundle quarantine 和 filesystem gate。
+- authoritative snapshot 的双采集稳定性、完整 host/boot/topology/launch-fact hash、单调 epoch 与 CAS、
+  HMAC/envelope/row 交叉校验、重复 JSON key/临时 schema object/数据库篡改拒绝、发布中途崩溃回滚、
+  并发 publisher 唯一 winner、boot/minimum-epoch/stale snapshot gate、导出 cache 原子替换，以及 sealed
+  authorization 的不可复制/不可 pickle/context 失效语义。
 - raw launch handle 的 before/open/after identity/group/node gate、完整 group 共享 IOMMUFD、原子逆序
-  cleanup、production provenance，以及 envelope 的 lease/store/process/receipt/commit ordering。
+  cleanup、production provenance、PRE_OPEN/POST_OPEN/PRE_SPAWN 全量复核；同时覆盖 authoritative
+  VFIO result 到 QEMU admission/fd/plan hash 的绑定、snapshot/lease scope 或 generation 漂移拒绝，以及
+  envelope 的 lease/store/process/receipt/commit ordering。
 
-完整单元测试当前为 268 个（Windows 有 5 个 Linux-only skip，WSL 为 268/268）。真实
+完整测试当前收集 293 项；2026-07-21 Windows 为 288 passed / 5 platform skips，WSL 为 293 passed。
+平台相关用例在运行条件不满足时保持显式 skip。真实
 subprocess/`os._exit`/`SIGKILL` fault runner 位于
 [`../qman-lab/test_static_lease_faults.py`](../qman-lab/test_static_lease_faults.py)；它在 WSL 原生
 文件系统创建 live DB，并明确把 bind/reset/QEMU 标为模拟阶段标签。真实 nested-QEMU component
-runner 位于 [`../qman-lab/test_qman_static_launch.py`](../qman-lab/test_qman_static_launch.py)。
+runner 位于 [`../qman-lab/test_qman_static_launch.py`](../qman-lab/test_qman_static_launch.py)；snapshot
+publisher 的真实 subprocess crash/concurrency/tamper runner 位于
+[`../qman-lab/test_authoritative_snapshot_faults.py`](../qman-lab/test_authoritative_snapshot_faults.py)。
 
 ## 8. 当前边界
 
@@ -306,5 +360,11 @@ runner 位于 [`../qman-lab/test_qman_static_launch.py`](../qman-lab/test_qman_s
 - QEMU 参数是启动前需求；启动后仍必须核对 guest BAR、ACPI `_CRS`、IOMMU map 和中断。
 - activation 目前只有无副作用 planner；Static component 有独立 durable journal，但 live driver
   transition、exact early-boot claim、可信 cleanup provider 和 boot reconcile 尚未接入 Qman host agent。
+- `ComponentHmacAuthenticator` 只证明 payload 对当前配置 component key 的真实性与完整性，明确标记为
+  `COMPONENT_AUTHENTICITY_ONLY`；它不是 TPM/HSM-backed production trust root，也没有 production
+  key catalog/rotation/revocation。SQLite 内部 epoch 只能发现仍可见的 stale snapshot；缺少外部单调
+  anchor 时，任何 earlier-valid 数据库状态回放——包括同 key 下原位/块级恢复或删除最新行——都可能被
+  接受，inode/store UUID 不是 anti-rollback 证明；多主机 consensus/fencing 也不在
+  该 authority 范围。因此该实现只能提供 component evidence，不能据此宣告产品发布或关闭 Case/Risk。
 - 本环境只有 WSL synthetic PCI，可验证只读扫描和算法，不能替代真实设备写全 1 sizing、
   电气 reset 或物理 ACS 验收。
