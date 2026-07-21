@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "qman-qmp-gate-policy-v1",
+  "allowedCommands": [
+    "qmp_capabilities",
+    "query-version",
+    "query-status",
+    "query-kvm",
+    "query-name",
+    "query-pci"
+  ],
+  "maxFrameBytes": 16384,
+  "maxBackendFrameBytes": 4194304,
+  "clientSocketMode": "0600",
+  "backendRoot": "/tmp",
+  "backendDirectoryMode": "0700",
+  "denial": {
+    "class": "GenericError",
+    "description": "QMP request denied by Qman gate"
+  }
+}
