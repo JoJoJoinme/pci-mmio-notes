@@ -171,16 +171,27 @@ no-IOMMU node 稳定拒绝，并可在 lab/component 模式真实执行 VFIO cde
 attach 与逆序 cleanup。它不是产品 launcher；CLI probe 完成后会关闭 fd，pre-attached session
 也不能直接交给 stock QEMU。
 
-[`static_lease.py`](pci_resource_model/static_lease.py) 是 schema-v3 host-local SQLite lease/CAS/FSM
+[`vfio_launch_handles.py`](pci_resource_model/vfio_launch_handles.py) 在 spawn 前重新采集 identity、
+完整 IOMMU group 与字符设备 inode，打开 fresh raw cdev/IOMMUFD，并在全部 fd 打开后再次复核。
+`open_vfio_launch_bundle()` 要求每个涉及的 IOMMU group 成员完整，使用一个共享 IOMMUFD，并把
+全组 fd 作为单一 close unit；[`qemu_launch_contract.py`](pci_resource_model/qemu_launch_contract.py)
+只渲染 fd-only stock-QEMU argv，不接收预绑定 session 或 caller 拼接的额外参数。
+
+[`static_lease.py`](pci_resource_model/static_lease.py) 是 schema-v4 host-local SQLite lease/CAS/FSM
 component。数据库固定 `local_host_id` 与单一 `trusted_authority_id`，完整 bundle、member claim、
 VM/device generation、transaction 和 journal 使用 `BEGIN IMMEDIATE` 原子更新；只有上层声明
 `cleanup_verified=True` 并提供下一代 generation/authority epoch 时才释放，否则保留 whole-bundle
 quarantine。默认只接受 allowlist 中的本地文件系统；`/mnt/e`/9p、tmpfs、overlay、FUSE、NFS/CIFS
 等不作为 normal durable boundary。
 
-这两个 component 仍未互相接线，也未实现 production authoritative publisher、真实 bind/reset/
-driver restore、fresh raw fd-only stock-QEMU handoff、pidfd、DMA/IRQ clean-state provider 或多主机
-fencing。故它们只能提供组件前提，不能关闭 C21、S03/S04/S05/F00 或任何 Risk。
+[`static_launch_envelope.py`](pci_resource_model/static_launch_envelope.py) 是 schema-v4 的 launch
+ordering component：它把 envelope 数据库、权威 lease store、进程 identity、fd/plan hash、QMP
+与 DMA 两个相互独立的签名 observer 固定在同一状态机中。只有 QMP 与 DMA receipt 都验证并持久化
+commit intent 后才能确认 `ATTACHED`；任一证据缺失只能清理或保留 claims 后 quarantine。
+
+这些 component 已能组成可执行的单机 Static launch 前提，但仍不是 production controller；还缺
+authoritative publisher、真实 reset/driver restore、独立 DMA/IRQ clean-state observer、pidfd owner、
+产品入口接线和多主机 fencing。故它们不能关闭 C21、S03/S04/S05/F00 或任何 Risk。
 
 ## 6. CLI
 
@@ -272,13 +283,16 @@ python3 -m unittest discover -v -s pci-resource-model/tests
 - desired/effective owner 分离、request-to-owner-group expansion、idle/transient/persistent busy A/B、
   shared attach collision、stale identity、foreign lease、host-critical、early-boot claim 和
   disable/rebind activation。
-- Static schema-v3 host/authority scope、bundle/member/VM/device generation CAS、同 epoch ABA、并发
+- Static schema-v4 host/authority/store-instance scope、bundle/member/VM/device generation CAS、同 epoch ABA、并发
   winner、commit 前崩溃原子性、精确 replay、reconcile、whole-bundle quarantine 和 filesystem gate。
+- raw launch handle 的 before/open/after identity/group/node gate、完整 group 共享 IOMMUFD、原子逆序
+  cleanup、production provenance，以及 envelope 的 lease/store/process/receipt/commit ordering。
 
-完整单元测试当前为 165 个（Windows 有 1 个 Linux-only tmpfs skip，WSL 为 165/165）。真实
+完整单元测试当前为 268 个（Windows 有 5 个 Linux-only skip，WSL 为 268/268）。真实
 subprocess/`os._exit`/`SIGKILL` fault runner 位于
 [`../qman-lab/test_static_lease_faults.py`](../qman-lab/test_static_lease_faults.py)；它在 WSL 原生
-文件系统创建 live DB，并明确把 bind/reset/QEMU 标为模拟阶段标签。
+文件系统创建 live DB，并明确把 bind/reset/QEMU 标为模拟阶段标签。真实 nested-QEMU component
+runner 位于 [`../qman-lab/test_qman_static_launch.py`](../qman-lab/test_qman_static_launch.py)。
 
 ## 8. 当前边界
 

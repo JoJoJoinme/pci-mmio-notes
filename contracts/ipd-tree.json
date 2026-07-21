@@ -237,6 +237,7 @@
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-vfio-provider-gate-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qmp-gate-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-static-lease-fault-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-static-launch-envelope-20260721-summary.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/S03.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/S04.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/S05.json"},
@@ -369,6 +370,7 @@
         {"kind": "REFERENCE_OBSERVATION", "path": "evidence/esxi8-edu-dma-teardown-20260714-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qmp-gate-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-static-lease-fault-20260721-summary.json"},
+        {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-static-launch-envelope-20260721-summary.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/F00.json"},
         {"kind": "ACCEPTANCE", "path": "acceptance/cases/F09.json"}
       ]

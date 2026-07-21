@@ -41,6 +41,7 @@ artifact hash drift => evidence invalidated
 | `QMAN-E3-DMA-PROVIDER-001` | E3 | unsafe=`Y` 时，no-IOMMU 与 IOMMU-backed device 仍呈现不同 provider node | TS-F1-02、F3-03；C21 前提 | 物理 IOMMU/IR/errata、IOMMUFD IOAS attach、DPDK workload |
 | `QMAN-E3-VFIO-PROVIDER-GATE-001` | E3 | Qman component 对 no-IOMMU 稳定拒绝；对 cdev 真实执行 IOMMUFD bind、IOAS allocate/attach、身份/完整 group 复核与逆序清理 | TS-F1-02、F3-03；C21 / R27 前提 | 权威产品 snapshot、durable lease、stock-QEMU handoff、物理 E4；C21/R27 均未关闭 |
 | `QMAN-E3-STATIC-LEASE-FAULT-001` | E3 | WSL 原生 ext4 上 7/7 subprocess/SQLite 故障场景通过：begin/release commit 前硬退出无部分状态，重叠 bundle 双进程仅一胜，未知 cleanup 与 SIGKILL 后 reconcile 保留 whole-bundle quarantine | TS-F3-02/05、F5-03/04；S03/S04/S05/F00 与 R04/R05/R11 前提 | bind/reset/QEMU/cleanup 真实执行、pidfd/DMA/IRQ/owner clean state、产品 Case/Risk；四个 Case 仍 blocked |
+| `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` | E3 | production-provenance raw cdev/IOMMUFD 在有效 lease authorization 内通过 fd-only argv 交给 stock QEMU；QMP/QOM 看到 realized `vfio-pci`，trace 中 bind、IOAS allocate、attach 三个 ioctl 均返回 0；无独立 DMA receipt 时不提交 `ATTACHED`，保留 claims 并 quarantine | TS-F3-02/03/05、F5-04；C21/S05 与 R04/R05/R26/R27 前提 | G1 权威 snapshot、真实 reset/driver restore、独立 DMA/IRQ observer、pidfd/产品 controller、物理 E4；Case/Risk/G2 均未关闭 |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 | QEMU floor 与 OVMF aperture 必须配对；双 64 GiB BAR 默认失败、128 GiB 配对成功 | TS-F4-01/02/04；M23 前提 | Qman observedPlan commit/rollback、物理 BAR qualification |
 
 当前所有 Risk 仍为 `OPEN`。这些结果增加“为什么要这样设计”的技术证据，不改变 G0 和
@@ -166,7 +167,7 @@ API/CLI/storage/alternate-monitor 封锁集成起来。因此结果是 `QMAN_COM
 `QMAN-E3-STATIC-LEASE-FAULT-001` 把 host-local persistence、CAS 和 recovery 语义从普通单测推进到
 WSL 原生 ext4 上的真实进程故障：
 
-- schema-v3 store 把 `local_host_id` 与单一 `trusted_authority_id` 固定进 metadata；bundle、每个 device
+- schema-v4 store 把 `local_host_id`、单一 `trusted_authority_id` 与 `store_instance_id` 固定进 metadata；bundle、每个 device
   generation 和 transaction 必须来自同一 authority namespace，同 epoch ABA、stale VM/device generation
   与跨 authority publisher 都 fail closed；
 - child 在 `BEGIN_BEFORE_COMMIT` 调用 `os._exit(91)` 后，transaction、journal、member/bundle claim 与
@@ -185,6 +186,43 @@ S03 的 `cleanup_verified` 是受信测试断言，F00 杀死的是 Python 代�
 DMA/IRQ teardown、driver restoration 或物理设备 clean state。
 
 证据：[`qman-static-lease-fault-20260721-summary.json`](../evidence/qman-static-lease-fault-20260721-summary.json)。
+
+### 3.8 Static launch 已跨过 stock-QEMU attach 前提，但故意没有越过 DMA 证据门
+
+`QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` 在 WSL2/KVM 外层 QEMU 11 中启动 Ubuntu + Intel vIOMMU，
+把虚拟 e1000e bind 到真实 `/dev/vfio/devices/vfio0`，再由 Qman component 打开 fresh raw cdev 与
+`/dev/iommu`。只有在 schema-v4 lease authorization 有效时，typed renderer 才生成 `env={}`、
+`cwd=/`、`shell=false` 的 fd-only stock-QEMU spawn：
+
+```text
+lease RESERVED -> PREPARING
+envelope INTENT_PERSISTED -> LEASE_PREPARED -> HANDLES_OPEN -> QEMU_RUNNING
+QMP/QOM realized vfio-pci -> QMP_RECEIPT_VERIFIED
+independent DMA receipt absent
+  -> CLEANING -> stop QEMU -> close raw fds
+  -> lease QUARANTINED (claims retained)
+  -> envelope QUARANTINED
+ATTACHED was never committed
+```
+
+本次观测到：
+
+- QMP 为 `prelaunch/running=false`，KVM enabled/present，`/machine/peripheral` 中存在
+  `dp0 child<vfio-pci>` 且 `realized=true`；
+- tracefs 将 255 个 QEMU ioctl 配对，其中 `VFIO_DEVICE_BIND_IOMMUFD (0x3b76)`、
+  `IOMMU_IOAS_ALLOC (0x3b81)`、`VFIO_DEVICE_ATTACH_IOMMUFD_PT (0x3b77)` 都返回 0；
+- QMP receipt 只具有 component authenticity；它与内核 syscall trace都不是独立 DMA/IRQ
+  isolation 证明，因此 DMA receipt 保持缺失，最终 lease/envelope 都是 `QUARANTINED`，raw fd 已关闭，
+  bundle/member claims 仍保留；
+- 现有 bundle opener 还通过单测固定“每个涉及的 IOMMU group 必须完整、多个 cdev 共享一个
+  IOMMUFD、任一 child close 关闭整个 ownership unit”的合同；正式 nested run 只有单成员 group，
+  不能冒充多设备或物理平台验证。
+
+正式登记的是 `v3` artifact。此前未登记的失败也保留了工程反馈：`v1` 暴露 QEMU greeting 后
+3 秒 command timeout 的误判，`v2` 的 guest 已 PASS，但长 Base64 证据与 ttyS0 systemd 日志交织。
+runner 因此改为有界 90/60 秒 QMP 等待，并把证据迁到独占 ttyS1；v3 的附件解析错误为 0。
+
+证据：[`qman-static-launch-envelope-20260721-summary.json`](../evidence/qman-static-launch-envelope-20260721-summary.json)。
 
 ## 4. 可复现入口
 
@@ -223,6 +261,12 @@ wsl -d Ubuntu-22.04 -- python3 `
   --state-root /root/.qman-static-lease-fault-state `
   --output-dir /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-static-lease-fault
 
+# Qman lease -> fresh raw VFIO fd -> stock-QEMU -> receipt/quarantine component
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/qman-lab/test_qman_static_launch.py `
+  --output /mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/RUN-ID-static-launch `
+  --timeout 600
+
 # QEMU 11 + OVMF dual-64GiB BAR
 wsl -d Ubuntu-22.04 -- env `
   WORKDIR=/root/pci-evidence/RUN-ID-mmio `
@@ -249,11 +293,11 @@ wsl -d Ubuntu-22.04 -- bash `
 按依赖顺序继续：
 
 1. 冻结 ADR-002 等 G0 合同，并建立带 boot identity、epoch、full-topology hash 与 trust-root 的
-   G1 权威 snapshot publisher；把 C21 component 接到唯一 launcher/lease 协议，验证 stock QEMU
-   fd-only 自行 bind/attach 后的受信观察与提交。
-2. `QMAN-E3-STATIC-LEASE-FAULT-001` 已完成 standalone lease/FSM 的 component crash 前提；下一步把
-   真实 bind/reset/QEMU/pidfd/clean-state provider 接入同一事务，执行产品级 S03/S04/S05/F00，验证
-   journal/lease/fd/mapping/driver rollback 与 whole-bundle quarantine。
+   G1 权威 snapshot publisher；把本轮 component chain 接入唯一 product controller，而不是继续扩大
+   standalone launcher surface。
+2. stock-QEMU fd-only bind/attach 与 fail-closed envelope 前提已经可执行；下一步加入真实
+   reset/driver restore、pidfd owner 和独立 DMA/IRQ/clean-state observer，执行产品级
+   S03/S04/S05/F00，验证 journal/lease/fd/mapping/driver rollback 与 whole-bundle quarantine。
 3. 将已验证的 QMP component 接入 production launcher/controller/durable lease/generation/VFIO，
    并执行覆盖 API、CLI、storage、alternate monitor、fd injection、并发和 replay 的完整 S15/F09
    产品 bypass matrix。

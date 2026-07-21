@@ -1920,11 +1920,14 @@ TS/Case/Risk 引用和 `closureEffect`。reference/component subject 与 E2 不�
 R01/R03/R20/R27 等硬件风险提升为 E4。qualification key 至少包含 host model/BIOS、IOMMU、
 device VID:DID/revision/firmware、kernel/QEMU/firmware 和 guest driver/workload。
 
-截至 2026-07-21，索引中有 2 条 E2、6 条 E3：5 条为 `REFERENCE_ONLY`，3 条为
+截至 2026-07-21，索引中有 2 条 E2、7 条 E3：5 条为 `REFERENCE_ONLY`，4 条为
 `QMAN_COMPONENT / COMPONENT_ONLY`。它们固定 reference model、C20 closure、raw QMP/BDF、
 VFIO provider split、QEMU/OVMF MMIO、最小 QMP default-deny component，以及
 `QMAN-E3-VFIO-PROVIDER-GATE-001` 的真实 cdev/IOMMUFD/no-IOMMU A/B 和
-`QMAN-E3-STATIC-LEASE-FAULT-001` 的 subprocess/SQLite crash/CAS 前提。所有 `closureEffect` 仍为空，
+`QMAN-E3-STATIC-LEASE-FAULT-001` 的 subprocess/SQLite crash/CAS 前提。新增
+`QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` 把 lease authorization、fresh raw fd、stock-QEMU
+bind/IOAS/attach observation 与无 DMA receipt 时的 claims-retaining quarantine 串成一个组件链。
+所有 `closureEffect` 仍为空，
 产品 Case/Risk 关闭数为 0；新增 component evidence 不改变 C21 或 S03/S04/S05/F00 的产品阻断状态。
 
 ## 17. 实施计划与提交边界
@@ -1955,10 +1958,13 @@ M00-M04、M11、M18-M23。
 SQLite/CAS lease、fd-only launcher、rollback journal、release/quarantine/reconcile、API/QMP bypass
 gate。完成门：O00-O09、S00-S16、F00、F09。
 
-当前只有 standalone schema-v3 `StaticLeaseStore` 与 component fault runner：它已证明固定 host/
-authority namespace、VM/device generation CAS、whole-bundle claim、journal、commit 前进程死亡原子性、
-双进程冲突和 unknown cleanup quarantine。runner 中的 bind/reset/QEMU 都是模拟阶段标签，
-`cleanup_verified` 仍是受信上层断言；因此 Phase 1C 和 G2 状态均不推进。
+standalone schema-v4 `StaticLeaseStore` 与 component fault runner 已证明固定 host/authority/store-instance
+namespace、VM/device generation CAS、whole-bundle claim、journal、commit 前进程死亡原子性、双进程冲突
+和 unknown cleanup quarantine。新增加的 raw-handle、fd-only render 与 launch-envelope components 已把
+lease authorization、fresh cdev/IOMMUFD、stock-QEMU spawn、QMP receipt 和 fail-closed quarantine 串成
+同一个可执行前提；但真实 reset/driver restore 与独立 DMA/IRQ clean-state observer 仍缺失，
+因此 Phase 1C 和 G2 状态均不推进。原 fault runner 中的 bind/reset/QEMU 仍只是模拟阶段标签，
+`cleanup_verified` 仍是受信上层断言。
 
 Phase 1A/1C 的关闭顺序不是并列清单，而是严格依赖链：
 

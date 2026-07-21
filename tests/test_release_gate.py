@@ -38,7 +38,7 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "Qman evidence: records=8 (E2=2, E3=6; reference=5, component=3, "
+            "Qman evidence: records=9 (E2=2, E3=7; reference=5, component=4, "
             "end_to_end=0, "
             "product_case_closures=0, risk_closures=0)",
             result.stdout,

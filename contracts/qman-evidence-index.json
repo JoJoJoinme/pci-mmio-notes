@@ -105,13 +105,24 @@
     {
       "id": "QMAN-E3-STATIC-LEASE-FAULT-001",
       "resultPath": "evidence/qman-static-lease-fault-20260721-summary.json",
-      "resultSha256": "9e3301f708886a8ce6067e115f3de2665a6acf63045afc5b7e0cb173b2774bd6",
+      "resultSha256": "7219ee28521c8aedbd462ae462f758fb26725656349765dbe22b16aa2ab23b1c",
       "subject": "QMAN_COMPONENT",
       "evidenceGrade": "E3",
       "verdict": "PASS",
       "techStories": ["TS-F3-02", "TS-F3-05", "TS-F5-03", "TS-F5-04"],
       "caseIds": ["S03", "S04", "S05", "F00"],
       "riskIds": ["R04", "R05", "R11"]
+    },
+    {
+      "id": "QMAN-E3-STATIC-LAUNCH-ENVELOPE-001",
+      "resultPath": "evidence/qman-static-launch-envelope-20260721-summary.json",
+      "resultSha256": "9242bcf77c2464407500dff2a3d49da92f9a8473823022f04c6eaad50d8ebcc6",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F3-02", "TS-F3-03", "TS-F3-05", "TS-F5-04"],
+      "caseIds": ["C21", "S05"],
+      "riskIds": ["R04", "R05", "R26", "R27"]
     }
   ]
 }

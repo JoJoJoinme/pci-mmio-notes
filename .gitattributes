@@ -1,2 +1,3 @@
 *.sh text eol=lf
 kernel-patches/*.patch text eol=lf
+evidence/*.json text eol=lf

@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "id": "QMAN-E3-STATIC-LEASE-FAULT-001",
-  "observedAt": "2026-07-21T04:10:39Z",
+  "observedAt": "2026-07-21T06:11:43Z",
   "subject": "QMAN_COMPONENT",
   "evidenceGrade": "E3",
   "claimBoundary": "COMPONENT_ONLY",
   "verdict": "PASS",
   "sourceState": {
-    "baseCommit": "cb8654b870228690e6c38ff0842edbc3622b638e",
+    "baseCommit": "3397b8b4bc0cbe7f56ff8afe3a6b94ef99426db5",
     "dirtyWorkingTree": true,
     "runnerHashes": {
-      "qman-lab/test_static_lease_faults.py": "26e72a269751ee740b9cbe028c8b75eacfeda876c196d0ff9e63db48e1681998"
+      "qman-lab/test_static_lease_faults.py": "b89bb9328794d94e81202d1639422b5991da0ad75d311cfe638d92c75d47037e"
     },
     "inputHashes": {
-      "pci-resource-model/pci_resource_model/static_lease.py": "5ff2b8dcce793a68517fb1a13026ff78591a4eee3d5577e5ba9c9a351e19c687"
+      "pci-resource-model/pci_resource_model/static_lease.py": "4904b6698de301a37570cc7f28282054d6523782a0574e72e313ddab0acf0ca5"
     }
   },
   "sut": {
@@ -21,8 +21,8 @@
     "components": [
       {
         "name": "Qman StaticLeaseStore component",
-        "version": "214467ccee4f057d0134b2a9cb52d3a35d029cbc schema-v3",
-        "sha256": "5ff2b8dcce793a68517fb1a13026ff78591a4eee3d5577e5ba9c9a351e19c687"
+        "version": "3397b8b4bc0cbe7f56ff8afe3a6b94ef99426db5 schema-v4",
+        "sha256": "4904b6698de301a37570cc7f28282054d6523782a0574e72e313ddab0acf0ca5"
       },
       {
         "name": "SQLite",
@@ -43,10 +43,10 @@
     {
       "name": "component-contract-and-independent-audit",
       "result": {
-        "windowsResourceModelTests": 165,
-        "windowsLinuxOnlySkips": 1,
-        "wslResourceModelTests": 165,
-        "staticLeaseFocusedTests": 26,
+        "windowsResourceModelTests": 268,
+        "windowsLinuxOnlySkips": 5,
+        "wslResourceModelTests": 268,
+        "staticLeaseFocusedTests": 41,
         "independentP0Findings": 0,
         "independentP1Findings": 0
       }
@@ -57,7 +57,7 @@
         "persistenceBoundary": "LOCAL_FILESYSTEM_COMPONENT_PERSISTENCE_ONLY",
         "liveDatabaseUnderMnt": false,
         "drvfsStateRootRejected": true,
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "trustedHostAndAuthorityPersisted": true,
         "sourceHashCheckedInEveryChild": true,
         "retainedArtifactHashes": 37,
@@ -106,28 +106,28 @@
   },
   "artifacts": [
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/summary.json",
-      "sha256": "a93f104b139f28431c1449c98566fd7f4148f2379e93eda25e521dde67cb2f55",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v3/summary.json",
+      "sha256": "6ed1625adb039046ccee17b576f00e965b08036bfb4583f4faa80fcadf316083",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/hashes.json",
-      "sha256": "1bd5873193fe71c0daf32535da712ac1cab7b86555cd90e2972b6d4698021d7b",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v3/hashes.json",
+      "sha256": "c5492f11d98bd5db08159a8ee718b10a24cc401e49b8fb999d9ed2097710ccc9",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/F00/lease.sqlite3",
-      "sha256": "c19881af4baee14c7f0ecdc35dba688d1876482ad8f589c4d0dea23c3f10d670",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v3/F00/lease.sqlite3",
+      "sha256": "023feec3d5482eea7e4158dceca21be9a35309b6e26c9bd9c8d95a4ecc81e92d",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/concurrent-overlap/lease.sqlite3",
-      "sha256": "067923c466708c9614f09dfb2a0de8aa1bbf0091412a2548a90e30df9099f4b5",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v3/concurrent-overlap/lease.sqlite3",
+      "sha256": "c1193ba41b0da83308d97f2ab7574425cc2dd9cba676003b6d22971e95647e0a",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v2/release-hard-exit/lease.sqlite3",
-      "sha256": "2f8149cf14349f51d114faad59ee114a05b72c2d1a62ca5dd7aa3df41fe91f37",
+      "path": "/mnt/e/Code/PCI/_artifacts/qman-wsl-qemu/20260721-static-lease-fault-v3/release-hard-exit/lease.sqlite3",
+      "sha256": "e6c12744ae21c7b4b1af931f19ec61968fc74276bb04948da81c68c2a947325d",
       "retention": "LOCAL_RAW"
     }
   ],
@@ -140,7 +140,7 @@
     "This is a standalone persistence/CAS/FSM component, not a production Static controller or end-to-end launch path. S03, S04, S05 and F00 remain IMPLEMENTATION_BLOCKED.",
     "Bind, reset, VFIO, QEMU start and cleanup-verification phases are simulated labels. The S03 cleanup_verified input is a trusted test assertion, not independently authenticated device-clean evidence.",
     "The F00 SIGKILL target is a Python owner process, not QEMU. No pidfd identity, VFIO ownership, DMA/IRQ teardown, reset, driver restoration or physical-device clean state was proved.",
-    "The fixed lab authority traverses the schema-v3 trusted_authority_id gate, but the experiment does not prove the G1 authoritative inventory publisher or trust root.",
+    "The fixed lab authority traverses the schema-v4 trusted_authority_id and store_instance_id gates, but the experiment does not prove the G1 authoritative inventory publisher or trust root.",
     "SQLite WAL/FULL on an allowlisted local filesystem proves this component's transaction behavior; it does not prove end-to-end power-loss durability, storage-controller flush semantics or multi-host fencing.",
     "No product Case, Risk, milestone, HCL entry or support claim is closed by this result."
   ]
