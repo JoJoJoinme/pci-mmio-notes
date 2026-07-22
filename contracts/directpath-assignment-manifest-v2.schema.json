@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-assignment-manifest-v2.schema.json",
+  "title": "Qman DirectPath AssignmentManifest v2",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization; wider values use schema-defined decimal strings.",
+  "description": "Closed append-only audit manifest for one committed Static or Dynamic run. It records but never replaces live lease authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "assignmentId", "vmId", "runId", "requestType", "hostId", "profileId", "snapshotEpoch", "topologyHash", "policyHash", "profileHash", "riskRegisterHash", "qualificationBundleHash", "authority", "backend", "activation", "bindings", "decisionHash", "planHash", "observedPlanHash", "resetContractsHash", "artifacts", "verification", "manifestDigest"],
+  "properties": {
+    "schemaVersion": {"const": 2},
+    "assignmentId": {"$ref": "#/$defs/id"}, "vmId": {"$ref": "#/$defs/id"}, "runId": {"$ref": "#/$defs/id"},
+    "requestType": {"enum": ["STATIC", "DYNAMIC"]}, "hostId": {"$ref": "#/$defs/id"}, "profileId": {"$ref": "#/$defs/id"},
+    "snapshotEpoch": {"type": "integer", "minimum": 1},
+    "topologyHash": {"$ref": "#/$defs/digest"}, "policyHash": {"$ref": "#/$defs/digest"}, "profileHash": {"$ref": "#/$defs/digest"},
+    "riskRegisterHash": {"$ref": "#/$defs/digest"}, "qualificationBundleHash": {"$ref": "#/$defs/digest"},
+    "authority": {"$ref": "#/$defs/authority"}, "backend": {"$ref": "#/$defs/backend"}, "activation": {"$ref": "#/$defs/activation"},
+    "bindings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/binding"}, "x-qmanCanonicalOrder": "ascending [requirementId,ordinal,bindingId]"},
+    "decisionHash": {"$ref": "#/$defs/digest"}, "planHash": {"$ref": "#/$defs/digest"}, "observedPlanHash": {"$ref": "#/$defs/digest"},
+    "resetContractsHash": {"$ref": "#/$defs/digest"}, "artifacts": {"$ref": "#/$defs/artifacts"}, "verification": {"$ref": "#/$defs/verification"},
+    "manifestDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "idSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["leaseSetHash", "leaseBindings", "fencingToken", "controllerGeneration", "hostEpoch", "runGeneration"],
+      "properties": {
+        "leaseSetHash": {"$ref": "#/$defs/digest"},
+        "leaseBindings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["bindingId", "bundleId", "leaseId", "leaseVersion"], "properties": {"bindingId": {"$ref": "#/$defs/id"}, "bundleId": {"$ref": "#/$defs/digest"}, "leaseId": {"$ref": "#/$defs/id"}, "leaseVersion": {"type": "integer", "minimum": 1}}}, "x-qmanCanonicalOrder": "same order as bindings"},
+        "fencingToken": {"type": "integer", "minimum": 1}, "controllerGeneration": {"type": "integer", "minimum": 1}, "hostEpoch": {"type": "integer", "minimum": 1}, "runGeneration": {"type": "integer", "minimum": 1}
+      }
+    },
+    "backend": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "configuredIommuType", "launchGrantKind", "attachReceiptHash"],
+      "properties": {"kind": {"enum": ["LEGACY_VFIO_TYPE1", "VFIO_CDEV_IOMMUFD"]}, "configuredIommuType": {"enum": ["VFIO_TYPE1V2_IOMMU", "VFIO_TYPE1_IOMMU", "IOMMUFD_IOAS"]}, "launchGrantKind": {"enum": ["AUTHORIZED_DEVICE_PATH", "AUTHORIZED_FD_BUNDLE"]}, "attachReceiptHash": {"$ref": "#/$defs/digest"}}
+    },
+    "activation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["plannedDisposition", "mode", "desiredOwner", "effectiveOwnerBefore", "effectiveOwnerAfter", "activationPlanHash", "observedStateHash"],
+      "properties": {"plannedDisposition": {"enum": ["LIVE_APPLY", "REBOOT_REQUIRED", "ALREADY_ACTIVE"]}, "mode": {"enum": ["BIND_ON_LEASE", "PERSISTENT_VFIO", "DEFERRED_BOOT"]}, "desiredOwner": {"enum": ["HOST", "PASSTHROUGH"]}, "effectiveOwnerBefore": {"enum": ["HOST", "VFIO"]}, "effectiveOwnerAfter": {"const": "VFIO"}, "activationPlanHash": {"$ref": "#/$defs/digest"}, "observedStateHash": {"$ref": "#/$defs/digest"}}
+    },
+    "binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bindingId", "requirementId", "ordinal", "assignedId", "deviceUid", "hostBdf", "deviceGeneration", "bundleId", "bundleMembers", "payloadMembers", "memberActionsHash", "guestSlot", "guestAbiClass", "guestAbiSignature", "backendKind", "launchGrantKind", "attachReceiptHash", "resourcePlanSliceHash"],
+      "properties": {
+        "bindingId": {"$ref": "#/$defs/id"}, "requirementId": {"$ref": "#/$defs/id"}, "ordinal": {"type": "integer", "minimum": 0}, "assignedId": {"$ref": "#/$defs/id"}, "deviceUid": {"$ref": "#/$defs/id"},
+        "hostBdf": {"type": "string", "pattern": "^[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\\.[0-7]$"}, "deviceGeneration": {"type": "integer", "minimum": 1}, "bundleId": {"$ref": "#/$defs/digest"},
+        "bundleMembers": {"$ref": "#/$defs/idSet"}, "payloadMembers": {"$ref": "#/$defs/idSet"}, "memberActionsHash": {"$ref": "#/$defs/digest"}, "guestSlot": {"$ref": "#/$defs/id"},
+        "guestAbiClass": {"$ref": "#/$defs/id"}, "guestAbiSignature": {"$ref": "#/$defs/digest"}, "backendKind": {"enum": ["LEGACY_VFIO_TYPE1", "VFIO_CDEV_IOMMUFD"]},
+        "launchGrantKind": {"enum": ["AUTHORIZED_DEVICE_PATH", "AUTHORIZED_FD_BUNDLE"]}, "attachReceiptHash": {"$ref": "#/$defs/digest"}, "resourcePlanSliceHash": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "artifacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["qemuBinaryHash", "firmwareCodeHash", "firmwareVarsBaseHashOrNull", "argvHash", "observedEvidenceHash"],
+      "properties": {"qemuBinaryHash": {"$ref": "#/$defs/digest"}, "firmwareCodeHash": {"$ref": "#/$defs/digest"}, "firmwareVarsBaseHashOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]}, "argvHash": {"$ref": "#/$defs/digest"}, "observedEvidenceHash": {"$ref": "#/$defs/digest"}}
+    },
+    "verification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["qmpRealized", "guestEnumerated", "iommuMapped", "interruptRemapped"],
+      "properties": {"qmpRealized": {"const": true}, "guestEnumerated": {"const": true}, "iommuMapped": {"const": true}, "interruptRemapped": {"const": true}}
+    }
+  },
+  "x-qmanCrossFieldRules": [
+    "authority.leaseBindings and bindings have identical bindingId order and exact bundle coverage; leaseSetHash covers every lease reference",
+    "backend.kind/configuredIommuType/launchGrantKind equals every binding and the exact qualification profile; no fallback is legal",
+    "STATIC has one ordered binding per fixed request member using requirementId static-<ordinal>; DYNAMIC has one binding per solved requirement result; neither mode permits partial commit",
+    "assignedId is run-scoped and is published only in the same atomic commit that makes the run ATTACHED",
+    "set manifestDigest to null and hash the complete CANONICAL-JSON-V1 object; manifestDigest is audit identity, not lease authority"
+  ]
+}

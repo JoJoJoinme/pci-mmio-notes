@@ -1254,7 +1254,7 @@
       "evidence": [
         {
           "path": "evidence/vmware-trace-index-20260722-summary.json",
-          "sha256": "bc8c950c4d5fb9b6baa3e4ad0cb7746664dbb5dbf1a37f1d44d64541febab854"
+          "sha256": "a1ee313de34d7ba84b8e3cdd0964ff483bd6542c5df0512787b398ba23f697c1"
         }
       ],
       "noRunReason": null,

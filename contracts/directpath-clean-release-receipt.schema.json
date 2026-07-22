@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-clean-release-receipt.schema.json",
+  "title": "Qman DirectPath full-assignment clean-release receipt",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization; wider values use schema-defined decimal strings.",
+  "description": "Closed wire and signing schema for ENTITY-CLEAN-RELEASE-RECEIPT. One receipt covers the complete assignment lease set; it is never a per-device or per-lease release token.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "receiptId", "relocationIdOrNull", "relocationGenerationOrNull", "receiptNonce", "sourceHostId", "sourceHostEpoch", "assignmentId", "runId", "oldRunGeneration", "leaseSetHash", "leaseBindings", "bindingsHash", "bundleIds", "bundleMembers", "newDeviceGenerations", "qemuExitProof", "dmaIrqTeardownProof", "iommuInvalidateProof", "resetStateProof", "ownerRestoreProof", "policyHash", "profileHash", "evidenceHash", "issuedAt", "expiresAt", "signerKeyId", "keyRingVersion", "receiptDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "receiptId": {"$ref": "#/$defs/id"},
+    "relocationIdOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+    "relocationGenerationOrNull": {"type": ["integer", "null"], "minimum": 1},
+    "receiptNonce": {"type": "string", "pattern": "^[A-Za-z0-9_-]{22}$"},
+    "sourceHostId": {"$ref": "#/$defs/id"},
+    "sourceHostEpoch": {"type": "integer", "minimum": 1},
+    "assignmentId": {"$ref": "#/$defs/id"},
+    "runId": {"$ref": "#/$defs/id"},
+    "oldRunGeneration": {"type": "integer", "minimum": 1},
+    "leaseSetHash": {"$ref": "#/$defs/digest"},
+    "leaseBindings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/leaseBinding"},
+      "x-qmanCanonicalOrder": "ascending canonical bytes of [bundleId,leaseId]"
+    },
+    "bindingsHash": {"$ref": "#/$defs/digest"},
+    "bundleIds": {"$ref": "#/$defs/digestSet"},
+    "bundleMembers": {"$ref": "#/$defs/idSet"},
+    "newDeviceGenerations": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"type": "string", "minLength": 1},
+      "additionalProperties": {"type": "integer", "minimum": 1}
+    },
+    "qemuExitProof": {"$ref": "#/$defs/digest"},
+    "dmaIrqTeardownProof": {"$ref": "#/$defs/digest"},
+    "iommuInvalidateProof": {"$ref": "#/$defs/digest"},
+    "resetStateProof": {"$ref": "#/$defs/digest"},
+    "ownerRestoreProof": {"$ref": "#/$defs/digest"},
+    "policyHash": {"$ref": "#/$defs/digest"},
+    "profileHash": {"$ref": "#/$defs/digest"},
+    "evidenceHash": {"$ref": "#/$defs/digest"},
+    "issuedAt": {"$ref": "#/$defs/timestamp"},
+    "expiresAt": {"$ref": "#/$defs/timestamp"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "keyRingVersion": {"type": "integer", "minimum": 1},
+    "receiptDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "idSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"},
+    "digestSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}, "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"},
+    "leaseBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leaseId", "leaseVersion", "bundleId", "memberDeviceUids", "oldDeviceGenerations"],
+      "properties": {
+        "leaseId": {"$ref": "#/$defs/id"},
+        "leaseVersion": {"type": "integer", "minimum": 1},
+        "bundleId": {"$ref": "#/$defs/digest"},
+        "memberDeviceUids": {"$ref": "#/$defs/idSet"},
+        "oldDeviceGenerations": {"type": "object", "minProperties": 1, "propertyNames": {"type": "string", "minLength": 1}, "additionalProperties": {"type": "integer", "minimum": 1}}
+      }
+    }
+  },
+  "x-qmanCrossFieldRules": [
+    "relocationIdOrNull and relocationGenerationOrNull are either both null or both non-null",
+    "leaseSetHash is CANONICAL-JSON-V1 hash of the complete ordered leaseBindings projection [leaseId,leaseVersion,bundleId,memberDeviceUids,oldDeviceGenerations]",
+    "bindingsHash covers the immutable assignment manifest binding set accepted for oldRunGeneration",
+    "bundleIds and bundleMembers equal the exact unions in leaseBindings; newDeviceGenerations has exactly the bundleMembers keys",
+    "issuedAt is before expiresAt; verifier time, sourceHostEpoch, oldRunGeneration and every lease version must still be current at CAS acceptance",
+    "receiptDigest and signature must be non-null outside the signing projection"
+  ],
+  "x-qmanSignatureRule": "Set receiptDigest and signature to null, encode the complete object with CANONICAL-JSON-V1, hash into receiptDigest, and sign ASCII(QMAN-DIRECTPATH/CLEAN-RELEASE-RECEIPT/V1) || 0x00 || the canonical bytes with a HOST_RELEASE_EVIDENCE key."
+}

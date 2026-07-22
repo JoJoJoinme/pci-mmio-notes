@@ -3797,6 +3797,151 @@ def invalid_evaluation(message: str) -> Evaluation:
     )
 
 
+def validate_project_portable_observation(
+    project: dict[str, Any],
+    contract: dict[str, Any],
+    template: dict[str, Any],
+    errors: list[str],
+) -> None:
+    """Keep the human/project status axes tied to generated portable artifacts."""
+
+    observations = project.get("observations")
+    observation = (
+        observations.get("portableImplementationContract")
+        if isinstance(observations, dict)
+        else None
+    )
+    matrix = contract.get("mappingSurface", {}).get("verificationMatrix", [])
+    mappings = template.get("mappings", [])
+    statuses = template.get("statusAxes", {})
+    topology = template.get("artifactTopology", {})
+    expected = {
+        "asOf": project.get("asOf"),
+        "contractRevision": contract.get("revision"),
+        "portableSpecReady": (
+            contract.get("statusAxes", {})
+            .get("portableSpecification", {})
+            .get("status")
+            == "READY"
+        ),
+        "mappingItems": len(mappings) if isinstance(mappings, list) else -1,
+        "verificationMatrixRows": len(matrix) if isinstance(matrix, list) else -1,
+        "targetCodeMapped": statuses.get("TARGET_CODE_MAPPED"),
+        "productImplemented": statuses.get("PRODUCT_IMPLEMENTED"),
+        "qualified": statuses.get("QUALIFIED"),
+        "privateRepositoryRequiredForPortableClosure": False,
+        "artifactConstructionOrder": topology.get("graph"),
+    }
+    if observation != expected:
+        errors.append(
+            "project-status portableImplementationContract observation must match "
+            "the generated portable contract and baseline integration-map template"
+        )
+
+
+def run_portable_handoff_gate(
+    mode: str,
+    *,
+    map_path: str = "contracts/qman-integration-map.template.json",
+    trusted_root_digest: str | None = None,
+    external_rollback_anchor: str | None = None,
+    external_catalog_anchor: str | None = None,
+    trust_anchor_freshness_envelope: str | None = None,
+    catalog_anchor_freshness_envelope: str | None = None,
+    verifier_nonce: str | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Run the independent portable semantic gate through its public CLI."""
+
+    argv = [
+        sys.executable,
+        str(ROOT / "tools" / "validate_portable_handoff.py"),
+        mode,
+        "--root",
+        str(ROOT),
+        "--map",
+        map_path,
+    ]
+    if trusted_root_digest is not None:
+        argv.extend(["--trusted-root-digest", trusted_root_digest])
+    if external_rollback_anchor is not None:
+        argv.extend(["--external-rollback-anchor", external_rollback_anchor])
+    if external_catalog_anchor is not None:
+        argv.extend(["--external-catalog-anchor", external_catalog_anchor])
+    if trust_anchor_freshness_envelope is not None:
+        argv.extend(
+            ["--trust-anchor-freshness-envelope", trust_anchor_freshness_envelope]
+        )
+    if catalog_anchor_freshness_envelope is not None:
+        argv.extend(
+            ["--catalog-anchor-freshness-envelope", catalog_anchor_freshness_envelope]
+        )
+    if verifier_nonce is not None:
+        argv.extend(["--verifier-nonce", verifier_nonce])
+    try:
+        return subprocess.run(
+            argv,
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=300,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return subprocess.CompletedProcess(
+            argv,
+            2,
+            stdout="",
+            stderr=f"ERROR: portable semantic validator could not run: {exc}\n",
+        )
+
+
+def append_portable_gate_errors(
+    completed: subprocess.CompletedProcess[str], errors: list[str]
+) -> None:
+    """Normalize validator output into the repository contract error list."""
+
+    if completed.returncode == 0:
+        return
+    lines = [
+        line.strip()
+        for line in (completed.stderr + "\n" + completed.stdout).splitlines()
+        if line.strip()
+    ]
+    semantic_errors = [
+        line.removeprefix("ERROR: ") for line in lines if line.startswith("ERROR: ")
+    ]
+    if not semantic_errors:
+        semantic_errors = lines or [
+            f"portable semantic validator exited {completed.returncode} without diagnostics"
+        ]
+    errors.extend(f"portable handoff: {item}" for item in semantic_errors)
+
+
+def validate_portable_release_axes(map_path: str) -> list[str]:
+    """Require the detached release map to claim every promoted axis explicitly."""
+
+    candidate = Path(map_path)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    try:
+        mapping = load_json(candidate.resolve(strict=True))
+    except (OSError, ValueError) as exc:
+        return [f"cannot load detached integration map {candidate}: {exc}"]
+    expected = {
+        "PORTABLE_SPEC_READY": True,
+        "TARGET_CODE_MAPPED": True,
+        "PRODUCT_IMPLEMENTED": True,
+        "QUALIFIED": True,
+    }
+    axes = mapping.get("statusAxes")
+    if axes != expected:
+        return [
+            "detached integration map statusAxes must exactly equal "
+            f"{expected!r}; observed {axes!r}"
+        ]
+    return []
+
+
 def _evaluate_unchecked() -> Evaluation:
     errors: list[str] = []
     blockers: list[str] = []
@@ -3838,6 +3983,14 @@ def _evaluate_unchecked() -> Evaluation:
         qemu_vfio_launch_surface = load_repository_json(
             "contracts/qemu-vfio-launch-surface.json", "QEMU VFIO launch surface"
         )
+        portable_contract = load_repository_json(
+            "contracts/directpath-portable-control-contract.json",
+            "DirectPath portable control contract",
+        )
+        portable_template = load_repository_json(
+            "contracts/qman-integration-map.template.json",
+            "DirectPath integration-map baseline template",
+        )
         risk_policy = load_repository_json(
             "contracts/risk-status.json", "risk status contract"
         )
@@ -3858,6 +4011,11 @@ def _evaluate_unchecked() -> Evaluation:
 
     if acceptance_policy.get("sourceDocument") != risk_policy.get("sourceDocument"):
         errors.append("risk and acceptance contracts must use the same detailed-design source")
+
+    append_portable_gate_errors(run_portable_handoff_gate("baseline"), errors)
+    validate_project_portable_observation(
+        project, portable_contract, portable_template, errors
+    )
 
     known_tech_story_ids = collect_ipd_tech_story_ids(ipd_contract)
     derived_open_decisions, decision_contract_valid = validate_product_decisions(
@@ -3994,6 +4152,22 @@ def print_report(result: Evaluation) -> None:
     print(f"Current milestone: {current}")
     print(f"Current claim: {claim}")
     print(f"Target release: {target} ({delivery_model})")
+    observations = result.project.get("observations", {})
+    portable = (
+        observations.get("portableImplementationContract", {})
+        if isinstance(observations, dict)
+        else {}
+    )
+    if isinstance(portable, dict) and portable:
+        print(
+            "Portable handoff: "
+            f"revision={portable.get('contractRevision')}, "
+            f"spec_ready={portable.get('portableSpecReady')}, "
+            f"mapping_items={portable.get('mappingItems')}, "
+            f"target_mapped={portable.get('targetCodeMapped')}, "
+            f"implemented={portable.get('productImplemented')}, "
+            f"qualified={portable.get('qualified')}"
+        )
     print(
         "IPD: "
         f"epics={result.ipd_counts['epics']}, "
@@ -4100,7 +4274,45 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("status", help="validate contracts and report current blockers")
-    subparsers.add_parser("release", help="run executable cases and fail closed on any blocker")
+    release_parser = subparsers.add_parser(
+        "release",
+        help="validate the detached portable map, run executable cases, and fail closed",
+    )
+    release_parser.add_argument(
+        "--map",
+        default="contracts/qman-integration-map.template.json",
+        help="detached final integration map; the baseline template intentionally cannot release",
+    )
+    release_parser.add_argument(
+        "--trusted-root-digest",
+        default=None,
+        help="out-of-band CONFIG-TRUST-ROOT-DIGEST",
+    )
+    release_parser.add_argument(
+        "--external-rollback-anchor",
+        default=None,
+        help="out-of-band key-ring rollback-anchor JSON path",
+    )
+    release_parser.add_argument(
+        "--external-catalog-anchor",
+        default=None,
+        help="out-of-band supported-catalog rollback-anchor JSON path",
+    )
+    release_parser.add_argument(
+        "--trust-anchor-freshness-envelope",
+        default=None,
+        help="live root-signed trust-anchor response to --verifier-nonce",
+    )
+    release_parser.add_argument(
+        "--catalog-anchor-freshness-envelope",
+        default=None,
+        help="live root-signed catalog-anchor response to --verifier-nonce",
+    )
+    release_parser.add_argument(
+        "--verifier-nonce",
+        default=None,
+        help="fresh out-of-band verifier nonce; never read from release artifacts",
+    )
     run_parser = subparsers.add_parser("run-cases", help="run declared executable acceptance cases")
     run_parser.add_argument("--case", action="append", dest="cases", help="case ID; repeat as needed")
     return parser.parse_args()
@@ -4115,6 +4327,32 @@ def main() -> int:
 
     if args.command == "status":
         return 0
+
+    if args.command == "release":
+        portable_release_errors = validate_portable_release_axes(args.map)
+        portable_gate = run_portable_handoff_gate(
+            "all",
+            map_path=args.map,
+            trusted_root_digest=args.trusted_root_digest,
+            external_rollback_anchor=args.external_rollback_anchor,
+            external_catalog_anchor=args.external_catalog_anchor,
+            trust_anchor_freshness_envelope=args.trust_anchor_freshness_envelope,
+            catalog_anchor_freshness_envelope=args.catalog_anchor_freshness_envelope,
+            verifier_nonce=args.verifier_nonce,
+        )
+        if portable_gate.stdout:
+            print(portable_gate.stdout.rstrip())
+        if portable_gate.stderr:
+            print(portable_gate.stderr.rstrip())
+        if portable_gate.returncode != 0:
+            portable_release_errors.append(
+                f"portable semantic gate exited {portable_gate.returncode}"
+            )
+        if portable_release_errors:
+            print("Portable release gate: BLOCKED")
+            for error in portable_release_errors:
+                print(f"  BLOCKER: {error}")
+            return 1
 
     requested = getattr(args, "cases", None)
     selected, unknown = select_cases(result, requested)

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-qualification-measurement.schema.json",
+  "title": "Qman DirectPath typed qualification measurement",
+  "description": "Closed signed observation produced before QualificationSubjectManifest construction. It binds one measured qualification field to a pinned collector and immutable raw observation artifacts; copying a value from a proposed QualificationRecord is not a measurement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "measurementId", "qualificationRunId", "subjectField", "sourceKind", "hostId", "hostEpoch", "bootId", "deviceUid", "deviceRecordHash", "inventorySnapshotDigestOrNull", "observedAt", "collector", "evidenceBindings", "measuredValue", "keyRingVersion", "signerKeyId", "signerRole", "measurementDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "measurementId": {"$ref": "#/$defs/id"},
+    "qualificationRunId": {"$ref": "#/$defs/id"},
+    "subjectField": {"$ref": "#/$defs/subjectField"},
+    "sourceKind": {"$ref": "#/$defs/sourceKind"},
+    "hostId": {"$ref": "#/$defs/id"},
+    "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+    "bootId": {"$ref": "#/$defs/id"},
+    "deviceUid": {"type": "string", "pattern": "^urn:qman:directpath:device:v1:[A-Za-z0-9][A-Za-z0-9._:-]{2,127}:sha256:[0-9a-f]{64}$"},
+    "deviceRecordHash": {"$ref": "#/$defs/digest"},
+    "inventorySnapshotDigestOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "observedAt": {"$ref": "#/$defs/timestamp"},
+    "collector": {"$ref": "#/$defs/collector"},
+    "evidenceBindings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/evidenceBinding"}, "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [evidenceRole,path,sha256]"},
+    "measuredValue": {},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "signerRole": {"enum": ["HOST_INVENTORY_EVIDENCE", "QUALIFICATION_ENGINEERING", "TEST_EVIDENCE"]},
+    "measurementDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "allOf": [
+    {"if": {"properties": {"subjectField": {"const": "pciIdentityMatch"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "HOST_INVENTORY"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}, "measuredValue": {"$ref": "directpath-qualification-record.schema.json#/$defs/pciIdentity"}}}},
+    {"if": {"properties": {"subjectField": {"const": "deviceArchetype"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "QUALIFICATION_TAXONOMY_CLASSIFICATION"}, "signerRole": {"const": "QUALIFICATION_ENGINEERING"}, "measuredValue": {"enum": ["CONSUMER_GPU", "PROFESSIONAL_GPU", "HBA", "ACCELERATOR", "GENERIC_PCI"]}}}},
+    {"if": {"properties": {"subjectField": {"const": "deviceFirmwareAndRom"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "FIRMWARE_READBACK"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}, "measuredValue": {"$ref": "directpath-qualification-record.schema.json#/$defs/deviceFirmware"}}}},
+    {"if": {"properties": {"subjectField": {"const": "kernelQemuFirmwareBackend"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "RUNTIME_BINARY_MEASUREMENT"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}, "measuredValue": {"$ref": "directpath-qualification-record.schema.json#/$defs/platformRuntime"}}}},
+    {"if": {"properties": {"subjectField": {"const": "iommuInterruptResetProviders"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "KERNEL_PROVIDER_READBACK"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}, "measuredValue": {"$ref": "directpath-qualification-record.schema.json#/$defs/providerSet"}}}},
+    {"if": {"properties": {"subjectField": {"const": "guestDriverAndWorkload"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "GUEST_ATTESTED_READBACK"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}, "measuredValue": {"$ref": "directpath-qualification-record.schema.json#/$defs/guestWorkload"}}}},
+    {"if": {"properties": {"subjectField": {"const": "deviceTraits"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "HOST_INVENTORY"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}, "measuredValue": {"$ref": "#/$defs/idSet"}}}},
+    {"if": {"properties": {"subjectField": {"const": "caseExecution"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "SCENARIO_EXECUTION_CORE"}, "signerRole": {"const": "TEST_EVIDENCE"}, "inventorySnapshotDigestOrNull": {"type": "null"}, "measuredValue": {"$ref": "#/$defs/digest"}}}}
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "idSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "subjectField": {"enum": ["pciIdentityMatch", "deviceArchetype", "deviceFirmwareAndRom", "kernelQemuFirmwareBackend", "iommuInterruptResetProviders", "guestDriverAndWorkload", "deviceTraits", "caseExecution"]},
+    "sourceKind": {"enum": ["HOST_INVENTORY", "QUALIFICATION_TAXONOMY_CLASSIFICATION", "FIRMWARE_READBACK", "RUNTIME_BINARY_MEASUREMENT", "KERNEL_PROVIDER_READBACK", "GUEST_ATTESTED_READBACK", "SCENARIO_EXECUTION_CORE"]},
+    "collector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "path", "blobSha256", "interfaceHash", "toolManifestPath", "toolManifestSha256"],
+      "properties": {
+        "protocol": {"const": "QMAN-DIRECTPATH-QUALIFICATION-COLLECTOR-V1"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "blobSha256": {"$ref": "#/$defs/digest"},
+        "interfaceHash": {"$ref": "#/$defs/digest"},
+        "toolManifestPath": {"$ref": "#/$defs/repositoryRelativePath"},
+        "toolManifestSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "evidenceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidenceRole", "path", "sha256", "mediaType", "byteLength", "schemaRefOrNull", "schemaSha256OrNull", "valueProjectionOrNull"],
+      "properties": {
+        "evidenceRole": {"enum": ["HOST_INVENTORY_RECORD", "DEVICE_INVENTORY_RECORD", "QUALIFICATION_TAXONOMY_RECORD", "FIRMWARE_OR_ROM_READBACK", "RUNTIME_BINARY", "RUNTIME_VERSION_READBACK", "KERNEL_PROVIDER_READBACK", "GUEST_ATTESTATION", "WORKLOAD_RESULT", "SCENARIO_EXECUTION_CORE_INPUT"]},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "schemaRefOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "schemaSha256OrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "valueProjectionOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^(/([^/~]|~[01])*)*$"}]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"evidenceRole": {"const": "HOST_INVENTORY_RECORD"}}, "required": ["evidenceRole"]},
+          "then": {"properties": {"mediaType": {"const": "application/json"}, "schemaRefOrNull": {"const": "contracts/directpath-portable-hash-subjects.schema.json#/$defs/hostSnapshot"}, "schemaSha256OrNull": {"$ref": "#/$defs/digest"}, "valueProjectionOrNull": {"type": "string"}}}
+        },
+        {
+          "if": {"properties": {"evidenceRole": {"const": "DEVICE_INVENTORY_RECORD"}}, "required": ["evidenceRole"]},
+          "then": {"properties": {"mediaType": {"const": "application/json"}, "schemaRefOrNull": {"const": "contracts/directpath-portable-entities.schema.json#/$defs/ENTITY-DEVICE-RECORD"}, "schemaSha256OrNull": {"$ref": "#/$defs/digest"}, "valueProjectionOrNull": {"type": "string"}}}
+        },
+        {
+          "if": {"properties": {"evidenceRole": {"const": "QUALIFICATION_TAXONOMY_RECORD"}}, "required": ["evidenceRole"]},
+          "then": {"properties": {"mediaType": {"const": "application/json"}, "schemaRefOrNull": {"const": "contracts/directpath-device-classification-record.schema.json"}, "schemaSha256OrNull": {"$ref": "#/$defs/digest"}, "valueProjectionOrNull": {"const": "/deviceArchetype"}}}
+        },
+        {
+          "if": {"properties": {"evidenceRole": {"const": "WORKLOAD_RESULT"}}, "required": ["evidenceRole"]},
+          "then": {"properties": {"mediaType": {"const": "application/json"}, "schemaRefOrNull": {"const": "contracts/directpath-qualification-workload-result.schema.json"}, "schemaSha256OrNull": {"$ref": "#/$defs/digest"}, "valueProjectionOrNull": {"type": "string"}}}
+        }
+      ]
+    }
+  },
+  "x-qmanCollectionRule": "The collector binary and tool manifest resolve at target commit C and their raw bytes match the declared hashes. Every evidenceBinding path resolves inside evidence commit E, raw bytes/length/media type are verified, and any non-null schemaRef/schemaSha256/valueProjection tuple is resolved against the pinned normative schema before measuredValue is derived. schemaRefOrNull, schemaSha256OrNull and valueProjectionOrNull are either all non-null or all null. At least one schema-validated raw projection MUST byte-equal the complete measuredValue, except pciIdentityMatch is deterministically reconstructed from the exact DeviceRecord immutableIdentity plus the fixed NONE errata profile; labels and all-null projection tuples are insufficient. For HOST_INVENTORY_RECORD, evidenceBinding.sha256 is the final signed JSON file's raw-byte hash, while inventorySnapshotDigestOrNull is its parsed internal HostSnapshot.contentHash and equals HostAuthority.currentSnapshotContentHash; these are separate hash domains and MUST NOT be substituted. DEVICE_INVENTORY_RECORD resolves the exact schema-valid DeviceRecord whose deviceUid/deviceRecordHash equal this measurement and whose hash is a member of that HostSnapshot; deviceTraits must be the exact /technicalTraits projection. The complete set of bindings is field-specific and independently sufficient: identity/traits require both the signed current HostSnapshot and that exact DeviceRecord; deviceArchetype requires a final schema-valid DeviceClassificationRecord for the same device whose signedAt/digest/signature are non-null, whose repository-signed current-pointer receipt and signed ClassificationContext byte-equal the exact taxonomy/current snapshot/device/time/signer tuple, whose prior DeviceTaxonomyDefinition recursively binds classifier source/build/runtime and exact path/symbol/blob/semantic/interface hashes, and whose classifier replay byte-equals the retained construction projection before final signing. It consumes neither QualificationRecord nor SupportedCatalog. Firmware/ROM require live option-ROM/VPD/firmware readback; runtime requires distinct measured kernel, QEMU and firmware binaries plus version/capability readback; providers require live IOMMU/interrupt/reset/backend readback; guest/workload require attested guest ABI/architecture/vCPU/memory/capabilities/driver identity and the signed WorkloadResult plus evaluator report; caseExecution requires the immutable scenario execution-core input. A value copied only from QualificationRecord or QualificationSubjectManifest is invalid.",
+  "x-qmanFreshnessRule": "All measurements bind one qualificationRunId, hostId, hostEpoch, bootId, deviceUid and deviceRecordHash. Non-case measurements bind the current inventory snapshot; caseExecution uses the same run/host/epoch/boot/device tuple and its measuredValue is the independently reconstructed scenarioExecutionCoreDigest. observedAt MUST fall inside the signed QualificationRunManifest interval and no later than the consuming QualificationSubjectManifest. Host boot/epoch change, stale inventory, device substitution, missing raw artifact or collector mismatch invalidates the measurement.",
+  "x-qmanSignatureRule": "Set measurementDigest and signature to null, encode the complete object with CANONICAL-JSON-V1, store SHA-256 in measurementDigest, and sign ASCII(QMAN-DIRECTPATH/QUALIFICATION-MEASUREMENT/V1) || 0x00 || those bytes. HOST_INVENTORY_EVIDENCE signs host, firmware, runtime, provider, guest and trait measurements; QUALIFICATION_ENGINEERING signs deviceArchetype classification; TEST_EVIDENCE signs caseExecution only. Resolve the exact role/key/history/rollback/freshness chain before accepting the record."
+}

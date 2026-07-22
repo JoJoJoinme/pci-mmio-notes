@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-trust-key-ring-history.schema.json",
+  "title": "Qman DirectPath complete trust key-ring history descriptor",
+  "description": "A closed descriptor for every signed key-ring revision from genesis through the current ring. A current ring plus an unresolved previousKeyRingDigest is not sufficient trust evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "historyId", "rootSetDigest", "keyRingId", "currentKeyRingSequence", "currentKeyRingDigest", "rings", "historyDigest"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "historyId": {"$ref": "#/$defs/id"},
+    "rootSetDigest": {"$ref": "#/$defs/digest"},
+    "keyRingId": {"$ref": "#/$defs/id"},
+    "currentKeyRingSequence": {"$ref": "#/$defs/safePositiveInteger"},
+    "currentKeyRingDigest": {"$ref": "#/$defs/digest"},
+    "rings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/ringDescriptor"}, "x-qmanCanonicalOrder": "strictly ascending keyRingSequence with no gaps, beginning at 1"},
+    "historyDigest": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "ringDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "schemaRef", "schemaSha256", "keyRingId", "keyRingSequence", "previousKeyRingDigest", "keyRingDigest"],
+      "properties": {
+        "path": {"$ref": "#/$defs/id"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "schemaRef": {"const": "contracts/directpath-trust-key-ring.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "keyRingId": {"$ref": "#/$defs/id"},
+        "keyRingSequence": {"$ref": "#/$defs/safePositiveInteger"},
+        "previousKeyRingDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "keyRingDigest": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "x-qmanChainRule": "Resolve every descriptor path inside the evidence repository; verify byte hash, exact schema hash, complete closed-schema instance, canonical keyRingDigest and root quorum signatures. There are exactly currentKeyRingSequence descriptors numbered 1..current with no duplicate or skipped sequence. Sequence 1 has previousKeyRingDigest=null; every successor previousKeyRingDigest byte-equals the predecessor keyRingDigest; all rings use keyRingId; final digest/sequence equal the top-level current values.",
+  "x-qmanIdentityContinuityRule": "Across the complete chain, an existing keyId or Ed25519 public key never changes principalId. Revocation is monotonic. A removed/revoked key cannot silently reappear, validity cannot be extended in place, and rotation creates a new keyId. Every revision is independently rooted; history does not make an invalid signature valid.",
+  "x-qmanDigestRule": "Set historyDigest to null in an in-memory projection and hash the complete CANONICAL-JSON-V1 object. The null calculation form need not satisfy the stored schema."
+}

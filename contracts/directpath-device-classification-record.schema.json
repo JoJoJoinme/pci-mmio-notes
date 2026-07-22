@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-device-classification-record.schema.json",
+  "title": "Qman DirectPath signed DeviceClassificationRecord",
+  "description": "Deterministic classifier output for one exact current HostSnapshot and DeviceRecord. It is the sole raw source for the deviceArchetype QualificationMeasurement and cannot consume a later qualification or support decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "classificationId", "targetRepositoryCommit", "mappingCoreId", "portableContractSha256", "taxonomyDefinition", "classificationContext", "hostAuthorityPointerReceipt", "hostId", "hostEpoch", "bootId", "snapshotEpoch", "inventorySnapshot", "deviceRecord", "deviceUid", "deviceRecordHash", "deviceArchetype", "qualificationCaseProfileId", "ruleTrace", "classifiedAt", "signedAt", "keyRingVersion", "signerKeyId", "signerRole", "classificationDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "classificationId": {"$ref": "#/$defs/id"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "taxonomyDefinition": {"$ref": "#/$defs/taxonomyDefinition"},
+    "classificationContext": {"$ref": "#/$defs/classificationContext"},
+    "hostAuthorityPointerReceipt": {"$ref": "#/$defs/hostAuthorityPointerReceipt"},
+    "hostId": {"$ref": "#/$defs/id"},
+    "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+    "bootId": {"$ref": "#/$defs/id"},
+    "snapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+    "inventorySnapshot": {"$ref": "#/$defs/inventorySnapshot"},
+    "deviceRecord": {"$ref": "#/$defs/deviceRecord"},
+    "deviceUid": {"type": "string", "pattern": "^urn:qman:directpath:device:v1:[A-Za-z0-9][A-Za-z0-9._:-]{2,127}:sha256:[0-9a-f]{64}$"},
+    "deviceRecordHash": {"$ref": "#/$defs/digest"},
+    "deviceArchetype": {"enum": ["CONSUMER_GPU", "PROFESSIONAL_GPU", "HBA", "ACCELERATOR", "GENERIC_PCI"]},
+    "qualificationCaseProfileId": {"$ref": "#/$defs/id"},
+    "ruleTrace": {"type": "array", "minItems": 1, "maxItems": 5, "uniqueItems": true, "items": {"$ref": "#/$defs/ruleEvaluation"}, "x-qmanCanonicalOrder": "strict ascending taxonomy precedence until first MATCHED"},
+    "classifiedAt": {"$ref": "#/$defs/timestamp"},
+    "signedAt": {"$ref": "#/$defs/nullableTimestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "signerRole": {"const": "QUALIFICATION_ENGINEERING"},
+    "classificationDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "signature": {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "nullableTimestamp": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "taxonomyDefinition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["taxonomyId", "path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "definitionDigest"],
+      "properties": {
+        "taxonomyId": {"$ref": "#/$defs/id"}, "path": {"$ref": "#/$defs/repositoryRelativePath"}, "sha256": {"$ref": "#/$defs/digest"}, "byteLength": {"$ref": "#/$defs/safePositiveInteger"}, "mediaType": {"const": "application/json"}, "schemaRef": {"const": "contracts/directpath-device-taxonomy-definition.schema.json"}, "schemaSha256": {"$ref": "#/$defs/digest"}, "definitionDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "classificationContext": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "classificationId", "targetRepositoryCommit", "mappingCoreId", "portableContractSha256", "taxonomyDefinition", "inventorySnapshot", "deviceRecord", "hostAuthorityPointerReceipt", "hostId", "hostEpoch", "bootId", "snapshotEpoch", "deviceUid", "deviceRecordHash", "classifiedAt", "keyRingVersion", "signerKeyId", "signerRole", "contextDigest", "signature"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "classificationId": {"$ref": "#/$defs/id"},
+        "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+        "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+        "portableContractSha256": {"$ref": "#/$defs/digest"},
+        "taxonomyDefinition": {"$ref": "#/$defs/taxonomyDefinition"},
+        "inventorySnapshot": {"$ref": "#/$defs/inventorySnapshot"},
+        "deviceRecord": {"$ref": "#/$defs/deviceRecord"},
+        "hostAuthorityPointerReceipt": {"$ref": "#/$defs/hostAuthorityPointerReceipt"},
+        "hostId": {"$ref": "#/$defs/id"},
+        "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "bootId": {"$ref": "#/$defs/id"},
+        "snapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "deviceUid": {"type": "string", "pattern": "^urn:qman:directpath:device:v1:[A-Za-z0-9][A-Za-z0-9._:-]{2,127}:sha256:[0-9a-f]{64}$"},
+        "deviceRecordHash": {"$ref": "#/$defs/digest"},
+        "classifiedAt": {"$ref": "#/$defs/timestamp"},
+        "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "signerKeyId": {"$ref": "#/$defs/id"},
+        "signerRole": {"const": "QUALIFICATION_ENGINEERING"},
+        "contextDigest": {"$ref": "#/$defs/digest"},
+        "signature": {"$ref": "#/$defs/signature"}
+      },
+      "x-qmanContextSignatureRule": "Construct this context only after resolving the signed taxonomy, current HostSnapshot, exact DeviceRecord and repository-signed HostAuthority pointer receipt observed at classifiedAt. taxonomyDefinition, inventorySnapshot and deviceRecord are the complete retained repository descriptors, including path/raw hash/length/schema hash/internal digest; sandbox materialization paths are excluded and cannot replace them. Set contextDigest and signature to null in the construction projection, RFC-8785 canonicalize the complete closed object, store SHA-256 in contextDigest, and sign ASCII(QMAN-DIRECTPATH/DEVICE-CLASSIFICATION-CONTEXT/V1) || 0x00 || the same bytes with a non-revoked QUALIFICATION_ENGINEERING key active at classifiedAt. The final classifier input requires non-null digest/signature."
+    },
+    "hostAuthorityPointerReceipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "receiptId", "classificationId", "hostAuthorityState", "inventorySnapshotRawSha256", "observedAt", "keyRingVersion", "signerKeyId", "signerRole", "receiptDigest", "signature"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "receiptId": {"$ref": "#/$defs/id"},
+        "classificationId": {"$ref": "#/$defs/id"},
+        "hostAuthorityState": {"$ref": "directpath-authority-entities.schema.json#/$defs/ENTITY-HOST-AUTHORITY"},
+        "inventorySnapshotRawSha256": {"$ref": "#/$defs/digest"},
+        "observedAt": {"$ref": "#/$defs/timestamp"},
+        "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "signerKeyId": {"$ref": "#/$defs/id"},
+        "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"},
+        "receiptDigest": {"$ref": "#/$defs/digest"},
+        "signature": {"$ref": "#/$defs/signature"}
+      },
+      "x-qmanReceiptRule": "In one serializable repository read, require HostAuthority cooperationState ONLINE_COOPERATIVE and capture its complete closed state plus the raw hash of the immutable signed HostSnapshot named by currentSnapshotContentHash. observedAt equals the consuming ClassificationContext.classifiedAt. Set receiptDigest/signature null only in the construction projection, hash RFC-8785 JCS into receiptDigest, and sign ASCII(QMAN-DIRECTPATH/HOST-AUTHORITY-POINTER-RECEIPT/V1) || 0x00 || the same bytes with an active HOST_INVENTORY_EVIDENCE key."
+    },
+    "inventorySnapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "contentHash"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"}, "sha256": {"$ref": "#/$defs/digest"}, "byteLength": {"$ref": "#/$defs/safePositiveInteger"}, "mediaType": {"const": "application/json"}, "schemaRef": {"const": "contracts/directpath-portable-hash-subjects.schema.json#/$defs/hostSnapshot"}, "schemaSha256": {"$ref": "#/$defs/digest"}, "contentHash": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "deviceRecord": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "recordDigest"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"}, "sha256": {"$ref": "#/$defs/digest"}, "byteLength": {"$ref": "#/$defs/safePositiveInteger"}, "mediaType": {"const": "application/json"}, "schemaRef": {"const": "contracts/directpath-portable-entities.schema.json#/$defs/ENTITY-DEVICE-RECORD"}, "schemaSha256": {"$ref": "#/$defs/digest"}, "recordDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "ruleEvaluation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["precedence", "archetype", "qualificationCaseProfileId", "verdict", "evidencePointers", "traceDigest"],
+      "properties": {
+        "precedence": {"type": "integer", "minimum": 1, "maximum": 5},
+        "archetype": {"enum": ["CONSUMER_GPU", "PROFESSIONAL_GPU", "HBA", "ACCELERATOR", "GENERIC_PCI"]},
+        "qualificationCaseProfileId": {"$ref": "#/$defs/id"},
+        "verdict": {"enum": ["NOT_MATCHED", "MATCHED"]},
+        "evidencePointers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/evidencePointer"}, "x-qmanCanonicalOrder": "ascending [source,jsonPointer,observedValueDigest] canonical bytes"},
+        "traceDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "evidencePointer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "jsonPointer", "observedValueDigest"],
+      "properties": {
+        "source": {"enum": ["HOST_SNAPSHOT", "DEVICE_RECORD"]},
+        "jsonPointer": {"type": "string", "pattern": "^(/([^/~]|~[01])*)+$"},
+        "observedValueDigest": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "x-qmanInputRule": "Resolve taxonomyDefinition, inventorySnapshot and deviceRecord from their exact raw descriptors and pinned normative schemas. Verify both signatures/internal digests, require parsed hostId/kernelBootId/hostEpoch/snapshotEpoch to byte-equal this record, require parsed DeviceRecord deviceUid/deviceRecordHash to equal this record, and require HostSnapshot.deviceRecordDigests to contain deviceRecordHash. Independently verify the HOST_INVENTORY_EVIDENCE-signed hostAuthorityPointerReceipt: classificationId/time/raw snapshot hash and the complete HostAuthority host/epoch/boot/agent/snapshot/resourceVersion/current-content-hash projection equal this record and parsed snapshot, proving that current pointer at classifiedAt. Independently verify classificationContext digest/signature; its complete taxonomyDefinition/inventorySnapshot/deviceRecord/pointer-receipt objects byte-equal the four top-level objects, and its C/M/portable/host/epoch/boot/snapshot/device/time/signer projection byte-equals this record and the parsed inputs. Raw-file sha256, parsed internal digest, pointer receipt digest and signed context digest are distinct and cannot be substituted.",
+  "x-qmanClassificationRule": "Execute only taxonomyDefinition.classifier under its recursively verified source/build/runtime closure with exactly the taxonomy, HostSnapshot, DeviceRecord and signed classificationContext inputs. Reconstruct the context input bytes as RFC-8785-JCS(classificationContext); sandbox materialization paths are excluded from identity. The deterministic classifier copies every context-bound metadata field and all three repository descriptors byte-for-byte and emits signedAt/classificationDigest/signature null; it cannot read a clock, random source, signer or path-mapping service. ruleTrace is a complete prefix of the taxonomy's unique ascending precedence: zero or more NOT_MATCHED rows followed by exactly one terminal MATCHED row; no rows follow the match. Each row byte-equals the taxonomy archetype/profile identity. evidencePointers identify actual schema-validated source values, and observedValueDigest is SHA-256 of RFC-8785 JCS of the projected value. traceDigest is SHA-256 of the closed row with traceDigest omitted. deviceArchetype and qualificationCaseProfileId equal the terminal MATCHED row. GENERIC_PCI is valid only as the taxonomy's final fallback.",
+  "x-qmanNoSelfQualificationRule": "The classifier inputs are limited to the current HostSnapshot, its exact DeviceRecord, the prior taxonomy definition and the signed classification context that binds only those identities plus authority metadata. They contain no QualificationRunRequest/Result/Manifest, QualificationMeasurement, Subject, QualificationRecord, SupportedCatalog, HCL support status, CaseCompletionRecord or release decision. Classification selects test routing only; it never asserts technically attachable, qualified or supported.",
+  "x-qmanSignatureRule": "classification time is not earlier than both parsed inventory capturedAt and taxonomy issuedAt. The classifier first emits a schema-valid deterministic construction projection with signedAt, classificationDigest and signature all null; null is forbidden in retained evidence. After the classifier terminates, the authority sets signedAt strictly later than classifiedAt, retains that final value while setting classificationDigest/signature to null, RFC-8785 canonicalizes the complete closed record, stores SHA-256 in classificationDigest, and signs ASCII(QMAN-DIRECTPATH/DEVICE-CLASSIFICATION-RECORD/V1) || 0x00 || the same bytes with the same QUALIFICATION_ENGINEERING principal named by classificationContext and a key active/non-revoked at signedAt."
+}

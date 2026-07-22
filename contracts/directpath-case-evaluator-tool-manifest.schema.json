@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-case-evaluator-tool-manifest.schema.json",
+  "title": "Qman DirectPath Case-completion evaluator tool manifest",
+  "description": "Closed signed provenance for the exact evaluator code and runtime that derives one CaseCompletionRecord. It is distinct from every Scenario RunnerManifest and cannot borrow an arbitrary runner TOOL_MANIFEST hash.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "manifestId", "targetRepositoryCommit", "mappingCoreId", "portableContractSha256", "caseContractRegistryDigest", "evaluator", "sourceTree", "buildAttestation", "executionEnvironment", "createdAt", "keyRingVersion", "signerKeyId", "manifestDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "manifestId": {"$ref": "#/$defs/id"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "caseContractRegistryDigest": {"$ref": "#/$defs/digest"},
+    "evaluator": {"$ref": "#/$defs/evaluator"},
+    "sourceTree": {"$ref": "#/$defs/sourceTree"},
+    "buildAttestation": {"$ref": "#/$defs/buildAttestation"},
+    "executionEnvironment": {"$ref": "#/$defs/executionEnvironment"},
+    "createdAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "manifestDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "evaluator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "path", "blobSha256", "interfaceHash"],
+      "properties": {
+        "protocol": {"const": "QMAN-DIRECTPATH-CASE-COMPLETION-EVALUATOR-V1"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "blobSha256": {"$ref": "#/$defs/digest"},
+        "interfaceHash": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "sourceTree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "sourceTreeSha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-source-tree-manifest.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "sourceTreeSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "buildAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "attestationDigest"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-build-attestation.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "attestationDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "executionEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "runtimeBinary", "dependencyLock", "environmentManifest", "buildLog"],
+      "properties": {
+        "mode": {"enum": ["NATIVE_BINARY", "INTERPRETED", "CONTAINERIZED"]},
+        "runtimeBinary": {"$ref": "#/$defs/artifact"},
+        "dependencyLock": {"$ref": "#/$defs/artifact"},
+        "environmentManifest": {"$ref": "#/$defs/artifact"},
+        "buildLog": {"$ref": "#/$defs/artifact"}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"}
+      }
+    }
+  },
+  "x-qmanCodeRule": "Resolve evaluator.path only at targetRepositoryCommit C, including a bounded recursively verified submodule when applicable; verify exact Git blob bytes against evaluator.blobSha256, and require one unique signed target mapping binding whose symbol/interface hash equals evaluator.interfaceHash and whose mapping core equals mappingCoreId. Reconstruct sourceTree from its raw path/hash, pinned schema hash and internal sourceTreeSha256; it MUST be the complete tracked tree for C and contain evaluator.path plus every repository-resident build/dependency input.",
+  "x-qmanBuildAttestationRule": "Resolve buildAttestation.path inside evidence commit E; verify its exact bytes/length/application-json media type, pinned schemaRef/schemaSha256, internal attestationDigest and TEST_EVIDENCE signature. Parsed targetRepositoryCommit, mappingCoreId, portableContractSha256 and complete SourceTree descriptor byte-equal this manifest; consumerKind=CASE_EVALUATOR and consumerBuildId=manifestId. Produced mode binds the exact CASE_EVALUATOR_BINARY runtime artifact and its consumerRuntimeMode MUST equal executionEnvironment.mode NATIVE_BINARY or CONTAINERIZED; INTERPRETED_NO_BUILD uniquely maps to executionEnvironment.mode=INTERPRETED and binds evaluator.path/blobSha256, the exact interpreter and dependency lock into the runtime identity. Builder/toolchain/dependency/environment/external-input/output/build-log roles are independently verified, and BuildAttestation.attestedAt is strictly before this manifest.createdAt. The attestation is constructed first and never references this CaseEvaluatorToolManifest.",
+  "x-qmanRuntimeRule": "Resolve every executionEnvironment artifact inside evidence commit E and verify raw bytes, length and media type. runtimeBinary, dependencyLock, environmentManifest and buildLog hashes and paths are pairwise distinct and cannot equal this manifest, its BuildAttestation, SourceTreeManifest, any Scenario RunnerManifest or any Scenario control artifact. Each value must equal the corresponding parsed BuildAttestation output/dependency/environment/log projection. INTERPRETED pins the exact interpreter/runtime binary and dependency lock; NATIVE_BINARY pins the produced executable/toolchain environment; CONTAINERIZED pins the immutable image/runtime manifest. No mutable latest tag, ambient PATH interpreter or undeclared package may execute the evaluator.",
+  "x-qmanSignatureRule": "Set manifestDigest and signature to null, encode the complete object with CANONICAL-JSON-V1, store SHA-256 in manifestDigest, and sign ASCII(QMAN-DIRECTPATH/CASE-EVALUATOR-TOOL-MANIFEST/V1) || 0x00 || those bytes with a non-revoked TEST_EVIDENCE key. The consuming CaseCompletionRecord separately binds both raw manifest SHA-256 and manifestDigest."
+}

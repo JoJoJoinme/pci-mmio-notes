@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-build-attestation.schema.json",
+  "title": "Qman DirectPath target BuildAttestation",
+  "description": "Closed signed provenance for one target tool build or interpreted no-build runtime. Runner, Case-completion evaluator, Workload evaluator and Taxonomy classifier consumers use one acyclic audience binding without this attestation depending on a later consumer object.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "attestationId", "consumerKind", "consumerBuildId", "targetRepositoryCommit", "mappingCoreId", "portableContractSha256", "sourceTree", "mode", "builder", "toolchain", "dependencies", "environment", "canonicalInvocation", "declaredExternalInputs", "output", "buildLog", "replayEvidence", "startedAt", "finishedAt", "attestedAt", "keyRingVersion", "signerKeyId", "signerRole", "attestationDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "attestationId": {"$ref": "#/$defs/id"},
+    "consumerKind": {"enum": ["RUNNER", "CASE_EVALUATOR", "WORKLOAD_EVALUATOR", "TAXONOMY_CLASSIFIER"]},
+    "consumerBuildId": {"$ref": "#/$defs/id"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "sourceTree": {"$ref": "#/$defs/sourceTree"},
+    "mode": {"enum": ["HERMETIC_REPRODUCIBLE", "PINNED_NONHERMETIC", "INTERPRETED_NO_BUILD"]},
+    "builder": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/builder"}]},
+    "toolchain": {"$ref": "#/$defs/toolchain"},
+    "dependencies": {"$ref": "#/$defs/dependencies"},
+    "environment": {"$ref": "#/$defs/environment"},
+    "canonicalInvocation": {"$ref": "#/$defs/canonicalInvocation"},
+    "declaredExternalInputs": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/externalInput"}, "x-qmanCanonicalOrder": "ascending externalInputId UTF-8 bytes; externalInputId is unique"},
+    "output": {"oneOf": [{"$ref": "#/$defs/producedOutput"}, {"$ref": "#/$defs/interpretedOutput"}]},
+    "buildLog": {"$ref": "#/$defs/artifact"},
+    "replayEvidence": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/replayReceipt"}, "x-qmanCanonicalOrder": "ascending replayId UTF-8 bytes; replayId is unique"},
+    "startedAt": {"$ref": "#/$defs/timestamp"},
+    "finishedAt": {"$ref": "#/$defs/timestamp"},
+    "attestedAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "signerRole": {"const": "TEST_EVIDENCE"},
+    "attestationDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "INTERPRETED_NO_BUILD"}}, "required": ["mode"]},
+      "then": {
+        "properties": {
+          "builder": {"type": "null"},
+          "output": {"$ref": "#/$defs/interpretedOutput"},
+          "toolchain": {
+            "properties": {
+              "components": {
+                "contains": {"type": "object", "properties": {"role": {"const": "INTERPRETER"}}, "required": ["role"]},
+                "minContains": 1,
+                "maxContains": 1
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "builder": {"$ref": "#/$defs/builder"},
+          "output": {"$ref": "#/$defs/producedOutput"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"mode": {"const": "HERMETIC_REPRODUCIBLE"}}, "required": ["mode"]},
+      "then": {
+        "properties": {
+          "environment": {
+            "properties": {
+              "isolation": {"enum": ["CONTAINER", "MICROVM", "SANDBOX"]},
+              "networkAccess": {"enum": ["DISABLED", "DECLARED_CAPTURE_ONLY"]},
+              "clockAccess": {"const": "FIXED_DECLARED"},
+              "randomnessAccess": {"const": "FIXED_DECLARED"}
+            }
+          },
+          "declaredExternalInputs": {
+            "items": {
+              "allOf": [
+                {"$ref": "#/$defs/externalInput"},
+                {"properties": {"availability": {"const": "ARCHIVED_BYTES"}}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"mode": {"const": "HERMETIC_REPRODUCIBLE"}}, "required": ["mode"]},
+      "then": {"properties": {"replayEvidence": {"minItems": 1}}},
+      "else": {"properties": {"replayEvidence": {"maxItems": 0}}}
+    },
+    {
+      "if": {"properties": {"consumerKind": {"const": "RUNNER"}}, "required": ["consumerKind"]},
+      "then": {"properties": {"output": {"oneOf": [
+        {"allOf": [{"$ref": "#/$defs/producedOutput"}, {"properties": {"role": {"const": "RUNNER_BINARY"}}}]},
+        {"allOf": [{"$ref": "#/$defs/interpretedOutput"}, {"properties": {"role": {"const": "RUNNER_SOURCE"}}}]}
+      ]}}}
+    },
+    {
+      "if": {"properties": {"consumerKind": {"const": "CASE_EVALUATOR"}}, "required": ["consumerKind"]},
+      "then": {"properties": {"output": {"oneOf": [
+        {"allOf": [{"$ref": "#/$defs/producedOutput"}, {"properties": {"role": {"const": "CASE_EVALUATOR_BINARY"}}}]},
+        {"allOf": [{"$ref": "#/$defs/interpretedOutput"}, {"properties": {"role": {"const": "CASE_EVALUATOR_SOURCE"}}}]}
+      ]}}}
+    },
+    {
+      "if": {"properties": {"consumerKind": {"const": "WORKLOAD_EVALUATOR"}}, "required": ["consumerKind"]},
+      "then": {"properties": {"output": {"oneOf": [
+        {"allOf": [{"$ref": "#/$defs/producedOutput"}, {"properties": {"role": {"const": "WORKLOAD_EVALUATOR_BINARY"}}}]},
+        {"allOf": [{"$ref": "#/$defs/interpretedOutput"}, {"properties": {"role": {"const": "WORKLOAD_EVALUATOR_SOURCE"}}}]}
+      ]}}}
+    },
+    {
+      "if": {"properties": {"consumerKind": {"const": "TAXONOMY_CLASSIFIER"}}, "required": ["consumerKind"]},
+      "then": {"properties": {"output": {"oneOf": [
+        {"allOf": [{"$ref": "#/$defs/producedOutput"}, {"properties": {"role": {"const": "TAXONOMY_CLASSIFIER_BINARY"}}}]},
+        {"allOf": [{"$ref": "#/$defs/interpretedOutput"}, {"properties": {"role": {"const": "TAXONOMY_CLASSIFIER_SOURCE"}}}]}
+      ]}}}
+    }
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "safeNonNegativeInteger": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!\\.git(?:/|$)).+$"},
+    "workingDirectory": {"anyOf": [{"const": "."}, {"$ref": "#/$defs/repositoryRelativePath"}]},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safeNonNegativeInteger"},
+        "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"}
+      }
+    },
+    "sourceTree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "sourceTreeSha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-source-tree-manifest.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "sourceTreeSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "builder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["builderId", "executable", "configuration", "protocol"],
+      "properties": {
+        "builderId": {"$ref": "#/$defs/id"},
+        "executable": {"$ref": "#/$defs/artifact"},
+        "configuration": {"$ref": "#/$defs/artifact"},
+        "protocol": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._/-]*-V[1-9][0-9]*$"}
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "components", "toolchainClosureSha256"],
+      "properties": {
+        "manifest": {"$ref": "#/$defs/artifact"},
+        "components": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/toolchainComponent"}, "x-qmanCanonicalOrder": "ascending componentId UTF-8 bytes; componentId is unique"},
+        "toolchainClosureSha256": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "toolchainComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["componentId", "role", "version", "artifact"],
+      "properties": {
+        "componentId": {"$ref": "#/$defs/id"},
+        "role": {"enum": ["COMPILER", "LINKER", "ASSEMBLER", "CODE_GENERATOR", "BUILD_DRIVER", "INTERPRETER", "PACKAGE_MANAGER", "OTHER"]},
+        "version": {"type": "string", "minLength": 1, "maxLength": 512},
+        "artifact": {"$ref": "#/$defs/artifact"}
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lockArtifact", "closureManifest", "resolvedArtifacts", "dependencyClosureSha256"],
+      "properties": {
+        "lockArtifact": {"$ref": "#/$defs/artifact"},
+        "closureManifest": {"$ref": "#/$defs/artifact"},
+        "resolvedArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/namedArtifact"}, "x-qmanCanonicalOrder": "ascending artifactId UTF-8 bytes; artifactId is unique"},
+        "dependencyClosureSha256": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "namedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "artifact"],
+      "properties": {
+        "artifactId": {"$ref": "#/$defs/id"},
+        "artifact": {"$ref": "#/$defs/artifact"}
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "builderInstanceId", "osName", "osVersion", "architecture", "kernelOrRuntime", "locale", "timezone", "umask", "isolation", "networkAccess", "clockAccess", "randomnessAccess"],
+      "properties": {
+        "manifest": {"$ref": "#/$defs/artifact"},
+        "builderInstanceId": {"$ref": "#/$defs/id"},
+        "osName": {"type": "string", "minLength": 1, "maxLength": 256},
+        "osVersion": {"type": "string", "minLength": 1, "maxLength": 256},
+        "architecture": {"enum": ["x86_64", "aarch64", "c86", "other"]},
+        "kernelOrRuntime": {"type": "string", "minLength": 1, "maxLength": 512},
+        "locale": {"type": "string", "minLength": 1, "maxLength": 128},
+        "timezone": {"type": "string", "minLength": 1, "maxLength": 128},
+        "umask": {"type": "string", "pattern": "^0[0-7]{3}$"},
+        "isolation": {"enum": ["CONTAINER", "MICROVM", "SANDBOX", "PINNED_HOST", "NONE_RECORDED"]},
+        "networkAccess": {"enum": ["DISABLED", "DECLARED_CAPTURE_ONLY", "LIVE_DECLARED"]},
+        "clockAccess": {"enum": ["FIXED_DECLARED", "REALTIME_DECLARED"]},
+        "randomnessAccess": {"enum": ["FIXED_DECLARED", "LIVE_DECLARED"]}
+      }
+    },
+    "canonicalInvocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "cwd", "environmentAllowlist"],
+      "properties": {
+        "argv": {"type": "array", "minItems": 1, "maxItems": 4096, "items": {"type": "string", "maxLength": 65536, "pattern": "^[^\\u0000]*$"}, "x-qmanCanonicalOrder": "positional process argument order; never sort"},
+        "cwd": {"$ref": "#/$defs/workingDirectory"},
+        "environmentAllowlist": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/environmentBinding"}, "x-qmanCanonicalOrder": "ascending name ASCII bytes; name is unique"}
+      }
+    },
+    "environmentBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "valueSource", "literalValue", "externalInputId", "valueSha256", "valueByteLength"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$", "maxLength": 256},
+        "valueSource": {"enum": ["FIXED_LITERAL_UTF8", "DECLARED_EXTERNAL_INPUT"]},
+        "literalValue": {"oneOf": [{"type": "null"}, {"type": "string", "maxLength": 65536, "pattern": "^[^\\u0000]*$"}]},
+        "externalInputId": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "valueSha256": {"$ref": "#/$defs/digest"},
+        "valueByteLength": {"$ref": "#/$defs/safeNonNegativeInteger"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"valueSource": {"const": "FIXED_LITERAL_UTF8"}}, "required": ["valueSource"]},
+          "then": {"properties": {"literalValue": {"type": "string"}, "externalInputId": {"type": "null"}}},
+          "else": {"properties": {"literalValue": {"type": "null"}, "externalInputId": {"$ref": "#/$defs/id"}}}
+        }
+      ]
+    },
+    "externalInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["externalInputId", "kind", "purpose", "origin", "contentSha256", "byteLength", "mediaType", "availability", "captureArtifact"],
+      "properties": {
+        "externalInputId": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["FILE", "DIRECTORY_MANIFEST", "NETWORK_RESPONSE", "SECRET", "HOST_RESOURCE", "CLOCK_VALUE", "RANDOM_SEED"]},
+        "purpose": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "origin": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "contentSha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safeNonNegativeInteger"},
+        "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"},
+        "availability": {"enum": ["ARCHIVED_BYTES", "HASH_ONLY_SECRET"]},
+        "captureArtifact": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/artifact"}]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"availability": {"const": "HASH_ONLY_SECRET"}}, "required": ["availability"]},
+          "then": {"properties": {"kind": {"const": "SECRET"}, "captureArtifact": {"type": "null"}}},
+          "else": {"properties": {"captureArtifact": {"$ref": "#/$defs/artifact"}}}
+        }
+      ]
+    },
+    "sourceBlob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "gitObjectId", "contentSha256", "byteLength"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "gitObjectId": {"type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"},
+        "contentSha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    },
+    "producedOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "role", "consumerRuntimeMode", "artifact", "executable"],
+      "properties": {
+        "kind": {"const": "PRODUCED_ARTIFACT"},
+        "role": {"enum": ["RUNNER_BINARY", "CASE_EVALUATOR_BINARY", "WORKLOAD_EVALUATOR_BINARY", "TAXONOMY_CLASSIFIER_BINARY", "GENERIC_RUNTIME_ARTIFACT"]},
+        "consumerRuntimeMode": {"enum": ["NATIVE_BINARY", "CONTAINERIZED"]},
+        "artifact": {"$ref": "#/$defs/artifact"},
+        "executable": {"type": "boolean"}
+      }
+    },
+    "interpretedOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "role", "entrypointSource", "interpreterComponentId", "interpreterArtifactSha256", "dependencyLockSha256", "runtimeIdentitySha256"],
+      "properties": {
+        "kind": {"const": "INTERPRETED_RUNTIME"},
+        "role": {"enum": ["RUNNER_SOURCE", "CASE_EVALUATOR_SOURCE", "WORKLOAD_EVALUATOR_SOURCE", "TAXONOMY_CLASSIFIER_SOURCE", "GENERIC_INTERPRETED_TOOL"]},
+        "entrypointSource": {"$ref": "#/$defs/sourceBlob"},
+        "interpreterComponentId": {"$ref": "#/$defs/id"},
+        "interpreterArtifactSha256": {"$ref": "#/$defs/digest"},
+        "dependencyLockSha256": {"$ref": "#/$defs/digest"},
+        "runtimeIdentitySha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "cleanEnvironmentInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instanceId", "provisioningManifest", "cleanStateEvidence", "initialWorkspaceState", "sourceMaterialization", "priorBuildCacheState"],
+      "properties": {
+        "instanceId": {"$ref": "#/$defs/id"},
+        "provisioningManifest": {"$ref": "#/$defs/artifact"},
+        "cleanStateEvidence": {"$ref": "#/$defs/artifact"},
+        "initialWorkspaceState": {"const": "EMPTY_BEFORE_SOURCE_MATERIALIZATION"},
+        "sourceMaterialization": {"const": "RECONSTRUCTED_FROM_SIGNED_SOURCE_TREE"},
+        "priorBuildCacheState": {"const": "EMPTY"}
+      }
+    },
+    "replayReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "replayId", "buildAttestationId", "targetRepositoryCommit", "mappingCoreId", "portableContractSha256", "executorPrincipalId", "executorKeyId", "executorRole", "cleanEnvironmentInstance", "sourceTreeSha256", "canonicalInvocationSha256", "toolchainClosureSha256", "dependencyClosureSha256", "environmentManifestSha256", "originalOutputSha256", "replayedOutputSha256", "result", "replayBuildLog", "startedAt", "finishedAt", "keyRingVersion", "receiptDigest", "signature"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "replayId": {"$ref": "#/$defs/id"},
+        "buildAttestationId": {"$ref": "#/$defs/id"},
+        "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+        "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+        "portableContractSha256": {"$ref": "#/$defs/digest"},
+        "executorPrincipalId": {"$ref": "#/$defs/id"},
+        "executorKeyId": {"$ref": "#/$defs/id"},
+        "executorRole": {"const": "TEST_EVIDENCE"},
+        "cleanEnvironmentInstance": {"$ref": "#/$defs/cleanEnvironmentInstance"},
+        "sourceTreeSha256": {"$ref": "#/$defs/digest"},
+        "canonicalInvocationSha256": {"$ref": "#/$defs/digest"},
+        "toolchainClosureSha256": {"$ref": "#/$defs/digest"},
+        "dependencyClosureSha256": {"$ref": "#/$defs/digest"},
+        "environmentManifestSha256": {"$ref": "#/$defs/digest"},
+        "originalOutputSha256": {"$ref": "#/$defs/digest"},
+        "replayedOutputSha256": {"$ref": "#/$defs/digest"},
+        "result": {"const": "BYTE_IDENTICAL"},
+        "replayBuildLog": {"$ref": "#/$defs/artifact"},
+        "startedAt": {"$ref": "#/$defs/timestamp"},
+        "finishedAt": {"$ref": "#/$defs/timestamp"},
+        "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "receiptDigest": {"$ref": "#/$defs/nullableDigest"},
+        "signature": {"$ref": "#/$defs/nullableSignature"}
+      }
+    }
+  },
+  "x-qmanConsumerIndependenceRule": "This schema MUST NOT embed, hash or reference the raw bytes/digest of a RunnerManifest, CaseEvaluatorToolManifest, WorkloadEvaluatorManifest or DeviceTaxonomyDefinition. consumerKind and consumerBuildId are a one-way audience binding, not a back-reference: RUNNER binds the consuming RunnerManifest build.buildId; CASE_EVALUATOR binds CaseEvaluatorToolManifest.manifestId; WORKLOAD_EVALUATOR binds WorkloadEvaluatorManifest.manifestId; TAXONOMY_CLASSIFIER binds DeviceTaxonomyDefinition.classifier.manifestId. The consumer independently binds this attestation's raw artifact SHA-256, pinned schema SHA-256 and attestationDigest, and requires targetRepositoryCommit C, mappingCoreId M and portableContractSha256 to equal its own signed values. This one-way ID comparison prevents a provenance cycle while preventing one build attestation from being relabelled for another consumer build.",
+  "x-qmanConsumerRuntimeRule": "For output.kind=PRODUCED_ARTIFACT, output.consumerRuntimeMode is exactly NATIVE_BINARY or CONTAINERIZED and MUST equal the consuming manifest's executionEnvironment.mode; a mismatch fails closed. For output.kind=INTERPRETED_RUNTIME, consumerRuntimeMode is structurally absent and the effective consumer mode is uniquely INTERPRETED. Each consumerKind permits only its matching BINARY/SOURCE role: RUNNER, CASE_EVALUATOR, WORKLOAD_EVALUATOR or TAXONOMY_CLASSIFIER respectively. No generic role may satisfy a typed consumer.",
+  "x-qmanSourceTreeRule": "Resolve sourceTree.path inside evidence commit E, verify its exact bytes, length and application/json media type against sourceTree.sha256, validate only against sourceTree.schemaRef whose raw schema hash equals sourceTree.schemaSha256, and require its internal sourceTreeSha256 to equal sourceTree.sourceTreeSha256. Independently reconstruct the complete tracked Git tree at targetRepositoryCommit C. Every source, recipe and repository-resident input used by this attestation must be present with the exact mode, Git object ID, content hash and length; dirty, untracked, omitted and unresolved-submodule inputs fail closed.",
+  "x-qmanInvocationRule": "canonicalInvocation.argv is the exact positional argv byte sequence after UTF-8 encoding (argv[0] is non-empty; later empty arguments remain significant), cwd resolves inside the reconstructed source tree, and the child process begins with an empty environment populated only from environmentAllowlist. Names are unique and sorted. FIXED_LITERAL_UTF8 valueSha256/valueByteLength must be recomputed from literalValue UTF-8 bytes. DECLARED_EXTERNAL_INPUT must resolve exactly one same-ID declaredExternalInputs record whose content hash and length equal the environment value. Shell expansion, ambient PATH lookup, inherited locale/timezone, undeclared response files and implicit working-directory state are forbidden.",
+  "x-qmanExternalInputCompletenessRule": "By signing the enclosing attestation, the authorized TEST_EVIDENCE principal declares that declaredExternalInputs is the complete set of bytes or state read outside sourceTree, builder, toolchain, dependency closure and environment manifests, based on its audited syscall/recorder process. The portable verifier mechanically checks the closed descriptors, canonical order, hashes, archived capture bytes and signatures; it cannot independently observe whether the physical executor hid a file open, network read, host probe, secret, clock value or randomness source. Such observational completeness is inside the audited TEST_EVIDENCE authority/trusted-recorder boundary, and contrary audit evidence invalidates the attestation. ARCHIVED_BYTES captureArtifact bytes must match contentSha256, byteLength and mediaType. HASH_ONLY_SECRET is permitted only for SECRET and remains non-replayable unless an authorized verifier can recover bytes matching the signed hash and length. A mutable URL, package channel, latest tag, trace artifact or ambient host resource is not self-proving evidence.",
+  "x-qmanBuildClosureRule": "Verify builder, every toolchain component, dependency lock, dependency closure, environment manifest and external input before invocation. componentId and resolved artifactId sets are unique and canonically ordered. Recompute toolchainClosureSha256 and dependencyClosureSha256 only by their dedicated rules below. All artifact paths resolve inside evidence commit E and their exact bytes, lengths and media types must match. Artifact roles are exclusive unless this schema carries an explicit digest/ID reference: no raw blob may silently satisfy builder, manifest, lock, external-input, output or build-log roles.",
+  "x-qmanToolchainClosureDigestRule": "During construction toolchain.toolchainClosureSha256 MUST be null. Construct exactly the JSON object {\"manifest\": toolchain.manifest, \"components\": toolchain.components}; it has exactly those two fields and MUST NOT contain toolchainClosureSha256 or any field outside that projection. Components remain in the signed canonical componentId order; array elements are never resorted by a verifier. Let B be RFC 8785 JCS encoding of that exact object and compute D = SHA-256(ASCII(QMAN-DIRECTPATH/BUILD-ATTESTATION/TOOLCHAIN-CLOSURE/V1) || 0x00 || B). Replace the null with lowercase \"sha256:\" + hex(D). A final accepted attestation requires a non-null value exactly equal to this recomputation; null is allowed only while constructing the digest and cannot pass evidence validation. The digest field itself, its prior value and the surrounding BuildAttestation do not participate in B.",
+  "x-qmanDependencyClosureDigestRule": "During construction dependencies.dependencyClosureSha256 MUST be null. Construct exactly the JSON object {\"lockArtifact\": dependencies.lockArtifact, \"closureManifest\": dependencies.closureManifest, \"resolvedArtifacts\": dependencies.resolvedArtifacts}; it has exactly those three fields and MUST NOT contain dependencyClosureSha256 or any field outside that projection. Resolved artifacts remain in the signed canonical artifactId order; array elements are never resorted by a verifier. Let B be RFC 8785 JCS encoding of that exact object and compute D = SHA-256(ASCII(QMAN-DIRECTPATH/BUILD-ATTESTATION/DEPENDENCY-CLOSURE/V1) || 0x00 || B). Replace the null with lowercase \"sha256:\" + hex(D). A final accepted attestation requires a non-null value exactly equal to this recomputation; null is allowed only while constructing the digest and cannot pass evidence validation. The digest field itself, its prior value and the surrounding BuildAttestation do not participate in B.",
+  "x-qmanReplayEvidenceRule": "replayEvidence is accepted only for HERMETIC_REPRODUCIBLE and contains at least one receipt; PINNED_NONHERMETIC and INTERPRETED_NO_BUILD require exactly []. For every receipt, buildAttestationId, targetRepositoryCommit, mappingCoreId and portableContractSha256 equal the enclosing attestation; sourceTreeSha256 equals sourceTree.sourceTreeSha256; toolchainClosureSha256 and dependencyClosureSha256 equal the enclosing final non-null closure digests; environmentManifestSha256 equals environment.manifest.sha256. canonicalInvocationSha256 equals lowercase \"sha256:\" + hex(SHA-256(ASCII(QMAN-DIRECTPATH/BUILD-ATTESTATION/CANONICAL-INVOCATION/V1) || 0x00 || RFC8785-JCS(canonicalInvocation))). originalOutputSha256 and replayedOutputSha256 both equal output.artifact.sha256, and result is BYTE_IDENTICAL. The independent receipt's TEST_EVIDENCE principal declares that cleanEnvironmentInstance began with an empty workspace/build cache and materialized only the signed source tree; provisioningManifest and cleanStateEvidence are signed authority evidence for that declaration, not portable proof of physical clean state. The portable verifier checks their closed descriptors, hashes, role separation, receipt signature and that instanceId differs from environment.builderInstanceId. replayBuildLog is mechanically verified as path/hash-distinct from the enclosing buildLog and bound to the receipt interval. Each receipt obeys enclosing finishedAt <= receipt.startedAt <= receipt.finishedAt <= attestedAt; receipt startedAt and finishedAt are within the executor key validity interval.",
+  "x-qmanReplayIndependenceRule": "Resolve signerKeyId and every executorKeyId through their respective accepted key-ring history/version. Each executorKeyId maps uniquely to its signed executorPrincipalId and an authorized, non-revoked TEST_EVIDENCE role. Every executorPrincipalId MUST differ from the principal resolved for the enclosing signerKeyId. Across replayEvidence, replayId, executorPrincipalId, executorKeyId, cleanEnvironmentInstance.instanceId, replayBuildLog.path, replayBuildLog.sha256, receiptDigest and signature are each pairwise distinct; duplicate or aliased replay work fails closed even if uniqueItems would otherwise accept it. No principal may sign both the enclosing BuildAttestation and one of its replay receipts.",
+  "x-qmanReplayReceiptDigestRule": "For one replay receipt, set receiptDigest and signature to null and retain every other required field. Let B be RFC 8785 JCS encoding of that complete closed receipt. Let P = ASCII(QMAN-DIRECTPATH/BUILD-ATTESTATION/REPLAY-RECEIPT/V1) || 0x00 || B and D = SHA-256(P). Store lowercase \"sha256:\" + hex(D) in receiptDigest and set signature to Ed25519(P) by executorKeyId. receiptDigest and signature do not participate in B except as the two explicit null values; no enclosing BuildAttestation field participates. A receipt embedded in final replayEvidence requires non-null receiptDigest/signature, exact digest recomputation and successful signature verification before the enclosing attestation is hashed or signed.",
+  "x-qmanModeRule": "HERMETIC_REPRODUCIBLE is the enclosing TEST_EVIDENCE authority's signed declaration that the build used the described isolation, no live network/clock/randomness, only archived external inputs, and the independently signed replay produced byte-identical output. PINNED_NONHERMETIC is its declaration that live state was recorded and content-bound, without a hermetic reproducibility claim. The portable verifier enforces each mode's closed structural constraints, hashes, signatures, time order and replay equality; it does not independently prove the physical isolation, clean instance or observational completeness asserted by trusted recorders. Both produced modes require builder != null and output.kind=PRODUCED_ARTIFACT. INTERPRETED_NO_BUILD requires builder=null, exactly one INTERPRETER toolchain component and output.kind=INTERPRETED_RUNTIME. Its entrypointSource must mechanically equal one regular-file entry in sourceTree; interpreterComponentId/artifact hash must resolve that unique INTERPRETER component; dependencyLockSha256 must equal dependencies.lockArtifact.sha256; runtimeIdentitySha256 equals SHA-256(ASCII(QMAN-DIRECTPATH/INTERPRETED-RUNTIME/V1) || 0x00 || CANONICAL-JSON-V1({entrypointSource, interpreterComponentId, interpreterArtifactSha256, dependencyLockSha256})). It MUST NOT claim or synthesize a produced binary. buildLog is the signed authority's exact-build-transcript declaration for produced modes and its dependency/environment resolution plus no-build declaration for interpreted mode.",
+  "x-qmanTrustBoundaryRule": "Portable verification establishes only schema closure, canonical projections, descriptor/path consistency, raw byte hashes, signature authorization, temporal/identity constraints and byte-equality among supplied artifacts. Claims that a recorder observed every physical input, an environment instance was actually clean, isolation prevented hidden state, or a log corresponds to all physical execution are factual attestations made by audited TEST_EVIDENCE authorities and trusted recorders. Their truth is governed by authority audit, key custody and qualification controls; no artifact field in this schema is treated as an oracle or independent proof of those external facts.",
+  "x-qmanOutputAndTimeRule": "For produced modes, output.artifact is the exact emitted binary/runtime artifact and must be created by the canonical invocation from the signed closure. For interpreted mode, the signed runtime tuple is the output identity and no output artifact bytes exist. buildLog must cover the complete original interval; startedAt, finishedAt and attestedAt are UTC timestamps from trusted recorders and obey startedAt <= finishedAt <= attestedAt. Every replay additionally obeys original finishedAt <= replay.startedAt <= replay.finishedAt <= attestedAt. The consuming typed manifest or definition independently requires attestedAt < its own createdAt or issuedAt; equality, future attestation, pre-build attestation and replay overlap with the original build fail closed.",
+  "x-qmanSignatureRule": "Set attestationDigest and signature to null, encode the complete object with CANONICAL-JSON-V1, store SHA-256 in attestationDigest, and sign ASCII(QMAN-DIRECTPATH/BUILD-ATTESTATION/V1) || 0x00 || those same bytes with signerKeyId. Resolve signerKeyId only through the accepted key-ring history at keyRingVersion and require a non-revoked TEST_EVIDENCE principal whose authorized validity interval covers attestedAt; finishedAt is not a substitute for the signing instant. A final accepted attestation has non-null attestationDigest and signature; null is permitted only as the canonical pre-signing projection."
+}

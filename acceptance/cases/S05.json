@@ -12,7 +12,7 @@
     "TS-F5-04"
   ],
   "dependsOnCaseIds": ["S03", "S04"],
-  "blocker": "The repository has isolated VFIO-provider, QMP-gate and durable lease/FSM premises, but no production launcher/controller transaction proves fd, IOAS, DMA, IRQ, reset, driver and lease cleanup after failures at every real QEMU spawn/readiness/realization boundary. Component success is not end-to-end product closure.",
+  "blocker": "The repository has isolated VFIO-provider, QMP-gate and durable lease/FSM premises, but no production launcher/controller transaction proves backend-specific grant revocation, QEMU process/fd teardown, DMA, IRQ, reset, driver and lease cleanup after failures at every real spawn/readiness/realization boundary. Component success is not end-to-end product closure.",
   "targetMilestone": "G2",
   "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
   "referenceEvidenceIds": [
@@ -21,9 +21,9 @@
     "QMAN-E3-STATIC-LEASE-FAULT-001"
   ],
   "assertions": [
-    "QEMU receives only inherited admitted fds and cannot reopen a host BDF during cleanup",
+    "Current Legacy QEMU sees only the exact authorized BDF/group path sandbox; a separately qualified future cdev backend receives only inherited admitted fds",
     "failure before QMP ready or topology verification executes the complete compensation stack in reverse order",
-    "DMA maps, IRQ eventfds, IOAS attachment, VFIO fds and driver ownership are independently read back before release",
+    "The release guard remains exclusive while QEMU process/fds and guest DMA/IRQ context are proven gone, a fresh backend-specific reset context is acquired, and driver ownership is independently read back",
     "any uncertain teardown or reset result preserves the durable whole-bundle claim in quarantine"
   ]
 }

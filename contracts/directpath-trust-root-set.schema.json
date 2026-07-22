@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-trust-root-set.schema.json",
+  "title": "Qman DirectPath offline trust root set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "rootSetId", "verificationPolicy", "keys", "rootSetDigest"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "rootSetId": {"type": "string", "minLength": 1},
+    "verificationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyId", "requiredSignatures", "allowedKeyIds"],
+      "properties": {
+        "policyId": {"const": "N_OF_M_ED25519_DISTINCT_KEYS_V1"},
+        "requiredSignatures": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "allowedKeyIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1},
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        }
+      },
+      "x-qmanPolicyRule": "allowedKeyIds equals the exact distinct keys[*].keyId set. requiredSignatures is no greater than the number of distinct eligible principalIds and distinct public keys. Only valid signatures with distinct keyId, publicKeyBase64Url and principalId count. The policy is inside rootSetDigest and cannot be selected or weakened by an integration map."
+    },
+    "keys": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanCanonicalOrder": "ascending canonical bytes of keyId",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["keyId", "principalId", "algorithm", "publicKeyBase64Url", "notBefore", "notAfter"],
+        "properties": {
+          "keyId": {"type": "string", "minLength": 1},
+          "principalId": {"type": "string", "pattern": "^urn:qman:principal:[A-Za-z0-9][A-Za-z0-9._:/-]{0,191}$"},
+          "algorithm": {"const": "Ed25519"},
+          "publicKeyBase64Url": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"},
+          "notBefore": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+          "notAfter": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"}
+        }
+      }
+    },
+    "rootSetDigest": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      ]
+    }
+  },
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization.",
+  "x-qmanDigestRule": "Set rootSetDigest to null, encode the complete closed object, including verificationPolicy, with CANONICAL-JSON-V1, and store SHA-256 of those UTF-8 bytes. The resulting digest must equal CONFIG-TRUST-ROOT-DIGEST. The independently pinned root set is the sole authority for signature quorum; a map cannot choose it.",
+  "x-qmanPrincipalQuorumRule": "principalId is the immutable offline/HSM custody principal. Distinct keyIds that reuse publicKeyBase64Url are invalid. A quorum counts at most one verified signature for each distinct principalId and each distinct public key; requiredSignatures must not exceed the number of distinct eligible principals. Key rotation never turns two keys controlled by one principal into two quorum votes."
+}

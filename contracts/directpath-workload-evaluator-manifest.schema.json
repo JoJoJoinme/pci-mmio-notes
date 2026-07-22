@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-workload-evaluator-manifest.schema.json",
+  "title": "Qman DirectPath WorkloadEvaluatorManifest",
+  "description": "Closed signed provenance and deterministic interface for the exact evaluator that derives qualification workload assertions and metrics. The executable is target mapped, source-tree closed and build-attested; a workload definition cannot name an opaque evaluator digest without making the runnable bytes locatable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "manifestId", "evaluatorVersion", "targetRepositoryCommit", "mappingCoreId", "portableContractSha256", "evaluator", "sourceTree", "buildAttestation", "executionEnvironment", "inputContracts", "observationArtifactAccess", "outputContract", "numericSemantics", "createdAt", "keyRingVersion", "signerKeyId", "signerRole", "manifestDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "manifestId": {"$ref": "#/$defs/id"},
+    "evaluatorVersion": {"$ref": "#/$defs/semver"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "evaluator": {"$ref": "#/$defs/evaluator"},
+    "sourceTree": {"$ref": "#/$defs/sourceTree"},
+    "buildAttestation": {"$ref": "#/$defs/buildAttestation"},
+    "executionEnvironment": {"$ref": "#/$defs/executionEnvironment"},
+    "inputContracts": {"$ref": "#/$defs/inputContracts"},
+    "observationArtifactAccess": {"const": "EXACT_DESCRIPTOR_SET_READ_ONLY"},
+    "outputContract": {"$ref": "#/$defs/outputContract"},
+    "numericSemantics": {"$ref": "#/$defs/numericSemantics"},
+    "createdAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "signerRole": {"const": "TEST_EVIDENCE"},
+    "manifestDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "semver": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"}
+      }
+    },
+    "evaluator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "path", "symbol", "blobSha256", "symbolSemanticHash", "interfaceContractDigest"],
+      "properties": {
+        "protocol": {"const": "QMAN-DIRECTPATH-WORKLOAD-EVALUATOR-V1"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "symbol": {"$ref": "#/$defs/id"},
+        "blobSha256": {"$ref": "#/$defs/digest"},
+        "symbolSemanticHash": {"$ref": "#/$defs/digest"},
+        "interfaceContractDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "sourceTree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "sourceTreeSha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-source-tree-manifest.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "sourceTreeSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "buildAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "attestationDigest"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-build-attestation.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "attestationDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "executionEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "runtimeBinary", "dependencyLock", "environmentManifest", "buildLog"],
+      "properties": {
+        "mode": {"enum": ["NATIVE_BINARY", "INTERPRETED", "CONTAINERIZED"]},
+        "runtimeBinary": {"$ref": "#/$defs/artifact"},
+        "dependencyLock": {"$ref": "#/$defs/artifact"},
+        "environmentManifest": {"$ref": "#/$defs/artifact"},
+        "buildLog": {"$ref": "#/$defs/artifact"}
+      }
+    },
+    "schemaContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaRef", "schemaSha256"],
+      "properties": {
+        "schemaRef": {"$ref": "#/$defs/id"},
+        "schemaSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "inputContracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workloadDefinition", "runRequest", "artifactObservationSet", "evaluationContext"],
+      "properties": {
+        "workloadDefinition": {"allOf": [{"$ref": "#/$defs/schemaContract"}, {"properties": {"schemaRef": {"const": "contracts/directpath-qualification-workload-definition.schema.json"}}}]},
+        "runRequest": {"allOf": [{"$ref": "#/$defs/schemaContract"}, {"properties": {"schemaRef": {"const": "contracts/directpath-qualification-run-request.schema.json"}}}]},
+        "artifactObservationSet": {"allOf": [{"$ref": "#/$defs/schemaContract"}, {"properties": {"schemaRef": {"const": "contracts/directpath-workload-evaluation-report.schema.json#/$defs/artifactObservationSet"}}}]},
+        "evaluationContext": {"allOf": [{"$ref": "#/$defs/schemaContract"}, {"properties": {"schemaRef": {"const": "contracts/directpath-workload-evaluation-report.schema.json#/$defs/evaluationContext"}}}]}
+      }
+    },
+    "outputContract": {
+      "allOf": [
+        {"$ref": "#/$defs/schemaContract"},
+        {"properties": {"schemaRef": {"const": "contracts/directpath-workload-evaluation-report.schema.json"}}}
+      ]
+    },
+    "numericSemantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "inputRepresentation", "maxInputEncodedBytes", "maxInputCoefficientDigits", "maxInputFractionalDigits", "maxSamplesPerMetric", "maxWorkingCoefficientDigits", "internalArithmetic", "roundingMode", "instantRule", "meanRule", "percentileRule", "totalRule", "rateRule", "outputEncoding"],
+      "properties": {
+        "protocol": {"const": "QMAN-DIRECTPATH-METRIC-AGGREGATION-V1"},
+        "inputRepresentation": {"const": "FINITE_BASE10_DECIMAL_STRING"},
+        "maxInputEncodedBytes": {"const": 128},
+        "maxInputCoefficientDigits": {"const": 128},
+        "maxInputFractionalDigits": {"const": 127},
+        "maxSamplesPerMetric": {"const": 1000000},
+        "maxWorkingCoefficientDigits": {"const": 256},
+        "internalArithmetic": {"const": "EXACT_INTEGER_COEFFICIENT_AND_BASE10_SCALE_WITHIN_SIGNED_RESOURCE_BOUNDS"},
+        "roundingMode": {"const": "ROUND_HALF_EVEN_AT_METRIC_OUTPUT_SCALE"},
+        "instantRule": {"const": "REQUIRE_EXACTLY_ONE_SAMPLE"},
+        "meanRule": {"const": "EXACT_SUM_DIVIDED_BY_SAMPLE_COUNT_THEN_ROUND"},
+        "percentileRule": {"const": "NEAREST_RANK_ASCENDING_CEIL_P_TIMES_N_INDEXED_FROM_ONE"},
+        "totalRule": {"const": "EXACT_SUM_THEN_ROUND"},
+        "rateRule": {"const": "EXACT_SUM_DIVIDED_BY_SIGNED_MONOTONIC_WINDOW_SECONDS_THEN_ROUND"},
+        "outputEncoding": {"const": "CANONICAL_FIXED_SCALE_BASE10_NO_EXPONENT_NEGATIVE_ZERO_FORBIDDEN"}
+      }
+    }
+  },
+  "x-qmanInterfaceRule": "Invoke the verified evaluator inside the required isolation runner, never through a shell, with exactly six ordered arguments: --definition <verified-definition-path> --request <verified-run-request-path> --observations <verified-artifact-observation-set-path> --context <verified-evaluation-context-path> --evidence-root <verified-read-only-observation-root> --output <new-empty-report-path>. The process starts with an empty environment except LC_ALL=C.UTF-8 and TZ=UTC and has no network. The evidence root contains exactly one immutable raw blob at each repository-relative artifactObservations.path and no unlisted file; every blob hash/length/media type and optional schema/projection was verified before mount. The evaluator may read only its signed runtime closure, the four declared JSON inputs and those exact observation blobs, and may write only the output. Exit 0 requires output bytes to equal RFC-8785-JCS of the one schema-valid construction report with signedAt/reportDigest/signature null; presentation whitespace, alternate key order or a merely equivalent JSON object is invalid. Nonzero or any undeclared read/write is evaluation failure. evaluator.interfaceContractDigest is SHA-256 of RFC-8785 JCS of the closed interface contract {protocol,argvOrder:[definition,request,observations,context,evidenceRoot,output],environment:{LC_ALL:C.UTF-8,TZ:UTC},network:DENY_ALL,inputContracts,observationArtifactAccess,outputContract,numericSemantics}; observationArtifactAccess MUST equal EXACT_DESCRIPTOR_SET_READ_ONLY. The interface digest is distinct from evaluator.blobSha256 and cannot be replaced by a Git blob hash.",
+  "x-qmanReplayIsolationRule": "A release verifier MUST NOT execute evaluator or dependency bytes as a child process on the verifier host. Replay is delegated only to an independently configured trusted isolation runner selected outside the target repository, mapping, evidence commit and evaluator manifest. The runner attests the requested target architecture/runtime identity; materializes the complete verified source/build/runtime/dependency closure read-only; exposes exactly the four immutable JSON inputs plus the exact raw observation-artifact closure at descriptor paths under one read-only evidence root; grants one new bounded output; applies no-new-privileges, deny-all network, no host filesystem/device/credential access, no undeclared child process, and explicit CPU/memory/process/file/time limits; and returns exit status, immutable output bytes and an isolation attestation bound to every input/closure/observation hash. The verifier revalidates unchanged inputs and byte-equality of the deterministic construction projection. Missing/incompatible runner, missing/extra observation blob, incomplete closure, unverifiable isolation or direct-exec fallback fails closed whenever a final EvaluationReport is consumed; it is not required merely to validate an empty portable baseline with no qualification evidence.",
+  "x-qmanCodeAndBuildRule": "Resolve evaluator.path+symbol at targetRepositoryCommit C and require exactly one target integration-map symbol row: mapping.path/symbol equal evaluator.path/symbol, mapping.interfaceHash with GIT_BLOB_BYTES scope equals evaluator.blobSha256, and mapping.symbolSemanticHash equals evaluator.symbolSemanticHash. Independently recompute evaluator.interfaceContractDigest from this manifest's closed interface projection; blob, symbol-semantic and interface-contract digest domains must never be substituted. Reconstruct the complete signed SourceTreeManifest. Resolve BuildAttestation and require consumerKind=WORKLOAD_EVALUATOR, consumerBuildId=manifestId, equal C/M/portable/source tree and matching WORKLOAD_EVALUATOR output/runtime mode. Runtime/dependency/environment/build-log descriptors byte-equal attestation projections; attestation time precedes createdAt. Missing/ambiguous symbols, source, mutable images, ambient interpreters or opaque digests fail closed.",
+  "x-qmanEvaluationRule": "The evaluator validates three retained descriptor/raw-byte tuples (WorkloadDefinition, RunRequest and signed EvaluationContext) plus one canonical descriptor input and its exact raw-artifact closure. The observation descriptor input is not an independent file identity: the orchestrator forms exactly RFC-8785-JCS(report.artifactObservations) and writes those bytes to a fresh temporary input. Every descriptor path resolves under the separate read-only evidence root to exactly its verified raw bytes; both the descriptor JCS and ordered [path,sha256,byteLength,mediaType,schemaRefOrNull,schemaSha256OrNull,valueProjectionOrNull] closure enter replay identity. Temporary materialization paths/evidence-root location are excluded and deleted after execution. The report copies the parsed array exactly, so a verifier reconstructs byte-identical descriptors and blob closure. Definition/request/context repository paths remain part of their retained descriptors. The evaluator verifies all schemas/signatures/digests and rejects mismatched observations. Context supplies evaluationId/evaluatedAt/keyRingVersion/signerKeyId/signerRole. Every assertion/metric is evaluated once unless EVALUATION_ERROR, where only a canonical prefix may be emitted. The report core with signedAt/reportDigest/signature null is a deterministic function of those three descriptor/raw pairs, descriptor+artifact observation closure and this manifest. After termination, the authority supplies signedAt, recomputes reportDigest and signs; no clock, signer metadata, evidence-root location or temporary filename is a hidden input.",
+  "x-qmanNumericRule": "Reject a sample before allocation if its UTF-8 length, coefficient digits or fractional digits exceeds the signed limits; exponent notation is forbidden. Reject a metric whose sample count exceeds both its definition maximum and maxSamplesPerMetric, or whose exact intermediate coefficient would exceed maxWorkingCoefficientDigits. Within these explicit resource bounds arithmetic has no precision loss: parse integer coefficient/base-10 scale, compare and sum exactly. INSTANT requires one sample; MIN/MAX select exact extrema; TOTAL sums; MEAN divides exact sum by N; P50/P95/P99 use ascending nearest rank ceil(p*N), one-indexed, no interpolation; RATE divides exact sum by signed monotonic window seconds and rejects non-positive/cross-clock windows. Division/final formatting use outputScale and one round-half-even. Emit no exponent, exactly outputScale fractional digits, no plus/leading zeros/negative zero. Resource rejection is EVALUATION_ERROR, never a rounded or partial success.",
+  "x-qmanSignatureRule": "Set manifestDigest and signature to null, RFC-8785 canonicalize the complete closed object, store SHA-256 of those bytes in manifestDigest, and sign ASCII(QMAN-DIRECTPATH/WORKLOAD-EVALUATOR-MANIFEST/V1) || 0x00 || the same bytes with a non-revoked TEST_EVIDENCE key. The WorkloadDefinition separately binds the raw manifest SHA-256, pinned schema SHA-256 and internal manifestDigest."
+}

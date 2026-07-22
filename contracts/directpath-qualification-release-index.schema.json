@@ -1,0 +1,569 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-qualification-release-index.schema.json",
+  "title": "Qman DirectPath qualification and supported-catalog release index",
+  "description": "A detached, signed post-anchor index. It binds one immutable target-code revision C and mapping core M to exact qualification records, per-record E4 CaseCompletionRecord coverage, one SupportedCatalog, and the independently committed catalog rollback-anchor snapshot/receipt that accepted that catalog. It never embeds evidence-repository revision E or the final integration-map digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "indexId",
+    "canonicalProfileId",
+    "targetCodeRevision",
+    "mappingCore",
+    "qualificationCaseMatrixSha256",
+    "platformProfileIds",
+    "supportedCatalog",
+    "catalogRollbackAnchor",
+    "qualificationRecords",
+    "e4CaseCompletionRecords",
+    "qualificationCoverage",
+    "issuedAt",
+    "keyRingVersion",
+    "signerKeyId",
+    "indexDigest",
+    "signature"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "indexId": {
+      "$ref": "#/$defs/id"
+    },
+    "canonicalProfileId": {
+      "const": "CANONICAL-JSON-V1"
+    },
+    "targetCodeRevision": {
+      "$ref": "#/$defs/targetCodeRevision"
+    },
+    "mappingCore": {
+      "$ref": "#/$defs/mappingCore"
+    },
+    "qualificationCaseMatrixSha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "platformProfileIds": {
+      "$ref": "#/$defs/idSet"
+    },
+    "supportedCatalog": {
+      "$ref": "#/$defs/supportedCatalogArtifact"
+    },
+    "catalogRollbackAnchor": {
+      "$ref": "#/$defs/catalogRollbackAnchorBinding"
+    },
+    "qualificationRecords": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [qualificationRecordDigest,path,sha256]",
+      "items": {
+        "$ref": "#/$defs/qualificationRecordArtifact"
+      }
+    },
+    "e4CaseCompletionRecords": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [platformProfileId,exactQualificationKey,caseId,path,sha256,completionDigest]",
+      "items": {
+        "$ref": "#/$defs/e4CaseCompletionArtifact"
+      }
+    },
+    "qualificationCoverage": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of qualificationRecordDigest",
+      "items": {
+        "$ref": "#/$defs/qualificationCoverage"
+      }
+    },
+    "issuedAt": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "keyRingVersion": {
+      "$ref": "#/$defs/safePositiveInteger"
+    },
+    "signerKeyId": {
+      "$ref": "#/$defs/id"
+    },
+    "indexDigest": {
+      "$ref": "#/$defs/nullableDigest"
+    },
+    "signature": {
+      "$ref": "#/$defs/nullableSignature"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "artifactPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._/-]+$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/digest"
+        }
+      ]
+    },
+    "nullableSignature": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"
+        }
+      ]
+    },
+    "idSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes",
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "digestSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes",
+      "items": {
+        "$ref": "#/$defs/digest"
+      }
+    },
+    "caseId": {
+      "type": "string",
+      "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"
+    },
+    "caseIdSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes",
+      "items": {
+        "$ref": "#/$defs/caseId"
+      }
+    },
+    "targetCodeRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryId",
+        "objectFormat",
+        "revision"
+      ],
+      "properties": {
+        "repositoryId": {
+          "$ref": "#/$defs/id"
+        },
+        "objectFormat": {
+          "enum": [
+            "SHA1",
+            "SHA256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "objectFormat": {
+                "const": "SHA1"
+              }
+            },
+            "required": [
+              "objectFormat"
+            ]
+          },
+          "then": {
+            "properties": {
+              "revision": {
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "objectFormat": {
+                "const": "SHA256"
+              }
+            },
+            "required": [
+              "objectFormat"
+            ]
+          },
+          "then": {
+            "properties": {
+              "revision": {
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "mappingCore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mappingCoreId",
+        "mappingCoreDigest"
+      ],
+      "properties": {
+        "mappingCoreId": {
+          "type": "string",
+          "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"
+        },
+        "mappingCoreDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "supportedCatalogArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "schemaRef",
+        "schemaSha256",
+        "catalogId",
+        "catalogSequence",
+        "catalogDigest"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/artifactPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "schemaRef": {
+          "const": "contracts/directpath-supported-catalog.schema.json"
+        },
+        "schemaSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "catalogId": {
+          "$ref": "#/$defs/id"
+        },
+        "catalogSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "catalogDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "qualificationRecordArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "schemaRef",
+        "schemaSha256",
+        "qualificationRecordDigest",
+        "platformProfileId"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/artifactPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "schemaRef": {
+          "const": "contracts/directpath-qualification-record.schema.json"
+        },
+        "schemaSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "qualificationRecordDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "platformProfileId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "e4CaseCompletionArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "schemaRef",
+        "schemaSha256",
+        "caseId",
+        "platformProfileId",
+        "targetRepositoryCommit",
+        "mappingCoreId",
+        "evidenceGrade",
+        "exactQualificationKey",
+        "completionDigest",
+        "qualificationRecordDigests"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/artifactPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "schemaRef": {
+          "const": "contracts/directpath-case-completion-record.schema.json"
+        },
+        "schemaSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "caseId": {
+          "$ref": "#/$defs/caseId"
+        },
+        "platformProfileId": {
+          "$ref": "#/$defs/id"
+        },
+        "targetRepositoryCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+        },
+        "mappingCoreId": {
+          "type": "string",
+          "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"
+        },
+        "evidenceGrade": {
+          "const": "E4-PHYSICAL-QUALIFICATION"
+        },
+        "exactQualificationKey": {
+          "$ref": "#/$defs/digest"
+        },
+        "completionDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "qualificationRecordDigests": {
+          "$ref": "#/$defs/digestSet"
+        }
+      }
+    },
+    "caseEvidenceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "e4CaseCompletionSha256",
+        "e4CaseCompletionDigest"
+      ],
+      "properties": {
+        "caseId": {
+          "$ref": "#/$defs/caseId"
+        },
+        "e4CaseCompletionSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "e4CaseCompletionDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "qualificationCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualificationRecordDigest",
+        "platformProfileId",
+        "derivedCaseIds",
+        "caseEvidenceBindings"
+      ],
+      "properties": {
+        "qualificationRecordDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "platformProfileId": {
+          "$ref": "#/$defs/id"
+        },
+        "derivedCaseIds": {
+          "$ref": "#/$defs/caseIdSet"
+        },
+        "caseEvidenceBindings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of caseId",
+          "items": {
+            "$ref": "#/$defs/caseEvidenceBinding"
+          }
+        }
+      }
+    },
+    "anchorSnapshotArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "schemaRef",
+        "schemaSha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/artifactPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "schemaRef": {
+          "const": "contracts/directpath-catalog-rollback-anchor.schema.json"
+        },
+        "schemaSha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "anchorReceiptBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptId",
+        "subjectAnchorDigest",
+        "catalogId",
+        "minimumCatalogSequence",
+        "acceptedCatalogDigest",
+        "anchorVersion",
+        "resourceVersion",
+        "authorityId",
+        "issuedAt",
+        "trustRootDigest",
+        "receiptDigest"
+      ],
+      "properties": {
+        "receiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "subjectAnchorDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "catalogId": {
+          "$ref": "#/$defs/id"
+        },
+        "minimumCatalogSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "acceptedCatalogDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "anchorVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "authorityId": {
+          "$ref": "#/$defs/id"
+        },
+        "issuedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "trustRootDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "receiptDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "catalogRollbackAnchorBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot",
+        "recordState",
+        "catalogId",
+        "minimumCatalogSequence",
+        "acceptedCatalogDigest",
+        "anchorVersion",
+        "resourceVersion",
+        "authorityId",
+        "anchorDigest",
+        "receipt"
+      ],
+      "properties": {
+        "snapshot": {
+          "$ref": "#/$defs/anchorSnapshotArtifact"
+        },
+        "recordState": {
+          "const": "COMMITTED"
+        },
+        "catalogId": {
+          "$ref": "#/$defs/id"
+        },
+        "minimumCatalogSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "acceptedCatalogDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "anchorVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "authorityId": {
+          "$ref": "#/$defs/id"
+        },
+        "anchorDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "receipt": {
+          "$ref": "#/$defs/anchorReceiptBinding"
+        }
+      }
+    }
+  },
+  "x-qmanInteroperableIntegerRule": "Every JSON numeric integer, including schemaVersion, catalogSequence, anchorVersion, resourceVersion and keyRingVersion, MUST be in -9007199254740991..9007199254740991 before canonicalization. This schema admits only the positive safe subset for counters. Booleans are not integers; floats, exponent notation, NaN, Infinity and wider numeric values are rejected.",
+  "x-qmanTimestampRule": "Every timestamp uses TIMESTAMP-UTC-US-V1: an RFC 3339 UTC instant with exactly six fractional decimal digits and uppercase Z. Offset timestamps, leap-second spellings, missing fractions, additional precision and non-existent civil times are rejected before signature verification.",
+  "x-qmanTargetAndMappingCoreRule": "targetCodeRevision MUST exactly equal the target integration map's non-null targetRepository repositoryId/objectFormat/commit tuple, with commit normalized to lowercase and no git: prefix, and mappingCore MUST exactly equal that map's mappingCoreId/scenarioBindingDigest tuple. The index contains neither evidence repository revision E nor final mapDigest, and unknown/alias fields are forbidden. Its bytes may be stored as evidence content at E because they bind only C and M.",
+  "x-qmanArtifactDescriptorRule": "For every descriptor, resolve path only in the separately supplied evidence view, require exact raw-blob SHA-256 equality, resolve schemaRef against the independently pinned normative schema closure, require schemaSha256 to equal those exact schema bytes, validate the blob under that schema, and then verify its internal digest/signature. SupportedCatalog, QualificationRecord, E4 CaseCompletionRecord and rollback-anchor snapshot schemaRef values are fixed by const and cannot be selected by the publisher. An acceptance scenario, ExecutionEvidenceIndex, QualificationSubjectManifest, log or other blob cannot occupy an E4 Case-completion slot.",
+  "x-qmanCatalogAnchorBindingRule": "Verify the SupportedCatalog first and require its parsed catalogId, catalogSequence and catalogDigest to equal the supportedCatalog summary. Then independently fetch and authenticate the out-of-band rollback anchor and require its exact CANONICAL-JSON-V1 bytes to equal catalogRollbackAnchor.snapshot, its recordState to be COMMITTED, and every mirrored top-level and receipt field to equal this binding. catalogId, minimumCatalogSequence and acceptedCatalogDigest MUST equal the SupportedCatalog values. The receipt subjectAnchorDigest MUST equal anchorDigest, receipt.issuedAt MUST NOT be later than index issuedAt, and its root-signature quorum MUST validate against an independently provisioned trust root. This index is post-anchor evidence: catalog signature -> external anchor CAS -> receipt -> index signature. The catalog MUST NOT bind this index, anchorDigest or receiptDigest, so no catalog-to-anchor fixed point exists. A mirror or this index never replaces the external authority or its current anti-rollback decision.",
+  "x-qmanQualificationCoverageRule": "qualificationCaseMatrixSha256 MUST equal the independently pinned authoritative matrix used to derive cases. platformProfileIds MUST exactly equal the governed platform-policy set and every platform referenced by a record, coverage entry or E4 CaseCompletionRecord MUST belong to that set. Parse every QualificationRecord and require descriptor qualificationRecordDigest/platformProfileId to equal the record's recordDigest/runtime platform; the descriptor record-digest set, SupportedCatalog qualificationRecordDigests set, and qualificationCoverage record-digest set MUST be exactly equal. Each record has exactly one qualificationCoverage entry. Its derivedCaseIds MUST exactly equal both the parsed record.caseIds and the matrix-derived mandatory set for that exact platform, machine/firmware/backend, archetype and complete trait set. Its caseEvidenceBindings caseId set MUST exactly equal derivedCaseIds with one binding per case and no duplicates.",
+  "x-qmanE4ExactCoverageRule": "For every (qualificationRecordDigest,caseId), the caseEvidenceBinding pair (e4CaseCompletionSha256,e4CaseCompletionDigest) MUST resolve to exactly one e4CaseCompletionRecords descriptor. Its caseId and signed platformProfileId equal the binding Case and parsed QualificationRecord runtime platform; its signed exactQualificationKey equals both the descriptor and parsed record; qualificationRecordDigests contains that record; evidenceGrade is E4-PHYSICAL-QUALIFICATION; targetRepositoryCommit and mappingCoreId equal this index's normalized target C and mapping core M. The raw blob MUST validate only as directpath-case-completion-record.schema.json, have completionDigest equal both descriptor and binding, carry scope=PRODUCT, sourceCaseStatus=EXECUTABLE and evidenceGrade=E4-PHYSICAL-QUALIFICATION, bind the current generated Case contract/registry and portable contract, bind the same normalized target C and M, and have a valid QUALIFICATION_ENGINEERING signature. A signed EXECUTED_PASS scenario alone never completes a Case. Resolve every aggregated scenarioEvidence item to its signed scenario execution result, ExecutionEvidenceIndex, RunnerManifest and scenario-execution core; resolve RunnerManifest's complete SourceTreeManifest and BuildAttestation from target C and require the six control artifacts to be role-exclusive; resolve every referenced QualificationRecord to its signed QualificationSubjectManifest; recursively resolve the Subject's dual-attested COMPLETE/PASSED QualificationRunManifest and exact measurement/core set; then resolve every measurement through raw bytes, pinned schema hash, internal measurementDigest/signature, collector/tool binding and complete /measuredValue projection. Independently rederive completion.platformProfileDigest from active policy, completion.backendProfileDigest as SHA-256(CANONICAL-JSON-V1(Subject.kernelQemuFirmwareBackend)), and the nine-field exact-key projection; all MUST equal the Subject/QualificationRecord and every transitive scenario target binding. All those objects MUST have the same qualification run/host/epoch/boot, Case, target C, mapping core M, exact qualification key and platform; every completion scenario core/index MUST be covered by each referenced run/subject/record E4 graph, caseExecution measurements MUST be a bijection with subject cores, and no E3 evidence is admitted. All qualificationRecordDigests sharing a descriptor MUST have the same exactQualificationKey and platform. Conversely, each descriptor's qualificationRecordDigests MUST exactly equal the set of qualificationCoverage records that reverse-reference both its raw sha256 and completionDigest for its declared Case/platform/key. Dependency completion edges MUST resolve the same signed platformProfileId/platformProfileDigest/backendProfileDigest/exactQualificationKey tuple. The same raw sha256 or completionDigest MUST NOT appear in descriptors for another key, platform, backend, Case, target or mapping core. Unreferenced completions, missing/duplicate per-record Case bindings, single-scenario substitution, partial aggregation, cross-key or cross-platform reuse, old-run/boot replay, union/Cartesian aggregation, descriptor relabeling and mismatched reverse bindings are invalid.",
+  "x-qmanCanonicalizationRule": "Reject duplicate object keys, non-NFC strings, unknown fields, unsafe integers, floats and non-TIMESTAMP-UTC-US-V1 timestamps. Enforce every declared set/order rule, then encode with CANONICAL-JSON-V1.",
+  "x-qmanEvidenceDagRule": "The acyclic order is target C -> SourceTreeManifest -> build/output/log -> BuildAttestation -> RunnerManifest; scenario execution core -> QualificationMeasurement records -> dual-attested QualificationRunManifest -> QualificationSubjectManifest -> ExecutionEvidenceIndex -> final signed scenario result; then QualificationRecord and CaseCompletionRecord -> this qualification release index. QualificationRecord and SupportedCatalog never reference CaseCompletionRecord or this index. This index joins already immutable objects only by raw and internal digests, so no artifact hashes itself directly or transitively.",
+  "x-qmanSignatureRule": "Deep-copy the complete closed index, set indexDigest to null and signature to null, retain target C, mapping core M, the case-matrix digest, all artifact descriptors, per-record E4 CaseCompletionRecord coverage, and the catalog-anchor snapshot/receipt binding unchanged, then encode with CANONICAL-JSON-V1. Store SHA-256 of those bytes as indexDigest. Sign ASCII(QMAN-DIRECTPATH/QUALIFICATION-RELEASE-INDEX/V1) || 0x00 || the same bytes with an active PRODUCT_RELEASE key. The intermediate null/null projection need not satisfy the stored signed-state requirement; a QUALIFIED release requires non-null digest/signature and independent verification."
+}

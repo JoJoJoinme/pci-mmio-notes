@@ -78,15 +78,16 @@ E2/E3/E4 表达证据强度；它不能代替 `basis_kind` 或 `subject`。旧�
 [`VMWARE-BEHAVIOR-MODEL.md`](VMWARE-BEHAVIOR-MODEL.md)；该映射只更新 VMware reference
 coverage，不更新 Qman implementation/qualification 状态。
 
-本次挂接后的治理快照为：Acceptance `101/101` 已显式分类，其中 2 个 executable reference、
-93 个 product implementation blocked、6 个 hardware blocked；R01-R39 已补治理责任和恢复/Case
+本次挂接后的治理快照为：Acceptance `101/101` 已显式分类，其中 1 个 executable reference、
+94 个 product implementation blocked、6 个 hardware blocked；C20 的 E2 runner 是参考证据而非
+产品完成记录；R01-R39 已补治理责任和恢复/Case
 映射，但状态仍全部 `OPEN`。G0 只关闭设计合同，不改变当前
 `REFERENCE_AND_QUALIFICATION_MODEL_ONLY` claim。下表中的 authoritative snapshot、future-cdev Static
 launch 和 Legacy surface 结果均不关闭产品 Case、Risk 或 release milestone。
 
 | Feature | 规范/实现补充 | 验收入口 | 当前依据与证据 | 当前缺口 |
 | --- | --- | --- | --- | --- |
-| F1 设备可见性与支持资格 | 详细设计 inventory/capability/dependency；实现蓝图 snapshot/provider/qualification | 设计 C00-C21；C20 reference executable；C10/C15/C16/C18/C21 product blocked | `vmware-esxi8-passthru-capable-observed-model.md`、`evidence/esxi8-directpath-20260714-summary.json`、`QMAN-E2-REFERENCE-MODEL-001`、`QMAN-E2-CLOSURE-001`、`QMAN-E3-DMA-PROVIDER-001`、`QMAN-E3-VFIO-PROVIDER-GATE-001`、`QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001`、`kernel-patches/` | host-local signed full-snapshot publisher/CAS/fault gate 仅为 bounded component；仍无 G1 产品 publisher、生产 trust root、外部单调防回滚锚和首批真实设备 qualification profile |
+| F1 设备可见性与支持资格 | 详细设计 inventory/capability/dependency；实现蓝图 snapshot/provider/qualification | 设计 C00-C21；C20 是有 E2 reference runner 的 product blocked Case；C10/C15/C16/C18/C21 同为 product blocked | `vmware-esxi8-passthru-capable-observed-model.md`、`evidence/esxi8-directpath-20260714-summary.json`、`QMAN-E2-REFERENCE-MODEL-001`、`QMAN-E2-CLOSURE-001`、`QMAN-E3-DMA-PROVIDER-001`、`QMAN-E3-VFIO-PROVIDER-GATE-001`、`QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001`、`kernel-patches/` | host-local signed full-snapshot publisher/CAS/fault gate 仅为 bounded component；仍无 G1 产品 publisher、生产 trust root、外部单调防回滚锚和首批真实设备 qualification profile |
 | F2 设备池与宿主业务共存 | 详细设计 trust/owner；蓝图 owner activation/attach lease | 设计 O00-O10；O09 为 reference executable，其余已分类为 product blocked | `evidence/esxi8-passthru-activation-20260718.md`、no-IOMMU A/B、activation reference model | O09 是 reference scope；live/deferred executor、boot reconcile 未实现 |
 | F3 Static 固定设备分配 | 详细设计 Static；蓝图 Static transaction/compensation | 设计 S00-S16；均已分类，产品实现仍阻塞 | VMware lifecycle 与 Qman lease/QMP/snapshot/cdev components；`evidence/qemu-legacy-launch-surface-20260722.md` | 现有 fd-only chain 只证明未来 cdev adapter；当前 Legacy 还缺 exact subtype pin、每 VM device/sysfs namespace+cgroup/LSM、stock-QEMU `host=` 后 proc-fd/QMP receipt，以及生产 authority/reset/DMA/IRQ/controller |
 | F4 VM 准入与 Guest 兼容 | 详细设计 BAR/MMIO/Guest ABI；蓝图 planner/guest surface | 设计 M00-M23；复用 F09 bypass gate | firmware layout、MMIO comparison、`QMAN-E3-MMIO-OBSERVED-001`、`QMAN-QEMU-CONTROL-001`、`QMAN-E3-QMP-GATE-001` | 通用多级 planner、生产 API/CLI/storage/QMP 全入口 gate、版本化首批 profile 和产品 post-start verify 未实现 |

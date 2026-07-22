@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-anchor-freshness-envelope.schema.json",
+  "title": "Qman DirectPath live external-anchor freshness envelope",
+  "description": "A short-lived root-signed response from the independent monotonic authority to a verifier-supplied nonce. A copied anchor file or nonce contained only in release artifacts is not freshness proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "envelopeId", "anchorKind", "authorityId", "subjectId", "anchorPath", "anchorBlobSha256", "anchorSchemaRef", "anchorSchemaSha256", "anchorDigest", "anchorVersion", "resourceVersion", "observedAt", "expiresAt", "verifierNonce", "trustRootDigest", "freshnessReceiptDigest", "rootSignatures"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "envelopeId": {"$ref": "#/$defs/id"},
+    "anchorKind": {"enum": ["TRUST_KEY_RING", "SUPPORTED_CATALOG"]},
+    "authorityId": {"$ref": "#/$defs/id"},
+    "subjectId": {"$ref": "#/$defs/id"},
+    "anchorPath": {"$ref": "#/$defs/id"},
+    "anchorBlobSha256": {"$ref": "#/$defs/digest"},
+    "anchorSchemaRef": {"enum": ["contracts/directpath-trust-rollback-anchor.schema.json", "contracts/directpath-catalog-rollback-anchor.schema.json"]},
+    "anchorSchemaSha256": {"$ref": "#/$defs/digest"},
+    "anchorDigest": {"$ref": "#/$defs/digest"},
+    "anchorVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "resourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "observedAt": {"$ref": "#/$defs/timestamp"},
+    "expiresAt": {"$ref": "#/$defs/timestamp"},
+    "verifierNonce": {"type": "string", "pattern": "^[A-Za-z0-9_-]{22,86}$"},
+    "trustRootDigest": {"$ref": "#/$defs/digest"},
+    "freshnessReceiptDigest": {"$ref": "#/$defs/digest"},
+    "rootSignatures": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/rootSignature"}, "x-qmanCanonicalOrder": "ascending canonical rootKeyId"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"anchorKind": {"const": "TRUST_KEY_RING"}}, "required": ["anchorKind"]},
+      "then": {"properties": {"anchorSchemaRef": {"const": "contracts/directpath-trust-rollback-anchor.schema.json"}}},
+      "else": {"properties": {"anchorSchemaRef": {"const": "contracts/directpath-catalog-rollback-anchor.schema.json"}}}
+    }
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "rootSignature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootKeyId", "signedAt", "algorithm", "signature"],
+      "properties": {
+        "rootKeyId": {"$ref": "#/$defs/id"},
+        "signedAt": {"$ref": "#/$defs/timestamp"},
+        "algorithm": {"const": "Ed25519"},
+        "signature": {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}
+      }
+    }
+  },
+  "x-qmanFreshnessRule": "The verifier generates verifierNonce from at least 128 bits of fresh randomness and supplies it directly to the independent authority and release evaluator; it is never read from the map, target repository or evidence repository. The authority reads its current committed monotonic record after receiving that nonce and returns this envelope. observedAt <= signedAt <= expiresAt, expiresAt-observedAt <= 300 seconds, and evaluator time is inside that interval. subjectId, anchor bytes/hash/schema, digest and versions byte-equal the live record.",
+  "x-qmanDigestAndSignatureRule": "Set freshnessReceiptDigest to null and rootSignatures to [], retain every other field, and hash CANONICAL-JSON-V1 bytes into freshnessReceiptDigest. Each root signature covers ASCII(QMAN-DIRECTPATH/ANCHOR-FRESHNESS/V1) || 0x00 || CANONICAL-JSON-V1({rootKeyId,signedAt,freshnessReceiptDigest}). Distinct root principal/key material satisfies the independently supplied root-set quorum.",
+  "x-qmanAuthorityRule": "The authority, nonce transport and current-record read are independent of target code, DirectPath control/database, map publisher and evidence repository. Without a matching live nonce response, the verifier may prove a historical signature but must report freshness=NOT_PROVEN and QUALIFIED/release remain false."
+}

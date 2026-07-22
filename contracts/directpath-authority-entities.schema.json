@@ -1,0 +1,998 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-authority-entities.schema.json",
+  "title": "Qman DirectPath authority entities",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization; wider values use schema-defined decimal strings.",
+  "description": "Closed portable persistence schema for the DirectPath controller, host, assignment, lease, journal, quarantine, relocation, idempotency, audit, and outbox authority records. The schema fixes wire types and state vocabularies; target repositories may normalize these records across tables but may not weaken their authority or lifecycle semantics.",
+  "oneOf": [
+    {"$ref": "#/$defs/ENTITY-CONTROLLER-AUTHORITY"},
+    {"$ref": "#/$defs/ENTITY-HOST-AUTHORITY"},
+    {"$ref": "#/$defs/ENTITY-OWNER-ACTIVATION-RUN"},
+    {"$ref": "#/$defs/ENTITY-ASSIGNMENT-RUN"},
+    {"$ref": "#/$defs/ENTITY-ASSIGNMENT-BINDING"},
+    {"$ref": "#/$defs/ENTITY-BUNDLE-LEASE"},
+    {"$ref": "#/$defs/ENTITY-HOST-ACTION-JOURNAL"},
+    {"$ref": "#/$defs/ENTITY-RESERVATION-CANCEL-RECEIPT"},
+    {"$ref": "#/$defs/ENTITY-CLEAN-RELEASE-ACCEPTANCE"},
+    {"$ref": "#/$defs/ENTITY-QUARANTINE-RECORD"},
+    {"$ref": "#/$defs/ENTITY-REMEDIATION-RUN"},
+    {"$ref": "#/$defs/ENTITY-RELOCATION-RUN"},
+    {"$ref": "#/$defs/ENTITY-IDEMPOTENCY-RECORD"},
+    {"$ref": "#/$defs/ENTITY-OPERATION-LEASE"},
+    {"$ref": "#/$defs/ENTITY-RELEASE-OWNERSHIP-GUARD"},
+    {"$ref": "#/$defs/ENTITY-AUDIT-EVENT"},
+    {"$ref": "#/$defs/ENTITY-OUTBOX-EVENT"}
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "positiveVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "nonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nullableId": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/id"}
+      ]
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/digest"}
+      ]
+    },
+    "nullableTimestamp": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/timestamp"}
+      ]
+    },
+    "nullablePositiveVersion": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/positiveVersion"}
+      ]
+    },
+    "pidStarttime": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,19}$",
+      "description": "Canonical unsigned decimal Linux /proc pid starttime ticks. A JSON string avoids implementation-dependent safe-integer truncation."
+    },
+    "nullablePidStarttime": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/pidStarttime"}
+      ]
+    },
+    "idSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/id"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "digestSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/digest"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "memberGenerations": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"$ref": "#/$defs/id"},
+      "additionalProperties": {"$ref": "#/$defs/positiveVersion"},
+      "x-qmanMapOrder": "object keys are encoded by CANONICAL-JSON-V1; key set must exactly equal the canonical memberDeviceUids set for the covered scope"
+    },
+    "reasonCode": {
+      "enum": [
+        "DEVICE_NOT_IN_INVENTORY",
+        "SNAPSHOT_INCOMPLETE",
+        "INVENTORY_EPOCH_CHANGED",
+        "STALE_RESOURCE_VERSION",
+        "STALE_CONTROLLER_GENERATION",
+        "STALE_RUN_GENERATION",
+        "STALE_HOST_EPOCH",
+        "IDEMPOTENCY_KEY_REUSED",
+        "HOST_IOMMU_MISSING",
+        "DEVICE_NO_IOMMU_DMA_ISOLATION",
+        "DEVICE_IOMMU_BACKING_UNKNOWN",
+        "INTERRUPT_REMAP_MISSING",
+        "PHYSICAL_ISOLATION_DOMAIN_UNKNOWN",
+        "ACS_OVERRIDE_REQUIRES_WHOLE_PHYSICAL_DOMAIN",
+        "HARDWARE_ROLE_NOT_ASSIGNABLE",
+        "PLATFORM_RESERVED",
+        "DEVICE_ERRATA_DENY",
+        "DEPENDENCY_PROVENANCE_UNKNOWN",
+        "DEPENDENCY_ACTION_UNKNOWN",
+        "DEPENDENCY_ACTION_CONFLICT",
+        "DEPENDENCY_CLOSURE_LIMIT",
+        "DEPENDENCY_BUSY",
+        "RESET_NOT_SUPPORTED",
+        "RESET_DOMAIN_UNVERIFIED",
+        "RESET_DOMAIN_CHANGED",
+        "RESET_FAILED",
+        "RESET_STATE_VERIFY_FAILED",
+        "ADMIN_DISABLED",
+        "HOST_ACTIVATION_REQUIRED",
+        "HOST_REBOOT_REQUIRED",
+        "HOST_DRIVER_BUSY",
+        "HOST_CRITICAL_DEPENDENCY",
+        "HOST_DEVICE_RESERVED",
+        "CURRENT_OWNER_UNKNOWN",
+        "QUIESCE_STATE_UNKNOWN",
+        "PERSISTENT_HOST_USE",
+        "ACTIVATION_IDENTITY_MISMATCH",
+        "ACTIVATION_OBSERVED_STATE_MISMATCH",
+        "ACTIVATION_ROLLBACK_UNCERTAIN",
+        "BOOT_CLAIM_UNSUPPORTED",
+        "EXCLUSIVE_ATTACH_GROUP_COLLISION",
+        "DEVICE_QUARANTINED",
+        "PROFILE_NO_MATCH",
+        "PROFILE_ABI_MISMATCH",
+        "QUALIFICATION_EVIDENCE_MISSING",
+        "PROFILE_NO_GLOBAL_SOLUTION",
+        "PROFILE_DEVICE_LIMIT",
+        "RMRR_PROFILE_CONFLICT",
+        "MMIO_APERTURE_EXHAUSTED",
+        "MMIO_PLANNER_TIMEOUT",
+        "NUMA_POLICY_UNSATISFIED",
+        "MANDATORY_BAR_UNASSIGNED",
+        "BACKEND_TOPOLOGY_GAP",
+        "BACKEND_APERTURE_ENCODING_GAP",
+        "BACKEND_RESOURCE_PLACEMENT_GAP",
+        "UNSUPPORTED_IOCTL_ABI",
+        "BACKEND_RELEASE_UNVERIFIED",
+        "BACKEND_RELEASE_CONTEXT_UNAVAILABLE",
+        "RELEASE_GUARD_CONFLICT",
+        "STATIC_DEVICE_HOST_AFFINITY",
+        "QEMU_START_FAILED",
+        "QEMU_CRASH",
+        "QEMU_EXIT_UNVERIFIED",
+        "DMA_TEARDOWN_UNVERIFIED",
+        "OWNER_RESTORE_UNVERIFIED",
+        "OBSERVED_PLAN_DRIFT",
+        "GUEST_PROBE_MISSING",
+        "OWNERSHIP_UNCERTAIN",
+        "RELEASE_CLEANUP_UNCERTAIN",
+        "CLEAN_RELEASE_RECEIPT_MISSING",
+        "CLEAN_RELEASE_RECEIPT_STALE",
+        "HOST_UNREACHABLE",
+        "RELOCATION_CANDIDATE_EXHAUSTED",
+        "HOST_RECONCILE_INCOMPLETE",
+        "REMEDIATION_NOT_AUTHORIZED",
+        "LIVE_MIGRATION_UNSUPPORTED",
+        "SNAPSHOT_UNSUPPORTED",
+        "SUSPEND_RESUME_UNSUPPORTED",
+        "FAULT_TOLERANCE_UNSUPPORTED",
+        "HOTPLUG_UNSUPPORTED",
+        "UNMANAGED_ATTACH_PATH",
+        "AUDIT_WRITE_FAILED",
+        "EVIDENCE_INCOMPLETE"
+      ]
+    },
+    "nullableReasonCode": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/reasonCode"}
+      ]
+    },
+    "entityId": {
+      "enum": [
+        "ENTITY-CONTROLLER-AUTHORITY",
+        "ENTITY-HOST-AUTHORITY",
+        "ENTITY-HOST-SNAPSHOT",
+        "ENTITY-DEVICE-RECORD",
+        "ENTITY-TRUST-KEY-RING",
+        "ENTITY-QUALIFICATION-RECORD",
+        "ENTITY-SUPPORTED-CATALOG",
+        "ENTITY-QUALIFICATION-PROFILE",
+        "ENTITY-VM-DIRECTPATH-REQUEST",
+        "ENTITY-DEPENDENCY-BUNDLE",
+        "ENTITY-OWNER-ACTIVATION-RUN",
+        "ENTITY-ASSIGNMENT-RUN",
+        "ENTITY-ASSIGNMENT-BINDING",
+        "ENTITY-BUNDLE-LEASE",
+        "ENTITY-ASSIGNMENT-MANIFEST",
+        "ENTITY-HOST-ACTION-JOURNAL",
+        "ENTITY-CLEAN-RELEASE-RECEIPT",
+        "ENTITY-RESERVATION-CANCEL-RECEIPT",
+        "ENTITY-CLEAN-RELEASE-ACCEPTANCE",
+        "ENTITY-QUARANTINE-RECORD",
+        "ENTITY-REMEDIATION-RUN",
+        "ENTITY-RELOCATION-RUN",
+        "ENTITY-IDEMPOTENCY-RECORD",
+        "ENTITY-OPERATION-LEASE",
+        "ENTITY-RELEASE-OWNERSHIP-GUARD",
+        "ENTITY-AUDIT-EVENT",
+        "ENTITY-OUTBOX-EVENT"
+      ]
+    },
+    "operationId": {
+      "enum": [
+        "OP-QUERY-DIRECTPATH",
+        "OP-SUBMIT-DIRECTPATH-REQUEST",
+        "OP-PLAN-STATIC",
+        "OP-EXECUTE-ASSIGNMENT",
+        "OP-RECONCILE-ASSIGNMENT",
+        "OP-CAPTURE-HOST-SNAPSHOT",
+        "OP-RESOLVE-QUALIFICATION-PROFILE",
+        "OP-EVALUATE-CAPABILITY",
+        "OP-PLAN-OWNER-ACTIVATION",
+        "OP-APPLY-OWNER-ACTIVATION",
+        "OP-RECONCILE-OWNER-ACTIVATION",
+        "OP-PLAN-GUEST-RESOURCES",
+        "OP-SOLVE-DYNAMIC",
+        "OP-CAS-ACQUIRE-OPERATION-LEASE",
+        "OP-CAS-RESERVE-BUNDLES",
+        "OP-CAS-TRANSITION-AGGREGATES",
+        "OP-CAS-CANCEL-UNSTARTED-RESERVATION",
+        "OP-CAS-REVOKE-LEASE",
+        "OP-STORE-IDEMPOTENT-RESULT",
+        "OP-PREPARE-HOST-BUNDLE",
+        "OP-TEARDOWN-HOST-BUNDLE",
+        "OP-RECONCILE-HOST",
+        "OP-MATERIALIZE-BACKEND-GRANT",
+        "OP-RELEASE-BACKEND-GRANT",
+        "OP-SPAWN-QEMU",
+        "OP-STOP-QEMU",
+        "OP-VERIFY-RUNTIME-PLAN",
+        "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD",
+        "OP-PROVE-CLEAN-RELEASE",
+        "OP-QUARANTINE-BUNDLE",
+        "OP-REMEDIATE-QUARANTINE",
+        "OP-PLAN-COLD-RELOCATION",
+        "OP-EXECUTE-COLD-RELOCATION",
+        "OP-EMIT-AUDIT-EVIDENCE",
+        "OP-GATE-LIFECYCLE"
+      ]
+    },
+    "leaseBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leaseId", "leaseVersion", "bundleId", "memberDeviceUids"],
+      "properties": {
+        "leaseId": {"$ref": "#/$defs/id"},
+        "leaseVersion": {"$ref": "#/$defs/positiveVersion"},
+        "bundleId": {"$ref": "#/$defs/digest"},
+        "memberDeviceUids": {"$ref": "#/$defs/idSet"}
+      }
+    },
+    "guardLeaseBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leaseId", "leaseVersion", "bundleId"],
+      "properties": {
+        "leaseId": {"$ref": "#/$defs/id"},
+        "leaseVersion": {"$ref": "#/$defs/positiveVersion"},
+        "bundleId": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "hostJournalUpperBound": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostId", "hostEpoch", "journalEpoch", "sequence", "entryHash", "operationLeaseResourceVersion", "fenceAcknowledgementHash"],
+      "properties": {
+        "hostId": {"$ref": "#/$defs/id"},
+        "hostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "journalEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "sequence": {"$ref": "#/$defs/nonNegativeInteger"},
+        "entryHash": {"$ref": "#/$defs/digest"},
+        "operationLeaseResourceVersion": {"$ref": "#/$defs/positiveVersion"},
+        "fenceAcknowledgementHash": {"$ref": "#/$defs/digest"}
+      },
+      "description": "A Host Agent fsynced acknowledgement that locally fences the exact operation lease before the global unstarted-reservation cancellation transaction. Sequence zero uses the deployment-fixed journal genesis digest."
+    },
+    "qemuExistenceProof": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "proofHash"],
+          "properties": {
+            "kind": {"const": "DURABLE_NEVER_CREATED"},
+            "proofHash": {"$ref": "#/$defs/digest"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "proofHash"],
+          "properties": {
+            "kind": {"const": "EXIT_PROVEN"},
+            "proofHash": {"$ref": "#/$defs/digest"}
+          }
+        }
+      ],
+      "description": "Closed projection of a durable launch-journal/process-census proof. proofHash resolves to the complete immutable evidence artifact; a caller-provided assertion is not proof."
+    },
+    "ENTITY-CONTROLLER-AUTHORITY": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clusterId", "controllerGeneration", "leaderIdentity", "authorityLeaseId", "issuedAt", "expiresAt", "resourceVersion"],
+      "properties": {
+        "clusterId": {"$ref": "#/$defs/id"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "leaderIdentity": {"$ref": "#/$defs/id"},
+        "authorityLeaseId": {"$ref": "#/$defs/id"},
+        "issuedAt": {"$ref": "#/$defs/timestamp"},
+        "expiresAt": {"$ref": "#/$defs/timestamp"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "x-qmanCrossFieldRules": [
+        "issuedAt is strictly before expiresAt",
+        "Every global mutation compares clusterId, leaderIdentity, controllerGeneration, authorityLeaseId, unexpired authority, and resourceVersion in one CAS",
+        "Expiry or replacement fences all new mutations from this authority but never revokes a BundleLease, consumes a ReleaseOwnershipGuard, or proves physical release",
+        "controllerGeneration and resourceVersion increase monotonically; a new leader or authority lease cannot reuse an earlier generation"
+      ]
+    },
+    "ENTITY-HOST-AUTHORITY": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostId", "hostEpoch", "kernelBootId", "agentIdentity", "agentGeneration", "cooperationState", "lastSnapshotEpoch", "currentSnapshotContentHash", "lastObservedAt", "resourceVersion"],
+      "properties": {
+        "hostId": {"$ref": "#/$defs/id"},
+        "hostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "kernelBootId": {"$ref": "#/$defs/id"},
+        "agentIdentity": {"$ref": "#/$defs/id"},
+        "agentGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "cooperationState": {"enum": ["RECONCILING", "ONLINE_COOPERATIVE", "UNREACHABLE"]},
+        "lastSnapshotEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "currentSnapshotContentHash": {"$ref": "#/$defs/digest"},
+        "lastObservedAt": {"$ref": "#/$defs/timestamp"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "x-qmanCrossFieldRules": [
+        "[hostId,kernelBootId,hostEpoch,agentIdentity,agentGeneration,lastSnapshotEpoch,currentSnapshotContentHash] identifies exactly one signed current HostSnapshot",
+        "Within one [hostId,kernelBootId,hostEpoch,agentGeneration], lastSnapshotEpoch is monotonic and currentSnapshotContentHash changes only by the atomic current-pointer CAS to that exact signed snapshot",
+        "A kernelBootId or agent authority replacement increments hostEpoch and/or agentGeneration and requires a new signed current snapshot before ONLINE_COOPERATIVE",
+        "Only ONLINE_COOPERATIVE after completed boot, owner, backend, lease, quarantine, and journal reconciliation is schedulable; heartbeat or reachability alone never proves clean release",
+        "RECONCILING and UNREACHABLE retain every existing physical claim and reject new assignment, owner, release handoff, and relocation-target side effects not explicitly authorized by reconcile"
+      ]
+    },
+    "ENTITY-OWNER-ACTIVATION-RUN": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ownerActivationRunId", "vmIdOrNull", "desiredOwner", "requestMode", "state", "identityManifestHash", "requestSetHash", "ownerGroupHash", "operationLeaseIdOrNull", "expectedSnapshotEpoch", "observedStateHash", "reasonCodeOrNull", "controllerGeneration", "resourceVersion"],
+      "properties": {
+        "ownerActivationRunId": {"$ref": "#/$defs/id"},
+        "vmIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "desiredOwner": {"enum": ["HOST", "PASSTHROUGH"]},
+        "requestMode": {"enum": ["LIVE_ONLY", "DEFER_TO_REBOOT", "LIVE_OR_REBOOT"]},
+        "state": {"enum": ["ENABLED", "LIVE_APPLICABLE", "PENDING_REBOOT", "DENIED", "APPLYING", "ACTIVE", "QUARANTINED", "FAILED"]},
+        "identityManifestHash": {"$ref": "#/$defs/digest"},
+        "requestSetHash": {"$ref": "#/$defs/digest"},
+        "ownerGroupHash": {"$ref": "#/$defs/digest"},
+        "operationLeaseIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "expectedSnapshotEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "observedStateHash": {"$ref": "#/$defs/digest"},
+        "reasonCodeOrNull": {"$ref": "#/$defs/nullableReasonCode"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"state": {"enum": ["APPLYING", "QUARANTINED"]}}, "required": ["state"]},
+          "then": {"properties": {"operationLeaseIdOrNull": {"$ref": "#/$defs/id"}}}
+        },
+        {
+          "if": {"properties": {"state": {"enum": ["DENIED", "QUARANTINED", "FAILED"]}}, "required": ["state"]},
+          "then": {"properties": {"reasonCodeOrNull": {"$ref": "#/$defs/reasonCode"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "state is exactly FSM-OWNER-ACTIVATION; only its contract transitions are legal",
+        "APPLYING requires a live OWNER_TRANSITION operation lease for ownerGroupHash before the first member side effect",
+        "PENDING_REBOOT pins the exact identityManifestHash, requestSetHash, ownerGroupHash, expectedSnapshotEpoch, desiredOwner, and requestMode and never retargets by PCI ID",
+        "ACTIVE requires full-group owner/provider readback; rollback ambiguity retains the complete scope in QUARANTINED"
+      ]
+    },
+    "ENTITY-ASSIGNMENT-RUN": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "vmId", "requestType", "operation", "state", "hostId", "snapshotEpoch", "policyHash", "profileHash", "decisionHash", "planHash", "runGeneration", "hostEpoch", "controllerGeneration", "resourceVersion"],
+      "properties": {
+        "runId": {"$ref": "#/$defs/id"},
+        "vmId": {"$ref": "#/$defs/id"},
+        "requestType": {"enum": ["STATIC", "DYNAMIC"]},
+        "operation": {"enum": ["POWER_ON", "GUEST_REBOOT", "POWER_OFF", "COLD_RELOCATE", "ROLLBACK", "RECONCILE"]},
+        "state": {"enum": ["REQUESTED", "PLANNED", "PREPARING", "ATTACHED", "RELEASING", "ROLLING_BACK", "FREE", "FAILED", "QUARANTINED"]},
+        "hostId": {"$ref": "#/$defs/id"},
+        "snapshotEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "policyHash": {"$ref": "#/$defs/digest"},
+        "profileHash": {"$ref": "#/$defs/digest"},
+        "decisionHash": {"$ref": "#/$defs/nullableDigest"},
+        "planHash": {"$ref": "#/$defs/nullableDigest"},
+        "runGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "hostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"state": {"const": "REQUESTED"}}, "required": ["state"]},
+          "then": {"properties": {"decisionHash": {"type": "null"}, "planHash": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"state": {"enum": ["PLANNED", "PREPARING", "ATTACHED", "RELEASING", "ROLLING_BACK"]}}, "required": ["state"]},
+          "then": {"properties": {"decisionHash": {"$ref": "#/$defs/digest"}, "planHash": {"$ref": "#/$defs/digest"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "state is exactly FSM-ASSIGNMENT; only its contract transitions are legal",
+        "A new execution attempt creates a new runId/runGeneration and may not retarget an existing run",
+        "ATTACHED is the only runtime-available state and requires one complete AssignmentManifest v2 plus matching backend, process, observed-plan, guest, IOMMU, DMA, and IRQ receipts",
+        "PREPARING reaches FREE without physical cleanup only through one complete ReservationCancelReceipt proving no Host Action Journal INTENT; after any host side effect, FREE requires atomic full-scope clean release",
+        "QUARANTINED retains all uncertain claims; FAILED is not permission to revoke leases or reuse a device"
+      ]
+    },
+    "ENTITY-ASSIGNMENT-BINDING": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "requirementId", "ordinal", "assignmentIdOrNull", "bindingId", "bundleId", "leaseId", "deviceUid", "guestSlot", "assignedIdOrNull", "bindingState", "deviceGeneration", "runGeneration", "controllerGeneration", "resourcePlanSliceHash", "resourceVersion"],
+      "properties": {
+        "runId": {"$ref": "#/$defs/id"},
+        "requirementId": {"$ref": "#/$defs/id"},
+        "ordinal": {"$ref": "#/$defs/nonNegativeInteger"},
+        "assignmentIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "bindingId": {"$ref": "#/$defs/id"},
+        "bundleId": {"$ref": "#/$defs/digest"},
+        "leaseId": {"$ref": "#/$defs/id"},
+        "deviceUid": {"$ref": "#/$defs/id"},
+        "guestSlot": {"$ref": "#/$defs/id"},
+        "assignedIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "bindingState": {"enum": ["RESERVED", "ATTACHED", "RELEASING", "REVOKED", "QUARANTINED"]},
+        "deviceGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "runGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "resourcePlanSliceHash": {"$ref": "#/$defs/digest"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"bindingState": {"const": "ATTACHED"}}, "required": ["bindingState"]},
+          "then": {"properties": {"assignmentIdOrNull": {"$ref": "#/$defs/id"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "[runId,requirementId,ordinal] and bindingId are immutable for one run generation",
+        "The complete ordered binding set reserves, attaches, releases, revokes, or quarantines atomically with its AssignmentRun and BundleLease set",
+        "assignedIdOrNull is non-null only for a committed Dynamic runtime binding and is cleared in the same transaction that makes the run FREE; it is never a persistent selector",
+        "REVOKED cannot authorize a host action or QEMU launch; QUARANTINED retains deny and ownership evidence"
+      ]
+    },
+    "ENTITY-BUNDLE-LEASE": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bundleId", "leaseId", "leaseVersion", "memberDeviceUids", "scopeHash", "runId", "ownerVmId", "state", "runGeneration", "hostEpoch", "controllerGeneration", "expectedMemberGenerations", "resourceVersion"],
+      "properties": {
+        "bundleId": {"$ref": "#/$defs/digest"},
+        "leaseId": {"$ref": "#/$defs/id"},
+        "leaseVersion": {"$ref": "#/$defs/positiveVersion"},
+        "memberDeviceUids": {"$ref": "#/$defs/idSet"},
+        "scopeHash": {"$ref": "#/$defs/digest"},
+        "runId": {"$ref": "#/$defs/id"},
+        "ownerVmId": {"$ref": "#/$defs/id"},
+        "state": {"enum": ["RESERVED", "PREPARING", "ATTACHED", "RELEASING", "REVOKED", "QUARANTINED"]},
+        "runGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "hostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "expectedMemberGenerations": {"$ref": "#/$defs/memberGenerations"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "x-qmanLifecycleRules": [
+        "memberDeviceUids is the exact complete exclusive attach group and exactly equals the key set of expectedMemberGenerations",
+        "scopeHash binds bundleId, ordered memberDeviceUids, expectedMemberGenerations, runId, ownerVmId, runGeneration, and hostEpoch",
+        "RESERVED, PREPARING, ATTACHED, RELEASING, and QUARANTINED all retain exclusive physical claims; TTL, controller expiry, process exit, or host loss never changes that fact",
+        "Only one atomic unstarted-cancel or full clean-release transaction may transition the complete canonical lease set to REVOKED",
+        "REVOKED cannot authorize any side effect; QUARANTINED retains claims and denies reuse until full-scope remediation"
+      ]
+    },
+    "ENTITY-HOST-ACTION-JOURNAL": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostId", "hostEpoch", "journalEpoch", "sequence", "entryType", "operationLeaseId", "scopeHash", "runIdOrIntentId", "stepId", "inputHash", "receiptHashOrNull", "priorEntryHash", "entryHash", "fsyncedAt"],
+      "properties": {
+        "hostId": {"$ref": "#/$defs/id"},
+        "hostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "journalEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "sequence": {"$ref": "#/$defs/positiveVersion"},
+        "entryType": {"enum": ["INTENT", "RESULT", "COMPENSATION"]},
+        "operationLeaseId": {"$ref": "#/$defs/id"},
+        "scopeHash": {"$ref": "#/$defs/digest"},
+        "runIdOrIntentId": {"$ref": "#/$defs/id"},
+        "stepId": {"$ref": "#/$defs/id"},
+        "inputHash": {"$ref": "#/$defs/digest"},
+        "receiptHashOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "priorEntryHash": {"$ref": "#/$defs/digest"},
+        "entryHash": {"$ref": "#/$defs/digest"},
+        "fsyncedAt": {"$ref": "#/$defs/timestamp"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"entryType": {"const": "INTENT"}}, "required": ["entryType"]},
+          "then": {"properties": {"receiptHashOrNull": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"entryType": {"enum": ["RESULT", "COMPENSATION"]}}, "required": ["entryType"]},
+          "then": {"properties": {"receiptHashOrNull": {"$ref": "#/$defs/digest"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "Within [hostId,hostEpoch,journalEpoch], sequence is gap-free and append-only and priorEntryHash equals the preceding entryHash; the genesis priorEntryHash is the deployment-fixed journal genesis digest",
+        "entryHash is the CANONICAL-JSON-V1 digest of the complete entry with entryHash omitted",
+        "The exact live typed OperationLease must match operationLeaseId, scopeHash, runIdOrIntentId, hostEpoch, and member generations before an INTENT is accepted",
+        "INTENT is fsynced before the first covered side effect; RESULT or COMPENSATION is fsynced after observation and references the corresponding receipt",
+        "The journal is recovery evidence only and cannot create, transfer, revoke, or free global authority"
+      ]
+    },
+    "ENTITY-RESERVATION-CANCEL-RECEIPT": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cancellationReceiptId", "runId", "runGeneration", "leaseSetHash", "leaseBindings", "operationLeaseId", "hostJournalUpperBound", "noHostSideEffectProof", "controllerGeneration", "createdAt", "receiptHash"],
+      "properties": {
+        "cancellationReceiptId": {"$ref": "#/$defs/id"},
+        "runId": {"$ref": "#/$defs/id"},
+        "runGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "leaseSetHash": {"$ref": "#/$defs/digest"},
+        "leaseBindings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/leaseBinding"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [bundleId,leaseId]"
+        },
+        "operationLeaseId": {"$ref": "#/$defs/id"},
+        "hostJournalUpperBound": {"$ref": "#/$defs/hostJournalUpperBound"},
+        "noHostSideEffectProof": {"$ref": "#/$defs/digest"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "createdAt": {"$ref": "#/$defs/timestamp"},
+        "receiptHash": {"$ref": "#/$defs/digest"}
+      },
+      "x-qmanCrossFieldRules": [
+        "leaseSetHash is the CANONICAL-JSON-V1 digest of the complete ordered leaseBindings projection",
+        "Every leaseBinding belongs to exactly runId/runGeneration and its memberDeviceUids is complete for bundleId",
+        "hostJournalUpperBound is captured under the exact current host/hostEpoch/journalEpoch and operation-lease resourceVersion; its fsynced fence acknowledgement serializes against the local action executor, proves no INTENT for this run generation exists through sequence, and prevents any later INTENT under that operation lease",
+        "The referenced operation lease is ASSIGNMENT_PREPARE for the exact run/scope. Its active version, fence acknowledgement, controller generation, run generation, every lease id/version, every binding, and PREPARING run resourceVersion are compared; the operation lease becomes REVOKED and all reservations become REVOKED/FREE in one global transaction or none change",
+        "receiptHash is the CANONICAL-JSON-V1 digest of the complete record with receiptHash omitted",
+        "After any owner, driver, reset, VFIO, QEMU, or cleanup INTENT, this receipt is invalid and full physical clean release is mandatory"
+      ]
+    },
+    "ENTITY-CLEAN-RELEASE-ACCEPTANCE": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acceptanceId",
+        "acceptanceKind",
+        "receiptId",
+        "receiptDigest",
+        "assignmentId",
+        "runId",
+        "oldRunGeneration",
+        "relocationIdOrNull",
+        "relocationGenerationOrNull",
+        "sourceHostId",
+        "expectedSourceHostEpoch",
+        "expectedAuthorityEntityId",
+        "expectedAuthorityResourceVersion",
+        "expectedLeaseSetHash",
+        "expectedLeaseBindings",
+        "committedAuthorityResourceVersion",
+        "leaseRevocationCommitVersion",
+        "repositoryTransactionId",
+        "idempotencyKey",
+        "acceptedAt",
+        "receiptExpiresAt",
+        "controllerGeneration",
+        "keyRingVersion",
+        "repositorySignerKeyId",
+        "acceptanceDigest",
+        "signature"
+      ],
+      "properties": {
+        "acceptanceId": {"$ref": "#/$defs/id"},
+        "acceptanceKind": {"enum": ["ASSIGNMENT_CLEAN_RELEASE", "RELOCATION_SOURCE_CLEAN_RELEASE", "RELOCATION_TARGET_CLEAN_RELEASE"]},
+        "receiptId": {"$ref": "#/$defs/id"},
+        "receiptDigest": {"$ref": "#/$defs/digest"},
+        "assignmentId": {"$ref": "#/$defs/id"},
+        "runId": {"$ref": "#/$defs/id"},
+        "oldRunGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "relocationIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "relocationGenerationOrNull": {"$ref": "#/$defs/nullablePositiveVersion"},
+        "sourceHostId": {"$ref": "#/$defs/id"},
+        "expectedSourceHostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "expectedAuthorityEntityId": {"enum": ["ENTITY-ASSIGNMENT-RUN", "ENTITY-RELOCATION-RUN"]},
+        "expectedAuthorityResourceVersion": {"$ref": "#/$defs/positiveVersion"},
+        "expectedLeaseSetHash": {"$ref": "#/$defs/digest"},
+        "expectedLeaseBindings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/leaseBinding"},
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [leaseId,leaseVersion,bundleId]"
+        },
+        "committedAuthorityResourceVersion": {"$ref": "#/$defs/positiveVersion"},
+        "leaseRevocationCommitVersion": {"$ref": "#/$defs/positiveVersion"},
+        "repositoryTransactionId": {"$ref": "#/$defs/id"},
+        "idempotencyKey": {"$ref": "#/$defs/id"},
+        "acceptedAt": {"$ref": "#/$defs/timestamp"},
+        "receiptExpiresAt": {"$ref": "#/$defs/timestamp"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "keyRingVersion": {"$ref": "#/$defs/positiveVersion"},
+        "repositorySignerKeyId": {"$ref": "#/$defs/id"},
+        "acceptanceDigest": {"$ref": "#/$defs/digest"},
+        "signature": {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"acceptanceKind": {"const": "ASSIGNMENT_CLEAN_RELEASE"}}, "required": ["acceptanceKind"]},
+          "then": {
+            "properties": {
+              "relocationIdOrNull": {"type": "null"},
+              "relocationGenerationOrNull": {"type": "null"},
+              "expectedAuthorityEntityId": {"const": "ENTITY-ASSIGNMENT-RUN"}
+            }
+          },
+          "else": {
+            "properties": {
+              "relocationIdOrNull": {"$ref": "#/$defs/id"},
+              "relocationGenerationOrNull": {"$ref": "#/$defs/positiveVersion"},
+              "expectedAuthorityEntityId": {"const": "ENTITY-RELOCATION-RUN"}
+            }
+          }
+        }
+      ],
+      "x-qmanAtomicAcceptanceRule": "In one global repository transaction, compare receiptDigest, assignment/run identity, oldRunGeneration, sourceHostEpoch, expectedAuthorityResourceVersion, the complete expectedLeaseBindings and expectedLeaseSetHash; require the signed clean-release receipt is unexpired; revoke exactly the complete old lease set; advance the assignment/relocation authority to committedAuthorityResourceVersion = expectedAuthorityResourceVersion + 1; write this acceptance record, audit event and outbox; then commit. Any mismatch writes nothing.",
+      "x-qmanExactlyOnceRule": "receiptDigest and idempotencyKey are globally unique. Replaying the same receipt returns this byte-identical acceptance; reusing either key with different canonical inputs is rejected. No target solve, FREE reuse or lease disappearance is authoritative without this record.",
+      "x-qmanDigestAndSignatureRule": "acceptanceDigest is SHA-256(CANONICAL-JSON-V1 of this complete object with acceptanceDigest and signature set to null). signature is Ed25519 over ASCII(QMAN-DIRECTPATH/CLEAN-RELEASE-ACCEPTANCE/V1) || 0x00 || the same bytes using a non-revoked CONTROL_REPOSITORY_EVIDENCE key. acceptedAt must be no later than receiptExpiresAt."
+    },
+    "ENTITY-QUARANTINE-RECORD": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quarantineScopeId", "generation", "leaseSetHashOrNull", "bundleIds", "memberDeviceUids", "reasonCode", "evidenceHash", "createdAt", "clearedBy", "clearedAt", "controllerGeneration", "resourceVersion"],
+      "properties": {
+        "quarantineScopeId": {"$ref": "#/$defs/id"},
+        "generation": {"$ref": "#/$defs/positiveVersion"},
+        "leaseSetHashOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "bundleIds": {"$ref": "#/$defs/digestSet"},
+        "memberDeviceUids": {"$ref": "#/$defs/idSet"},
+        "reasonCode": {"$ref": "#/$defs/reasonCode"},
+        "evidenceHash": {"$ref": "#/$defs/digest"},
+        "createdAt": {"$ref": "#/$defs/timestamp"},
+        "clearedBy": {"$ref": "#/$defs/nullableId"},
+        "clearedAt": {"$ref": "#/$defs/nullableTimestamp"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "oneOf": [
+        {"properties": {"clearedBy": {"type": "null"}, "clearedAt": {"type": "null"}}},
+        {"properties": {"clearedBy": {"$ref": "#/$defs/id"}, "clearedAt": {"$ref": "#/$defs/timestamp"}}}
+      ],
+      "x-qmanLifecycleRules": [
+        "One generation covers the exact canonical transitive lease, bundle, member, reset, owner, and target-attempt scope; bundleIds and memberDeviceUids are never narrowed",
+        "An uncleared record atomically retains every applicable claim and deny index and blocks owner transition, solver, reserve, attach, release takeover, and partial remediation",
+        "A failed or ambiguous remediation creates evidence and leaves clearedBy/clearedAt null; it never deletes or partially clears the record",
+        "clearedBy and clearedAt become non-null together only in the same CAS that verifies a successful full-scope RemediationRun, exact generation/resourceVersion, current controller authority, and clean-release evidence",
+        "clearedAt is strictly after createdAt; historical cleared records remain append-only audit evidence"
+      ]
+    },
+    "ENTITY-REMEDIATION-RUN": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["remediationRunId", "quarantineScopeHash", "state", "requestedBy", "operationLeaseIdOrNull", "attempt", "reasonCodeOrNull", "evidenceHashOrNull", "controllerGeneration", "resourceVersion"],
+      "properties": {
+        "remediationRunId": {"$ref": "#/$defs/id"},
+        "quarantineScopeHash": {"$ref": "#/$defs/digest"},
+        "state": {"enum": ["QUARANTINED", "REMEDIATING", "FREE"]},
+        "requestedBy": {"$ref": "#/$defs/id"},
+        "operationLeaseIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "attempt": {"$ref": "#/$defs/positiveVersion"},
+        "reasonCodeOrNull": {"$ref": "#/$defs/nullableReasonCode"},
+        "evidenceHashOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"state": {"enum": ["REMEDIATING", "FREE"]}}, "required": ["state"]},
+          "then": {"properties": {"operationLeaseIdOrNull": {"$ref": "#/$defs/id"}}}
+        },
+        {
+          "if": {"properties": {"state": {"const": "FREE"}}, "required": ["state"]},
+          "then": {"properties": {"reasonCodeOrNull": {"type": "null"}, "evidenceHashOrNull": {"$ref": "#/$defs/digest"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "state is exactly FSM-QUARANTINE-REMEDIATION; only its contract transitions are legal",
+        "REMEDIATING requires one live QUARANTINE_REMEDIATION operation lease matching quarantineScopeHash, exact quarantine generation, host epoch, member generations, controller generation, and resourceVersion",
+        "A failed or unknown attempt returns to QUARANTINED, increments a future attempt, preserves the complete quarantine scope and claims, and records a closed reason/evidence",
+        "FREE requires complete identity, DMA/IRQ, IOMMU, reset/state, owner, lease, and member proof plus the atomic quarantine-clear CAS"
+      ]
+    },
+    "ENTITY-RELOCATION-RUN": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relocationId", "vmId", "sourceAssignmentId", "sourceRunId", "sourceAssignedId", "sourceManifestHash", "state", "sourceHostId", "targetHostIdOrNull", "sourceRunGeneration", "relocationGeneration", "sourceHostEpoch", "targetHostEpochOrNull", "sourceCleanReceiptIdOrNull", "sourceCleanFactVersionOrNull", "targetAttempt", "targetAttemptIdOrNull", "targetRunIdOrNull", "targetAssignmentIdOrNull", "targetRunGenerationOrNull", "targetAssignedIdOrNull", "targetManifestHashOrNull", "controllerGeneration", "resourceVersion"],
+      "properties": {
+        "relocationId": {"$ref": "#/$defs/id"},
+        "vmId": {"$ref": "#/$defs/id"},
+        "sourceAssignmentId": {"$ref": "#/$defs/id"},
+        "sourceRunId": {"$ref": "#/$defs/id"},
+        "sourceAssignedId": {"$ref": "#/$defs/id"},
+        "sourceManifestHash": {"$ref": "#/$defs/digest"},
+        "state": {"enum": ["ATTACHED", "RELOCATING_SOURCE_STOP", "SOURCE_RELEASING", "TARGET_SOLVE", "TARGET_RESERVED", "TARGET_ATTACHING", "TARGET_ROLLING_BACK", "STOPPED_UNSAT", "HOST_UNREACHABLE", "SOURCE_RECONCILE", "QUARANTINED"]},
+        "sourceHostId": {"$ref": "#/$defs/id"},
+        "targetHostIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "sourceRunGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "relocationGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "sourceHostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "targetHostEpochOrNull": {"$ref": "#/$defs/nullablePositiveVersion"},
+        "sourceCleanReceiptIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "sourceCleanFactVersionOrNull": {"$ref": "#/$defs/nullablePositiveVersion"},
+        "targetAttempt": {"$ref": "#/$defs/nonNegativeInteger"},
+        "targetAttemptIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "targetRunIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "targetAssignmentIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "targetRunGenerationOrNull": {"$ref": "#/$defs/nullablePositiveVersion"},
+        "targetAssignedIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "targetManifestHashOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "controllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"state": {"enum": ["TARGET_SOLVE", "TARGET_RESERVED", "TARGET_ATTACHING", "TARGET_ROLLING_BACK", "STOPPED_UNSAT"]}}, "required": ["state"]},
+          "then": {
+            "properties": {
+              "sourceCleanReceiptIdOrNull": {"$ref": "#/$defs/id"},
+              "sourceCleanFactVersionOrNull": {"$ref": "#/$defs/positiveVersion"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"state": {"enum": ["TARGET_RESERVED", "TARGET_ATTACHING", "TARGET_ROLLING_BACK"]}}, "required": ["state"]},
+          "then": {
+            "properties": {
+              "targetHostIdOrNull": {"$ref": "#/$defs/id"},
+              "targetHostEpochOrNull": {"$ref": "#/$defs/positiveVersion"},
+              "targetAttempt": {"type": "integer", "minimum": 1},
+              "targetAttemptIdOrNull": {"$ref": "#/$defs/id"},
+              "targetRunIdOrNull": {"$ref": "#/$defs/id"},
+              "targetRunGenerationOrNull": {"$ref": "#/$defs/positiveVersion"}
+            }
+          }
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "state is exactly FSM-COLD-RELOCATION; only its contract transitions and pseudo-state expansions are legal",
+        "source identity, source assignment/run/assignedId/manifest, source run generation, source host, and source host epoch are immutable for one relocation generation",
+        "sourceCleanReceiptIdOrNull and sourceCleanFactVersionOrNull are both null or both non-null; acceptance consumes one signed receipt exactly once and atomically revokes the complete source lease set before TARGET_SOLVE",
+        "Each targetAttempt greater than zero has a new targetAttemptId, targetRunId, targetRunGeneration, and append-only audit history; at most one target lease set is active",
+        "targetAssignedIdOrNull, when present, differs from sourceAssignedId; source BDF and assignedId are never copied as target selection constraints",
+        "ATTACHED either represents the original untouched source assignment before relocation side effects or a fully committed target with non-null target assignment, assignedId, and manifest; a target commit starts a later relocation only with a new relocationGeneration",
+        "STOPPED_UNSAT and HOST_UNREACHABLE are durable quiescent failure states, not success; pre-clean source loss retains every source claim and never permits target reservation",
+        "TARGET_ROLLING_BACK reaches STOPPED_UNSAT only after complete target clean release; cleanup ambiguity quarantines the complete target scope without altering sourceCleanFactVersion"
+      ]
+    },
+    "ENTITY-IDEMPOTENCY-RECORD": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "idempotencyKey", "requestHash", "state", "runId", "responseHash", "expiresAt"],
+      "properties": {
+        "scope": {"$ref": "#/$defs/id"},
+        "idempotencyKey": {"$ref": "#/$defs/id"},
+        "requestHash": {"$ref": "#/$defs/digest"},
+        "state": {"enum": ["IN_PROGRESS", "COMPLETED"]},
+        "runId": {"$ref": "#/$defs/id"},
+        "responseHash": {"$ref": "#/$defs/nullableDigest"},
+        "expiresAt": {"$ref": "#/$defs/timestamp"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"state": {"const": "IN_PROGRESS"}}, "required": ["state"]},
+          "then": {"properties": {"responseHash": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"state": {"const": "COMPLETED"}}, "required": ["state"]},
+          "then": {"properties": {"responseHash": {"$ref": "#/$defs/digest"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "[scope,idempotencyKey] is a permanent natural key for the retention window",
+        "The first accepted canonical requestHash fixes exactly one runId; the same key and hash replays that run/result and a different hash is rejected with IDEMPOTENCY_KEY_REUSED",
+        "COMPLETED is monotonic and its responseHash is immutable; retry or client timeout never creates a second run, lease, or physical side effect",
+        "Expiry only permits retention cleanup after every referenced operation, audit, lease, and recovery obligation is independently durable; expiry is never cancellation or release authority"
+      ]
+    },
+    "ENTITY-OPERATION-LEASE": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operationLeaseId", "leaseType", "scopeHash", "runIdOrIntentId", "bundleIds", "memberGenerations", "hostEpoch", "runGenerationOrNull", "holderControllerGeneration", "state", "resourceVersion"],
+      "properties": {
+        "operationLeaseId": {"$ref": "#/$defs/id"},
+        "leaseType": {"enum": ["OWNER_TRANSITION", "ASSIGNMENT_PREPARE", "RELEASE", "RELOCATION_HANDOFF", "QUARANTINE_REMEDIATION"]},
+        "scopeHash": {"$ref": "#/$defs/digest"},
+        "runIdOrIntentId": {"$ref": "#/$defs/id"},
+        "bundleIds": {"$ref": "#/$defs/digestSet"},
+        "memberGenerations": {"$ref": "#/$defs/memberGenerations"},
+        "hostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "runGenerationOrNull": {"$ref": "#/$defs/nullablePositiveVersion"},
+        "holderControllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "state": {"enum": ["ACTIVE", "CONSUMED", "REVOKED", "QUARANTINED"]},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"leaseType": {"enum": ["ASSIGNMENT_PREPARE", "RELEASE", "RELOCATION_HANDOFF"]}}, "required": ["leaseType"]},
+          "then": {"properties": {"runGenerationOrNull": {"$ref": "#/$defs/positiveVersion"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "Only ACTIVE authorizes the one exact leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, run generation or intent version, controller generation, and resourceVersion",
+        "The five leaseType values are non-interchangeable and every physical/reset/exclusive-domain overlap uses one shared conflict key",
+        "The executor revalidates the live ACTIVE row and sealed capability before the first covered side effect and binds it to an fsynced Host Action Journal INTENT",
+        "CONSUMED and REVOKED never authorize or resume a side effect; replay returns the durable prior result or requires a new lease",
+        "QUARANTINED never authorizes normal side effects and retains the complete scope's deny/claim effect until full-scope remediation",
+        "Lease loss, ambiguity, controller expiry, or host loss after a side effect enters reconcile and retains/quarantines claims; it never implies clean release"
+      ]
+    },
+    "ENTITY-RELEASE-OWNERSHIP-GUARD": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["guardId", "operationLeaseId", "leaseSetHash", "leaseBindings", "runId", "bundleIds", "memberDeviceUids", "hostEpoch", "runGeneration", "qemuPidStarttimeOrNull", "qemuExistenceProof", "backendProfileHash", "holderControllerGeneration", "state", "resourceVersion"],
+      "properties": {
+        "guardId": {"$ref": "#/$defs/id"},
+        "operationLeaseId": {"$ref": "#/$defs/id"},
+        "leaseSetHash": {"$ref": "#/$defs/digest"},
+        "leaseBindings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/guardLeaseBinding"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [bundleId,leaseId]"
+        },
+        "runId": {"$ref": "#/$defs/id"},
+        "bundleIds": {"$ref": "#/$defs/digestSet"},
+        "memberDeviceUids": {"$ref": "#/$defs/idSet"},
+        "hostEpoch": {"$ref": "#/$defs/positiveVersion"},
+        "runGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "qemuPidStarttimeOrNull": {"$ref": "#/$defs/nullablePidStarttime"},
+        "qemuExistenceProof": {"$ref": "#/$defs/qemuExistenceProof"},
+        "backendProfileHash": {"$ref": "#/$defs/digest"},
+        "holderControllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "state": {"enum": ["ACTIVE", "CONSUMED", "QUARANTINED"]},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "qemuExistenceProof": {
+                "properties": {"kind": {"const": "DURABLE_NEVER_CREATED"}},
+                "required": ["kind"]
+              }
+            },
+            "required": ["qemuExistenceProof"]
+          },
+          "then": {"properties": {"qemuPidStarttimeOrNull": {"type": "null"}}}
+        },
+        {
+          "if": {
+            "properties": {
+              "qemuExistenceProof": {
+                "properties": {"kind": {"const": "EXIT_PROVEN"}},
+                "required": ["kind"]
+              }
+            },
+            "required": ["qemuExistenceProof"]
+          },
+          "then": {"properties": {"qemuPidStarttimeOrNull": {"$ref": "#/$defs/pidStarttime"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "operationLeaseId resolves to one live RELEASE OperationLease whose exact scope, run, host epoch, run generation, holder controller generation, and resourceVersion match this guard",
+        "leaseSetHash binds the complete ordered leaseBindings including every exact leaseVersion, bundleIds, memberDeviceUids, and current member generations; bundleIds exactly equals the canonical bundleId projection of leaseBindings and no subset guard exists",
+        "qemuPidStarttimeOrNull is null exactly for DURABLE_NEVER_CREATED; EXIT_PROVEN requires the exact managed-process starttime as a canonical decimal string, and proofHash binds that identical value plus pid, run, host epoch, launch journal, pidfd/exit observation, descriptor census, and observation time",
+        "Only ACTIVE authorizes ordered stop/teardown and excludes every new launcher/open path, owner transition, reset by another run, relocation target use, and quarantine clear",
+        "CONSUMED never authorizes another side effect and exists only after one atomic full-scope clean-release commit",
+        "QUARANTINED retains all claims and deny effects; cleanup uncertainty cannot consume the guard, revoke a lease, or make any member FREE",
+        "QEMU-owned VFIO or IOMMUFD descriptors are not retained cross-process; backend release contexts are freshly reacquired under the live guard and exact qualified profile"
+      ]
+    },
+    "ENTITY-AUDIT-EVENT": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eventId", "aggregateType", "aggregateId", "aggregateVersion", "actor", "action", "decision", "reasonCodeOrNull", "correlationIds", "payloadHash", "priorEventHash", "createdAt"],
+      "properties": {
+        "eventId": {"$ref": "#/$defs/id"},
+        "aggregateType": {"$ref": "#/$defs/entityId"},
+        "aggregateId": {"$ref": "#/$defs/id"},
+        "aggregateVersion": {"$ref": "#/$defs/positiveVersion"},
+        "actor": {"$ref": "#/$defs/id"},
+        "action": {"$ref": "#/$defs/operationId"},
+        "decision": {"enum": ["ALLOW", "DENY", "CONFLICT", "FAIL", "CANCEL", "QUARANTINE"]},
+        "reasonCodeOrNull": {"$ref": "#/$defs/nullableReasonCode"},
+        "correlationIds": {"$ref": "#/$defs/idSet"},
+        "payloadHash": {"$ref": "#/$defs/digest"},
+        "priorEventHash": {"$ref": "#/$defs/digest"},
+        "createdAt": {"$ref": "#/$defs/timestamp"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"decision": {"enum": ["DENY", "CONFLICT", "FAIL", "QUARANTINE"]}}, "required": ["decision"]},
+          "then": {"properties": {"reasonCodeOrNull": {"$ref": "#/$defs/reasonCode"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "Events are append-only CANONICAL-JSON-V1 records ordered by aggregateType, aggregateId, aggregateVersion and chained by priorEventHash; the genesis digest is deployment-fixed",
+        "aggregateVersion equals the authoritative aggregate version committed in the same transaction and may not be fabricated by an asynchronous logger",
+        "correlationIds is a canonical set containing every applicable command, idempotency, VM, run, assignment, lease, guard, host, relocation, and evidence correlation",
+        "An audit event records a decision but never substitutes for an OperationLease, BundleLease, ReleaseOwnershipGuard, receipt, signed evidence, or state CAS"
+      ]
+    },
+    "ENTITY-OUTBOX-EVENT": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outboxId", "aggregateType", "aggregateId", "aggregateVersion", "eventType", "payloadHash", "deliveryState", "attempt", "nextAttemptAt", "createdAt", "publishedAtOrNull", "resourceVersion"],
+      "properties": {
+        "outboxId": {"$ref": "#/$defs/id"},
+        "aggregateType": {"$ref": "#/$defs/entityId"},
+        "aggregateId": {"$ref": "#/$defs/id"},
+        "aggregateVersion": {"$ref": "#/$defs/positiveVersion"},
+        "eventType": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,127}$"},
+        "payloadHash": {"$ref": "#/$defs/digest"},
+        "deliveryState": {"enum": ["PENDING", "IN_FLIGHT", "PUBLISHED", "FAILED"]},
+        "attempt": {"$ref": "#/$defs/nonNegativeInteger"},
+        "nextAttemptAt": {"$ref": "#/$defs/timestamp"},
+        "createdAt": {"$ref": "#/$defs/timestamp"},
+        "publishedAtOrNull": {"$ref": "#/$defs/nullableTimestamp"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"deliveryState": {"const": "PUBLISHED"}}, "required": ["deliveryState"]},
+          "then": {"properties": {"publishedAtOrNull": {"$ref": "#/$defs/timestamp"}}}
+        },
+        {
+          "if": {"properties": {"deliveryState": {"enum": ["PENDING", "IN_FLIGHT", "FAILED"]}}, "required": ["deliveryState"]},
+          "then": {"properties": {"publishedAtOrNull": {"type": "null"}}}
+        }
+      ],
+      "x-qmanLifecycleRules": [
+        "The initial PENDING row is inserted in the same transaction as the exact aggregate transition and aggregateVersion",
+        "Delivery is at-least-once; consumers deduplicate by [outboxId,aggregateType,aggregateId,aggregateVersion] and verify payloadHash",
+        "PUBLISHED requires durable broker/consumer-acceptance evidence and publishedAtOrNull no earlier than createdAt",
+        "FAILED is not PUBLISHED, keeps publishedAtOrNull null, and cannot be interpreted as delivery success; a retry increments attempt and resourceVersion under CAS",
+        "Outbox publication does not confer authority and cannot repair or advance an aggregate state"
+      ]
+    }
+  },
+  "x-qmanGlobalRules": [
+    "Every object is closed: a target extension requires a versioned portable schema change, not an ignored column or open JSON member",
+    "All timestamps use TIMESTAMP-UTC-US-V1: UTC RFC3339 with exactly six fractional digits and literal Z",
+    "All generation, epoch, lease version, aggregate version, and resourceVersion values are integers greater than or equal to one and advance monotonically in their declared authority scope",
+    "All x-qmanSetOrder annotations are normative; a validator rejects non-canonical input order rather than sorting it before validation or hashing",
+    "Every mutable authority transition compares the current controller generation and resourceVersion plus every applicable host epoch, run generation, lease version, member generation, quarantine generation, state, and immutable scope hash",
+    "An expired, REVOKED, CONSUMED, FAILED, UNREACHABLE, or otherwise non-active authority never authorizes a side effect; uncertainty retains or quarantines the complete physical scope",
+    "No local journal, outbox, audit event, TTL, heartbeat, process absence, or controller fence can create, transfer, revoke, or cleanly release physical ownership"
+  ]
+}

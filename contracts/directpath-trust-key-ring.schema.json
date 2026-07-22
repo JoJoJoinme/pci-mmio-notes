@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-trust-key-ring.schema.json",
+  "title": "Qman DirectPath role-constrained trust key ring",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization; wider values use schema-defined decimal strings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "keyRingId", "keyRingSequence", "previousKeyRingDigest", "minimumReaderSchemaVersion", "keys", "revokedKeyIds", "notBefore", "expiresAt", "rootSignatures", "keyRingDigest"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "keyRingId": {"type": "string", "minLength": 1},
+    "keyRingSequence": {"type": "integer", "minimum": 1},
+    "previousKeyRingDigest": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      ]
+    },
+    "minimumReaderSchemaVersion": {"type": "integer", "minimum": 1, "maximum": 1},
+    "keys": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanCanonicalOrder": "ascending canonical bytes of keyId",
+      "items": {"$ref": "#/$defs/key"}
+    },
+    "revokedKeyIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "notBefore": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "expiresAt": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "rootSignatures": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-qmanCanonicalOrder": "ascending canonical bytes of rootKeyId",
+      "items": {"$ref": "#/$defs/rootSignature"}
+    },
+    "keyRingDigest": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      ]
+    }
+  },
+  "$defs": {
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["keyId", "principalId", "algorithm", "publicKeyBase64Url", "roles", "notBefore", "notAfter", "revokedAtOrNull"],
+      "properties": {
+        "keyId": {"type": "string", "minLength": 1},
+        "principalId": {"type": "string", "pattern": "^urn:qman:principal:[A-Za-z0-9][A-Za-z0-9._:/-]{0,191}$"},
+        "algorithm": {"const": "Ed25519"},
+        "publicKeyBase64Url": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"},
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes",
+          "items": {"enum": ["HOST_INVENTORY_EVIDENCE", "QUALIFICATION_ENGINEERING", "PRODUCT_RELEASE", "HOST_RELEASE_EVIDENCE", "CONTROL_REPOSITORY_EVIDENCE", "TEST_EVIDENCE", "TARGET_ARCHITECT", "SECURITY", "TEST"]},
+          "allOf": [
+            {"not": {"allOf": [{"contains": {"const": "QUALIFICATION_ENGINEERING"}}, {"contains": {"const": "PRODUCT_RELEASE"}}]}},
+            {"not": {"allOf": [{"contains": {"const": "TARGET_ARCHITECT"}}, {"contains": {"const": "SECURITY"}}]}},
+            {"not": {"allOf": [{"contains": {"const": "TARGET_ARCHITECT"}}, {"contains": {"const": "TEST"}}]}},
+            {"not": {"allOf": [{"contains": {"const": "SECURITY"}}, {"contains": {"const": "TEST"}}]}}
+          ]
+        },
+        "notBefore": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+        "notAfter": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+        "revokedAtOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"}
+          ]
+        }
+      }
+    },
+    "rootSignature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootKeyId", "signature", "signedAt"],
+      "properties": {
+        "rootKeyId": {"type": "string", "minLength": 1},
+        "signature": {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"},
+        "signedAt": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"}
+      }
+    }
+  },
+  "x-qmanSignatureRule": "Set rootSignatures to [] and keyRingDigest to null, encode the complete ring with CANONICAL-JSON-V1, and store its SHA-256 in keyRingDigest. For each stored rootSignature, form the closed signature envelope {rootKeyId:<exact rootKeyId>,signedAt:<exact signedAt>,keyRingDigest:<stored keyRingDigest>} and verify Ed25519 over ASCII(QMAN-DIRECTPATH/TRUST-KEY-RING/V1) || 0x00 || CANONICAL-JSON-V1(envelope) against the offline root set. Thus signedAt is signed rather than removed with rootSignatures. The candidate ring contains no receipt/hash of the external anchor that accepts it, preventing a digest fixed point; after verification, external monotonic state is compared and advanced independently.",
+  "x-qmanKeyIdentityRule": "principalId is the immutable enterprise IAM/HSM principal bound to this signed key entry. Reassigning an existing keyId or public key to another principal is invalid; rotation creates a new keyId. No two keyIds in one ring may reuse publicKeyBase64Url. Approval.identity must byte-equal the principalId resolved through approval.keyId.",
+  "x-qmanSeparationOfDutiesRule": "QUALIFICATION_ENGINEERING and PRODUCT_RELEASE use distinct keyIds, public-key material and principalIds. TARGET_ARCHITECT, SECURITY and TEST approvals use three distinct keyIds, three distinct public keys and three distinct principalIds; no one principal or key may hold two of those roles. QualificationRecord signerKeyId/principalId must differ from the Product Release signer of the consuming SupportedCatalog and QualificationReleaseIndex. CONTROL_REPOSITORY_EVIDENCE signs only a repository transaction result after the repository has atomically consumed a host receipt; HOST_RELEASE_EVIDENCE cannot impersonate that independent authority."
+}

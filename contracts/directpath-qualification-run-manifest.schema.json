@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-qualification-run-manifest.schema.json",
+  "title": "Qman DirectPath completed QualificationRunManifest",
+  "description": "Closed dual-attested manifest for one completed physical qualification run. It binds the orchestrated request, current host inventory, measured platform/backend, typed QualificationMeasurements, pre-index scenario execution cores and workload result without creating a Subject/Index/Record digest cycle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "manifestId",
+    "qualificationRunId",
+    "state",
+    "evidenceGrade",
+    "targetRepositoryCommit",
+    "mappingCoreId",
+    "mappingCoreDigest",
+    "portableContractSha256",
+    "hostId",
+    "hostEpoch",
+    "bootId",
+    "deviceUid",
+    "deviceRecordHash",
+    "currentInventorySnapshot",
+    "platformProfile",
+    "backendProfile",
+    "orchestratorRequest",
+    "startedAt",
+    "finishedAt",
+    "monotonicTiming",
+    "qualificationMeasurements",
+    "scenarioExecutionCoreDigests",
+    "workloadResult",
+    "keyRingVersion",
+    "runDigest",
+    "attestations"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "manifestId": {"$ref": "#/$defs/id"},
+    "qualificationRunId": {"$ref": "#/$defs/id"},
+    "state": {"const": "COMPLETE"},
+    "evidenceGrade": {"const": "E4-PHYSICAL-QUALIFICATION"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "mappingCoreDigest": {"$ref": "#/$defs/digest"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "hostId": {"$ref": "#/$defs/id"},
+    "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+    "bootId": {"$ref": "#/$defs/id"},
+    "deviceUid": {"type": "string", "pattern": "^urn:qman:directpath:device:v1:[A-Za-z0-9][A-Za-z0-9._:-]{2,127}:sha256:[0-9a-f]{64}$"},
+    "deviceRecordHash": {"$ref": "#/$defs/digest"},
+    "currentInventorySnapshot": {"$ref": "#/$defs/inventorySnapshot"},
+    "platformProfile": {"$ref": "#/$defs/platformProfile"},
+    "backendProfile": {"$ref": "#/$defs/backendProfile"},
+    "orchestratorRequest": {"$ref": "#/$defs/orchestratorRequest"},
+    "startedAt": {"$ref": "#/$defs/timestamp"},
+    "finishedAt": {"$ref": "#/$defs/timestamp"},
+    "monotonicTiming": {"$ref": "#/$defs/monotonicTiming"},
+    "qualificationMeasurements": {"$ref": "#/$defs/measurementSet"},
+    "scenarioExecutionCoreDigests": {"$ref": "#/$defs/digestSet"},
+    "workloadResult": {"$ref": "#/$defs/workloadResult"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "runDigest": {"$ref": "#/$defs/digest"},
+    "attestations": {"$ref": "#/$defs/attestationSet"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "principalId": {"type": "string", "pattern": "^urn:qman:principal:[A-Za-z0-9][A-Za-z0-9._:/-]{0,191}$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"},
+    "decimalNanoseconds": {"type": "string", "pattern": "^(0|[1-9][0-9]{0,38})$"},
+    "digestSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/digest"},
+      "x-qmanSetOrder": "ascending canonical bytes"
+    },
+    "inventorySnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshotEpoch",
+        "agentGeneration",
+        "hostAuthorityResourceVersion",
+        "inventorySnapshotDigest",
+        "observedAt",
+        "path",
+        "sha256",
+        "byteLength",
+        "mediaType",
+        "schemaRef",
+        "schemaSha256"
+      ],
+      "properties": {
+        "snapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "agentGeneration": {"$ref": "#/$defs/safePositiveInteger"},
+        "hostAuthorityResourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "inventorySnapshotDigest": {"$ref": "#/$defs/digest"},
+        "observedAt": {"$ref": "#/$defs/timestamp"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-portable-hash-subjects.schema.json#/$defs/hostSnapshot"},
+        "schemaSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "platformProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platformProfileId", "platformProfileDigest", "compatibilityPolicyPath", "compatibilityPolicySha256"],
+      "properties": {
+        "platformProfileId": {"$ref": "#/$defs/id"},
+        "platformProfileDigest": {"$ref": "#/$defs/digest"},
+        "compatibilityPolicyPath": {"const": "contracts/compatibility-profile-policy.json"},
+        "compatibilityPolicySha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "backendProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backendFamily", "configuredIommuType", "backendProfileDigest"],
+      "properties": {
+        "backendFamily": {"enum": ["LEGACY_VFIO_TYPE1", "VFIO_CDEV_IOMMUFD"]},
+        "configuredIommuType": {"enum": ["VFIO_TYPE1V2_IOMMU", "VFIO_TYPE1_IOMMU", "IOMMUFD_IOAS"]},
+        "backendProfileDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "orchestratorRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "orchestratorId",
+        "orchestratorPrincipalId",
+        "requestId",
+        "requestNonce",
+        "issuedAt",
+        "expiresAt",
+        "path",
+        "sha256",
+        "byteLength",
+        "mediaType",
+        "schemaRef",
+        "schemaSha256",
+        "requestDigest"
+      ],
+      "properties": {
+        "orchestratorId": {"$ref": "#/$defs/id"},
+        "orchestratorPrincipalId": {"$ref": "#/$defs/principalId"},
+        "requestId": {"$ref": "#/$defs/id"},
+        "requestNonce": {"type": "string", "pattern": "^[A-Za-z0-9_-]{22,86}$"},
+        "issuedAt": {"$ref": "#/$defs/timestamp"},
+        "expiresAt": {"$ref": "#/$defs/timestamp"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-qualification-run-request.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "requestDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "monotonicTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clockId", "startedNanoseconds", "finishedNanoseconds", "durationNanoseconds"],
+      "properties": {
+        "clockId": {"enum": ["CLOCK_MONOTONIC", "CLOCK_MONOTONIC_RAW", "CLOCK_BOOTTIME"]},
+        "startedNanoseconds": {"$ref": "#/$defs/decimalNanoseconds"},
+        "finishedNanoseconds": {"$ref": "#/$defs/decimalNanoseconds"},
+        "durationNanoseconds": {"type": "string", "pattern": "^[1-9][0-9]{0,38}$"}
+      }
+    },
+    "measurementSet": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/measurementDescriptor"},
+      "allOf": [
+        {"contains": {"properties": {"subjectField": {"const": "pciIdentityMatch"}}, "required": ["subjectField"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"subjectField": {"const": "deviceArchetype"}}, "required": ["subjectField"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"subjectField": {"const": "deviceFirmwareAndRom"}}, "required": ["subjectField"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"subjectField": {"const": "kernelQemuFirmwareBackend"}}, "required": ["subjectField"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"subjectField": {"const": "iommuInterruptResetProviders"}}, "required": ["subjectField"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"subjectField": {"const": "guestDriverAndWorkload"}}, "required": ["subjectField"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"subjectField": {"const": "deviceTraits"}}, "required": ["subjectField"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"subjectField": {"const": "caseExecution"}}, "required": ["subjectField"]}, "minContains": 1}
+      ],
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [subjectField,sourceKind,measurementDigest]"
+    },
+    "measurementDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "measurementId",
+        "qualificationRunId",
+        "subjectField",
+        "sourceKind",
+        "measurementPath",
+        "measurementSha256",
+        "measurementByteLength",
+        "mediaType",
+        "schemaRef",
+        "schemaSha256",
+        "measurementDigest",
+        "signerRole",
+        "observedAt",
+        "hostId",
+        "hostEpoch",
+        "bootId",
+        "deviceUid",
+        "deviceRecordHash"
+      ],
+      "properties": {
+        "measurementId": {"$ref": "#/$defs/id"},
+        "qualificationRunId": {"$ref": "#/$defs/id"},
+        "subjectField": {"$ref": "#/$defs/subjectField"},
+        "sourceKind": {"$ref": "#/$defs/sourceKind"},
+        "measurementPath": {"$ref": "#/$defs/repositoryRelativePath"},
+        "measurementSha256": {"$ref": "#/$defs/digest"},
+        "measurementByteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-qualification-measurement.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "measurementDigest": {"$ref": "#/$defs/digest"},
+        "signerRole": {"enum": ["HOST_INVENTORY_EVIDENCE", "QUALIFICATION_ENGINEERING", "TEST_EVIDENCE"]},
+        "observedAt": {"$ref": "#/$defs/timestamp"},
+        "hostId": {"$ref": "#/$defs/id"},
+        "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "bootId": {"$ref": "#/$defs/id"},
+        "deviceUid": {"type": "string", "pattern": "^urn:qman:directpath:device:v1:[A-Za-z0-9][A-Za-z0-9._:-]{2,127}:sha256:[0-9a-f]{64}$"},
+        "deviceRecordHash": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {"if": {"properties": {"subjectField": {"const": "pciIdentityMatch"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "HOST_INVENTORY"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}}}},
+        {"if": {"properties": {"subjectField": {"const": "deviceArchetype"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "QUALIFICATION_TAXONOMY_CLASSIFICATION"}, "signerRole": {"const": "QUALIFICATION_ENGINEERING"}}}},
+        {"if": {"properties": {"subjectField": {"const": "deviceFirmwareAndRom"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "FIRMWARE_READBACK"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}}}},
+        {"if": {"properties": {"subjectField": {"const": "kernelQemuFirmwareBackend"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "RUNTIME_BINARY_MEASUREMENT"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}}}},
+        {"if": {"properties": {"subjectField": {"const": "iommuInterruptResetProviders"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "KERNEL_PROVIDER_READBACK"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}}}},
+        {"if": {"properties": {"subjectField": {"const": "guestDriverAndWorkload"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "GUEST_ATTESTED_READBACK"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}}}},
+        {"if": {"properties": {"subjectField": {"const": "deviceTraits"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "HOST_INVENTORY"}, "signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}}}},
+        {"if": {"properties": {"subjectField": {"const": "caseExecution"}}, "required": ["subjectField"]}, "then": {"properties": {"sourceKind": {"const": "SCENARIO_EXECUTION_CORE"}, "signerRole": {"const": "TEST_EVIDENCE"}}}}
+      ]
+    },
+    "subjectField": {
+      "enum": [
+        "pciIdentityMatch",
+        "deviceArchetype",
+        "deviceFirmwareAndRom",
+        "kernelQemuFirmwareBackend",
+        "iommuInterruptResetProviders",
+        "guestDriverAndWorkload",
+        "deviceTraits",
+        "caseExecution"
+      ]
+    },
+    "sourceKind": {
+      "enum": [
+        "HOST_INVENTORY",
+        "QUALIFICATION_TAXONOMY_CLASSIFICATION",
+        "FIRMWARE_READBACK",
+        "RUNTIME_BINARY_MEASUREMENT",
+        "KERNEL_PROVIDER_READBACK",
+        "GUEST_ATTESTED_READBACK",
+        "SCENARIO_EXECUTION_CORE"
+      ]
+    },
+    "workloadResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workloadId",
+        "workloadDefinitionDigest",
+        "outcome",
+        "startedAt",
+        "finishedAt",
+        "monotonicDurationNanoseconds",
+        "path",
+        "sha256",
+        "byteLength",
+        "mediaType",
+        "schemaRef",
+        "schemaSha256",
+        "resultDigest"
+      ],
+      "properties": {
+        "workloadId": {"$ref": "#/$defs/id"},
+        "workloadDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "outcome": {"enum": ["PASSED", "FAILED", "ABORTED"]},
+        "startedAt": {"$ref": "#/$defs/timestamp"},
+        "finishedAt": {"$ref": "#/$defs/timestamp"},
+        "monotonicDurationNanoseconds": {"type": "string", "pattern": "^[1-9][0-9]{0,38}$"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"$ref": "#/$defs/mediaType"},
+        "schemaRef": {"const": "contracts/directpath-qualification-workload-result.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "resultDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "attestationSet": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/attestation"},
+      "allOf": [
+        {"contains": {"properties": {"signerRole": {"const": "HOST_INVENTORY_EVIDENCE"}}, "required": ["signerRole"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"signerRole": {"const": "TEST_EVIDENCE"}}, "required": ["signerRole"]}, "minContains": 1, "maxContains": 1}
+      ],
+      "x-qmanCanonicalOrder": "HOST_INVENTORY_EVIDENCE, then TEST_EVIDENCE"
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["signerRole", "principalId", "signerKeyId", "signedAt", "algorithm", "signature"],
+      "properties": {
+        "signerRole": {"enum": ["HOST_INVENTORY_EVIDENCE", "TEST_EVIDENCE"]},
+        "principalId": {"$ref": "#/$defs/principalId"},
+        "signerKeyId": {"$ref": "#/$defs/id"},
+        "signedAt": {"$ref": "#/$defs/timestamp"},
+        "algorithm": {"const": "Ed25519"},
+        "signature": {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}
+      }
+    }
+  },
+  "x-qmanTargetBindingRule": "Normalize targetRepositoryCommit to the lowercase unprefixed Git object ID C. Resolve mappingCoreId/mappingCoreDigest as the one detached mapping core M for C and verify portableContractSha256 against the independently pinned portable contract. Every parsed QualificationMeasurement and reconstructed scenario execution core MUST bind exactly this C, M and portable contract where those fields are present; a display label, branch, mutable tag or alternate map cannot substitute.",
+  "x-qmanInventoryAndPlatformRule": "At run admission and again immediately before each attestation, independently read the current HostAuthority. Its hostId, hostEpoch and kernelBootId MUST equal hostId, hostEpoch and bootId; its agentGeneration, resourceVersion, currentSnapshotContentHash and lastSnapshotEpoch MUST respectively equal currentInventorySnapshot.agentGeneration, hostAuthorityResourceVersion, inventorySnapshotDigest and snapshotEpoch. Resolve currentInventorySnapshot.path only in evidence commit E and verify sha256 over the final signed JSON raw bytes, byteLength, mediaType and fixed HostSnapshot schema bytes. In the parsed HostSnapshot require hostId=manifest.hostId, kernelBootId=bootId, hostEpoch=manifest.hostEpoch, agentGeneration=currentInventorySnapshot.agentGeneration, hostAuthorityResourceVersion=currentInventorySnapshot.hostAuthorityResourceVersion, snapshotEpoch=currentInventorySnapshot.snapshotEpoch, capturedAt=currentInventorySnapshot.observedAt and contentHash=currentInventorySnapshot.inventorySnapshotDigest, then verify its active HOST_INVENTORY_EVIDENCE signature. No independent snapshotId exists; the immutable identity is the raw descriptor plus internal contentHash/current-pointer tuple. Raw sha256 and contentHash are distinct hash domains. Select exactly one platform row from compatibilityPolicyPath whose raw hash is compatibilityPolicySha256 and whose ID is platformProfileId, then derive platformProfileDigest. Parse the unique kernelQemuFirmwareBackend measurement: its platformProfileId, backendFamily and configuredIommuType equal this manifest, and backendProfileDigest is SHA-256(CANONICAL-JSON-V1 of its complete measuredValue). A stale snapshot, boot/epoch change or descriptor relabeling invalidates the run.",
+  "x-qmanOrchestratorRequestRule": "requestNonce is generated by the orchestrator from at least 128 bits of fresh randomness, is supplied before any collection starts and is consumed exactly once for qualificationRunId. Resolve the request raw bytes by path/hash/length, validate only against the fixed QualificationRunRequest schema whose pinned raw hash equals schemaSha256, verify requestDigest and its TEST_EVIDENCE signature, and require parsed qualificationRunId/orchestrator/request/principal/nonce/target C/mapping core/host/boot/current snapshot/platform/backend/workload/Case-plan fields to byte-equal this manifest and its complete measurement/core closure. issuedAt < startedAt <= finishedAt <= expiresAt; an expired, replayed, self-generated or evidence-repository-derived nonce fails closed.",
+  "x-qmanTimingRule": "startedAt is strictly before finishedAt. Parse monotonic nanosecond values as unsigned decimal integers and require finishedNanoseconds > startedNanoseconds and durationNanoseconds = finishedNanoseconds - startedNanoseconds. The same monotonic clock and bootId cover the entire run; wall clock adjustment cannot shorten the measured duration. workloadResult starts and finishes inside the run interval, its monotonic duration is independently derived from its result artifact and does not exceed the run duration, and every measurement observedAt lies inside the run interval.",
+  "x-qmanMeasurementClosureRule": "Resolve every measurementPath inside evidence commit E, verify raw SHA-256, byte length and media type, validate only against the pinned directpath-qualification-measurement schema whose raw hash equals schemaSha256, then verify the parsed measurementDigest/signature/key history. Each descriptor's measurementId, qualificationRunId, subjectField, sourceKind, observedAt, signerRole, hostId, hostEpoch, bootId, deviceUid and deviceRecordHash MUST byte-equal the parsed record and this manifest's frozen run/host/epoch/boot/device tuple. Exactly one HOST_INVENTORY_EVIDENCE measurement exists for each of pciIdentityMatch, deviceFirmwareAndRom, kernelQemuFirmwareBackend, iommuInterruptResetProviders, guestDriverAndWorkload and deviceTraits; exactly one independently signed QUALIFICATION_ENGINEERING measurement exists for deviceArchetype and derives it from a prior taxonomy/classifier artifact without consuming the final QualificationRecord or SupportedCatalog. caseExecution records are TEST_EVIDENCE-signed, and their measuredValue set is a bijection with scenarioExecutionCoreDigests. Every non-case record's inventorySnapshotDigestOrNull equals currentInventorySnapshot.inventorySnapshotDigest. Paths, raw hashes, measurement IDs and measurement digests are each unique; omitted, extra, duplicate, cross-device or relabeled measurements invalidate COMPLETE.",
+  "x-qmanScenarioCoreRule": "Each scenarioExecutionCoreDigest is independently reconstructed from the pre-index scenario execution-result projection defined by ExecutionEvidenceIndex and has one matching caseExecution QualificationMeasurement. Resolve that measurement's immutable SCENARIO_EXECUTION_CORE_INPUT plus the referenced Scenario and RunnerManifest: together they MUST bind this qualificationRunId/request nonce through the request-correlation evidence and bind target C, mapping core M, portable contract, E4 grade and host/profile/backend tuple through the signed scenario target binding. The set contains every core launched by the request and no unrelated core. It deliberately contains no final ExecutionEvidenceIndex digest, final scenario result digest, QualificationSubjectManifest digest, QualificationRecord digest or CaseCompletionRecord digest.",
+  "x-qmanWorkloadResultRule": "Resolve workloadResult.path inside evidence commit E, verify its raw hash/length/media type, validate only against the fixed QualificationWorkloadResult schema whose raw hash equals schemaSha256, and verify its internal resultDigest and TEST_EVIDENCE signature. Parsed qualificationRunId/requestDigest/target C/mapping core/host/epoch/boot/workload ID/definition digest, outcome, timestamps and monotonic duration MUST byte-equal the request, this manifest and descriptor; the unique guestDriverAndWorkload measurement MUST bind the same workload definition and include this exact raw result artifact in its evidenceBindings. Recursively verify the Request's fixed QualificationWorkloadDefinition descriptor before interpreting mandatory assertions, evidence roles or metric definitions. state=COMPLETE records any terminal outcome immutably, but only outcome=PASSED and satisfaction of every definition assertion plus independently measured minimum duration are eligible for QualificationSubjectManifest or QualificationRecord construction.",
+  "x-qmanCompleteStateRule": "COMPLETE means the orchestrator request is terminal, all requested scenario cores and the workload result are immutable, every required QualificationMeasurement has been signed, the current inventory pointer has been rechecked, and both independent attestations are present. A running, partially collected, timed-out without terminal result, mutable or reopenable run MUST NOT be represented by this schema. Once either attestation exists, changing any bound byte creates a different runDigest and requires a new qualificationRunId rather than mutation in place.",
+  "x-qmanAcyclicConstructionRule": "Construct and sign every QualificationMeasurement first; a measurement contains qualificationRunId but never runDigest or a RunManifest/Subject/Index/Record/Completion digest. Next construct this RunManifest from the complete measurement descriptors, pre-index scenario core set and workload result, derive runDigest, and obtain both attestations. Construct QualificationSubjectManifest only afterward and make it reference this manifest's raw hash/runDigest plus exactly the same measurement/core projection. Then construct ExecutionEvidenceIndexes containing the Subject, followed by final scenario results, QualificationRecord and CaseCompletionRecords. This manifest never embeds or hashes any of those later objects, so no fixed point exists.",
+  "x-qmanDigestAndSignatureRule": "Deep-copy the complete closed manifest, replace runDigest with null and attestations with [], retain every other field unchanged, encode with CANONICAL-JSON-V1 and store SHA-256 of those UTF-8 bytes in runDigest. The null/empty construction projection need not validate as a stored instance. For each attestation, encode the closed object {signerRole,principalId,signerKeyId,signedAt,runDigest} with CANONICAL-JSON-V1 and verify Ed25519 over ASCII(QMAN-DIRECTPATH/QUALIFICATION-RUN-MANIFEST-ATTESTATION/V1) || 0x00 || those bytes. Resolve both keys through the same independently authenticated keyRingVersion; they are active and non-revoked at signedAt, signedAt is not before finishedAt, and role/principal/key/public-key material are all distinct. Exactly one HOST_INVENTORY_EVIDENCE principal and one TEST_EVIDENCE principal therefore attest the same runDigest independently; neither signature, either principal alone, nor two keys controlled by one principal completes the run."
+}

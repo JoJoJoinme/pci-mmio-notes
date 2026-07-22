@@ -3,7 +3,8 @@
 状态：`TECHNICAL EVIDENCE / PRODUCT NOT IMPLEMENTED`
 项目 claim：`REFERENCE_AND_QUALIFICATION_MODEL_ONLY`
 治理快照：G0 `DONE`；G1 `IN_PROGRESS`；G2-G6 `NOT_STARTED`；Acceptance `101/101` 已分类
-（2 `EXECUTABLE` reference、93 `IMPLEMENTATION_BLOCKED`、6 `HARDWARE_BLOCKED`）；R01-R39 全部 `OPEN`
+（1 `EXECUTABLE` reference、94 `IMPLEMENTATION_BLOCKED`、6 `HARDWARE_BLOCKED`）；C20 的 E2
+reference runner 只证明算法，不关闭 PRODUCT Case；R01-R39 全部 `OPEN`
 实验日期：`2026-07-21 Asia/Shanghai`
 环境：`WSL2 Ubuntu-22.04 + KVM + QEMU 11.0.2 + OVMF 2022.02`
 
@@ -133,7 +134,7 @@ stock QEMU 自行 bind/attach。物理 IOMMU/IR/errata/reset/workload 仍需 E4�
 
 ### 3.5 C20 必须把依赖闭包放在 availability 之前
 
-`QMAN-E2-CLOSURE-001` 把实现蓝图中的 C20 四格变成可执行 reference Case：dependency
+`QMAN-E2-CLOSURE-001` 把实现蓝图中的 C20 四格变成可执行 reference runner：dependency
 qualified/free 与同一 bundle busy 拥有完全相同的 snapshot/bundle/capability/policy hash，仅
 availability 与 `decisionHash` 改变；dependency reset missing 或 action unknown 则在 capable gate
 直接失败。补充反例还验证了：

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-trust-rollback-anchor.schema.json",
+  "title": "Qman DirectPath externally protected key-ring rollback anchor",
+  "description": "Committed monotonic state held outside the target repository, evidence repository and DirectPath controller. Its exact live bytes must additionally be bound by a verifier-nonce AnchorFreshnessEnvelope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "recordType", "canonicalProfileId", "recordState", "keyRingId", "minimumSequence", "acceptedKeyRingDigest", "anchorVersion", "resourceVersion", "previousAnchorDigestOrNull", "updatedAt", "authorityId", "casPrecondition", "anchorDigest"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "recordType": {"const": "DIRECTPATH_TRUST_KEY_RING_ROLLBACK_ANCHOR"},
+    "canonicalProfileId": {"const": "CANONICAL-JSON-V1"},
+    "recordState": {"const": "COMMITTED"},
+    "keyRingId": {"$ref": "#/$defs/id"},
+    "minimumSequence": {"$ref": "#/$defs/safePositiveInteger"},
+    "acceptedKeyRingDigest": {"$ref": "#/$defs/digest"},
+    "anchorVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "resourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "previousAnchorDigestOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "updatedAt": {"$ref": "#/$defs/timestamp"},
+    "authorityId": {"$ref": "#/$defs/id"},
+    "casPrecondition": {"$ref": "#/$defs/casPrecondition"},
+    "anchorDigest": {"$ref": "#/$defs/digest"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"anchorVersion": {"const": 1}}, "required": ["anchorVersion"]},
+      "then": {
+        "properties": {
+          "resourceVersion": {"const": 1},
+          "previousAnchorDigestOrNull": {"type": "null"},
+          "casPrecondition": {"$ref": "#/$defs/genesisCasPrecondition"}
+        }
+      },
+      "else": {
+        "properties": {
+          "previousAnchorDigestOrNull": {"$ref": "#/$defs/digest"},
+          "casPrecondition": {"$ref": "#/$defs/successorCasPrecondition"}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "casPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectedAnchorVersionOrNull", "expectedResourceVersionOrNull", "expectedMinimumSequenceOrNull", "expectedAcceptedKeyRingDigestOrNull", "expectedAnchorDigestOrNull"],
+      "properties": {
+        "expectedAnchorVersionOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/safePositiveInteger"}]},
+        "expectedResourceVersionOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/safePositiveInteger"}]},
+        "expectedMinimumSequenceOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/safePositiveInteger"}]},
+        "expectedAcceptedKeyRingDigestOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "expectedAnchorDigestOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]}
+      }
+    },
+    "genesisCasPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectedAnchorVersionOrNull", "expectedResourceVersionOrNull", "expectedMinimumSequenceOrNull", "expectedAcceptedKeyRingDigestOrNull", "expectedAnchorDigestOrNull"],
+      "properties": {
+        "expectedAnchorVersionOrNull": {"type": "null"},
+        "expectedResourceVersionOrNull": {"type": "null"},
+        "expectedMinimumSequenceOrNull": {"type": "null"},
+        "expectedAcceptedKeyRingDigestOrNull": {"type": "null"},
+        "expectedAnchorDigestOrNull": {"type": "null"}
+      }
+    },
+    "successorCasPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectedAnchorVersionOrNull", "expectedResourceVersionOrNull", "expectedMinimumSequenceOrNull", "expectedAcceptedKeyRingDigestOrNull", "expectedAnchorDigestOrNull"],
+      "properties": {
+        "expectedAnchorVersionOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedResourceVersionOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedMinimumSequenceOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedAcceptedKeyRingDigestOrNull": {"$ref": "#/$defs/digest"},
+        "expectedAnchorDigestOrNull": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "x-qmanDigestRule": "Set anchorDigest to null in an in-memory projection and hash the complete CANONICAL-JSON-V1 object. The null projection need not satisfy the stored schema.",
+  "x-qmanMonotonicCasRule": "The independent authority atomically compares every casPrecondition field for keyRingId. Genesis has no predecessor. A successor increments anchorVersion and resourceVersion by exactly one, binds previousAnchorDigestOrNull, has a later updatedAt, and never decreases minimumSequence. Equal sequence requires the same accepted digest; a higher sequence must bind the fully verified current ring and its complete genesis-to-current TrustKeyRingHistory. Stale CAS, skips, lower sequence or equivocation write nothing.",
+  "x-qmanFreshnessRule": "This stored record proves monotonic acceptance but not that a copied file is current. Release/QUALIFIED additionally require a live directpath-anchor-freshness-envelope with anchorKind=TRUST_KEY_RING, an evaluator-supplied nonce, unexpired root quorum signatures, and exact anchor bytes/digest/version/resourceVersion."
+}

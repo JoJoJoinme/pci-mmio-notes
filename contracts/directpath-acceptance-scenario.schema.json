@@ -1,0 +1,714 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-acceptance-scenario.schema.json",
+  "title": "Qman DirectPath executable product scenario",
+  "description": "Defines a portable oracle, a target-bound runnable scenario, or an immutable passing execution record without allowing those states to be conflated.",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991; the semantic validator rejects wider values before canonicalization or signature verification.",
+  "x-qmanSemanticValidationRules": [
+    "For BOUND and EXECUTED_PASS, resolve targetBinding.testPath and testSymbol at targetBinding.repositoryCommit and recompute every declared hash.",
+    "For EXECUTED_PASS, executionResult.targetRepositoryCommit must equal targetBinding.repositoryCommit and scenarioInputSha256 must hash the CANONICAL-JSON-V1 scenario with executionResult set to null.",
+    "Resolve caseContractDigest from the generated 101-record Case registry. casePredicateBindings exactly cover its assertions and pin each immutable assertion digest to a target predicate symbol/interface in RunnerManifest. Every iteration independently returns PASS for the exact assertion set using same-iteration, role-exclusive artifact hashes from ExecutionEvidenceIndex.",
+    "Artifact instances must cover every artifacts expectation independently in every iteration; their producer, type, on-disk bytes, and SHA-256 must agree. artifacts[*].correlationFields resolves either to a closed first-class correlation field (scenarioId, caseId, scenarioRunId, iterationRunId, iteration, faultPoint, commandId, assignmentId, runId) or to exactly one correlation.subjectBindings key; missing, duplicate, unknown, or cross-iteration values fail.",
+    "Each iteration's oracleResults must cover every step expectedImmediateResult, final state, mustOccur, mustNotOccur, authoritative write, physical oracle, idempotency oracle, and cleanup proof exactly once; every referenced evidence hash must resolve to an artifact instance correlated to that same iterationRunId.",
+    "Resolve caseId, Tech Story, Risk, Port, Operation, Entity, Reason, FSM, Transition, Test obligation, Parity obligation, and state references against targetBinding.portableContractSha256. trace operationIds equals the step operation set; portIds derives from those operations' owner ports; entityIds derives from authoritative writes plus referenced FSM entities; stateMachineIds equals initial/final/cleanup keys; transitionIds must name an exact legal path whose ordered operations/CAS/authority semantics are exercised; testObligationIds derives from caseId; parityObligationIds derives from those tests and ports. Self-declared extra coverage is rejected.",
+    "Fixture, profile, backend, integration-map, runner, and evidence-index hashes must be immutable and applicable to the exact platform/device/firmware/guest/workload run.",
+    "RunnerManifest and ExecutionEvidenceIndex are required typed signed objects, not hash labels. SOURCE_TREE_MANIFEST, BUILD_ATTESTATION, BUILD_LOG, TEST_LOG, TOOL_MANIFEST and RUNNER_BINARY are distinct verified artifacts; iteration/oracle/predicate artifacts cannot be reused across roles or iterations.",
+    "E3 target/result bindings set all qualification-run correlation fields to null. E4 target binding is created from a signed pre-run QualificationRunRequest and fixes qualificationRunId, requestDigest and a domain-separated nonce digest; executionResult and ExecutionEvidenceIndex repeat those exact fields inside the signed scenario core/index so a later RunManifest cannot adopt unrelated cores.",
+    "EXECUTED_PASS is only eligible evidence; it does not itself close a Case, Risk, milestone, qualification, or release gate until the release evaluator validates dependencies, evidence grade, approvals, and non-invalidated hashes.",
+    "EXECUTED_PASS requires limitations=[]; a run with any known observation, coverage, applicability, trust, or fixture limitation remains informational and must not be represented by this status."
+  ],
+  "x-qmanOracleIdContract": {
+    "immediateResults": "STEP-%03d-IMMEDIATE for every steps[*].sequence",
+    "finalStates": "FINAL-STATE:<FSM-ID> for every expected.finalStates key",
+    "mustOccur": "MUST-OCCUR:%03d using one-based array order",
+    "mustNotOccur": "MUST-NOT-OCCUR:%03d using one-based array order",
+    "authoritativeWrites": "AUTHORITATIVE-WRITE:%03d using one-based array order",
+    "physicalOracle": "PHYSICAL:%03d using one-based array order",
+    "idempotencyOracle": "IDEMPOTENCY",
+    "cleanup": "CLEANUP-STATE:<FSM-ID> for every cleanup.expectedStates key, followed by CLEANUP-PROOF:%03d for every cleanup.proofRequired item",
+    "rule": "The executable semantic validator derives these exact sets; missing, duplicate, unknown, or extra oracle IDs invalidate EXECUTED_PASS. Array order is normative and cannot be renumbered without creating a new scenarioInputSha256."
+  },
+  "x-qmanIterationEvidenceContract": "execution.faultPointPlan is an exact execution partition: its repeat sum equals execution.repeat and its non-null fault points/counts equal the declared step fault injections. executionResult.iterationResults contains exactly execution.repeat records numbered 1..repeat with unique iterationRunId values. Every record independently binds its planned fault point, full oracle matrix, exact correlated artifact hash set, schedule/barrier evidence, cleanup proof, timestamps, and PASS. Aggregate or cross-iteration evidence cannot substitute for a missing iteration.",
+  "x-qmanExecutionDigestDAG": "For E4, qualificationRunRequestNonceDigestOrNull = SHA-256(ASCII(QMAN-DIRECTPATH/QUALIFICATION-RUN-NONCE/V1) || 0x00 || UTF8(decoded-and-reencoded canonical unpadded-base64url requestNonce)); it correlates without exposing nonce bytes. First compute scenarioExecutionCoreDigest using the projection defined by ExecutionEvidenceIndex; evidenceGrade and all three qualification-run correlation fields remain in that projection. Construct and sign the index without embedding final resultDigest or the index itself. Then populate evidenceIndexRecordSha256, executionEvidenceIndexDigest and executionEvidenceIndexPath in executionResult; set resultDigest and signature to null, hash the complete CANONICAL-JSON-V1 executionResult into resultDigest, and sign ASCII(QMAN-DIRECTPATH/ACCEPTANCE-EXECUTION/V1) || 0x00 || those same bytes. This order is acyclic: request -> bound input -> core -> index -> final result.",
+  "x-qmanOperationPayloadContract": "Every step.operationId byte-equals request.operationId and expectedImmediateResult.operationId. The request/result schema refs are the unique 35-operation fragments selected by directpath-operation-envelope requestPayloadSchemaBinding/resultPayloadSchemaBinding, and payloadSchemaSha256 equals the normative raw hash of the complete operation-payload schema. TEMPLATE keeps payloadPathOrNull/payloadHashOrNull null and intentSummary is explanatory only. BOUND and EXECUTED_PASS require repository-contained immutable request and expected-result fixture paths, parse and validate the exact closed profiles, recompute payloadHashOrNull as SHA-256 of CANONICAL-JSON-V1(payload), and require their internal operationId/direction/profileId to match. The evidence commit fixes path/content history; payloadHash is the semantic canonical digest, not an assertion that presentation whitespace bytes equal canonical bytes. Every EXECUTED_PASS iteration additionally contains an exact ordered operationExchanges bijection with steps. Each exchange resolves raw request/result envelope bytes through its fixed schema fragment/hash, verifies requestHash/resultHash and payloadHash, binds one common command/correlation identity, and projects RESULT status/reason/retryable exactly. The parsed payload hashes equal the bound fixture canonical digests and the result projection equals expectedImmediateResult. An open ad-hoc request object, narrative-only result, target-local payload schema, missing exchange or mismatched operation fragment cannot bind or execute a scenario.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "definitionStatus",
+    "scenarioId",
+    "caseId",
+    "title",
+    "scope",
+    "targetMilestone",
+    "applicability",
+    "traceability",
+    "caseContractDigest",
+    "casePredicateBindings",
+    "preconditions",
+    "steps",
+    "expected",
+    "artifacts",
+    "cleanup",
+    "execution",
+    "targetBinding",
+    "executionResult"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "definitionStatus": {
+      "enum": ["TEMPLATE", "BOUND", "EXECUTED_PASS"],
+      "description": "TEMPLATE defines an oracle. BOUND pins real target code, tests, profiles, and fixtures but is not execution evidence; TEMPLATE and BOUND cannot close any Case, Risk, milestone, qualification, or release gate. EXECUTED_PASS additionally carries immutable passing run evidence. Only EXECUTED_PASS may be considered by a Case/Risk/milestone gate, and the gate must still validate applicability, hashes, dependencies, evidence grade, and release approvals."
+    },
+    "scenarioId": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]+$"},
+    "caseId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"},
+    "title": {"type": "string", "minLength": 1},
+    "scope": {"const": "PRODUCT"},
+    "targetMilestone": {"enum": ["G1", "G2", "G3", "G4", "G5", "G6"]},
+    "applicability": {"$ref": "#/$defs/applicability"},
+    "traceability": {"$ref": "#/$defs/traceability"},
+    "caseContractDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "casePredicateBindings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/casePredicateBinding"}},
+    "preconditions": {"$ref": "#/$defs/preconditions"},
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/step"}
+    },
+    "expected": {"$ref": "#/$defs/expected"},
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "cleanup": {"$ref": "#/$defs/cleanup"},
+    "execution": {"$ref": "#/$defs/execution"},
+    "targetBinding": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/targetBinding"}
+      ]
+    },
+    "executionResult": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/executionResult"}
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"definitionStatus": {"const": "TEMPLATE"}}, "required": ["definitionStatus"]},
+      "then": {
+        "properties": {
+          "targetBinding": {"type": "null"},
+          "executionResult": {"type": "null"},
+          "casePredicateBindings": {"items": {"properties": {"targetPredicateSymbolOrNull": {"type": "null"}, "targetPredicateInterfaceHashOrNull": {"type": "null"}}}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"definitionStatus": {"const": "BOUND"}}, "required": ["definitionStatus"]},
+      "then": {
+        "properties": {
+          "targetBinding": {"$ref": "#/$defs/targetBinding"},
+          "executionResult": {"type": "null"},
+          "casePredicateBindings": {"items": {"properties": {"targetPredicateSymbolOrNull": {"type": "string", "minLength": 1}, "targetPredicateInterfaceHashOrNull": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}},
+          "steps": {"items": {"properties": {"request": {"properties": {"payloadPathOrNull": {"type": "string"}, "payloadHashOrNull": {"type": "string"}}}, "expectedImmediateResult": {"properties": {"payloadPathOrNull": {"type": "string"}, "payloadHashOrNull": {"type": "string"}}}}}},
+          "preconditions": {
+            "properties": {
+              "fixtures": {
+                "items": {
+                  "properties": {
+                    "digest": {"not": {"const": "sha256:0000000000000000000000000000000000000000000000000000000000000000"}}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"definitionStatus": {"const": "EXECUTED_PASS"}}, "required": ["definitionStatus"]},
+      "then": {
+        "properties": {
+          "targetBinding": {"$ref": "#/$defs/targetBinding"},
+          "executionResult": {"$ref": "#/$defs/executionResult"},
+          "casePredicateBindings": {"items": {"properties": {"targetPredicateSymbolOrNull": {"type": "string", "minLength": 1}, "targetPredicateInterfaceHashOrNull": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}},
+          "steps": {"items": {"properties": {"request": {"properties": {"payloadPathOrNull": {"type": "string"}, "payloadHashOrNull": {"type": "string"}}}, "expectedImmediateResult": {"properties": {"payloadPathOrNull": {"type": "string"}, "payloadHashOrNull": {"type": "string"}}}}}},
+          "preconditions": {
+            "properties": {
+              "fixtures": {
+                "items": {
+                  "properties": {
+                    "digest": {"not": {"const": "sha256:0000000000000000000000000000000000000000000000000000000000000000"}}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nonEmptyUniqueStrings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "uniqueStrings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "casePredicateBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assertionId", "assertionDigest", "oracleClass", "predicateEvaluator", "targetPredicateSymbolOrNull", "targetPredicateInterfaceHashOrNull"],
+      "properties": {
+        "assertionId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?-[A-Z]+-[0-9]{3}$"},
+        "assertionDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "oracleClass": {"enum": ["authoritativeWrites", "cleanup", "finalStates", "idempotencyOracle", "immediateResults", "mustNotOccur", "mustOccur", "physicalOracle"]},
+        "predicateEvaluator": {"const": "TARGET-PREDICATE-INTERFACE-V1"},
+        "targetPredicateSymbolOrNull": {"type": ["string", "null"]},
+        "targetPredicateInterfaceHashOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}]}
+      }
+    },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platformProfileIds", "backendFamilies", "deviceTraitFamilies", "requiresPhysicalHardware"],
+      "properties": {
+        "platformProfileIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "backendFamilies": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["LEGACY_VFIO_TYPE1", "VFIO_CDEV_IOMMUFD"]}
+        },
+        "deviceTraitFamilies": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "requiresPhysicalHardware": {"type": "boolean"}
+      }
+    },
+    "traceability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractItemIds", "canonicalizationProfileIds", "guardIds", "configIds", "migrationIds", "telemetryIds", "techStoryIds", "riskIds", "portIds", "operationIds", "entityIds", "stateMachineIds", "transitionIds", "testObligationIds", "parityObligationIds", "expectedReasonCodes"],
+      "properties": {
+        "contractItemIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "canonicalizationProfileIds": {"$ref": "#/$defs/uniqueStrings"},
+        "guardIds": {"$ref": "#/$defs/uniqueStrings"},
+        "configIds": {"$ref": "#/$defs/uniqueStrings"},
+        "migrationIds": {"$ref": "#/$defs/uniqueStrings"},
+        "telemetryIds": {"$ref": "#/$defs/uniqueStrings"},
+        "techStoryIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "riskIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "portIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "operationIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "entityIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "stateMachineIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "transitionIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "testObligationIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "parityObligationIds": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "expectedReasonCodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "digest"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "preconditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initialStates", "authority", "fixtures", "facts"],
+      "properties": {
+        "initialStates": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {"type": "string", "minLength": 1}
+        },
+        "authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["snapshotEpoch", "resourceVersion", "hostEpoch", "runGeneration"],
+          "properties": {
+            "snapshotEpoch": {"type": "integer", "minimum": 0},
+            "resourceVersion": {"type": "integer", "minimum": 0},
+            "hostEpoch": {"type": "integer", "minimum": 0},
+            "runGeneration": {"type": "integer", "minimum": 0}
+          }
+        },
+        "fixtures": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/fixture"}},
+        "facts": {"$ref": "#/$defs/nonEmptyUniqueStrings"}
+      }
+    },
+    "faultInjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["point", "faultClasses", "trigger", "effect", "scheduleBarrier"],
+      "properties": {
+        "point": {"type": "string", "minLength": 1},
+        "faultClasses": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "trigger": {"type": "string", "minLength": 1},
+        "effect": {"type": "string", "minLength": 1},
+        "scheduleBarrier": {"type": "string", "minLength": 1}
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "actor", "operationId", "request", "expectedImmediateResult"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "actor": {"enum": ["API_CLIENT", "CONTROLLER", "SCHEDULER", "HOST_AGENT", "BOOT_AGENT", "QEMU", "GUEST", "FAULT_INJECTOR", "VERIFIER", "OPERATOR"]},
+        "operationId": {"type": "string", "pattern": "^OP-[A-Z0-9-]+$"},
+        "request": {"$ref": "#/$defs/requestPayloadBinding"},
+        "faultInjection": {"$ref": "#/$defs/faultInjection"},
+        "expectedImmediateResult": {"$ref": "#/$defs/expectedImmediateResult"}
+      }
+    },
+    "payloadBindingBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operationId", "direction", "payloadSchemaAuthority", "payloadSchemaRef", "payloadSchemaSha256", "payloadCanonicalProfile", "payloadPathOrNull", "payloadHashOrNull", "intentSummary"],
+      "properties": {
+        "operationId": {"type": "string", "pattern": "^OP-[A-Z0-9-]+$"},
+        "direction": {"enum": ["REQUEST", "RESULT"]},
+        "payloadSchemaAuthority": {"const": "PORTABLE_CONTRACT"},
+        "payloadSchemaRef": {"type": "string", "minLength": 1},
+        "payloadSchemaSha256": {"const": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b"},
+        "payloadCanonicalProfile": {"const": "CANONICAL-JSON-V1"},
+        "payloadPathOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"}]},
+        "payloadHashOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}]},
+        "intentSummary": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "expectedStatus": {"enum": ["IN_PROGRESS", "SUCCEEDED", "REJECTED", "CONFLICT", "FAILED"]},
+        "expectedReasonCodeOrNull": {"type": ["string", "null"]},
+        "expectedRetryable": {"type": "boolean"}
+      },
+      "allOf": [
+        {"if": {"properties": {"payloadPathOrNull": {"type": "null"}}, "required": ["payloadPathOrNull"]}, "then": {"properties": {"payloadHashOrNull": {"type": "null"}}}, "else": {"properties": {"payloadHashOrNull": {"type": "string"}}}}
+      ]
+    },
+    "requestPayloadBinding": {
+      "allOf": [
+        {"$ref": "#/$defs/payloadBindingBase"},
+        {"properties": {"direction": {"const": "REQUEST"}}},
+        {"$ref": "directpath-operation-envelope.schema.json#/$defs/requestPayloadSchemaBinding"},
+        {"not": {"anyOf": [{"required": ["expectedStatus"]}, {"required": ["expectedReasonCodeOrNull"]}, {"required": ["expectedRetryable"]}]}}
+      ]
+    },
+    "resultPayloadBinding": {
+      "allOf": [
+        {"$ref": "#/$defs/payloadBindingBase"},
+        {"properties": {"direction": {"const": "RESULT"}}},
+        {"$ref": "directpath-operation-envelope.schema.json#/$defs/resultPayloadSchemaBinding"}
+      ]
+    },
+    "expectedImmediateResult": {
+      "allOf": [
+        {"$ref": "#/$defs/resultPayloadBinding"},
+        {
+          "type": "object",
+          "required": ["expectedStatus", "expectedReasonCodeOrNull", "expectedRetryable"],
+          "properties": {
+            "expectedStatus": {"enum": ["IN_PROGRESS", "SUCCEEDED", "REJECTED", "CONFLICT", "FAILED"]},
+            "expectedReasonCodeOrNull": {"type": ["string", "null"]},
+            "expectedRetryable": {"type": "boolean"}
+          }
+        }
+      ]
+    },
+    "authoritativeWrite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entityId", "mutation", "predicate"],
+      "properties": {
+        "entityId": {"type": "string", "pattern": "^ENTITY-[A-Z0-9-]+$"},
+        "mutation": {"type": "string", "minLength": 1},
+        "predicate": {"type": "string", "minLength": 1}
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finalStates", "reasonCode", "retryable", "mustOccur", "mustNotOccur", "authoritativeWrites", "physicalOracle", "idempotencyOracle"],
+      "properties": {
+        "finalStates": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {"type": "string", "minLength": 1}
+        },
+        "reasonCode": {"type": ["string", "null"]},
+        "retryable": {"type": "boolean"},
+        "mustOccur": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "mustNotOccur": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "authoritativeWrites": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/authoritativeWrite"}},
+        "physicalOracle": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "idempotencyOracle": {"type": "string", "minLength": 1}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactType", "producer", "formatOrSchema", "hashRequired", "correlationFields"],
+      "properties": {
+        "artifactType": {"type": "string", "minLength": 1},
+        "producer": {"type": "string", "minLength": 1},
+        "formatOrSchema": {"type": "string", "minLength": 1},
+        "hashRequired": {"const": true},
+        "correlationFields": {"$ref": "#/$defs/nonEmptyUniqueStrings"}
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "expectedStates", "proofRequired"],
+      "properties": {
+        "required": {"const": true},
+        "expectedStates": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {"type": "string", "minLength": 1}
+        },
+        "proofRequired": {"$ref": "#/$defs/nonEmptyUniqueStrings"}
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetTestBindingRequired", "timeoutMs", "repeat", "concurrencySchedule", "faultPointPlan"],
+      "properties": {
+        "targetTestBindingRequired": {"const": true},
+        "timeoutMs": {"type": "integer", "minimum": 1},
+        "repeat": {"type": "integer", "minimum": 1},
+        "concurrencySchedule": {"type": "string", "minLength": 1},
+        "faultPointPlan": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["faultPointOrNull", "faultClasses", "repeat"],
+            "properties": {
+              "faultPointOrNull": {"type": ["string", "null"]},
+              "faultClasses": {"$ref": "#/$defs/uniqueStrings"},
+              "repeat": {"type": "integer", "minimum": 1}
+            }
+          }
+        }
+      }
+    },
+    "targetBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryId",
+        "repositoryObjectFormat",
+        "repositoryCommit",
+        "portableContractSha256",
+        "integrationMapId",
+        "mappingCoreId",
+        "integrationMapSha256",
+        "artifactGraphPosition",
+        "testPath",
+        "testSymbol",
+        "testInterfaceHash",
+        "fixtureSetHash",
+        "platformProfileDigest",
+        "backendProfileDigest",
+        "evidenceGrade",
+        "qualificationRunIdOrNull",
+        "qualificationRunRequestDigestOrNull",
+        "qualificationRunRequestNonceDigestOrNull",
+        "trustKeyRingPath",
+        "trustKeyRingSha256",
+        "runnerManifestPath",
+        "runnerManifestSha256",
+        "hashScope",
+        "buildId"
+      ],
+      "properties": {
+        "repositoryId": {"type": "string", "minLength": 1},
+        "repositoryObjectFormat": {"enum": ["SHA1", "SHA256"]},
+        "repositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+        "portableContractSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "integrationMapId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-INTEGRATION-[A-Z0-9._-]+$"},
+        "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+        "integrationMapSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "Mapping-core digest M: exactly qman-integration-map scenarioBindingDigest, never final mapDigest. M binds portable source plus target code revision C and structural bindings, while excluding evidence revision E, approvals and completion evidence."},
+        "artifactGraphPosition": {"const": "EVIDENCE_BLOB_EMBEDS_C_AND_M_NOT_E"},
+        "testPath": {"type": "string", "minLength": 1},
+        "testSymbol": {"type": "string", "minLength": 1},
+        "testInterfaceHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "fixtureSetHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "platformProfileDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "backendProfileDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "evidenceGrade": {"enum": ["E3-END-TO-END-PRODUCT", "E4-PHYSICAL-QUALIFICATION"]},
+        "qualificationRunIdOrNull": {"type": ["string", "null"], "minLength": 1},
+        "qualificationRunRequestDigestOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}]},
+        "qualificationRunRequestNonceDigestOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}]},
+        "trustKeyRingPath": {"type": "string", "minLength": 1},
+        "trustKeyRingSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "runnerManifestPath": {"type": "string", "minLength": 1},
+        "runnerManifestSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "hashScope": {"const": "GIT_BLOB_BYTES"},
+        "buildId": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"evidenceGrade": {"const": "E3-END-TO-END-PRODUCT"}}, "required": ["evidenceGrade"]},
+          "then": {"properties": {"qualificationRunIdOrNull": {"type": "null"}, "qualificationRunRequestDigestOrNull": {"type": "null"}, "qualificationRunRequestNonceDigestOrNull": {"type": "null"}}},
+          "else": {"properties": {"qualificationRunIdOrNull": {"type": "string", "minLength": 1}, "qualificationRunRequestDigestOrNull": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "qualificationRunRequestNonceDigestOrNull": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}
+        }
+      ]
+    },
+    "artifactInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactType", "producer", "path", "sha256", "correlation"],
+      "properties": {
+        "artifactType": {"type": "string", "minLength": 1},
+        "producer": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+        "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "correlation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scenarioId", "caseId", "scenarioRunId", "iterationRunId", "iteration", "faultPointOrNull", "commandIdOrNull", "assignmentIdOrNull", "runIdOrNull", "subjectBindings"],
+          "properties": {
+            "scenarioId": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]+$"},
+            "caseId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"},
+            "scenarioRunId": {"type": "string", "minLength": 1},
+            "iterationRunId": {"type": "string", "minLength": 1},
+            "iteration": {"type": "integer", "minimum": 1},
+            "faultPointOrNull": {"type": ["string", "null"]},
+            "commandIdOrNull": {"type": ["string", "null"]},
+            "assignmentIdOrNull": {"type": ["string", "null"]},
+            "runIdOrNull": {"type": ["string", "null"]},
+            "subjectBindings": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["key", "value"],
+                "properties": {
+                  "key": {"type": "string", "pattern": "^[a-z][a-zA-Z0-9._-]{0,127}$"},
+                  "value": {"type": "string", "minLength": 1}
+                }
+              },
+              "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [key,value]; duplicate key is rejected"
+            }
+          }
+        }
+      }
+    },
+    "oracleResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["oracleId", "verdict", "observed", "evidenceArtifactHashes"],
+      "properties": {
+        "oracleId": {"type": "string", "minLength": 1},
+        "verdict": {"const": "PASS"},
+        "observed": {"type": "string", "minLength": 1},
+        "evidenceArtifactHashes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "oracleResultSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/oracleResult"}
+    },
+    "oracleMatrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["immediateResults", "finalStates", "mustOccur", "mustNotOccur", "authoritativeWrites", "physicalOracle", "idempotencyOracle", "cleanup"],
+      "properties": {
+        "immediateResults": {"$ref": "#/$defs/oracleResultSet"},
+        "finalStates": {"$ref": "#/$defs/oracleResultSet"},
+        "mustOccur": {"$ref": "#/$defs/oracleResultSet"},
+        "mustNotOccur": {"$ref": "#/$defs/oracleResultSet"},
+        "authoritativeWrites": {"$ref": "#/$defs/oracleResultSet"},
+        "physicalOracle": {"$ref": "#/$defs/oracleResultSet"},
+        "idempotencyOracle": {"$ref": "#/$defs/oracleResultSet"},
+        "cleanup": {"$ref": "#/$defs/oracleResultSet"}
+      }
+    },
+    "operationRequestEnvelopeArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "envelopeHash", "payloadHash"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+        "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "byteLength": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-operation-envelope.schema.json#/$defs/requestEnvelope"},
+        "schemaSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "envelopeHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "payloadHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "operationResultEnvelopeArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "envelopeHash", "payloadHash", "status", "reasonCodeOrNull", "retryable"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "byteLength": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-operation-envelope.schema.json#/$defs/resultEnvelope"},
+        "schemaSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "envelopeHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "payloadHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "status": {"enum": ["IN_PROGRESS", "SUCCEEDED", "REJECTED", "CONFLICT", "FAILED"]},
+        "reasonCodeOrNull": {"type": ["string", "null"]},
+        "retryable": {"type": "boolean"}
+      }
+    },
+    "operationExchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stepSequence", "operationId", "requestEnvelope", "resultEnvelope"],
+      "properties": {
+        "stepSequence": {"type": "integer", "minimum": 1},
+        "operationId": {"type": "string", "pattern": "^OP-[A-Z0-9-]+$"},
+        "requestEnvelope": {"$ref": "#/$defs/operationRequestEnvelopeArtifact"},
+        "resultEnvelope": {"$ref": "#/$defs/operationResultEnvelopeArtifact"}
+      }
+    },
+    "iterationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["iteration", "iterationRunId", "verdict", "startedAt", "finishedAt", "observedDurationSeconds", "faultPointOrNull", "faultClasses", "scheduleTraceArtifactHash", "barrierObservationArtifactHashes", "cleanupProofArtifactHash", "artifactHashes", "operationExchanges", "oracleResults", "casePredicateResults"],
+      "properties": {
+        "iteration": {"type": "integer", "minimum": 1},
+        "iterationRunId": {"type": "string", "minLength": 1},
+        "verdict": {"const": "PASS"},
+        "startedAt": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+        "finishedAt": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+        "observedDurationSeconds": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "faultPointOrNull": {"type": ["string", "null"]},
+        "faultClasses": {"$ref": "#/$defs/uniqueStrings"},
+        "scheduleTraceArtifactHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "barrierObservationArtifactHashes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        },
+        "cleanupProofArtifactHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "artifactHashes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        },
+        "operationExchanges": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/operationExchange"},
+          "x-qmanCanonicalOrder": "exact scenario.steps order by stepSequence; stepSequence and request/result envelope sha256 values are independently unique"
+        },
+        "oracleResults": {"$ref": "#/$defs/oracleMatrix"},
+        "casePredicateResults": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/casePredicateResult"}}
+      }
+    },
+    "casePredicateResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assertionId", "assertionDigest", "oracleClass", "verdict", "evidenceArtifactHashes"],
+      "properties": {
+        "assertionId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?-[A-Z]+-[0-9]{3}$"},
+        "assertionDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "oracleClass": {"enum": ["authoritativeWrites", "cleanup", "finalStates", "idempotencyOracle", "immediateResults", "mustNotOccur", "mustOccur", "physicalOracle"]},
+        "verdict": {"const": "PASS"},
+        "evidenceArtifactHashes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+      }
+    },
+    "executionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "verdict",
+        "startedAt",
+        "finishedAt",
+        "targetRepositoryCommit",
+        "evidenceGrade",
+        "qualificationRunIdOrNull",
+        "qualificationRunRequestDigestOrNull",
+        "qualificationRunRequestNonceDigestOrNull",
+        "scenarioInputSha256",
+        "runnerSha256",
+        "runnerManifestDigest",
+        "runnerManifestPath",
+        "iterationResults",
+        "artifactInstances",
+        "resultCanonicalization",
+        "evidenceIndexRecordSha256",
+        "executionEvidenceIndexDigest",
+        "executionEvidenceIndexPath",
+        "resultDigest",
+        "keyRingVersion",
+        "signerKeyId",
+        "signature",
+        "limitations"
+      ],
+      "properties": {
+        "runId": {"type": "string", "minLength": 1},
+        "verdict": {"const": "PASS"},
+        "startedAt": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+        "finishedAt": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+        "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+        "evidenceGrade": {"enum": ["E3-END-TO-END-PRODUCT", "E4-PHYSICAL-QUALIFICATION"]},
+        "qualificationRunIdOrNull": {"type": ["string", "null"], "minLength": 1},
+        "qualificationRunRequestDigestOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}]},
+        "qualificationRunRequestNonceDigestOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}]},
+        "scenarioInputSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "runnerSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "runnerManifestDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "runnerManifestPath": {"type": "string", "minLength": 1},
+        "iterationResults": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/iterationResult"}},
+        "artifactInstances": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/artifactInstance"}},
+        "resultCanonicalization": {"const": "CANONICAL-JSON-V1"},
+        "evidenceIndexRecordSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "executionEvidenceIndexDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "executionEvidenceIndexPath": {"type": "string", "minLength": 1},
+        "resultDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "keyRingVersion": {"type": "integer", "minimum": 1},
+        "signerKeyId": {"type": "string", "minLength": 1},
+        "signature": {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"},
+        "limitations": {"type": "array", "maxItems": 0, "items": false}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"evidenceGrade": {"const": "E3-END-TO-END-PRODUCT"}}, "required": ["evidenceGrade"]},
+          "then": {"properties": {"qualificationRunIdOrNull": {"type": "null"}, "qualificationRunRequestDigestOrNull": {"type": "null"}, "qualificationRunRequestNonceDigestOrNull": {"type": "null"}}},
+          "else": {"properties": {"qualificationRunIdOrNull": {"type": "string", "minLength": 1}, "qualificationRunRequestDigestOrNull": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "qualificationRunRequestNonceDigestOrNull": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}
+        }
+      ]
+    }
+  }
+}

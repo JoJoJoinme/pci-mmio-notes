@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-portable-hash-subjects.schema.json",
+  "title": "Qman DirectPath portable canonical hash subjects",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization; wider values use schema-defined decimal strings.",
+  "description": "Closed cross-port digest descriptors. Large provider payloads remain separately retained artifacts, but every authorization/CAS/plan hash uses exactly one descriptor below and cannot invent a target-local serialization.",
+  "oneOf": [
+    {"$ref": "directpath-identity-v1.schema.json"},
+    {"$ref": "#/$defs/hostSnapshot"},
+    {"$ref": "#/$defs/qualificationProfile"},
+    {"$ref": "#/$defs/dependencyBundle"},
+    {"$ref": "#/$defs/dynamicEquivalence"},
+    {"$ref": "#/$defs/ownerActivationIntent"},
+    {"$ref": "#/$defs/capabilityDecision"},
+    {"$ref": "#/$defs/guestResourcePlan"},
+    {"$ref": "#/$defs/backendGrantReceipt"},
+    {"$ref": "#/$defs/auditEvidenceBundle"}
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "idSet": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"},
+    "nonEmptyIdSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"},
+    "digestSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}, "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"},
+    "hostSnapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "hostId", "kernelBootId", "hostEpoch", "agentGeneration", "hostAuthorityResourceVersion", "snapshotEpoch", "previousSnapshotContentHashOrNull", "capturedAt", "topologyDigest", "deviceRecordDigests", "providerFactsDigest", "policyHash", "keyRingVersion", "signerKeyId", "signature", "contentHash"],
+      "properties": {
+        "subjectType": {"const": "HOST_SNAPSHOT"}, "schemaVersion": {"const": 1}, "hostId": {"$ref": "#/$defs/id"}, "kernelBootId": {"$ref": "#/$defs/id"},
+        "hostEpoch": {"type": "integer", "minimum": 1}, "agentGeneration": {"type": "integer", "minimum": 1}, "hostAuthorityResourceVersion": {"type": "integer", "minimum": 1}, "snapshotEpoch": {"type": "integer", "minimum": 1}, "previousSnapshotContentHashOrNull": {"$ref": "#/$defs/nullableDigest"}, "capturedAt": {"$ref": "#/$defs/timestamp"},
+        "topologyDigest": {"$ref": "#/$defs/digest"}, "deviceRecordDigests": {"$ref": "#/$defs/digestSet"}, "providerFactsDigest": {"$ref": "#/$defs/digest"}, "policyHash": {"$ref": "#/$defs/digest"}, "keyRingVersion": {"type": "integer", "minimum": 1}, "signerKeyId": {"$ref": "#/$defs/id"}, "signature": {"$ref": "#/$defs/nullableSignature"}, "contentHash": {"$ref": "#/$defs/nullableDigest"}
+      },
+      "x-qmanCurrentPointerRule": "Publication is one repository CAS against ENTITY-HOST-AUTHORITY: same hostId/kernelBootId/hostEpoch/agentGeneration, hostAuthorityResourceVersion equals the expected current version, snapshotEpoch equals lastSnapshotEpoch+1, and previousSnapshotContentHashOrNull equals currentSnapshotContentHash (null only for the first epoch of that host authority incarnation). The transaction stores the immutable signed snapshot and advances lastSnapshotEpoch/currentSnapshotContentHash/lastObservedAt/resourceVersion. Planning and every side-effect CAS require this snapshot to remain the current pointer; an older valid signature is not current authority."
+    },
+    "qualificationProfile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "profileId", "platformProfileId", "platformDigest", "kernelDigest", "qemuDigest", "machineDigest", "firmwareDigest", "backendDigest", "deviceTraitsDigest", "guestAbiClass", "workloadDigest", "qualificationRecordDigests", "supportedCatalogDigest", "catalogSequence", "revocationSeverity", "revocationBehavior", "supportStatus", "verificationReceiptHash", "profileHash"],
+      "properties": {
+        "subjectType": {"const": "QUALIFICATION_PROFILE"}, "schemaVersion": {"const": 1}, "profileId": {"$ref": "#/$defs/id"}, "platformProfileId": {"$ref": "#/$defs/id"},
+        "platformDigest": {"$ref": "#/$defs/digest"}, "kernelDigest": {"$ref": "#/$defs/digest"}, "qemuDigest": {"$ref": "#/$defs/digest"}, "machineDigest": {"$ref": "#/$defs/digest"}, "firmwareDigest": {"$ref": "#/$defs/digest"}, "backendDigest": {"$ref": "#/$defs/digest"}, "deviceTraitsDigest": {"$ref": "#/$defs/digest"},
+        "guestAbiClass": {"$ref": "#/$defs/id"}, "workloadDigest": {"$ref": "#/$defs/digest"}, "qualificationRecordDigests": {"$ref": "#/$defs/digestSet"}, "supportedCatalogDigest": {"$ref": "#/$defs/digest"}, "catalogSequence": {"type": "integer", "minimum": 1},
+        "revocationSeverity": {"enum": ["NORMAL", "CRITICAL"]}, "revocationBehavior": {"enum": ["DENY_NEW_AND_NEXT_POWER_ON", "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP"]}, "supportStatus": {"enum": ["QUALIFIED", "SUPPORTED", "REVOKED"]}, "verificationReceiptHash": {"$ref": "#/$defs/digest"}, "profileHash": {"$ref": "#/$defs/nullableDigest"}
+      },
+      "allOf": [
+        {"if": {"properties": {"revocationSeverity": {"const": "NORMAL"}}, "required": ["revocationSeverity"]}, "then": {"properties": {"revocationBehavior": {"const": "DENY_NEW_AND_NEXT_POWER_ON"}}}},
+        {"if": {"properties": {"revocationSeverity": {"const": "CRITICAL"}}, "required": ["revocationSeverity"]}, "then": {"properties": {"revocationBehavior": {"const": "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP"}}}}
+      ]
+    },
+    "dependencyAction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["deviceUid", "action", "provenanceDigest"],
+      "properties": {"deviceUid": {"$ref": "#/$defs/id"}, "action": {"enum": ["PAYLOAD", "LEASE_ONLY", "DETACH", "RESET_WITH", "RESTORE_OWNER", "DENY_IF_PRESENT"]}, "provenanceDigest": {"$ref": "#/$defs/digest"}}
+    },
+    "dependencyBundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "snapshotEpoch", "memberDeviceUids", "physicalIsolationDomain", "ownerActivationGroup", "exclusiveAttachGroup", "resetAffectedSet", "dependencyActions", "bundleHash"],
+      "properties": {
+        "subjectType": {"const": "DEPENDENCY_BUNDLE"}, "schemaVersion": {"const": 1}, "snapshotEpoch": {"type": "integer", "minimum": 1},
+        "memberDeviceUids": {"$ref": "#/$defs/nonEmptyIdSet"}, "physicalIsolationDomain": {"$ref": "#/$defs/nonEmptyIdSet"}, "ownerActivationGroup": {"$ref": "#/$defs/nonEmptyIdSet"}, "exclusiveAttachGroup": {"$ref": "#/$defs/id"}, "resetAffectedSet": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "dependencyActions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/dependencyAction"}, "x-qmanCanonicalOrder": "ascending canonical bytes of [deviceUid,action]"}, "bundleHash": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "dynamicEquivalence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "normalizedSelectorMatch", "qualificationProfileHash", "guestAbiClass", "deviceTraitVector", "dependencyBundleClosureHash", "physicalIsolationClass", "resetContractClass", "ownerActivationClass", "BARAndROMResourceEnvelope", "RMRRContract", "interruptContract", "NUMAClass", "backendCapabilityClass", "firmwareMachineCompatibilityClass", "equivalenceHash"],
+      "properties": {
+        "subjectType": {"const": "DYNAMIC_CANDIDATE_EQUIVALENCE"}, "schemaVersion": {"const": 1}, "normalizedSelectorMatch": {"$ref": "#/$defs/digest"}, "qualificationProfileHash": {"$ref": "#/$defs/digest"}, "guestAbiClass": {"$ref": "#/$defs/id"}, "deviceTraitVector": {"$ref": "#/$defs/nonEmptyIdSet"}, "dependencyBundleClosureHash": {"$ref": "#/$defs/digest"},
+        "physicalIsolationClass": {"$ref": "#/$defs/id"}, "resetContractClass": {"$ref": "#/$defs/id"}, "ownerActivationClass": {"$ref": "#/$defs/id"}, "BARAndROMResourceEnvelope": {"$ref": "#/$defs/digest"}, "RMRRContract": {"$ref": "#/$defs/digest"}, "interruptContract": {"$ref": "#/$defs/digest"}, "NUMAClass": {"$ref": "#/$defs/id"}, "backendCapabilityClass": {"$ref": "#/$defs/id"}, "firmwareMachineCompatibilityClass": {"$ref": "#/$defs/id"}, "equivalenceHash": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "ownerActivationIntent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "ownerActivationRunId", "vmIdOrNull", "desiredOwner", "requestMode", "identityManifestHash", "requestSetHash", "ownerGroupHash", "expectedSnapshotEpoch", "hostEpoch", "runGenerationOrNull", "intentHash"],
+      "properties": {
+        "subjectType": {"const": "OWNER_ACTIVATION_INTENT"}, "schemaVersion": {"const": 1}, "ownerActivationRunId": {"$ref": "#/$defs/id"}, "vmIdOrNull": {"type": ["string", "null"]}, "desiredOwner": {"enum": ["HOST", "PASSTHROUGH"]}, "requestMode": {"enum": ["LIVE_ONLY", "DEFER_TO_REBOOT", "LIVE_OR_REBOOT"]},
+        "identityManifestHash": {"$ref": "#/$defs/digest"}, "requestSetHash": {"$ref": "#/$defs/digest"}, "ownerGroupHash": {"$ref": "#/$defs/digest"}, "expectedSnapshotEpoch": {"type": "integer", "minimum": 1}, "hostEpoch": {"type": "integer", "minimum": 1}, "runGenerationOrNull": {"type": ["integer", "null"], "minimum": 1}, "intentHash": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "decisionReason": {
+      "$ref": "directpath-operation-envelope.schema.json#/$defs/reason"
+    },
+    "capabilityDecision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "evaluationContext", "admissionMode", "requestHash", "snapshotEpoch", "policyHash", "profileHash", "bundleHashOrNull", "resourcePlanHashOrNull", "hardwareCapable", "technicallyAttachable", "qualified", "supported", "policyEligible", "adminEnabled", "hostActive", "available", "attachable", "eligible", "reasons", "warnings", "decisionHash"],
+      "properties": {
+        "subjectType": {"const": "CAPABILITY_DECISION"}, "schemaVersion": {"const": 1}, "evaluationContext": {"enum": ["HOST_ONLY", "VM_REQUEST"]}, "admissionMode": {"enum": ["PRODUCTION", "ISOLATED_UNQUALIFIED_LAB"]}, "requestHash": {"$ref": "#/$defs/digest"}, "snapshotEpoch": {"type": "integer", "minimum": 1}, "policyHash": {"$ref": "#/$defs/digest"}, "profileHash": {"$ref": "#/$defs/digest"}, "bundleHashOrNull": {"$ref": "#/$defs/nullableDigest"}, "resourcePlanHashOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "hardwareCapable": {"type": "boolean"}, "technicallyAttachable": {"type": ["boolean", "null"]}, "qualified": {"type": "boolean"}, "supported": {"type": "boolean"}, "policyEligible": {"type": "boolean"}, "adminEnabled": {"type": "boolean"}, "hostActive": {"type": "boolean"}, "available": {"type": "boolean"}, "attachable": {"type": "boolean"}, "eligible": {"type": "boolean"},
+        "reasons": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/decisionReason"}, "x-qmanCanonicalOrder": "ascending canonical bytes of [stage,code,devices]"}, "warnings": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/decisionReason"}, "x-qmanCanonicalOrder": "ascending canonical bytes of [stage,code,devices]"}, "decisionHash": {"$ref": "#/$defs/nullableDigest"}
+      },
+      "allOf": [
+        {"if": {"properties": {"evaluationContext": {"const": "HOST_ONLY"}}, "required": ["evaluationContext"]}, "then": {"properties": {"technicallyAttachable": {"type": "null"}, "attachable": {"const": false}, "eligible": {"const": false}}}},
+        {"if": {"properties": {"evaluationContext": {"const": "VM_REQUEST"}}, "required": ["evaluationContext"]}, "then": {"properties": {"technicallyAttachable": {"type": "boolean"}}}},
+        {"if": {"properties": {"hardwareCapable": {"const": false}}, "required": ["hardwareCapable"]}, "then": {"properties": {"qualified": {"const": false}, "supported": {"const": false}, "policyEligible": {"const": false}, "adminEnabled": {"const": false}, "hostActive": {"const": false}, "available": {"const": false}, "attachable": {"const": false}, "eligible": {"const": false}}}},
+        {"if": {"properties": {"qualified": {"const": true}}, "required": ["qualified"]}, "then": {"properties": {"hardwareCapable": {"const": true}}}},
+        {"if": {"properties": {"supported": {"const": true}}, "required": ["supported"]}, "then": {"properties": {"qualified": {"const": true}, "hardwareCapable": {"const": true}}}},
+        {"if": {"properties": {"policyEligible": {"const": true}}, "required": ["policyEligible"]}, "then": {"properties": {"hardwareCapable": {"const": true}}}},
+        {"if": {"properties": {"admissionMode": {"const": "PRODUCTION"}, "policyEligible": {"const": true}}, "required": ["admissionMode", "policyEligible"]}, "then": {"properties": {"supported": {"const": true}}}},
+        {"if": {"properties": {"adminEnabled": {"const": true}}, "required": ["adminEnabled"]}, "then": {"properties": {"policyEligible": {"const": true}}}},
+        {"if": {"properties": {"hostActive": {"const": true}}, "required": ["hostActive"]}, "then": {"properties": {"adminEnabled": {"const": true}, "policyEligible": {"const": true}}}},
+        {"if": {"properties": {"available": {"const": true}}, "required": ["available"]}, "then": {"properties": {"hostActive": {"const": true}, "adminEnabled": {"const": true}}}},
+        {"if": {"properties": {"attachable": {"const": true}}, "required": ["attachable"]}, "then": {"properties": {"evaluationContext": {"const": "VM_REQUEST"}, "technicallyAttachable": {"const": true}, "policyEligible": {"const": true}, "adminEnabled": {"const": true}, "hostActive": {"const": true}, "available": {"const": true}, "eligible": {"const": true}}}},
+        {"if": {"properties": {"eligible": {"const": true}}, "required": ["eligible"]}, "then": {"properties": {"attachable": {"const": true}}}},
+        {"if": {"properties": {"eligible": {"const": false}}, "required": ["eligible"]}, "then": {"properties": {"attachable": {"const": false}}}}
+      ],
+      "x-qmanDerivedFieldRule": "The capability engine recomputes every layer from the pinned snapshot/request/profile/policy. qualified implies hardwareCapable; supported implies qualified; production policyEligible implies supported; adminEnabled implies policyEligible; hostActive implies adminEnabled; available implies hostActive; attachable equals technicallyAttachable && policyEligible && adminEnabled && hostActive && available plus the remaining current request gates; eligible equals attachable. HOST_ONLY has technicallyAttachable=null and cannot claim attachable/eligible. ISOLATED_UNQUALIFIED_LAB must be an explicit non-production policy and never sets supported by implication."
+    },
+    "window": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ownerId", "resourceClass", "base", "size", "alignment"],
+      "properties": {"ownerId": {"$ref": "#/$defs/id"}, "resourceClass": {"enum": ["MMIO32", "MMIO64_PREFETCH", "MMIO64_NONPREFETCH", "IOPORT"]}, "base": {"type": "integer", "minimum": 0}, "size": {"type": "integer", "minimum": 1}, "alignment": {"type": "integer", "minimum": 1}}
+    },
+    "guestResourcePlan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "planId", "runId", "snapshotEpoch", "profileHash", "guestAbiClass", "machineType", "firmwareKind", "rootWindows", "bridgeWindows", "barPlacements", "interruptPlanDigest", "rmrrPlanDigest", "qemuSettingsDigest", "allMandatoryResourcesAssigned", "planHash"],
+      "properties": {
+        "subjectType": {"const": "GUEST_RESOURCE_PLAN"}, "schemaVersion": {"const": 1}, "planId": {"$ref": "#/$defs/id"}, "runId": {"$ref": "#/$defs/id"}, "snapshotEpoch": {"type": "integer", "minimum": 1}, "profileHash": {"$ref": "#/$defs/digest"}, "guestAbiClass": {"$ref": "#/$defs/id"}, "machineType": {"enum": ["virt", "q35", "i440fx"]}, "firmwareKind": {"enum": ["UEFI", "SeaBIOS"]},
+        "rootWindows": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/window"}, "x-qmanCanonicalOrder": "ascending canonical bytes of [ownerId,resourceClass,base]"}, "bridgeWindows": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/window"}, "x-qmanCanonicalOrder": "ascending canonical bytes of [ownerId,resourceClass,base]"}, "barPlacements": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/window"}, "x-qmanCanonicalOrder": "ascending canonical bytes of [ownerId,resourceClass,base]"},
+        "interruptPlanDigest": {"$ref": "#/$defs/digest"}, "rmrrPlanDigest": {"$ref": "#/$defs/digest"}, "qemuSettingsDigest": {"$ref": "#/$defs/digest"}, "allMandatoryResourcesAssigned": {"const": true}, "planHash": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "grantMember": {
+      "type": "object", "additionalProperties": false,
+      "required": ["deviceUid", "currentBdf", "bundleId", "deviceGeneration", "grantLocator", "receiptHash"],
+      "properties": {"deviceUid": {"$ref": "#/$defs/id"}, "currentBdf": {"type": "string", "pattern": "^[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\\.[0-7]$"}, "bundleId": {"$ref": "#/$defs/digest"}, "deviceGeneration": {"type": "integer", "minimum": 1}, "grantLocator": {"$ref": "#/$defs/id"}, "receiptHash": {"$ref": "#/$defs/digest"}}
+    },
+    "backendGrantReceipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "grantId", "backendKind", "configuredIommuType", "launchGrantKind", "runId", "leaseSetHash", "hostEpoch", "runGeneration", "backendProfileHash", "members", "qemuPidStarttime", "argvHash", "qmpQomIdentityHash", "dmaDomainReceiptHash", "grantDigest"],
+      "properties": {
+        "subjectType": {"const": "BACKEND_GRANT_RECEIPT"}, "schemaVersion": {"const": 1}, "grantId": {"$ref": "#/$defs/id"}, "backendKind": {"enum": ["LEGACY_VFIO_TYPE1", "VFIO_CDEV_IOMMUFD"]}, "configuredIommuType": {"enum": ["VFIO_TYPE1V2_IOMMU", "VFIO_TYPE1_IOMMU", "IOMMUFD_IOAS"]}, "launchGrantKind": {"enum": ["AUTHORIZED_DEVICE_PATH", "AUTHORIZED_FD_BUNDLE"]}, "runId": {"$ref": "#/$defs/id"}, "leaseSetHash": {"$ref": "#/$defs/digest"}, "hostEpoch": {"type": "integer", "minimum": 1}, "runGeneration": {"type": "integer", "minimum": 1}, "backendProfileHash": {"$ref": "#/$defs/digest"},
+        "members": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/grantMember"}, "x-qmanCanonicalOrder": "ascending canonical bytes of [bundleId,deviceUid]"}, "qemuPidStarttime": {"$ref": "#/$defs/id"}, "argvHash": {"$ref": "#/$defs/digest"}, "qmpQomIdentityHash": {"$ref": "#/$defs/digest"}, "dmaDomainReceiptHash": {"$ref": "#/$defs/digest"}, "grantDigest": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifactType", "path", "sha256"],
+      "properties": {"artifactType": {"$ref": "#/$defs/id"}, "path": {"$ref": "#/$defs/id"}, "sha256": {"$ref": "#/$defs/digest"}}
+    },
+    "auditEvidenceBundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subjectType", "schemaVersion", "evidenceBundleId", "runId", "assignmentManifestDigest", "requestHash", "snapshotContentHash", "decisionHash", "planHash", "leaseSetHash", "artifactIndex", "priorAuditDigestOrNull", "createdAt", "bundleDigest"],
+      "properties": {
+        "subjectType": {"const": "AUDIT_EVIDENCE_BUNDLE"}, "schemaVersion": {"const": 1}, "evidenceBundleId": {"$ref": "#/$defs/id"}, "runId": {"$ref": "#/$defs/id"}, "assignmentManifestDigest": {"$ref": "#/$defs/digest"}, "requestHash": {"$ref": "#/$defs/digest"}, "snapshotContentHash": {"$ref": "#/$defs/digest"}, "decisionHash": {"$ref": "#/$defs/digest"}, "planHash": {"$ref": "#/$defs/digest"}, "leaseSetHash": {"$ref": "#/$defs/digest"},
+        "artifactIndex": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/artifact"}, "x-qmanCanonicalOrder": "ascending canonical bytes of [artifactType,path]"}, "priorAuditDigestOrNull": {"$ref": "#/$defs/nullableDigest"}, "createdAt": {"$ref": "#/$defs/timestamp"}, "bundleDigest": {"$ref": "#/$defs/nullableDigest"}
+      }
+    }
+  },
+  "x-qmanDigestRule": "For the selected closed subject, set its terminal *Hash/*Digest field to null; for a signed subject also set its signature field to null; reject noncanonical set order, and hash CANONICAL-JSON-V1 bytes. Payloads referenced only by digest must exist in the evidence store and be independently schema/hash verified; digest indirection never permits missing evidence. HostSnapshot contentHash/signature use SIGNED-ENVELOPE-V1 and HOST_INVENTORY_EVIDENCE authority."
+}

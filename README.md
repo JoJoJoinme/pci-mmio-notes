@@ -7,6 +7,55 @@ release command are maintained in [`PROJECT-STATUS.md`](PROJECT-STATUS.md). The
 current supported claim is **reference and qualification model only**, not a
 production DirectPath controller.
 
+For transfer into a private Qman repository, use
+[`handoff/QMAN-DIRECTPATH-IMPLEMENTATION-HANDOFF.md`](handoff/QMAN-DIRECTPATH-IMPLEMENTATION-HANDOFF.md).
+It requires no private source code in this repository: the target-independent contract is frozen in
+[`contracts/directpath-portable-control-contract.json`](contracts/directpath-portable-control-contract.json),
+and the intranet AI fills
+[`contracts/qman-integration-map.template.json`](contracts/qman-integration-map.template.json) against an exact
+private commit under
+[`contracts/qman-integration-map.schema.json`](contracts/qman-integration-map.schema.json). Portable-spec readiness,
+target-code mapping, product implementation, and physical qualification are separate status axes; the first never
+implies the other three.
+
+The portable handoff now closes 35 common operation envelopes and 70 operation-specific request/result payload
+profiles, plus 17 persisted authority aggregates, four non-authority entity projections, deterministic identity golden
+vectors, signed qualification/catalog trust, and 293 ordered mapping requirements. Every Scenario Step selects one exact
+portable payload fragment and pins immutable request/result fixture bytes; every executed iteration retains a one-to-one
+`operationExchanges` set of raw typed request/result envelopes, hashes, and projected result semantics. An ad-hoc target
+DTO, narrative intent or opaque log cannot change or satisfy the wire contract. Each mapping item has an independently
+derived Case/test/eight-oracle digest; target scenarios
+cannot weaken it by self-reporting coverage. Completion artifacts use the acyclic construction
+`C (target code) → M (detached mapping core) → catalog/evidence content → A (external catalog anchor) → E (evidence revision) → detached final map`.
+
+The portable axis does not require access to a private Qman repository. The generated 101-Case registry freezes each
+design pass condition, assertion digest, trace surface, fault class, artifact schema, repeat/duration floor and evidence
+boundary. A signed `CaseCompletionRecord` aggregates only typed `EXECUTED_PASS` runs at one exact
+C/M/target/platform/backend/qualification tuple. Complete Git source-tree, BuildAttestation, RunnerManifest,
+execution-index, per-field qualification-measurement, dual-attested QualificationRunManifest, qualification-subject,
+complete trust-history and live anchor-freshness objects prevent a target mapper from replacing those contracts with
+a dirty working tree, self-reported labels, replayed measurements or one reused log blob.
+The workload decision path is independently replayable as
+`WorkloadEvaluatorManifest → signed EvaluationContext → EvaluationReport → WorkloadResult`; the terminal result must
+copy the report's observations, assertions, metrics, and outcome exactly. Device archetype is likewise derived through
+the independent `DeviceTaxonomyDefinition → signed ClassificationContext → DeviceClassificationRecord` path, never
+copied from a catalog or HCL decision. Guest ABI/architecture/OS/kernel/driver and runtime
+platform/backend/IOMMU/machine/firmware are matched as complete tuples rather than Cartesian products; vCPU, memory,
+capabilities and providers are signed measurements from the same qualification run.
+
+No private Qman repository is needed to validate this portable axis, and no private code needs to leave the intranet.
+The private repository becomes input only when the intranet AI pins an exact commit and supplies exact symbol,
+storage/transaction, and test/fixture mappings. Those mappings, implementation, and physical qualification remain
+separate work; the production release is therefore still `BLOCKED`.
+
+Product tests are handed off under the closed
+[`contracts/directpath-acceptance-scenario.schema.json`](contracts/directpath-acceptance-scenario.schema.json).
+The S05 file under [`handoff/examples/`](handoff/examples/) is deliberately marked `TEMPLATE`. `BOUND` means runnable
+against exact target code and real request/result fixtures for the selected operation profiles but still carries no
+completion authority; only `EXECUTED_PASS` contains
+immutable passing evidence, and even that must pass the Case dependencies, evidence-grade checks, approvals, and
+release evaluator before it can close a product gate.
+
 The single product hierarchy is maintained in [`ipd/README.md`](ipd/README.md):
 `EPIC-PCI-01 → F1-F8 → User Story → Tech Story`. Existing design, acceptance,
 VMware/QEMU evidence, reference code, and historical inputs are attached without

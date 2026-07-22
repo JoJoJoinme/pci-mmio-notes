@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-identity-v1.schema.json",
+  "title": "Qman DirectPath IDENTITY-V1 fingerprint input",
+  "description": "Closed host-scoped identity input with byte-reproducible serial and firmware-path providers. BDF, IOMMU group number, VFIO minor, sysfs paths and mutable kernel aliases are forbidden.",
+  "oneOf": [
+    {"$ref": "#/$defs/strongSerial"},
+    {"$ref": "#/$defs/slotBound"}
+  ],
+  "$defs": {
+    "hostStableId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$"},
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "safeUint": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "hexBytes": {"type": "string", "minLength": 2, "maxLength": 131072, "pattern": "^(?:[0-9a-f]{2})+$"},
+    "serialBytes": {"type": "string", "minLength": 2, "maxLength": 8192, "pattern": "^(?:[0-9a-f]{2})+$"},
+    "functionRole": {
+      "enum": [
+        "UNCLASSIFIED",
+        "MASS_STORAGE_CONTROLLER",
+        "NETWORK_CONTROLLER",
+        "DISPLAY_CONTROLLER",
+        "MULTIMEDIA_CONTROLLER",
+        "MEMORY_CONTROLLER",
+        "BRIDGE_DEVICE",
+        "SIMPLE_COMMUNICATION_CONTROLLER",
+        "BASE_SYSTEM_PERIPHERAL",
+        "INPUT_DEVICE_CONTROLLER",
+        "DOCKING_STATION",
+        "PROCESSOR",
+        "SERIAL_BUS_CONTROLLER",
+        "WIRELESS_CONTROLLER",
+        "INTELLIGENT_CONTROLLER",
+        "SATELLITE_COMMUNICATION_CONTROLLER",
+        "ENCRYPTION_CONTROLLER",
+        "SIGNAL_PROCESSING_CONTROLLER",
+        "PROCESSING_ACCELERATOR",
+        "NON_ESSENTIAL_INSTRUMENTATION",
+        "COPROCESSOR",
+        "RESERVED_OR_VENDOR_SPECIFIC"
+      ]
+    },
+    "classRoleMapping": {
+      "oneOf": [
+        {"properties": {"classCode": {"pattern": "^00"}, "functionRole": {"const": "UNCLASSIFIED"}}},
+        {"properties": {"classCode": {"pattern": "^01"}, "functionRole": {"const": "MASS_STORAGE_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^02"}, "functionRole": {"const": "NETWORK_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^03"}, "functionRole": {"const": "DISPLAY_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^04"}, "functionRole": {"const": "MULTIMEDIA_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^05"}, "functionRole": {"const": "MEMORY_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^06"}, "functionRole": {"const": "BRIDGE_DEVICE"}}},
+        {"properties": {"classCode": {"pattern": "^07"}, "functionRole": {"const": "SIMPLE_COMMUNICATION_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^08"}, "functionRole": {"const": "BASE_SYSTEM_PERIPHERAL"}}},
+        {"properties": {"classCode": {"pattern": "^09"}, "functionRole": {"const": "INPUT_DEVICE_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^0a"}, "functionRole": {"const": "DOCKING_STATION"}}},
+        {"properties": {"classCode": {"pattern": "^0b"}, "functionRole": {"const": "PROCESSOR"}}},
+        {"properties": {"classCode": {"pattern": "^0c"}, "functionRole": {"const": "SERIAL_BUS_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^0d"}, "functionRole": {"const": "WIRELESS_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^0e"}, "functionRole": {"const": "INTELLIGENT_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^0f"}, "functionRole": {"const": "SATELLITE_COMMUNICATION_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^10"}, "functionRole": {"const": "ENCRYPTION_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^11"}, "functionRole": {"const": "SIGNAL_PROCESSING_CONTROLLER"}}},
+        {"properties": {"classCode": {"pattern": "^12"}, "functionRole": {"const": "PROCESSING_ACCELERATOR"}}},
+        {"properties": {"classCode": {"pattern": "^13"}, "functionRole": {"const": "NON_ESSENTIAL_INSTRUMENTATION"}}},
+        {"properties": {"classCode": {"pattern": "^40"}, "functionRole": {"const": "COPROCESSOR"}}},
+        {
+          "properties": {
+            "classCode": {"not": {"pattern": "^(?:00|01|02|03|04|05|06|07|08|09|0a|0b|0c|0d|0e|0f|10|11|12|13|40)"}},
+            "functionRole": {"const": "RESERVED_OR_VENDOR_SPECIFIC"}
+          }
+        }
+      ]
+    },
+    "pciIds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendorId", "deviceId", "subsystemVendorId", "subsystemDeviceId", "revisionId", "classCode", "functionRoleAlgorithm", "functionRoleAlgorithmVersion", "functionRoleDefinitionDigest", "functionRole"],
+      "properties": {
+        "vendorId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "deviceId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "subsystemVendorId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "subsystemDeviceId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "revisionId": {"type": "string", "pattern": "^[0-9a-f]{2}$"},
+        "classCode": {"type": "string", "pattern": "^[0-9a-f]{6}$", "description": "PCI base-class, subclass and programming-interface bytes in that order."},
+        "functionRoleAlgorithm": {"const": "CLASS_CODE_ROLE_V1"},
+        "functionRoleAlgorithmVersion": {"const": 1},
+        "functionRoleDefinitionDigest": {"const": "sha256:7f119749c919c48f6d9cae971378e78ab3ac39ce404d9f2651bc6766812ff35f"},
+        "functionRole": {"$ref": "#/$defs/functionRole"}
+      },
+      "allOf": [{"$ref": "#/$defs/classRoleMapping"}]
+    },
+    "dsnProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "providerVersion", "providerDefinitionDigest"],
+      "properties": {
+        "providerId": {"const": "PCI_DSN_EUI64_V1"},
+        "providerVersion": {"const": 1},
+        "providerDefinitionDigest": {"const": "sha256:c477361654ccb4f6c1b61446d3e9695bf666a0e5cf313b18789a76d2d340cd65"}
+      }
+    },
+    "vpdProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "providerVersion", "providerDefinitionDigest"],
+      "properties": {
+        "providerId": {"const": "PCI_VPD_SN_UTF8_V1"},
+        "providerVersion": {"const": 1},
+        "providerDefinitionDigest": {"const": "sha256:2ac49a541d5e0324d1f8eaacbcfb87ad8667fe3e86599936a751cb74d9769429"}
+      }
+    },
+    "vendorProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "providerVersion", "providerDefinitionDigest"],
+      "properties": {
+        "providerId": {"const": "VENDOR_QUALIFIED_BYTES_V1"},
+        "providerVersion": {"const": 1},
+        "providerDefinitionDigest": {"const": "sha256:084e4ef848c737fe0db24231bdda1441c40287cd99743c61ce2e340644c23764"}
+      }
+    },
+    "serialProvider": {
+      "oneOf": [
+        {"$ref": "#/$defs/dsnProvider"},
+        {"$ref": "#/$defs/vpdProvider"},
+        {"$ref": "#/$defs/vendorProvider"}
+      ]
+    },
+    "dsnMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceLocator", "sourceBytesHex", "extractionOffsetBytes", "extractionLengthBytes", "extractedBytesHex", "byteOrder", "textNormalization", "canonicalSerialBytesHex"],
+      "properties": {
+        "sourceLocator": {"const": "PCI_EXT_CAPABILITY_0003_PAYLOAD"},
+        "sourceBytesHex": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "extractionOffsetBytes": {"const": 0},
+        "extractionLengthBytes": {"const": 8},
+        "extractedBytesHex": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "byteOrder": {"const": "PCI_LE32_LOW_THEN_HIGH_TO_UINT64_BE"},
+        "textNormalization": {"const": "NOT_TEXT"},
+        "canonicalSerialBytesHex": {"type": "string", "pattern": "^(?!(?:0{16}|f{16})$)[0-9a-f]{16}$"}
+      }
+    },
+    "vpdMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceLocator", "sourceBytesHex", "extractionOffsetBytes", "extractionLengthBytes", "extractedBytesHex", "byteOrder", "textNormalization", "canonicalSerialBytesHex"],
+      "properties": {
+        "sourceLocator": {"const": "PCI_VPD_READ_ONLY_SN_KEYWORD"},
+        "sourceBytesHex": {"$ref": "#/$defs/hexBytes"},
+        "extractionOffsetBytes": {"$ref": "#/$defs/safeUint"},
+        "extractionLengthBytes": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "extractedBytesHex": {"$ref": "#/$defs/serialBytes"},
+        "byteOrder": {"const": "AS_EXTRACTED"},
+        "textNormalization": {"const": "STRICT_UTF8_TRIM_ASCII_SPACE_NFC"},
+        "canonicalSerialBytesHex": {"$ref": "#/$defs/serialBytes"}
+      }
+    },
+    "vendorMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceLocator", "sourceBytesHex", "extractionOffsetBytes", "extractionLengthBytes", "extractedBytesHex", "byteOrder", "textNormalization", "canonicalSerialBytesHex", "vendorExtractorId", "vendorExtractorDefinitionDigest"],
+      "properties": {
+        "sourceLocator": {"const": "QUALIFIED_VENDOR_SOURCE"},
+        "sourceBytesHex": {"$ref": "#/$defs/hexBytes"},
+        "extractionOffsetBytes": {"$ref": "#/$defs/safeUint"},
+        "extractionLengthBytes": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "extractedBytesHex": {"$ref": "#/$defs/serialBytes"},
+        "byteOrder": {"const": "AS_EXTRACTED"},
+        "textNormalization": {"const": "QUALIFIED_EXTRACTOR_OUTPUT_BYTES"},
+        "canonicalSerialBytesHex": {"$ref": "#/$defs/serialBytes"},
+        "vendorExtractorId": {"$ref": "#/$defs/id"},
+        "vendorExtractorDefinitionDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "serialMaterial": {
+      "oneOf": [
+        {"$ref": "#/$defs/dsnMaterial"},
+        {"$ref": "#/$defs/vpdMaterial"},
+        {"$ref": "#/$defs/vendorMaterial"}
+      ]
+    },
+    "strongSerial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "identityVariant", "hostStableId", "pciIds", "serialProvider", "serialMaterial", "serialValueHash"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "identityVariant": {"const": "STRONG_SERIAL"},
+        "hostStableId": {"$ref": "#/$defs/hostStableId"},
+        "pciIds": {"$ref": "#/$defs/pciIds"},
+        "serialProvider": {"$ref": "#/$defs/serialProvider"},
+        "serialMaterial": {"$ref": "#/$defs/serialMaterial"},
+        "serialValueHash": {"$ref": "#/$defs/digest"}
+      },
+      "oneOf": [
+        {"properties": {"serialProvider": {"$ref": "#/$defs/dsnProvider"}, "serialMaterial": {"$ref": "#/$defs/dsnMaterial"}}},
+        {"properties": {"serialProvider": {"$ref": "#/$defs/vpdProvider"}, "serialMaterial": {"$ref": "#/$defs/vpdMaterial"}}},
+        {"properties": {"serialProvider": {"$ref": "#/$defs/vendorProvider"}, "serialMaterial": {"$ref": "#/$defs/vendorMaterial"}}}
+      ]
+    },
+    "acpiPathProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "providerVersion", "providerDefinitionDigest"],
+      "properties": {
+        "providerId": {"const": "ACPI_FIRMWARE_PATH_V1"},
+        "providerVersion": {"const": 1},
+        "providerDefinitionDigest": {"const": "sha256:61b92f14fcd158f7885ec07d0a375324e051e3b2f936c748ac103b4a230203e4"}
+      }
+    },
+    "smbiosPathProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "providerVersion", "providerDefinitionDigest"],
+      "properties": {
+        "providerId": {"const": "SMBIOS_SYSTEM_SLOT_V1"},
+        "providerVersion": {"const": 1},
+        "providerDefinitionDigest": {"const": "sha256:c8a3291773b34ff8ef67511a5574db43be24b07bd7840c900bbbdab682687b0d"}
+      }
+    },
+    "deviceTreePathProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "providerVersion", "providerDefinitionDigest"],
+      "properties": {
+        "providerId": {"const": "DEVICETREE_FULL_PATH_V1"},
+        "providerVersion": {"const": 1},
+        "providerDefinitionDigest": {"const": "sha256:6165a1a4c882e22bc2011448b956fb70967fdc146189c4c66664ae4b994577d6"}
+      }
+    },
+    "physicalPathProvider": {
+      "oneOf": [
+        {"$ref": "#/$defs/acpiPathProvider"},
+        {"$ref": "#/$defs/smbiosPathProvider"},
+        {"$ref": "#/$defs/deviceTreePathProvider"}
+      ]
+    },
+    "acpiPhysicalPath": {"type": "string", "pattern": "^acpi:/[A-Z_][A-Z0-9_]{3}(?:/[A-Z_][A-Z0-9_]{3})+#adr=[0-9a-f]{16}$"},
+    "smbiosPhysicalPath": {"type": "string", "pattern": "^smbios-system-slot:/slot-id=[0-9a-f]{4}/designation=(?:[A-Za-z0-9._~-]|%[0-9A-F]{2})+/function=[0-7]$"},
+    "deviceTreePhysicalPath": {"type": "string", "pattern": "^devicetree:/(?:[A-Za-z_][A-Za-z0-9,._+\\-]*(?:@[0-9a-f]+(?:,[0-9a-f]+)*)?)(?:/(?:[A-Za-z_][A-Za-z0-9,._+\\-]*(?:@[0-9a-f]+(?:,[0-9a-f]+)*)?))*#function=[0-7]$"},
+    "slotBound": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "identityVariant", "hostStableId", "pciIds", "physicalPathProvider", "physicalPath"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "identityVariant": {"const": "SLOT_BOUND"},
+        "hostStableId": {"$ref": "#/$defs/hostStableId"},
+        "pciIds": {"$ref": "#/$defs/pciIds"},
+        "physicalPathProvider": {"$ref": "#/$defs/physicalPathProvider"},
+        "physicalPath": {"type": "string", "minLength": 1, "maxLength": 512}
+      },
+      "oneOf": [
+        {"properties": {"physicalPathProvider": {"$ref": "#/$defs/acpiPathProvider"}, "physicalPath": {"$ref": "#/$defs/acpiPhysicalPath"}}},
+        {"properties": {"physicalPathProvider": {"$ref": "#/$defs/smbiosPathProvider"}, "physicalPath": {"$ref": "#/$defs/smbiosPhysicalPath"}}},
+        {"properties": {"physicalPathProvider": {"$ref": "#/$defs/deviceTreePathProvider"}, "physicalPath": {"$ref": "#/$defs/deviceTreePhysicalPath"}}}
+      ]
+    }
+  },
+  "x-qmanProviderDefinitionDigestRule": "providerDefinitionDigest = SHA-256(ASCII('QMAN-DIRECTPATH/IDENTITY-PROVIDER-DEFINITION/V1') || 0x00 || ASCII(providerId) || 0x00 || ASCII(decimal providerVersion) || 0x00 || UTF-8(definitionUtf8)). The exact definitionUtf8 values and hashes are in x-qmanProviderDefinitions and directpath-identity-v1.golden-vectors.json. Unknown IDs, versions or digests are rejected.",
+  "x-qmanProviderDefinitions": [
+    {
+      "providerId": "PCI_DSN_EUI64_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=PCIe Extended Capability ID 0x0003; require exactly one capability; read bytes at capability+4 through +11 in ascending PCI configuration-space address order; bytes 0..3 are Serial Number Low DWORD little-endian and bytes 4..7 are Serial Number High DWORD little-endian; canonicalSerialBytes=the uint64 value encoded as exactly eight big-endian bytes; reject zero and all-ones; hash=SHA-256(ASCII(\"QMAN-DIRECTPATH/SERIAL-VALUE/V1\") || 0x00 || ASCII(providerId) || 0x00 || canonicalSerialBytes).",
+      "providerDefinitionDigest": "sha256:c477361654ccb4f6c1b61446d3e9695bf666a0e5cf313b18789a76d2d340cd65"
+    },
+    {
+      "providerId": "PCI_VPD_SN_UTF8_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=complete PCI VPD resource image; parse PCI VPD large-resource records with little-endian lengths; require exactly one read-only-product-data SN keyword and a valid End Tag; extracted bytes=SN value; decode strict UTF-8; reject NUL, C0 and C1 controls; remove only leading and trailing U+0020; normalize Unicode NFC; reject empty; canonicalSerialBytes=UTF-8(normalized text); hash=SHA-256(ASCII(\"QMAN-DIRECTPATH/SERIAL-VALUE/V1\") || 0x00 || ASCII(providerId) || 0x00 || canonicalSerialBytes).",
+      "providerDefinitionDigest": "sha256:2ac49a541d5e0324d1f8eaacbcfb87ad8667fe3e86599936a751cb74d9769429"
+    },
+    {
+      "providerId": "VENDOR_QUALIFIED_BYTES_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source and extraction are defined by a signed qualification-bound vendor extractor profile identified by vendorExtractorId and vendorExtractorDefinitionDigest; require an exact byte slice and deterministic output of 1..4096 bytes; canonicalSerialBytes=the profile output without further transformation; hash=SHA-256(ASCII(\"QMAN-DIRECTPATH/SERIAL-VALUE/V1\") || 0x00 || ASCII(providerId) || 0x00 || canonicalSerialBytes).",
+      "providerDefinitionDigest": "sha256:084e4ef848c737fe0db24231bdda1441c40287cd99743c61ce2e340644c23764"
+    },
+    {
+      "providerId": "ACPI_FIRMWARE_PATH_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=ACPI namespace firmware node, never a Linux sysfs alias or PCI BDF; require the canonical absolute namespace path of four-character uppercase NameSeg components and the device _ADR value; physicalPath=\"acpi:/\" + slash-separated NameSegs + \"#adr=\" + the unsigned _ADR encoded as exactly sixteen lowercase hexadecimal digits.",
+      "providerDefinitionDigest": "sha256:61b92f14fcd158f7885ec07d0a375324e051e3b2f936c748ac103b4a230203e4"
+    },
+    {
+      "providerId": "SMBIOS_SYSTEM_SLOT_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=one unique populated SMBIOS Type 9 System Slots record, never its segment/bus/device/function fields; normalize Slot ID as four lowercase hexadecimal digits; decode Slot Designation as strict UTF-8, remove only leading and trailing U+0020, normalize NFC, then RFC3986 percent-encode every byte except ALPHA, DIGIT, hyphen, period, underscore and tilde using uppercase hex; physicalPath=\"smbios-system-slot:/slot-id=\" + slotId + \"/designation=\" + encodedDesignation + \"/function=\" + decimal function 0..7.",
+      "providerDefinitionDigest": "sha256:c8a3291773b34ff8ef67511a5574db43be24b07bd7840c900bbbdab682687b0d"
+    },
+    {
+      "providerId": "DEVICETREE_FULL_PATH_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=Open Firmware device node full_name, never a Linux sysfs alias or PCI BDF string; require an absolute slash-separated DeviceTree path with no empty, dot or dot-dot segments and lowercase hexadecimal unit-address cells; physicalPath=\"devicetree:\" + full_name + \"#function=\" + decimal function 0..7.",
+      "providerDefinitionDigest": "sha256:6165a1a4c882e22bc2011448b956fb70967fdc146189c4c66664ae4b994577d6"
+    }
+  ],
+  "x-qmanFunctionRoleRule": "classCode is exactly lowercase hex of PCI configuration-space Base Class byte at 0x0b, Subclass byte at 0x0a and Programming Interface byte at 0x09, concatenated in that order. CLASS_CODE_ROLE_V1 derives functionRole only from the first byte; the complete closed table is enforced by $defs/classRoleMapping. Its definition digest is sha256:7f119749c919c48f6d9cae971378e78ab3ac39ce404d9f2651bc6766812ff35f. No implementation-defined role string enters an immutable fingerprint.",
+  "x-qmanSerialMaterialRule": "sourceBytesHex is the exact provider input; extractionOffsetBytes and extractionLengthBytes select extractedBytesHex; provider rules transform it to canonicalSerialBytesHex. All offsets and lengths are bytes and bounded safe integers. Implementations MUST verify slice equality and the provider transformation, not trust the supplied derived fields.",
+  "x-qmanSerialHashRule": "serialValueHash = SHA-256(ASCII('QMAN-DIRECTPATH/SERIAL-VALUE/V1') || 0x00 || ASCII(serialProvider.providerId) || 0x00 || HEX-DECODE(serialMaterial.canonicalSerialBytesHex)). This domain-separated preimage is exact; the provider descriptor and source material remain in the identity fingerprint.",
+  "x-qmanPhysicalPathRule": "physicalPath MUST validate against the grammar selected by physicalPathProvider. Values beginning with or derived from /sys, pci:, a domain:bus:device.function BDF, IOMMU group number, VFIO minor, udev alias or kernel enumeration order are invalid even if firmware metadata happens to contain that text.",
+  "x-qmanCanonicalRule": "Reject duplicate keys, floats, integers outside [-9007199254740991,9007199254740991], non-NFC strings, unknown fields and non-fixed-width PCI IDs; encode the selected closed variant with CANONICAL-JSON-V1. identityFingerprint is SHA-256 of those canonical bytes. deviceUid is urn:qman:directpath:device:v1:<hostStableId>:<identityFingerprint including sha256 prefix>.",
+  "x-qmanGoldenVectorSet": {
+    "path": "contracts/directpath-identity-v1.golden-vectors.json",
+    "vectorSetDigest": "sha256:0d24bf773afc921caa8965b69588cbfb5876e6c636c283b3ff3362507b9ee693",
+    "digestRule": "Set vectorSetDigest to null, encode the complete file with CANONICAL-JSON-V1, then SHA-256 the canonical bytes."
+  },
+  "x-qmanGoldenVectors": [
+    {
+      "id": "IDENTITY-STRONG-SERIAL-001",
+      "canonicalUtf8": "{\"hostStableId\":\"550e8400-e29b-41d4-a716-446655440000\",\"identityVariant\":\"STRONG_SERIAL\",\"pciIds\":{\"classCode\":\"030000\",\"deviceId\":\"2684\",\"functionRole\":\"DISPLAY_CONTROLLER\",\"functionRoleAlgorithm\":\"CLASS_CODE_ROLE_V1\",\"functionRoleAlgorithmVersion\":1,\"functionRoleDefinitionDigest\":\"sha256:7f119749c919c48f6d9cae971378e78ab3ac39ce404d9f2651bc6766812ff35f\",\"revisionId\":\"a1\",\"subsystemDeviceId\":\"1448\",\"subsystemVendorId\":\"10de\",\"vendorId\":\"10de\"},\"schemaVersion\":1,\"serialMaterial\":{\"byteOrder\":\"PCI_LE32_LOW_THEN_HIGH_TO_UINT64_BE\",\"canonicalSerialBytesHex\":\"1122334455667788\",\"extractedBytesHex\":\"8877665544332211\",\"extractionLengthBytes\":8,\"extractionOffsetBytes\":0,\"sourceBytesHex\":\"8877665544332211\",\"sourceLocator\":\"PCI_EXT_CAPABILITY_0003_PAYLOAD\",\"textNormalization\":\"NOT_TEXT\"},\"serialProvider\":{\"providerDefinitionDigest\":\"sha256:c477361654ccb4f6c1b61446d3e9695bf666a0e5cf313b18789a76d2d340cd65\",\"providerId\":\"PCI_DSN_EUI64_V1\",\"providerVersion\":1},\"serialValueHash\":\"sha256:e503f90f1bc7379febacb1440c92e6d25a565b65a0fb4140cd2fd894c8216f75\"}",
+      "sha256": "sha256:cdd27d3d0fd4797945492b54cec2eb36e4568509f1ef34e5fb6089343f9287ac"
+    },
+    {
+      "id": "IDENTITY-SLOT-BOUND-001",
+      "canonicalUtf8": "{\"hostStableId\":\"550e8400-e29b-41d4-a716-446655440000\",\"identityVariant\":\"SLOT_BOUND\",\"pciIds\":{\"classCode\":\"010700\",\"deviceId\":\"00c9\",\"functionRole\":\"MASS_STORAGE_CONTROLLER\",\"functionRoleAlgorithm\":\"CLASS_CODE_ROLE_V1\",\"functionRoleAlgorithmVersion\":1,\"functionRoleDefinitionDigest\":\"sha256:7f119749c919c48f6d9cae971378e78ab3ac39ce404d9f2651bc6766812ff35f\",\"revisionId\":\"01\",\"subsystemDeviceId\":\"1f4a\",\"subsystemVendorId\":\"1028\",\"vendorId\":\"1000\"},\"physicalPath\":\"acpi:/_SB_/PCI0/RP05#adr=0000000000000000\",\"physicalPathProvider\":{\"providerDefinitionDigest\":\"sha256:61b92f14fcd158f7885ec07d0a375324e051e3b2f936c748ac103b4a230203e4\",\"providerId\":\"ACPI_FIRMWARE_PATH_V1\",\"providerVersion\":1},\"schemaVersion\":1}",
+      "sha256": "sha256:ad53b62e53168d757061523c0d82ebc6e6291296ed5f2686955deaf375d0d934"
+    }
+  ]
+}

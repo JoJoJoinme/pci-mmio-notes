@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-supported-catalog.schema.json",
+  "title": "Qman DirectPath supported qualification catalog",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization; wider values use schema-defined decimal strings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "catalogId", "catalogSequence", "previousCatalogDigest", "minimumReaderSchemaVersion", "qualificationRecordDigests", "denyAndRevocationEntries", "revocationBehavior", "issuedAt", "notBefore", "expiresAt", "keyRingVersion", "productReleaseSignerKeyId", "signature", "catalogDigest"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "catalogId": {"$ref": "#/$defs/id"},
+    "catalogSequence": {"type": "integer", "minimum": 1},
+    "previousCatalogDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "minimumReaderSchemaVersion": {"const": 1},
+    "qualificationRecordDigests": {"$ref": "#/$defs/digestSet"},
+    "denyAndRevocationEntries": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/denyEntry"}, "x-qmanCanonicalOrder": "ascending canonical bytes of entryId"},
+    "revocationBehavior": {"const": "DENY_NEW_AND_NEXT_POWER_ON", "description": "Catalog-wide default. A deny/revocation entry may escalate only through its explicit revocationBehavior field."},
+    "issuedAt": {"$ref": "#/$defs/timestamp"},
+    "notBefore": {"$ref": "#/$defs/timestamp"},
+    "expiresAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"type": "integer", "minimum": 1},
+    "productReleaseSignerKeyId": {"$ref": "#/$defs/id"},
+    "signature": {"$ref": "#/$defs/nullableSignature"},
+    "catalogDigest": {"$ref": "#/$defs/nullableDigest"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "digestSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "denyEntry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["entryId", "selectorKind", "selectorDigest", "reasonCode", "severity", "revocationBehavior", "effectiveAt", "evidenceHash"],
+      "properties": {
+        "entryId": {"$ref": "#/$defs/id"},
+        "selectorKind": {"enum": ["QUALIFICATION_RECORD", "PCI_IDENTITY", "PLATFORM_PROFILE", "FIRMWARE", "GUEST_DRIVER", "WORKLOAD"]},
+        "selectorDigest": {"$ref": "#/$defs/digest"},
+        "reasonCode": {"$ref": "#/$defs/id"},
+        "severity": {"enum": ["NORMAL", "CRITICAL"]},
+        "revocationBehavior": {"enum": ["DENY_NEW_AND_NEXT_POWER_ON", "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP"]},
+        "effectiveAt": {"$ref": "#/$defs/timestamp"},
+        "evidenceHash": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {"if": {"properties": {"severity": {"const": "NORMAL"}}, "required": ["severity"]}, "then": {"properties": {"revocationBehavior": {"const": "DENY_NEW_AND_NEXT_POWER_ON"}}}},
+        {"if": {"properties": {"severity": {"const": "CRITICAL"}}, "required": ["severity"]}, "then": {"properties": {"revocationBehavior": {"const": "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP"}}}}
+      ]
+    }
+  },
+  "x-qmanRevocationRule": "A revoked/absent record denies every new power-on, reservation, and relocation. NORMAL uses DENY_NEW_AND_NEXT_POWER_ON: an already attached VM may run until its next explicit power transition. CRITICAL uses DENY_NEW_AND_REQUIRE_CONTROLLED_STOP: the controller creates an explicit, auditable stop-maintenance intent and performs normal stop/release; it never silently kills a VM or force-frees a lease. Failure to prove clean release quarantines the complete scope.",
+  "x-qmanSignatureRule": "Set catalogDigest and signature to null, canonicalize the complete object, hash into catalogDigest, and sign ASCII(QMAN-DIRECTPATH/SUPPORTED-CATALOG/V1) || 0x00 || the canonical bytes with a PRODUCT_RELEASE key. The candidate catalog contains no receipt/hash of the external anchor that accepts it. After signature/chain validation, independently supplied monotonic catalog-anchor state must accept catalogSequence/catalogDigest and is advanced in a separate CAS, preventing catalogDigest↔anchorDigest fixed points."
+}

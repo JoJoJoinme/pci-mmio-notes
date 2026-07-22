@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "definitionStatus": "TEMPLATE",
+  "scenarioId": "S05-LEGACY-QEMU-EXIT-BEFORE-QMP-CLEAN-ROLLBACK",
+  "caseId": "S05",
+  "title": "Legacy QEMU exits before QMP readiness and the complete bundle rolls back to FREE only after clean-release proof",
+  "scope": "PRODUCT",
+  "targetMilestone": "G2",
+  "caseContractDigest": "sha256:7bf61c3a7b5abc6d77c8402c1a92fc1c49170da1dca85a4844028228837e260a",
+  "casePredicateBindings": [
+    {"assertionId": "S05-PASS-001", "assertionDigest": "sha256:18d8d5eef048e6d3f0eca35230ba4eef26cac8f0158afdd9c5c74fc876766180", "oracleClass": "cleanup", "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1", "targetPredicateSymbolOrNull": null, "targetPredicateInterfaceHashOrNull": null},
+    {"assertionId": "S05-ASSERT-001", "assertionDigest": "sha256:0b189ed348446b6cbc547e4e60c666d646076deb098da4c2c989220a5c291fa4", "oracleClass": "physicalOracle", "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1", "targetPredicateSymbolOrNull": null, "targetPredicateInterfaceHashOrNull": null},
+    {"assertionId": "S05-ASSERT-002", "assertionDigest": "sha256:fe749d6a375ab232ff20c97f65911fd2087164a36f9030021aade470406c16ac", "oracleClass": "physicalOracle", "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1", "targetPredicateSymbolOrNull": null, "targetPredicateInterfaceHashOrNull": null},
+    {"assertionId": "S05-ASSERT-003", "assertionDigest": "sha256:dfce57928299e29be7f36cb4b371d179cb7ba65480241e194543b732a0518d93", "oracleClass": "cleanup", "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1", "targetPredicateSymbolOrNull": null, "targetPredicateInterfaceHashOrNull": null},
+    {"assertionId": "S05-ASSERT-004", "assertionDigest": "sha256:9eef1f8afe13e083bb3ba40972e149bddfad05af60a5ab75f6f8c453ee7d63bf", "oracleClass": "cleanup", "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1", "targetPredicateSymbolOrNull": null, "targetPredicateInterfaceHashOrNull": null}
+  ],
+  "applicability": {
+    "platformProfileIds": ["qman-x86-q35-uefi-v1"],
+    "backendFamilies": ["LEGACY_VFIO_TYPE1"],
+    "deviceTraitFamilies": ["synthetic-resettable-endpoint"],
+    "requiresPhysicalHardware": false
+  },
+  "traceability": {
+    "contractItemIds": [
+      "ENTITY-ASSIGNMENT-RUN",
+      "ENTITY-BUNDLE-LEASE",
+      "ENTITY-CLEAN-RELEASE-ACCEPTANCE",
+      "ENTITY-CLEAN-RELEASE-RECEIPT",
+      "ENTITY-OPERATION-LEASE",
+      "ENTITY-OWNER-ACTIVATION-RUN",
+      "FSM-ASSIGNMENT",
+      "FSM-OWNER-ACTIVATION",
+      "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD",
+      "OP-CAS-RESERVE-BUNDLES",
+      "OP-CAS-TRANSITION-AGGREGATES",
+      "OP-MATERIALIZE-BACKEND-GRANT",
+      "OP-PREPARE-HOST-BUNDLE",
+      "OP-PROVE-CLEAN-RELEASE",
+      "OP-SPAWN-QEMU",
+      "OP-TEARDOWN-HOST-BUNDLE",
+      "PARITY-DMA-RESET-CLEAN-RELEASE",
+      "PARITY-STATIC",
+      "PORT-GLOBAL-REPOSITORY",
+      "PORT-HOST-AGENT",
+      "PORT-QEMU-LAUNCHER",
+      "PORT-RELEASE-RECOVERY",
+      "PORT-VFIO-BACKEND",
+      "QEMU_START_FAILED",
+      "TEST-STATIC-LIFECYCLE",
+      "TR-RUN-PLANNED-PREPARING",
+      "TR-RUN-PREPARING-ROLLING-BACK",
+      "TR-RUN-ROLLBACK-FREE"
+    ],
+    "canonicalizationProfileIds": [],
+    "guardIds": [],
+    "configIds": [],
+    "migrationIds": [],
+    "telemetryIds": [],
+    "techStoryIds": ["TS-F3-03", "TS-F3-05", "TS-F5-02", "TS-F5-04"],
+    "riskIds": ["R05", "R06", "R11", "R26"],
+    "portIds": ["PORT-GLOBAL-REPOSITORY", "PORT-HOST-AGENT", "PORT-QEMU-LAUNCHER", "PORT-RELEASE-RECOVERY", "PORT-VFIO-BACKEND"],
+    "operationIds": ["OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD", "OP-CAS-RESERVE-BUNDLES", "OP-CAS-TRANSITION-AGGREGATES", "OP-MATERIALIZE-BACKEND-GRANT", "OP-PREPARE-HOST-BUNDLE", "OP-PROVE-CLEAN-RELEASE", "OP-SPAWN-QEMU", "OP-TEARDOWN-HOST-BUNDLE"],
+    "entityIds": ["ENTITY-ASSIGNMENT-RUN", "ENTITY-BUNDLE-LEASE", "ENTITY-CLEAN-RELEASE-ACCEPTANCE", "ENTITY-CLEAN-RELEASE-RECEIPT", "ENTITY-OPERATION-LEASE", "ENTITY-OWNER-ACTIVATION-RUN"],
+    "stateMachineIds": ["FSM-ASSIGNMENT", "FSM-OWNER-ACTIVATION"],
+    "transitionIds": ["TR-RUN-PLANNED-PREPARING", "TR-RUN-PREPARING-ROLLING-BACK", "TR-RUN-ROLLBACK-FREE"],
+    "testObligationIds": ["TEST-STATIC-LIFECYCLE"],
+    "parityObligationIds": ["PARITY-DMA-RESET-CLEAN-RELEASE", "PARITY-STATIC"],
+    "expectedReasonCodes": ["QEMU_START_FAILED"]
+  },
+  "preconditions": {
+    "initialStates": {
+      "FSM-ASSIGNMENT": "PLANNED",
+      "FSM-OWNER-ACTIVATION": "ACTIVE"
+    },
+    "authority": {
+      "snapshotEpoch": 42,
+      "resourceVersion": 7,
+      "hostEpoch": 3,
+      "runGeneration": 9
+    },
+    "fixtures": [
+      {
+        "id": "fixture-s05-legacy-single-bundle-v1",
+        "kind": "signed-host-snapshot-plus-qualified-profile",
+        "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ],
+    "facts": [
+      "This handoff example is TEMPLATE-only; its all-zero fixture digest is deliberately non-evidence and must be replaced before definitionStatus may become BOUND",
+      "One exact dependency bundle is free and generation-current",
+      "Legacy TYPE1 subtype is pinned by the profile with no fallback",
+      "Owner activation is already effective and read back",
+      "The cleanup observer is configured to prove QEMU exit, DMA/IRQ teardown, reset state, and owner restore"
+    ]
+  },
+  "steps": [
+    {
+      "sequence": 1,
+      "actor": "CONTROLLER",
+      "operationId": "OP-CAS-RESERVE-BUNDLES",
+      "request": {"operationId": "OP-CAS-RESERVE-BUNDLES", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_RESERVE_BUNDLES_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Reserve the complete bundle atomically from PLANNED to PREPARING."},
+      "expectedImmediateResult": {"operationId": "OP-CAS-RESERVE-BUNDLES", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_RESERVE_BUNDLES_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "One complete bundle and typed assignment operation lease commit atomically.", "expectedStatus": "SUCCEEDED", "expectedReasonCodeOrNull": null, "expectedRetryable": false}
+    },
+    {
+      "sequence": 2,
+      "actor": "HOST_AGENT",
+      "operationId": "OP-PREPARE-HOST-BUNDLE",
+      "request": {"operationId": "OP-PREPARE-HOST-BUNDLE", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PREPARE_HOST_BUNDLE_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Prepare the complete bundle with the pinned LEGACY_VFIO_TYPE1 backend."},
+      "expectedImmediateResult": {"operationId": "OP-PREPARE-HOST-BUNDLE", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PREPARE_HOST_BUNDLE_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Owner/reset preparation receipts and reverse compensation journal are durable.", "expectedStatus": "SUCCEEDED", "expectedReasonCodeOrNull": null, "expectedRetryable": false}
+    },
+    {
+      "sequence": 3,
+      "actor": "HOST_AGENT",
+      "operationId": "OP-MATERIALIZE-BACKEND-GRANT",
+      "request": {"operationId": "OP-MATERIALIZE-BACKEND-GRANT", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_MATERIALIZE_BACKEND_GRANT_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Materialize only the exact authorized device paths for the pinned TYPE1 subtype."},
+      "expectedImmediateResult": {"operationId": "OP-MATERIALIZE-BACKEND-GRANT", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_MATERIALIZE_BACKEND_GRANT_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Only exact BDF/group paths and the pinned TYPE1 subtype are authorized.", "expectedStatus": "SUCCEEDED", "expectedReasonCodeOrNull": null, "expectedRetryable": false}
+    },
+    {
+      "sequence": 4,
+      "actor": "FAULT_INJECTOR",
+      "operationId": "OP-SPAWN-QEMU",
+      "request": {"operationId": "OP-SPAWN-QEMU", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_SPAWN_QEMU_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Spawn the single managed QEMU process for run generation 9."},
+      "faultInjection": {
+        "point": "after-process-created-before-qmp-ready",
+        "faultClasses": ["CLEAN_RELEASE_FAILURE", "QEMU_START_FAILURE", "RESET_FAILURE"],
+        "trigger": "first managed QEMU process for run generation 9",
+        "effect": "terminate the exact pid/starttime before QMP readiness",
+        "scheduleBarrier": "grant-receipt-durable-and-run-still-PREPARING"
+      },
+      "expectedImmediateResult": {"operationId": "OP-SPAWN-QEMU", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_SPAWN_QEMU_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "QEMU_START_FAILED; no ATTACHED commit and no assignedId publication.", "expectedStatus": "FAILED", "expectedReasonCodeOrNull": "QEMU_START_FAILED", "expectedRetryable": false}
+    },
+    {
+      "sequence": 5,
+      "actor": "CONTROLLER",
+      "operationId": "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD",
+      "request": {"operationId": "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_ACQUIRE_RELEASE_OWNERSHIP_GUARD_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Acquire a RELEASE ownership guard for the full lease set and run generation 9."},
+      "expectedImmediateResult": {"operationId": "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_ACQUIRE_RELEASE_OWNERSHIP_GUARD_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "The complete assignment lease/bundle set is exclusively guarded before rollback cleanup.", "expectedStatus": "SUCCEEDED", "expectedReasonCodeOrNull": null, "expectedRetryable": false}
+    },
+    {
+      "sequence": 6,
+      "actor": "CONTROLLER",
+      "operationId": "OP-CAS-TRANSITION-AGGREGATES",
+      "request": {"operationId": "OP-CAS-TRANSITION-AGGREGATES", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_TRANSITION_AGGREGATES_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "CAS the failed run from PREPARING to ROLLING_BACK under the full release guard."},
+      "expectedImmediateResult": {"operationId": "OP-CAS-TRANSITION-AGGREGATES", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_TRANSITION_AGGREGATES_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "The failed run enters ROLLING_BACK while the full-scope release guard remains authoritative.", "expectedStatus": "SUCCEEDED", "expectedReasonCodeOrNull": null, "expectedRetryable": false}
+    },
+    {
+      "sequence": 7,
+      "actor": "HOST_AGENT",
+      "operationId": "OP-TEARDOWN-HOST-BUNDLE",
+      "request": {"operationId": "OP-TEARDOWN-HOST-BUNDLE", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_TEARDOWN_HOST_BUNDLE_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Teardown the whole bundle using the fresh Legacy release context."},
+      "expectedImmediateResult": {"operationId": "OP-TEARDOWN-HOST-BUNDLE", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_TEARDOWN_HOST_BUNDLE_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "QEMU pid/fds are gone and backend/DMA/IRQ/reset/owner receipts cover every member.", "expectedStatus": "SUCCEEDED", "expectedReasonCodeOrNull": null, "expectedRetryable": false}
+    },
+    {
+      "sequence": 8,
+      "actor": "VERIFIER",
+      "operationId": "OP-PROVE-CLEAN-RELEASE",
+      "request": {"operationId": "OP-PROVE-CLEAN-RELEASE", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PROVE_CLEAN_RELEASE_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "Prove clean release for the complete bundle."},
+      "expectedImmediateResult": {"operationId": "OP-PROVE-CLEAN-RELEASE", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PROVE_CLEAN_RELEASE_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "A complete clean-release receipt is produced.", "expectedStatus": "SUCCEEDED", "expectedReasonCodeOrNull": null, "expectedRetryable": false}
+    },
+    {
+      "sequence": 9,
+      "actor": "CONTROLLER",
+      "operationId": "OP-CAS-TRANSITION-AGGREGATES",
+      "request": {"operationId": "OP-CAS-TRANSITION-AGGREGATES", "direction": "REQUEST", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_TRANSITION_AGGREGATES_REQUEST", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "In one CAS transaction accept the clean-release receipt, revoke the exact lease set, consume the guard, clear bindings and move ROLLING_BACK to FREE."},
+      "expectedImmediateResult": {"operationId": "OP-CAS-TRANSITION-AGGREGATES", "direction": "RESULT", "payloadSchemaAuthority": "PORTABLE_CONTRACT", "payloadSchemaRef": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_TRANSITION_AGGREGATES_RESULT", "payloadSchemaSha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b", "payloadCanonicalProfile": "CANONICAL-JSON-V1", "payloadPathOrNull": null, "payloadHashOrNull": null, "intentSummary": "One global transaction commits every release effect or commits none.", "expectedStatus": "SUCCEEDED", "expectedReasonCodeOrNull": null, "expectedRetryable": false}
+    }
+  ],
+  "expected": {
+    "finalStates": {
+      "FSM-ASSIGNMENT": "FREE",
+      "FSM-OWNER-ACTIVATION": "ACTIVE"
+    },
+    "reasonCode": "QEMU_START_FAILED",
+    "retryable": false,
+    "mustOccur": [
+      "PREPARING transitions to ROLLING_BACK before FREE",
+      "ReleaseOwnershipGuard covers the complete assignment lease/bundle set during cleanup",
+      "Fresh Legacy release context uses the exact pinned TYPE1 subtype",
+      "Device generation changes only after verified reset and cleanup",
+      "Current Legacy QEMU sees only the exact authorized BDF/group path sandbox; a separately qualified future cdev backend receives only inherited admitted fds",
+      "failure before QMP ready or topology verification executes the complete compensation stack in reverse order"
+    ],
+    "mustNotOccur": [
+      "ATTACHED commit",
+      "assignedId publication",
+      "lease TTL based release",
+      "unquarantined FREE without clean-release proof",
+      "open of an unauthorized BDF or VFIO group",
+      "fallback to another TYPE1 subtype, no-IOMMU, or cdev"
+    ],
+    "authoritativeWrites": [
+      {"entityId": "ENTITY-ASSIGNMENT-RUN", "mutation": "ROLLING_BACK then atomic FREE with assignedId/runtime binding clear", "predicate": "expected state, resource version, controller generation, host epoch and run generation all match"},
+      {"entityId": "ENTITY-BUNDLE-LEASE", "mutation": "all leases in leaseSetHash revoked in the same FREE transaction", "predicate": "every leaseId, bundleId and expectedLeaseVersion matches the accepted receipt"},
+      {"entityId": "ENTITY-OPERATION-LEASE", "mutation": "RELEASE authority acquired then consumed", "predicate": "complete scope hash and bundle generations match"},
+      {"entityId": "ENTITY-CLEAN-RELEASE-RECEIPT", "mutation": "append immutable host receipt", "predicate": "all required proof hashes are present"},
+      {"entityId": "ENTITY-CLEAN-RELEASE-ACCEPTANCE", "mutation": "append immutable repository acceptance in the same FREE transaction", "predicate": "receipt digest, full old lease set, authority resourceVersion, transaction ID and idempotency key all match; acceptedAt is before receipt expiry"}
+    ],
+    "physicalOracle": [
+      "Exact QEMU pid/starttime no longer exists and has no VFIO descriptors",
+      "No guest DMA mapping or IRQ route remains",
+      "Release reset and post-reset state probe pass for every affected member",
+      "Original owner state is restored or the qualified persistent VFIO owner is read back"
+    ],
+    "idempotencyOracle": "Replaying the original mutation key or cleanup steps returns the same run/receipt/result and creates no second QEMU or lease"
+  },
+  "artifacts": [
+    {"artifactType": "canonical-request-and-idempotency", "producer": "PORT-CONTROL-API", "formatOrSchema": "CANONICAL-JSON-V1", "hashRequired": true, "correlationFields": ["caseId", "runId", "scenarioId"]},
+    {"artifactType": "operation-request-envelope", "producer": "MAPPED-OPERATION-ACTOR", "formatOrSchema": "contracts/directpath-operation-envelope.schema.json#/$defs/requestEnvelope", "hashRequired": true, "correlationFields": ["commandId", "iterationRunId", "operationId", "payloadHash", "requestHash", "stepSequence"]},
+    {"artifactType": "operation-result-envelope", "producer": "MAPPED-OPERATION-ACTOR", "formatOrSchema": "contracts/directpath-operation-envelope.schema.json#/$defs/resultEnvelope", "hashRequired": true, "correlationFields": ["commandId", "iterationRunId", "operationId", "payloadHash", "resultHash", "stepSequence"]},
+    {"artifactType": "lease-and-fsm-journal", "producer": "PORT-GLOBAL-REPOSITORY", "formatOrSchema": "versioned transaction export", "hashRequired": true, "correlationFields": ["hostEpoch", "leaseId", "runGeneration", "runId"]},
+    {"artifactType": "qemu-process-and-grant", "producer": "PORT-QEMU-LAUNCHER", "formatOrSchema": "typed Legacy grant plus pid/starttime/argv receipt", "hashRequired": true, "correlationFields": ["grantId", "pidStarttime", "runId"]},
+    {"artifactType": "clean-release-receipt", "producer": "PORT-RELEASE-RECOVERY", "formatOrSchema": "ENTITY-CLEAN-RELEASE-RECEIPT", "hashRequired": true, "correlationFields": ["assignmentId", "bindingsHash", "leaseId", "leaseSetHash", "oldRunGeneration", "profileHash", "receiptDigest", "receiptId", "runId", "sourceHostEpoch", "sourceHostId"]},
+    {"artifactType": "clean-release-acceptance", "producer": "PORT-GLOBAL-REPOSITORY", "formatOrSchema": "ENTITY-CLEAN-RELEASE-ACCEPTANCE", "hashRequired": true, "correlationFields": ["acceptanceDigest", "acceptanceId", "assignmentId", "committedAuthorityResourceVersion", "expectedAuthorityResourceVersion", "expectedLeaseSetHash", "idempotencyKey", "receiptDigest", "receiptId", "repositoryTransactionId", "runId"]},
+    {"artifactType": "runner-manifest", "producer": "PORT-AUDIT-EVIDENCE", "formatOrSchema": "contracts/directpath-runner-manifest.schema.json", "hashRequired": true, "correlationFields": ["caseId", "scenarioId"]},
+    {"artifactType": "execution-evidence-index", "producer": "PORT-AUDIT-EVIDENCE", "formatOrSchema": "contracts/directpath-execution-evidence-index.schema.json", "hashRequired": true, "correlationFields": ["caseId", "runId", "scenarioId"]}
+  ],
+  "cleanup": {
+    "required": true,
+    "expectedStates": {"FSM-ASSIGNMENT": "FREE"},
+    "proofRequired": ["no managed QEMU process", "no VFIO fd owner", "no DMA/IRQ context", "reset/state verified", "owner restored", "lease revoked", "guard consumed", "fd/IOMMU/driver/lease 逆序清理", "The release guard remains exclusive while QEMU process/fds and guest DMA/IRQ context are proven gone, a fresh backend-specific reset context is acquired, and driver ownership is independently read back", "any uncertain teardown or reset result preserves the durable whole-bundle claim in quarantine", "one CONTROL_REPOSITORY_EVIDENCE-signed acceptance proves the receipt was atomically consumed exactly once"]
+  },
+  "execution": {
+    "targetTestBindingRequired": true,
+    "timeoutMs": 120000,
+    "repeat": 10,
+    "concurrencySchedule": "deterministic barrier at process-created-before-qmp-ready; replay cleanup after every durable journal boundary",
+    "faultPointPlan": [
+      {
+        "faultPointOrNull": "after-process-created-before-qmp-ready",
+        "faultClasses": ["CLEAN_RELEASE_FAILURE", "QEMU_START_FAILURE", "RESET_FAILURE"],
+        "repeat": 10
+      }
+    ]
+  },
+  "targetBinding": null,
+  "executionResult": null
+}

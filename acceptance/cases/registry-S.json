@@ -9,7 +9,7 @@
       "riskIds": ["R04", "R06"],
       "requiredTechStories": ["TS-F3-01", "TS-F3-02", "TS-F3-03", "TS-F3-05", "TS-F5-02"],
       "dependsOnCaseIds": ["C21"],
-      "blocker": "The product controller does not yet connect immutable identity, whole-bundle lease, selected VFIO backend, fd-only QEMU attach and verified clean release.",
+      "blocker": "The product controller does not yet connect immutable identity, whole-bundle lease, a typed backend launch grant (Legacy authorized path or separately qualified future cdev fd bundle), verified attach receipt and verified clean release.",
       "targetMilestone": "G2"
     },
     {

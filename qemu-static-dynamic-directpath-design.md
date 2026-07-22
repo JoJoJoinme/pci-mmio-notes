@@ -32,6 +32,21 @@ Qman/reference-side 的 E2/E3/E4 定义、WSL/QEMU 实测、hash 与关闭权限
 [`product-decisions.json`](contracts/product-decisions.json) 与
 [`compatibility-profile-policy.json`](contracts/compatibility-profile-policy.json)。
 
+私有 Qman 源码不是本设计收敛的前置条件。target-independent 语义以
+[`directpath-portable-control-contract.json`](contracts/directpath-portable-control-contract.json)
+revision `2026-07-22.10` 为机器权威：35 个 operation、17 个可变 authority aggregate、4 个非
+authority projection、FSM/CAS/reason/trust/qualification 都有 closed schema，并确定性导出 293 个
+mapping item 与逐项 Case/test/八类 oracle requirement digest。35 个 operation 另有 70 个逐
+operation/direction 的 closed request/result payload profile，Scenario fixture 必须绑定唯一 portable fragment、
+profileId 和 canonical payload digest；每个执行 iteration 的 `operationExchanges` 再逐 Step 绑定实际 raw
+envelope。qualification
+还固定了可重放的 workload evaluator、独立 device taxonomy 以及实测
+guest/runtime prerequisite。内网 AI 后续只把这些义务映射到 exact target commit 的 symbol/interface、
+storage/transaction 和 test/fixture；私有代码无需离开内网，也不能根据现有代码反向缩小合同。
+`PORTABLE_SPEC_READY=READY` 与
+`TARGET_CODE_MAPPED=UNMAPPED`、`PRODUCT_IMPLEMENTED=NOT_PROVEN`、`QUALIFIED=NOT_PROVEN` 同时成立，
+因此项目 release 仍诚实保持 `BLOCKED`。
+
 ## 0. 先理解问题，再看方案
 
 ### 0.1 我们实际在解决什么
@@ -660,7 +675,7 @@ flowchart LR
 ```
 
 前六道门必须是无副作用计算。只有 G7 可以改 driver、打开 VFIO fd、执行 reset 或启动 QEMU。
-任何 gate 都读取同一个 `inventoryEpoch/policyHash/profileHash`；版本不一致时整次计划作废。
+任何 gate 都读取同一个 `snapshotEpoch/policyHash/profileHash`；版本不一致时整次计划作废。
 
 ## 5. 信任与安全模型
 
@@ -777,78 +792,49 @@ fail-closed，必须先用目标 Linux headers 生成并验收 ioctl ABI。
 ## 6. 规范化 inventory
 
 inventory 是事实快照，不是调度结果。每次 PCI add/remove、driver bind、link change、reset
-失败、kernel reboot 或 policy 更新都递增 `inventoryEpoch`。
+失败、kernel reboot 或 policy 更新都递增 `snapshotEpoch`。
 
 ### 6.1 DeviceRecord
 
-```json
-{
-  "deviceUid": "host-uuid/physical-slot-or-bdf/function",
-  "hostBdf": "0000:65:00.0",
-  "identity": {
-    "vendorId": 4318,
-    "deviceId": 9860,
-    "subVendorId": 4318,
-    "subDeviceId": 5192,
-    "revisionId": 161,
-    "classCode": 197120
-  },
-  "structure": {
-    "headerType": 0,
-    "pcieType": 0,
-    "parent": "0000:64:00.0",
-    "physicalSlot": "slot-3",
-    "numaNode": 1
-  },
-  "resources": {
-    "bars": [],
-    "rom": null,
-    "rmrr": [],
-    "interruptModes": ["msix", "msi"],
-    "maxVectors": 129,
-    "dmaAddressBits": 48
-  },
-  "domains": {
-    "kernelIommuGroup": ["0000:65:00.0"],
-    "physicalIsolationDomain": ["0000:65:00.0"],
-    "resetDomain": ["0000:65:00.0"],
-    "requesterAliasSet": ["0000:65:00.0"],
-    "multifunctionSet": ["0000:65:00.0"],
-    "functionalGroup": []
-  },
-  "reset": {
-    "methods": ["flr"],
-    "selectedMethod": "flr",
-    "domainSource": "vfio-hot-reset-info"
-  },
-  "isolation": {
-    "provenance": "native-acs",
-    "overrideSource": "none",
-    "nativeIsolation": true,
-    "effectiveIsolation": true,
-    "componentProvenanceComplete": true
-  },
-  "activation": {
-    "adminEnabled": true,
-    "desiredOwner": "passthrough",
-    "effectiveOwner": "host",
-    "hostActive": false,
-    "activationDisposition": "live-apply",
-    "driver": "nvidia",
-    "activationMode": "bind-on-lease"
-  },
-  "health": {
-    "state": "healthy",
-    "generation": 12,
-    "lastResetResult": "pass"
-  },
-  "policy": {
-    "eligible": true,
-    "policyHash": "sha256:...",
-    "qualificationLevel": "software-plus-vendor"
-  }
-}
+`DeviceRecord` 的跨进程、持久化和 hash projection 只有一个，严格等于
+[`directpath-portable-entities.schema.json#/$defs/ENTITY-DEVICE-RECORD`](contracts/directpath-portable-entities.schema.json)：
+
+```python
+record DeviceRecord:                         # closed wire projection
+    subjectType: const("DEVICE_RECORD")
+    schemaVersion: const(1)
+    hostId: Id
+    deviceUid: IdentityV1DeviceUid
+    immutableIdentity: IdentityV1
+    identityFingerprint: SHA256
+    currentBdf: CanonicalBdf
+    physicalPathProvider: PhysicalPathProvider
+    physicalPath: ProviderBoundPhysicalPath
+    role: DeviceRole
+    iommuProvider: IommuProvider
+    physicalIsolationDomain: PhysicalIsolationDomainFact
+    dependencyActions: CanonicalSet[DependencyAction]
+    resetContract: ResetContractProjection
+    owner: OwnerState
+    bars: CanonicalSet[BarFact]
+    interrupts: InterruptFacts
+    health: DeviceHealth
+    generations: DeviceGenerations
+    provenance: DeviceProvenance
+    deviceRecordHash: SHA256
 ```
+
+`deviceUid` 按 [`contracts/directpath-identity-v1.schema.json`](contracts/directpath-identity-v1.schema.json)
+的 `IDENTITY-V1` 与 `CANONICAL-JSON-V1` 生成；BDF 永不作为
+identity input。没有 qualified serial/VPD 时必须使用 `SLOT_BOUND` 的稳定 physical location，
+且 Static 是否允许由 profile 显式决定。所有 PCI ID 在 wire/hash 对象中使用固定宽度小写
+十六进制字符串；采集器可在内部用整数，但跨进程前必须先规范化。
+
+`structure/resources/domains/isolation/activation/policy` 等便于算法阅读的旧分组不是 wire 字段。
+实现可以从 `immutableIdentity`、`role`、`iommuProvider`、`dependencyActions`、`resetContract`、
+`owner`、`bars`、`interrupts` 和 `provenance.providerFacts` 物化只读 `DeviceEvaluationView`，但该 view
+不得持久化、签名或独立计算 hash；它必须能无歧义投影回上面这一个 closed `DeviceRecord`，额外字段
+进入 wire 一律拒绝。
 
 ### 6.2 必收集字段
 
@@ -877,15 +863,30 @@ BAR 与 `PCI_COMMAND`。本仓库 [`pci-resource-model/`](pci-resource-model/REA
 所有 evaluator 接受不可变 snapshot，不允许在算法中途再次零散读取 sysfs：
 
 ```python
-record InventorySnapshot:
+record HostSnapshotWire:                    # exact portable hash subject
+    subjectType: const("HOST_SNAPSHOT")
+    schemaVersion: const(1)
     hostId: UUID
-    inventoryEpoch: uint64
     kernelBootId: UUID
-    topologyHash: SHA256
-    policyHash: SHA256
+    hostEpoch: uint64
+    agentGeneration: uint64
+    hostAuthorityResourceVersion: uint64
+    snapshotEpoch: uint64
+    previousSnapshotContentHashOrNull: SHA256 | null
     capturedAt: Timestamp
+    topologyDigest: SHA256
+    deviceRecordDigests: CanonicalSet[SHA256]
+    providerFactsDigest: SHA256
+    policyHash: SHA256
+    keyRingVersion: uint64
+    signerKeyId: Id
+    signature: Ed25519Signature | null
+    contentHash: SHA256 | null
+
+record SnapshotEvaluationView:              # internal, never a second wire object
+    wire: HostSnapshotWire
     hostFacts: HostFacts
-    devices: Map[BDF, DeviceRecord]
+    devices: Map[BDF, DeviceEvaluationView]
 
 record Fact[T]:
     value: T
@@ -895,6 +896,13 @@ record Fact[T]:
     observedAt: Timestamp
     evidenceHash: SHA256
 ```
+
+`HostSnapshotWire` 的唯一 schema 是
+[`directpath-portable-hash-subjects.schema.json#/$defs/hostSnapshot`](contracts/directpath-portable-hash-subjects.schema.json)；
+它不内嵌 device map。repository 读取 `deviceRecordDigests` 指向的 exact `DeviceRecord`，验证集合、
+`providerFactsDigest/topologyDigest/contentHash/signature` 后才可构造 `SnapshotEvaluationView`。下文伪代码的
+`snapshot.devices`、`snapshot.hostFacts` 是该只读 view 的快捷访问，不是 `HostSnapshotWire` 的额外字段；
+`snapshot.hostId/snapshotEpoch/topologyDigest/policyHash` 都代理到 `snapshot.wire`。
 
 扫描器先收集全 host，再做 domain closure，最后原子发布新 epoch。只扫描请求 BDF 会漏掉
 IOMMU peer、reset peer 和 bridge child，因此不能产生 production snapshot。任一关键事实为
@@ -910,7 +918,9 @@ function publishSnapshot(raw):
     assert no parent cycle and no BDF identity collision
     assert ACS native/effective/source tuple is internally consistent
     assert topology did not change between first and final uevent sequence read
-    return immutableSnapshot(epoch = previous.epoch + 1)
+    return immutableHostSnapshot(
+        snapshotEpoch=previous.snapshotEpoch + 1,
+        previousSnapshotContentHashOrNull=previous.contentHash)
 ```
 
 当前 [`authoritative_snapshot.py`](pci-resource-model/pci_resource_model/authoritative_snapshot.py)
@@ -919,7 +929,7 @@ function publishSnapshot(raw):
 - `capture_linux_full_snapshot()` 只接受 `FULL_HOST` capture，并要求
   `scannedDeviceCount == returnedDeviceCount == len(devices)`；连续两次完整扫描的 host、boot 和
   topology hash 必须相同，调用方不能自选 epoch。
-- canonical signed envelope 覆盖 store instance、authority/key、host/boot/epoch、完整安全拓扑，
+- canonical signed envelope 覆盖 store instance、authority/key、host/boot/snapshot epoch、完整安全拓扑，
   以及每个 BDF 的 VID:DID/subsystem/revision、IOMMU group/member、identity/group hash 和 device
   generation；读取侧以 exact schema、duplicate-key、signature/content/topology/row cross-check 拒绝
   任何漂移。
@@ -949,8 +959,17 @@ hardwareCapable = assignable function role
                && trustworthy isolation
                && no structural/platform exclusion
 
+technicallyAttachable = hardwareCapable
+                     && given guest profile/VM resource context has a complete safe plan
+                     # owner/lease/catalog state is deliberately excluded
+
+qualified = exact platform/device/software/guest/workload record has valid E4 evidence
+
+supported = qualified && current signed compatibility catalog contains exact record
+
 policyEligible = hardwareCapable
               && HCL/errata/trust-domain policy permits
+              && (supported in PRODUCTION || explicit UNQUALIFIED_LAB policy)
 
 adminEnabled = policyEligible && administrator admitted device to pool
 
@@ -966,7 +985,10 @@ available = adminEnabled
          && complete dependency bundle is healthy and free
 
 attachable = available
+          && technicallyAttachable
           && selected VM BAR/MMIO/RMRR/NUMA/IRQ admission passes
+
+eligible = attachable              # IPD current-request state; not qualification/support
 
 operationSupported(op) = attachable
                       && every selected device supports op
@@ -982,13 +1004,17 @@ flowchart TB
     ISO --> RESET["Accepted reset contract?"]
     RESET --> EXCL["No platform/errata exclusion?"]
     EXCL --> HC["hardwareCapable"]
-    HC --> POLICY["HCL, trust-domain, profile policy"]
+    HC --> TECH["guest profile/VM hard resource plan"]
+    TECH --> TA["technicallyAttachable"]
+    HC --> QUAL["exact E4 qualification"]
+    QUAL --> CAT["signed supported catalog"]
+    CAT --> POLICY["HCL, trust-domain, profile policy"]
     POLICY --> PC["passthruCapable / policyEligible"]
     PC --> ENABLE["adminEnabled"]
     ENABLE --> ACT["activation disposition<br/>active or live-applicable"]
     ACT --> FREE["Complete bundle healthy and free"]
     FREE --> AVAIL["available"]
-    AVAIL --> VM["MMIO, RMRR, ABI, NUMA, IRQ admission"]
+    AVAIL --> VM["reuse technicallyAttachable plan at current generations"]
     VM --> ATTACH["attachable for this VM"]
 ```
 
@@ -996,6 +1022,11 @@ VMware API 的 `passthruCapable` 对标 `policyEligible`，而不是 `available`
 设备被另一台 VM 占用时，capable 不应抖成 false；只是 `available=false`。
 `hostActive=false` 也不必自动令 candidate 消失：若 disposition 是 `LIVE_APPLY`，设备可在取得
 lease 后进入启动事务；`REBOOT_REQUIRED` 和 `DENIED` 才阻断本次 VM 启动。
+
+这与 IPD 四态一一对应：`TECHNICALLY_ATTACHABLE=technicallyAttachable`；
+`ELIGIBLE=eligible`；`QUALIFIED=qualified`；`SUPPORTED=supported`。内部
+`hardwareCapable/policyEligible/adminEnabled/hostActive/available/attachable` 是解释 VMware-like
+capable 与运行时 gate 的分解字段，不得拿其中任意一个单独宣告产品 support。
 
 ### 7.2 设备 role
 
@@ -1009,7 +1040,7 @@ lease 后进入启动事务；`REBOOT_REQUIRED` 和 `DENIED` 才阻断本次 VM 
 Role 判断使用结构证据，class code 只用于交叉检查：
 
 ```python
-function classifyFunctionRole(d: DeviceRecord) -> RoleDecision:
+function classifyFunctionRole(d: DeviceEvaluationView) -> RoleDecision:
     if d.structure.headerType == TYPE1:
         return FABRIC("TYPE1_HEADER")
 
@@ -1040,7 +1071,11 @@ function classifyFunctionRole(d: DeviceRecord) -> RoleDecision:
 
 ### 7.3 reason code
 
-所有 reason 至少带 `stage`、`devices`、`details`、`source`：
+所有 reason 至少带 `code`、`stage`、`devices`、`details`、`provenance`。权威 closed enum、retryability、
+operator action 与 operation/CAS 引用位于
+[`contracts/directpath-portable-control-contract.json`](contracts/directpath-portable-control-contract.json)
+的 `errorContract.reasonCodes`；未登记 code 禁止出现在 wire/audit。下面只保留常见分组的阅读索引，
+不是另一份枚举：
 
 ```text
 HARDWARE_ROLE_NOT_ASSIGNABLE
@@ -1078,49 +1113,75 @@ PROFILE_ABI_MISMATCH
 RMRR_PROFILE_CONFLICT
 MMIO_APERTURE_EXHAUSTED
 NUMA_POLICY_UNSATISFIED
-MIGRATION_UNSUPPORTED
+LIVE_MIGRATION_UNSUPPORTED
 HOTPLUG_UNSUPPORTED
-HOST_FENCE_PENDING
 INVENTORY_EPOCH_CHANGED
 ```
+
+历史 `HOST_FENCE_PENDING` 不再是 wire code：控制面 generation 冲突使用
+`STALE_HOST_EPOCH/STALE_RUN_GENERATION`，物理 source 不可达使用 `HOST_UNREACHABLE`。逻辑 epoch
+从不声称完成 BMC/power fence。
 
 ### 7.4 输出对象与 reason 排序
 
 ```python
-record CapabilityDecision:
+record CapabilityDecisionWire:              # the only persisted/signed projection
+    subjectType: const("CAPABILITY_DECISION")
+    schemaVersion: const(1)
+    evaluationContext: enum(HOST_ONLY, VM_REQUEST)
+    admissionMode: enum(PRODUCTION, ISOLATED_UNQUALIFIED_LAB)
+    requestHash: SHA256
     snapshotEpoch: uint64
-    target: BDF
-    payload: SortedSet[BDF]
+    policyHash: SHA256
+    profileHash: SHA256
+    bundleHashOrNull: SHA256 | null
+    resourcePlanHashOrNull: SHA256 | null
     hardwareCapable: bool
+    technicallyAttachable: bool | null
+    qualified: bool
+    supported: bool
     policyEligible: bool
-    passthruCapable: bool       # equals policyEligible
     adminEnabled: bool
     hostActive: bool
+    available: bool
+    attachable: bool            # HOST_ONLY is always false
+    eligible: bool
+    reasons: List[Reason]
+    warnings: List[Reason]
+    decisionHash: SHA256 | null
+
+record Reason:
+    code: StableEnum
+    stage: StableReasonStage
+    devices: CanonicalSet[DeviceUid]
+    details: CanonicalSet[ReasonDetail]
+    provenance: CanonicalSet[ReasonProvenance]
+
+record CapabilityEvaluationInternal:        # mutable algorithm view; never wire/hash
+    wireDraft: CapabilityDecisionWireDraft
+    wire: CapabilityDecisionWire | null
+    target: BDF
+    payload: SortedSet[BDF]
+    passthruCapable: bool                    # compatibility view = policyEligible
     activationDisposition: enum(ALREADY_ACTIVE, LIVE_APPLY,
                                 REBOOT_REQUIRED, DENIED) | null
     activationPlan: HostActivationPlan | null
-    available: bool
-    attachable: bool | null     # null means no VM context was supplied
     operationSupported: Map[Operation, bool]
     selectedReset: Map[BDF, ResetContract]
     leaseBundle: DependencyBundle | null
     resourcePlan: VmResourcePlan | null
-    reasons: List[Reason]
-    warnings: List[Reason]
-    decisionHash: SHA256
-
-record Reason:
-    code: StableEnum
-    stage: enum(inventory, hardware, policy, activation,
-                availability, vm_admission, operation, transaction)
-    devices: SortedSet[BDF]
-    message: string
-    source: Provenance
-    details: CanonicalJson
 ```
 
-Reasons 按 `stageOrder, code, devices` 稳定排序。API 文案可以本地化，但 code、devices、details
-和 decision hash 必须稳定，便于调度重试、审计和回归测试。
+`CapabilityDecisionWire` 严格等于
+[`directpath-portable-hash-subjects.schema.json#/$defs/capabilityDecision`](contracts/directpath-portable-hash-subjects.schema.json)，
+`Reason` 严格等于 operation envelope 的 closed `reason`；二者均拒绝额外字段。target/payload、activation
+plan、operation matrix、selected reset、完整 bundle/resource plan 是内部计算输入或独立 hash artifact，
+只能通过 `bundleHashOrNull/resourcePlanHashOrNull` 绑定，不能偷偷塞进 decision wire。
+`finalizeDecision` 是唯一 projection：它把 HOST_ONLY 的内部 `attachable=null` 规范化为 wire
+`attachable=false/eligible=false`，填充固定 context/hash，再按 canonical `[stage,code,devices]` 排序
+reason。API 本地化 message 位于 signed decision 之外；code、devices、details、provenance 和 decision hash
+保持稳定。下文变量 `out/decision` 是不越过进程边界的 `CapabilityEvaluationInternal`；访问同名布尔字段
+表示访问其 `wireDraft`，最终只有 `finalizeDecision(out).wire` 可以落库、签名、缓存或返回 API。
 
 ### 7.5 capable 主算法
 
@@ -1130,8 +1191,8 @@ Reasons 按 `stageOrder, code, devices` 稳定排序。API 文案可以本地化
 function evaluatePassthrough(snapshot, target, requestContext?, policy):
     ctx = requestContext or CapabilityContext.empty()
     profile = ctx.profile or policy.defaultCapabilityProfile
-    out = CapabilityDecision(
-        snapshotEpoch=snapshot.inventoryEpoch,
+    out = CapabilityEvaluationInternal(
+        snapshotEpoch=snapshot.snapshotEpoch,
         target=target,
         attachable=(false if ctx.vmSpec exists else null))
 
@@ -1203,8 +1264,29 @@ function evaluatePassthrough(snapshot, target, requestContext?, policy):
             if not rule.supports(policy.trustDomain, ctx.operations, action):
                 add(out, POLICY, QUALIFICATION_MISSING, {bdf}, rule.provenance)
 
+    out.qualified = out.hardwareCapable and \
+                    policy.qualificationDb.everyMatchedRuleHasValidE4(out.leaseBundle)
+    out.supported = out.qualified and \
+                    policy.supportedCatalog.containsExactQualificationSet(
+                        out.leaseBundle, policy.qualificationDb.matchedRuleHashes)
+    if policy.evaluationMode == PRODUCTION and not out.supported:
+        add(out, POLICY, PROFILE_NO_MATCH, out.payload,
+            details={"classification": "SUPPORTED_CATALOG_NO_MATCH"})
+    if policy.evaluationMode == UNQUALIFIED_LAB and \
+            not policy.explicitLabAdmission:
+        add(out, POLICY, PROFILE_NO_MATCH, out.payload,
+            details={"classification": "UNQUALIFIED_LAB_NOT_ENABLED"})
     out.policyEligible = out.hardwareCapable and noBlockingReason(out, through=POLICY)
     out.passthruCapable = out.policyEligible
+
+    # Owner-independent technical plan: calculated even when the bundle is busy.
+    # It maps directly to IPD TECHNICALLY_ATTACHABLE and is not support status.
+    if ctx.vmSpec exists and out.hardwareCapable:
+        technicalPlan = planVmResources(snapshot, out.leaseBundle,
+                                        ctx.vmSpec, profile)
+        out.resourcePlan = technicalPlan
+        out.technicallyAttachable = technicalPlan.success and \
+                                    hardOperationConstraintAllows(ctx.operations)
 
     # Gate 4: activation is planned without changing owner/driver.
     out.adminEnabled = out.policyEligible and allAdminEnabled(out.payload)
@@ -1233,25 +1315,32 @@ function evaluatePassthrough(snapshot, target, requestContext?, policy):
 
     # Gate 6: optional VM-specific admission
     if ctx.vmSpec exists and out.available:
-        out.resourcePlan = planVmResources(snapshot, out.leaseBundle,
-                                           ctx.vmSpec,
-                                           profile)
         evaluateVmAdmission(out.resourcePlan, ctx, out)
-        out.attachable = noBlockingReason(out, through=VM_ADMISSION)
+        out.attachable = out.technicallyAttachable and \
+                         noBlockingReason(out, through=VM_ADMISSION)
+    out.eligible = (out.attachable == true)
 
     evaluateOperationMatrix(out, ctx, policy)
     return finalizeDecision(out)
 
 function finalizeDecision(out):
-    out.reasons = stableSort(out.reasons)
-    out.warnings = stableSort(out.warnings)
-    out.decisionHash = hashCanonical(out without localized messages)
+    wire = projectClosedCapabilityDecision(out.wireDraft,
+        bundleHashOrNull=hashOrNull(out.leaseBundle),
+        resourcePlanHashOrNull=hashOrNull(out.resourcePlan),
+        attachable=(out.attachable == true),
+        eligible=(out.attachable == true),
+        reasons=stableSort(out.reasons),
+        warnings=stableSort(out.warnings),
+        decisionHash=null)
+    validateClosed(wire, CAPABILITY_DECISION_SCHEMA)
+    wire.decisionHash = hashCanonical(wire with decisionHash=null)
+    out.wire = wire
     return out
 
 function selectPublishedResetContract(snapshot, bdf, resetPolicy):
     candidates = []
     for c in snapshot.resetContracts.get(bdf, []):
-        if c.inventoryEpoch != snapshot.inventoryEpoch:
+        if c.snapshotEpoch != snapshot.snapshotEpoch:
             continue
         if c.topologyHash != resetTopologyHash(
                 snapshot, bdf, c.affectedDevices):
@@ -1355,7 +1444,7 @@ function evaluateVmAdmission(plan, ctx, out):
 - `passthruCapable` 只能因 inventory/policy/profile 事实变化而变化，不能因当前 lease owner 变化。
 - `available` 可以频繁变化，但不得写回 qualification DB。
 - `attachable` 必须带 VM spec 和 profile hash；脱离该上下文的 true 没有意义。
-- 任何 decision cache key 至少包含 `hostId + inventoryEpoch + policyHash + profileHash + requestHash`。
+- 任何 decision cache key 至少包含 `hostId + snapshotEpoch + policyHash + profileHash + requestHash`。
 - driver rebind、reset、AER fatal、link flap、SR-IOV VF create/remove 都使相关 cache 失效。
 - API 只允许从同一 decision object 派生各布尔值，禁止不同 endpoint 各自复制一套判断。
 
@@ -1453,7 +1542,7 @@ record ResetContract:
     providerApi: string
     providerFlags: uint64
     source: Provenance
-    inventoryEpoch: uint64
+    snapshotEpoch: uint64
     topologyHash: SHA256         # target path + affected set, not whole-host hash
     qualificationRule: RuleId
     stateVerification: List[Probe]
@@ -1504,7 +1593,7 @@ function discoverResetContract(snapshot, bdf, provider, resetPolicy):
             providerApi=capability.providerApi,
             providerFlags=capability.flags,
             source=capability.provenance,
-            inventoryEpoch=snapshot.inventoryEpoch,
+            snapshotEpoch=snapshot.snapshotEpoch,
             topologyHash=resetTopologyHash(snapshot, bdf, {bdf}),
             qualificationRule=rule.id,
             stateVerification=rule.stateVerification)
@@ -1559,7 +1648,7 @@ function discoverResetContract(snapshot, bdf, provider, resetPolicy):
         providerApi=provider.uapiVersion,
         providerFlags=info.flags,
         source=KERNEL_VFIO_HOT_RESET_INFO,
-        inventoryEpoch=snapshot.inventoryEpoch,
+        snapshotEpoch=snapshot.snapshotEpoch,
         topologyHash=resetTopologyHash(snapshot, bdf, affected),
         qualificationRule=rule.id,
         stateVerification=rule.stateVerification)
@@ -1576,7 +1665,9 @@ function executeReset(contract, lease, openedDevices, provider, qualificationDb)
     require lease.state == PREPARING or lease.state == RELEASING
     require lease.members containsAll contract.affectedDevices
     require leaseStore.currentOwner(contract.affectedDevices) == lease.owner
-    require leaseStore.currentFencingToken(lease.hostId) == lease.fencingToken
+    require leaseStore.currentControllerGeneration() == lease.controllerGeneration
+    require leaseStore.currentHostEpochForLease(lease.leaseId) == lease.hostEpoch
+    require leaseStore.currentRunGenerationForLease(lease.leaseId) == lease.runGeneration
     require qualificationDb.rule(contract.qualificationRule).isCurrent
     require currentResetTopologyHash(
         contract.target, contract.affectedDevices) == contract.topologyHash
@@ -1893,12 +1984,12 @@ function resolveCapabilityClosure(snapshot, initialPayload, profile, policy):
 
     bundle = DependencyBundle(
         id=hashCanonical(members, payload, edges, actions,
-                         snapshot.inventoryEpoch, policy.hash),
+                         snapshot.snapshotEpoch, policy.hash),
         members=sorted(members),
         payload=sorted(payload),
         actions=canonicalMap(actions),
         edges=stableSort(edges),
-        inventoryEpoch=snapshot.inventoryEpoch,
+        snapshotEpoch=snapshot.snapshotEpoch,
         policyHash=policy.hash)
     return CapabilityClosure(
         success=true,
@@ -1907,7 +1998,7 @@ function resolveCapabilityClosure(snapshot, initialPayload, profile, policy):
 ```
 
 `mergeMemberActionOrReject` 使用显式 action lattice，不是随意取 enum 最大值。默认可提升路径是
-`LOCK_ONLY -> VFIO_HOLD_IN_SAME_IOAS -> ASSIGN_TO_GUEST`；`QUIESCE_HOST` 与 guest assignment
+`LOCK_ONLY -> VFIO_HOLD_IN_SAME_DMA_DOMAIN -> ASSIGN_TO_GUEST`；`QUIESCE_HOST` 与 guest assignment
 冲突时必须有精确 signed rule，否则拒绝。算法以 set 去重、stable sort 和 member/edge 上限保证
 cycle-safe、确定性终止；超限不能返回截断 bundle。
 
@@ -1920,56 +2011,107 @@ Bundle 的相交关系以 `members` 判断，而不是 payload。任何两 bundl
 非空，就不能同时租给不同 owner。每条 edge 保存 kind 和 provenance，管理员可解释“为什么
 一张 NIC 把旁边 function/bridge 也锁住”。
 
-`VFIO_HOLD_IN_SAME_IOAS` 表示 function 不出现在 guest PCI tree，但 host agent 必须打开并
+`VFIO_HOLD_IN_SAME_DMA_DOMAIN` 表示 function 不出现在 guest PCI tree，但 host agent 必须打开并
 置于同一 DMA owner，满足 IOMMU group 或 cdev hot-reset ownership。它与只关闭 bus master 的
-`QUIESCE_HOST` 不同，manifest 必须记录实际 action。
+`QUIESCE_HOST` 不同，manifest 必须记录实际 action。当前 Legacy adapter 对应同一个 TYPE1
+container；未来 cdev adapter 对应同一个 IOMMUFD/IOAS。历史材料中的
+`VFIO_HOLD_IN_SAME_IOAS` 只作为读取别名；持久对象、API、manifest 和新实现一律写 canonical
+enum `VFIO_HOLD_IN_SAME_DMA_DOMAIN`，避免把 future cdev 名词泄漏到 Legacy 合同。
 
 ## 9. 静态直通设计
 
 ### 9.1 持久配置
 
-```json
-{
-  "mode": "static",
-  "deviceUid": "host-a/slot-3/function-0",
-  "expectedHostBdf": "0000:65:00.0",
-  "expectedIdentity": {
-    "vendorId": 4318,
-    "deviceId": 9860,
-    "subVendorId": 4318,
-    "subDeviceId": 5192,
-    "revisionId": 161
-  },
-  "guestSlot": "rp-dp0/00.0",
-  "profile": "vmware-esxi8u3-vhw20-create-efi-acpi"
-}
+持久对象使用唯一 closed `ENTITY-VM-DIRECTPATH-REQUEST` projection；外层索引字段必须与
+`canonicalRequest` 对应字段 byte-equal，不是第二套输入：
+
+```python
+record VmDirectPathRequestWire:
+    subjectType: const("VM_DIRECTPATH_REQUEST")
+    schemaVersion: const(1)
+    vmId: Id
+    requestVersion: uint64
+    requestType: enum(STATIC, DYNAMIC)
+    canonicalRequest: StaticCanonicalRequest | DynamicCanonicalRequest
+    requestHash: SHA256                 # hash(CANONICAL-JSON-V1(canonicalRequest))
+    requiredGuestAbiClass: Id
+    lifecyclePolicy: StaticLifecyclePolicy | DynamicLifecyclePolicy
+    requestedBy: Id
+    createdAt: Timestamp                # equals canonicalRequest.issuedAt
+    resourceVersion: uint64
+
+record StaticCanonicalRequest:
+    schemaVersion: const(1)
+    vmId: Id
+    requestVersion: uint64
+    requestType: const(STATIC)
+    selector: {
+        selectorType: const(STATIC_FIXED_IDENTITY_SET),
+        members: CanonicalSet[{
+            requirementId, deviceUid, identityFingerprint, enrolledHostId,
+            expectedPhysicalPathProvider, expectedPhysicalPath,
+            expectedCurrentBdf, guestSlot
+        }]
+    }
+    hostAffinity: {mode: const(EXACT_HOST), hostId: Id}
+    requiredGuestAbiClass: Id
+    lifecyclePolicy: StaticLifecyclePolicy
+    profileBinding: ProfileBinding
+    snapshotConstraint: ResolveCurrentAtOperation | PinnedCurrentSnapshot
+    policyBinding: PolicyBinding
+    mutationPrecondition: MutationPrecondition
+    idempotency: IdempotencyBinding
+    requestedBy: Id
+    issuedAt: Timestamp
 ```
 
-BDF 改变、板卡被替换或 subsystem/revision 不符时必须拒绝并要求管理员确认，不能像 Dynamic
-模式一样自动换卡。
+完整字段、const、nullability、canonical order 和 selector union 严格以
+[`directpath-portable-entities.schema.json#/$defs/ENTITY-VM-DIRECTPATH-REQUEST`](contracts/directpath-portable-entities.schema.json)
+为准。`deviceUid` 和 `identityFingerprint` 的 canonical 算法由 portable contract 的 `IDENTITY-V1`
+冻结；`expectedCurrentBdf` 只是 revalidation 位置事实。BDF/location 改变、板卡被替换或 fingerprint 不符时必须拒绝并要求
+管理员显式 re-enroll，不能像 Dynamic 模式一样自动换卡。这里的 `qman-*` 是产品 guest profile，
+不是把 VMware 实验 profile 当成 Qman 支持项。
+
+`RESOLVE_CURRENT_AT_OPERATION` 由 repository 读取当时唯一 HostAuthority current pointer，再检查
+`maximumAgeMicros` 并签发 sealed binding；`PINNED_CURRENT_SNAPSHOT` 则要求 request 中的完整
+`hostId/kernelBootId/hostEpoch/agentGeneration/hostAuthorityResourceVersion/snapshotEpoch/snapshotContentHash`
+binding 与 current pointer byte-equal 且未超龄。不存在“minimum epoch + 可独立组合的 boot/hash/BDF”
+兼容入口；两种模式在任何 side effect 前都会变成同一种 exact current binding。
 
 ### 9.2 状态机
 
+Owner activation 与 VM assignment 是两台正交状态机，不允许再混成一张图：
+
 ```mermaid
 stateDiagram-v2
-    [*] --> Disabled
-    Disabled --> Enabled: admin enable
-    Enabled --> Active: effective owner already matches
-    Enabled --> LiveApplicable: idle and live-transitionable
-    Enabled --> PendingReboot: explicit maintenance intent
-    LiveApplicable --> Active: lease + verified live activation
-    PendingReboot --> Active: early-boot claim verified
-    Active --> Reserved: lease CAS
-    LiveApplicable --> Reserved: lease CAS
-    Reserved --> Preparing: bind/open/reset
-    Preparing --> Attached: QEMU verified
-    Attached --> Releasing: VM stop/crash
-    Releasing --> Active: teardown/reset verified
-    Preparing --> Quarantined: rollback failed
-    Releasing --> Quarantined: teardown/reset failed
-    Quarantined --> Active: explicit recovery and qualification
-    Active --> Disabled: admin disable
+    state OwnerActivation {
+        [*] --> ENABLED
+        ENABLED --> LIVE_APPLICABLE: planner proves live transition
+        ENABLED --> PENDING_REBOOT: explicit maintenance intent
+        LIVE_APPLICABLE --> APPLYING: typed operation lease
+        APPLYING --> ACTIVE: effective owner read-back matches
+        APPLYING --> ENABLED: rollback verified
+        APPLYING --> QUARANTINED: rollback uncertain
+        PENDING_REBOOT --> ACTIVE: exact early-boot claim verified
+        PENDING_REBOOT --> FAILED: identity or owner mismatch
+    }
+    state Assignment {
+        [*] --> REQUESTED
+        REQUESTED --> PLANNED: decision plus resource plan
+        PLANNED --> PREPARING: whole-bundle lease CAS plus transaction intent
+        PREPARING --> ATTACHED: QEMU plus observed plan committed
+        PREPARING --> ROLLING_BACK: attach failure
+        ROLLING_BACK --> FREE: compensation verified
+        ROLLING_BACK --> QUARANTINED: cleanup uncertain
+        ATTACHED --> RELEASING: stop or crash
+        RELEASING --> FREE: clean-release receipt
+        RELEASING --> QUARANTINED: cleanup uncertain
+    }
 ```
+
+`ACTIVE` 只表示 host effective owner，`ATTACHED` 才表示某次 VM run 已提交；二者不能互换。
+quarantine 也分别保存 owner recovery 与 assignment recovery 事实，通过同一个 bundle conflict key
+阻断新事务，但不把两台 FSM 的 state 写进同一列。
 
 ### 9.3 启动事务
 
@@ -2071,38 +2213,72 @@ milestone，不关闭 C21/S05/R04/R05/R26/R27。
 
 ### 9.4 释放事务
 
-1. 停止 guest DMA，等待 QEMU 退出或完成 device detach。
-2. 撤销 IRQ eventfd 和 DMA map、invalidate IOTLB，但保留 VFIO fd 与 ownership context。
-3. 在完整 affected-set ownership 仍成立时关闭 bus master/interrupt，执行 release reset。
-4. reset 验证后才 detach IOAS、关闭 device fd，并按 policy 恢复 host driver。
-5. 验证无 stale DMA/IRQ、identity/link/health，递增 device generation。
-6. 仅在全部成功时清除 runtime binding 并释放 lease；否则保留 recovery binding 并 quarantine。
+这里的强不变量是**独占权连续**，不是“QEMU 的原 fd 必须跨进程保留”。Stock QEMU 持有的
+VFIO fd 会随进程退出关闭，Host Agent 不能把它们事后据为己有；因此产品使用一个在 QEMU 停止
+前持久化的 `ReleaseOwnershipGuard`，把 durable lease、host/run generation、全入口 deny、
+完整 affected set 和 OS device ACL 绑定在一起。在 guard 撤销前，除本次 Host Agent 外没有主体
+能重新打开或重新分配 bundle。
+
+1. `ATTACHED -> RELEASING` 做 CAS，并在任何 stop 副作用前签发
+   `ReleaseOwnershipGuard`；撤销本次 launch grant，阻断新的 QEMU/raw-QMP/VFIO opener。
+2. 要求 guest/设备停止提交 DMA，收集 QMP teardown 状态，再按 deadline 停止并 fence QEMU；
+   以 pidfd/starttime 和 `/proc/<pid>/fd` 证明原进程及其 VFIO fd 已消失。进程未能消失时保持
+   lease 并 quarantine，绝不继续 reset 或 restore driver。
+3. 在 guard 和完整 bundle lease 仍有效时，由 backend adapter 获取新的、仅用于 release 的
+   reset ownership context：Legacy 重新打开 exact group/container/device，固定原 TYPE1 subtype；
+   future cdev 重新打开 exact cdev/reset handles，但不复用已销毁的 guest IOAS。
+4. 核对 owner 仍为 `vfio-pci`、identity/group/physical/reset affected set 未漂移；证明旧 guest
+   DMA/IRQ context 已 teardown，再关闭 bus master/interrupt 并执行 qualified release reset。
+5. reset 和 post-reset probe 通过后关闭 release handles；按 activation mode 恢复原 host driver
+   或验证 persistent VFIO owner，并验证无 stale DMA/IRQ、identity/link/health。
+6. 递增 device generation。仅在所有 receipt 成功时清除 runtime binding、释放 lease 和 guard；
+   否则保留 recovery binding、lease 与 guard 的 deny 效果，并 quarantine 整个 affected set。
+
+这个次序同时适用于 Legacy 与 future cdev；差异仅在 `acquireReleaseContext`、backend teardown
+receipt 和 handle close adapter。任何实现若“先把 lease/ACL 变为 FREE，再尝试 reset”，或把
+QEMU 退出等同于 clean release，均违反本合同。
 
 ### 9.5 启动事务伪代码
 
 ```python
 function attachStatic(vm, request):
-    profile = resolveAndPersistProfile(vm, request.profile)
+    validateClosedEntity(request, ENTITY_VM_DIRECTPATH_REQUEST)
+    require request.requestType == STATIC
+    canonical = request.canonicalRequest
+    require canonical.requestType == STATIC
+    require indexedProjectionByteEqualsCanonical(request)
+    require hashCanonical(canonical) == request.requestHash
+    require canonical.hostAffinity.mode == EXACT_HOST
+    require canonical.selector.selectorType == STATIC_FIXED_IDENTITY_SET
+    profile = resolveExactProfileBinding(canonical.profileBinding)
     snapshotAuthorization = snapshotStore.authorizeLaunch(
-        hostId=vm.hostId,
-        expectedCurrentSnapshotHash=request.snapshotHash,
-        expectedBootId=request.kernelBootId,
-        minimumEpoch=request.minimumSnapshotEpoch,
-        requestedBdfs=request.requestedBdfs)
+        hostId=canonical.hostAffinity.hostId,
+        snapshotConstraint=canonical.snapshotConstraint,
+        requestedDeviceUids=sorted(m.deviceUid for m in canonical.selector.members))
     # 两个 authorization 都必须一直存活到 Popen。
     snapshot = snapshotAuthorization.snapshot
-    decision = evaluatePassthrough(snapshot, request.bdf,
-                                   context(vm, profile), policy)
+    selected = resolveStaticMembersExact(
+        snapshot, canonical.selector.members,
+        requireIdentityFingerprint=true,
+        requireEnrolledHostAndPhysicalPath=true,
+        requireExpectedCurrentBdf=true)
+    decision = evaluatePassthroughSet(snapshot, selected.currentBdfs,
+                                      context(vm, profile, request.requestHash), policy)
     require decision.attachable == true
     require decision.activationDisposition in {ALREADY_ACTIVE, LIVE_APPLY}
 
     lease = leaseStore.reserveAllCAS(
-        bundleId=decision.leaseBundle.id,
-        members=decision.leaseBundle.members,
-        expectedInventoryEpoch=snapshot.inventoryEpoch,
-        expectedGenerations=generations(snapshot, decision.leaseBundle.members),
-        owner=vm.runId,
-        decisionHash=decision.decisionHash)
+        bundleId=decision.leaseBundle.bundleHash,
+        memberDeviceUids=decision.leaseBundle.memberDeviceUids,
+        expectedSnapshotEpoch=snapshot.snapshotEpoch,
+        expectedMemberGenerations=generations(
+            snapshot, decision.leaseBundle.memberDeviceUids),
+        ownerVmId=vm.id,
+        runId=vm.runId,
+        expectedRunGeneration=currentRunGeneration(vm.runId),
+        expectedHostEpoch=currentHostEpoch(snapshot.hostId),
+        expectedControllerGeneration=currentControllerGeneration(),
+        decisionHash=decision.wire.decisionHash)
     leaseStore.transitionCAS(lease, RESERVED, PREPARING)
     leaseAuthorization = leaseStore.authorizeLaunch(lease)
 
@@ -2113,7 +2289,9 @@ function attachStatic(vm, request):
         current = inventory.readImmutable()
         requireSameIdentityAndDomains(snapshot, current,
                                       decision.leaseBundle.members)
-        require lease.fencingToken == leaseStore.currentToken(vm.hostId)
+        require lease.controllerGeneration == leaseStore.currentControllerGeneration()
+        require lease.hostEpoch == leaseStore.currentHostEpoch(vm.hostId)
+        require lease.runGeneration == leaseStore.currentRunGeneration(vm.runId)
 
         # 只有 durable lease 后才执行 LIVE_APPLY。helper 按 action manifest 处理
         # 完整 bundle，并以 owner/driver 读回结果作为提交条件。
@@ -2152,25 +2330,58 @@ function attachStatic(vm, request):
         require finalPlan.success
         require finalPlan.guestAbiSignature == decision.resourcePlan.guestAbiSignature
 
-        launchHandles = vfio.openAuthorizedLaunchBundle(
+        # 唯一的 backend 分叉点。当前产品不会无条件打开 cdev/IOMMUFD fd。
+        launchGrant = backendAdapter.createLaunchGrant(
+            profile=profile,
             snapshotAuthorization=snapshotAuthorization,
+            leaseAuthorization=leaseAuthorization,
             requestedBdfs=decision.payload)
-        # PRE_OPEN/POST_OPEN 只能使用 authorization 中封存的 capture provider。
-        rollback.push(() => vfio.closeAll(launchHandles))
-        require launchHandles.members == completeAuthorizedIommuGroups(
+        rollback.push(() => backendAdapter.revokeLaunchGrant(launchGrant))
+        require launchGrant.members == completeAuthorizedIommuGroups(
             snapshotAuthorization, decision.payload)
 
-        qemuBinding = qemuContract.fromAuthorizedVfioLaunchResult(
-            launchHandles, leaseAuthorization)
-        qemuSpec = renderQemu(profile, finalPlan, qemuBinding)
+        match launchGrant.kind:
+            case AUTHORIZED_DEVICE_PATH:
+                require profile.backendFamily == LEGACY_VFIO_TYPE1
+                require launchGrant.preopenedDeviceFdPassing == false
+                sandbox = launcher.createLegacySandbox(
+                    transientUid=newPerVmUid(),
+                    exactBdfs=launchGrant.authorizedBdfs,
+                    exactGroupNodes=launchGrant.groupNodes,
+                    configuredIommuType=profile.configuredIommuType,
+                    noAlternateLaunchOrQmpEntry=true)
+                rollback.push(() => launcher.destroySandbox(sandbox))
+                qemuSpec = renderQemuAuthorizedDevicePath(
+                    profile, finalPlan, launchGrant, sandbox)
+            case AUTHORIZED_FD_BUNDLE:
+                require profile.backendFamily == VFIO_CDEV_IOMMUFD
+                require profile.isIndependentlyQualifiedFutureProfile
+                # PRE_OPEN/POST_OPEN 只使用 authorization 中封存的 capture provider；
+                # fresh raw fd 由 grant 持有，QEMU 内部完成 bind/IOAS attach。
+                require launchGrant.hasFreshRawCdevAndIommufdFds
+                qemuSpec = renderQemuAuthorizedFdBundle(
+                    profile, finalPlan, launchGrant)
+
         qemuSpec.validateBeforeSpawn()       # PRE_SPAWN capture
         process = Popen(**qemuSpec.popen_kwargs())  # PRE_SPAWN again
         rollback.push(() => qemu.stopAndFence(process))
 
         qmp = qemu.waitQmpReady(process, profile.startTimeout)
         verifyRealizedTopology(qmp, finalPlan)
-        verifyQemuIommufdBindAndIoasOwnership(
-            process, qemuBinding, decision.leaseBundle)
+        attachReceipt = backendAdapter.collectAndVerifyAttachReceipt(
+            process=process,
+            grant=launchGrant,
+            lease=lease,
+            required=[QEMU_PID_STARTTIME, QEMU_ARGV_HASH,
+                      AUTHORIZED_BDF_AND_GROUP, PROC_FD_DEVICE_IDENTITY,
+                      QMP_QOM_DEVICE_IDENTITY, LEASE_AND_RUN_GENERATION,
+                      HOST_EPOCH])
+        require attachReceipt.hasNoUnauthorizedVfioFdOrBdf
+        if launchGrant.kind == AUTHORIZED_DEVICE_PATH:
+            require attachReceipt.selectedLegacyIommuType == \
+                    profile.configuredIommuType
+        else:
+            require attachReceipt.qemuPerformedIommufdBindAndIoasAttachForEveryPayload
         guestEvidence = verifyGuestResources(vm, finalPlan)
         require guestEvidence.allMandatoryBarsMatch
         observedPlan = verifyObservedPlan(finalPlan, qmp, guestEvidence)
@@ -2178,7 +2389,8 @@ function attachStatic(vm, request):
         binding = persistRuntimeBindingCAS(
             vm=vm, lease=lease, process=process,
             manifest=buildAssignmentManifest(
-                decision, freshContracts, finalPlan, observedPlan))
+                decision, freshContracts, finalPlan, observedPlan,
+                launchGrant.kind, attachReceipt))
         rollback.push(() => clearRuntimeBindingCAS(binding))
 
         leaseStore.transitionCAS(lease, PREPARING, ATTACHED)
@@ -2198,60 +2410,91 @@ function attachStatic(vm, request):
         snapshotAuthorization.close()
 ```
 
-`renderQemu` 只能使用 plan 中的 guest slot、machine、firmware hash、BAR aperture 和已继承 fd；
-禁止再按 BDF 扫描设备或重新选择 Dynamic candidate。
+renderer 只能使用 plan 中的 guest slot、machine、firmware hash、BAR aperture 和 typed
+`launchGrant`；Legacy 只能使用 grant 中 exact BDF/path sandbox，future cdev 只能使用 grant 中
+继承 fd。禁止再扫描设备、扩展 group、切换 TYPE1 subtype 或重新选择 Dynamic candidate。
 
 ### 9.6 释放事务伪代码
 
 ```python
-function releaseAssignment(binding, reason):
-    lease = leaseStore.require(binding.leaseId, state=ATTACHED)
-    leaseStore.transitionCAS(lease, ATTACHED, RELEASING)
+function releaseAssignment(assignmentId, reason):
+    manifest = store.requireAssignmentManifestV2(assignmentId)
+    bindings = canonicalOrderedBindings(manifest.bindings)
+    leaseSet = store.requireCanonicalLeaseSet(bindings, state=ATTACHED)
+    scope = canonicalReleaseScope(leaseSet, bindings,
+                                  manifest.resetAffectedSets)
 
-    failures = []
-    qemu.stopGuestDmaOrFence(binding.process)
-    waitProcessExit(binding.process)
-    failures += disableAllIrqEventfds(binding)
-    failures += unmapAllDmaAndInvalidateIotlb(binding.ioas)
+    # 同一 global transaction 取得 RELEASE operation lease/full-scope guard，
+    # 并推进 Assignment ATTACHED -> RELEASING；不能逐 binding/逐 bundle 释放。
+    capability, guard = store.beginReleaseTransition(
+        assignmentId, leaseSet, scope,
+        expectedControllerGeneration=currentControllerGeneration(),
+        expectedRunGeneration=manifest.runGeneration,
+        expectedHostEpoch=manifest.hostEpoch)
+    require guard.leaseSetHash == canonicalHash(leaseSet)
+    require guard.coversEvery(scope.bundleIds, scope.memberDeviceUids)
 
-    for contract in reverseResetOrder(binding.manifest.resetContracts):
-        failures += tryExecuteReleaseReset(
-            contract, lease, binding.openedDevices,
-            vfioProvider, policy.resetPolicy, policy.qualificationDb)
+    failures = qemu.stopGuestDmaAndFenceByDeadline(manifest.process)
+    if not qemu.provePidAndAllVfioFdsGone(manifest.process):
+        failures += failure(QEMU_EXIT_UNVERIFIED)
 
-    # hot reset 完成前不能丢掉 cdev/iommufd 或 legacy group ownership proof。
-    failures += detachAllDevices(binding.ioas)
-    failures += closeDeviceFdsAndDestroyIoas(binding)
-    failures += verifyNoStaleDmaIrq(binding.manifest)
-    failures += restoreHostDriversByManifest(binding.manifest.memberActions)
-    failures += verifyIdentityAndHealth(binding.manifest.bundleMembers)
-
-    bumpGeneration(binding.manifest.bundleMembers)
+    releaseContexts = []
     if failures is empty:
-        clearRuntimeBindingCAS(binding)
-        leaseStore.transitionCAS(lease, RELEASING, FREE)
-    else:
-        markRuntimeBindingRecoveryRequired(binding, failures)
-        quarantine(binding.manifest.bundleMembers, reason, failures)
-        leaseStore.transitionToQuarantined(lease)
+        # Stock QEMU fd 不跨进程保留；guard 存活期间按每个 backend binding
+        # 重新取得最小 release context，但 guard/receipt/CAS 始终覆盖整个 lease set。
+        for binding in bindings:
+            ctx = backendAdapter(binding.backendKind).acquireReleaseContext(
+                capability=capability, guard=guard, binding=binding,
+                exactConfiguredIommuType=binding.configuredIommuType)
+            releaseContexts += ctx
+            failures += backendAdapter(binding.backendKind).verifyGuestDmaIrqContextDestroyed(
+                binding, ctx)
 
-function tryExecuteReleaseReset(planned, lease, openedDevices,
+    if failures is empty:
+        failures += disableBusMasterAndInterrupts(scope.memberDeviceUids,
+                                                  releaseContexts)
+        for contract in reverseResetOrder(scope.resetContracts):
+            failures += tryExecuteReleaseReset(
+                contract, leaseSet, releaseContexts,
+                resetProvider, policy.resetPolicy, policy.qualificationDb)
+
+    failures += closeEveryReleaseContext(releaseContexts)
+    if failures is empty:
+        failures += restoreHostDriversByManifest(manifest.memberActions)
+        failures += verifyNoStaleDmaIrq(manifest)
+        failures += verifyIdentityAndHealth(scope.memberDeviceUids)
+
+    if failures is empty:
+        receipt = signFullAssignmentCleanReleaseReceipt(
+            guard, leaseSet, bindings, scope, evidence())
+        store.atomicAcceptReceiptRevokeLeaseSetAndFreeAssignment(
+            receipt, leaseSet, expectedControllerGeneration=currentControllerGeneration())
+        backendAdapter.releaseOwnershipGuard(guard)
+    else:
+        markRuntimeBindingRecoveryRequired(manifest, failures)
+        store.atomicQuarantineScopeAndRetainEveryClaim(
+            scope, leaseSet, reason, failures)
+        backendAdapter.retainDenyGuardForQuarantine(guard)
+
+function tryExecuteReleaseReset(planned, leaseSet, releaseContexts,
                                 provider, resetPolicy, qualificationDb):
     current = inventory.refreshMembers(planned.affectedDevices)
     fresh = discoverResetContract(current, planned.target,
                                   provider, resetPolicy)
     if fresh.rejected:
-        return failure(RELEASE_RESET_UNAVAILABLE, fresh.reasons)
+        return failure(RESET_NOT_SUPPORTED, fresh.reasons)
     if resetSafetyEnvelope(fresh) != resetSafetyEnvelope(planned):
         return failure(RESET_DOMAIN_CHANGED,
                        planned=planned.affectedDevices,
                        current=fresh.affectedDevices)
     return captureFailure(() => executeReset(
-        fresh, lease, openedDevices, provider, qualificationDb))
+        fresh, leaseSet, releaseContexts, provider, qualificationDb))
 ```
 
-QEMU 退出只满足释放流程的第一个条件。DMA unmap/IOTLB invalidation、IRQ teardown、release
-reset 和 health verification 任一缺失，都不能把 lease 变成 FREE。
+QEMU 退出只满足释放流程的第一个条件。Stock QEMU 的旧 guest DMA context 以进程/fd teardown
+销毁，Host Agent 随后在仍有效的 durable guard 下取得 fresh release context；两者之间没有授权
+窗口。backend teardown receipt、IRQ teardown、release reset 和 health verification 任一缺失，
+都不能把 lease 或 OS deny guard 变成 FREE。
 
 ## 10. Dynamic DirectPath 设计
 
@@ -2259,33 +2502,45 @@ reset 和 health verification 任一缺失，都不能把 lease 变成 FREE。
 
 每个 virtual passthrough slot 是一个 requirement。持久配置保存 predicate，不保存 BDF：
 
-```json
-{
-  "mode": "dynamic",
-  "requirements": [
-    {
-      "requestKey": "pciPassthru0",
-      "allowedDevices": [
-        {
-          "vendorId": 32902,
-          "deviceId": 4110,
-          "subVendorId": 6900,
-          "subDeviceId": 1,
-          "revisionId": 2
-        }
-      ],
-      "customLabel": "storage-tier-a",
-      "count": 1,
-      "guestSlot": "rp-dp0/00.0",
-      "guestAbiClass": "nvme-tier-a-v1"
+```python
+record DynamicCanonicalRequest:
+    schemaVersion: const(1)
+    vmId: Id
+    requestVersion: uint64
+    requestType: const(DYNAMIC)
+    selector: {
+        selectorType: const(DYNAMIC_ALLOWED_DEVICE_REQUIREMENTS),
+        requirements: CanonicalSet[{
+            requirementId,
+            allowedDevices: CanonicalSet[{
+                vendorId, deviceId,
+                subsystemVendorId?, subsystemDeviceId?, revisionId?
+            }],
+            customLabelOrNull,
+            requiredGuestAbiClass,
+            count,
+            guestSlots,                 # ordered sequence; length == count
+            equivalencePolicyHash
+        }]
     }
-  ],
-  "profile": "vmware-esxi8u3-vhw20-create-efi-acpi"
-}
+    hostAffinity: AnyOnlineCooperativeHost | AllowedOnlineCooperativeHostSet
+    requiredGuestAbiClass: Id
+    lifecyclePolicy: DynamicLifecyclePolicy
+    profileBinding: ProfileBinding
+    snapshotConstraint: ResolveCurrentAtOperation | PinnedCurrentSnapshot
+    policyBinding: PolicyBinding
+    mutationPrecondition: MutationPrecondition
+    idempotency: IdempotencyBinding
+    requestedBy: Id
+    issuedAt: Timestamp
 ```
 
 `vendorId/deviceId` 必须匹配；subsystem/revision 只有在 request 中存在时才参与 exact match。
-`customLabel` 存在时也必须 exact match。class code、display name 和驱动名不能替代这些字段。
+所有 PCI ID 使用固定宽度小写十六进制字符串；`customLabelOrNull` 非 null 时也必须 exact match。
+class code、display name 和驱动名不能替代这些字段。`guestSlots` 是有序数组且长度必须等于
+`count`；solver 把它展开为 `(requirementId, ordinal, guestSlot)`，不自行发明额外 slot。
+外层仍是上一节的 `VmDirectPathRequestWire`，且 `requestType=DYNAMIC`；BDF、physicalPath、
+`deviceUid/bundleId/leaseId/assignedId` 在该 closed selector 中结构上不可表达。
 
 ### 10.2 candidate 构造
 
@@ -2304,20 +2559,21 @@ record Candidate:
     assignPayload: SortedSet[BDF]
     bundle: DependencyBundle
     resourceSignature: ResourceSignature
+    guestAbiClass: string
     guestAbiSignature: SHA256
     numaNode: int | UNKNOWN
     scoreInputs: Map
     decisionHash: SHA256
 
 function buildCandidates(snapshot, requirement, vmContext, policy):
-    byBundle = Map[BundleId, Candidate]()
+    byEquivalence = Map[CandidateEquivalenceKey, Candidate]()
 
     for bdf in sorted(snapshot.devices):
         d = snapshot.devices[bdf]
         if not exactMatcher(requirement.allowedDevices, d.identity):
             continue
-        if requirement.customLabel exists and \
-                requirement.customLabel not in d.policy.labels:
+        if requirement.customLabelOrNull is not null and \
+                requirement.customLabelOrNull not in d.policy.labels:
             continue
 
         decision = evaluatePassthrough(snapshot, bdf, vmContext.withoutMmio(), policy)
@@ -2332,18 +2588,29 @@ function buildCandidates(snapshot, requirement, vmContext, policy):
             assignPayload=decision.leaseBundle.payload,
             bundle=decision.leaseBundle,
             resourceSignature=signatureOfBarsRmrrIrq(decision.leaseBundle),
+            guestAbiClass=computeGuestAbiClass(d, vmContext.profile),
             guestAbiSignature=computeGuestAbiSignature(d, vmContext.profile),
             numaNode=effectiveNumaNode(decision.leaseBundle),
-            decisionHash=decision.decisionHash)
+            decisionHash=decision.wire.decisionHash)
 
-        if candidate.guestAbiSignature not in requirement.allowedAbiSignatures:
+        if candidate.guestAbiClass != requirement.requiredGuestAbiClass:
             continue
 
-        # 同一 lease bundle 只能形成一个物理 candidate。
-        byBundle[candidate.bundle.id] = chooseStableRepresentative(
-            byBundle.get(candidate.bundle.id), candidate)
+        # 只有 payload、member action、ABI 和 resource signature 全部相同时才能去重。
+        # 仅以 bundleId 去重会丢掉同一 multifunction bundle 的另一种合法 guest payload。
+        key = CandidateEquivalenceKey(
+            bundleId=candidate.bundle.id,
+            assignPayloadHash=hashCanonical(candidate.assignPayload),
+            memberActionHash=hashCanonical(candidate.bundle.memberActions),
+            guestAbiClass=candidate.guestAbiClass,
+            guestAbiSignature=candidate.guestAbiSignature,
+            resourceSignatureHash=hashCanonical(candidate.resourceSignature))
+        byEquivalence[key] = chooseStableRepresentative(
+            byEquivalence.get(key), candidate,
+            key=(snapshot.devices[candidate.primaryDevice].deviceUid,
+                 candidate.decisionHash))
 
-    return stableSort(byBundle.values, candidatePreferenceKey)
+    return stableSort(byEquivalence.values, candidatePreferenceKey)
 ```
 
 若一个 functional group 必须整体进 guest，candidate 的 `assignPayload` 包含完整组；若该组需要
@@ -2365,12 +2632,15 @@ host MMIO/RMRR/NUMA/IRQ/VM device-count 限制满足
 实现使用确定性 backtracking/constraint solver，不使用逐 requirement 贪心。排序只影响可重复性：
 
 1. candidate 数量最少的 requirement 优先；
-2. exact subsystem/revision/label 优先；
-3. 满足 VM NUMA locality 的 bundle 优先；
-4. resource waste 较小者优先；
-5. 最后按稳定 `deviceUid` 排序。
+2. exact subsystem/revision/label 匹配维度较多者优先；
+3. NUMA rank 按 `LOCAL=0, UNKNOWN=1, REMOTE=2`（若 policy 要求 strict local，则后两者直接不可行）；
+4. resource waste 按 `(below4GBytes, highMmioBytes, bridgeWindowBytes, virtualSlotCost)` 字典序较小者优先；
+5. 最后按排序后的 `deviceUid`、`bundleId`、`guestAbiSignature` 和 `decisionHash` 排序。
 
 这不是声称 VMware 使用同一排序，而是提供稳定、可审计且满足相同外部约束的选择。
+`candidatePreferenceKey` 就是上述完整 tuple；不得依赖 hash-map 插入顺序、瞬时 BDF 枚举顺序或
+数据库默认排序。`scoreAndCanonicalize` 在完整解上使用所有 selected candidate 的 tuple 拼接，
+再加精确 resource plan 的 waste tuple；两个 tuple 全等才视为同一个 canonical 解。
 
 ```mermaid
 flowchart LR
@@ -2440,7 +2710,7 @@ function solveDynamic(snapshot, requirements, vmSpec, profile, policy):
     if best is null:
         return reject(PROFILE_NO_GLOBAL_SOLUTION,
                       explainUnsatisfiedConstraints(candidates))
-    return best.with(snapshotEpoch=snapshot.inventoryEpoch,
+    return best.with(snapshotEpoch=snapshot.snapshotEpoch,
                      policyHash=policy.hash,
                      profileHash=profile.hash)
 ```
@@ -2456,12 +2726,12 @@ sequenceDiagram
     participant H as Host Agent
     participant L as Lease Store
     participant Q as QEMU
-    C->>H: Plan dynamic request at inventoryEpoch E
+    C->>H: Plan dynamic request at snapshotEpoch E
     H-->>C: Candidate bundles and constraints
     C->>L: CAS reserve all bundles at E
     L-->>C: leaseId + generations
     C->>H: Prepare selected bundles
-    H->>H: Revalidate, bind, reset, open fds
+    H->>H: Revalidate, bind, reset, create typed launch grant
     H->>Q: Start with selected fds and resource plan
     Q-->>H: QMP ready and device realized
     H-->>C: Commit runtime bindings/assignedIds
@@ -2487,15 +2757,26 @@ guest hotplug。
 function reserveDynamicSolution(vm, solution):
     members = union(c.bundle.members for c in solution.candidates)
     return leaseStore.transaction:
-        require currentInventoryEpoch(solution.hostId) == solution.snapshotEpoch
+        require currentSnapshotEpoch(solution.hostId) == solution.snapshotEpoch
         require all lease(member) in {FREE, vm.runId} for member in members
         require generations(members) == solution.expectedGenerations
-        create one LeaseRecord(state=RESERVED,
-                               members=sorted(members),
-                               bundleIds=solution.bundleIds,
-                               ownerVmId=vm.id,
-                               runId=vm.runId,
-                               fencingToken=nextToken(solution.hostId))
+        create one BundleLeaseRecord per canonical bundleId,
+                               each(bundleId=bundle.bundleHash,
+                                    leaseId=newLeaseId(),
+                                    leaseVersion=1,
+                                    memberDeviceUids=sorted(bundle.memberDeviceUids),
+                                    scopeHash=hashCanonicalScope(...),
+                                    runId=vm.runId,
+                                    ownerVmId=vm.id,
+                                    state=RESERVED,
+                                    runGeneration=solution.runGeneration,
+                                    hostEpoch=solution.hostEpoch,
+                                    controllerGeneration=currentControllerGeneration(),
+                                    expectedMemberGenerations=solution.expectedMemberGenerations,
+                                    resourceVersion=nextResourceVersion()))
+        create canonical leaseSetHash over every bundleId/leaseId/leaseVersion
+        require all BundleLeaseRecord rows and the Assignment PREPARING transition
+                commit in this one transaction or none commit
 ```
 
 不允许逐 candidate 写 lease，因为第二个失败时，第一个已经可被外部观察，容易形成部分 reservation。
@@ -2515,52 +2796,84 @@ function attachDynamic(vm, request):
     # 与 static 的差别仅在 selection；之后使用同一个 prepare/rollback core。
     binding = attachSelectedBundles(vm, solution.candidates,
                                     solution.resourcePlan, lease)
-    runtime.assignedIds = {
-        slot.requestKey: candidate.primaryDevice
-        for slot, candidate in solution.selection
-    }
+    runtime.bindings = [
+        RuntimeAssignedBinding(
+            requirementId=slot.requirementId,
+            ordinal=slot.ordinal,
+            guestSlot=slot.guestSlot,
+            assignedId=mintOpaqueAssignedId(vm.runId,
+                                            slot.requirementId,
+                                            slot.ordinal),
+            deviceUid=snapshot.devices[candidate.primaryDevice].deviceUid,
+            hostBdf=candidate.primaryDevice,
+            bundleId=candidate.bundle.id)
+        for slot, candidate in canonicalSelectionOrder(solution.selection)
+    ]
     persistRuntimeBindingCAS(runtime, onlyIfLeaseState=ATTACHED)
     return runtime
 ```
 
-`assignedId` 只能在 QEMU 和 guest resource verification 完成后发布；停止 VM 时先清 runtime
-binding，再释放 lease。持久 VM definition 始终只保存 matcher/profile。
+`assignedId` 是当前 `runId` 内的 opaque runtime key，不是 BDF、`deviceUid` 或下一次启动的选择
+约束；实际物理映射只存在于同一 `RuntimeAssignedBinding`/manifest 中。它只能在 QEMU 和 guest
+resource verification 完成后发布；停止 VM 时在 clean release transaction 中清 runtime binding，
+再释放 lease。持久 VM definition 始终只保存 matcher/profile/guest slots。
 
 ## 11. Durable lease 与并发控制
 
-### 11.1 LeaseRecord
+### 11.1 BundleLeaseRecord 与 assignment lease set
 
 ```json
 {
-  "leaseId": "uuid",
-  "hostId": "host-a",
-  "ownerVmId": "vm-42",
+  "bundleId": "sha256:...",
+  "leaseId": "lease-uuid",
+  "leaseVersion": 19,
+  "memberDeviceUids": [
+    "urn:qman:directpath:device:v1:host-a:sha256:identity"
+  ],
+  "scopeHash": "sha256:...",
   "runId": "run-77",
+  "ownerVmId": "vm-42",
   "state": "ATTACHED",
-  "bundleIds": ["bundle/0000:65:00.0"],
-  "members": ["0000:64:00.0", "0000:65:00.0"],
-  "inventoryEpoch": 1042,
-  "deviceGenerations": {
-    "0000:65:00.0": 12
+  "runGeneration": 901,
+  "hostEpoch": 37,
+  "controllerGeneration": 204,
+  "expectedMemberGenerations": {
+    "urn:qman:directpath:device:v1:host-a:sha256:identity": 12
   },
-  "fencingToken": 981,
-  "policyHash": "sha256:...",
-  "expiresAt": null
+  "resourceVersion": 77
 }
 ```
+
+每个完整 exclusive dependency bundle 对应一条权威 `BundleLeaseRecord`；一次 assignment 可以原子
+持有多条 lease。assignment 以 canonical `leaseSetHash` 和逐 binding 的
+`bundleId/leaseId/leaseVersion` 引用该集合。reserve、release、rollback、reconcile 都必须比较和更新
+完整集合，禁止把多 bundle assignment 折叠成一条可被部分释放的 lease。
+字段集合、枚举和 lifecycle invariant 严格以
+[`directpath-authority-entities.schema.json#/$defs/ENTITY-BUNDLE-LEASE`](contracts/directpath-authority-entities.schema.json)
+为准；旧 host/快照别名、BDF member 列表、TTL 或单一 fencing token 都不是该 authority row
+的兼容别名。host 归属由 run/assignment 关联解析，快照与 policy 由 request/decision/manifest hash 绑定，
+过期只触发 reconcile，绝不能凭 TTL 释放物理 claim。
 
 ### 11.2 状态
 
 ```text
-FREE -> RESERVED -> PREPARING -> ATTACHED -> RELEASING -> FREE
-                         |             |             |
-                         +-------------+-------------+-> QUARANTINED
+[no lease row] -> RESERVED -> PREPARING -> ATTACHED -> RELEASING -> REVOKED
+                      |          |             |             |
+                      +----------+-------------+-------------+-> QUARANTINED
+RESERVED --------------------------------------------------------> REVOKED
+                       only atomic unstarted-cancel
 ```
 
-- 单 host 可用 SQLite WAL 加 host-local file lock，但 API 必须保留 CAS/epoch 语义。
-- 多 host 使用有共识的 durable store；QEMU pidfile、VM config 和进程列表都不是权威租约。
+`FREE` 是 Assignment/设备可分配语义，不是 `BundleLeaseRecord.state`。只有完整 canonical lease set
+在 unstarted-cancel 或 clean-release transaction 中一起进入终态 `REVOKED` 后，Assignment 才可进入
+`FREE`；`REVOKED` row 保留作审计且永不再次授权副作用。
+
+- 所有产品 profile（包括单 host 部署）都使用同一 PostgreSQL global repository 和相同 CAS/epoch
+  语义；Host Agent SQLite WAL 仅保存本机补偿 journal/cache，不能仲裁 owner、把 lease 置为
+  `REVOKED` 或把 Assignment 置为 `FREE`。
+- 多 host 仍使用同一 durable store；QEMU pidfile、VM config、SQLite cache 和进程列表都不是权威租约。
 - 使用 pidfd/systemd scope 或等价进程身份，禁止仅按 PID 判断 owner，避免 PID reuse。
-- TTL 只触发调查/回收流程，不能直接把 DMA-capable device 置为 FREE。
+- TTL 只触发调查/回收流程，不能直接 revoke lease 或把 DMA-capable device 置为 FREE。
 - 每次 bind/reset/release 增加 generation；旧 generation 的回调不能释放新 lease。
 
 ### 11.3 TOCTOU 防护
@@ -2568,7 +2881,7 @@ FREE -> RESERVED -> PREPARING -> ATTACHED -> RELEASING -> FREE
 租约提交前后都核对：
 
 ```text
-inventoryEpoch
+snapshotEpoch
 device generation
 BDF -> deviceUid mapping
 VID:DID/subsystem/revision
@@ -2725,7 +3038,7 @@ record VmResourcePlan:
     profileId: string
     profileHash: SHA256
     firmwareHash: SHA256
-    inventoryEpoch: uint64
+    snapshotEpoch: uint64
     tree: GuestPciTree
     barPlacements: Map[DemandKey, AddressRange]
     bridgeWindows: Map[NodeId, List[WindowPlan]]
@@ -2907,7 +3220,7 @@ function planVmResources(snapshot, bundles, vmSpec, profile):
     plan.profileId = profile.id
     plan.profileHash = profile.hash
     plan.firmwareHash = profile.firmwareHash
-    plan.inventoryEpoch = snapshot.inventoryEpoch
+    plan.snapshotEpoch = snapshot.snapshotEpoch
     populateRmrAbiNumaAndInterruptAdmission(plan, snapshot, bundles,
                                             vmSpec, profile)
     require plan.allMandatoryBarsAssigned
@@ -3266,7 +3579,7 @@ VENDOR_HEALTH_CHECK_FAILED
 
 1. Coordinator 向每个 host 请求基于 snapshot 的 `CanSatisfy`，用于筛选和评分。
 2. 选中 host 后必须重新执行原子 lease；`CanSatisfy=true` 不是 reservation。
-3. 若 inventory epoch 或 owner 变化，返回可重试 conflict，而不是继续使用旧 plan。
+3. 若 current snapshot epoch 或 owner 变化，返回可重试 conflict，而不是继续使用旧 plan。
 4. 所有 requirements 成功后才启动 VM。
 
 ### 16.2 cold relocate
@@ -3311,63 +3624,104 @@ GET  /vms/{vm}/directpath/runtime-bindings
 `PENDING_REBOOT`；`apply-activation` 必须携带完整 bundle lease。不存在 runtime PCI hotplug API，
 兼容层收到 VMware-like fixed-hotplug 字段时返回 `FEATURE_DISABLED`。
 
+这些 URL 是语义示意，不要求私有 Qman 新建第二套 REST。reservation/prepare/attach/release 是
+Controller 内部 operation，普通 caller 只能通过既有 VM lifecycle 发起并用 `operationId` 查询；
+不得人工调用 attach/commit 跳过 receipt。canonical port、operation、request hash、async/cancel、
+RBAC、reason 和 FSM 以
+[`contracts/directpath-portable-control-contract.json`](contracts/directpath-portable-control-contract.json)
+为权威，目标 REST/gRPC/event/symbol 由内网 integration map 绑定。
+
 ### 17.2 AssignmentManifest
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "assignmentId": "assignment-uuid",
   "vmId": "vm-42",
   "runId": "run-77",
-  "mode": "dynamic",
-  "profile": "vmware-esxi8u3-vhw20-efi",
-  "inventoryEpoch": 1042,
+  "requestType": "DYNAMIC",
+  "hostId": "host-a",
+  "profileId": "qman-x86-q35-uefi-v1",
+  "snapshotEpoch": 1042,
+  "topologyHash": "sha256:...",
   "policyHash": "sha256:...",
+  "profileHash": "sha256:...",
   "riskRegisterHash": "sha256:...",
   "qualificationBundleHash": "sha256:...",
-  "leaseId": "uuid",
-  "fencingToken": 981,
+  "authority": {
+    "leaseSetHash": "sha256:...",
+    "leaseBindings": [
+      {"bindingId": "binding-uuid", "bundleId": "sha256:...", "leaseId": "lease-uuid", "leaseVersion": 19}
+    ],
+    "fencingToken": 981,
+    "controllerGeneration": 204,
+    "hostEpoch": 37,
+    "runGeneration": 901
+  },
+  "backend": {
+    "kind": "LEGACY_VFIO_TYPE1",
+    "configuredIommuType": "VFIO_TYPE1V2_IOMMU",
+    "launchGrantKind": "AUTHORIZED_DEVICE_PATH",
+    "attachReceiptHash": "sha256:..."
+  },
   "activation": {
-    "plannedDisposition": "live-apply",
-    "mode": "bind-on-lease",
-    "desiredOwner": "passthrough",
-    "effectiveOwnerBefore": "host",
-    "effectiveOwnerAfter": "passthrough",
+    "plannedDisposition": "LIVE_APPLY",
+    "mode": "BIND_ON_LEASE",
+    "desiredOwner": "PASSTHROUGH",
+    "effectiveOwnerBefore": "HOST",
+    "effectiveOwnerAfter": "VFIO",
+    "activationPlanHash": "sha256:...",
     "observedStateHash": "sha256:..."
   },
   "bindings": [
     {
-      "requestKey": "pciPassthru0",
-      "assignedId": "0000:65:00.0",
-      "deviceUid": "host-a/slot-3/function-0",
+      "bindingId": "binding-uuid",
+      "requirementId": "gpu0",
+      "ordinal": 0,
+      "assignedId": "dp-assigned/run-77/gpu0/0",
+      "deviceUid": "urn:qman:directpath:device:v1:host-a:sha256:identity",
+      "hostBdf": "0000:65:00.0",
       "deviceGeneration": 12,
-      "leaseMembers": ["0000:64:00.0", "0000:65:00.0"],
+      "bundleId": "sha256:...",
+      "bundleMembers": ["0000:64:00.0", "0000:65:00.0"],
+      "payloadMembers": ["0000:65:00.0"],
+      "memberActionsHash": "sha256:...",
       "guestSlot": "rp-dp0/00.0",
-      "guestAbiSignature": "sha256:..."
+      "guestAbiClass": "cuda-gpu-v1",
+      "guestAbiSignature": "sha256:...",
+      "backendKind": "LEGACY_VFIO_TYPE1",
+      "launchGrantKind": "AUTHORIZED_DEVICE_PATH",
+      "attachReceiptHash": "sha256:...",
+      "resourcePlanSliceHash": "sha256:..."
     }
   ],
-  "resourcePlan": {
-    "mmio32": [],
-    "mmio64": [],
-    "rmrrEnvelope": [],
-    "ovmfPciMmio64Mb": 2048,
-    "qemuPciHole64FloorBytes": 2147483648
-  },
+  "decisionHash": "sha256:...",
+  "planHash": "sha256:...",
+  "observedPlanHash": "sha256:...",
+  "resetContractsHash": "sha256:...",
   "artifacts": {
-    "qemuHash": "sha256:...",
+    "qemuBinaryHash": "sha256:...",
     "firmwareCodeHash": "sha256:...",
-    "firmwareVarsBaseHash": "sha256:...",
-    "argvHash": "sha256:..."
+    "firmwareVarsBaseHashOrNull": "sha256:...",
+    "argvHash": "sha256:...",
+    "observedEvidenceHash": "sha256:..."
   },
   "verification": {
     "qmpRealized": true,
     "guestEnumerated": true,
     "iommuMapped": true,
     "interruptRemapped": true
-  }
+  },
+  "manifestDigest": "sha256:..."
 }
 ```
 
-manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的持久 backing。
+Static 也使用同一结构，固定 `requirementId=static-0, ordinal=0`。Dynamic 的一个 manifest 可包含
+多个 requirement、多个 bundle 和多个 guest slot；禁止退化为单 `bundleId`/flat `assignedIds`。
+manifest 可以记录本次 Dynamic BDF，但 `assignedId` 是 run-scoped opaque key，二者都不能回写成
+下一次启动的持久 backing。完整 closed JSON Schema 和 required hash 字段以
+[`contracts/directpath-assignment-manifest-v2.schema.json`](contracts/directpath-assignment-manifest-v2.schema.json)
+及 portable contract 的 `ENTITY-ASSIGNMENT-MANIFEST` 为权威。
 
 ## 18. 关键风险与控制
 
@@ -3376,7 +3730,7 @@ manifest 可以记录本次 Dynamic BDF，但不能回写成下一次启动的�
 | R01 | ACS override 缩小 group | P2P 绕过 IOMMU | 双域模型，整租 physical domain | provenance + peer-DMA negative/positive control |
 | R02 | reset 影响旁路 function | 破坏 host/其他 VM | VFIO affected set 闭包和原子 lease | hot-reset info + callback/真实硬件 |
 | R03 | reset 未清敏感状态 | 跨租户泄漏 | 双端 reset、state probe、失败 quarantine | generation register/vendor test |
-| R04 | 双重分配/TOCTOU | 两个 owner 同时 DMA | durable CAS、epoch、fd passing | 并发 race 测试 |
+| R04 | 双重分配/TOCTOU | 两个 owner 同时 DMA | durable CAS、epoch、backend-specific typed launch grant | 并发 race 测试 |
 | R05 | 多设备部分成功 | guest 少配或依赖拆分 | constraint solver、all-or-nothing rollback | 中途 bind/reset fault injection |
 | R06 | stale DMA/IOTLB/IRQ | power-off 后写 guest/host | unmap/invalidate/IRQ teardown 后才释放 | IOMMU trace 和 sentinel |
 | R07 | RMRR 与 guest RAM 重叠 | identity DMA 错址 | selector-wide RMRR envelope | synthetic DMAR overlap A/B |
@@ -3480,8 +3834,9 @@ Static attach 已安全或设备已进入兼容性列表。
 
 ## 19. 验收矩阵
 
-当前机器 acceptance inventory 为 101/101：C20、O09 是 2 个 `EXECUTABLE` reference Case；
-93 个是 `IMPLEMENTATION_BLOCKED`；C12、M08、M12、M13、S06、S08 是 6 个
+当前机器 acceptance inventory 为 101/101：O09 是 1 个 `EXECUTABLE` reference Case；
+94 个是 `IMPLEMENTATION_BLOCKED`，其中 C20 的 E2 reference runner 不能替代产品闭环；
+C12、M08、M12、M13、S06、S08 是 6 个
 `HARDWARE_BLOCKED`；未分类数为 0。分类表示每个 Case 的当前执行边界，不表示已通过；
 产品 Case closure 仍为 0。
 
@@ -3509,7 +3864,7 @@ Static attach 已安全或设备已进入兼容性列表。
 | C17 | VFIO cdev/legacy/mixed hot reset | cdev 要求 `DEV_ID_OWNED`；legacy 要求完整 group fds；mixed 拒绝 | UAPI 设计已定，provider 待实现 |
 | C18 | stale `ResetContract` | epoch/topology/rule 任一变化即不可选择 | Case 已定义为 `IMPLEMENTATION_BLOCKED`；snapshot stale gate 与 reference evaluator 已有，但不能替代 authoritative reset provider/执行前 re-query |
 | C19 | kernel native shadow domain | override-on shadow domain 是 override-off stock/alias constraint 的相等或保守超集；unknown component 拒绝 | phase-1 provenance patch 已构建；shadow ABI 待实现 |
-| C20 | capability closure 前置与 reset/action 固定点 | mandatory dependency 无 reset/action/qualification 时 target capable=false；同 bundle free/busy A/B 只改变 available，不改变 capable/bundle hash | `QMAN-E2-CLOSURE-001` / 22 个 reference Case 已通过；产品 publisher/verifier/controller 与 R38 仍未关闭 |
+| C20 | capability closure 前置与 reset/action 固定点 | mandatory dependency 无 reset/action/qualification 时 target capable=false；同 bundle free/busy A/B 只改变 available，不改变 capable/bundle hash | `QMAN-E2-CLOSURE-001` / 22 个 reference runner 场景已通过，但 C20 本身是 `PRODUCT/IMPLEMENTATION_BLOCKED`；产品 publisher/verifier/controller、E3 CaseCompletionRecord 与 R38 仍未关闭 |
 | C21 | global unsafe switch 与逐设备 DMA provider A/B | 相同 device 在 unsafe=`Y` 时：`noiommu-*` 稳定拒绝；当前 Legacy profile 必须在 normal group 上选择精确 TYPE1 subtype并产生 QEMU proc-fd/QMP receipt；future cdev profile 必须绑定 IOMMUFD；全局开关本身不改变 device capable | v5 只有 future cdev bounded snapshot→lease→fresh raw fd→stock-QEMU component integration；Legacy product launch isolation/receipt、production authority/controller、独立 DMA/IRQ receipt 和物理 E4 均缺，Case 保持 `IMPLEMENTATION_BLOCKED` |
 
 ### 19.2 Host owner activation
@@ -3613,7 +3968,7 @@ F01/C01。它只映射 TS-F1-01、TS-F8-02 与 R04，`caseIds` 为空，不能�
 | F02 | lease store 短时不可用 | 不产生无租约 attach | 待实现 |
 | F03 | source host/agent 失联 | lease 与 assignedId 保留，VM stopped，任何 target 接管均拒绝 | 产品负向门待实现；不需要 BMC 实验 |
 | F04 | stale host epoch / operation generation | 旧 agent 无法提交、释放或改写 relocation | 待实现 |
-| F05 | 双在线 cold relocate | source clean-release receipt 提交后，Dynamic 在 target 重选；static 保持 host-affine | target re-solve 已有 VMware 观察；原子 clean-release 正负 Case 待补 |
+| F05 | 双在线 cold relocate | source clean-release receipt 提交后，Dynamic 在 target 重选；static 保持 host-affine | Case 已定义为 `IMPLEMENTATION_BLOCKED`；target re-solve 已有 VMware 观察，原子 clean-release 正负 `EXECUTED_PASS` 产品场景与证据待实现 |
 | F06 | target candidate exhaustion | source 已 clean release 但 target 无完整候选时 VM 保持 stopped，reason 完整 | 待实现 |
 | F07 | live migration request | parity profile 明确拒绝 | 已有 ESXi；QEMU gate 待实现 |
 | F08 | VFIO migration backend 即使可用 | V3 仍稳定返回 `FEATURE_DISABLED`，状态与 lease 不变 | 产品四层负向门待实现；正向 migration 不在范围 |
@@ -3636,9 +3991,16 @@ double-scan/CAS/HMAC publisher、launch authorization 与 fault runner 已存在
 rotation/revocation、compatibility catalog 和 kernel atomic generation/reset source 是进入产品阶段前的
 新增交付物，不能从 component HMAC 推导出来。
 
+qualification 的 `platformProfileHash` 必须从 active policy 的唯一完整平台行、完整 backend policy 与
+host-configuration policy 按固定 projection 重算，不能信任 record 自报。离线 root 与 key ring 的每个
+key 还必须绑定 immutable `principalId`；quorum/Qualification Engineering/Product Release/
+Target Architect/Security/Test 的职责分离同时按 principal、keyId 和 public-key material 检查，同一
+主体换多把钥匙不得被算成多方批准。
+
 ### Phase 1：单 host 静态控制器
 
-- 实现 host agent、activation state、durable local lease、VFIO fd passing。
+- 实现 host agent、activation state、global durable lease、当前 Legacy authorized-path
+  grant/sandbox/receipt；future cdev fd passing 只进入独立 backend qualification。
 - 复用已冻结的逐设备 DMA provider component，但由 authoritative snapshot publisher 产生 expected
   identity/group hash，并由产品 launcher 观察 stock QEMU 内部 bind/IOAS attach；以 C21 将
   `noiommu-*` 拒绝与 IOMMU-backed 正控接入产品 Case。
@@ -3714,7 +4076,7 @@ snapshot→lease authorization→fresh cdev/IOMMUFD→stock-QEMU bind/attach→�
 
 | 模块 | 当前状态 |
 | --- | --- |
-| K01-K31 全量对标合同 | 文档和 G0 governance evaluator 已完成；acceptance `101/101` 已分类（2 个 executable reference、93 个 implementation blocked、6 个 hardware blocked），未分类为 0；product release controller 和产品 Case closure 仍未完成 |
+| K01-K31 全量对标合同 | 文档和 G0 governance evaluator 已完成；acceptance `101/101` 已分类（1 个 executable reference、94 个 implementation blocked、6 个 hardware blocked），未分类为 0；product release controller 和产品 Case closure 仍未完成 |
 | qualification/risk DB | R01-R39 的 owner、containment/recovery、Case 和证据字段已补齐，但 39 条状态仍全部 `OPEN`；signed DB、依赖失效和 runtime capability gate 尚未实现 |
 | capable evaluator | `capability.py` 已有 role、per-device DMA mode、host dataplane reservation、isolation/reset-policy/availability/VM-fit 基线；全局 unsafe switch 只告警，no-IOMMU/unknown payload 硬拒绝；尚缺第 7.5 节其余完整 gate、admin activation、精确 qualification 和 operation matrix |
 | dependency closure | 已合并 kernel group、physical domain、reset estimate、multifunction 和 platform dependency；尚缺 requester alias、PF/VF、functional rule、member action 与 edge provenance |
@@ -4011,6 +4373,122 @@ generation/reset provenance，所以不能把该行视为产品后置条件已�
 
 每个提交都必须保持尚未完成的 capability 为 `FEATURE_DISABLED`。不允许先开放 raw QEMU/VFIO
 入口，再期待后续控制面补上安全边界。
+
+### 25.5 无私有代码条件下的 Case、证据与信任闭环
+
+本设计的完成不依赖访问 Qman 私有仓库。私有仓库只在 target mapping 阶段提供 exact commit、
+service/path/symbol/interface/test，不能重新定义 VMware parity、安全不变量或 Case 退出条件。
+该阶段的输出必须进一步落到 exact storage table/field/transaction/CAS/outbox/journal/migration 和 exact
+test/fixture；不需要、也不允许为了本 portable 设计把私有源码带出内网。
+
+35 个 backend-neutral operation 的 common envelope 与 operation-specific body 分离：
+`directpath-operation-payload.schema.json` 为每个 operation 固定一个 `REQUEST` 和一个 `RESULT`，共 70 个
+closed profile；envelope 的 request/result binding 必须选择唯一 fragment。Scenario Step 只能在 `TEMPLATE`
+中保留尚未落盘的 fixture；进入 `BOUND/EXECUTED_PASS` 后，request 与 expected result 必须同时固定
+operationId、direction、profileId、portable schema fragment/hash、repository path 和 raw fixture hash，并与实际
+envelope/status/reason/retryable 精确一致。叙述性 intent、开放 object 或 target-local DTO 没有绑定权限。
+
+`tools/generate_directpath_case_contracts.py` 从本设计第 19 节、`acceptance/cases/` 和 portable contract
+确定性生成 101 个 `CaseContract`。每个合同固定：原始 pass condition、显式 assertion digest、依赖 Case、
+Tech Story/Risk、test/parity obligation、要求覆盖的 port/operation/transition、fault class、artifact schema、
+八类 oracle、minimum repeat/duration，以及 E3/E4 边界。单个 Scenario 可以覆盖其中一个合法子集；只有
+`CaseCompletionRecord` 能在同一 target-code revision C、mapping core M 和 target commit 上聚合多个
+`EXECUTED_PASS`，独立求 coverage union 与 repeat/duration sum 后宣告 Case 完成。记录同时签入
+`platformProfileId/platformProfileDigest/backendProfileDigest/exactQualificationKey`；E3 的 exact key 为 null，
+E4 必须从实测 Subject 的九字段资格输入重算。完成/依赖复用身份使用完整
+`(platformProfileId, platformProfileDigest, backendProfileDigest, exactQualificationKey, caseId)` tuple，不能只按
+Case ID 或 target commit 复用；外层 integration/release index 无权为解析后的记录换标签。
+
+证据构造采用以下无环顺序：
+
+```text
+target commit C -> SourceTreeManifest -> build/output/log -> BuildAttestation
+  -> RunnerManifest + WorkloadEvaluatorManifest + DeviceTaxonomyDefinition
+signed RunRequest(fresh nonce + exact deviceUid/deviceRecordHash)
+  -> DeviceTaxonomyDefinition + current signed HostSnapshot/exact DeviceRecord
+  -> signed HostAuthority pointer receipt(at classifiedAt) + signed ClassificationContext
+  -> deterministic classification projection -> authority fills signedAt/signs DeviceClassificationRecord
+  -> taxonomy Measurement
+WorkloadDefinition(pinned evaluator manifest) + the same signed RunRequest
+  -> E4 scenario input + RunnerManifest + canonical raw artifact observations + signed EvaluationContext
+  -> scenario execution core（含 run/request/nonce digests，不含 index、自身 final digest、QualificationSubject）
+  -> replay pinned evaluator -> signed EvaluationReport -> signed WorkloadResult
+  -> typed QualificationMeasurement -> dual-attested QualificationRunManifest -> measured QualificationSubjectManifest（仅 E4）
+  -> ExecutionEvidenceIndex
+  -> final signed ScenarioExecutionResult
+  -> QualificationRecord + CaseCompletionRecord
+  -> integration / qualification release index
+```
+
+`SourceTreeManifest` 从 target commit 的 Git object database 完整枚举 tracked path、mode、object、raw content
+hash、symlink 与递归 submodule；dirty/untracked working-tree 输入或只写一个不可复算的 source hash 均无效。
+`BuildAttestation` 固定 canonical argv/cwd/空环境 allowlist、builder/toolchain/dependency/environment、
+完整外部输入闭包、output 与 build log；Hermetic 声明必须再有不同 principal 在独立 clean environment
+产生 byte-identical output 的签名 replay receipt。`RunnerManifest` 双重绑定 source tree 与 build attestation
+的 raw/internal digest，并固定 runner binary、predicate symbol/interface 和 schema decoder；产品 Scenario
+runner 禁止 interpreted no-build。`ExecutionEvidenceIndex` 要求 SOURCE_TREE_MANIFEST、BUILD_ATTESTATION、
+BUILD_LOG、TEST_LOG、TOOL_MANIFEST、RUNNER_BINARY 为六个不同 byte-verified artifact，并把
+oracle/predicate evidence 限定到唯一 iteration 和唯一 evidence role。一个 blob/hash 不得跨 iteration、
+oracle、assertion 或 control role 复用。
+
+Case 求值器不属于 Scenario runner。它必须单独生成并签名 `CaseEvaluatorToolManifest`，绑定 evaluator 在
+C 中的精确 blob/interface、完整 SourceTreeManifest、runtime binary、dependency lock、environment manifest
+和 build log；四种 runtime artifact role 相互独立。借用 RunnerManifest、scenario 的 TOOL_MANIFEST hash、
+ambient PATH interpreter 或 mutable image tag 均不能证明 completion evaluator 的来源与执行环境。
+
+E4 不接受 `QualificationRecord` 自报 subject。PCI identity/traits、device archetype taxonomy、firmware/ROM、
+kernel/QEMU/firmware、IOMMU/interrupt/reset provider、guest driver/workload 和每个 scenario core 必须先各自
+形成可定位、raw hash-bound、typed、签名的 `QualificationMeasurement`；固定 collector/tool manifest 从
+原始 observation 重建完整 `/measuredValue`。`DeviceTaxonomyDefinition` 先固定五类 archetype/profile、
+classifier 的 exact path/symbol/blob/semantic/interface、完整 source/build/runtime closure 和 QE 签名；随后
+RunRequest 在任何 collector 前冻结 exact `deviceUid/deviceRecordHash`。Host Inventory authority 在
+`classifiedAt` 对完整 HostAuthority state、snapshot raw hash 与 classificationId 生成独立签名 pointer receipt；
+`ClassificationContext` 再签入该 receipt 以及 classificationId/classifiedAt/signer 与 exact
+taxonomy/snapshot/device。identity/traits Measurement 的 current HostSnapshot 和 DeviceRecord binding、
+classification 内嵌的 DeviceRecord descriptor 必须三方完全一致；从 DeviceRecord.immutableIdentity
+确定性反推的 PCI identity 也必须逐字段相等。`DeviceClassificationRecord` 的 classifier 只消费这些显式输入，
+输出 trace、archetype/profile 和空的
+`signedAt/digest/signature` 构造投影，再由 authority 完成签名。它不能读取隐藏时钟、QualificationRecord、
+SupportedCatalog 或 HCL 结论。
+
+所有 Measurement 还绑定同一 run/host/epoch/boot/deviceUid/deviceRecordHash。`QualificationWorkloadDefinition` 预先固定 binary/config、
+无 shell invocation、duration、完整 `supportedQualificationTuples`（每行同时包含 guest+runtime，禁止两半
+独立命中或笛卡尔扩展）、
+mandatory assertion/oracle/evidence role、metric
+projection 与 `WorkloadEvaluatorManifest`；signed `QualificationRunRequest` 在执行前原子消费 fresh nonce 并
+固定定义、Case plan 和 host/profile/backend。Evaluator manifest 固定 exact C/M/portable、source tree、
+BuildAttestation、runtime closure、path/symbol/blob/interface 和 decimal/rounding/percentile/rate 语义。replay
+只能交给 verifier 外置、受信、按目标架构运行的 isolation runner，禁止 validator 裸执行 evidence binary；signed
+`EvaluationContext` 在求值前固定 evaluationId/evaluatedAt/key-ring/signer。evaluator 只消费 Definition、
+RunRequest、RFC8785 canonical artifact-observation descriptor array、descriptor 精确绑定的 read-only raw
+observation closure 与 Context，生成可重放的 signed
+`WorkloadEvaluationReport`。terminal `QualificationWorkloadResult` 必须逐字节复制报告的 observations、
+assertionResults、metrics 和 outcome；进程退出码、日志摘要和事后可变脚本均不能替代报告。
+
+guest ABI/architecture/OS/kernel/driver/vCPU/memory/capabilities 只与 signed guest/workload Measurement 比较；
+runtime capabilities 及 platform/backend/IOMMU/machine/firmware/provider 只与 signed platform/provider
+Measurement 比较；archetype/traits 只与上述 classification/trait Measurement 比较。required
+capability/provider 必须逐项精确包含，资源必须达到 definition minimum；缺失、alias、自报或未支持的笛卡尔
+组合一律 fail closed。E4 Scenario
+target/input、execution core 和 EvidenceIndex 必须重复相同 runId、request digest 与 domain-separated nonce
+digest，因此 RunManifest 不能事后收养无关 core。
+`QualificationRunManifest` 固定 fresh orchestrator nonce、当前 inventory、wall/monotonic 起止、完整
+measurement/core/workload 集合，并由 Host Inventory 与 Test 两个不同 principal 双签。
+`QualificationSubjectManifest` 只接受该 COMPLETE/PASSED run，要求七个普通字段各恰好一条 measurement，
+caseExecution 与 core digest 一一双射，再重算 `platformProfileHash`、case matrix、`exactQualificationKey`，
+并证明实测时长不少于 profile 的 `minimumDurationSeconds`。旧 boot/run replay 或从 proposed Record/Subject
+回抄值一律无效。
+
+Host Agent 的 `CleanReleaseReceipt` 只证明“主机声称物理清理完成”。全局可复用还要求 repository 在同一
+serializable transaction 内比较 receipt digest、完整旧 lease/version、assignment/run/generation、host epoch
+和 authority resourceVersion，撤销全部 lease、推进 authority version、写 audit/outbox，并生成
+`ENTITY-CLEAN-RELEASE-ACCEPTANCE`。该对象由独立 `CONTROL_REPOSITORY_EVIDENCE` key 签名。没有它，
+`FREE`、relocation `TARGET_SOLVE` 和新 assignment 都必须拒绝。
+
+信任门必须解析 `TrustKeyRingHistory` 的 genesis→current 每一环，禁止 sequence 跳号、principal/key
+重绑定或撤销回滚。旁置 rollback-anchor 文件只证明历史内容；release evaluator 必须生成至少 128-bit
+nonce，向独立 monotonic authority 实时取得最长 300 秒的 `AnchorFreshnessEnvelope`，并以离线 root quorum
+验证。没有匹配 nonce 的 live response，只能报告 `freshness=NOT_PROVEN`，不能提升 `QUALIFIED`。
 
 ## 26. 公开依据
 

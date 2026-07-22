@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "canonicalProfile": {
+    "profileId": "CANONICAL-JSON-V1",
+    "requirements": [
+      "UTF-8 without BOM",
+      "object keys sorted by Unicode code point",
+      "no insignificant whitespace",
+      "strings normalized to NFC before encoding",
+      "integers restricted to [-9007199254740991,9007199254740991]",
+      "duplicate keys, floats and unknown fields rejected before hashing"
+    ]
+  },
+  "hashProfiles": {
+    "providerDefinitionDigest": "SHA-256(ASCII('QMAN-DIRECTPATH/IDENTITY-PROVIDER-DEFINITION/V1') || 0x00 || ASCII(providerId) || 0x00 || ASCII(decimal providerVersion) || 0x00 || UTF-8(definitionUtf8))",
+    "functionRoleDefinitionDigest": "SHA-256(ASCII('QMAN-DIRECTPATH/CLASS-CODE-ROLE-DEFINITION/V1') || 0x00 || UTF-8(definitionUtf8))",
+    "vendorExtractorDefinitionDigest": "SHA-256(ASCII('QMAN-DIRECTPATH/VENDOR-EXTRACTOR-DEFINITION/V1') || 0x00 || ASCII(vendorExtractorId) || 0x00 || UTF-8(definitionUtf8))",
+    "serialValueHash": "SHA-256(ASCII('QMAN-DIRECTPATH/SERIAL-VALUE/V1') || 0x00 || ASCII(providerId) || 0x00 || HEX-DECODE(canonicalSerialBytesHex))",
+    "identityFingerprint": "SHA-256(CANONICAL-JSON-V1(identity input)); no additional domain bytes",
+    "vectorSetDigest": "Set vectorSetDigest to null, encode this complete document with CANONICAL-JSON-V1, then SHA-256 the canonical bytes"
+  },
+  "providerDefinitionVectors": [
+    {
+      "providerId": "PCI_DSN_EUI64_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=PCIe Extended Capability ID 0x0003; require exactly one capability; read bytes at capability+4 through +11 in ascending PCI configuration-space address order; bytes 0..3 are Serial Number Low DWORD little-endian and bytes 4..7 are Serial Number High DWORD little-endian; canonicalSerialBytes=the uint64 value encoded as exactly eight big-endian bytes; reject zero and all-ones; hash=SHA-256(ASCII(\"QMAN-DIRECTPATH/SERIAL-VALUE/V1\") || 0x00 || ASCII(providerId) || 0x00 || canonicalSerialBytes).",
+      "providerDefinitionDigest": "sha256:c477361654ccb4f6c1b61446d3e9695bf666a0e5cf313b18789a76d2d340cd65"
+    },
+    {
+      "providerId": "PCI_VPD_SN_UTF8_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=complete PCI VPD resource image; parse PCI VPD large-resource records with little-endian lengths; require exactly one read-only-product-data SN keyword and a valid End Tag; extracted bytes=SN value; decode strict UTF-8; reject NUL, C0 and C1 controls; remove only leading and trailing U+0020; normalize Unicode NFC; reject empty; canonicalSerialBytes=UTF-8(normalized text); hash=SHA-256(ASCII(\"QMAN-DIRECTPATH/SERIAL-VALUE/V1\") || 0x00 || ASCII(providerId) || 0x00 || canonicalSerialBytes).",
+      "providerDefinitionDigest": "sha256:2ac49a541d5e0324d1f8eaacbcfb87ad8667fe3e86599936a751cb74d9769429"
+    },
+    {
+      "providerId": "VENDOR_QUALIFIED_BYTES_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source and extraction are defined by a signed qualification-bound vendor extractor profile identified by vendorExtractorId and vendorExtractorDefinitionDigest; require an exact byte slice and deterministic output of 1..4096 bytes; canonicalSerialBytes=the profile output without further transformation; hash=SHA-256(ASCII(\"QMAN-DIRECTPATH/SERIAL-VALUE/V1\") || 0x00 || ASCII(providerId) || 0x00 || canonicalSerialBytes).",
+      "providerDefinitionDigest": "sha256:084e4ef848c737fe0db24231bdda1441c40287cd99743c61ce2e340644c23764"
+    },
+    {
+      "providerId": "ACPI_FIRMWARE_PATH_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=ACPI namespace firmware node, never a Linux sysfs alias or PCI BDF; require the canonical absolute namespace path of four-character uppercase NameSeg components and the device _ADR value; physicalPath=\"acpi:/\" + slash-separated NameSegs + \"#adr=\" + the unsigned _ADR encoded as exactly sixteen lowercase hexadecimal digits.",
+      "providerDefinitionDigest": "sha256:61b92f14fcd158f7885ec07d0a375324e051e3b2f936c748ac103b4a230203e4"
+    },
+    {
+      "providerId": "SMBIOS_SYSTEM_SLOT_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=one unique populated SMBIOS Type 9 System Slots record, never its segment/bus/device/function fields; normalize Slot ID as four lowercase hexadecimal digits; decode Slot Designation as strict UTF-8, remove only leading and trailing U+0020, normalize NFC, then RFC3986 percent-encode every byte except ALPHA, DIGIT, hyphen, period, underscore and tilde using uppercase hex; physicalPath=\"smbios-system-slot:/slot-id=\" + slotId + \"/designation=\" + encodedDesignation + \"/function=\" + decimal function 0..7.",
+      "providerDefinitionDigest": "sha256:c8a3291773b34ff8ef67511a5574db43be24b07bd7840c900bbbdab682687b0d"
+    },
+    {
+      "providerId": "DEVICETREE_FULL_PATH_V1",
+      "providerVersion": 1,
+      "definitionUtf8": "source=Open Firmware device node full_name, never a Linux sysfs alias or PCI BDF string; require an absolute slash-separated DeviceTree path with no empty, dot or dot-dot segments and lowercase hexadecimal unit-address cells; physicalPath=\"devicetree:\" + full_name + \"#function=\" + decimal function 0..7.",
+      "providerDefinitionDigest": "sha256:6165a1a4c882e22bc2011448b956fb70967fdc146189c4c66664ae4b994577d6"
+    }
+  ],
+  "functionRoleDefinition": {
+    "algorithmId": "CLASS_CODE_ROLE_V1",
+    "algorithmVersion": 1,
+    "definitionUtf8": "Map PCI classCode base byte 00,01,02,03,04,05,06,07,08,09,0a,0b,0c,0d,0e,0f,10,11,12,13,40 respectively to UNCLASSIFIED,MASS_STORAGE_CONTROLLER,NETWORK_CONTROLLER,DISPLAY_CONTROLLER,MULTIMEDIA_CONTROLLER,MEMORY_CONTROLLER,BRIDGE_DEVICE,SIMPLE_COMMUNICATION_CONTROLLER,BASE_SYSTEM_PERIPHERAL,INPUT_DEVICE_CONTROLLER,DOCKING_STATION,PROCESSOR,SERIAL_BUS_CONTROLLER,WIRELESS_CONTROLLER,INTELLIGENT_CONTROLLER,SATELLITE_COMMUNICATION_CONTROLLER,ENCRYPTION_CONTROLLER,SIGNAL_PROCESSING_CONTROLLER,PROCESSING_ACCELERATOR,NON_ESSENTIAL_INSTRUMENTATION,COPROCESSOR; map every other base byte to RESERVED_OR_VENDOR_SPECIFIC; subclass and programming-interface bytes do not change the V1 role.",
+    "definitionDigest": "sha256:7f119749c919c48f6d9cae971378e78ab3ac39ce404d9f2651bc6766812ff35f"
+  },
+  "vendorExtractorExample": {
+    "vendorExtractorId": "VENDOR-EXAMPLE-OFFSET-2-LENGTH-4-V1",
+    "definitionUtf8": "sourceBytes=aa bb 01 02 03 04 cc; select offset 2 length 4; output selected bytes unchanged.",
+    "vendorExtractorDefinitionDigest": "sha256:acfec603d929bdd1f62b11ed2098445eb4be8dc98313a8e25c6641ac85238d06"
+  },
+  "serialVectors": [
+    {
+      "id": "SERIAL-PCI-DSN-001",
+      "providerId": "PCI_DSN_EUI64_V1",
+      "sourceBytesHex": "8877665544332211",
+      "extractionOffsetBytes": 0,
+      "extractionLengthBytes": 8,
+      "extractedBytesHex": "8877665544332211",
+      "canonicalSerialBytesHex": "1122334455667788",
+      "serialValueHash": "sha256:e503f90f1bc7379febacb1440c92e6d25a565b65a0fb4140cd2fd894c8216f75"
+    },
+    {
+      "id": "SERIAL-PCI-VPD-001",
+      "providerId": "PCI_VPD_SN_UTF8_V1",
+      "sourceBytesHex": "900900534e06534e2d30303178",
+      "extractionOffsetBytes": 6,
+      "extractionLengthBytes": 6,
+      "extractedBytesHex": "534e2d303031",
+      "canonicalText": "SN-001",
+      "canonicalSerialBytesHex": "534e2d303031",
+      "serialValueHash": "sha256:c05dfc34ef4aca6e31ba1c81c8607632add0594ead3a451e8932159f1484b0d0"
+    },
+    {
+      "id": "SERIAL-VENDOR-001",
+      "providerId": "VENDOR_QUALIFIED_BYTES_V1",
+      "vendorExtractorId": "VENDOR-EXAMPLE-OFFSET-2-LENGTH-4-V1",
+      "vendorExtractorDefinitionDigest": "sha256:acfec603d929bdd1f62b11ed2098445eb4be8dc98313a8e25c6641ac85238d06",
+      "sourceBytesHex": "aabb01020304cc",
+      "extractionOffsetBytes": 2,
+      "extractionLengthBytes": 4,
+      "extractedBytesHex": "01020304",
+      "canonicalSerialBytesHex": "01020304",
+      "serialValueHash": "sha256:8e24b052c7145c1ae8fce54afc16768056174cebb8002aad45b714d04ca9c573"
+    }
+  ],
+  "physicalPathVectors": [
+    {"id": "PATH-ACPI-001", "providerId": "ACPI_FIRMWARE_PATH_V1", "accepted": "acpi:/_SB_/PCI0/RP05#adr=0000000000000000"},
+    {"id": "PATH-SMBIOS-001", "providerId": "SMBIOS_SYSTEM_SLOT_V1", "accepted": "smbios-system-slot:/slot-id=0003/designation=PCIe%20Slot%203/function=0"},
+    {"id": "PATH-DEVICETREE-001", "providerId": "DEVICETREE_FULL_PATH_V1", "accepted": "devicetree:/soc/pcie@10000000/slot@3/accelerator@0#function=0"}
+  ],
+  "rejectedPhysicalPaths": [
+    "0000:03:00.0",
+    "03:00.0",
+    "/sys/bus/pci/devices/0000:03:00.0",
+    "pci:0000:03:00.0",
+    "vfio-minor:12",
+    "iommu-group:42"
+  ],
+  "functionRoleVectors": [
+    {"classCode": "030000", "functionRole": "DISPLAY_CONTROLLER"},
+    {"classCode": "010700", "functionRole": "MASS_STORAGE_CONTROLLER"},
+    {"classCode": "120000", "functionRole": "PROCESSING_ACCELERATOR"},
+    {"classCode": "ff0000", "functionRole": "RESERVED_OR_VENDOR_SPECIFIC"}
+  ],
+  "identityFingerprintVectors": [
+    {
+      "id": "IDENTITY-STRONG-SERIAL-001",
+      "canonicalUtf8": "{\"hostStableId\":\"550e8400-e29b-41d4-a716-446655440000\",\"identityVariant\":\"STRONG_SERIAL\",\"pciIds\":{\"classCode\":\"030000\",\"deviceId\":\"2684\",\"functionRole\":\"DISPLAY_CONTROLLER\",\"functionRoleAlgorithm\":\"CLASS_CODE_ROLE_V1\",\"functionRoleAlgorithmVersion\":1,\"functionRoleDefinitionDigest\":\"sha256:7f119749c919c48f6d9cae971378e78ab3ac39ce404d9f2651bc6766812ff35f\",\"revisionId\":\"a1\",\"subsystemDeviceId\":\"1448\",\"subsystemVendorId\":\"10de\",\"vendorId\":\"10de\"},\"schemaVersion\":1,\"serialMaterial\":{\"byteOrder\":\"PCI_LE32_LOW_THEN_HIGH_TO_UINT64_BE\",\"canonicalSerialBytesHex\":\"1122334455667788\",\"extractedBytesHex\":\"8877665544332211\",\"extractionLengthBytes\":8,\"extractionOffsetBytes\":0,\"sourceBytesHex\":\"8877665544332211\",\"sourceLocator\":\"PCI_EXT_CAPABILITY_0003_PAYLOAD\",\"textNormalization\":\"NOT_TEXT\"},\"serialProvider\":{\"providerDefinitionDigest\":\"sha256:c477361654ccb4f6c1b61446d3e9695bf666a0e5cf313b18789a76d2d340cd65\",\"providerId\":\"PCI_DSN_EUI64_V1\",\"providerVersion\":1},\"serialValueHash\":\"sha256:e503f90f1bc7379febacb1440c92e6d25a565b65a0fb4140cd2fd894c8216f75\"}",
+      "sha256": "sha256:cdd27d3d0fd4797945492b54cec2eb36e4568509f1ef34e5fb6089343f9287ac"
+    },
+    {
+      "id": "IDENTITY-SLOT-BOUND-001",
+      "canonicalUtf8": "{\"hostStableId\":\"550e8400-e29b-41d4-a716-446655440000\",\"identityVariant\":\"SLOT_BOUND\",\"pciIds\":{\"classCode\":\"010700\",\"deviceId\":\"00c9\",\"functionRole\":\"MASS_STORAGE_CONTROLLER\",\"functionRoleAlgorithm\":\"CLASS_CODE_ROLE_V1\",\"functionRoleAlgorithmVersion\":1,\"functionRoleDefinitionDigest\":\"sha256:7f119749c919c48f6d9cae971378e78ab3ac39ce404d9f2651bc6766812ff35f\",\"revisionId\":\"01\",\"subsystemDeviceId\":\"1f4a\",\"subsystemVendorId\":\"1028\",\"vendorId\":\"1000\"},\"physicalPath\":\"acpi:/_SB_/PCI0/RP05#adr=0000000000000000\",\"physicalPathProvider\":{\"providerDefinitionDigest\":\"sha256:61b92f14fcd158f7885ec07d0a375324e051e3b2f936c748ac103b4a230203e4\",\"providerId\":\"ACPI_FIRMWARE_PATH_V1\",\"providerVersion\":1},\"schemaVersion\":1}",
+      "sha256": "sha256:ad53b62e53168d757061523c0d82ebc6e6291296ed5f2686955deaf375d0d934"
+    }
+  ],
+  "vectorSetDigest": "sha256:0d24bf773afc921caa8965b69588cbfb5876e6c636c283b3ff3362507b9ee693"
+}

@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-qualification-workload-definition.schema.json",
+  "title": "Qman DirectPath signed QualificationWorkloadDefinition",
+  "description": "Closed TEST_EVIDENCE-signed definition for an immutable qualification workload. It fixes exact guest/runtime prerequisites, entrypoint bytes, shell-free invocation, evidence roles, mandatory assertions and typed metric extraction so workloadDefinitionDigest is independently reconstructible rather than a bare label.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workloadId",
+    "workloadVersion",
+    "supportedQualificationTuples",
+    "guestPrerequisites",
+    "runtimePrerequisites",
+    "entrypoint",
+    "evaluatorManifest",
+    "canonicalInvocation",
+    "minimumDurationSeconds",
+    "requiredArtifactRoles",
+    "mandatoryAssertions",
+    "metricDefinitions",
+    "issuedAt",
+    "keyRingVersion",
+    "signerKeyId",
+    "signerRole",
+    "definitionDigest",
+    "signature"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "workloadId": {"$ref": "#/$defs/id"},
+    "workloadVersion": {"$ref": "#/$defs/semver"},
+    "supportedQualificationTuples": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/qualificationTuple"},
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [guest,runtime]; each row is one indivisible guest+runtime compatibility unit"
+    },
+    "guestPrerequisites": {"$ref": "#/$defs/guestPrerequisites"},
+    "runtimePrerequisites": {"$ref": "#/$defs/runtimePrerequisites"},
+    "entrypoint": {"$ref": "#/$defs/entrypoint"},
+    "evaluatorManifest": {"$ref": "#/$defs/evaluatorManifest"},
+    "canonicalInvocation": {"$ref": "#/$defs/canonicalInvocation"},
+    "minimumDurationSeconds": {"$ref": "#/$defs/safePositiveInteger"},
+    "requiredArtifactRoles": {"$ref": "#/$defs/artifactRoleSet"},
+    "mandatoryAssertions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/mandatoryAssertion"},
+      "x-qmanCanonicalOrder": "ascending canonical assertionId"
+    },
+    "metricDefinitions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/metricDefinition"},
+      "x-qmanCanonicalOrder": "ascending canonical metricId"
+    },
+    "issuedAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "signerRole": {"const": "TEST_EVIDENCE"},
+    "definitionDigest": {"$ref": "#/$defs/digest"},
+    "signature": {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "semver": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "safeNonNegativeInteger": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"},
+    "decimalValue": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+    },
+    "idSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/id"},
+      "x-qmanSetOrder": "ascending canonical bytes"
+    },
+    "optionalIdSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/id"},
+      "x-qmanSetOrder": "ascending canonical bytes"
+    },
+    "artifactRole": {
+      "enum": [
+        "WORKLOAD_COMMAND",
+        "WORKLOAD_STDOUT",
+        "WORKLOAD_STDERR",
+        "WORKLOAD_ASSERTION",
+        "DEVICE_TELEMETRY",
+        "GUEST_DRIVER_STATE",
+        "HOST_DEVICE_STATE",
+        "DMA_IRQ_OBSERVATION",
+        "METRIC_SOURCE"
+      ]
+    },
+    "artifactRoleSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/artifactRole"},
+      "x-qmanSetOrder": "ascending canonical bytes"
+    },
+    "guestPrerequisites": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredGuestCapabilities"],
+      "properties": {
+        "requiredGuestCapabilities": {"$ref": "#/$defs/optionalIdSet"}
+      }
+    },
+    "guestTuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["guestAbiClass", "guestArchitecture", "guestOs", "guestKernel", "driverName", "driverVersion", "driverDigest"],
+      "properties": {
+        "guestAbiClass": {"$ref": "#/$defs/id"},
+        "guestArchitecture": {"enum": ["ARM64", "C86", "X86_64"]},
+        "guestOs": {"$ref": "#/$defs/id"},
+        "guestKernel": {"$ref": "#/$defs/id"},
+        "driverName": {"$ref": "#/$defs/id"},
+        "driverVersion": {"$ref": "#/$defs/id"},
+        "driverDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "runtimePrerequisites": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deviceArchetypes",
+        "requiredDeviceTraits",
+        "requiredProviderIds",
+        "minimumVcpus",
+        "minimumMemoryMiB",
+        "requiredRuntimeCapabilities"
+      ],
+      "properties": {
+        "deviceArchetypes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["CONSUMER_GPU", "PROFESSIONAL_GPU", "HBA", "ACCELERATOR", "GENERIC_PCI"]},
+          "x-qmanSetOrder": "ascending canonical bytes"
+        },
+        "requiredDeviceTraits": {"$ref": "#/$defs/optionalIdSet"},
+        "requiredProviderIds": {"$ref": "#/$defs/optionalIdSet"},
+        "minimumVcpus": {"$ref": "#/$defs/safePositiveInteger"},
+        "minimumMemoryMiB": {"$ref": "#/$defs/safePositiveInteger"},
+        "requiredRuntimeCapabilities": {"$ref": "#/$defs/optionalIdSet"}
+      }
+    },
+    "runtimeTuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platformProfileId", "backendFamily", "configuredIommuType", "machineType", "firmwareKind"],
+      "properties": {
+        "platformProfileId": {"$ref": "#/$defs/id"},
+        "backendFamily": {"enum": ["LEGACY_VFIO_TYPE1", "VFIO_CDEV_IOMMUFD"]},
+        "configuredIommuType": {"enum": ["VFIO_TYPE1V2_IOMMU", "VFIO_TYPE1_IOMMU", "IOMMUFD_IOAS"]},
+        "machineType": {"enum": ["virt", "q35", "i440fx"]},
+        "firmwareKind": {"enum": ["UEFI", "SeaBIOS"]}
+      }
+    },
+    "qualificationTuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["guest", "runtime"],
+      "properties": {
+        "guest": {"$ref": "#/$defs/guestTuple"},
+        "runtime": {"$ref": "#/$defs/runtimeTuple"}
+      }
+    },
+    "entrypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["binary", "configuration"],
+      "properties": {
+        "binary": {"$ref": "#/$defs/entrypointArtifact"},
+        "configuration": {"$ref": "#/$defs/entrypointArtifact"}
+      }
+    },
+    "entrypointArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "path", "sha256", "byteLength", "mediaType", "schemaRefOrNull", "schemaSha256OrNull"],
+      "properties": {
+        "artifactId": {"$ref": "#/$defs/id"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"$ref": "#/$defs/mediaType"},
+        "schemaRefOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "schemaSha256OrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]}
+      }
+    },
+    "evaluatorManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestId", "path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "manifestDigest"],
+      "properties": {
+        "manifestId": {"$ref": "#/$defs/id"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-workload-evaluator-manifest.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "manifestDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "canonicalInvocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "executableArtifactId",
+        "configurationArtifactId",
+        "arguments",
+        "environment",
+        "workingDirectory",
+        "stdinMode",
+        "timeoutSeconds",
+        "terminationGraceSeconds",
+        "expectedExitCodes",
+        "networkPolicy",
+        "locale",
+        "timezone"
+      ],
+      "properties": {
+        "protocol": {"const": "QMAN-DIRECTPATH-QUALIFICATION-WORKLOAD-V1"},
+        "executableArtifactId": {"$ref": "#/$defs/id"},
+        "configurationArtifactId": {"$ref": "#/$defs/id"},
+        "arguments": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {"type": "string", "maxLength": 4096}
+        },
+        "environment": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/environmentVariable"},
+          "x-qmanCanonicalOrder": "ascending canonical name; duplicate name is invalid"
+        },
+        "workingDirectory": {"$ref": "#/$defs/repositoryRelativePath"},
+        "stdinMode": {"enum": ["CLOSED", "CONFIGURATION_ARTIFACT"]},
+        "timeoutSeconds": {"$ref": "#/$defs/safePositiveInteger"},
+        "terminationGraceSeconds": {"$ref": "#/$defs/safeNonNegativeInteger"},
+        "expectedExitCodes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 0, "maximum": 255},
+          "x-qmanSetOrder": "ascending integer"
+        },
+        "networkPolicy": {"enum": ["DENY_ALL", "FIXTURE_ENDPOINTS_ONLY"]},
+        "locale": {"const": "C.UTF-8"},
+        "timezone": {"const": "UTC"}
+      }
+    },
+    "environmentVariable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"},
+        "value": {"type": "string", "maxLength": 4096}
+      }
+    },
+    "mandatoryAssertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assertionId", "assertionDigest", "statement", "oracle", "requiredEvidenceRoles"],
+      "properties": {
+        "assertionId": {"type": "string", "pattern": "^WL-[A-Z0-9][A-Z0-9._-]{1,126}$"},
+        "assertionDigest": {"$ref": "#/$defs/digest"},
+        "statement": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "oracle": {"$ref": "#/$defs/oracle"},
+        "requiredEvidenceRoles": {"$ref": "#/$defs/artifactRoleSet"}
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["oracleId", "oracleKind", "expressionLanguage", "expression", "expressionSha256", "evaluatorId", "evaluatorDefinitionDigest"],
+      "properties": {
+        "oracleId": {"$ref": "#/$defs/id"},
+        "oracleKind": {"enum": ["EXIT_CODE", "JSON_POINTER_COMPARISON", "THRESHOLD", "DEVICE_STATE", "CUSTOM_PINNED_EVALUATOR"]},
+        "expressionLanguage": {"const": "QMAN-WORKLOAD-PINNED-EVALUATOR-CONFIG-V1"},
+        "expression": {"type": "string", "minLength": 1, "maxLength": 8192},
+        "expressionSha256": {"$ref": "#/$defs/digest"},
+        "evaluatorId": {"$ref": "#/$defs/id"},
+        "evaluatorDefinitionDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "metricDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metricId",
+        "metricDefinitionDigest",
+        "evaluatorId",
+        "evaluatorDefinitionDigest",
+        "exactValueProjection",
+        "aggregation",
+        "outputScale",
+        "unit",
+        "sourceRoleAllowlist",
+        "valueContract"
+      ],
+      "properties": {
+        "metricId": {"$ref": "#/$defs/id"},
+        "metricDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "evaluatorId": {"$ref": "#/$defs/id"},
+        "evaluatorDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "exactValueProjection": {"$ref": "#/$defs/exactValueProjection"},
+        "aggregation": {"enum": ["INSTANT", "MIN", "MAX", "MEAN", "P50", "P95", "P99", "TOTAL", "RATE"]},
+        "outputScale": {"type": "integer", "minimum": 0, "maximum": 38},
+        "unit": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._/%*^-]{0,63}$"},
+        "sourceRoleAllowlist": {"$ref": "#/$defs/artifactRoleSet"},
+        "valueContract": {"$ref": "#/$defs/valueContract"}
+      }
+    },
+    "exactValueProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceSchemaRef", "sourceSchemaSha256", "jsonPointer"],
+      "properties": {
+        "sourceSchemaRef": {"$ref": "#/$defs/id"},
+        "sourceSchemaSha256": {"$ref": "#/$defs/digest"},
+        "jsonPointer": {"type": "string", "pattern": "^(/([^/~]|~[01])*)*$"}
+      }
+    },
+    "valueContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "representation",
+        "minimumInclusiveOrNull",
+        "maximumInclusiveOrNull",
+        "minimumSampleCount",
+        "maximumSampleCount",
+        "allowNaN",
+        "allowInfinity"
+      ],
+      "properties": {
+        "representation": {"const": "FINITE_DECIMAL_STRING_V1"},
+        "minimumInclusiveOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/decimalValue"}]},
+        "maximumInclusiveOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/decimalValue"}]},
+        "minimumSampleCount": {"$ref": "#/$defs/safePositiveInteger"},
+        "maximumSampleCount": {"type": "integer", "minimum": 1, "maximum": 1000000},
+        "allowNaN": {"const": false},
+        "allowInfinity": {"const": false}
+      }
+    }
+  },
+  "x-qmanPrerequisiteRule": "Construct one closed measured row {guest:{guestAbiClass,guestArchitecture,guestOs,guestKernel,driverName:guestDriverName,driverVersion:guestDriverVersion,driverDigest:guestDriverDigest},runtime:{platformProfileId,backendFamily,configuredIommuType,machineType,firmwareKind}} and require byte equality with exactly one supportedQualificationTuples row. The complete twelve-field row is the sole compatibility unit: guest and runtime halves are never matched independently, decomposed into per-field sets or expanded as a Cartesian product. Independently require every requiredGuestCapability, a listed deviceArchetype, all required device traits/provider IDs/runtime capabilities, and minimum vCPU/memory. Missing measurements, wildcard aliases, version-range guessing or self-reported guest/runtime identity fail closed.",
+  "x-qmanEntrypointAndInvocationRule": "Resolve entrypoint.binary and entrypoint.configuration from the immutable workload artifact store, verify distinct artifact IDs/paths/hashes, raw lengths/media types and any non-null pinned schemas. For each artifact, schemaRefOrNull and schemaSha256OrNull are both null or both non-null. canonicalInvocation.executableArtifactId and configurationArtifactId MUST respectively equal the two entrypoint artifact IDs. Invoke the verified binary directly with exactly the ordered arguments, canonical unique environment, working directory, stdin/network/locale/timezone policy, timeout and exit-code set; a shell, ambient PATH lookup, inherited undeclared environment, mutable image/tag, substituted config or extra argument is forbidden. timeoutSeconds is greater than or equal to minimumDurationSeconds plus terminationGraceSeconds. Separately resolve evaluatorManifest raw bytes/schema/internal digest/signature and its recursive source/build/runtime closure; its C/M/portable tuple equals the consuming RunRequest and it predates this definition.",
+  "x-qmanAssertionRule": "assertionId values, assertionDigest values and oracleId values are independently unique. For each assertion, form the closed object {assertionId,statement,oracle,requiredEvidenceRoles}, serialize with RFC 8785 JCS and require assertionDigest = SHA-256 of those bytes. expressionSha256 is SHA-256 of the exact UTF-8 expression bytes. Every oracle evaluatorId/evaluatorDefinitionDigest equals evaluatorManifest.manifestId/manifestDigest; the opaque configuration is executable only by that pinned QMAN-DIRECTPATH-WORKLOAD-EVALUATOR-V1 implementation and cannot be reinterpreted by a reporter. Every required assertion evidence role belongs to requiredArtifactRoles, every mandatory assertion is evaluated exactly once, and no exit-code-only or human-readable log claim can substitute unless that exact evaluator configuration says so.",
+  "x-qmanMetricDefinitionRule": "metricId and metricDefinitionDigest values are independently unique. Every metric evaluatorId/evaluatorDefinitionDigest equals evaluatorManifest.manifestId/manifestDigest. For each metric, form the closed object {metricId,evaluatorId,evaluatorDefinitionDigest,exactValueProjection,aggregation,outputScale,unit,sourceRoleAllowlist,valueContract}, serialize with RFC 8785 JCS and require metricDefinitionDigest = SHA-256 of those bytes. Resolve sourceSchemaRef only from independently pinned bytes matching sourceSchemaSha256, validate each allowed source artifact, and apply exactly jsonPointer before aggregation. sourceRoleAllowlist is a subset of requiredArtifactRoles. Samples use at most 128-byte canonical fixed-point base-10 strings with no exponent, so coefficient/scale expansion is bounded; parse with integer coefficient plus scale, enforce inclusive sample bounds and sample-count bounds, then apply QMAN-DIRECTPATH-METRIC-AGGREGATION-V1 with one final round-half-even at outputScale. Bounds constrain source samples, not the aggregate output. Reject missing pointers, coercion, exponent notation, NaN/infinity, unit aliases, alternate schemas, undocumented source roles or reporter-calculated values without exact source artifacts.",
+  "x-qmanResultCompatibilityRule": "A terminal QualificationWorkloadResult claiming this definition MUST byte-equal workloadId and definitionDigest, meet minimumDurationSeconds using its signed monotonic duration, use exactly the artifact-role vocabulary selected by requiredArtifactRoles, contain evidence for every mandatory assertion, and contain exactly one metric result per metricDefinitions entry with matching metricDefinitionDigest/aggregation/unit and allowed source hashes. The definition is the authority; a result cannot weaken prerequisites, omit assertions, redefine projections or invent metric contracts.",
+  "x-qmanAcyclicConstructionRule": "This immutable definition is authored and signed independently before any qualification request. It contains no QualificationRunRequest requestId/digest/nonce, qualificationRunId, QualificationRunManifest path/hash/runDigest, QualificationWorkloadResult resultId/digest, QualificationMeasurement digest, scenario execution-core or ExecutionEvidenceIndex digest, QualificationSubjectManifest digest, QualificationRecord digest, CaseCompletionRecord digest or release-index digest. Requests and results may refer forward to definitionDigest; no run-specific or later digest participates in definitionDigest, so replay checks and the evidence DAG remain acyclic.",
+  "x-qmanDigestAndSignatureRule": "Deep-copy the complete closed definition, conceptually replace definitionDigest and signature with null, retain every other field unchanged, serialize with RFC 8785 JSON Canonicalization Scheme (JCS), and store SHA-256 of those UTF-8 bytes in definitionDigest. The null/null construction projection need not validate as a stored signed instance. Verify signature as Ed25519 over ASCII(QMAN-DIRECTPATH/QUALIFICATION-WORKLOAD-DEFINITION/V1) || 0x00 || the same JCS bytes. Resolve signerKeyId through the independently authenticated key ring at keyRingVersion; the key is active and non-revoked at issuedAt and has role TEST_EVIDENCE. Ordinary JSON, a different canonicalization/domain, a partial projection, self-declared role or mutable in-place version is invalid; any semantic or artifact change requires a new workloadVersion and definitionDigest."
+}

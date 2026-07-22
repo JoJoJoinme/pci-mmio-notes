@@ -7,7 +7,7 @@
   "riskIds": ["R27"],
   "requiredTechStories": ["TS-F1-02", "TS-F3-03"],
   "dependsOnCaseIds": ["C10", "C20"],
-  "blocker": "The repository now has a Qman component that rejects noiommu and performs a real cdev/IOMMUFD bind and IOAS attach, but it is not integrated with an authoritative G1 snapshot publisher, durable lease, production launcher/QEMU fd handoff, post-start verification, or physical E4 qualification.",
+  "blocker": "The repository now has a Qman component that rejects noiommu and performs a real cdev/IOMMUFD bind and IOAS attach, but it is not integrated with an authoritative G1 snapshot publisher, durable lease, the current Legacy authorized-path launcher/receipt, a separately qualified future cdev launch grant, post-start verification, or physical E4 qualification.",
   "targetMilestone": "G2",
   "referenceEvidenceIds": [
     "QMAN-E3-DMA-PROVIDER-001",
@@ -17,7 +17,7 @@
   "assertions": [
     "host global unsafe mode does not by itself make the target ineligible",
     "a target backed by /dev/vfio/noiommu-N is rejected",
-    "an IOMMU-backed group/cdev is independently proven at attach time",
+    "an IOMMU-backed Legacy group or separately qualified cdev is independently proven at attach time",
     "provider uncertainty fails closed"
   ]
 }

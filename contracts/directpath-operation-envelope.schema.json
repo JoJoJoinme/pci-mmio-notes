@@ -1,0 +1,812 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-operation-envelope.schema.json",
+  "title": "Qman DirectPath portable operation envelope",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization; wider values use schema-defined decimal strings.",
+  "description": "Closed common request/result envelope for exactly the 35 frozen backend-neutral OP-* operations. Operation-specific payload bytes are validated separately and are bound here by schema authority, schema reference, schema digest, and canonical payload digest.",
+  "oneOf": [
+    {"$ref": "#/$defs/requestEnvelope"},
+    {"$ref": "#/$defs/resultEnvelope"}
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
+      "$comment": "TIMESTAMP-UTC-US-V1: UTC RFC 3339 with exactly six fractional digits and literal Z; offsets, missing/variable fractions, and leap-second spelling are rejected."
+    },
+    "schemaRef": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*(?:#(?:/[A-Za-z0-9._~$-]+)+)?$",
+      "minLength": 1,
+      "maxLength": 1024,
+      "$comment": "Canonical repository-relative POSIX path plus an optional restricted JSON Pointer fragment. Absolute paths, backslashes, URI aliases, empty segments, query strings, and dot traversal are not legal."
+    },
+    "operationId": {
+      "enum": [
+        "OP-QUERY-DIRECTPATH",
+        "OP-SUBMIT-DIRECTPATH-REQUEST",
+        "OP-PLAN-STATIC",
+        "OP-EXECUTE-ASSIGNMENT",
+        "OP-RECONCILE-ASSIGNMENT",
+        "OP-CAPTURE-HOST-SNAPSHOT",
+        "OP-RESOLVE-QUALIFICATION-PROFILE",
+        "OP-EVALUATE-CAPABILITY",
+        "OP-PLAN-OWNER-ACTIVATION",
+        "OP-APPLY-OWNER-ACTIVATION",
+        "OP-RECONCILE-OWNER-ACTIVATION",
+        "OP-PLAN-GUEST-RESOURCES",
+        "OP-SOLVE-DYNAMIC",
+        "OP-CAS-ACQUIRE-OPERATION-LEASE",
+        "OP-CAS-RESERVE-BUNDLES",
+        "OP-CAS-TRANSITION-AGGREGATES",
+        "OP-CAS-CANCEL-UNSTARTED-RESERVATION",
+        "OP-CAS-REVOKE-LEASE",
+        "OP-STORE-IDEMPOTENT-RESULT",
+        "OP-PREPARE-HOST-BUNDLE",
+        "OP-TEARDOWN-HOST-BUNDLE",
+        "OP-RECONCILE-HOST",
+        "OP-MATERIALIZE-BACKEND-GRANT",
+        "OP-RELEASE-BACKEND-GRANT",
+        "OP-SPAWN-QEMU",
+        "OP-STOP-QEMU",
+        "OP-VERIFY-RUNTIME-PLAN",
+        "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD",
+        "OP-PROVE-CLEAN-RELEASE",
+        "OP-QUARANTINE-BUNDLE",
+        "OP-REMEDIATE-QUARANTINE",
+        "OP-PLAN-COLD-RELOCATION",
+        "OP-EXECUTE-COLD-RELOCATION",
+        "OP-EMIT-AUDIT-EVIDENCE",
+        "OP-GATE-LIFECYCLE"
+      ]
+    },
+    "idempotencyMode": {
+      "enum": [
+        "READ_ONLY",
+        "REQUIRED",
+        "DETERMINISTIC_BY_INPUT_HASH",
+        "REPLAY_SAFE_BY_RUN_GENERATION",
+        "NEW_EPOCH_WHEN_CONTENT_CHANGES",
+        "DETERMINISTIC_BY_PROFILE_HASH",
+        "DETERMINISTIC_BY_SNAPSHOT_POLICY_PROFILE_HASH",
+        "DETERMINISTIC_BY_SNAPSHOT_REQUEST_HASH",
+        "REPLAY_SAFE_BY_INTENT_VERSION",
+        "REQUIRED_BY_OPERATION_SCOPE_HASH",
+        "REPLAY_SAFE_BY_CANONICAL_TRANSITION_SET_HASH",
+        "REPLAY_SAFE_BY_LEASE_SET_HASH_AND_RUN_GENERATION",
+        "REPLAY_SAFE_BY_LEASE_SET_HASH_AND_VERSIONS",
+        "NATURAL_KEY_SCOPE_AND_IDEMPOTENCY_KEY",
+        "REPLAY_SAFE_BY_LEASE_AND_STEP_JOURNAL",
+        "REPLAY_SAFE_BY_BOOT_AND_HOST_EPOCH",
+        "REPLAY_SAFE_BY_GRANT_ID",
+        "ONE_PROCESS_PER_RUN_GENERATION",
+        "REPLAY_SAFE_BY_PID_STARTTIME",
+        "DETERMINISTIC_BY_PLAN_AND_OBSERVATION_HASH",
+        "REQUIRED_BY_RELEASE_SCOPE_HASH",
+        "DETERMINISTIC_BY_RECEIPT_SET_HASH",
+        "MONOTONIC_BY_QUARANTINE_SCOPE_AND_GENERATION",
+        "AUDITED_RUN",
+        "DETERMINISTIC_BY_SOURCE_TARGET_EPOCHS",
+        "REQUIRED_BY_RELOCATION_GENERATION",
+        "CONTENT_HASH_DEDUPLICATED",
+        "DETERMINISTIC"
+      ]
+    },
+    "operationIdentity": {
+      "oneOf": [
+        {"properties": {"operationId": {"const": "OP-QUERY-DIRECTPATH"}, "actorPortId": {"const": "PORT-CONTROL-API"}, "idempotencyMode": {"const": "READ_ONLY"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-SUBMIT-DIRECTPATH-REQUEST"}, "actorPortId": {"const": "PORT-CONTROL-API"}, "idempotencyMode": {"const": "REQUIRED"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-STATIC"}, "actorPortId": {"const": "PORT-ASSIGNMENT-ORCHESTRATOR"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_INPUT_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-EXECUTE-ASSIGNMENT"}, "actorPortId": {"const": "PORT-ASSIGNMENT-ORCHESTRATOR"}, "idempotencyMode": {"const": "REQUIRED"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-ASSIGNMENT"}, "actorPortId": {"const": "PORT-ASSIGNMENT-ORCHESTRATOR"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_RUN_GENERATION"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-CAPTURE-HOST-SNAPSHOT"}, "actorPortId": {"const": "PORT-INVENTORY-SNAPSHOT"}, "idempotencyMode": {"const": "NEW_EPOCH_WHEN_CONTENT_CHANGES"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-RESOLVE-QUALIFICATION-PROFILE"}, "actorPortId": {"const": "PORT-QUALIFICATION-CATALOG"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_PROFILE_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-EVALUATE-CAPABILITY"}, "actorPortId": {"const": "PORT-CAPABILITY-ENGINE"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_SNAPSHOT_POLICY_PROFILE_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-OWNER-ACTIVATION"}, "actorPortId": {"const": "PORT-OWNER-ACTIVATION"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_SNAPSHOT_REQUEST_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-APPLY-OWNER-ACTIVATION"}, "actorPortId": {"const": "PORT-OWNER-ACTIVATION"}, "idempotencyMode": {"const": "REQUIRED"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-OWNER-ACTIVATION"}, "actorPortId": {"const": "PORT-OWNER-ACTIVATION"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_INTENT_VERSION"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-GUEST-RESOURCES"}, "actorPortId": {"const": "PORT-RESOURCE-PLANNER"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_INPUT_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-SOLVE-DYNAMIC"}, "actorPortId": {"const": "PORT-DYNAMIC-SOLVER"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_SNAPSHOT_REQUEST_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-CAS-ACQUIRE-OPERATION-LEASE"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "REQUIRED_BY_OPERATION_SCOPE_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-CAS-RESERVE-BUNDLES"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "REQUIRED"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-CAS-TRANSITION-AGGREGATES"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_CANONICAL_TRANSITION_SET_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-CAS-CANCEL-UNSTARTED-RESERVATION"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_LEASE_SET_HASH_AND_RUN_GENERATION"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-CAS-REVOKE-LEASE"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_LEASE_SET_HASH_AND_VERSIONS"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-STORE-IDEMPOTENT-RESULT"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "NATURAL_KEY_SCOPE_AND_IDEMPOTENCY_KEY"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-PREPARE-HOST-BUNDLE"}, "actorPortId": {"const": "PORT-HOST-AGENT"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_LEASE_AND_STEP_JOURNAL"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-TEARDOWN-HOST-BUNDLE"}, "actorPortId": {"const": "PORT-HOST-AGENT"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_LEASE_AND_STEP_JOURNAL"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-HOST"}, "actorPortId": {"const": "PORT-HOST-AGENT"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_BOOT_AND_HOST_EPOCH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-MATERIALIZE-BACKEND-GRANT"}, "actorPortId": {"const": "PORT-VFIO-BACKEND"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_GRANT_ID"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-RELEASE-BACKEND-GRANT"}, "actorPortId": {"const": "PORT-VFIO-BACKEND"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_GRANT_ID"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-SPAWN-QEMU"}, "actorPortId": {"const": "PORT-QEMU-LAUNCHER"}, "idempotencyMode": {"const": "ONE_PROCESS_PER_RUN_GENERATION"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-STOP-QEMU"}, "actorPortId": {"const": "PORT-QEMU-LAUNCHER"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_PID_STARTTIME"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-VERIFY-RUNTIME-PLAN"}, "actorPortId": {"const": "PORT-RUNTIME-VERIFIER"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_PLAN_AND_OBSERVATION_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD"}, "actorPortId": {"const": "PORT-RELEASE-RECOVERY"}, "idempotencyMode": {"const": "REQUIRED_BY_RELEASE_SCOPE_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-PROVE-CLEAN-RELEASE"}, "actorPortId": {"const": "PORT-RELEASE-RECOVERY"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_RECEIPT_SET_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-QUARANTINE-BUNDLE"}, "actorPortId": {"const": "PORT-RELEASE-RECOVERY"}, "idempotencyMode": {"const": "MONOTONIC_BY_QUARANTINE_SCOPE_AND_GENERATION"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-REMEDIATE-QUARANTINE"}, "actorPortId": {"const": "PORT-RELEASE-RECOVERY"}, "idempotencyMode": {"const": "AUDITED_RUN"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-COLD-RELOCATION"}, "actorPortId": {"const": "PORT-RELOCATION-COORDINATOR"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_SOURCE_TARGET_EPOCHS"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-EXECUTE-COLD-RELOCATION"}, "actorPortId": {"const": "PORT-RELOCATION-COORDINATOR"}, "idempotencyMode": {"const": "REQUIRED_BY_RELOCATION_GENERATION"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-EMIT-AUDIT-EVIDENCE"}, "actorPortId": {"const": "PORT-AUDIT-EVIDENCE"}, "idempotencyMode": {"const": "CONTENT_HASH_DEDUPLICATED"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-GATE-LIFECYCLE"}, "actorPortId": {"const": "PORT-LIFECYCLE-GATE"}, "idempotencyMode": {"const": "DETERMINISTIC"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]}
+      ]
+    },
+    "gitCommitBinding": {
+      "oneOf": [
+        {
+          "properties": {
+            "targetRepositoryObjectFormat": {"const": "SHA1"},
+            "targetRepositoryCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+          },
+          "required": ["targetRepositoryObjectFormat", "targetRepositoryCommit"]
+        },
+        {
+          "properties": {
+            "targetRepositoryObjectFormat": {"const": "SHA256"},
+            "targetRepositoryCommit": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          },
+          "required": ["targetRepositoryObjectFormat", "targetRepositoryCommit"]
+        }
+      ]
+    },
+    "generationBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "generation"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "generation": {"type": "integer", "minimum": 1}
+      }
+    },
+    "resourceVersionExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entityType", "resourceId", "expectedResourceVersion"],
+      "properties": {
+        "entityType": {"$ref": "#/$defs/entityType"},
+        "resourceId": {"$ref": "#/$defs/id"},
+        "expectedResourceVersion": {"type": "integer", "minimum": 1}
+      }
+    },
+    "entityType": {
+      "enum": [
+        "ENTITY-CONTROLLER-AUTHORITY",
+        "ENTITY-HOST-AUTHORITY",
+        "ENTITY-HOST-SNAPSHOT",
+        "ENTITY-DEVICE-RECORD",
+        "ENTITY-TRUST-KEY-RING",
+        "ENTITY-QUALIFICATION-RECORD",
+        "ENTITY-SUPPORTED-CATALOG",
+        "ENTITY-QUALIFICATION-PROFILE",
+        "ENTITY-VM-DIRECTPATH-REQUEST",
+        "ENTITY-DEPENDENCY-BUNDLE",
+        "ENTITY-OWNER-ACTIVATION-RUN",
+        "ENTITY-ASSIGNMENT-RUN",
+        "ENTITY-ASSIGNMENT-BINDING",
+        "ENTITY-BUNDLE-LEASE",
+        "ENTITY-ASSIGNMENT-MANIFEST",
+        "ENTITY-HOST-ACTION-JOURNAL",
+        "ENTITY-CLEAN-RELEASE-RECEIPT",
+        "ENTITY-CLEAN-RELEASE-ACCEPTANCE",
+        "ENTITY-RESERVATION-CANCEL-RECEIPT",
+        "ENTITY-QUARANTINE-RECORD",
+        "ENTITY-REMEDIATION-RUN",
+        "ENTITY-RELOCATION-RUN",
+        "ENTITY-IDEMPOTENCY-RECORD",
+        "ENTITY-OPERATION-LEASE",
+        "ENTITY-RELEASE-OWNERSHIP-GUARD",
+        "ENTITY-AUDIT-EVENT",
+        "ENTITY-OUTBOX-EVENT"
+      ]
+    },
+    "casAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controllerGeneration", "snapshotEpoch", "hostEpochs", "runGenerations", "memberGenerations", "resourceVersions"],
+      "properties": {
+        "controllerGeneration": {"type": "integer", "minimum": 1},
+        "snapshotEpoch": {"type": ["integer", "null"], "minimum": 1},
+        "hostEpochs": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/generationBinding"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [id,generation]; duplicate id values are rejected even when generations differ"
+        },
+        "runGenerations": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/generationBinding"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [id,generation]; duplicate id values are rejected even when generations differ"
+        },
+        "memberGenerations": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/generationBinding"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [id,generation]; id is deviceUid and duplicate id values are rejected"
+        },
+        "resourceVersions": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/resourceVersionExpectation"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [entityType,resourceId,expectedResourceVersion]; duplicate [entityType,resourceId] keys are rejected"
+        }
+      }
+    },
+    "operationLeaseCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operationLeaseId", "leaseType", "scopeHash", "runIdOrIntentId", "bundleIds", "memberGenerations", "hostEpoch", "runGenerationOrNull", "holderControllerGeneration", "operationLeaseResourceVersion"],
+      "properties": {
+        "operationLeaseId": {"$ref": "#/$defs/id"},
+        "leaseType": {"enum": ["OWNER_TRANSITION", "ASSIGNMENT_PREPARE", "RELEASE", "RELOCATION_HANDOFF", "QUARANTINE_REMEDIATION"]},
+        "scopeHash": {"$ref": "#/$defs/digest"},
+        "runIdOrIntentId": {"$ref": "#/$defs/id"},
+        "bundleIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/digest"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        },
+        "memberGenerations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/generationBinding"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [id,generation]; id is deviceUid and duplicate id values are rejected"
+        },
+        "hostEpoch": {"type": "integer", "minimum": 1},
+        "runGenerationOrNull": {"type": ["integer", "null"], "minimum": 1},
+        "holderControllerGeneration": {"type": "integer", "minimum": 1},
+        "operationLeaseResourceVersion": {"type": "integer", "minimum": 1}
+      }
+    },
+    "releaseOwnershipGuardCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["guardId", "operationLeaseId", "leaseSetHash", "leaseBindings", "runId", "bundleIds", "memberDeviceUids", "hostEpoch", "runGeneration", "qemuPidStarttimeOrNull", "qemuExistenceProof", "backendProfileHash", "holderControllerGeneration", "state", "resourceVersion"],
+      "properties": {
+        "guardId": {"$ref": "#/$defs/id"},
+        "operationLeaseId": {"$ref": "#/$defs/id"},
+        "leaseSetHash": {"$ref": "#/$defs/digest"},
+        "leaseBindings": {
+          "type": "array", "minItems": 1, "maxItems": 4096, "uniqueItems": true,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["leaseId", "leaseVersion", "bundleId"],
+            "properties": {"leaseId": {"$ref": "#/$defs/id"}, "leaseVersion": {"type": "integer", "minimum": 1}, "bundleId": {"$ref": "#/$defs/digest"}}
+          },
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [bundleId,leaseId,leaseVersion]; duplicate leaseId or bundleId is rejected"
+        },
+        "runId": {"$ref": "#/$defs/id"},
+        "bundleIds": {"type": "array", "minItems": 1, "maxItems": 4096, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}, "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"},
+        "memberDeviceUids": {"type": "array", "minItems": 1, "maxItems": 4096, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"},
+        "hostEpoch": {"type": "integer", "minimum": 1},
+        "runGeneration": {"type": "integer", "minimum": 1},
+        "qemuPidStarttimeOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^[1-9][0-9]{0,19}$"}]},
+        "qemuExistenceProof": {
+          "oneOf": [
+            {
+              "type": "object", "additionalProperties": false,
+              "required": ["kind", "proofHash"],
+              "properties": {"kind": {"const": "DURABLE_NEVER_CREATED"}, "proofHash": {"$ref": "#/$defs/digest"}}
+            },
+            {
+              "type": "object", "additionalProperties": false,
+              "required": ["kind", "proofHash"],
+              "properties": {"kind": {"const": "EXIT_PROVEN"}, "proofHash": {"$ref": "#/$defs/digest"}}
+            }
+          ]
+        },
+        "backendProfileHash": {"$ref": "#/$defs/digest"},
+        "holderControllerGeneration": {"type": "integer", "minimum": 1},
+        "state": {"const": "ACTIVE"},
+        "resourceVersion": {"type": "integer", "minimum": 1}
+      },
+      "allOf": [
+        {"if": {"properties": {"qemuExistenceProof": {"properties": {"kind": {"const": "EXIT_PROVEN"}}, "required": ["kind"]}}, "required": ["qemuExistenceProof"]}, "then": {"properties": {"qemuPidStarttimeOrNull": {"type": "string"}}}},
+        {"if": {"properties": {"qemuExistenceProof": {"properties": {"kind": {"const": "DURABLE_NEVER_CREATED"}}, "required": ["kind"]}}, "required": ["qemuExistenceProof"]}, "then": {"properties": {"qemuPidStarttimeOrNull": {"type": "null"}}}}
+      ],
+      "x-qmanScopeRule": "leaseBindings covers exactly bundleIds and hashes to leaseSetHash; operationLeaseId names the same live RELEASE capability; run/bundle/member/host/run/controller generations and backend profile exactly equal the original assignment authority. ACTIVE is the only authorizing state."
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["traceId", "spanId", "parentCommandIdOrNull", "assignmentIdOrNull", "runIdOrNull", "relocationIdOrNull", "hostIds", "deviceUids"],
+      "properties": {
+        "traceId": {"type": "string", "pattern": "^[0-9a-f]{32}$", "not": {"const": "00000000000000000000000000000000"}},
+        "spanId": {"type": "string", "pattern": "^[0-9a-f]{16}$", "not": {"const": "0000000000000000"}},
+        "parentCommandIdOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "assignmentIdOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "runIdOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "relocationIdOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "hostIds": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        },
+        "deviceUids": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        }
+      }
+    },
+    "requestPayloadSchemaBinding": {
+      "oneOf": [
+        {"properties": {"operationId": {"const": "OP-QUERY-DIRECTPATH"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_QUERY_DIRECTPATH_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-SUBMIT-DIRECTPATH-REQUEST"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_SUBMIT_DIRECTPATH_REQUEST_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-STATIC"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PLAN_STATIC_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-EXECUTE-ASSIGNMENT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_EXECUTE_ASSIGNMENT_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-ASSIGNMENT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RECONCILE_ASSIGNMENT_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAPTURE-HOST-SNAPSHOT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAPTURE_HOST_SNAPSHOT_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RESOLVE-QUALIFICATION-PROFILE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RESOLVE_QUALIFICATION_PROFILE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-EVALUATE-CAPABILITY"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_EVALUATE_CAPABILITY_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-OWNER-ACTIVATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PLAN_OWNER_ACTIVATION_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-APPLY-OWNER-ACTIVATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_APPLY_OWNER_ACTIVATION_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-OWNER-ACTIVATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RECONCILE_OWNER_ACTIVATION_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-GUEST-RESOURCES"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PLAN_GUEST_RESOURCES_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-SOLVE-DYNAMIC"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_SOLVE_DYNAMIC_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-ACQUIRE-OPERATION-LEASE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_ACQUIRE_OPERATION_LEASE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-RESERVE-BUNDLES"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_RESERVE_BUNDLES_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-TRANSITION-AGGREGATES"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_TRANSITION_AGGREGATES_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-CANCEL-UNSTARTED-RESERVATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_CANCEL_UNSTARTED_RESERVATION_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-REVOKE-LEASE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_REVOKE_LEASE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-STORE-IDEMPOTENT-RESULT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_STORE_IDEMPOTENT_RESULT_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PREPARE-HOST-BUNDLE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PREPARE_HOST_BUNDLE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-TEARDOWN-HOST-BUNDLE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_TEARDOWN_HOST_BUNDLE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-HOST"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RECONCILE_HOST_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-MATERIALIZE-BACKEND-GRANT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_MATERIALIZE_BACKEND_GRANT_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RELEASE-BACKEND-GRANT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RELEASE_BACKEND_GRANT_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-SPAWN-QEMU"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_SPAWN_QEMU_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-STOP-QEMU"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_STOP_QEMU_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-VERIFY-RUNTIME-PLAN"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_VERIFY_RUNTIME_PLAN_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_ACQUIRE_RELEASE_OWNERSHIP_GUARD_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PROVE-CLEAN-RELEASE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PROVE_CLEAN_RELEASE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-QUARANTINE-BUNDLE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_QUARANTINE_BUNDLE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-REMEDIATE-QUARANTINE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_REMEDIATE_QUARANTINE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-COLD-RELOCATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PLAN_COLD_RELOCATION_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-EXECUTE-COLD-RELOCATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_EXECUTE_COLD_RELOCATION_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-EMIT-AUDIT-EVIDENCE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_EMIT_AUDIT_EVIDENCE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-GATE-LIFECYCLE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_GATE_LIFECYCLE_REQUEST"}}, "required": ["operationId", "payloadSchemaRef"]}
+      ]
+    },
+    "resultPayloadSchemaBinding": {
+      "oneOf": [
+        {"properties": {"operationId": {"const": "OP-QUERY-DIRECTPATH"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_QUERY_DIRECTPATH_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-SUBMIT-DIRECTPATH-REQUEST"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_SUBMIT_DIRECTPATH_REQUEST_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-STATIC"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PLAN_STATIC_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-EXECUTE-ASSIGNMENT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_EXECUTE_ASSIGNMENT_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-ASSIGNMENT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RECONCILE_ASSIGNMENT_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAPTURE-HOST-SNAPSHOT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAPTURE_HOST_SNAPSHOT_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RESOLVE-QUALIFICATION-PROFILE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RESOLVE_QUALIFICATION_PROFILE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-EVALUATE-CAPABILITY"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_EVALUATE_CAPABILITY_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-OWNER-ACTIVATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PLAN_OWNER_ACTIVATION_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-APPLY-OWNER-ACTIVATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_APPLY_OWNER_ACTIVATION_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-OWNER-ACTIVATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RECONCILE_OWNER_ACTIVATION_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-GUEST-RESOURCES"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PLAN_GUEST_RESOURCES_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-SOLVE-DYNAMIC"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_SOLVE_DYNAMIC_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-ACQUIRE-OPERATION-LEASE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_ACQUIRE_OPERATION_LEASE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-RESERVE-BUNDLES"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_RESERVE_BUNDLES_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-TRANSITION-AGGREGATES"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_TRANSITION_AGGREGATES_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-CANCEL-UNSTARTED-RESERVATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_CANCEL_UNSTARTED_RESERVATION_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-CAS-REVOKE-LEASE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_CAS_REVOKE_LEASE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-STORE-IDEMPOTENT-RESULT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_STORE_IDEMPOTENT_RESULT_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PREPARE-HOST-BUNDLE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PREPARE_HOST_BUNDLE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-TEARDOWN-HOST-BUNDLE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_TEARDOWN_HOST_BUNDLE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RECONCILE-HOST"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RECONCILE_HOST_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-MATERIALIZE-BACKEND-GRANT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_MATERIALIZE_BACKEND_GRANT_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-RELEASE-BACKEND-GRANT"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_RELEASE_BACKEND_GRANT_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-SPAWN-QEMU"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_SPAWN_QEMU_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-STOP-QEMU"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_STOP_QEMU_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-VERIFY-RUNTIME-PLAN"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_VERIFY_RUNTIME_PLAN_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_ACQUIRE_RELEASE_OWNERSHIP_GUARD_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PROVE-CLEAN-RELEASE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PROVE_CLEAN_RELEASE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-QUARANTINE-BUNDLE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_QUARANTINE_BUNDLE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-REMEDIATE-QUARANTINE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_REMEDIATE_QUARANTINE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-PLAN-COLD-RELOCATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_PLAN_COLD_RELOCATION_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-EXECUTE-COLD-RELOCATION"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_EXECUTE_COLD_RELOCATION_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-EMIT-AUDIT-EVIDENCE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_EMIT_AUDIT_EVIDENCE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]},
+        {"properties": {"operationId": {"const": "OP-GATE-LIFECYCLE"}, "payloadSchemaRef": {"const": "contracts/directpath-operation-payload.schema.json#/$defs/profile_OP_GATE_LIFECYCLE_RESULT"}}, "required": ["operationId", "payloadSchemaRef"]}
+      ]
+    },
+    "requestEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "envelopeKind",
+        "operationId",
+        "commandId",
+        "idempotencyMode",
+        "idempotencyKey",
+        "idempotencyScopeHash",
+        "actorPortId",
+        "issuedAt",
+        "deadlineAt",
+        "portableContractId",
+        "portableContractRevision",
+        "portableContractSha256",
+        "targetRepositoryObjectFormat",
+        "targetRepositoryCommit",
+        "authority",
+        "operationLeaseCapabilityOrNull",
+        "releaseOwnershipGuardCapabilityOrNull",
+        "payloadSchemaAuthority",
+        "payloadSchemaRef",
+        "payloadSchemaSha256",
+        "payloadCanonicalProfile",
+        "payloadHash",
+        "correlation",
+        "requestHash"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "envelopeKind": {"const": "REQUEST"},
+        "operationId": {"$ref": "#/$defs/operationId"},
+        "commandId": {"$ref": "#/$defs/id"},
+        "idempotencyMode": {"$ref": "#/$defs/idempotencyMode"},
+        "idempotencyKey": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$"}]},
+        "idempotencyScopeHash": {"$ref": "#/$defs/digest"},
+        "actorPortId": {"type": "string", "pattern": "^PORT-[A-Z0-9-]+$"},
+        "issuedAt": {"$ref": "#/$defs/timestamp"},
+        "deadlineAt": {"$ref": "#/$defs/timestamp"},
+        "portableContractId": {"const": "QMAN-DIRECTPATH-PORTABLE-CONTROL"},
+        "portableContractRevision": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.[1-9][0-9]*$"},
+        "portableContractSha256": {"$ref": "#/$defs/digest"},
+        "targetRepositoryObjectFormat": {"enum": ["SHA1", "SHA256"]},
+        "targetRepositoryCommit": {"type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"},
+        "authority": {"$ref": "#/$defs/casAuthority"},
+        "operationLeaseCapabilityOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/operationLeaseCapability"}]},
+        "releaseOwnershipGuardCapabilityOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/releaseOwnershipGuardCapability"}]},
+        "payloadSchemaAuthority": {"const": "PORTABLE_CONTRACT"},
+        "payloadSchemaRef": {"$ref": "#/$defs/schemaRef"},
+        "payloadSchemaSha256": {"const": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b"},
+        "payloadCanonicalProfile": {"const": "CANONICAL-JSON-V1"},
+        "payloadHash": {"$ref": "#/$defs/digest"},
+        "correlation": {"$ref": "#/$defs/correlation"},
+        "requestHash": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {"$ref": "#/$defs/operationIdentity"},
+        {"$ref": "#/$defs/gitCommitBinding"},
+        {"$ref": "#/$defs/requestPayloadSchemaBinding"},
+        {
+          "if": {"properties": {"operationId": {"const": "OP-QUERY-DIRECTPATH"}}, "required": ["operationId"]},
+          "then": {"properties": {"idempotencyKey": {"type": "null"}}},
+          "else": {"properties": {"idempotencyKey": {"type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$"}}}
+        },
+        {
+          "if": {"properties": {"operationId": {"enum": ["OP-EXECUTE-ASSIGNMENT", "OP-RECONCILE-ASSIGNMENT", "OP-APPLY-OWNER-ACTIVATION", "OP-RECONCILE-OWNER-ACTIVATION", "OP-CAS-RESERVE-BUNDLES", "OP-CAS-TRANSITION-AGGREGATES", "OP-CAS-CANCEL-UNSTARTED-RESERVATION", "OP-CAS-REVOKE-LEASE", "OP-PREPARE-HOST-BUNDLE", "OP-TEARDOWN-HOST-BUNDLE", "OP-RECONCILE-HOST", "OP-MATERIALIZE-BACKEND-GRANT", "OP-RELEASE-BACKEND-GRANT", "OP-SPAWN-QEMU", "OP-STOP-QEMU", "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD", "OP-PROVE-CLEAN-RELEASE", "OP-QUARANTINE-BUNDLE", "OP-REMEDIATE-QUARANTINE", "OP-EXECUTE-COLD-RELOCATION"]}}, "required": ["operationId"]},
+          "then": {"properties": {"operationLeaseCapabilityOrNull": {"$ref": "#/$defs/operationLeaseCapability"}}}
+        },
+        {
+          "if": {"properties": {"operationId": {"enum": ["OP-TEARDOWN-HOST-BUNDLE", "OP-RELEASE-BACKEND-GRANT", "OP-STOP-QEMU", "OP-PROVE-CLEAN-RELEASE", "OP-CAS-REVOKE-LEASE"]}}, "required": ["operationId"]},
+          "then": {"properties": {"operationLeaseCapabilityOrNull": {"allOf": [{"$ref": "#/$defs/operationLeaseCapability"}, {"properties": {"leaseType": {"const": "RELEASE"}}}]}, "releaseOwnershipGuardCapabilityOrNull": {"$ref": "#/$defs/releaseOwnershipGuardCapability"}}}
+        },
+        {
+          "if": {"properties": {"operationId": {"const": "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD"}}, "required": ["operationId"]},
+          "then": {"properties": {"operationLeaseCapabilityOrNull": {"allOf": [{"$ref": "#/$defs/operationLeaseCapability"}, {"properties": {"leaseType": {"const": "RELEASE"}}}]}, "releaseOwnershipGuardCapabilityOrNull": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"operationId": {"enum": ["OP-APPLY-OWNER-ACTIVATION", "OP-RECONCILE-OWNER-ACTIVATION"]}}, "required": ["operationId"]},
+          "then": {"properties": {"operationLeaseCapabilityOrNull": {"allOf": [{"$ref": "#/$defs/operationLeaseCapability"}, {"properties": {"leaseType": {"const": "OWNER_TRANSITION"}}}]}}}
+        },
+        {
+          "if": {"properties": {"operationId": {"const": "OP-REMEDIATE-QUARANTINE"}}, "required": ["operationId"]},
+          "then": {"properties": {"operationLeaseCapabilityOrNull": {"allOf": [{"$ref": "#/$defs/operationLeaseCapability"}, {"properties": {"leaseType": {"const": "QUARANTINE_REMEDIATION"}}}]}}}
+        },
+        {
+          "if": {"properties": {"operationId": {"const": "OP-EXECUTE-COLD-RELOCATION"}}, "required": ["operationId"]},
+          "then": {"properties": {"operationLeaseCapabilityOrNull": {"allOf": [{"$ref": "#/$defs/operationLeaseCapability"}, {"properties": {"leaseType": {"const": "RELOCATION_HANDOFF"}}}]}}}
+        }
+      ]
+    },
+    "reasonDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "valueType", "value"],
+      "properties": {
+        "key": {"type": "string", "pattern": "^[a-z][a-zA-Z0-9._-]{0,127}$"},
+        "valueType": {"enum": ["TEXT", "INTEGER", "BOOLEAN", "DIGEST", "ID"]},
+        "value": {}
+      },
+      "oneOf": [
+        {"properties": {"valueType": {"const": "TEXT"}, "value": {"type": "string", "minLength": 1, "maxLength": 4096}}},
+        {"properties": {"valueType": {"const": "INTEGER"}, "value": {"type": "integer"}}},
+        {"properties": {"valueType": {"const": "BOOLEAN"}, "value": {"type": "boolean"}}},
+        {"properties": {"valueType": {"const": "DIGEST"}, "value": {"$ref": "#/$defs/digest"}}},
+        {"properties": {"valueType": {"const": "ID"}, "value": {"$ref": "#/$defs/id"}}}
+      ]
+    },
+    "reasonProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactType", "artifactId", "schemaRef", "artifactSha256"],
+      "properties": {
+        "artifactType": {"type": "string", "pattern": "^[A-Z][A-Z0-9_-]{0,127}$"},
+        "artifactId": {"$ref": "#/$defs/id"},
+        "schemaRef": {"$ref": "#/$defs/schemaRef"},
+        "artifactSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "stage", "devices", "details", "provenance"],
+      "properties": {
+        "code": {
+          "enum": [
+            "DEVICE_NOT_IN_INVENTORY", "SNAPSHOT_INCOMPLETE", "INVENTORY_EPOCH_CHANGED", "STALE_RESOURCE_VERSION", "STALE_CONTROLLER_GENERATION", "STALE_RUN_GENERATION", "STALE_HOST_EPOCH", "IDEMPOTENCY_KEY_REUSED",
+            "HOST_IOMMU_MISSING", "DEVICE_NO_IOMMU_DMA_ISOLATION", "DEVICE_IOMMU_BACKING_UNKNOWN", "INTERRUPT_REMAP_MISSING", "PHYSICAL_ISOLATION_DOMAIN_UNKNOWN", "ACS_OVERRIDE_REQUIRES_WHOLE_PHYSICAL_DOMAIN", "HARDWARE_ROLE_NOT_ASSIGNABLE", "PLATFORM_RESERVED", "DEVICE_ERRATA_DENY", "DEPENDENCY_PROVENANCE_UNKNOWN", "DEPENDENCY_ACTION_UNKNOWN", "DEPENDENCY_ACTION_CONFLICT", "DEPENDENCY_CLOSURE_LIMIT", "DEPENDENCY_BUSY",
+            "RESET_NOT_SUPPORTED", "RESET_DOMAIN_UNVERIFIED", "RESET_DOMAIN_CHANGED", "RESET_FAILED", "RESET_STATE_VERIFY_FAILED", "ADMIN_DISABLED", "HOST_ACTIVATION_REQUIRED", "HOST_REBOOT_REQUIRED", "HOST_DRIVER_BUSY", "HOST_CRITICAL_DEPENDENCY", "HOST_DEVICE_RESERVED", "CURRENT_OWNER_UNKNOWN", "QUIESCE_STATE_UNKNOWN", "PERSISTENT_HOST_USE", "ACTIVATION_IDENTITY_MISMATCH", "ACTIVATION_OBSERVED_STATE_MISMATCH", "ACTIVATION_ROLLBACK_UNCERTAIN", "BOOT_CLAIM_UNSUPPORTED", "EXCLUSIVE_ATTACH_GROUP_COLLISION", "DEVICE_QUARANTINED",
+            "PROFILE_NO_MATCH", "PROFILE_ABI_MISMATCH", "QUALIFICATION_EVIDENCE_MISSING", "PROFILE_NO_GLOBAL_SOLUTION", "PROFILE_DEVICE_LIMIT", "RMRR_PROFILE_CONFLICT", "MMIO_APERTURE_EXHAUSTED", "MMIO_PLANNER_TIMEOUT", "NUMA_POLICY_UNSATISFIED", "MANDATORY_BAR_UNASSIGNED",
+            "BACKEND_TOPOLOGY_GAP", "BACKEND_APERTURE_ENCODING_GAP", "BACKEND_RESOURCE_PLACEMENT_GAP", "UNSUPPORTED_IOCTL_ABI", "BACKEND_RELEASE_UNVERIFIED", "BACKEND_RELEASE_CONTEXT_UNAVAILABLE", "RELEASE_GUARD_CONFLICT", "STATIC_DEVICE_HOST_AFFINITY", "QEMU_START_FAILED", "QEMU_CRASH", "QEMU_EXIT_UNVERIFIED", "DMA_TEARDOWN_UNVERIFIED", "OWNER_RESTORE_UNVERIFIED", "OBSERVED_PLAN_DRIFT", "GUEST_PROBE_MISSING", "OWNERSHIP_UNCERTAIN", "RELEASE_CLEANUP_UNCERTAIN",
+            "CLEAN_RELEASE_RECEIPT_MISSING", "CLEAN_RELEASE_RECEIPT_STALE", "HOST_UNREACHABLE", "RELOCATION_CANDIDATE_EXHAUSTED", "HOST_RECONCILE_INCOMPLETE", "REMEDIATION_NOT_AUTHORIZED", "LIVE_MIGRATION_UNSUPPORTED", "SNAPSHOT_UNSUPPORTED", "SUSPEND_RESUME_UNSUPPORTED", "FAULT_TOLERANCE_UNSUPPORTED", "HOTPLUG_UNSUPPORTED", "UNMANAGED_ATTACH_PATH", "AUDIT_WRITE_FAILED", "EVIDENCE_INCOMPLETE"
+          ]
+        },
+        "stage": {"enum": ["inventory", "concurrency", "api", "capability", "qualification", "reservation", "prepare", "release", "policy", "owner", "admission", "solver", "runtime-verification", "backend", "placement", "launch", "runtime", "reconcile", "relocation", "remediation", "lifecycle", "audit"]},
+        "devices": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        },
+        "details": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/reasonDetail"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [key,valueType,value]; duplicate key values are rejected"
+        },
+        "provenance": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/reasonProvenance"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [artifactType,artifactId,schemaRef,artifactSha256]"
+        }
+      },
+      "oneOf": [
+        {"properties": {"code": {"enum": ["DEVICE_NOT_IN_INVENTORY", "SNAPSHOT_INCOMPLETE"]}, "stage": {"const": "inventory"}}},
+        {"properties": {"code": {"enum": ["INVENTORY_EPOCH_CHANGED", "STALE_RESOURCE_VERSION", "STALE_CONTROLLER_GENERATION", "STALE_RUN_GENERATION", "STALE_HOST_EPOCH"]}, "stage": {"const": "concurrency"}}},
+        {"properties": {"code": {"const": "IDEMPOTENCY_KEY_REUSED"}, "stage": {"const": "api"}}},
+        {"properties": {"code": {"enum": ["HOST_IOMMU_MISSING", "DEVICE_NO_IOMMU_DMA_ISOLATION", "DEVICE_IOMMU_BACKING_UNKNOWN", "INTERRUPT_REMAP_MISSING", "PHYSICAL_ISOLATION_DOMAIN_UNKNOWN", "ACS_OVERRIDE_REQUIRES_WHOLE_PHYSICAL_DOMAIN", "HARDWARE_ROLE_NOT_ASSIGNABLE", "PLATFORM_RESERVED", "DEPENDENCY_PROVENANCE_UNKNOWN", "DEPENDENCY_ACTION_UNKNOWN", "DEPENDENCY_ACTION_CONFLICT", "DEPENDENCY_CLOSURE_LIMIT", "RESET_NOT_SUPPORTED", "RESET_DOMAIN_UNVERIFIED"]}, "stage": {"const": "capability"}}},
+        {"properties": {"code": {"enum": ["DEVICE_ERRATA_DENY", "PROFILE_NO_MATCH", "QUALIFICATION_EVIDENCE_MISSING"]}, "stage": {"const": "qualification"}}},
+        {"properties": {"code": {"enum": ["DEPENDENCY_BUSY", "EXCLUSIVE_ATTACH_GROUP_COLLISION"]}, "stage": {"const": "reservation"}}},
+        {"properties": {"code": {"enum": ["RESET_DOMAIN_CHANGED", "RESET_FAILED"]}, "stage": {"const": "prepare"}}},
+        {"properties": {"code": {"enum": ["RESET_STATE_VERIFY_FAILED", "BACKEND_RELEASE_UNVERIFIED", "BACKEND_RELEASE_CONTEXT_UNAVAILABLE", "RELEASE_GUARD_CONFLICT", "QEMU_EXIT_UNVERIFIED", "DMA_TEARDOWN_UNVERIFIED", "OWNER_RESTORE_UNVERIFIED", "RELEASE_CLEANUP_UNCERTAIN"]}, "stage": {"const": "release"}}},
+        {"properties": {"code": {"enum": ["ADMIN_DISABLED", "DEVICE_QUARANTINED"]}, "stage": {"const": "policy"}}},
+        {"properties": {"code": {"enum": ["HOST_ACTIVATION_REQUIRED", "HOST_REBOOT_REQUIRED", "HOST_DRIVER_BUSY", "HOST_CRITICAL_DEPENDENCY", "HOST_DEVICE_RESERVED", "CURRENT_OWNER_UNKNOWN", "QUIESCE_STATE_UNKNOWN", "PERSISTENT_HOST_USE", "ACTIVATION_IDENTITY_MISMATCH", "ACTIVATION_OBSERVED_STATE_MISMATCH", "ACTIVATION_ROLLBACK_UNCERTAIN", "BOOT_CLAIM_UNSUPPORTED"]}, "stage": {"const": "owner"}}},
+        {"properties": {"code": {"enum": ["PROFILE_ABI_MISMATCH", "PROFILE_DEVICE_LIMIT", "RMRR_PROFILE_CONFLICT", "MMIO_APERTURE_EXHAUSTED", "MMIO_PLANNER_TIMEOUT"]}, "stage": {"const": "admission"}}},
+        {"properties": {"code": {"enum": ["PROFILE_NO_GLOBAL_SOLUTION", "NUMA_POLICY_UNSATISFIED"]}, "stage": {"const": "solver"}}},
+        {"properties": {"code": {"enum": ["MANDATORY_BAR_UNASSIGNED", "OBSERVED_PLAN_DRIFT", "GUEST_PROBE_MISSING"]}, "stage": {"const": "runtime-verification"}}},
+        {"properties": {"code": {"enum": ["BACKEND_TOPOLOGY_GAP", "BACKEND_APERTURE_ENCODING_GAP", "BACKEND_RESOURCE_PLACEMENT_GAP", "UNSUPPORTED_IOCTL_ABI"]}, "stage": {"const": "backend"}}},
+        {"properties": {"code": {"const": "STATIC_DEVICE_HOST_AFFINITY"}, "stage": {"const": "placement"}}},
+        {"properties": {"code": {"const": "QEMU_START_FAILED"}, "stage": {"const": "launch"}}},
+        {"properties": {"code": {"const": "QEMU_CRASH"}, "stage": {"const": "runtime"}}},
+        {"properties": {"code": {"enum": ["OWNERSHIP_UNCERTAIN", "HOST_RECONCILE_INCOMPLETE"]}, "stage": {"const": "reconcile"}}},
+        {"properties": {"code": {"enum": ["CLEAN_RELEASE_RECEIPT_MISSING", "CLEAN_RELEASE_RECEIPT_STALE", "HOST_UNREACHABLE", "RELOCATION_CANDIDATE_EXHAUSTED"]}, "stage": {"const": "relocation"}}},
+        {"properties": {"code": {"const": "REMEDIATION_NOT_AUTHORIZED"}, "stage": {"const": "remediation"}}},
+        {"properties": {"code": {"enum": ["LIVE_MIGRATION_UNSUPPORTED", "SNAPSHOT_UNSUPPORTED", "SUSPEND_RESUME_UNSUPPORTED", "FAULT_TOLERANCE_UNSUPPORTED", "HOTPLUG_UNSUPPORTED", "UNMANAGED_ATTACH_PATH"]}, "stage": {"const": "lifecycle"}}},
+        {"properties": {"code": {"enum": ["AUDIT_WRITE_FAILED", "EVIDENCE_INCOMPLETE"]}, "stage": {"const": "audit"}}}
+      ]
+    },
+    "authoritativeState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stateMachineId", "aggregateId", "state", "resourceVersion", "generation"],
+      "properties": {
+        "stateMachineId": {"enum": ["FSM-OWNER-ACTIVATION", "FSM-ASSIGNMENT", "FSM-COLD-RELOCATION", "FSM-QUARANTINE-REMEDIATION"]},
+        "aggregateId": {"$ref": "#/$defs/id"},
+        "state": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+        "resourceVersion": {"type": "integer", "minimum": 1},
+        "generation": {"type": "integer", "minimum": 1}
+      },
+      "oneOf": [
+        {"properties": {"stateMachineId": {"const": "FSM-OWNER-ACTIVATION"}, "state": {"enum": ["ENABLED", "LIVE_APPLICABLE", "PENDING_REBOOT", "DENIED", "APPLYING", "ACTIVE", "QUARANTINED", "FAILED"]}}},
+        {"properties": {"stateMachineId": {"const": "FSM-ASSIGNMENT"}, "state": {"enum": ["REQUESTED", "PLANNED", "PREPARING", "ATTACHED", "RELEASING", "ROLLING_BACK", "FREE", "FAILED", "QUARANTINED"]}}},
+        {"properties": {"stateMachineId": {"const": "FSM-COLD-RELOCATION"}, "state": {"enum": ["ATTACHED", "RELOCATING_SOURCE_STOP", "SOURCE_RELEASING", "TARGET_SOLVE", "TARGET_RESERVED", "TARGET_ATTACHING", "TARGET_ROLLING_BACK", "STOPPED_UNSAT", "HOST_UNREACHABLE", "SOURCE_RECONCILE", "QUARANTINED"]}}},
+        {"properties": {"stateMachineId": {"const": "FSM-QUARANTINE-REMEDIATION"}, "state": {"enum": ["QUARANTINED", "REMEDIATING", "FREE"]}}}
+      ]
+    },
+    "committedResourceVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entityType", "resourceId", "previousResourceVersionOrNull", "committedResourceVersion"],
+      "properties": {
+        "entityType": {"$ref": "#/$defs/entityType"},
+        "resourceId": {"$ref": "#/$defs/id"},
+        "previousResourceVersionOrNull": {"type": ["integer", "null"], "minimum": 1},
+        "committedResourceVersion": {"type": "integer", "minimum": 1}
+      }
+    },
+    "receiptHash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receiptType", "receiptId", "schemaRef", "schemaSha256", "receiptSha256"],
+      "properties": {
+        "receiptType": {"type": "string", "pattern": "^RECEIPT-[A-Z0-9-]+$"},
+        "receiptId": {"$ref": "#/$defs/id"},
+        "schemaRef": {"$ref": "#/$defs/schemaRef"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "receiptSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "resultEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "envelopeKind",
+        "operationId",
+        "commandId",
+        "idempotencyMode",
+        "idempotencyKey",
+        "actorPortId",
+        "status",
+        "retryable",
+        "reason",
+        "portableContractId",
+        "portableContractRevision",
+        "portableContractSha256",
+        "targetRepositoryObjectFormat",
+        "targetRepositoryCommit",
+        "authority",
+        "policyHash",
+        "profileHash",
+        "authoritativeStates",
+        "committedResourceVersions",
+        "receiptHashes",
+        "payloadSchemaAuthority",
+        "payloadSchemaRef",
+        "payloadSchemaSha256",
+        "payloadCanonicalProfile",
+        "payloadHash",
+        "correlation",
+        "completedAt",
+        "resultHash"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "envelopeKind": {"const": "RESULT"},
+        "operationId": {"$ref": "#/$defs/operationId"},
+        "commandId": {"$ref": "#/$defs/id"},
+        "idempotencyMode": {"$ref": "#/$defs/idempotencyMode"},
+        "idempotencyKey": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$"}]},
+        "actorPortId": {"type": "string", "pattern": "^PORT-[A-Z0-9-]+$"},
+        "status": {"enum": ["IN_PROGRESS", "SUCCEEDED", "REJECTED", "CONFLICT", "FAILED"]},
+        "retryable": {"type": "boolean"},
+        "reason": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/reason"}]},
+        "portableContractId": {"const": "QMAN-DIRECTPATH-PORTABLE-CONTROL"},
+        "portableContractRevision": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.[1-9][0-9]*$"},
+        "portableContractSha256": {"$ref": "#/$defs/digest"},
+        "targetRepositoryObjectFormat": {"enum": ["SHA1", "SHA256"]},
+        "targetRepositoryCommit": {"type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"},
+        "authority": {"$ref": "#/$defs/casAuthority"},
+        "policyHash": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "profileHash": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "authoritativeStates": {
+          "type": "array",
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/authoritativeState"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [stateMachineId,aggregateId,state,resourceVersion,generation]; duplicate [stateMachineId,aggregateId] keys are rejected"
+        },
+        "committedResourceVersions": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/committedResourceVersion"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [entityType,resourceId,committedResourceVersion]; duplicate [entityType,resourceId] keys are rejected"
+        },
+        "receiptHashes": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/receiptHash"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [receiptType,receiptId,schemaRef,receiptSha256]; duplicate [receiptType,receiptId] keys are rejected"
+        },
+        "payloadSchemaAuthority": {"const": "PORTABLE_CONTRACT"},
+        "payloadSchemaRef": {"$ref": "#/$defs/schemaRef"},
+        "payloadSchemaSha256": {"const": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b"},
+        "payloadCanonicalProfile": {"const": "CANONICAL-JSON-V1"},
+        "payloadHash": {"$ref": "#/$defs/digest"},
+        "correlation": {"$ref": "#/$defs/correlation"},
+        "completedAt": {"$ref": "#/$defs/timestamp"},
+        "resultHash": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {"$ref": "#/$defs/operationIdentity"},
+        {"$ref": "#/$defs/gitCommitBinding"},
+        {"$ref": "#/$defs/resultPayloadSchemaBinding"},
+        {
+          "if": {"properties": {"operationId": {"const": "OP-QUERY-DIRECTPATH"}}, "required": ["operationId"]},
+          "then": {"properties": {"idempotencyKey": {"type": "null"}}},
+          "else": {"properties": {"idempotencyKey": {"type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$"}}}
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "status": {"enum": ["IN_PROGRESS", "SUCCEEDED"]},
+                "retryable": {"const": false},
+                "reason": {"type": "null"}
+              }
+            },
+            {
+              "properties": {
+                "status": {"enum": ["REJECTED", "CONFLICT", "FAILED"]},
+                "retryable": {"const": true},
+                "reason": {
+                  "allOf": [
+                    {"$ref": "#/$defs/reason"},
+                    {"properties": {"code": {"enum": ["INVENTORY_EPOCH_CHANGED", "STALE_RESOURCE_VERSION", "STALE_CONTROLLER_GENERATION", "DEPENDENCY_BUSY"]}}}
+                  ]
+                }
+              }
+            },
+            {
+              "properties": {
+                "status": {"enum": ["REJECTED", "CONFLICT", "FAILED"]},
+                "retryable": {"const": false},
+                "reason": {
+                  "allOf": [
+                    {"$ref": "#/$defs/reason"},
+                    {"properties": {"code": {"not": {"enum": ["INVENTORY_EPOCH_CHANGED", "STALE_RESOURCE_VERSION", "STALE_CONTROLLER_GENERATION", "DEPENDENCY_BUSY"]}}}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "x-qmanCanonicalProfile": "CANONICAL-JSON-V1",
+  "x-qmanTimestampProfile": "TIMESTAMP-UTC-US-V1",
+  "x-qmanDetachedPayloadRule": "The payload is not an open member of this envelope. Before use, fetch exact payload bytes from the operation transport, require payloadSchemaAuthority=PORTABLE_CONTRACT, select the unique operationId+envelopeKind fragment through requestPayloadSchemaBinding/resultPayloadSchemaBinding, verify payloadSchemaSha256 against the normative operation-payload schema raw hash, validate the closed payload, canonicalize with CANONICAL-JSON-V1 and require payloadHash equality. A target-local schema, alias, redirect, mutable latest reference, unknown field, direction/profile mismatch or hash mismatch fails closed.",
+  "x-qmanHashRules": [
+    "requestHash is SHA-256 of CANONICAL-JSON-V1 over the complete REQUEST object with requestHash conceptually replaced by null; the transmitted REQUEST must carry a non-null requestHash",
+    "resultHash is SHA-256 of CANONICAL-JSON-V1 over the complete RESULT object with resultHash conceptually replaced by null; the transmitted RESULT must carry a non-null resultHash",
+    "The idempotency record binds [operationId,idempotencyScopeHash,idempotencyKey,requestHash]; a repeated key with a different requestHash returns IDEMPOTENCY_KEY_REUSED and never starts a second run",
+    "Every digest is lowercase sha256:<64 hex>; strings are NFC, integers are exact, floats are forbidden, and every x-qmanSetOrder array must arrive deduplicated and already sorted rather than being normalized after receipt"
+  ],
+  "x-qmanCrossFieldRules": [
+    "Exactly one of REQUEST or RESULT validates; envelopeKind is the discriminator and unknown top-level or nested fields are rejected",
+    "operationId, actorPortId, and idempotencyMode must match one of the 35 frozen operationIdentity tuples; no extension OP-* is accepted without a new version of this schema and portable contract",
+    "targetRepositoryObjectFormat determines the exact lowercase targetRepositoryCommit length: SHA1 is 40 hex and SHA256 is 64 hex",
+    "deadlineAt is strictly after issuedAt; completedAt is no later than the corresponding request deadline unless the operation returns a separately defined timeout result",
+    "For REQUEST, idempotencyKey is null only for OP-QUERY-DIRECTPATH and is mandatory for every other operation; RESULT echoes the exact request commandId, idempotencyMode, and idempotencyKey",
+    "authority host/run/member/resource arrays reject duplicate logical keys even when the remaining values differ; all supplied generations and expected versions are one coherent CAS read set",
+    "When operationLeaseCapabilityOrNull is non-null, its holderControllerGeneration equals authority.controllerGeneration, its member generations and host epoch are present identically in authority, and the live ENTITY-OPERATION-LEASE row must match every field before the first covered side effect",
+    "The schema requires a non-null typed operation capability for every frozen workflow/host/backend/process/release side-effect operation; transitionExecutionBinding.requiredLeaseTypeOrNull further selects the exact legal type in context. A wrong, stale, absent, consumed, revoked, or scope-mismatched capability fails before side effects",
+    "When releaseOwnershipGuardCapabilityOrNull is required, it names the same RELEASE operation lease, complete live lease/version/bundle/member set, run, epochs/generations, process-or-never-created proof, backend profile and controller generation as the request and repository. Null, inactive, partial or mismatched guard authority fails before stop/teardown/release/clean-release side effects",
+    "A RESULT with IN_PROGRESS or SUCCEEDED has reason null and retryable false; REJECTED, CONFLICT, or FAILED has one non-null frozen reason; retryable is true only for INVENTORY_EPOCH_CHANGED, STALE_RESOURCE_VERSION, STALE_CONTROLLER_GENERATION, or DEPENDENCY_BUSY",
+    "reason code and stage are a closed frozen pair; devices, details, and provenance are explicit possibly-empty canonical sets and duplicate logical keys are rejected",
+    "authoritativeStates accepts only a state from the named frozen FSM and has at most one row per [stateMachineId,aggregateId]",
+    "committedResourceVersions has at most one row per [entityType,resourceId]; a create has previousResourceVersionOrNull null and committedResourceVersion 1, otherwise committedResourceVersion equals previousResourceVersionOrNull plus one",
+    "receiptHashes identifies each receipt by a closed schema reference and exact schema/document hashes; a digest without its receipt type, identity, and schema binding is not authoritative",
+    "Every RESULT portable contract hash, target commit, operation tuple, command identity, correlation identity, and payload schema binding exactly equals the accepted REQUEST"
+  ]
+}

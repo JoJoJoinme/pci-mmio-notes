@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-acceptance-case-contract.schema.json",
+  "title": "Qman DirectPath closed acceptance Case contract registry",
+  "description": "A generated, target-independent, digest-bound interpretation of every design Case. A target scenario may implement this contract but may not replace or weaken its predicates, trace surface, fault classes, artifacts, repetitions, dependencies, or evidence boundary.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "registryId", "generationAlgorithm", "portableContractId", "portableContractRevision", "sourcePolicySha256", "sourceDesignSha256", "oracleClasses", "caseCount", "records", "registryDigest"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "registryId": {"const": "QMAN-DIRECTPATH-ACCEPTANCE-CASE-CONTRACTS"},
+    "generationAlgorithm": {"const": "DERIVED-CLOSED-CASE-CONTRACT-V1"},
+    "portableContractId": {"const": "QMAN-DIRECTPATH-PORTABLE-CONTROL"},
+    "portableContractRevision": {"type": "string", "minLength": 1},
+    "sourcePolicySha256": {"$ref": "#/$defs/digest"},
+    "sourceDesignSha256": {"$ref": "#/$defs/digest"},
+    "oracleClasses": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/oracleClass"},
+      "x-qmanSetOrder": "ascending canonical bytes"
+    },
+    "caseCount": {"const": 101},
+    "records": {
+      "type": "array",
+      "minItems": 101,
+      "maxItems": 101,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/caseContract"},
+      "x-qmanCanonicalOrder": "design section 19 row order; every Case exactly once"
+    },
+    "registryDigest": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "id": {"type": "string", "minLength": 1},
+    "idSet": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "nonEmptyIdSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "oracleClass": {"enum": ["authoritativeWrites", "cleanup", "finalStates", "idempotencyOracle", "immediateResults", "mustNotOccur", "mustOccur", "physicalOracle"]},
+    "designMatrixRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section", "title", "passCondition", "sourceEvidence", "rowDigest"],
+      "properties": {
+        "section": {"const": "19"},
+        "title": {"type": "string", "minLength": 1},
+        "passCondition": {"type": "string", "minLength": 1},
+        "sourceEvidence": {"type": "string", "minLength": 1},
+        "rowDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "status", "targetMilestone", "proofBoundaryOrNull", "riskIds", "techStoryIds", "dependsOnCaseIds"],
+      "properties": {
+        "scope": {"enum": ["PRODUCT", "REFERENCE_MODEL"]},
+        "status": {"enum": ["EXECUTABLE", "IMPLEMENTATION_BLOCKED", "HARDWARE_BLOCKED", "FEATURE_DISABLED"]},
+        "targetMilestone": {"enum": ["G1", "G2", "G3", "G4", "G5", "G6"]},
+        "proofBoundaryOrNull": {"type": ["string", "null"]},
+        "riskIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "techStoryIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "dependsOnCaseIds": {"$ref": "#/$defs/idSet"}
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assertionId", "sourceKind", "statement", "statementSha256", "requiredOracleClass", "predicateEvaluator", "assertionDigest"],
+      "properties": {
+        "assertionId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?-[A-Z]+-[0-9]{3}$"},
+        "sourceKind": {"enum": ["DESIGN_PASS_CONDITION", "CASE_ASSERTION"]},
+        "statement": {"type": "string", "minLength": 1},
+        "statementSha256": {"$ref": "#/$defs/digest"},
+        "requiredOracleClass": {"$ref": "#/$defs/oracleClass"},
+        "predicateEvaluator": {"const": "TARGET-PREDICATE-INTERFACE-V1"},
+        "assertionDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "evidenceBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["productClosureGrade", "qualificationClosureGrade", "componentOrReferenceEvidenceMayCloseProduct", "vmwareObservationMayCloseProduct", "blockedCaseMayExecuteAsClosure", "dependencyClosureRequired"],
+      "properties": {
+        "productClosureGrade": {"const": "E3-END-TO-END-PRODUCT"},
+        "qualificationClosureGrade": {"const": "E4-PHYSICAL-QUALIFICATION"},
+        "componentOrReferenceEvidenceMayCloseProduct": {"const": false},
+        "vmwareObservationMayCloseProduct": {"const": false},
+        "blockedCaseMayExecuteAsClosure": {"const": false},
+        "dependencyClosureRequired": {"const": true}
+      }
+    },
+    "caseContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caseId", "definitionPath", "definitionFileSha256", "definitionRecordSha256", "designMatrix", "classification", "testObligationIds", "parityObligationIds", "requiredPortIds", "requiredOperationIds", "requiredTransitionIds", "requiredFaultClasses", "requiredArtifactSchemaRefs", "requiredOracleClasses", "minimumRepeat", "minimumDurationSeconds", "assertions", "evidenceBoundary", "caseContractDigest"],
+      "properties": {
+        "caseId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"},
+        "definitionPath": {"type": "string", "pattern": "^acceptance/cases/[A-Za-z0-9._-]+\\.json$"},
+        "definitionFileSha256": {"$ref": "#/$defs/digest"},
+        "definitionRecordSha256": {"$ref": "#/$defs/digest"},
+        "designMatrix": {"$ref": "#/$defs/designMatrixRow"},
+        "classification": {"$ref": "#/$defs/classification"},
+        "testObligationIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "parityObligationIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "requiredPortIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "requiredOperationIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "requiredTransitionIds": {"$ref": "#/$defs/idSet", "description": "Empty is valid for a read-only capability Case whose required operations do not transition an authority aggregate."},
+        "requiredFaultClasses": {"$ref": "#/$defs/idSet"},
+        "requiredArtifactSchemaRefs": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "requiredOracleClasses": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/oracleClass"},
+          "x-qmanSetOrder": "ascending canonical bytes"
+        },
+        "minimumRepeat": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "minimumDurationSeconds": {"type": "integer", "minimum": 1, "maximum": 86400},
+        "assertions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/assertion"}},
+        "evidenceBoundary": {"$ref": "#/$defs/evidenceBoundary"},
+        "caseContractDigest": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "x-qmanDigestRule": "For each record, set caseContractDigest to null in an in-memory projection and hash CANONICAL-JSON-V1 bytes. For the registry, set registryDigest to null after every record digest is populated and hash CANONICAL-JSON-V1 bytes. The null projections are calculation forms and are not valid stored records.",
+  "x-qmanExecutionRule": "A scenario binds the exact caseContractDigest and all assertion IDs/digests. Each assertion resolves to a target predicate symbol and immutable interface hash; every iteration returns PASS plus same-iteration artifact hashes for every assertion. Case closure aggregates only EXECUTED_PASS scenarios at the exact target commit/mapping core and must cover the registry-required operations, transitions, fault classes, schema-validated artifacts, repeat, duration, dependencies, and all eight oracle classes.",
+  "x-qmanStatusRule": "Only a Case whose current source classification is EXECUTABLE and PRODUCT may be used for product closure. IMPLEMENTATION_BLOCKED and HARDWARE_BLOCKED scenarios may be authored and run for diagnosis but cannot be represented as closure evidence. REFERENCE_MODEL and VMware evidence can inform predicates but never close product or qualification status."
+}

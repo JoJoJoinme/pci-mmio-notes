@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-device-taxonomy-definition.schema.json",
+  "title": "Qman DirectPath signed DeviceTaxonomyDefinition",
+  "description": "Immutable taxonomy and exact classifier provenance for the five supported qualification archetypes. It prevents a QualificationRecord or catalog entry from self-declaring its own device class.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "taxonomyId", "taxonomyVersion", "targetRepositoryCommit", "mappingCoreId", "portableContractSha256", "archetypes", "classifier", "sourceTree", "buildAttestation", "executionEnvironment", "inputContracts", "outputContract", "issuedAt", "keyRingVersion", "signerKeyId", "signerRole", "definitionDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "taxonomyId": {"$ref": "#/$defs/id"},
+    "taxonomyVersion": {"$ref": "#/$defs/semver"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "archetypes": {"$ref": "#/$defs/archetypeSet"},
+    "classifier": {"$ref": "#/$defs/classifier"},
+    "sourceTree": {"$ref": "#/$defs/sourceTree"},
+    "buildAttestation": {"$ref": "#/$defs/buildAttestation"},
+    "executionEnvironment": {"$ref": "#/$defs/executionEnvironment"},
+    "inputContracts": {"$ref": "#/$defs/inputContracts"},
+    "outputContract": {"allOf": [{"$ref": "#/$defs/schemaContract"}, {"properties": {"schemaRef": {"const": "contracts/directpath-device-classification-record.schema.json"}}}]},
+    "issuedAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "signerRole": {"const": "QUALIFICATION_ENGINEERING"},
+    "definitionDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "semver": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "archetype": {"enum": ["CONSUMER_GPU", "PROFESSIONAL_GPU", "HBA", "ACCELERATOR", "GENERIC_PCI"]},
+    "archetypeDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["archetype", "precedence", "qualificationCaseProfileId", "description"],
+      "properties": {
+        "archetype": {"$ref": "#/$defs/archetype"},
+        "precedence": {"type": "integer", "minimum": 1, "maximum": 5},
+        "qualificationCaseProfileId": {"$ref": "#/$defs/id"},
+        "description": {"type": "string", "minLength": 1, "maxLength": 2048}
+      }
+    },
+    "archetypeSet": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/archetypeDefinition"},
+      "x-qmanCanonicalOrder": "ascending precedence; precedence and archetype are independently unique",
+      "allOf": [
+        {"contains": {"properties": {"archetype": {"const": "CONSUMER_GPU"}}, "required": ["archetype"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"archetype": {"const": "PROFESSIONAL_GPU"}}, "required": ["archetype"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"archetype": {"const": "HBA"}}, "required": ["archetype"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"archetype": {"const": "ACCELERATOR"}}, "required": ["archetype"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"archetype": {"const": "GENERIC_PCI"}}, "required": ["archetype"]}, "minContains": 1, "maxContains": 1}
+      ]
+    },
+    "classifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestId", "protocol", "path", "symbol", "blobSha256", "symbolSemanticHash", "interfaceContractDigest"],
+      "properties": {
+        "manifestId": {"$ref": "#/$defs/id"},
+        "protocol": {"const": "QMAN-DIRECTPATH-DEVICE-TAXONOMY-CLASSIFIER-V1"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "symbol": {"$ref": "#/$defs/id"},
+        "blobSha256": {"$ref": "#/$defs/digest"},
+        "symbolSemanticHash": {"$ref": "#/$defs/digest"},
+        "interfaceContractDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"}
+      }
+    },
+    "sourceTree": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "sourceTreeSha256"],
+      "properties": {"path": {"$ref": "#/$defs/repositoryRelativePath"}, "sha256": {"$ref": "#/$defs/digest"}, "byteLength": {"$ref": "#/$defs/safePositiveInteger"}, "mediaType": {"const": "application/json"}, "schemaRef": {"const": "contracts/directpath-source-tree-manifest.schema.json"}, "schemaSha256": {"$ref": "#/$defs/digest"}, "sourceTreeSha256": {"$ref": "#/$defs/digest"}}
+    },
+    "buildAttestation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "attestationDigest"],
+      "properties": {"path": {"$ref": "#/$defs/repositoryRelativePath"}, "sha256": {"$ref": "#/$defs/digest"}, "byteLength": {"$ref": "#/$defs/safePositiveInteger"}, "mediaType": {"const": "application/json"}, "schemaRef": {"const": "contracts/directpath-build-attestation.schema.json"}, "schemaSha256": {"$ref": "#/$defs/digest"}, "attestationDigest": {"$ref": "#/$defs/digest"}}
+    },
+    "executionEnvironment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "runtimeBinary", "dependencyLock", "environmentManifest", "buildLog"],
+      "properties": {"mode": {"enum": ["NATIVE_BINARY", "INTERPRETED", "CONTAINERIZED"]}, "runtimeBinary": {"$ref": "#/$defs/artifact"}, "dependencyLock": {"$ref": "#/$defs/artifact"}, "environmentManifest": {"$ref": "#/$defs/artifact"}, "buildLog": {"$ref": "#/$defs/artifact"}}
+    },
+    "schemaContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaRef", "schemaSha256"],
+      "properties": {"schemaRef": {"$ref": "#/$defs/id"}, "schemaSha256": {"$ref": "#/$defs/digest"}}
+    },
+    "inputContracts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["hostSnapshot", "deviceRecord", "classificationContext"],
+      "properties": {
+        "hostSnapshot": {"allOf": [{"$ref": "#/$defs/schemaContract"}, {"properties": {"schemaRef": {"const": "contracts/directpath-portable-hash-subjects.schema.json#/$defs/hostSnapshot"}}}]},
+        "deviceRecord": {"allOf": [{"$ref": "#/$defs/schemaContract"}, {"properties": {"schemaRef": {"const": "contracts/directpath-portable-entities.schema.json#/$defs/ENTITY-DEVICE-RECORD"}}}]},
+        "classificationContext": {"allOf": [{"$ref": "#/$defs/schemaContract"}, {"properties": {"schemaRef": {"const": "contracts/directpath-device-classification-record.schema.json#/$defs/classificationContext"}}}]}
+      }
+    }
+  },
+  "x-qmanArchetypeRule": "The five archetype IDs are exhaustive for qualification routing, not HCL support claims. The classifier evaluates definitions in unique ascending precedence and must emit exactly one class; GENERIC_PCI is the explicit final fallback, never an implicit wildcard. description is explanatory only. qualificationCaseProfileId selects a separately pinned qualification-case matrix; it cannot waive mandatory cases or confer SUPPORTED status.",
+  "x-qmanClassifierRule": "Resolve classifier.path+symbol at target commit C and exactly one integration-map symbol row whose path/symbol match, whose GIT_BLOB_BYTES interfaceHash equals classifier.blobSha256 and whose symbolSemanticHash equals classifier.symbolSemanticHash. Independently require classifier.interfaceContractDigest = SHA-256(RFC-8785-JCS of {protocol,argvOrder:[taxonomy,hostSnapshot,deviceRecord,classificationContext,output],environment:{LC_ALL:C.UTF-8,TZ:UTC},network:DENY_ALL,inputContracts,outputContract}); blob, symbol-semantic and interface-contract digests are not interchangeable. Verify the signed DeviceClassificationContext, form exactly RFC-8785-JCS(record.classificationContext), write those bytes to a fresh temporary input whose path is excluded from identity, and invoke the verified classifier directly with --taxonomy, --host-snapshot, --device-record, --context and --output. The process has an empty environment except LC_ALL=C.UTF-8/TZ=UTC, no shell/network, read-only signed inputs and one new output; it may not read a clock, random source, signer service or undeclared identifier. Output bytes equal RFC-8785-JCS of the deterministic construction record whose signedAt/classificationDigest/signature are null; presentation whitespace, alternate key order or merely equivalent JSON is invalid. The authority then supplies signedAt, recomputes the digest and signs. The final output validates against the fixed classification-record schema and normative raw schema hash.",
+  "x-qmanReplayIsolationRule": "A release verifier MUST NOT execute classifier or dependency bytes directly on the verifier host. Replay uses only an independently configured trusted isolation runner outside the target repository, mapping and evidence: exact target architecture/runtime, complete verified source/build/runtime/dependency closure mounted read-only, exactly taxonomy/snapshot/device/context inputs, one bounded output, no-new-privileges, deny-all network, no host filesystem/device/credential access, no undeclared child process, and explicit CPU/memory/process/file/time limits. The runner returns immutable output/exit/isolation attestation bound to all hashes; the verifier requires byte equality with the retained deterministic construction projection. Missing/incompatible runner, incomplete closure or direct-exec fallback fails closed whenever a DeviceClassificationRecord is consumed.",
+  "x-qmanBuildRule": "Reconstruct sourceTree and resolve the signed BuildAttestation. It byte-equals C/M/portable/source tree, uses consumerKind=TAXONOMY_CLASSIFIER and consumerBuildId=classifier.manifestId, and emits TAXONOMY_CLASSIFIER_BINARY or TAXONOMY_CLASSIFIER_SOURCE matching executionEnvironment.mode. Runtime/dependency/environment/build-log descriptors equal the attestation projections; attestation time precedes issuedAt. A mutable tool label or digest without source/build/runtime closure is invalid.",
+  "x-qmanAcyclicRule": "This definition is created before any classification or qualification run. It contains no inventory instance, device UID/record hash, run/request/result, Measurement, Scenario, Subject, QualificationRecord, SupportedCatalog, CaseCompletionRecord or release digest. Classification records point to this definition; it never points forward to them.",
+  "x-qmanSignatureRule": "Set definitionDigest and signature to null, RFC-8785 canonicalize the complete closed definition, store SHA-256 of those bytes in definitionDigest, and sign ASCII(QMAN-DIRECTPATH/DEVICE-TAXONOMY-DEFINITION/V1) || 0x00 || the same bytes with a non-revoked QUALIFICATION_ENGINEERING key."
+}

@@ -14,6 +14,10 @@
 [`contracts/ipd-tree.json`](../contracts/ipd-tree.json)。
 当前 Qman/reference-side 的 TS→Case→Risk→result/hash 证据链见
 [`QMAN-TECHNICAL-EVIDENCE.md`](QMAN-TECHNICAL-EVIDENCE.md)；它补充树，不改变树节点状态。
+将本设计交给未知私有 Qman 仓库实施时，使用
+[`../handoff/QMAN-DIRECTPATH-IMPLEMENTATION-HANDOFF.md`](../handoff/QMAN-DIRECTPATH-IMPLEMENTATION-HANDOFF.md)
+与 [`../contracts/directpath-portable-control-contract.json`](../contracts/directpath-portable-control-contract.json)；
+内网代码绑定状态独立记录，不反向改变本树的 G1-G6 产品状态。
 
 ## 1. 读树规则
 
@@ -44,7 +48,7 @@ owner、MMIO/拓扑和 Guest 约束，引擎原则上都应能生成安全计划
 
 | 维度 | 判断对象 | 定义 |
 | --- | --- | --- |
-| `TECHNICALLY_ATTACHABLE` | 设备实例 + host snapshot | 通用引擎能生成不违反硬安全约束的 attach plan；QEMU 能启动本身不等于成立 |
+| `TECHNICALLY_ATTACHABLE` | 设备实例 + host snapshot + guest profile/VM resource context | 通用引擎能生成不违反硬安全约束的 attach plan；它不读取当前 owner/lease，也不等于 qualified/supported；QEMU 能启动本身不等于成立 |
 | `ELIGIBLE` | 当前 VM 分配请求 | technically attachable，且设备此刻可用、健康、未被租用，owner/lease/资源和策略均满足 |
 | `QUALIFIED` | 精确版本化 profile | platform/BIOS/kernel/QEMU/firmware/device firmware/Guest/driver/workload/feature 组合通过 Qman 真实硬件 Case，并绑定 evidence hash |
 | `SUPPORTED` | 产品支持合同 | qualified profile 被当前 V3 compatibility catalog 正式纳入支持范围 |
@@ -230,15 +234,17 @@ V3 明确不以 live migration、FT、snapshot/suspend 或 guest runtime PCI hot
 
 - 产品方向与树结构：`ACCEPTED`。
 - 产品实现：未因本树新增而推进。
-- 101/101 个设计 Case 已机器分类：C20、O09 为 2 个 reference-scope `EXECUTABLE`；
-  93 个为 `IMPLEMENTATION_BLOCKED`；C12、M08、M12、M13、S06、S08 为 6 个
+- 101/101 个设计 Case 已机器分类：O09 为 1 个 reference-scope `EXECUTABLE`；
+  94 个为 `IMPLEMENTATION_BLOCKED`，其中 C20 仅有 E2 reference runner、仍是 PRODUCT Case；
+  C12、M08、M12、M13、S06、S08 为 6 个
   `HARDWARE_BLOCKED`；未分类数为 0。VFIO provider、QMP gate、authoritative snapshot、
   Static lease/FSM 与 future-cdev launch-envelope evidence 只是产品 Case 的组件前提，
   不构成产品关闭，也不推进 F1/F3/F5/F8 状态。
 - 所有 Case 通过 `requiredTechStories` 挂回本树，并用 `dependsOnCaseIds` 固定关闭顺序；
   当前关键链由机器门约束为 `C10 + C20 → C21 → S03 → S04 → S05 → F00`，以及
-  `C21 → S15 → F09`、`C10 → F10`；C20 仍是 reference scope，不能替代 C21 的 PRODUCT
-  前置，任何 reference/component Case 都不能关闭产品依赖。
+  `C21 → S15 → F09`、`C10 → F10`；C20 是 `PRODUCT/IMPLEMENTATION_BLOCKED`，现有 E2
+  reference runner 不能替代 C20 自身或 C21 的产品前置，任何 reference/component evidence
+  都不能关闭产品依赖。
 - 风险：R01-R39 的治理字段已补齐，但 39 条状态仍全部为 `OPEN`，产品关闭数为 0。
 - 发布：`BLOCKED`。
 

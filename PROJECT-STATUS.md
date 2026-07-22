@@ -17,6 +17,16 @@
 本轮 WSL/QEMU 技术结果、复现命令和关闭边界见
 [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md)。
 
+面向内网私有 Qman 仓库的交接不以“先提供源码”为前置：
+[`handoff/QMAN-DIRECTPATH-IMPLEMENTATION-HANDOFF.md`](handoff/QMAN-DIRECTPATH-IMPLEMENTATION-HANDOFF.md)
+和 [`contracts/directpath-portable-control-contract.json`](contracts/directpath-portable-control-contract.json)
+已经冻结 target-independent port、operation、FSM、CAS、backend、reason、配置/迁移/telemetry 与
+parity obligation；[`contracts/qman-integration-map.template.json`](contracts/qman-integration-map.template.json)
+保持全部项目 `UNMAPPED/NOT_STARTED`，等待内网 AI 对 exact private commit 做 symbol/interface、
+storage/table/transaction 和 test/fixture 绑定。私有源码不需要离开内网，也不需要先提供给本仓库。
+`PORTABLE_SPEC_READY` 与 `TARGET_CODE_MAPPED`、`PRODUCT_IMPLEMENTED`、`QUALIFIED` 是四条
+独立状态轴，前者不会推进下面的产品 milestone 或 release claim。
+
 ## 1. 当前结论
 
 仓库已经具备详细设计、VMware/QEMU 实验依据和可运行的 PCI 资源参考模型，但还不是
@@ -51,8 +61,24 @@ qualification profile。参考实验仍不得冒充 Qman 产品实现或支持�
   bounded authoritative snapshot 组件已通过真实 subprocess hard-exit、并发 CAS、签名/载荷/重放/
   boot 负向门，并把 sealed authorization 保持到 VFIO/QEMU 启动边界；
   产品 Case/Risk 关闭数仍为 0。
-- 101 个设计 Case 已全部机器分类：2 个 `EXECUTABLE` reference Case（C20、O09）、
-  93 个 `IMPLEMENTATION_BLOCKED`、6 个 `HARDWARE_BLOCKED`，未分类数为 0。
+- 101 个设计 Case 已全部机器分类：1 个 `EXECUTABLE` reference Case（O09）、
+  94 个 `IMPLEMENTATION_BLOCKED`（包括只有 E2 reference runner 的 PRODUCT C20）、
+  6 个 `HARDWARE_BLOCKED`，未分类数为 0。
+- portable revision `2026-07-22.10` 已冻结 293 个有序映射项，并把完整 Git tree、独立 BuildAttestation、
+  六类互斥 runner control artifact、typed Measurement、双签 QualificationRunManifest、Case completion、
+  trust history/live freshness 纳入 target-independent baseline；这只证明设计可交接，不证明私有实现。
+- 35 个 operation 的 common envelope 已分别绑定 70 个 closed request/result payload profile；Scenario Step
+  只能绑定 exact portable fragment 与 immutable request/result fixture；每个执行 iteration 还必须以
+  `operationExchanges` 逐 step 保留 raw request/result envelope、digest、payload hash 和结果投影。
+- qualification 判定已经拆成可重放的
+  `WorkloadEvaluatorManifest → signed EvaluationContext → EvaluationReport → WorkloadResult`；设备类型已经拆成
+  独立的 `DeviceTaxonomyDefinition → signed HostAuthority pointer receipt + ClassificationContext → DeviceClassificationRecord`。
+  RunRequest/RunManifest/Measurement/Subject 全链固定 exact deviceUid/deviceRecordHash，identity/traits/classification
+  必须引用同一 current-snapshot DeviceRecord。guest
+  ABI/architecture/OS/kernel/driver 与 runtime platform/backend/IOMMU/machine/firmware 都按完整 tuple 匹配；
+  vCPU/memory/capability 与
+  runtime capability/provider prerequisite 都必须来自同一 qualification run 的 signed Measurement 并精确匹配，
+  不能由配置、catalog、HCL 或结果对象回抄。
 - ADR-002/003/005/007/010 均已 `ACCEPTED`；`openDecisions=0`。R01-R39 的 owner、containment/
   recovery、Case 和证据字段已补齐，但 39 条风险状态仍全部为 `OPEN`。
 
@@ -69,6 +95,9 @@ qualification profile。参考实验仍不得冒充 Qman 产品实现或支持�
   coordinator。BMC/power fencing 和 host-failure 自动 HA restart 不在 V3 范围。
 - 生产 launcher/controller 与 QMP gate 的 privilege、lease、generation、VFIO 和全入口集成。
 - 任何没有通过机器发布门的 supported capability。
+
+因此当前的准确结论是：portable contract 可以交给内网 AI 开始 exact mapping，但 target mapping 尚未完成，
+产品实现和六平台/设备 qualification 均未证明；生产发布继续为 `BLOCKED`。
 
 ## 2. G0 退出条件（已完成）
 
@@ -119,6 +148,9 @@ Case 已关闭。风险、验收依赖、缺失证据与未完成里程仍由发
 ## 5. 检查命令
 
 ```text
+python tools/generate_directpath_portable_package.py --check
+python tools/generate_directpath_case_contracts.py --check
+python tools/validate_portable_handoff.py baseline --root .
 python tools/evaluate_release.py status
 python tools/evaluate_release.py run-cases --case O09
 python tools/evaluate_release.py release
@@ -126,9 +158,13 @@ python -m unittest discover -s tests
 python -m unittest discover -s pci-resource-model/tests -t pci-resource-model
 ```
 
-- `status` 检查合同结构并报告阻断项，当前应成功执行但显示 `BLOCKED`。
+- `generate... --check` 与 portable `baseline` 不需要私有代码，分别检查生成闭包漂移和 target-independent
+  语义；两者当前必须返回 0。
+- `status` 同时执行 portable baseline、检查全部项目合同并报告阻断项，当前应成功执行但显示 `BLOCKED`。
 - `run-cases` 执行已经定义的场景。
-- `release` 是 fail-closed 门；当前 G1-G6、39 条 `OPEN` 风险和未闭环 Case 使其必须返回非零。
+- `release` 还要求 `--map` 指向四轴均提升的 detached final map，并从仓库外提供 trust-root/key-ring
+  rollback/catalog rollback 状态；默认 UNMAPPED template、当前 G1-G6、39 条 `OPEN` 风险和未闭环 Case
+  都使其必须返回非零。
 
 ## 6. AI 协作规则
 

@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-qualification-record.schema.json",
+  "title": "Qman DirectPath exact qualification record",
+  "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991 before canonicalization; wider values use schema-defined decimal strings.",
+  "description": "Closed signed record for one exact platform/device identity provider/archetype/trait/case-matrix/firmware/backend/guest/workload qualification key. Trait families or self-declared case lists alone never match this schema as production support.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "qualificationRecordId", "qualificationSubjectManifestDigest", "exactQualificationKey", "platformProfileHash", "pciIdentityMatch", "deviceArchetype", "deviceTraits", "qualificationCaseMatrixSha256", "deviceFirmwareAndRom", "kernelQemuFirmwareBackend", "iommuInterruptResetProviders", "guestDriverAndWorkload", "caseIds", "e4EvidenceHashes", "issuedAt", "notBefore", "expiresAt", "qualificationSignerKeyId", "keyRingVersion", "signature", "recordDigest"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "qualificationRecordId": {"$ref": "#/$defs/id"},
+    "qualificationSubjectManifestDigest": {"$ref": "#/$defs/digest"},
+    "exactQualificationKey": {"$ref": "#/$defs/digest"},
+    "platformProfileHash": {"$ref": "#/$defs/digest"},
+    "pciIdentityMatch": {"$ref": "#/$defs/pciIdentity"},
+    "deviceArchetype": {"enum": ["CONSUMER_GPU", "PROFESSIONAL_GPU", "HBA", "ACCELERATOR", "GENERIC_PCI"]},
+    "deviceTraits": {"$ref": "#/$defs/idSet"},
+    "qualificationCaseMatrixSha256": {"$ref": "#/$defs/digest"},
+    "deviceFirmwareAndRom": {"$ref": "#/$defs/deviceFirmware"},
+    "kernelQemuFirmwareBackend": {"$ref": "#/$defs/platformRuntime"},
+    "iommuInterruptResetProviders": {"$ref": "#/$defs/providerSet"},
+    "guestDriverAndWorkload": {"$ref": "#/$defs/guestWorkload"},
+    "caseIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "e4EvidenceHashes": {"$ref": "#/$defs/digestSet"},
+    "issuedAt": {"$ref": "#/$defs/timestamp"},
+    "notBefore": {"$ref": "#/$defs/timestamp"},
+    "expiresAt": {"$ref": "#/$defs/timestamp"},
+    "qualificationSignerKeyId": {"$ref": "#/$defs/id"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signature": {"$ref": "#/$defs/nullableSignature"},
+    "recordDigest": {"$ref": "#/$defs/nullableDigest"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "idSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "optionalIdSet": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "digestSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "pciIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vendorId",
+        "deviceId",
+        "subsystemVendorId",
+        "subsystemDeviceId",
+        "revisionId",
+        "classCode",
+        "functionRoleAlgorithm",
+        "functionRoleAlgorithmVersion",
+        "functionRoleDefinitionDigest",
+        "functionRole",
+        "identityVariant",
+        "identityProviderId",
+        "identityProviderVersion",
+        "identityProviderDefinitionDigest",
+        "identityVectorSetDigest",
+        "serialValueHashOrNull",
+        "physicalPathOrNull",
+        "vendorExtractorIdOrNull",
+        "vendorExtractorDefinitionDigestOrNull",
+        "errataProfileId"
+      ],
+      "properties": {
+        "vendorId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "deviceId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "subsystemVendorId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "subsystemDeviceId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "revisionId": {"type": "string", "pattern": "^[0-9a-f]{2}$"},
+        "classCode": {"type": "string", "pattern": "^[0-9a-f]{6}$"},
+        "functionRoleAlgorithm": {"const": "CLASS_CODE_ROLE_V1"},
+        "functionRoleAlgorithmVersion": {"const": 1},
+        "functionRoleDefinitionDigest": {"const": "sha256:7f119749c919c48f6d9cae971378e78ab3ac39ce404d9f2651bc6766812ff35f"},
+        "functionRole": {"$ref": "directpath-identity-v1.schema.json#/$defs/functionRole"},
+        "identityVariant": {"enum": ["STRONG_SERIAL", "SLOT_BOUND"]},
+        "identityProviderId": {
+          "enum": [
+            "PCI_DSN_EUI64_V1",
+            "PCI_VPD_SN_UTF8_V1",
+            "VENDOR_QUALIFIED_BYTES_V1",
+            "ACPI_FIRMWARE_PATH_V1",
+            "SMBIOS_SYSTEM_SLOT_V1",
+            "DEVICETREE_FULL_PATH_V1"
+          ]
+        },
+        "identityProviderVersion": {"const": 1},
+        "identityProviderDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "identityVectorSetDigest": {"const": "sha256:0d24bf773afc921caa8965b69588cbfb5876e6c636c283b3ff3362507b9ee693"},
+        "serialValueHashOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "physicalPathOrNull": {"type": ["string", "null"], "maxLength": 512},
+        "vendorExtractorIdOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "vendorExtractorDefinitionDigestOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "errataProfileId": {"const": "NONE"}
+      },
+      "allOf": [{"$ref": "directpath-identity-v1.schema.json#/$defs/classRoleMapping"}],
+      "oneOf": [
+        {
+          "properties": {
+            "identityVariant": {"const": "STRONG_SERIAL"},
+            "identityProviderId": {"const": "PCI_DSN_EUI64_V1"},
+            "identityProviderDefinitionDigest": {"const": "sha256:c477361654ccb4f6c1b61446d3e9695bf666a0e5cf313b18789a76d2d340cd65"},
+            "serialValueHashOrNull": {"$ref": "#/$defs/digest"},
+            "physicalPathOrNull": {"type": "null"},
+            "vendorExtractorIdOrNull": {"type": "null"},
+            "vendorExtractorDefinitionDigestOrNull": {"type": "null"}
+          }
+        },
+        {
+          "properties": {
+            "identityVariant": {"const": "STRONG_SERIAL"},
+            "identityProviderId": {"const": "PCI_VPD_SN_UTF8_V1"},
+            "identityProviderDefinitionDigest": {"const": "sha256:2ac49a541d5e0324d1f8eaacbcfb87ad8667fe3e86599936a751cb74d9769429"},
+            "serialValueHashOrNull": {"$ref": "#/$defs/digest"},
+            "physicalPathOrNull": {"type": "null"},
+            "vendorExtractorIdOrNull": {"type": "null"},
+            "vendorExtractorDefinitionDigestOrNull": {"type": "null"}
+          }
+        },
+        {
+          "properties": {
+            "identityVariant": {"const": "STRONG_SERIAL"},
+            "identityProviderId": {"const": "VENDOR_QUALIFIED_BYTES_V1"},
+            "identityProviderDefinitionDigest": {"const": "sha256:084e4ef848c737fe0db24231bdda1441c40287cd99743c61ce2e340644c23764"},
+            "serialValueHashOrNull": {"$ref": "#/$defs/digest"},
+            "physicalPathOrNull": {"type": "null"},
+            "vendorExtractorIdOrNull": {"$ref": "#/$defs/id"},
+            "vendorExtractorDefinitionDigestOrNull": {"$ref": "#/$defs/digest"}
+          }
+        },
+        {
+          "properties": {
+            "identityVariant": {"const": "SLOT_BOUND"},
+            "identityProviderId": {"const": "ACPI_FIRMWARE_PATH_V1"},
+            "identityProviderDefinitionDigest": {"const": "sha256:61b92f14fcd158f7885ec07d0a375324e051e3b2f936c748ac103b4a230203e4"},
+            "serialValueHashOrNull": {"type": "null"},
+            "physicalPathOrNull": {"$ref": "directpath-identity-v1.schema.json#/$defs/acpiPhysicalPath"},
+            "vendorExtractorIdOrNull": {"type": "null"},
+            "vendorExtractorDefinitionDigestOrNull": {"type": "null"}
+          }
+        },
+        {
+          "properties": {
+            "identityVariant": {"const": "SLOT_BOUND"},
+            "identityProviderId": {"const": "SMBIOS_SYSTEM_SLOT_V1"},
+            "identityProviderDefinitionDigest": {"const": "sha256:c8a3291773b34ff8ef67511a5574db43be24b07bd7840c900bbbdab682687b0d"},
+            "serialValueHashOrNull": {"type": "null"},
+            "physicalPathOrNull": {"$ref": "directpath-identity-v1.schema.json#/$defs/smbiosPhysicalPath"},
+            "vendorExtractorIdOrNull": {"type": "null"},
+            "vendorExtractorDefinitionDigestOrNull": {"type": "null"}
+          }
+        },
+        {
+          "properties": {
+            "identityVariant": {"const": "SLOT_BOUND"},
+            "identityProviderId": {"const": "DEVICETREE_FULL_PATH_V1"},
+            "identityProviderDefinitionDigest": {"const": "sha256:6165a1a4c882e22bc2011448b956fb70967fdc146189c4c66664ae4b994577d6"},
+            "serialValueHashOrNull": {"type": "null"},
+            "physicalPathOrNull": {"$ref": "directpath-identity-v1.schema.json#/$defs/deviceTreePhysicalPath"},
+            "vendorExtractorIdOrNull": {"type": "null"},
+            "vendorExtractorDefinitionDigestOrNull": {"type": "null"}
+          }
+        }
+      ]
+    },
+    "deviceFirmware": {
+      "type": "object", "additionalProperties": false,
+      "required": ["deviceFirmwareVersion", "deviceFirmwareDigest", "optionRomDigestOrNull", "vpdDigestOrNull", "settingsDigest"],
+      "properties": {
+        "deviceFirmwareVersion": {"$ref": "#/$defs/id"},
+        "deviceFirmwareDigest": {"$ref": "#/$defs/digest"},
+        "optionRomDigestOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "vpdDigestOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "settingsDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "platformRuntime": {
+      "type": "object", "additionalProperties": false,
+      "required": ["platformProfileId", "osRelease", "architecture", "kernelRelease", "kernelBuildDigest", "qemuVersion", "qemuBinaryDigest", "machineType", "machineVersion", "firmwareKind", "firmwareCodeDigest", "firmwareVarsBaseDigestOrNull", "backendFamily", "configuredIommuType", "runtimeCapabilities"],
+      "properties": {
+        "platformProfileId": {"$ref": "#/$defs/id"},
+        "osRelease": {"$ref": "#/$defs/id"},
+        "architecture": {"enum": ["ARM64", "C86", "X86_64"]},
+        "kernelRelease": {"$ref": "#/$defs/id"},
+        "kernelBuildDigest": {"$ref": "#/$defs/digest"},
+        "qemuVersion": {"$ref": "#/$defs/id"},
+        "qemuBinaryDigest": {"$ref": "#/$defs/digest"},
+        "machineType": {"enum": ["virt", "q35", "i440fx"]},
+        "machineVersion": {"$ref": "#/$defs/id"},
+        "firmwareKind": {"enum": ["UEFI", "SeaBIOS"]},
+        "firmwareCodeDigest": {"$ref": "#/$defs/digest"},
+        "firmwareVarsBaseDigestOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "backendFamily": {"enum": ["LEGACY_VFIO_TYPE1", "VFIO_CDEV_IOMMUFD"]},
+        "configuredIommuType": {"enum": ["VFIO_TYPE1V2_IOMMU", "VFIO_TYPE1_IOMMU", "IOMMUFD_IOAS"]},
+        "runtimeCapabilities": {"$ref": "#/$defs/optionalIdSet"}
+      }
+    },
+    "providerSet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["iommuProviderId", "iommuProviderDigest", "interruptRemappingProviderId", "interruptRemappingProviderDigest", "physicalIsolationProviderId", "physicalIsolationProviderDigest", "resetProviderId", "resetProviderDigest", "dmaIrqObserverId", "dmaIrqObserverDigest"],
+      "properties": {
+        "iommuProviderId": {"$ref": "#/$defs/id"}, "iommuProviderDigest": {"$ref": "#/$defs/digest"},
+        "interruptRemappingProviderId": {"$ref": "#/$defs/id"}, "interruptRemappingProviderDigest": {"$ref": "#/$defs/digest"},
+        "physicalIsolationProviderId": {"$ref": "#/$defs/id"}, "physicalIsolationProviderDigest": {"$ref": "#/$defs/digest"},
+        "resetProviderId": {"$ref": "#/$defs/id"}, "resetProviderDigest": {"$ref": "#/$defs/digest"},
+        "dmaIrqObserverId": {"$ref": "#/$defs/id"}, "dmaIrqObserverDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "guestWorkload": {
+      "type": "object", "additionalProperties": false,
+      "required": ["guestAbiClass", "guestArchitecture", "guestOs", "guestKernel", "guestDriverName", "guestDriverVersion", "guestDriverDigest", "guestVcpuCount", "guestMemoryMiB", "guestCapabilities", "workloadId", "workloadDefinitionDigest", "minimumDurationSeconds"],
+      "properties": {
+        "guestAbiClass": {"$ref": "#/$defs/id"}, "guestArchitecture": {"enum": ["ARM64", "C86", "X86_64"]}, "guestOs": {"$ref": "#/$defs/id"}, "guestKernel": {"$ref": "#/$defs/id"},
+        "guestDriverName": {"$ref": "#/$defs/id"}, "guestDriverVersion": {"$ref": "#/$defs/id"}, "guestDriverDigest": {"$ref": "#/$defs/digest"},
+        "guestVcpuCount": {"$ref": "#/$defs/safePositiveInteger"}, "guestMemoryMiB": {"$ref": "#/$defs/safePositiveInteger"}, "guestCapabilities": {"$ref": "#/$defs/optionalIdSet"},
+        "workloadId": {"$ref": "#/$defs/id"}, "workloadDefinitionDigest": {"$ref": "#/$defs/digest"}, "minimumDurationSeconds": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    }
+  },
+  "x-qmanPlatformProfileHashRule": "Select exactly one compatibility-profile-policy.platforms row whose id equals kernelQemuFirmwareBackend.platformProfileId. platformProfileHash = SHA-256(CANONICAL-JSON-V1 of the closed object {profileProjectionVersion:1,policySchemaVersion:policy.schemaVersion,capabilityTarget:policy.capabilityTarget,platform:<the complete selected row>,backendPolicy:policy.backendPolicy,hostConfigurationPolicy:policy.hostConfigurationPolicy}). Missing/duplicate platform rows or any byte mismatch deny qualification. qualificationCaseMatrix is independently bound by qualificationCaseMatrixSha256; hclPolicy and clusterPolicy are deliberately outside this technical platform projection.",
+  "x-qmanExactKeyRule": "exactQualificationKey is SHA-256 of the CANONICAL-JSON-V1 object containing platformProfileHash, pciIdentityMatch, deviceArchetype, sorted deviceTraits, qualificationCaseMatrixSha256, deviceFirmwareAndRom, kernelQemuFirmwareBackend, iommuInterruptResetProviders and guestDriverAndWorkload. pciIdentityMatch pins the closed provider ID, version, definition digest and golden-vector-set digest; vendor extraction additionally pins its exact signed extractor definition. This schema revision fixes errataProfileId to NONE because no independently signed errata-profile registry is part of the portable contract; a future non-NONE value requires a versioned signed registry and cannot enter as a free-form label. Resolve qualificationSubjectManifestDigest to one schema-valid, HOST_INVENTORY_EVIDENCE-signed QualificationSubjectManifest, then recursively resolve its dual-attested COMPLETE/PASSED QualificationRunManifest and all typed Measurements. Every listed projection field, caseIds, platform hash, case-matrix digest and derivedExactQualificationKey must byte-equal this record. No wildcard, provider alias, self-reported subject, omitted trait/archetype, stale boot/run or older case matrix matches production SUPPORTED.",
+  "x-qmanCaseMatrixRule": "deviceArchetype and the complete sorted deviceTraits set are inputs to the authoritative qualification matrix identified by qualificationCaseMatrixSha256. caseIds MUST equal the matrix-derived mandatory set for those inputs and the exact platform/runtime tuple; self-declared case coverage is invalid.",
+  "x-qmanWorkloadPrerequisiteRule": "Resolve the signed QualificationWorkloadDefinition whose digest equals guestDriverAndWorkload.workloadDefinitionDigest. Construct one twelve-field measured {guest,runtime} row from the exact guest ABI/architecture/OS/kernel/driver projection and platform/backend/IOMMU/machine/firmware projection; it must byte-equal exactly one supportedQualificationTuples row, so the two halves cannot be independently selected or Cartesian-combined. guestDriverAndWorkload contains every requiredGuestCapability and meets minimum vCPU/memory; kernelQemuFirmwareBackend.runtimeCapabilities contains every requiredRuntimeCapability, while deviceArchetype, deviceTraits and iommuInterruptResetProviders provider IDs satisfy the remaining constraints. Missing, aliased or self-reported-only prerequisites deny qualification.",
+  "x-qmanIdentityProviderRule": "pciIdentityMatch MUST validate the provider-specific oneOf branch and CLASS_CODE_ROLE_V1 mapping from directpath-identity-v1.schema.json. STRONG_SERIAL pins serialValueHash; SLOT_BOUND pins a grammar-valid firmware physicalPath. A record produced with a different vector set, even under the same provider name, is a different qualification input and cannot match.",
+  "x-qmanEvidenceRule": "e4EvidenceHashes contains qualificationSubjectManifestDigest, the recursively verified QualificationRunManifest.runDigest, and the completed ExecutionEvidenceIndex digest for every scenarioExecutionCoreDigest named by that manifest. Each index byte-validates a QUALIFICATION_SUBJECT artifact whose manifestDigest equals qualificationSubjectManifestDigest, uses evidenceGrade E4-PHYSICAL-QUALIFICATION, binds the same run/core/host/boot/platform/backend tuple, and together the indexes cover the exact mandatory caseIds and minimum workload duration. The QualificationRecord is constructed only after these acyclic run->subject->index links exist.",
+  "x-qmanSignatureRule": "Set recordDigest and signature to null, canonicalize the complete object, hash into recordDigest, and sign ASCII(QMAN-DIRECTPATH/QUALIFICATION-RECORD/V1) || 0x00 || the canonical bytes with a QUALIFICATION_ENGINEERING key."
+}

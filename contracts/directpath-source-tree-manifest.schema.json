@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-source-tree-manifest.schema.json",
+  "title": "Qman DirectPath canonical Git source-tree manifest",
+  "description": "Deterministic complete projection of the tracked Git tree used to build a target runner. It removes ambiguity between a commit ID, a dirty working tree and an unexplained sourceTreeSha256 label.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "algorithm", "targetRepositoryCommit", "repositoryObjectFormat", "rootPath", "entries", "submoduleTrees", "sourceTreeSha256"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "algorithm": {"const": "GIT-TRACKED-TREE-CLOSURE-V1"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "repositoryObjectFormat": {"enum": ["SHA1", "SHA256"]},
+    "rootPath": {"const": "."},
+    "entries": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/entry"}, "x-qmanCanonicalOrder": "ascending UTF-8 path bytes; paths are unique after NFC normalization"},
+    "submoduleTrees": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/submodule"}, "x-qmanCanonicalOrder": "ascending UTF-8 path bytes"},
+    "sourceTreeSha256": {"$ref": "#/$defs/nullableDigest"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "safeNonNegativeInteger": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!\\.git(?:/|$)).+$"},
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "mode", "gitObjectId", "contentSha256", "byteLength"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "mode": {"enum": ["100644", "100755", "120000", "160000"]},
+        "gitObjectId": {"type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"},
+        "contentSha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safeNonNegativeInteger"}
+      }
+    },
+    "submodule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "commit", "manifestPath", "manifestSha256", "sourceTreeSha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"},
+        "manifestPath": {"$ref": "#/$defs/repositoryRelativePath"},
+        "manifestSha256": {"$ref": "#/$defs/digest"},
+        "sourceTreeSha256": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "x-qmanTreeProjectionRule": "Read the exact commit object named by targetRepositoryCommit from the target repository object database, never the working tree or index. repositoryObjectFormat=SHA1 requires exactly 40 lowercase hexadecimal characters for every commit/object ID; SHA256 requires exactly 64. Enumerate every tracked root-tree entry recursively in Git byte order. Every path MUST be valid NFC UTF-8 and repository-relative; otherwise target mapping fails closed. For modes 100644, 100755 and 120000, contentSha256 hashes the exact Git blob bytes and byteLength is their length (a symlink blob is its link-target bytes). For mode 160000, contentSha256 hashes the lowercase ASCII gitlink commit and byteLength is 40 or 64; exactly one same-path submoduleTrees descriptor recursively resolves a complete manifest at that commit. No untracked, ignored, generated-after-checkout or dirty-working-tree file may enter the build.",
+  "x-qmanCompletenessRule": "entries is exactly the full recursive `git ls-tree` projection of targetRepositoryCommit: no omission, extra path, duplicate normalized path, mode/object mismatch or unresolved gitlink. submoduleTrees is in bijection with mode-160000 entries and recursively obeys the same rules; cycles or path escape fail closed. Build inputs, runner source, predicate evaluators, artifact decoders and build recipes must all resolve to this closure. Runtime-only secrets may be injected as declared non-source inputs but cannot change compiled bytes without changing the pinned tool/build evidence.",
+  "x-qmanDigestRule": "Set sourceTreeSha256 to null, encode the complete closed object with CANONICAL-JSON-V1, and store SHA-256 of those bytes in sourceTreeSha256. The consuming RunnerManifest separately binds both this internal digest and the raw manifest-file SHA-256."
+}

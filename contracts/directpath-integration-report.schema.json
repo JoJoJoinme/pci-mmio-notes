@@ -1,0 +1,1116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-integration-report.schema.json",
+  "title": "Qman DirectPath detached target-integration reports",
+  "description": "Closed signed reports for mapping coverage, conflicts, and implementation tests. Each report binds the portable contract, immutable target-code revision C, and detached mapping-core digest M. The report may be stored as evidence content at E, but its bytes never embed E, a final integration-map digest, or a digest that depends on either.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/mappingCoverageReport"
+    },
+    {
+      "$ref": "#/$defs/conflictRegister"
+    },
+    {
+      "$ref": "#/$defs/implementationTestReport"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "safeUint": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/digest"
+        }
+      ]
+    },
+    "nullableSignature": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"
+        }
+      ]
+    },
+    "portableContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "revision",
+        "sha256"
+      ],
+      "properties": {
+        "contractId": {
+          "const": "QMAN-DIRECTPATH-PORTABLE-CONTROL"
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}\\.[0-9]+$"
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "targetCodeRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryId",
+        "repositoryLocatorDigest",
+        "objectFormat",
+        "revision"
+      ],
+      "properties": {
+        "repositoryId": {
+          "$ref": "#/$defs/id"
+        },
+        "repositoryLocatorDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "objectFormat": {
+          "enum": [
+            "GIT_SHA1",
+            "GIT_SHA256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "objectFormat": {
+                "const": "GIT_SHA1"
+              }
+            },
+            "required": [
+              "objectFormat"
+            ]
+          },
+          "then": {
+            "properties": {
+              "revision": {
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "objectFormat": {
+                "const": "GIT_SHA256"
+              }
+            },
+            "required": [
+              "objectFormat"
+            ]
+          },
+          "then": {
+            "properties": {
+              "revision": {
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      ],
+      "x-qmanRepositoryLocatorDigestRule": "repositoryLocatorDigest = SHA-256(CANONICAL-JSON-V1 of the closed object {repositoryId: targetRepository.repositoryId, repositoryLocation: targetRepository.repositoryLocation} from integration map C). It never hashes targetCodeRevision or repositoryLocatorDigest itself. objectFormat and revision are separately byte-equal to C."
+    },
+    "mappingCore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mappingCoreId",
+        "mappingCoreDigest"
+      ],
+      "properties": {
+        "mappingCoreId": {
+          "type": "string",
+          "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"
+        },
+        "mappingCoreDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "evidenceContentHash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactRole",
+        "path",
+        "mediaType",
+        "sha256"
+      ],
+      "properties": {
+        "artifactRole": {
+          "enum": [
+            "MAPPING_ENTRY_SET",
+            "TARGET_SYMBOL_INDEX",
+            "RESOLVER_EVIDENCE",
+            "ACCEPTANCE_SCENARIO",
+            "EXECUTION_EVIDENCE_INDEX",
+            "CASE_COMPLETION_RECORD",
+            "TEST_LOG",
+            "BUILD_LOG",
+            "CONFLICT_DECISION",
+            "TOOL_MANIFEST"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^(?!/)(?!.*\\\\)(?!.*(^|/)\\.\\.(/|$)).+$"
+        },
+        "mediaType": {
+          "enum": [
+            "application/json",
+            "application/jsonl",
+            "text/plain"
+          ]
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "evidenceContentHashes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/evidenceContentHash"
+      },
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [artifactRole,path,sha256]"
+    },
+    "limitations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      },
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "contractItemIdSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[A-Z][A-Z0-9._-]+$"
+      },
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "platformProfileIdSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      },
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "mappingCoverageItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractItemId",
+        "kind",
+        "releaseTrack",
+        "disposition",
+        "mappingEntryDigestOrNull",
+        "deferDecisionDigestOrNull"
+      ],
+      "properties": {
+        "contractItemId": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9._-]+$"
+        },
+        "kind": {
+          "enum": [
+            "CANONICALIZATION",
+            "CAS_RULE",
+            "CONFIG",
+            "ENTITY",
+            "EQUIVALENCE",
+            "GUARD",
+            "MIGRATION",
+            "OPERATION",
+            "PARITY_OBLIGATION",
+            "PORT",
+            "REASON",
+            "STATE_MACHINE",
+            "TELEMETRY",
+            "TEST",
+            "TRANSITION"
+          ]
+        },
+        "releaseTrack": {
+          "enum": [
+            "CURRENT_RELEASE_REQUIRED",
+            "FUTURE_SEPARATELY_QUALIFIED"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "BOUND",
+            "AUTHORIZED_DEFERRED",
+            "UNMAPPED",
+            "CONFLICT"
+          ]
+        },
+        "mappingEntryDigestOrNull": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "deferDecisionDigestOrNull": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "BOUND"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "mappingEntryDigestOrNull": {
+                "$ref": "#/$defs/digest"
+              },
+              "deferDecisionDigestOrNull": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "AUTHORIZED_DEFERRED"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "releaseTrack": {
+                "const": "FUTURE_SEPARATELY_QUALIFIED"
+              },
+              "mappingEntryDigestOrNull": {
+                "type": "null"
+              },
+              "deferDecisionDigestOrNull": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "enum": [
+                  "UNMAPPED",
+                  "CONFLICT"
+                ]
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "mappingEntryDigestOrNull": {
+                "type": "null"
+              },
+              "deferDecisionDigestOrNull": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "mappingCoverageSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requiredCount",
+        "boundCount",
+        "authorizedDeferredCount",
+        "unmappedCount",
+        "conflictCount"
+      ],
+      "properties": {
+        "requiredCount": {
+          "$ref": "#/$defs/safeUint"
+        },
+        "boundCount": {
+          "$ref": "#/$defs/safeUint"
+        },
+        "authorizedDeferredCount": {
+          "$ref": "#/$defs/safeUint"
+        },
+        "unmappedCount": {
+          "$ref": "#/$defs/safeUint"
+        },
+        "conflictCount": {
+          "$ref": "#/$defs/safeUint"
+        }
+      }
+    },
+    "mappingCoverageReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "reportType",
+        "canonicalProfileId",
+        "publicationState",
+        "reportId",
+        "reportSequence",
+        "portableContract",
+        "targetCodeRevision",
+        "mappingCore",
+        "generatedAt",
+        "status",
+        "requiredContractItemIds",
+        "itemResults",
+        "summary",
+        "evidenceContentHashes",
+        "limitations",
+        "keyRingVersion",
+        "trustKeyRingDigest",
+        "signerRole",
+        "signerKeyId",
+        "reportDigest",
+        "signature"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "reportType": {
+          "const": "MAPPING_COVERAGE_REPORT"
+        },
+        "canonicalProfileId": {
+          "const": "CANONICAL-JSON-V1"
+        },
+        "publicationState": {
+          "enum": [
+            "DRAFT",
+            "FINAL"
+          ]
+        },
+        "reportId": {
+          "$ref": "#/$defs/id"
+        },
+        "reportSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "portableContract": {
+          "$ref": "#/$defs/portableContract"
+        },
+        "targetCodeRevision": {
+          "$ref": "#/$defs/targetCodeRevision"
+        },
+        "mappingCore": {
+          "$ref": "#/$defs/mappingCore"
+        },
+        "generatedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "status": {
+          "enum": [
+            "COMPLETE",
+            "INCOMPLETE",
+            "INVALID"
+          ]
+        },
+        "requiredContractItemIds": {
+          "$ref": "#/$defs/contractItemIdSet"
+        },
+        "itemResults": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/mappingCoverageItem"
+          },
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of contractItemId"
+        },
+        "summary": {
+          "$ref": "#/$defs/mappingCoverageSummary"
+        },
+        "evidenceContentHashes": {
+          "$ref": "#/$defs/evidenceContentHashes"
+        },
+        "limitations": {
+          "$ref": "#/$defs/limitations"
+        },
+        "keyRingVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "trustKeyRingDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "signerRole": {
+          "const": "TARGET_ARCHITECT"
+        },
+        "signerKeyId": {
+          "$ref": "#/$defs/id"
+        },
+        "reportDigest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "signature": {
+          "$ref": "#/$defs/nullableSignature"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/publicationStateRule"
+        }
+      ],
+      "x-qmanCompletionRule": "requiredContractItemIds and itemResults.contractItemId are exact equal sets with one result per item. Summary counters equal the itemResults partition. COMPLETE requires every CURRENT_RELEASE_REQUIRED item BOUND, every FUTURE_SEPARATELY_QUALIFIED item BOUND or AUTHORIZED_DEFERRED, zero UNMAPPED/CONFLICT items, and all referenced mapping/defer digests to verify against M."
+    },
+    "conflictItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conflictId",
+        "contractItemIds",
+        "severity",
+        "state",
+        "description",
+        "discoveredAt",
+        "resolutionOrNull",
+        "decisionDigestOrNull"
+      ],
+      "properties": {
+        "conflictId": {
+          "$ref": "#/$defs/id"
+        },
+        "contractItemIds": {
+          "$ref": "#/$defs/contractItemIdSet"
+        },
+        "severity": {
+          "enum": [
+            "BLOCKING",
+            "NON_BLOCKING"
+          ]
+        },
+        "state": {
+          "enum": [
+            "OPEN",
+            "RESOLVED",
+            "AUTHORIZED_DEFERRED"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "discoveredAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "resolutionOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          ]
+        },
+        "decisionDigestOrNull": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "OPEN"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "resolutionOrNull": {
+                "type": "null"
+              },
+              "decisionDigestOrNull": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "RESOLVED",
+                  "AUTHORIZED_DEFERRED"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "resolutionOrNull": {
+                "type": "string",
+                "minLength": 1
+              },
+              "decisionDigestOrNull": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "conflictRegister": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "reportType",
+        "canonicalProfileId",
+        "publicationState",
+        "reportId",
+        "reportSequence",
+        "portableContract",
+        "targetCodeRevision",
+        "mappingCore",
+        "generatedAt",
+        "status",
+        "conflicts",
+        "evidenceContentHashes",
+        "limitations",
+        "keyRingVersion",
+        "trustKeyRingDigest",
+        "signerRole",
+        "signerKeyId",
+        "reportDigest",
+        "signature"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "reportType": {
+          "const": "CONFLICT_REGISTER"
+        },
+        "canonicalProfileId": {
+          "const": "CANONICAL-JSON-V1"
+        },
+        "publicationState": {
+          "enum": [
+            "DRAFT",
+            "FINAL"
+          ]
+        },
+        "reportId": {
+          "$ref": "#/$defs/id"
+        },
+        "reportSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "portableContract": {
+          "$ref": "#/$defs/portableContract"
+        },
+        "targetCodeRevision": {
+          "$ref": "#/$defs/targetCodeRevision"
+        },
+        "mappingCore": {
+          "$ref": "#/$defs/mappingCore"
+        },
+        "generatedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "status": {
+          "enum": [
+            "CLEAR",
+            "OPEN_CONFLICTS",
+            "INVALID"
+          ]
+        },
+        "conflicts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/conflictItem"
+          },
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of conflictId"
+        },
+        "evidenceContentHashes": {
+          "$ref": "#/$defs/evidenceContentHashes"
+        },
+        "limitations": {
+          "$ref": "#/$defs/limitations"
+        },
+        "keyRingVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "trustKeyRingDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "signerRole": {
+          "const": "SECURITY"
+        },
+        "signerKeyId": {
+          "$ref": "#/$defs/id"
+        },
+        "reportDigest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "signature": {
+          "$ref": "#/$defs/nullableSignature"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/publicationStateRule"
+        }
+      ],
+      "x-qmanCompletionRule": "CLEAR requires no OPEN conflict and no unresolved BLOCKING conflict. RESOLVED and AUTHORIZED_DEFERRED entries require a verified decisionDigestOrNull whose decision binds the exact contractItemIds, C, and M. A limitation or NON_BLOCKING label never suppresses a CURRENT_RELEASE_REQUIRED conflict."
+    },
+    "testResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "testBindingId",
+        "scenarioId",
+        "scenarioSha256",
+        "scenarioRunId",
+        "contractItemIds",
+        "result",
+        "startedAt",
+        "completedAt",
+        "executionEvidenceIndexRecordSha256OrNull"
+      ],
+      "properties": {
+        "testBindingId": {
+          "$ref": "#/$defs/id"
+        },
+        "scenarioId": {
+          "$ref": "#/$defs/id"
+        },
+        "scenarioSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "scenarioRunId": {
+          "$ref": "#/$defs/id"
+        },
+        "contractItemIds": {
+          "$ref": "#/$defs/contractItemIdSet"
+        },
+        "result": {
+          "enum": [
+            "EXECUTED_PASS",
+            "EXECUTED_FAIL",
+            "NOT_EXECUTED",
+            "INVALID_EVIDENCE"
+          ]
+        },
+        "startedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "completedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "executionEvidenceIndexRecordSha256OrNull": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result": {
+                "const": "EXECUTED_PASS"
+              }
+            },
+            "required": [
+              "result"
+            ]
+          },
+          "then": {
+            "properties": {
+              "executionEvidenceIndexRecordSha256OrNull": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "implementationTestSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requiredCount",
+        "passedCount",
+        "failedCount",
+        "notExecutedCount",
+        "invalidEvidenceCount"
+      ],
+      "properties": {
+        "requiredCount": {
+          "$ref": "#/$defs/safeUint"
+        },
+        "passedCount": {
+          "$ref": "#/$defs/safeUint"
+        },
+        "failedCount": {
+          "$ref": "#/$defs/safeUint"
+        },
+        "notExecutedCount": {
+          "$ref": "#/$defs/safeUint"
+        },
+        "invalidEvidenceCount": {
+          "$ref": "#/$defs/safeUint"
+        }
+      }
+    },
+    "caseCompletionRecordArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "targetCommit",
+        "mappingCoreId",
+        "platformProfileId",
+        "scope",
+        "sourceCaseStatus",
+        "caseContractDigest",
+        "caseContractRegistryDigest",
+        "portableContractSha256",
+        "path",
+        "sha256",
+        "completionDigest",
+        "schemaRef",
+        "schemaSha256",
+        "evidenceGrade"
+      ],
+      "properties": {
+        "caseId": {
+          "type": "string",
+          "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"
+        },
+        "targetCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+        },
+        "mappingCoreId": {
+          "type": "string",
+          "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"
+        },
+        "platformProfileId": {
+          "$ref": "#/$defs/id"
+        },
+        "scope": {
+          "const": "PRODUCT"
+        },
+        "sourceCaseStatus": {
+          "const": "EXECUTABLE"
+        },
+        "caseContractDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "caseContractRegistryDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "portableContractSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^(?!/)(?!.*\\\\)(?!.*(^|/)\\.\\.(/|$)).+$"
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "completionDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "schemaRef": {
+          "const": "contracts/directpath-case-completion-record.schema.json"
+        },
+        "schemaSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "evidenceGrade": {
+          "enum": [
+            "E3-END-TO-END-PRODUCT",
+            "E4-PHYSICAL-QUALIFICATION"
+          ]
+        }
+      },
+      "x-qmanParsedArtifactRule": "Resolve path by repository policy, verify raw blob sha256 and schemaSha256, validate the blob against schemaRef as a closed CaseCompletionRecord, and require the parsed caseId, targetRepositoryCommit, mappingCoreId, platformProfileId, scope, sourceCaseStatus, caseContractDigest, caseContractRegistryDigest, portableContractSha256, completionDigest and evidenceGrade to byte-equal this descriptor (targetRepositoryCommit is therefore the lowercase unprefixed targetCommit). Verify completionDigest and the role-appropriate TEST_EVIDENCE or QUALIFICATION_ENGINEERING signature before this descriptor can count. platformProfileId is not a free label: independently rederive the signed completion platformProfileDigest from active policy, require every transitive scenario to name exactly this profile, and require its targetBinding platform/backend digests to equal the completion's signed values. E3 has exactQualificationKey=null; E4 recursively rederives the non-null key from one byte-identical measured Subject."
+    },
+    "implementationTestReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "reportType",
+        "canonicalProfileId",
+        "publicationState",
+        "reportId",
+        "reportSequence",
+        "portableContract",
+        "targetCodeRevision",
+        "mappingCore",
+        "platformProfileIds",
+        "generatedAt",
+        "status",
+        "testPlanDigest",
+        "buildResult",
+        "testResults",
+        "caseCompletionRecords",
+        "summary",
+        "evidenceContentHashes",
+        "limitations",
+        "keyRingVersion",
+        "trustKeyRingDigest",
+        "signerRole",
+        "signerKeyId",
+        "reportDigest",
+        "signature"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "reportType": {
+          "const": "IMPLEMENTATION_TEST_REPORT"
+        },
+        "canonicalProfileId": {
+          "const": "CANONICAL-JSON-V1"
+        },
+        "publicationState": {
+          "enum": [
+            "DRAFT",
+            "FINAL"
+          ]
+        },
+        "reportId": {
+          "$ref": "#/$defs/id"
+        },
+        "reportSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "portableContract": {
+          "$ref": "#/$defs/portableContract"
+        },
+        "targetCodeRevision": {
+          "$ref": "#/$defs/targetCodeRevision"
+        },
+        "mappingCore": {
+          "$ref": "#/$defs/mappingCore"
+        },
+        "platformProfileIds": {
+          "$ref": "#/$defs/platformProfileIdSet"
+        },
+        "generatedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "INCOMPLETE",
+            "INVALID"
+          ]
+        },
+        "testPlanDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "buildResult": {
+          "enum": [
+            "PASSED",
+            "FAILED",
+            "NOT_RUN"
+          ]
+        },
+        "testResults": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/testResult"
+          },
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [testBindingId,scenarioRunId]"
+        },
+        "caseCompletionRecords": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/caseCompletionRecordArtifact"
+          },
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [platformProfileId,caseId,targetCommit,mappingCoreId,completionDigest,path,sha256]",
+          "x-qmanUniquenessRule": "Exactly one descriptor exists per [platformProfileId,caseId]. path, sha256 and completionDigest are each unique and MUST NOT be reused for a different Case or platform."
+        },
+        "summary": {
+          "$ref": "#/$defs/implementationTestSummary"
+        },
+        "evidenceContentHashes": {
+          "$ref": "#/$defs/evidenceContentHashes"
+        },
+        "limitations": {
+          "$ref": "#/$defs/limitations"
+        },
+        "keyRingVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "trustKeyRingDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "signerRole": {
+          "const": "TEST"
+        },
+        "signerKeyId": {
+          "$ref": "#/$defs/id"
+        },
+        "reportDigest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "signature": {
+          "$ref": "#/$defs/nullableSignature"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/publicationStateRule"
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "caseCompletionRecords": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "x-qmanCompletionRule": "Summary counters equal the exact testResults partition and requiredCount equals its size. Resolve the current generated Case-contract registry and applicable platform policy independently from portableContract; platformProfileIds MUST exactly equal the platform set applicable to targetCodeRevision rather than a reporter-selected subset. PASS requires buildResult=PASSED; zero applicable PRODUCT Case may remain IMPLEMENTATION_BLOCKED, HARDWARE_BLOCKED, FEATURE_DISABLED or otherwise non-EXECUTABLE; and caseCompletionRecords MUST exactly cover, once per governed platformProfileIds member, the complete independently derived set of applicable current scope=PRODUCT,status=EXECUTABLE Cases plus its transitive Case dependency closure. Every descriptor and parsed CaseCompletionRecord MUST bind this report's exact targetCodeRevision.revision (C), mappingCore.mappingCoreId and portableContract.sha256; every transitive run MUST bind mappingCore.mappingCoreDigest (M) and the descriptor's platformProfileId; all descriptors MUST bind the one current registry digest and the corresponding current Case-contract digest. Each dependencyCompletionDigests edge MUST resolve to the completionDigest of the exact dependency Case for the same signed platformProfileId/platformProfileDigest/backendProfileDigest/exactQualificationKey tuple in this report, with no missing dependency, cycle, cross-profile substitution or ungoverned extra Case. Every caseCompletionRecords raw hash MUST also occur exactly once in evidenceContentHashes with artifactRole=CASE_COMPLETION_RECORD, mediaType=application/json and the same path, and every scenarioEvidence member aggregated by a completion record MUST recursively resolve its scenario, execution-evidence index and runner-manifest paths/hashes to exactly one matching EXECUTED_PASS testResults entry and verified immutable artifacts. Each RunnerManifest additionally resolves and reconstructs its complete SourceTreeManifest and BuildAttestation from target C, including independent replay evidence for any hermetic claim, and each EvidenceIndex contains six role-exclusive control artifacts. Any E4 completion additionally resolves the Subject's dual-attested COMPLETE/PASSED QualificationRunManifest plus the exact boot-bound typed QualificationMeasurement/core sets and complete raw/schema/internal digest/signature/projection chain. Unused or multiply claimed runs are invalid. An individual acceptance Scenario, execution-evidence index, E2 component result, VMware observation, self-declared summary or limitation can never replace a verified current PRODUCT+EXECUTABLE CaseCompletionRecord. PASS additionally requires every required test binding represented exactly once, every test result EXECUTED_PASS, every transitive artifact hash and signature verified, and no run, evidence-index record, raw blob or completionDigest reused across the full (platformProfileId,platformProfileDigest,backendProfileDigest,exactQualificationKey,caseId) identity."
+    },
+    "publicationStateRule": {
+      "if": {
+        "properties": {
+          "publicationState": {
+            "const": "DRAFT"
+          }
+        },
+        "required": [
+          "publicationState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reportDigest": {
+            "type": "null"
+          },
+          "signature": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "reportDigest": {
+            "$ref": "#/$defs/digest"
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"
+          }
+        }
+      }
+    }
+  },
+  "x-qmanCanonicalizationRule": "Reject duplicate keys, unknown fields, non-NFC strings, floats, timestamps outside TIMESTAMP-UTC-US-V1, and integers outside -9007199254740991..9007199254740991. Set-valued arrays use their declared canonical order. Encode with CANONICAL-JSON-V1.",
+  "x-qmanDigestAndSignatureRule": "For every report type, deep-copy the intended complete FINAL report, set reportDigest and signature to null, retain publicationState and every other field unchanged, and hash its CANONICAL-JSON-V1 UTF-8 bytes into reportDigest. The intermediate projection need not itself satisfy the stored-report schema. Sign ASCII(QMAN-DIRECTPATH/INTEGRATION-REPORT/V1) || 0x00 || ASCII(reportType) || 0x00 || the same bytes using the role fixed by that report schema. Only FINAL reports with non-null, verified digest/signature count as completion evidence.",
+  "x-qmanEvidenceContentRule": "Every evidenceContentHashes entry binds exact immutable artifact bytes by content hash. Paths are locator hints only and are never authority. The array must not include the report itself, a final integration map, an evidence-repository tree/commit manifest, or any artifact whose digest transitively includes this report. Reusing a path or digest with conflicting metadata, duplicating the same [artifactRole,path,sha256] tuple, or assigning multiple roles to the same raw blob is ambiguous and fails closed; multiple distinct artifacts may legitimately share one artifactRole.",
+  "x-qmanNoSelfReferenceRule": "Fields named mapDigest, finalMapDigest, evidenceRepository, evidenceRepositoryRevision, evidenceCommit, evidenceTreeDigest, integrationMapDigest, or aliases with the same semantics are forbidden by the closed schemas. Report bytes may live in evidence revision E, but no report field or transitive subject may bind E or the detached final map that will later bind the report.",
+  "x-qmanArtifactDagRule": "C is the immutable targetCodeRevision. M is mappingCore.mappingCoreDigest computed from the portable source contract, C, and closed structural mapping bindings before any report or final-map reference exists. These three ordinary integration-report types are then produced against C+M and stored as content-addressed bytes at evidence revision E; they never bind catalog anchor A. The anchor-aware qualification release index follows the separate order catalog -> A -> E. Finally, a detached signed integration map binds C, M, E, A when qualification is claimed, and verified report hashes. No edge may point backward, and report bytes embed only the portable contract, C, M, and leaf evidence-content hashes.",
+  "x-qmanLimitationRule": "limitations disclose residual constraints but never turn INCOMPLETE, INVALID, FAIL, OPEN_CONFLICTS, UNMAPPED, CONFLICT, NOT_EXECUTED, or INVALID_EVIDENCE into a successful completion state."
+}

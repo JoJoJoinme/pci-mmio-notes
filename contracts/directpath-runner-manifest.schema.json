@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-runner-manifest.schema.json",
+  "title": "Qman DirectPath target test RunnerManifest",
+  "description": "Closed signed descriptor for the exact runner binary, build, predicate implementations and typed artifact decoders used by one target revision. A bare runner hash or display label is not executable evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "manifestId", "targetRepositoryCommit", "mappingCoreId", "portableContractSha256", "caseContractRegistrySha256", "runner", "build", "predicateEvaluators", "artifactDecoders", "createdAt", "keyRingVersion", "signerKeyId", "manifestDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "manifestId": {"$ref": "#/$defs/id"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "caseContractRegistrySha256": {"$ref": "#/$defs/digest"},
+    "runner": {"$ref": "#/$defs/runner"},
+    "build": {"$ref": "#/$defs/build"},
+    "predicateEvaluators": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/predicate"}, "x-qmanCanonicalOrder": "ascending canonical [caseId,assertionId]"},
+    "artifactDecoders": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/decoder"}, "x-qmanCanonicalOrder": "ascending canonical schemaRef"},
+    "createdAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "manifestDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "symbol", "blobSha256", "interfaceHash", "binaryArtifactSha256", "invocationProtocol"],
+      "properties": {
+        "path": {"$ref": "#/$defs/id"},
+        "symbol": {"$ref": "#/$defs/id"},
+        "blobSha256": {"$ref": "#/$defs/digest"},
+        "interfaceHash": {"$ref": "#/$defs/digest"},
+        "binaryArtifactSha256": {"$ref": "#/$defs/digest"},
+        "invocationProtocol": {"const": "QMAN-DIRECTPATH-RUNNER-V1"}
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["buildId", "sourceTreeManifestPath", "sourceTreeManifestSha256", "sourceTreeManifestSchemaSha256", "sourceTreeSha256", "buildAttestation", "toolManifestArtifactSha256", "buildLogArtifactSha256", "builderImageOrEnvironmentSha256", "reproducibility"],
+      "properties": {
+        "buildId": {"$ref": "#/$defs/id"},
+        "sourceTreeManifestPath": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sourceTreeManifestSha256": {"$ref": "#/$defs/digest"},
+        "sourceTreeManifestSchemaSha256": {"$ref": "#/$defs/digest"},
+        "sourceTreeSha256": {"$ref": "#/$defs/digest"},
+        "buildAttestation": {"$ref": "#/$defs/buildAttestation"},
+        "toolManifestArtifactSha256": {"$ref": "#/$defs/digest"},
+        "buildLogArtifactSha256": {"$ref": "#/$defs/digest"},
+        "builderImageOrEnvironmentSha256": {"$ref": "#/$defs/digest"},
+        "reproducibility": {"enum": ["HERMETIC_REPRODUCIBLE", "PINNED_NONHERMETIC_WITH_COMPLETE_MANIFEST"]}
+      }
+    },
+    "predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caseId", "assertionId", "assertionDigest", "symbol", "interfaceHash", "evaluatorProtocol"],
+      "properties": {
+        "caseId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"},
+        "assertionId": {"$ref": "#/$defs/id"},
+        "assertionDigest": {"$ref": "#/$defs/digest"},
+        "symbol": {"$ref": "#/$defs/id"},
+        "interfaceHash": {"$ref": "#/$defs/digest"},
+        "evaluatorProtocol": {"const": "TARGET-PREDICATE-INTERFACE-V1"}
+      }
+    },
+    "decoder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaRef", "schemaSha256", "symbol", "interfaceHash", "validationMode"],
+      "properties": {
+        "schemaRef": {"$ref": "#/$defs/id"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "symbol": {"$ref": "#/$defs/id"},
+        "interfaceHash": {"$ref": "#/$defs/digest"},
+        "validationMode": {"const": "CLOSED_SCHEMA_PLUS_NORMATIVE_SEMANTICS"}
+      }
+    },
+    "buildAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "attestationDigest"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-build-attestation.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "attestationDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"}
+  },
+  "x-qmanSignatureRule": "Set manifestDigest and signature to null, encode the complete object with CANONICAL-JSON-V1, store its SHA-256 in manifestDigest, and sign ASCII(QMAN-DIRECTPATH/RUNNER-MANIFEST/V1) || 0x00 || the same bytes with a non-revoked TEST_EVIDENCE key.",
+  "x-qmanArtifactRule": "The consuming ExecutionEvidenceIndex resolves sourceTreeManifestSha256, build.buildAttestation.sha256, buildLogArtifactSha256, its test-log hash, toolManifestArtifactSha256 and binaryArtifactSha256 to six distinct typed control records with SOURCE_TREE_MANIFEST, BUILD_ATTESTATION, BUILD_LOG, TEST_LOG, TOOL_MANIFEST and RUNNER_BINARY roles. All six hashes and paths are role-exclusive; their on-disk bytes, lengths, media type/schema and SHA-256 are verified, and no one blob or hash may satisfy more than one role.",
+  "x-qmanSourceTreeRule": "Resolve build.sourceTreeManifestPath inside evidence commit E, verify its raw bytes against sourceTreeManifestSha256, validate it only against contracts/directpath-source-tree-manifest.schema.json whose pinned raw hash equals sourceTreeManifestSchemaSha256, and require its internal sourceTreeSha256 to equal build.sourceTreeSha256. Independently reconstruct the complete tracked-tree projection from this manifest's targetRepositoryCommit C, recursively including submodules with bounded depth/count, and reject any omission, extra path, dirty/untracked build input, unresolved submodule, object-mode/hash mismatch or non-NFC path. runner.path/blobSha256, every predicate evaluator and decoder implementation, and all build recipes resolve at C inside that exact tree.",
+  "x-qmanBuildAttestationRule": "Resolve build.buildAttestation.path inside evidence commit E; verify exact bytes/length/application-json media type, pinned schemaRef/schemaSha256, internal attestationDigest and TEST_EVIDENCE signature. The parsed BuildAttestation targetRepositoryCommit, mappingCoreId and portableContractSha256 byte-equal this RunnerManifest; consumerKind=RUNNER and consumerBuildId=build.buildId; its SourceTree path/raw hash/schema hash/internal digest projection equals the five corresponding build fields. RunnerManifest accepts only produced HERMETIC_REPRODUCIBLE or PINNED_NONHERMETIC attestation modes; INTERPRETED_NO_BUILD is rejected for a product scenario runner. Its build log, toolchain/dependency/environment closure and produced RUNNER_BINARY output independently derive this manifest's build hashes, reproducibility label and runner.binaryArtifactSha256. HERMETIC_REPRODUCIBLE maps directly; PINNED_NONHERMETIC maps to PINNED_NONHERMETIC_WITH_COMPLETE_MANIFEST. BuildAttestation.attestedAt is strictly before this manifest.createdAt. The attestation is built before and never references this RunnerManifest."
+}

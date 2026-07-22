@@ -1,0 +1,398 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-catalog-rollback-anchor.schema.json",
+  "title": "Qman DirectPath externally protected supported-catalog rollback anchor",
+  "description": "A per-catalog monotonic record held by an authority that is independent of the DirectPath controller, target-code repository, evidence repository, and integration-map publisher. The catalog is verified and hashed first; only then may this record advance by atomic compare-and-swap.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "canonicalProfileId",
+    "recordState",
+    "catalogId",
+    "anchorVersion",
+    "resourceVersion",
+    "minimumCatalogSequence",
+    "acceptedCatalogDigest",
+    "updatedAt",
+    "authorityId",
+    "previousAnchorDigestOrNull",
+    "casPrecondition",
+    "anchorDigest",
+    "receipt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "recordType": {
+      "const": "DIRECTPATH_CATALOG_ROLLBACK_ANCHOR"
+    },
+    "canonicalProfileId": {
+      "const": "CANONICAL-JSON-V1"
+    },
+    "recordState": {
+      "enum": [
+        "PREPARED",
+        "COMMITTED"
+      ]
+    },
+    "catalogId": {
+      "$ref": "#/$defs/id"
+    },
+    "anchorVersion": {
+      "$ref": "#/$defs/safePositiveInteger"
+    },
+    "resourceVersion": {
+      "$ref": "#/$defs/safePositiveInteger"
+    },
+    "minimumCatalogSequence": {
+      "$ref": "#/$defs/safePositiveInteger"
+    },
+    "acceptedCatalogDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "updatedAt": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "authorityId": {
+      "$ref": "#/$defs/id"
+    },
+    "previousAnchorDigestOrNull": {
+      "$ref": "#/$defs/nullableDigest"
+    },
+    "casPrecondition": {
+      "$ref": "#/$defs/casPrecondition"
+    },
+    "anchorDigest": {
+      "$ref": "#/$defs/nullableDigest"
+    },
+    "receipt": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/receipt"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "recordState": {
+            "const": "PREPARED"
+          }
+        },
+        "required": [
+          "recordState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "anchorDigest": {
+            "type": "null"
+          },
+          "receipt": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "recordState": {
+            "const": "COMMITTED"
+          }
+        },
+        "required": [
+          "recordState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "anchorDigest": {
+            "$ref": "#/$defs/digest"
+          },
+          "receipt": {
+            "$ref": "#/$defs/receipt"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "anchorVersion": {
+            "const": 1
+          }
+        },
+        "required": [
+          "anchorVersion"
+        ]
+      },
+      "then": {
+        "properties": {
+          "resourceVersion": {
+            "const": 1
+          },
+          "previousAnchorDigestOrNull": {
+            "type": "null"
+          },
+          "casPrecondition": {
+            "$ref": "#/$defs/genesisCasPrecondition"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "previousAnchorDigestOrNull": {
+            "$ref": "#/$defs/digest"
+          },
+          "casPrecondition": {
+            "$ref": "#/$defs/successorCasPrecondition"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/digest"
+        }
+      ]
+    },
+    "casPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedAnchorVersionOrNull",
+        "expectedResourceVersionOrNull",
+        "expectedMinimumCatalogSequenceOrNull",
+        "expectedAcceptedCatalogDigestOrNull",
+        "expectedAnchorDigestOrNull"
+      ],
+      "properties": {
+        "expectedAnchorVersionOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/safePositiveInteger"
+            }
+          ]
+        },
+        "expectedResourceVersionOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/safePositiveInteger"
+            }
+          ]
+        },
+        "expectedMinimumCatalogSequenceOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/safePositiveInteger"
+            }
+          ]
+        },
+        "expectedAcceptedCatalogDigestOrNull": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "expectedAnchorDigestOrNull": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      }
+    },
+    "genesisCasPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedAnchorVersionOrNull",
+        "expectedResourceVersionOrNull",
+        "expectedMinimumCatalogSequenceOrNull",
+        "expectedAcceptedCatalogDigestOrNull",
+        "expectedAnchorDigestOrNull"
+      ],
+      "properties": {
+        "expectedAnchorVersionOrNull": {
+          "type": "null"
+        },
+        "expectedResourceVersionOrNull": {
+          "type": "null"
+        },
+        "expectedMinimumCatalogSequenceOrNull": {
+          "type": "null"
+        },
+        "expectedAcceptedCatalogDigestOrNull": {
+          "type": "null"
+        },
+        "expectedAnchorDigestOrNull": {
+          "type": "null"
+        }
+      }
+    },
+    "successorCasPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedAnchorVersionOrNull",
+        "expectedResourceVersionOrNull",
+        "expectedMinimumCatalogSequenceOrNull",
+        "expectedAcceptedCatalogDigestOrNull",
+        "expectedAnchorDigestOrNull"
+      ],
+      "properties": {
+        "expectedAnchorVersionOrNull": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "expectedResourceVersionOrNull": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "expectedMinimumCatalogSequenceOrNull": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "expectedAcceptedCatalogDigestOrNull": {
+          "$ref": "#/$defs/digest"
+        },
+        "expectedAnchorDigestOrNull": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "receiptId",
+        "subjectAnchorDigest",
+        "catalogId",
+        "minimumCatalogSequence",
+        "acceptedCatalogDigest",
+        "anchorVersion",
+        "resourceVersion",
+        "authorityId",
+        "issuedAt",
+        "trustRootDigest",
+        "receiptDigest",
+        "rootSignatures"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "receiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "subjectAnchorDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "catalogId": {
+          "$ref": "#/$defs/id"
+        },
+        "minimumCatalogSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "acceptedCatalogDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "anchorVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "authorityId": {
+          "$ref": "#/$defs/id"
+        },
+        "issuedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "trustRootDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "receiptDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "rootSignatures": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/rootSignature"
+          },
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of rootKeyId"
+        }
+      }
+    },
+    "rootSignature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rootKeyId",
+        "signedAt",
+        "algorithm",
+        "signature"
+      ],
+      "properties": {
+        "rootKeyId": {
+          "$ref": "#/$defs/id"
+        },
+        "signedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "algorithm": {
+          "const": "Ed25519"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"
+        }
+      }
+    }
+  },
+  "x-qmanCanonicalizationRule": "All JSON numeric integers are restricted to -9007199254740991..9007199254740991; this schema uses only the non-negative safe subset. Reject duplicate keys, non-NFC strings, unknown fields, floats, and timestamps outside TIMESTAMP-UTC-US-V1 before CANONICAL-JSON-V1 encoding.",
+  "x-qmanAnchorDigestRule": "To compute anchorDigest, deep-copy the intended complete COMMITTED record, set anchorDigest to null and receipt to null, retain recordState and every other field unchanged, encode with CANONICAL-JSON-V1, and store SHA-256 of those bytes as sha256:<64 lowercase hex>. A COMMITTED record must carry that digest. The intermediate digest projection need not itself satisfy the stored-record schema. This projection is acyclic because the receipt is created only after anchorDigest exists.",
+  "x-qmanReceiptRule": "For a COMMITTED record, every receipt subject field must exactly equal its top-level counterpart and subjectAnchorDigest must equal anchorDigest. Deep-copy the receipt, represent receiptDigest as null and rootSignatures as [], retain every other field, and encode with CANONICAL-JSON-V1. Store SHA-256 of those bytes as receiptDigest. For each rootSignature, form {rootKeyId:<exact rootKeyId>,signedAt:<exact signedAt>,receiptDigest:<stored receiptDigest>} and verify Ed25519 over ASCII(QMAN-DIRECTPATH/CATALOG-ROLLBACK-ANCHOR-RECEIPT/V1) || 0x00 || CANONICAL-JSON-V1(envelope); signedAt is therefore signed. receipt.trustRootDigest must equal the digest of the independently supplied root set; duplicate rootKeyIds are invalid, and distinct valid rootKeyIds must satisfy that root set's N_OF_M_ED25519_DISTINCT_KEYS_V1 verificationPolicy. Although stored digest/signature fields are non-null, the digest projection deliberately uses null/empty sentinels.",
+  "x-qmanMonotonicCasRule": "The authority atomically compares every casPrecondition field against its current record for the same catalogId. Genesis requires no prior record. A successor requires anchorVersion=expectedAnchorVersion+1, resourceVersion=expectedResourceVersion+1, previousAnchorDigestOrNull=expectedAnchorDigestOrNull, updatedAt later than the prior committed record, and minimumCatalogSequence>=expectedMinimumCatalogSequenceOrNull. If the candidate sequence equals the previous minimum, acceptedCatalogDigest must equal expectedAcceptedCatalogDigestOrNull; a different digest at the same sequence is rollback/equivocation and fails closed. A lower sequence, stale CAS, version skip, cross-catalog receipt, or digest mismatch never mutates the anchor.",
+  "x-qmanAcyclicAcceptanceRule": "First verify the candidate SupportedCatalog with an independently pinned trust root/key ring and compute its catalogDigest; minimumCatalogSequence must then equal that candidate's catalogSequence and acceptedCatalogDigest must equal that candidate's catalogDigest. Next CAS this external anchor, then issue the receipt. The candidate catalog MUST NOT contain the accepting anchorDigest, this receipt, or any digest derived from either in its own catalogDigest/signature projection. It may bind only previously committed anchor state when a separate protocol explicitly requires that context.",
+  "x-qmanOutOfBandAuthorityRule": "The current anchor, its trust root, and its CAS service are provisioned out of band and are not writable or selectable by the target-code repository, evidence repository, DirectPath database/controller, integration map, or artifacts whose qualification they decide. A colocated file, target-repository constant, map field, or self-declared authority key is not rollback protection. Only a COMMITTED record with a valid external receipt may authorize a QUALIFIED catalog.",
+  "x-qmanMirrorBindingRule": "If a release descriptor points at a mirror of this anchor in evidence storage, the independently fetched COMMITTED record's exact CANONICAL-JSON-V1 bytes and SHA-256 must equal that descriptor's blob. The equality prevents substitution but does not transfer authority to the descriptor, evidence revision, or map; the out-of-band CAS record and independently supplied trust root remain authoritative."
+}

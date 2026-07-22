@@ -192,7 +192,7 @@
       "vmwareReferenceStatus": "UNKNOWN",
       "experimentIds": ["VMW-QUAL-001", "VMW-DEP-001", "VMW-OWNER-002"],
       "minimalOpenExperimentIds": ["VMW-TYPE-CGPU-001", "VMW-TYPE-PGPU-001", "VMW-TYPE-HBA-001", "VMW-TYPE-ACCEL-001"],
-      "requiredQmanMeaning": "Consumer GPU, professional GPU, HBA, and accelerator traits are admitted by technical properties and conservative errata gates; exact specimens remain evidence metadata rather than the public HCL key."
+      "requiredQmanMeaning": "The capability engine is generic and evaluates consumer GPU, professional GPU, HBA, and accelerator traits plus conservative errata. Production SUPPORTED admission nevertheless requires an exact signed QualificationRecord key and SupportedCatalog digest for the complete platform/device/firmware/guest/workload profile; trait families are taxonomy and test coverage, never wildcard support."
     },
     {
       "id": "PARITY-VMWARE-SKU-HCL",
@@ -200,7 +200,7 @@
       "vmwareReferenceStatus": "PARTIAL",
       "experimentIds": ["VMW-QUAL-001"],
       "minimalOpenExperimentIds": [],
-      "requiredQmanMeaning": "Qman does not reproduce the VMware SKU compatibility catalog; it separates technical attachability from its type/trait support policy."
+      "requiredQmanMeaning": "Qman does not copy VMware catalog contents, naming, or format. It maintains its own exact signed QualificationRecord/SupportedCatalog allow entries, may present them grouped by type/trait, and keeps technically attachable but noncatalog devices unsupported."
     },
     {
       "id": "PARITY-BACKEND-CONTROL-PLANE-IMPLEMENTATION",
@@ -716,7 +716,7 @@
       "legacyIds": [],
       "evidencePaths": ["evidence/vmware-trace-index-20260722-summary.json"],
       "evidenceSha256": {
-        "evidence/vmware-trace-index-20260722-summary.json": "bc8c950c4d5fb9b6baa3e4ad0cb7746664dbb5dbf1a37f1d44d64541febab854"
+        "evidence/vmware-trace-index-20260722-summary.json": "a1ee313de34d7ba84b8e3cdd0964ff483bd6542c5df0512787b398ba23f697c1"
       },
       "runnerPaths": [
         "tools/generate_vmware_evidence_index.py",

@@ -133,6 +133,98 @@
       "backendFamily": "LEGACY_VFIO_TYPE1"
     }
   ],
+  "qualificationCaseMatrix": {
+    "matrixVersion": 1,
+    "derivationMode": "EXACT_UNION",
+    "missingRule": "DENY_QUALIFIED",
+    "evidenceRule": "E4_EXACT_CASE_SET",
+    "globalMandatoryCaseIds": [
+      "C00", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C10", "C15", "C16", "C18", "C19", "C20", "C21",
+      "D00", "D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10", "D11", "D12", "D13", "D14",
+      "F00", "F01", "F02", "F03", "F04", "F05", "F06", "F07", "F08", "F09", "F10",
+      "M06", "M07", "M08", "M10", "M12", "M14", "M15", "M16", "M17", "M20", "M21",
+      "O00", "O01", "O02", "O03", "O04", "O05a", "O05b", "O06", "O07", "O08", "O09", "O10",
+      "S00", "S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16"
+    ],
+    "platformRules": [
+      {"platformProfileId": "MAIN-KYLIN-V11-ARM", "caseIds": ["C21", "M08", "M12"]},
+      {"platformProfileId": "MAIN-KYLIN-V11-C86", "caseIds": ["C21", "M08", "M12"]},
+      {"platformProfileId": "MAIN-OPENEULER-X86", "caseIds": ["C21", "M08", "M12"]},
+      {"platformProfileId": "TEST-KYLIN-V10-ARM", "caseIds": ["C21", "M08", "M12"]},
+      {"platformProfileId": "TEST-KYLIN-V10-C86", "caseIds": ["C21", "M08", "M12"]},
+      {"platformProfileId": "TEST-RH-X86", "caseIds": ["C21", "M08", "M12"]}
+    ],
+    "backendRules": [
+      {"backendFamily": "LEGACY_VFIO_TYPE1", "caseIds": ["C17", "C21", "F08", "S15"]},
+      {"backendFamily": "VFIO_CDEV_IOMMUFD", "caseIds": ["C17", "C21", "F08", "S15"]}
+    ],
+    "machineFirmwareRules": [
+      {"machine": "i440fx", "firmware": "SeaBIOS", "caseIds": ["M03", "M14", "M15", "M16"]},
+      {"machine": "i440fx", "firmware": "UEFI", "caseIds": ["M14", "M15", "M16"]},
+      {"machine": "q35", "firmware": "SeaBIOS", "caseIds": ["M03", "M14", "M15", "M16", "M22"]},
+      {"machine": "q35", "firmware": "UEFI", "caseIds": ["M14", "M15", "M16", "M23"]},
+      {"machine": "virt", "firmware": "UEFI", "caseIds": ["M14", "M15", "M16"]}
+    ],
+    "configuredIommuTypeRules": [
+      {"configuredIommuType": "IOMMUFD_IOAS", "caseIds": ["C17", "C21", "F08", "S15"]},
+      {"configuredIommuType": "VFIO_TYPE1V2_IOMMU", "caseIds": ["C17", "C21", "F08", "S15"]},
+      {"configuredIommuType": "VFIO_TYPE1_IOMMU", "caseIds": ["C17", "C21", "F08", "S15"]}
+    ],
+    "identityVariantRules": [
+      {"identityVariant": "SLOT_BOUND", "caseIds": ["C10", "O06", "S01"]},
+      {"identityVariant": "STRONG_SERIAL", "caseIds": ["C10", "O06", "S01"]}
+    ],
+    "deviceArchetypeRules": [
+      {
+        "deviceArchetype": "ACCELERATOR",
+        "requiredDeviceTraits": ["ats-pri-pasid-policy", "dma-queues", "guest-workload", "large-bar", "msix", "reset"],
+        "caseIds": ["C09", "M00", "M01", "M02", "M08", "M09", "S08"]
+      },
+      {
+        "deviceArchetype": "CONSUMER_GPU",
+        "requiredDeviceTraits": ["guest-workload", "large-or-resizable-bar", "multifunction-audio", "option-rom", "reset"],
+        "caseIds": ["C08", "C09", "D14", "M00", "M01", "M02", "M05", "M08", "M11", "S06", "S08"]
+      },
+      {
+        "deviceArchetype": "GENERIC_PCI",
+        "requiredDeviceTraits": ["guest-workload", "reset"],
+        "caseIds": ["C09", "M08", "S08"]
+      },
+      {
+        "deviceArchetype": "HBA",
+        "requiredDeviceTraits": ["boot-critical-deny", "downstream-device-scope", "driver-restore", "guest-workload", "host-storage-dependency", "reset"],
+        "caseIds": ["C07", "C09", "M08", "O04", "S08"]
+      },
+      {
+        "deviceArchetype": "PROFESSIONAL_GPU",
+        "requiredDeviceTraits": ["guest-workload", "large-bar", "long-workload", "msix", "optional-p2p-policy", "reset"],
+        "caseIds": ["C09", "M00", "M01", "M02", "M08", "M10", "S08"]
+      }
+    ],
+    "deviceTraitRules": [
+      {"deviceTrait": "ats-pri-pasid-policy", "caseIds": ["M09"]},
+      {"deviceTrait": "boot-critical-deny", "caseIds": ["C07", "O04"]},
+      {"deviceTrait": "dma-queues", "caseIds": ["M08"]},
+      {"deviceTrait": "downstream-device-scope", "caseIds": ["C04", "C07", "D14"]},
+      {"deviceTrait": "driver-restore", "caseIds": ["S07", "S08"]},
+      {"deviceTrait": "guest-workload", "caseIds": ["S06", "S08"]},
+      {"deviceTrait": "host-storage-dependency", "caseIds": ["C07", "O04"]},
+      {"deviceTrait": "large-bar", "caseIds": ["M00", "M01", "M02", "M18", "M19", "M20", "M21"]},
+      {"deviceTrait": "large-or-resizable-bar", "caseIds": ["M00", "M01", "M02", "M11", "M18", "M19", "M20", "M21"]},
+      {"deviceTrait": "long-workload", "caseIds": ["S06", "S08"]},
+      {"deviceTrait": "msix", "caseIds": ["M08"]},
+      {"deviceTrait": "multifunction-audio", "caseIds": ["D14"]},
+      {"deviceTrait": "option-rom", "caseIds": ["M05"]},
+      {"deviceTrait": "optional-p2p-policy", "caseIds": ["M10"]},
+      {"deviceTrait": "rciep", "caseIds": ["C03", "C12"]},
+      {"deviceTrait": "reset", "caseIds": ["C03", "C04", "C18", "S04", "S07", "S08", "S11", "S12"]},
+      {"deviceTrait": "resizable-bar", "caseIds": ["M11"]},
+      {"deviceTrait": "rmrr", "caseIds": ["M04", "M13"]},
+      {"deviceTrait": "sriov", "caseIds": ["C13", "C14"]},
+      {"deviceTrait": "sub-page-bar", "caseIds": ["C11"]}
+    ],
+    "derivationRule": "For one QualificationRecord, compute the canonical set union of globalMandatoryCaseIds plus exactly one matching platform, backend, machine/firmware, configured-IOMMU, identity-variant and device-archetype rule plus every declared device-trait rule. deviceArchetype must contain every requiredDeviceTrait; every record trait must have exactly one rule. Missing, duplicate or unmatched selectors deny QUALIFIED. record.caseIds and E4 result case IDs must equal, not merely contain, the derived set. qualificationCaseMatrixSha256 is SHA-256 of CANONICAL-JSON-V1 bytes of this complete qualificationCaseMatrix object."
+  },
   "hclPolicy": {
     "engineScope": "GENERIC_PCI",
     "productionRequiresExactCatalogMatch": true,

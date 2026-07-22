@@ -50,8 +50,8 @@ class ReleaseGateTests(unittest.TestCase):
         self.assertIn("Risks: 39", result.stdout)
         self.assertIn("Acceptance: 101/101 defined", result.stdout)
         self.assertIn("0 unclassified", result.stdout)
-        self.assertIn("EXECUTABLE=2", result.stdout)
-        self.assertIn("IMPLEMENTATION_BLOCKED=93", result.stdout)
+        self.assertIn("EXECUTABLE=1", result.stdout)
+        self.assertIn("IMPLEMENTATION_BLOCKED=94", result.stdout)
         self.assertIn("HARDWARE_BLOCKED=6", result.stdout)
         self.assertIn(
             "implementation-blocked acceptance cases: C00, C01, C02, C03",
@@ -62,7 +62,7 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "reference-only executable cases do not close product gates: C20, O09",
+            "reference-only executable cases do not close product gates: O09",
             result.stdout,
         )
         self.assertIn(
@@ -71,7 +71,8 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "product acceptance dependency is reference-only: C21 -> C20",
+            "acceptance dependency is not closure-ready: C21 -> C20 "
+            "(IMPLEMENTATION_BLOCKED)",
             result.stdout,
         )
         self.assertIn(
@@ -125,18 +126,18 @@ class ReleaseGateTests(unittest.TestCase):
         result = self.invoke("release")
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("Release: BLOCKED", result.stdout)
-        self.assertIn("Case C20: PASS", result.stdout)
-        self.assertIn("Case O09: PASS", result.stdout)
+        self.assertIn("Portable release gate: BLOCKED", result.stdout)
+        self.assertNotIn("Case O09: PASS", result.stdout)
 
     def test_o09_is_executable(self) -> None:
         result = self.invoke("run-cases", "--case", "O09")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Case O09: PASS", result.stdout)
 
-    def test_c20_is_executable_reference_scope(self) -> None:
+    def test_c20_e2_runner_does_not_make_product_case_executable(self) -> None:
         result = self.invoke("run-cases", "--case", "C20")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("Case C20: PASS", result.stdout)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("Not executable or unknown: C20", result.stdout)
 
     def test_project_evidence_snapshot_cannot_drift_from_index(self) -> None:
         counts = Counter(

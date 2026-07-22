@@ -70,8 +70,8 @@ class AcceptanceGovernanceTests(unittest.TestCase):
         self.assertEqual(
             Counter(
                 {
-                    "EXECUTABLE": 2,
-                    "IMPLEMENTATION_BLOCKED": 93,
+                    "EXECUTABLE": 1,
+                    "IMPLEMENTATION_BLOCKED": 94,
                     "HARDWARE_BLOCKED": 6,
                 }
             ),
@@ -92,7 +92,7 @@ class AcceptanceGovernanceTests(unittest.TestCase):
         self.assertEqual([], errors)
         self.assertEqual([], missing)
         self.assertEqual(101, sum(counts.values()))
-        self.assertEqual({"C20", "O09"}, set(executable))
+        self.assertEqual({"O09"}, set(executable))
         self.assertTrue(blockers, "classified cases must still block release until closed")
 
         candidate = copy.deepcopy(self.policy)

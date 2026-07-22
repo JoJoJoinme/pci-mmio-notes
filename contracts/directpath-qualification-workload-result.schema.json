@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-qualification-workload-result.schema.json",
+  "title": "Qman DirectPath signed terminal QualificationWorkloadResult",
+  "description": "Closed TEST_EVIDENCE-signed terminal workload observation for one physical qualification run. It binds exact target/host/workload inputs, authoritative monotonic duration, immutable observation artifacts and typed metrics without referring backward to a RunManifest, Subject or EvidenceIndex.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "resultId",
+    "qualificationRunId",
+    "qualificationRunRequestDigest",
+    "targetRepositoryCommit",
+    "mappingCoreId",
+    "mappingCoreDigest",
+    "portableContractSha256",
+    "hostId",
+    "hostEpoch",
+    "bootId",
+    "workloadId",
+    "workloadDefinitionDigest",
+    "evaluationReport",
+    "outcome",
+    "terminalReasonCodeOrNull",
+    "wallClockTiming",
+    "monotonicTiming",
+    "artifactObservations",
+    "assertionResults",
+    "metrics",
+    "createdAt",
+    "keyRingVersion",
+    "signerKeyId",
+    "signerRole",
+    "resultDigest",
+    "signature"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "resultId": {"$ref": "#/$defs/id"},
+    "qualificationRunId": {"$ref": "#/$defs/id"},
+    "qualificationRunRequestDigest": {"$ref": "#/$defs/digest"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "mappingCoreDigest": {"$ref": "#/$defs/digest"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "hostId": {"$ref": "#/$defs/id"},
+    "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+    "bootId": {"$ref": "#/$defs/id"},
+    "workloadId": {"$ref": "#/$defs/id"},
+    "workloadDefinitionDigest": {"$ref": "#/$defs/digest"},
+    "evaluationReport": {"$ref": "#/$defs/evaluationReport"},
+    "outcome": {"enum": ["PASSED", "FAILED", "ABORTED"]},
+    "terminalReasonCodeOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/reasonCode"}]},
+    "wallClockTiming": {"$ref": "#/$defs/wallClockTiming"},
+    "monotonicTiming": {"$ref": "#/$defs/monotonicTiming"},
+    "artifactObservations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/artifactObservation"},
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [artifactRole,observationId,sha256]"
+    },
+    "assertionResults": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/assertionResult"},
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of assertionId"
+    },
+    "metrics": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/metric"},
+      "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of [metricId,aggregation,unit]"
+    },
+    "createdAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "signerRole": {"const": "TEST_EVIDENCE"},
+    "resultDigest": {"$ref": "#/$defs/digest"},
+    "signature": {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"outcome": {"const": "PASSED"}}, "required": ["outcome"]},
+      "then": {"properties": {"terminalReasonCodeOrNull": {"type": "null"}}},
+      "else": {"properties": {"terminalReasonCodeOrNull": {"$ref": "#/$defs/reasonCode"}}}
+    },
+    {
+      "if": {"properties": {"evaluationReport": {"properties": {"evaluationOutcome": {"const": "EVALUATION_ERROR"}}, "required": ["evaluationOutcome"]}}, "required": ["evaluationReport"]},
+      "then": {"properties": {"outcome": {"enum": ["FAILED", "ABORTED"]}}},
+      "else": {"properties": {"assertionResults": {"minItems": 1}, "metrics": {"minItems": 1}}}
+    },
+    {
+      "if": {"properties": {"evaluationReport": {"properties": {"evaluationOutcome": {"const": "PASSED"}}, "required": ["evaluationOutcome"]}}, "required": ["evaluationReport"]},
+      "then": {"properties": {"outcome": {"const": "PASSED"}}}
+    },
+    {
+      "if": {"properties": {"evaluationReport": {"properties": {"evaluationOutcome": {"const": "FAILED"}}, "required": ["evaluationOutcome"]}}, "required": ["evaluationReport"]},
+      "then": {"properties": {"outcome": {"const": "FAILED"}}}
+    }
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "reasonCode": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,127}$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "repositoryRelativePath": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "mediaType": {"type": "string", "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$"},
+    "decimalNanoseconds": {"type": "string", "pattern": "^(0|[1-9][0-9]{0,38})$"},
+    "positiveDecimalDuration": {"type": "string", "pattern": "^[1-9][0-9]{0,38}$"},
+    "decimalMetricValue": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+    },
+    "digestSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/digest"},
+      "x-qmanSetOrder": "ascending canonical bytes"
+    },
+    "evaluationReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluationId", "evaluationOutcome", "evaluatedAt", "reportSignedAt", "path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "reportDigest"],
+      "properties": {
+        "evaluationId": {"$ref": "#/$defs/id"},
+        "evaluationOutcome": {"enum": ["PASSED", "FAILED", "EVALUATION_ERROR"]},
+        "evaluatedAt": {"$ref": "#/$defs/timestamp"},
+        "reportSignedAt": {"$ref": "#/$defs/timestamp"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-workload-evaluation-report.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "reportDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "wallClockTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startedAt", "finishedAt", "durationMicroseconds"],
+      "properties": {
+        "startedAt": {"$ref": "#/$defs/timestamp"},
+        "finishedAt": {"$ref": "#/$defs/timestamp"},
+        "durationMicroseconds": {"$ref": "#/$defs/positiveDecimalDuration"}
+      }
+    },
+    "monotonicTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clockId", "startedNanoseconds", "finishedNanoseconds", "durationNanoseconds"],
+      "properties": {
+        "clockId": {"enum": ["CLOCK_MONOTONIC", "CLOCK_MONOTONIC_RAW", "CLOCK_BOOTTIME"]},
+        "startedNanoseconds": {"$ref": "#/$defs/decimalNanoseconds"},
+        "finishedNanoseconds": {"$ref": "#/$defs/decimalNanoseconds"},
+        "durationNanoseconds": {"$ref": "#/$defs/positiveDecimalDuration"}
+      }
+    },
+    "artifactObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observationId",
+        "artifactRole",
+        "observedAt",
+        "path",
+        "sha256",
+        "byteLength",
+        "mediaType",
+        "schemaRefOrNull",
+        "schemaSha256OrNull",
+        "valueProjectionOrNull"
+      ],
+      "properties": {
+        "observationId": {"$ref": "#/$defs/id"},
+        "artifactRole": {
+          "enum": [
+            "WORKLOAD_COMMAND",
+            "WORKLOAD_STDOUT",
+            "WORKLOAD_STDERR",
+            "WORKLOAD_ASSERTION",
+            "DEVICE_TELEMETRY",
+            "GUEST_DRIVER_STATE",
+            "HOST_DEVICE_STATE",
+            "DMA_IRQ_OBSERVATION",
+            "METRIC_SOURCE"
+          ]
+        },
+        "observedAt": {"$ref": "#/$defs/timestamp"},
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"$ref": "#/$defs/mediaType"},
+        "schemaRefOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+        "schemaSha256OrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+        "valueProjectionOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^(/([^/~]|~[01])*)*$"}]}
+      }
+    },
+    "assertionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assertionId", "assertionDigest", "oracleId", "evaluatorId", "evaluatorDefinitionDigest", "verdict", "evidenceArtifactSha256s"],
+      "properties": {
+        "assertionId": {"type": "string", "pattern": "^WL-[A-Z0-9][A-Z0-9._-]{1,126}$"},
+        "assertionDigest": {"$ref": "#/$defs/digest"},
+        "oracleId": {"$ref": "#/$defs/id"},
+        "evaluatorId": {"$ref": "#/$defs/id"},
+        "evaluatorDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "verdict": {"enum": ["PASS", "FAIL"]},
+        "evidenceArtifactSha256s": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}, "x-qmanSetOrder": "ascending canonical bytes"}
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metricId",
+        "metricDefinitionDigest",
+        "evaluatorId",
+        "evaluatorDefinitionDigest",
+        "unit",
+        "valueDecimal",
+        "outputScale",
+        "aggregation",
+        "sampleCount",
+        "windowStartedAt",
+        "windowFinishedAt",
+        "monotonicClockId",
+        "windowStartedNanoseconds",
+        "windowFinishedNanoseconds",
+        "sourceArtifactSha256s"
+      ],
+      "properties": {
+        "metricId": {"$ref": "#/$defs/id"},
+        "metricDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "evaluatorId": {"$ref": "#/$defs/id"},
+        "evaluatorDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "unit": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._/%*^-]{0,63}$"},
+        "valueDecimal": {"$ref": "#/$defs/decimalMetricValue"},
+        "outputScale": {"type": "integer", "minimum": 0, "maximum": 38},
+        "aggregation": {"enum": ["INSTANT", "MIN", "MAX", "MEAN", "P50", "P95", "P99", "TOTAL", "RATE"]},
+        "sampleCount": {"$ref": "#/$defs/safePositiveInteger"},
+        "windowStartedAt": {"$ref": "#/$defs/timestamp"},
+        "windowFinishedAt": {"$ref": "#/$defs/timestamp"},
+        "monotonicClockId": {"enum": ["CLOCK_MONOTONIC", "CLOCK_MONOTONIC_RAW", "CLOCK_BOOTTIME"]},
+        "windowStartedNanoseconds": {"$ref": "#/$defs/decimalNanoseconds"},
+        "windowFinishedNanoseconds": {"$ref": "#/$defs/decimalNanoseconds"},
+        "sourceArtifactSha256s": {"$ref": "#/$defs/digestSet"}
+      }
+    }
+  },
+  "x-qmanInputBindingRule": "Resolve qualificationRunRequestDigest to one schema-valid, TEST_EVIDENCE-signed QualificationRunRequest and require its qualificationRunId, normalized target C, mapping core ID/digest M, portable contract, hostId/hostEpoch/bootId and workload ID/definition digest to byte-equal this result. Recursively resolve that request's fixed QualificationWorkloadDefinition raw/schema/internal digest/signature descriptor; the parsed entrypoint binary/configuration, invocation, minimum duration, required artifacts, mandatory assertions and metric definitions are authoritative. A bare workloadDefinitionDigest cannot locate or redefine them, and a result from another request, target revision, mapping, host boot, workload version or portable contract cannot be relabeled or reused.",
+  "x-qmanTerminalOutcomeRule": "Resolve the parsed evaluation report raw bytes, exact pinned schema hash, internal reportDigest and signature before forming this result. Descriptor evaluationId/evaluationOutcome/evaluatedAt byte-equal the parsed report, whose complete C/M/portable/run/request/host/boot/workload tuple byte-equals this result. artifactObservations, assertionResults and metrics byte-equal the report arrays. outcome=PASSED requires report PASSED, null terminal reason and every assertion PASS; report FAILED requires result FAILED; EVALUATION_ERROR permits only FAILED or ABORTED with a stable non-null reason and may copy only its verified partial prefixes. A process exit code, log line or reporter summary cannot override the report. Once signed, retry or resume creates a new resultId and qualificationRunId rather than changing this object.",
+  "x-qmanTimingRule": "wallClockTiming.finishedAt is strictly after startedAt and durationMicroseconds equals their exact UTC difference. Parse monotonic values as unsigned decimal integers and require finishedNanoseconds > startedNanoseconds and durationNanoseconds = finishedNanoseconds - startedNanoseconds. The monotonic clock remains in the same bootId for the complete workload and is authoritative for minimum-duration qualification; wall-clock timing is correlation evidence and cannot replace it. Every artifact observedAt and metric window lies within the inclusive wall-clock interval, every metric window has finish >= start, and no sample from another run or boot is admitted.",
+  "x-qmanArtifactAndMetricRule": "Resolve every artifact path inside evidence commit E, verify exact raw SHA-256, byte length and media type, and require observationId, path and sha256 to be independently unique. schemaRefOrNull, schemaSha256OrNull and valueProjectionOrNull are either all null or all non-null; for a typed artifact resolve the independently pinned schema bytes, validate the closed record and apply the JSON Pointer projection. artifactObservations exactly covers every evidence role and assertion oracle required by the parsed QualificationWorkloadDefinition and terminal outcome. Every metricId/aggregation/unit tuple is unique; evaluator identity, metricDefinitionDigest, outputScale and source projection byte-equal the matching definition; monotonic clock/window lies inside this result's monotonic interval; and sourceArtifactSha256s resolves only to allowed observations. Re-run the pinned WorkloadEvaluatorManifest and require its report to byte-equal the signed report projection. Missing, duplicated, cross-run, aggregate-only or untraceable observations and metrics fail closed.",
+  "x-qmanAcyclicConstructionRule": "Construct this result after the terminal workload observation and before QualificationRunManifest. It may refer backward only to the already signed pre-run QualificationRunRequest and raw observation artifacts. It contains no QualificationRunManifest path/hash/runDigest, QualificationMeasurement digest, scenario execution-core or ExecutionEvidenceIndex digest, QualificationSubjectManifest digest, QualificationRecord digest, CaseCompletionRecord digest or release-index digest. The later guestDriverAndWorkload QualificationMeasurement may bind this raw result; the later RunManifest may bind its raw hash/resultDigest; Subject and Index are constructed afterward. No later digest participates in resultDigest.",
+  "x-qmanDigestAndSignatureRule": "The parsed report's evaluatedAt/signedAt byte-equal evaluationReport.evaluatedAt/reportSignedAt and obey wallClockTiming.finishedAt <= evaluatedAt < signedAt < createdAt. Deep-copy the complete closed result, conceptually replace resultDigest and signature with null, retain every other field unchanged, serialize with RFC 8785 JSON Canonicalization Scheme (JCS), and store SHA-256 of those UTF-8 bytes in resultDigest. The null/null construction projection need not validate as a stored signed instance. Verify signature as Ed25519 over ASCII(QMAN-DIRECTPATH/QUALIFICATION-WORKLOAD-RESULT/V1) || 0x00 || the same JCS bytes. Resolve signerKeyId through the independently authenticated key ring at keyRingVersion; the key is active and non-revoked at createdAt and has role TEST_EVIDENCE. Ordinary JSON, a different canonicalization/domain, a partial projection, self-declared role or signature created before the terminal observation/evaluation is invalid."
+}

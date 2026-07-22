@@ -1,0 +1,1190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-portable-entities.schema.json",
+  "title": "Qman DirectPath portable non-authority entity projections",
+  "description": "Closed portable wire projections for DeviceRecord, QualificationProfile, VM DirectPath Request and DependencyBundle. These read/configuration models do not replace the persisted authority aggregates in directpath-authority-entities.schema.json.",
+  "oneOf": [
+    {"$ref": "#/$defs/ENTITY-DEVICE-RECORD"},
+    {"$ref": "#/$defs/ENTITY-QUALIFICATION-PROFILE"},
+    {"$ref": "#/$defs/ENTITY-VM-DIRECTPATH-REQUEST"},
+    {"$ref": "#/$defs/ENTITY-DEPENDENCY-BUNDLE"}
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$"
+    },
+    "deviceUid": {
+      "type": "string",
+      "pattern": "^urn:qman:directpath:device:v1:[A-Za-z0-9][A-Za-z0-9._:-]{2,127}:sha256:[0-9a-f]{64}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/digest"}
+      ]
+    },
+    "safeUint": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "bdf": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{4}:[0-9a-f]{2}:[01][0-9a-f]\\.[0-7]$"
+    },
+    "idSet": {
+      "type": "array",
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/id"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "nonEmptyDeviceUidSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/deviceUid"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "bdfSet": {
+      "type": "array",
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/bdf"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "providerFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "factId",
+        "providerId",
+        "providerVersion",
+        "providerDefinitionDigest",
+        "observedAt",
+        "evidenceHash"
+      ],
+      "properties": {
+        "factId": {"$ref": "#/$defs/id"},
+        "providerId": {"$ref": "#/$defs/id"},
+        "providerVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "providerDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "observedAt": {"$ref": "#/$defs/timestamp"},
+        "evidenceHash": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "physicalPathProvider": {
+      "$ref": "directpath-identity-v1.schema.json#/$defs/physicalPathProvider"
+    },
+    "physicalPath": {
+      "oneOf": [
+        {"$ref": "directpath-identity-v1.schema.json#/$defs/acpiPhysicalPath"},
+        {"$ref": "directpath-identity-v1.schema.json#/$defs/smbiosPhysicalPath"},
+        {"$ref": "directpath-identity-v1.schema.json#/$defs/deviceTreePhysicalPath"}
+      ]
+    },
+    "deviceRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "structuralRole",
+        "functionRole",
+        "roleFactsDigest",
+        "provenanceDigest"
+      ],
+      "properties": {
+        "structuralRole": {
+          "enum": [
+            "ENDPOINT_PAYLOAD",
+            "FABRIC_DEPENDENCY",
+            "PLATFORM_DEPENDENCY",
+            "HOST_CRITICAL_DENIED",
+            "UNKNOWN"
+          ]
+        },
+        "functionRole": {
+          "$ref": "directpath-identity-v1.schema.json#/$defs/functionRole"
+        },
+        "roleFactsDigest": {"$ref": "#/$defs/digest"},
+        "provenanceDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "iommuProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dmaIsolationMode",
+        "backendCapability",
+        "kernelIommuGroup",
+        "providerId",
+        "providerVersion",
+        "providerDefinitionDigest",
+        "evidenceHash"
+      ],
+      "properties": {
+        "dmaIsolationMode": {
+          "enum": ["IOMMU", "NO_IOMMU", "UNKNOWN"]
+        },
+        "backendCapability": {
+          "enum": [
+            "LEGACY_VFIO_TYPE1",
+            "LEGACY_VFIO_TYPE1V2",
+            "VFIO_CDEV_IOMMUFD",
+            "NONE",
+            "UNKNOWN"
+          ]
+        },
+        "kernelIommuGroup": {"$ref": "#/$defs/bdfSet"},
+        "providerId": {"$ref": "#/$defs/id"},
+        "providerVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "providerDefinitionDigest": {"$ref": "#/$defs/digest"},
+        "evidenceHash": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"dmaIsolationMode": {"const": "IOMMU"}},
+            "required": ["dmaIsolationMode"]
+          },
+          "then": {
+            "properties": {
+              "backendCapability": {
+                "enum": [
+                  "LEGACY_VFIO_TYPE1",
+                  "LEGACY_VFIO_TYPE1V2",
+                  "VFIO_CDEV_IOMMUFD"
+                ]
+              },
+              "kernelIommuGroup": {"minItems": 1}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "dmaIsolationMode": {"enum": ["NO_IOMMU", "UNKNOWN"]}
+            },
+            "required": ["dmaIsolationMode"]
+          },
+          "then": {
+            "properties": {
+              "backendCapability": {"enum": ["NONE", "UNKNOWN"]}
+            }
+          }
+        }
+      ]
+    },
+    "dependencyAction": {
+      "$ref": "directpath-portable-hash-subjects.schema.json#/$defs/dependencyAction"
+    },
+    "physicalIsolationDomainFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "memberDeviceUids", "provenanceDigest"],
+      "properties": {
+        "state": {"enum": ["KNOWN", "UNKNOWN", "CONFLICT"]},
+        "memberDeviceUids": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/deviceUid"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        },
+        "provenanceDigest": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"state": {"const": "KNOWN"}},
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {"memberDeviceUids": {"minItems": 1}}
+          },
+          "else": {
+            "properties": {"memberDeviceUids": {"maxItems": 0}}
+          }
+        }
+      ]
+    },
+    "resetContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "supported",
+        "selectedMethodOrNull",
+        "resetAffectedSet",
+        "contractDigest",
+        "provenanceDigest"
+      ],
+      "properties": {
+        "supported": {"type": "boolean"},
+        "selectedMethodOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "enum": [
+                "PCI_FLR",
+                "VFIO_DEVICE_RESET",
+                "VFIO_HOT_RESET",
+                "SECONDARY_BUS_RESET",
+                "PM_RESET",
+                "VENDOR_QUALIFIED_RESET"
+              ]
+            }
+          ]
+        },
+        "resetAffectedSet": {"$ref": "#/$defs/nonEmptyDeviceUidSet"},
+        "contractDigest": {"$ref": "#/$defs/digest"},
+        "provenanceDigest": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"supported": {"const": true}},
+            "required": ["supported"]
+          },
+          "then": {
+            "properties": {"selectedMethodOrNull": {"type": "string"}}
+          },
+          "else": {
+            "properties": {"selectedMethodOrNull": {"type": "null"}}
+          }
+        }
+      ]
+    },
+    "ownerState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adminEnabled",
+        "desiredOwner",
+        "effectiveOwner",
+        "hostActive",
+        "activationDisposition",
+        "driverOrNull",
+        "ownerActivationGroup",
+        "exclusiveAttachGroup",
+        "provenanceDigest"
+      ],
+      "properties": {
+        "adminEnabled": {"type": "boolean"},
+        "desiredOwner": {"enum": ["HOST", "PASSTHROUGH"]},
+        "effectiveOwner": {
+          "enum": ["HOST", "PASSTHROUGH", "UNBOUND", "UNKNOWN"]
+        },
+        "hostActive": {"type": "boolean"},
+        "activationDisposition": {
+          "enum": ["ALREADY_ACTIVE", "LIVE_APPLY", "REBOOT_REQUIRED", "DENIED"]
+        },
+        "driverOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"}
+          ]
+        },
+        "ownerActivationGroup": {"$ref": "#/$defs/nonEmptyDeviceUidSet"},
+        "exclusiveAttachGroup": {"$ref": "#/$defs/id"},
+        "provenanceDigest": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"hostActive": {"const": true}},
+            "required": ["hostActive"]
+          },
+          "then": {
+            "properties": {
+              "adminEnabled": {"const": true},
+              "effectiveOwner": {"const": "PASSTHROUGH"},
+              "activationDisposition": {"const": "ALREADY_ACTIVE"}
+            }
+          }
+        }
+      ]
+    },
+    "barFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "barKind",
+        "index",
+        "regionKind",
+        "addressWidthBits",
+        "prefetchable",
+        "sizeBytes",
+        "alignmentBytes",
+        "currentAddressOrNull",
+        "resizableBarCurrentSizeOrNull",
+        "enabled",
+        "provenanceDigest"
+      ],
+      "properties": {
+        "barKind": {"enum": ["STANDARD_BAR", "VF_BAR", "EXPANSION_ROM"]},
+        "index": {"type": "integer", "minimum": 0, "maximum": 6},
+        "regionKind": {"enum": ["MMIO", "IOPORT", "ROM"]},
+        "addressWidthBits": {"enum": [32, 64]},
+        "prefetchable": {"type": "boolean"},
+        "sizeBytes": {"$ref": "#/$defs/safePositiveInteger"},
+        "alignmentBytes": {"$ref": "#/$defs/safePositiveInteger"},
+        "currentAddressOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/safeUint"}
+          ]
+        },
+        "resizableBarCurrentSizeOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/safePositiveInteger"}
+          ]
+        },
+        "enabled": {"type": "boolean"},
+        "provenanceDigest": {"$ref": "#/$defs/digest"}
+      },
+      "x-qmanArithmeticRule": "sizeBytes, alignmentBytes and every address are safe integers; sizeBytes and alignmentBytes are powers of two, and a non-null currentAddressOrNull is aligned to alignmentBytes. Provider validation, not JSON Schema alone, enforces the power-of-two and alignment relations."
+    },
+    "interruptFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "supportedModes",
+        "maximumVectors",
+        "interruptRemapping",
+        "ats",
+        "pri",
+        "pasid",
+        "provenanceDigest"
+      ],
+      "properties": {
+        "supportedModes": {
+          "type": "array",
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {"enum": ["INTX", "MSI", "MSIX"]},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        },
+        "maximumVectors": {"$ref": "#/$defs/safeUint"},
+        "interruptRemapping": {"enum": ["PRESENT", "ABSENT", "UNKNOWN"]},
+        "ats": {"enum": ["PRESENT", "ABSENT", "UNKNOWN"]},
+        "pri": {"enum": ["PRESENT", "ABSENT", "UNKNOWN"]},
+        "pasid": {"enum": ["PRESENT", "ABSENT", "UNKNOWN"]},
+        "provenanceDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "lastResetResult",
+        "quarantineReasonCodeOrNull",
+        "healthEvidenceHash",
+        "observedAt"
+      ],
+      "properties": {
+        "state": {"enum": ["HEALTHY", "DEGRADED", "FAILED", "QUARANTINED", "UNKNOWN"]},
+        "lastResetResult": {"enum": ["PASS", "FAIL", "NOT_RUN", "UNKNOWN"]},
+        "quarantineReasonCodeOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,127}$"}
+          ]
+        },
+        "healthEvidenceHash": {"$ref": "#/$defs/digest"},
+        "observedAt": {"$ref": "#/$defs/timestamp"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"state": {"const": "QUARANTINED"}},
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {"quarantineReasonCodeOrNull": {"type": "string"}}
+          }
+        }
+      ]
+    },
+    "deviceGenerations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hostEpoch",
+        "agentGeneration",
+        "snapshotEpoch",
+        "deviceGeneration",
+        "resourceVersion"
+      ],
+      "properties": {
+        "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "agentGeneration": {"$ref": "#/$defs/safePositiveInteger"},
+        "snapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "deviceGeneration": {"$ref": "#/$defs/safePositiveInteger"},
+        "resourceVersion": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    },
+    "deviceProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capturedAt",
+        "providerFacts",
+        "providerFactsDigest"
+      ],
+      "properties": {
+        "capturedAt": {"$ref": "#/$defs/timestamp"},
+        "providerFacts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/providerFact"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [factId,providerId,providerVersion,evidenceHash]; duplicate factId values are rejected"
+        },
+        "providerFactsDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "ENTITY-DEVICE-RECORD": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "hostId",
+        "deviceUid",
+        "immutableIdentity",
+        "identityFingerprint",
+        "currentBdf",
+        "physicalPathProvider",
+        "physicalPath",
+        "role",
+        "iommuProvider",
+        "physicalIsolationDomain",
+        "dependencyActions",
+        "resetContract",
+        "owner",
+        "bars",
+        "interrupts",
+        "health",
+        "technicalTraits",
+        "generations",
+        "provenance",
+        "deviceRecordHash"
+      ],
+      "properties": {
+        "subjectType": {"const": "DEVICE_RECORD"},
+        "schemaVersion": {"const": 1},
+        "hostId": {"$ref": "#/$defs/id"},
+        "deviceUid": {"$ref": "#/$defs/deviceUid"},
+        "immutableIdentity": {"$ref": "directpath-identity-v1.schema.json"},
+        "identityFingerprint": {"$ref": "#/$defs/digest"},
+        "currentBdf": {"$ref": "#/$defs/bdf"},
+        "physicalPathProvider": {"$ref": "#/$defs/physicalPathProvider"},
+        "physicalPath": {"$ref": "#/$defs/physicalPath"},
+        "role": {"$ref": "#/$defs/deviceRole"},
+        "iommuProvider": {"$ref": "#/$defs/iommuProvider"},
+        "physicalIsolationDomain": {"$ref": "#/$defs/physicalIsolationDomainFact"},
+        "dependencyActions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/dependencyAction"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [deviceUid,action,provenanceDigest]; duplicate [deviceUid,action] values are rejected"
+        },
+        "resetContract": {"$ref": "#/$defs/resetContract"},
+        "owner": {"$ref": "#/$defs/ownerState"},
+        "bars": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/barFact"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [barKind,index]; duplicate [barKind,index] values are rejected"
+        },
+        "interrupts": {"$ref": "#/$defs/interruptFacts"},
+        "health": {"$ref": "#/$defs/health"},
+        "technicalTraits": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"},
+        "generations": {"$ref": "#/$defs/deviceGenerations"},
+        "provenance": {"$ref": "#/$defs/deviceProvenance"},
+        "deviceRecordHash": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "physicalPathProvider": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/acpiPathProvider"
+              }
+            },
+            "required": ["physicalPathProvider"]
+          },
+          "then": {
+            "properties": {
+              "physicalPath": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/acpiPhysicalPath"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "physicalPathProvider": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/smbiosPathProvider"
+              }
+            },
+            "required": ["physicalPathProvider"]
+          },
+          "then": {
+            "properties": {
+              "physicalPath": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/smbiosPhysicalPath"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "physicalPathProvider": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/deviceTreePathProvider"
+              }
+            },
+            "required": ["physicalPathProvider"]
+          },
+          "then": {
+            "properties": {
+              "physicalPath": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/deviceTreePhysicalPath"
+              }
+            }
+          }
+        }
+      ],
+      "x-qmanIdentityRule": "immutableIdentity is the complete IDENTITY-V1 object. identityFingerprint is SHA-256 of its CANONICAL-JSON-V1 bytes; deviceUid is derived by the IDENTITY-V1 rule, and hostId and role.functionRole must equal immutableIdentity.hostStableId and immutableIdentity.pciIds.functionRole. For SLOT_BOUND, physicalPathProvider and physicalPath must equal the immutable identity fields. For STRONG_SERIAL they are current firmware locators only and never identity inputs.",
+      "x-qmanCurrentFactRule": "currentBdf, path, role observations, IOMMU group, domains, dependencies, reset, owner, BAR, interrupt, health and technicalTraits fields are facts from exactly one current HostSnapshot. technicalTraits is a canonical set emitted by the versioned inventory provider from the same retained provider facts; it is qualification routing input, not an HCL support assertion. They never mutate immutableIdentity. A changed fact publishes a new snapshot/device generation and cannot overwrite an older immutable record.",
+      "x-qmanDomainRule": "physicalIsolationDomain.memberDeviceUids, every dependency action target, resetAffectedSet and ownerActivationGroup use deviceUid, while iommuProvider.kernelIommuGroup alone uses current BDF because it is the kernel operational open/bind unit. KNOWN physicalIsolationDomain includes this deviceUid; UNKNOWN or CONFLICT carries an empty member set and denies capability instead of inventing isolation.",
+      "x-qmanHashRule": "deviceRecordHash = SHA-256(CANONICAL-JSON-V1 of this complete closed object with deviceRecordHash conceptually replaced by null). The published object carries the non-null digest; HostSnapshot.deviceRecordDigests contains this exact value."
+    },
+    "ENTITY-QUALIFICATION-PROFILE": {
+      "allOf": [
+        {
+          "$ref": "directpath-portable-hash-subjects.schema.json#/$defs/qualificationProfile"
+        },
+        {
+          "properties": {
+            "catalogSequence": {"$ref": "#/$defs/safePositiveInteger"},
+            "profileHash": {"$ref": "#/$defs/digest"}
+          }
+        }
+      ],
+      "x-qmanAliasRule": "This entity is the exact portable qualificationProfile hash subject, narrowed only so a persisted resolved read model has a non-null profileHash and a safe catalogSequence. No second field spelling or serialization is permitted.",
+      "x-qmanHashRule": "profileHash is computed by the directpath-portable-hash-subjects.schema.json qualificationProfile rule with profileHash conceptually null; the stored entity carries the resulting non-null digest."
+    },
+    "lifecycleOperation": {
+      "enum": ["COLD_RELOCATE", "GUEST_REBOOT", "POWER_OFF", "POWER_ON"]
+    },
+    "staticLifecyclePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operations",
+        "guestRuntimePciHotplug",
+        "liveMigration",
+        "snapshotWhileAttached",
+        "suspendWhileAttached",
+        "automaticHostFailureRestart",
+        "coldRelocationMode"
+      ],
+      "properties": {
+        "operations": {
+          "const": ["GUEST_REBOOT", "POWER_OFF", "POWER_ON"]
+        },
+        "guestRuntimePciHotplug": {"const": false},
+        "liveMigration": {"const": false},
+        "snapshotWhileAttached": {"const": false},
+        "suspendWhileAttached": {"const": false},
+        "automaticHostFailureRestart": {"const": false},
+        "coldRelocationMode": {"const": "DISABLED_STATIC_HOST_AFFINITY"}
+      }
+    },
+    "dynamicLifecyclePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operations",
+        "guestRuntimePciHotplug",
+        "liveMigration",
+        "snapshotWhileAttached",
+        "suspendWhileAttached",
+        "automaticHostFailureRestart",
+        "coldRelocationMode"
+      ],
+      "properties": {
+        "operations": {
+          "const": ["COLD_RELOCATE", "GUEST_REBOOT", "POWER_OFF", "POWER_ON"]
+        },
+        "guestRuntimePciHotplug": {"const": false},
+        "liveMigration": {"const": false},
+        "snapshotWhileAttached": {"const": false},
+        "suspendWhileAttached": {"const": false},
+        "automaticHostFailureRestart": {"const": false},
+        "coldRelocationMode": {"const": "DUAL_ONLINE_COOPERATIVE_ONLY"}
+      }
+    },
+    "profileBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileId",
+        "profileHash",
+        "verificationReceiptHash",
+        "requiredSupportStatus"
+      ],
+      "properties": {
+        "profileId": {"$ref": "#/$defs/id"},
+        "profileHash": {"$ref": "#/$defs/digest"},
+        "verificationReceiptHash": {"$ref": "#/$defs/digest"},
+        "requiredSupportStatus": {"enum": ["QUALIFIED", "SUPPORTED"]}
+      }
+    },
+    "hostSnapshotBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hostId",
+        "kernelBootId",
+        "hostEpoch",
+        "agentGeneration",
+        "hostAuthorityResourceVersion",
+        "snapshotEpoch",
+        "snapshotContentHash"
+      ],
+      "properties": {
+        "hostId": {"$ref": "#/$defs/id"},
+        "kernelBootId": {"$ref": "#/$defs/id"},
+        "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "agentGeneration": {"$ref": "#/$defs/safePositiveInteger"},
+        "hostAuthorityResourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "snapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "snapshotContentHash": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "resolveCurrentSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "maximumAgeMicros"],
+      "properties": {
+        "mode": {"const": "RESOLVE_CURRENT_AT_OPERATION"},
+        "maximumAgeMicros": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    },
+    "pinnedCurrentSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "maximumAgeMicros", "binding"],
+      "properties": {
+        "mode": {"const": "PINNED_CURRENT_SNAPSHOT"},
+        "maximumAgeMicros": {"$ref": "#/$defs/safePositiveInteger"},
+        "binding": {"$ref": "#/$defs/hostSnapshotBinding"}
+      }
+    },
+    "snapshotConstraint": {
+      "oneOf": [
+        {"$ref": "#/$defs/resolveCurrentSnapshot"},
+        {"$ref": "#/$defs/pinnedCurrentSnapshot"}
+      ]
+    },
+    "policyBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyId",
+        "policyVersion",
+        "policyHash",
+        "admissionMode",
+        "supportedCatalogDigest",
+        "catalogSequence",
+        "trustKeyRingSequence",
+        "qualificationCaseMatrixHash"
+      ],
+      "properties": {
+        "policyId": {"$ref": "#/$defs/id"},
+        "policyVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "policyHash": {"$ref": "#/$defs/digest"},
+        "admissionMode": {"enum": ["PRODUCTION", "ISOLATED_UNQUALIFIED_LAB"]},
+        "supportedCatalogDigest": {"$ref": "#/$defs/digest"},
+        "catalogSequence": {"$ref": "#/$defs/safePositiveInteger"},
+        "trustKeyRingSequence": {"$ref": "#/$defs/safePositiveInteger"},
+        "qualificationCaseMatrixHash": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "mutationPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedExistingRequestVersionOrNull",
+        "expectedExistingResourceVersionOrNull"
+      ],
+      "properties": {
+        "expectedExistingRequestVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/safePositiveInteger"}
+          ]
+        },
+        "expectedExistingResourceVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/safePositiveInteger"}
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "expectedExistingRequestVersionOrNull": {"type": "null"},
+            "expectedExistingResourceVersionOrNull": {"type": "null"}
+          },
+          "required": [
+            "expectedExistingRequestVersionOrNull",
+            "expectedExistingResourceVersionOrNull"
+          ]
+        },
+        {
+          "properties": {
+            "expectedExistingRequestVersionOrNull": {
+              "$ref": "#/$defs/safePositiveInteger"
+            },
+            "expectedExistingResourceVersionOrNull": {
+              "$ref": "#/$defs/safePositiveInteger"
+            }
+          },
+          "required": [
+            "expectedExistingRequestVersionOrNull",
+            "expectedExistingResourceVersionOrNull"
+          ]
+        }
+      ],
+      "x-qmanCasRule": "Both values are null only when creating the first request. An update supplies both current values; partial null/non-null pairs are invalid and the repository commits only by exact resourceVersion CAS."
+    },
+    "idempotencyBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "idempotencyKey", "idempotencyScopeHash"],
+      "properties": {
+        "mode": {"const": "EXACTLY_ONCE_BY_SCOPE_KEY_AND_REQUEST_HASH"},
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{16,128}$"
+        },
+        "idempotencyScopeHash": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "exactHostAffinity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "hostId"],
+      "properties": {
+        "mode": {"const": "EXACT_HOST"},
+        "hostId": {"$ref": "#/$defs/id"}
+      }
+    },
+    "anyOnlineHostAffinity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {"const": "ANY_ONLINE_COOPERATIVE_HOST"}
+      }
+    },
+    "allowedOnlineHostAffinity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "allowedHostIds"],
+      "properties": {
+        "mode": {"const": "ALLOWED_ONLINE_COOPERATIVE_HOST_SET"},
+        "allowedHostIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        }
+      }
+    },
+    "dynamicHostAffinity": {
+      "oneOf": [
+        {"$ref": "#/$defs/anyOnlineHostAffinity"},
+        {"$ref": "#/$defs/allowedOnlineHostAffinity"}
+      ]
+    },
+    "staticMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirementId",
+        "deviceUid",
+        "identityFingerprint",
+        "enrolledHostId",
+        "expectedPhysicalPathProvider",
+        "expectedPhysicalPath",
+        "expectedCurrentBdf",
+        "guestSlot"
+      ],
+      "properties": {
+        "requirementId": {"$ref": "#/$defs/id"},
+        "deviceUid": {"$ref": "#/$defs/deviceUid"},
+        "identityFingerprint": {"$ref": "#/$defs/digest"},
+        "enrolledHostId": {"$ref": "#/$defs/id"},
+        "expectedPhysicalPathProvider": {"$ref": "#/$defs/physicalPathProvider"},
+        "expectedPhysicalPath": {"$ref": "#/$defs/physicalPath"},
+        "expectedCurrentBdf": {"$ref": "#/$defs/bdf"},
+        "guestSlot": {"$ref": "#/$defs/id"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "expectedPhysicalPathProvider": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/acpiPathProvider"
+              }
+            },
+            "required": ["expectedPhysicalPathProvider"]
+          },
+          "then": {
+            "properties": {
+              "expectedPhysicalPath": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/acpiPhysicalPath"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "expectedPhysicalPathProvider": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/smbiosPathProvider"
+              }
+            },
+            "required": ["expectedPhysicalPathProvider"]
+          },
+          "then": {
+            "properties": {
+              "expectedPhysicalPath": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/smbiosPhysicalPath"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "expectedPhysicalPathProvider": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/deviceTreePathProvider"
+              }
+            },
+            "required": ["expectedPhysicalPathProvider"]
+          },
+          "then": {
+            "properties": {
+              "expectedPhysicalPath": {
+                "$ref": "directpath-identity-v1.schema.json#/$defs/deviceTreePhysicalPath"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "staticSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selectorType", "members"],
+      "properties": {
+        "selectorType": {"const": "STATIC_FIXED_IDENTITY_SET"},
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/staticMember"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [requirementId,guestSlot,deviceUid]; duplicate requirementId, guestSlot or deviceUid values are rejected"
+        }
+      }
+    },
+    "allowedDevice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendorId", "deviceId"],
+      "properties": {
+        "vendorId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "deviceId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "subsystemVendorId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "subsystemDeviceId": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+        "revisionId": {"type": "string", "pattern": "^[0-9a-f]{2}$"}
+      }
+    },
+    "dynamicRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirementId",
+        "allowedDevices",
+        "customLabelOrNull",
+        "requiredGuestAbiClass",
+        "count",
+        "guestSlots",
+        "equivalencePolicyHash"
+      ],
+      "properties": {
+        "requirementId": {"$ref": "#/$defs/id"},
+        "allowedDevices": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/allowedDevice"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [vendorId,deviceId,subsystemVendorId-or-null,subsystemDeviceId-or-null,revisionId-or-null]"
+        },
+        "customLabelOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"}
+          ]
+        },
+        "requiredGuestAbiClass": {"$ref": "#/$defs/id"},
+        "count": {"type": "integer", "minimum": 1, "maximum": 64},
+        "guestSlots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"},
+          "x-qmanSequenceRule": "This is an intentional ordered sequence, not a set. Its length equals count and ordinal is the zero-based array index."
+        },
+        "equivalencePolicyHash": {"$ref": "#/$defs/digest"}
+      },
+      "x-qmanCountRule": "guestSlots.length must equal count exactly."
+    },
+    "dynamicSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selectorType", "requirements"],
+      "properties": {
+        "selectorType": {"const": "DYNAMIC_ALLOWED_DEVICE_REQUIREMENTS"},
+        "requirements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/dynamicRequirement"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of requirementId; duplicate requirementId or guestSlot across requirements is rejected"
+        }
+      },
+      "x-qmanSelectorRule": "A persisted Dynamic selector contains only allowedDevices, optional exact customLabel, ABI, count, ordered guestSlots and equivalence policy. BDF, physicalPath, deviceUid, bundleId, leaseId and assignedId are impossible fields under this closed schema."
+    },
+    "staticCanonicalRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "vmId",
+        "requestVersion",
+        "requestType",
+        "selector",
+        "hostAffinity",
+        "requiredGuestAbiClass",
+        "lifecyclePolicy",
+        "profileBinding",
+        "snapshotConstraint",
+        "policyBinding",
+        "mutationPrecondition",
+        "idempotency",
+        "requestedBy",
+        "issuedAt"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "vmId": {"$ref": "#/$defs/id"},
+        "requestVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "requestType": {"const": "STATIC"},
+        "selector": {"$ref": "#/$defs/staticSelector"},
+        "hostAffinity": {"$ref": "#/$defs/exactHostAffinity"},
+        "requiredGuestAbiClass": {"$ref": "#/$defs/id"},
+        "lifecyclePolicy": {"$ref": "#/$defs/staticLifecyclePolicy"},
+        "profileBinding": {"$ref": "#/$defs/profileBinding"},
+        "snapshotConstraint": {"$ref": "#/$defs/snapshotConstraint"},
+        "policyBinding": {"$ref": "#/$defs/policyBinding"},
+        "mutationPrecondition": {"$ref": "#/$defs/mutationPrecondition"},
+        "idempotency": {"$ref": "#/$defs/idempotencyBinding"},
+        "requestedBy": {"$ref": "#/$defs/id"},
+        "issuedAt": {"$ref": "#/$defs/timestamp"}
+      },
+      "x-qmanStaticRule": "Every selector member enrolledHostId equals hostAffinity.hostId. A PINNED_CURRENT_SNAPSHOT binding, when used, has the same hostId. Static start re-resolves deviceUid, identityFingerprint, physical path and current BDF on that host and fails with STATIC_DEVICE_HOST_AFFINITY or identity/location drift; it never substitutes another device."
+    },
+    "dynamicCanonicalRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "vmId",
+        "requestVersion",
+        "requestType",
+        "selector",
+        "hostAffinity",
+        "requiredGuestAbiClass",
+        "lifecyclePolicy",
+        "profileBinding",
+        "snapshotConstraint",
+        "policyBinding",
+        "mutationPrecondition",
+        "idempotency",
+        "requestedBy",
+        "issuedAt"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "vmId": {"$ref": "#/$defs/id"},
+        "requestVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "requestType": {"const": "DYNAMIC"},
+        "selector": {"$ref": "#/$defs/dynamicSelector"},
+        "hostAffinity": {"$ref": "#/$defs/dynamicHostAffinity"},
+        "requiredGuestAbiClass": {"$ref": "#/$defs/id"},
+        "lifecyclePolicy": {"$ref": "#/$defs/dynamicLifecyclePolicy"},
+        "profileBinding": {"$ref": "#/$defs/profileBinding"},
+        "snapshotConstraint": {"$ref": "#/$defs/snapshotConstraint"},
+        "policyBinding": {"$ref": "#/$defs/policyBinding"},
+        "mutationPrecondition": {"$ref": "#/$defs/mutationPrecondition"},
+        "idempotency": {"$ref": "#/$defs/idempotencyBinding"},
+        "requestedBy": {"$ref": "#/$defs/id"},
+        "issuedAt": {"$ref": "#/$defs/timestamp"}
+      },
+      "x-qmanDynamicRule": "A PINNED_CURRENT_SNAPSHOT binding, when used for one solve/launch attempt, must satisfy hostAffinity. A relocation or later power-on resolves a new current target snapshot and produces a new runtime assignedId; no selected physical identity is written back into this persistent request."
+    },
+    "canonicalVmRequest": {
+      "oneOf": [
+        {"$ref": "#/$defs/staticCanonicalRequest"},
+        {"$ref": "#/$defs/dynamicCanonicalRequest"}
+      ]
+    },
+    "ENTITY-VM-DIRECTPATH-REQUEST": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "vmId",
+        "requestVersion",
+        "requestType",
+        "canonicalRequest",
+        "requestHash",
+        "requiredGuestAbiClass",
+        "lifecyclePolicy",
+        "requestedBy",
+        "createdAt",
+        "resourceVersion"
+      ],
+      "properties": {
+        "subjectType": {"const": "VM_DIRECTPATH_REQUEST"},
+        "schemaVersion": {"const": 1},
+        "vmId": {"$ref": "#/$defs/id"},
+        "requestVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "requestType": {"enum": ["STATIC", "DYNAMIC"]},
+        "canonicalRequest": {"$ref": "#/$defs/canonicalVmRequest"},
+        "requestHash": {"$ref": "#/$defs/digest"},
+        "requiredGuestAbiClass": {"$ref": "#/$defs/id"},
+        "lifecyclePolicy": {
+          "oneOf": [
+            {"$ref": "#/$defs/staticLifecyclePolicy"},
+            {"$ref": "#/$defs/dynamicLifecyclePolicy"}
+          ]
+        },
+        "requestedBy": {"$ref": "#/$defs/id"},
+        "createdAt": {"$ref": "#/$defs/timestamp"},
+        "resourceVersion": {"$ref": "#/$defs/safePositiveInteger"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"requestType": {"const": "STATIC"}},
+            "required": ["requestType"]
+          },
+          "then": {
+            "properties": {
+              "canonicalRequest": {"$ref": "#/$defs/staticCanonicalRequest"},
+              "lifecyclePolicy": {"$ref": "#/$defs/staticLifecyclePolicy"}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"requestType": {"const": "DYNAMIC"}},
+            "required": ["requestType"]
+          },
+          "then": {
+            "properties": {
+              "canonicalRequest": {"$ref": "#/$defs/dynamicCanonicalRequest"},
+              "lifecyclePolicy": {"$ref": "#/$defs/dynamicLifecyclePolicy"}
+            }
+          }
+        }
+      ],
+      "x-qmanProjectionRule": "vmId, requestVersion, requestType, requiredGuestAbiClass, lifecyclePolicy and requestedBy are indexed projections and must byte-equal the same fields in canonicalRequest; createdAt equals canonicalRequest.issuedAt. They are not alternate inputs and may not be repaired independently.",
+      "x-qmanRequestHashRule": "requestHash = SHA-256(CANONICAL-JSON-V1 bytes of canonicalRequest). canonicalRequest does not contain requestHash, so there is no fixed-point or field-exclusion ambiguity. The repository binds [canonicalRequest.idempotency.idempotencyScopeHash, canonicalRequest.idempotency.idempotencyKey, requestHash] to exactly one accepted requestVersion/result; reuse with another hash is IDEMPOTENCY_KEY_REUSED.",
+      "x-qmanMutationRule": "For first creation requestVersion=1 and both mutationPrecondition fields are null. For an update, requestVersion equals expectedExistingRequestVersionOrNull+1 and both expected versions match the current row; resourceVersion is the committed row version and is never supplied as a guessed postcondition.",
+      "x-qmanAdmissionRule": "Every solve, plan, reservation and launch revalidates that the selected HostSnapshot is the current HostAuthority pointer and that profileHash, policyHash, supported catalog sequence/digest, key-ring sequence, qualification matrix hash, requestHash and resourceVersion remain exact. A stored request never grants a host side effect by itself."
+    },
+    "persistedDependencyBundleSubject": {
+      "allOf": [
+        {
+          "$ref": "directpath-portable-hash-subjects.schema.json#/$defs/dependencyBundle"
+        },
+        {
+          "properties": {
+            "snapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+            "bundleHash": {"$ref": "#/$defs/digest"}
+          }
+        }
+      ]
+    },
+    "ENTITY-DEPENDENCY-BUNDLE": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "bundleId",
+        "canonicalBundle"
+      ],
+      "properties": {
+        "subjectType": {"const": "DEPENDENCY_BUNDLE_ENTITY"},
+        "schemaVersion": {"const": 1},
+        "bundleId": {"$ref": "#/$defs/digest"},
+        "canonicalBundle": {"$ref": "#/$defs/persistedDependencyBundleSubject"}
+      },
+      "x-qmanAliasRule": "canonicalBundle is the exact closed dependencyBundle hash subject; this wrapper adds only the portable entity key. bundleId must byte-equal canonicalBundle.bundleHash. Consumers use canonicalBundle memberDeviceUids, physicalIsolationDomain, ownerActivationGroup, exclusiveAttachGroup, resetAffectedSet, dependencyActions and snapshotEpoch without a second spelling.",
+      "x-qmanHashRule": "canonicalBundle.bundleHash is computed under directpath-portable-hash-subjects.schema.json with bundleHash conceptually null. The wrapper is not a second hash subject; bundleId is an exact alias of that non-null digest. Changed snapshot epoch, membership, action or provenance produces another bundleHash/bundleId."
+    }
+  },
+  "x-qmanCanonicalRule": "Every object is closed. Reject duplicate keys, floats, non-NFC strings, integers outside [-9007199254740991,9007199254740991], timestamps other than UTC with exactly six fractional digits, unknown enum values, duplicate logical set keys and arrays that violate their declared canonical order before hashing or persistence.",
+  "x-qmanSetRule": "Every array marked x-qmanSetOrder is a mathematical set serialized in the stated ascending CANONICAL-JSON-V1 order. uniqueItems is necessary but not sufficient: implementations also reject duplicate semantic keys called out by the array rule. Arrays marked x-qmanSequenceRule preserve caller-visible order instead.",
+  "x-qmanAuthorityRule": "These four projections are inputs/read models only. Controller, host, assignment, lease, guard, release, quarantine, audit and outbox authority remains exclusively in directpath-authority-entities.schema.json and cannot be inferred from a valid object here."
+}

@@ -20,7 +20,7 @@
   "artifacts": [
     {
       "path": "tools/evaluate_release.py",
-      "sha256": "77385a23f412b100e0cf746641b8ccb3b91f54bb0c9d95f56360c0b405748122"
+      "sha256": "c4a3ae22ea5f46e9e18783b10c024f71cf2c171a8ae9193ef8763d027e6d0819"
     },
     {
       "path": "tools/generate_vmware_evidence_index.py",

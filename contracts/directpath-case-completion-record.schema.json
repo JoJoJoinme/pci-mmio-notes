@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-case-completion-record.schema.json",
+  "title": "Qman DirectPath aggregated CaseCompletionRecord",
+  "description": "Signed deterministic aggregation of one or more EXECUTED_PASS scenarios against one closed Case contract. It is the only portable object that may claim a PRODUCT Case complete; an individual scenario, test log, VMware observation or blocked Case cannot.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "completionId", "caseId", "sourceCaseStatus", "scope", "caseContractDigest", "caseContractRegistryDigest", "portableContractSha256", "targetRepositoryCommit", "mappingCoreId", "platformProfileId", "platformProfileDigest", "backendProfileDigest", "exactQualificationKey", "evidenceGrade", "scenarioEvidence", "observedCoverage", "dependencyCompletionDigests", "evaluator", "completedAt", "keyRingVersion", "signerKeyId", "completionDigest", "signature"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "completionId": {"$ref": "#/$defs/id"},
+    "caseId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"},
+    "sourceCaseStatus": {"const": "EXECUTABLE"},
+    "scope": {"const": "PRODUCT"},
+    "caseContractDigest": {"$ref": "#/$defs/digest"},
+    "caseContractRegistryDigest": {"$ref": "#/$defs/digest"},
+    "portableContractSha256": {"$ref": "#/$defs/digest"},
+    "targetRepositoryCommit": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"},
+    "mappingCoreId": {"type": "string", "pattern": "^QMAN-DIRECTPATH-MAPPING-CORE-[A-Z0-9._-]+$"},
+    "platformProfileId": {"$ref": "#/$defs/id"},
+    "platformProfileDigest": {"$ref": "#/$defs/digest"},
+    "backendProfileDigest": {"$ref": "#/$defs/digest"},
+    "exactQualificationKey": {"$ref": "#/$defs/nullableDigest"},
+    "evidenceGrade": {"enum": ["E3-END-TO-END-PRODUCT", "E4-PHYSICAL-QUALIFICATION"]},
+    "scenarioEvidence": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/scenarioEvidence"}, "x-qmanCanonicalOrder": "ascending canonical [scenarioId,scenarioRunId]"},
+    "observedCoverage": {"$ref": "#/$defs/coverage"},
+    "dependencyCompletionDigests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/dependency"}, "x-qmanCanonicalOrder": "ascending canonical caseId"},
+    "evaluator": {"$ref": "#/$defs/evaluator"},
+    "completedAt": {"$ref": "#/$defs/timestamp"},
+    "keyRingVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "completionDigest": {"$ref": "#/$defs/nullableDigest"},
+    "signature": {"$ref": "#/$defs/nullableSignature"}
+  },
+  "allOf": [
+    {"if": {"properties": {"evidenceGrade": {"const": "E3-END-TO-END-PRODUCT"}}, "required": ["evidenceGrade"]}, "then": {"properties": {"exactQualificationKey": {"type": "null"}}}},
+    {"if": {"properties": {"evidenceGrade": {"const": "E4-PHYSICAL-QUALIFICATION"}}, "required": ["evidenceGrade"]}, "then": {"properties": {"exactQualificationKey": {"$ref": "#/$defs/digest"}}}}
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 512},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "idSet": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "nonEmptyIdSet": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}, "x-qmanSetOrder": "ascending canonical bytes"},
+    "nullableDigest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/digest"}]},
+    "nullableSignature": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"}]},
+    "safePositiveInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"},
+    "oracleClass": {"enum": ["authoritativeWrites", "cleanup", "finalStates", "idempotencyOracle", "immediateResults", "mustNotOccur", "mustOccur", "physicalOracle"]},
+    "scenarioEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenarioId", "scenarioRunId", "scenarioPath", "scenarioSha256", "scenarioExecutionCoreDigest", "executionEvidenceIndexPath", "evidenceIndexRecordSha256", "executionEvidenceIndexDigest", "executionResultDigest", "runnerManifestPath", "runnerManifestSha256", "runnerManifestDigest", "repeat", "observedDurationSeconds", "faultClasses", "portIds", "operationIds", "transitionIds", "artifactSchemaRefs", "oracleClasses", "assertionDigests"],
+      "properties": {
+        "scenarioId": {"$ref": "#/$defs/id"},
+        "scenarioRunId": {"$ref": "#/$defs/id"},
+        "scenarioPath": {"$ref": "#/$defs/repositoryRelativePath"},
+        "scenarioSha256": {"$ref": "#/$defs/digest"},
+        "scenarioExecutionCoreDigest": {"$ref": "#/$defs/digest"},
+        "executionEvidenceIndexPath": {"$ref": "#/$defs/repositoryRelativePath"},
+        "evidenceIndexRecordSha256": {"$ref": "#/$defs/digest"},
+        "executionEvidenceIndexDigest": {"$ref": "#/$defs/digest"},
+        "executionResultDigest": {"$ref": "#/$defs/digest"},
+        "runnerManifestPath": {"$ref": "#/$defs/repositoryRelativePath"},
+        "runnerManifestSha256": {"$ref": "#/$defs/digest"},
+        "runnerManifestDigest": {"$ref": "#/$defs/digest"},
+        "repeat": {"$ref": "#/$defs/safePositiveInteger"},
+        "observedDurationSeconds": {"$ref": "#/$defs/safePositiveInteger"},
+        "faultClasses": {"$ref": "#/$defs/idSet"},
+        "portIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "operationIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "transitionIds": {"$ref": "#/$defs/idSet"},
+        "artifactSchemaRefs": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "oracleClasses": {"type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true, "items": {"$ref": "#/$defs/oracleClass"}},
+        "assertionDigests": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}}
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["portIds", "operationIds", "transitionIds", "faultClasses", "artifactSchemaRefs", "oracleClasses", "assertionDigests", "repeatByFaultClass", "totalObservedDurationSeconds"],
+      "properties": {
+        "portIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "operationIds": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "transitionIds": {"$ref": "#/$defs/idSet"},
+        "faultClasses": {"$ref": "#/$defs/idSet"},
+        "artifactSchemaRefs": {"$ref": "#/$defs/nonEmptyIdSet"},
+        "oracleClasses": {"type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true, "items": {"$ref": "#/$defs/oracleClass"}},
+        "assertionDigests": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}},
+        "repeatByFaultClass": {"type": "array", "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["faultClass", "repeat"], "properties": {"faultClass": {"$ref": "#/$defs/id"}, "repeat": {"$ref": "#/$defs/safePositiveInteger"}}}},
+        "totalObservedDurationSeconds": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caseId", "completionDigest"],
+      "properties": {"caseId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"}, "completionDigest": {"$ref": "#/$defs/digest"}}
+    },
+    "evaluator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "path", "blobSha256", "interfaceHash", "toolManifest"],
+      "properties": {
+        "protocol": {"const": "QMAN-DIRECTPATH-CASE-COMPLETION-EVALUATOR-V1"},
+        "path": {"$ref": "#/$defs/id"},
+        "blobSha256": {"$ref": "#/$defs/digest"},
+        "interfaceHash": {"$ref": "#/$defs/digest"},
+        "toolManifest": {"$ref": "#/$defs/evaluatorToolManifest"}
+      }
+    },
+    "evaluatorToolManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength", "mediaType", "schemaRef", "schemaSha256", "manifestDigest"],
+      "properties": {
+        "path": {"$ref": "#/$defs/repositoryRelativePath"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "byteLength": {"$ref": "#/$defs/safePositiveInteger"},
+        "mediaType": {"const": "application/json"},
+        "schemaRef": {"const": "contracts/directpath-case-evaluator-tool-manifest.schema.json"},
+        "schemaSha256": {"$ref": "#/$defs/digest"},
+        "manifestDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "repositoryRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    }
+  },
+  "x-qmanAggregationRule": "Resolve the current generated Case contract independently. Every scenarioPath, executionEvidenceIndexPath and runnerManifestPath is a repository-contained path in evidence commit E; verify each raw file against scenarioSha256, evidenceIndexRecordSha256 or runnerManifestSha256 before parsing, then verify its internal signed digest against executionResultDigest, executionEvidenceIndexDigest or runnerManifestDigest. Every scenario/index/result/runner is schema-valid, signed, EXECUTED_PASS, limitation-free, same caseId/C/M/portable contract/target commit and at least this evidenceGrade. Every transitive scenario applicability resolves to exactly platformProfileId; its targetBinding.platformProfileDigest and backendProfileDigest byte-equal this record, so runs from different platform or backend profiles cannot be unioned. Independently recompute platformProfileDigest from the active compatibility-policy row. For E3 exactQualificationKey is null and backendProfileDigest is the singleton value shared by every signed scenario target binding. For E4 exactQualificationKey is non-null; all indexes resolve the same byte-identical QualificationSubjectManifest, whose policy-derived platformProfileHash, SHA-256(CANONICAL-JSON-V1(kernelQemuFirmwareBackend)) and independently recomputed nine-field exact qualification-key projection respectively equal platformProfileDigest, backendProfileDigest and exactQualificationKey. The three raw hashes and the three internal digests are pairwise bound through the referenced documents; labels or unresolvable digests are not evidence. observedCoverage equals the exact set union and numeric sums re-derived from those referenced documents, not a self-declared subset. It covers every required port, operation, transition, fault class, artifact schema, oracle class and assertion digest; every required fault class reaches minimumRepeat and total duration reaches minimumDurationSeconds.",
+  "x-qmanDependencyRule": "dependencyCompletionDigests exactly covers Case dependsOnCaseIds. Every dependency record is independently valid, PRODUCT, EXECUTABLE, same target C/M/portable contract and byte-identical platformProfileId/platformProfileDigest/backendProfileDigest/exactQualificationKey, and completed before this record. In an IntegrationReport or QualificationReleaseIndex, each edge resolves to exactly one signed completion descriptor by completionDigest; a standalone record with a non-empty dependency array has status UNRESOLVED_DEPENDENCY_CLOSURE until the complete descriptor set is separately supplied. Cycles, missing/unready dependencies, descriptor relabeling or cross-platform/backend/qualification substitution fail closed.",
+  "x-qmanEvaluatorRule": "Resolve evaluator.path/blobSha256/interfaceHash from target commit C, including a bounded recursively verified submodule when applicable, and require exactly one signed mapping binding for the Case-completion evaluator interface. Resolve evaluator.toolManifest.path inside evidence commit E, verify its raw sha256/byteLength/mediaType, validate only against the independently pinned schemaRef/schemaSha256, then require parsed manifestDigest and signature to verify. The parsed manifest target C, mapping core M, portable contract, Case registry and evaluator tuple MUST byte-equal this record. Reconstruct its SourceTreeManifest, BuildAttestation and four role-exclusive runtime artifacts; produced and interpreted modes follow the manifest's exact output/runtime-identity rules, and any hermetic claim requires independent replay evidence. A Scenario RunnerManifest or an arbitrary transitive TOOL_MANIFEST cannot satisfy this evaluator-specific descriptor.",
+  "x-qmanStatusRule": "The source Case definition and generated contract must currently be scope=PRODUCT and status=EXECUTABLE. IMPLEMENTATION_BLOCKED, HARDWARE_BLOCKED, FEATURE_DISABLED and REFERENCE_MODEL cannot be converted into completion merely by constructing this object.",
+  "x-qmanSignatureRule": "Set completionDigest and signature to null, encode the complete object with CANONICAL-JSON-V1, store its SHA-256 in completionDigest, and sign ASCII(QMAN-DIRECTPATH/CASE-COMPLETION/V1) || 0x00 || the same bytes with TEST_EVIDENCE for E3 or QUALIFICATION_ENGINEERING for E4."
+}
