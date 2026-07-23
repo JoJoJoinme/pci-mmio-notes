@@ -87,7 +87,7 @@ VMware 只提供外部语义参考，不能证明这些 Qman profile。
 | Static identity、排他与 release-before-reuse | `MUST_MATCH` | `PARTIAL` | `VMW-STATIC-IDENTITY-001`、`VMW-STATIC-002` |
 | Dynamic selector、全量求解、原子 reservation、runtime assignedId | `MUST_MATCH` | 整体 `PARTIAL`；assignedId 切片 `VERIFIED` | `VMW-DYNAMIC-001`、`VMW-DYNAMIC-003`、`VMW-DYNAMIC-004` |
 | firmware/MMIO/full reservation/post-start verify | `MUST_MATCH` | 整体 `PARTIAL`；冻结 profile 的 post-start 切片 `VERIFIED` | `VMW-ADMISSION-001/002`、`VMW-GUEST-VERIFY-001`；ARM 由 `QMAN-ARM-VIRT-UEFI-001` 自证 |
-| PCI error surface、message route、guest write、lifecycle recovery | `MUST_MATCH` | `PARTIAL`；仅 Correctable status projection 切片已观察 | `VMW-AER-COR-001`；route-enabled、guest write、T5 lifecycle 和物理 health 仍未闭环 |
+| PCI error surface、message route、guest write、lifecycle recovery | `MUST_MATCH` | `PARTIAL`；历史 e1000e hidden-header/status projection、virtio PassthruIdle 8-tuple frozen route 与 Active visible-header/raw-CES/no-event 切片已观察 | `VMW-AER-COR-001`；ESXi service/IRQ 归因、guest write、T5 lifecycle 和物理 health 仍未闭环 |
 | VMware 与 Qman 的精确 chipset、bridge identity、BAR 地址相同 | `ACCEPTABLE_DIFFERENCE` | `NOT_APPLICABLE` | Qman 只需冻结自身 guest ABI 并证明等价准入结果 |
 | legacy group/container、IOMMUFD/cdev、fd handoff 与单控制面内部实现 | `ACCEPTABLE_DIFFERENCE` | `NOT_APPLICABLE` | `QMAN-BACKEND-CONFORMANCE-001` |
 | DMA/IRQ teardown、reset 与 clean release | `MUST_MATCH` | `PARTIAL` | `VMW-TEARDOWN-001`、`VMW-QUARANTINE-001` |
@@ -145,7 +145,7 @@ chipset identity。`OUT_OF_SCOPE` 指 Qman 不提供该能力；对于 runtime h
 | TS-F4-03 full reservation | 全 VM 内存 reservation 是官方要求，page budget/RMRR 会影响 admission | `PARTIAL` | M04/M07/S05；补多桥、RAM pressure、ROM/aux BAR/RMRR 组合 |
 | TS-F4-04 post-start verification | Guest BAR/root window、bridge、IRQ 与 VT-d mapping 已在每轮关联 | `VERIFIED` | LF/M/D/I 当前 nested profile 已闭环；物理 device-trait profile 仍须单独 qualification |
 | TS-F4-05 raw QEMU/QMP gate | VMware task/API 负例可参考，QMP/launcher ACL 是 Qman 自身安全边界 | `NOT_APPLICABLE` | 由 Qman API/launcher/QMP 攻击 Case 自证 |
-| TS-F4-06 PCI error policy | 已观察 guest header/`_OSC` 隐藏与 raw status projection；当前 CERE=0，message route、guest write、recovery 未证明 | `PARTIAL` | `VMW-AER-COR-001`；补完整 gate、Root W1C/Source、owner/lifecycle、guest write 与物理 qualification |
+| TS-F4-06 PCI error policy | 双 profile：历史 e1000e 隐藏 guest AER header 并投影 raw status；virtio controlled-route 完成 Idle 8 个 E/M/R tuple，且 Active guest 可见 header `0x00020001`、raw CES `0→1`，但 AER totals `0→0`、无 kernel event | `PARTIAL` | `VMW-AER-COR-001`；只有 `g100/g101` 的 frozen QEMU snapshot 出现 Root `COR_RCV+Source`，不代证 ESXi service/IRQ；补 notification 归因、owner/lifecycle、guest write 与物理 qualification |
 
 ### F5 设备生命周期与故障恢复
 
@@ -263,12 +263,34 @@ Qman 同时必须优先执行 `QMAN-BACKEND-CONFORMANCE-001`：同一 API、sele
 - `VMW-CAP-TRAIT-001`、`VMW-DEP-MIXED-001`：IOMMU/ACS/reset/dependency 正负 A/B 和整组 Busy。
 - `VMW-DYN-SELECTOR-001`：subsystem/revision/customLabel 与非法 selector A/B。
 - `VMW-MMIO-TOPO-001`：多级桥、辅助 BAR、sub-4KB、ReBAR、alignment 与 limit+1。
-- `VMW-AER-COR-001`：已执行 Correctable 8-bit PassthruIdle、Active 代表 bit 与 QEMU gate 正控；
-  canonical result 与 hash summary 分别见
+- `VMW-AER-COR-001`：结果按两个 profile 保存。历史 `e1000e/status-projection` 已执行
+  Correctable 8-bit PassthruIdle 与 Active 代表 bit，但 endpoint/root CERE 和 Root COR_EN
+  均为 0；新增 `virtio/controlled-route` 完成 PassthruIdle Receiver 的 8 个 E/M/R tuple，
+  8/8 通过，只有 `g100`、`g101` 在 outer QEMU 暂停期间的 frozen snapshot 出现 Root
+  `COR_RCV` 与 Source，其余六格被 endpoint reporting 或 mask 阻断。该 controlled-route
+  result SHA-256 为
+  `655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`；
+  Active `g100/g101` 还观察到 virtio guest 的 AER capability 可发现、raw CES
+  `0→1`，但 Linux AER totals 不增且无实际 kernel AER event。历史 e1000e canonical
+  result 与 hash summary 分别见
   [`esxi8-aer-correctable-20260723-result.json`](../evidence/esxi8-aer-correctable-20260723-result.json)
   和 [`esxi8-aer-correctable-20260723-summary.json`](../evidence/esxi8-aer-correctable-20260723-summary.json)；
-  结论限定为 status projection。下一步补 route-enabled CERE/CEM/Root Command、Root W1C/Source、
-  guest write、owner/lifecycle 与 E4 physical health。
+  virtio 由并列的
+  [`esxi8-aer-correctable-virtio-route-20260723-result.json`](../evidence/esxi8-aer-correctable-virtio-route-20260723-result.json)
+  与 [`esxi8-aer-correctable-virtio-route-20260723-summary.json`](../evidence/esxi8-aer-correctable-virtio-route-20260723-summary.json)
+  登记，不反向改写历史文件。frozen snapshot 证明的是
+  QEMU fabric 在 ESXi 所编程 gate 下的沉积/路由，不证明 ESXi service、IRQ 或恢复；恢复运行后
+  的有界日志窗没有匹配项，也不能推出 no service。下一步补 notification/IRQ、guest write、
+  owner/lifecycle 与 E4 physical health。
+- 公开边界：[Broadcom KB 312208](https://knowledge.broadcom.com/external/article/312208/)
+  规定 DirectPath PCI error 由 ESXi 处理、而不是作为错误交给 guest；它没有公开
+  notification/service/recovery 实现，也不要求所有 profile 都隐藏 guest capability header
+  或 raw status；
+  [KB 424082](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)
+  只公开 `pcipDisablePciErrReporting` 的配置含义；
+  [Linux AER](https://docs.kernel.org/PCI/pcieaer-howto.html)与
+  [QEMU 11.0.2 AER 源码](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
+  是通用/参考机制，不能反推 VMware 私有实现。
 - `QMAN-ARM-VIRT-UEFI-001`：ARM virt/UEFI 的 PCIe、BAR/window、MSI/ITS、DMA/IOMMU、reset 与
   clean release；这是 Qman E3/E4，不是 VMware 实验。
 - `VMW-TRACE-001` 已通过 `contracts/vmware-evidence-index.json` 完成 37/37 实验登记，并固定已执行

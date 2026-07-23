@@ -153,8 +153,19 @@
       "id": "PARITY-PCI-ERROR-POLICY",
       "classification": "MUST_MATCH",
       "vmwareReferenceStatus": "PARTIAL",
-      "verifiedSlices": ["correctable-status-projection-for-frozen-nested-profile"],
-      "unverifiedSlices": ["route-enabled-delivery", "guest-write-isolation", "lifecycle-clear-reuse", "physical-health-recovery"],
+      "verifiedSlices": [
+        "historical-e1000e-hidden-header-raw-status-projection",
+        "qemu-eight-bits-by-eight-emr-reference",
+        "virtio-idle-eight-emr-frozen-fabric-routing",
+        "profile-dependent-guest-aer-discovery-and-raw-status-projection"
+      ],
+      "unverifiedSlices": [
+        "esxi-host-notification-interrupt-and-service-attribution",
+        "root-command-notification-effect",
+        "guest-write-isolation",
+        "lifecycle-clear-reuse",
+        "physical-health-recovery"
+      ],
       "experimentIds": ["VMW-AER-COR-001"],
       "minimalOpenExperimentIds": ["VMW-AER-COR-001"],
       "requiredQmanMeaning": "PCI error capability, status deposition, message routing, guest writes, bounded observability, lifecycle cleanup and recovery are separate versioned policy surfaces; one cannot prove another."
@@ -266,7 +277,7 @@
         "vmware-esxi8-passthru-capable-observed-model.md"
       ],
       "evidenceSha256": {
-        "evidence/esxi8-directpath-20260714-summary.json": "665d586649c622324ca4953a9dd05df748af6db1fac47e349a42e4aa5db37714",
+        "evidence/esxi8-directpath-20260714-summary.json": "5e5846fc55a599a69ad4a710674800dae6138a9cd5c5cbdcb4b3055786843de2",
         "vmware-esxi8-passthru-capable-observed-model.md": "ca74b93136405ec451234b9152b5d33dfc57038a76da2b5ecdbfbec5cd048213"
       },
       "runnerPaths": ["vmware-esxi8-lab/test_esxi_passthru_capability_matrix.py"],
@@ -467,28 +478,32 @@
     },
     {
       "id": "VMW-AER-COR-001",
-      "title": "Correctable AER status projection and effective gate observation",
+      "title": "Profile-dependent Correctable AER guest surface and E/M/R route observation",
       "executionState": "PARTIAL",
       "legacyIds": ["S03", "C00-C03", "COR-8"],
       "evidencePaths": [
         "evidence/esxi8-aer-correctable-20260723-summary.json",
-        "evidence/esxi8-aer-correctable-20260723-result.json"
+        "evidence/esxi8-aer-correctable-20260723-result.json",
+        "evidence/esxi8-aer-correctable-virtio-route-20260723-summary.json",
+        "evidence/esxi8-aer-correctable-virtio-route-20260723-result.json"
       ],
       "evidenceSha256": {
         "evidence/esxi8-aer-correctable-20260723-summary.json": "de2d6e078cc570afedb6e1ca7e258d53e4d12e9f7749ac50f7ce04dc67db5e32",
-        "evidence/esxi8-aer-correctable-20260723-result.json": "d1f32e458b819a76622638fcc0e8e5a4965446b922a87012373310c8a22f55aa"
+        "evidence/esxi8-aer-correctable-20260723-result.json": "d1f32e458b819a76622638fcc0e8e5a4965446b922a87012373310c8a22f55aa",
+        "evidence/esxi8-aer-correctable-virtio-route-20260723-summary.json": "08de08bf88eb900086376e698bde8d70414edf0c3fd5ee62e1c4b5887e3079b3",
+        "evidence/esxi8-aer-correctable-virtio-route-20260723-result.json": "fd54b0628f01f591629349498ff135aa2ca475a339858e6c100a5cff6e50c445"
       },
       "runnerPaths": [
         "vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py",
         "vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py"
       ],
       "limitations": [
-        "endpoint-cere-disabled",
-        "root-cere-and-correctable-command-disabled",
-        "status-projection-not-message-delivery",
-        "no-guest-write-or-t5-lifecycle-matrix",
-        "synthetic-endpoint-not-physical-link-or-device-recovery",
-        "single-esxi-build-and-efi-guest"
+        "historical-e1000e-endpoint-and-root-reporting-disabled",
+        "esxi-host-service-and-interrupt-attribution-unverified",
+        "guest-write-isolation-unverified",
+        "lifecycle-clear-and-reuse-unverified",
+        "synthetic-endpoint-not-physical-recovery",
+        "single-esxi-build-and-nested-profile"
       ]
     },
     {
@@ -756,7 +771,7 @@
       "legacyIds": [],
       "evidencePaths": ["evidence/vmware-trace-index-20260723-summary.json"],
       "evidenceSha256": {
-        "evidence/vmware-trace-index-20260723-summary.json": "618456ec384dabf05dc35fb86603e9a483eac6ada87817f342fe2fd7aeb15f96"
+        "evidence/vmware-trace-index-20260723-summary.json": "262315949a1f434418ee3d08b90656684a71fbc266942244dfd5f3d462781b5b"
       },
       "runnerPaths": [
         "tools/generate_vmware_evidence_index.py",
@@ -917,9 +932,9 @@
     {
       "techStoryId": "TS-F4-06",
       "status": "PARTIAL",
-      "sourceIds": ["VMW-SRC-001"],
+      "sourceIds": ["VMW-SRC-001", "VMW-SRC-025"],
       "experimentIds": ["VMW-AER-COR-001"],
-      "observableContract": "The frozen ESXi profile exposes hidden guest AER discovery with raw Correctable status projection; route-enabled delivery, guest writes, lifecycle cleanup and physical recovery remain unverified."
+      "observableContract": "The tested e1000e and virtio profiles expose different guest AER capability surfaces while both can project raw Correctable status. E and M control frozen-fabric Root deposition in the QEMU oracle, R is a separate notification-eligibility dimension, and no current observation attributes an ESXi interrupt or service path. Guest writes, lifecycle cleanup and physical recovery remain unverified."
     },
     {
       "techStoryId": "TS-F5-01",

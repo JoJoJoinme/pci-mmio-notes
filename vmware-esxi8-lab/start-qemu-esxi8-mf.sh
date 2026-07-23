@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 instance="${QEMU_ESXI_INSTANCE:-mf}"
@@ -100,13 +101,14 @@ fi
 
 test_devices=()
 test_fn0_rom_options=""
-test_fn_aer_options=""
 test_fn0_model="${QEMU_ESXI_TEST_FN0_MODEL:-e1000e}"
 test_fn1_model="${QEMU_ESXI_TEST_FN1_MODEL:-e1000e}"
 test_fn0_mac="${QEMU_ESXI_TEST_FN0_MAC:-52:54:00:08:00:00}"
 test_fn1_mac="${QEMU_ESXI_TEST_FN1_MAC:-52:54:00:08:00:01}"
 test_fn0_identity_options=""
 test_fn1_identity_options=""
+test_fn0_aer_options=""
+test_fn1_aer_options=""
 
 case "$test_fn0_model" in
   e1000e)
@@ -119,6 +121,7 @@ case "$test_fn0_model" in
     ;;
   virtio-net-pci)
     test_fn0_identity_options+=",disable-legacy=on"
+    test_fn0_aer_options+=",aer=${QEMU_ESXI_TEST_FN0_AER:-off}"
     ;;
   *)
     echo "unsupported QEMU_ESXI_TEST_FN0_MODEL: $test_fn0_model" >&2
@@ -137,6 +140,7 @@ case "$test_fn1_model" in
     ;;
   virtio-net-pci)
     test_fn1_identity_options+=",disable-legacy=on"
+    test_fn1_aer_options+=",aer=${QEMU_ESXI_TEST_FN1_AER:-off}"
     ;;
   *)
     echo "unsupported QEMU_ESXI_TEST_FN1_MODEL: $test_fn1_model" >&2
@@ -145,7 +149,26 @@ case "$test_fn1_model" in
 esac
 
 if [[ "${QEMU_ESXI_HIDE_AER:-0}" == "1" ]]; then
-  test_fn_aer_options=",x-hide-aer=on"
+  if [[ "$test_fn0_model" != "e1000e" || "$test_fn1_model" != "e1000e" ]]; then
+    echo "QEMU_ESXI_HIDE_AER is only supported by the e1000e test profile" >&2
+    exit 2
+  fi
+  test_fn0_aer_options=",x-hide-aer=on"
+  test_fn1_aer_options=",x-hide-aer=on"
+fi
+for aer_value in "${QEMU_ESXI_TEST_FN0_AER:-off}" "${QEMU_ESXI_TEST_FN1_AER:-off}"; do
+  if [[ "$aer_value" != "on" && "$aer_value" != "off" ]]; then
+    echo "QEMU_ESXI_TEST_FN0_AER and QEMU_ESXI_TEST_FN1_AER must be on or off" >&2
+    exit 2
+  fi
+done
+if [[ "$test_fn0_model" == "e1000e" && -n "${QEMU_ESXI_TEST_FN0_AER:-}" ]]; then
+  echo "QEMU_ESXI_TEST_FN0_AER is only valid with virtio-net-pci" >&2
+  exit 2
+fi
+if [[ "$test_fn1_model" == "e1000e" && -n "${QEMU_ESXI_TEST_FN1_AER:-}" ]]; then
+  echo "QEMU_ESXI_TEST_FN1_AER is only valid with virtio-net-pci" >&2
+  exit 2
 fi
 if [[ -n "${QEMU_ESXI_TEST_ROMFILE:-}" ]]; then
   if [[ ! -r "$QEMU_ESXI_TEST_ROMFILE" ]]; then
@@ -172,8 +195,8 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
   pcie)
     test_devices+=(
       -device "pcie-root-port,$root_port_options"
-      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=test_rp,addr=0x00.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn_aer_options"
-      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=test_rp,addr=0x00.1$test_fn1_identity_options$test_fn_aer_options"
+      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=test_rp,addr=0x00.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn0_aer_options"
+      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=test_rp,addr=0x00.1$test_fn1_identity_options$test_fn1_aer_options"
     )
     if [[ "${QEMU_ESXI_PRIMARY_DEDICATED_ROOT_PORT:-0}" == "1" ]]; then
       primary_root_port_options="id=test_primary_rp,bus=pcie.0,chassis=10,slot=10,addr=0x0a.0"
@@ -211,8 +234,8 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     ;;
   root)
     test_devices+=(
-      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=pcie.0,addr=0x08.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn_aer_options"
-      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=pcie.0,addr=0x08.1$test_fn1_identity_options$test_fn_aer_options"
+      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=pcie.0,addr=0x08.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn0_aer_options"
+      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=pcie.0,addr=0x08.1$test_fn1_identity_options$test_fn1_aer_options"
     )
     ivshmem_bus=pcie.0
     ivshmem_addr=0x09.0
@@ -229,8 +252,8 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     test_devices+=(
       -device "pcie-root-port,$root_port_options"
       -device "pcie-pci-bridge,id=test_legacy,bus=test_rp,addr=0x00.0"
-      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=test_legacy,addr=0x01.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn_aer_options"
-      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=test_legacy,addr=0x01.1$test_fn1_identity_options$test_fn_aer_options"
+      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=test_legacy,addr=0x01.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn0_aer_options"
+      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=test_legacy,addr=0x01.1$test_fn1_identity_options$test_fn1_aer_options"
     )
     ivshmem_bus=test_legacy
     ivshmem_addr=0x02.0
@@ -489,6 +512,7 @@ elif [[ "${QEMU_ESXI_START_PAUSED:-0}" != "0" ]]; then
 fi
 
 mkdir -p "$vm_dir"
+chmod 700 "$vm_dir"
 rm -f "$pid_file"
 if [[ "${QEMU_ESXI_TRACE:-0}" == "1" ]] && [[ -e "$vm_dir/qemu-trace.log" ]]; then
   mv -f "$vm_dir/qemu-trace.log" "$vm_dir/qemu-trace.previous.log"

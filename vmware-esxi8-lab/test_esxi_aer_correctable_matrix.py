@@ -5,11 +5,13 @@ The runner deliberately exposes no uncorrectable injection path.  Every HMP
 command is constructed from a closed allow-list of PCIe Correctable Error
 Status bits and always uses ``pcie_aer_inject_error -c``.
 
-The default oracle captures the ESXi 8.0.3 behavior already observed by this
-lab: the physical Correctable Error Status changes, while an active DirectPath
-guest sees a hidden AER header with the raw status body preserved.  Use the
-``delivery-only`` oracle when characterising another ESXi build without
-asserting that guest projection.
+The default oracle captures profile-specific ESXi 8.0.3 behavior.  The
+historical e1000e profile hides the guest AER header while preserving raw
+status projection; a controlled virtio profile may expose the capability while
+still withholding a guest kernel AER service event.  Use the ``delivery-only``
+oracle when characterising another ESXi build.  Capability visibility, status
+projection and service/interrupt delivery are deliberately evaluated
+separately.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ import argparse
 import collections
 import hashlib
 import json
+import multiprocessing
 import os
 import re
 import shlex
@@ -69,6 +72,10 @@ BIT_ALIASES = {
     "header_overflow": "header_log_overflow",
 }
 SAFE_VALUE_TO_NAME = {value: name for name, value in SAFE_CORRECTABLE_BITS.items()}
+GATE_STABILITY_DELAYS = (0.0, 0.1, 1.0)
+OWNER_PROBE_HTTP_TIMEOUT_SECONDS = 5
+OWNER_PROBE_HARD_TIMEOUT_SECONDS = 10.0
+OWNER_PROBE_TERMINATE_GRACE_SECONDS = 1.0
 
 OWNER_CHOICES = ("Native", "PassthruIdle", "PassthruActive")
 EXPECTED_CURRENT_OWNER = {
@@ -97,6 +104,72 @@ class InjectionFailure(RuntimeError):
 
 class SafetyViolation(RuntimeError):
     """A non-Correctable state changed during a Correctable-only case."""
+
+
+class GateLeaseApplyFailure(RuntimeError):
+    """Gate writes started, so the caller must retain and restore the lease."""
+
+    def __init__(
+        self,
+        message: str,
+        lease: dict[str, Any],
+        *,
+        safety: bool,
+    ) -> None:
+        super().__init__(message)
+        self.lease = lease
+        self.safety = safety
+
+
+@dataclass(frozen=True)
+class GateTuple:
+    """Requested Correctable-only gate values.
+
+    E is Endpoint Device Control.CERE, M is the selected bit in the Endpoint
+    Correctable Error Mask, and R is Root Error Command.COR_EN.
+    """
+
+    endpoint_cere: bool
+    endpoint_masked: bool
+    root_cor_enabled: bool
+
+    @property
+    def label(self) -> str:
+        return "".join(
+            "1" if value else "0"
+            for value in (
+                self.endpoint_cere,
+                self.endpoint_masked,
+                self.root_cor_enabled,
+            )
+        )
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "label": self.label,
+            "E": int(self.endpoint_cere),
+            "M": int(self.endpoint_masked),
+            "R": int(self.root_cor_enabled),
+        }
+
+
+@dataclass(frozen=True)
+class RootPathState:
+    """Auxiliary Root Port gates, deliberately kept separate from R."""
+
+    bridge_serr: bool
+    root_cere: bool
+
+    @property
+    def open(self) -> bool:
+        return self.bridge_serr and self.root_cere
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "bridgeControlSerr": int(self.bridge_serr),
+            "rootDeviceControlCere": int(self.root_cere),
+            "open": self.open,
+        }
 
 
 def utc_now() -> str:
@@ -195,6 +268,32 @@ def parse_error_bits(raw: str) -> list[tuple[str, int]]:
     if not selected:
         raise ValueError("at least one safe Correctable AER bit is required")
     return selected
+
+
+def parse_gate_tuples(raw: str | None) -> list[GateTuple]:
+    if raw is None:
+        return []
+    tokens = [item.strip() for item in raw.split(",")]
+    if not tokens or any(not token for token in tokens):
+        raise ValueError("--gate-tuples must be a comma-separated list of 000-111")
+    result: list[GateTuple] = []
+    seen: set[str] = set()
+    for token in tokens:
+        if not re.fullmatch(r"[01]{3}", token):
+            raise ValueError(
+                f"invalid gate tuple {token!r}; expected exactly three bits E,M,R"
+            )
+        if token in seen:
+            raise ValueError(f"duplicate gate tuple: {token}")
+        seen.add(token)
+        result.append(
+            GateTuple(
+                endpoint_cere=token[0] == "1",
+                endpoint_masked=token[1] == "1",
+                root_cor_enabled=token[2] == "1",
+            )
+        )
+    return result
 
 
 def build_injection_command(qemu_device: str, mask: int) -> str:
@@ -398,6 +497,952 @@ def outer_qemu_aer_snapshot(
         client.close()
 
 
+def gate_tuple_from_snapshot(snapshot: dict[str, Any], mask: int) -> GateTuple:
+    endpoint = snapshot["endpointState"]
+    root = snapshot["rootState"]
+    return GateTuple(
+        endpoint_cere=bool(
+            int(endpoint["deviceControl"]) & qemu_aer.PCI_EXP_DEVCTL_CERE
+        ),
+        endpoint_masked=bool(int(endpoint["correctableErrorMask"]) & mask),
+        root_cor_enabled=bool(
+            int(root["rootErrorCommand"]) & qemu_aer.PCI_ERR_ROOT_CMD_COR_EN
+        ),
+    )
+
+
+def root_path_from_snapshot(snapshot: dict[str, Any]) -> RootPathState:
+    root = snapshot["rootState"]
+    return RootPathState(
+        bridge_serr=bool(
+            int(root["bridgeControl"]) & qemu_aer.PCI_BRIDGE_CTL_SERR
+        ),
+        root_cere=bool(
+            int(root["deviceControl"]) & qemu_aer.PCI_EXP_DEVCTL_CERE
+        ),
+    )
+
+
+def gate_readback(snapshot: dict[str, Any], mask: int) -> dict[str, Any]:
+    endpoint = snapshot["endpointState"]
+    root = snapshot["rootState"]
+    return {
+        "tuple": gate_tuple_from_snapshot(snapshot, mask).as_dict(),
+        "raw": {
+            "endpointDeviceControl": int(endpoint["deviceControl"]),
+            "endpointCorrectableMask": int(endpoint["correctableErrorMask"]),
+            "rootErrorCommand": int(root["rootErrorCommand"]),
+        },
+        "rootPath": root_path_from_snapshot(snapshot).as_dict(),
+    }
+
+
+def outer_snapshot_safety_faults(snapshot: dict[str, Any]) -> list[str]:
+    endpoint = snapshot["endpointState"]
+    root = snapshot["rootState"]
+    faults: list[str] = []
+    if int(endpoint["uncorrectableErrorStatus"]):
+        faults.append(
+            "endpoint UES="
+            f"0x{int(endpoint['uncorrectableErrorStatus']):08x}"
+        )
+    endpoint_non_ced = int(endpoint["deviceStatus"]) & (
+        qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK ^ qemu_aer.PCI_EXP_DEVSTA_CED
+    )
+    if endpoint_non_ced:
+        faults.append(f"endpoint DeviceStatus non-CED=0x{endpoint_non_ced:04x}")
+    if int(root["uncorrectableErrorStatus"]):
+        faults.append(
+            f"root UES=0x{int(root['uncorrectableErrorStatus']):08x}"
+        )
+    root_device_errors = int(root["deviceStatus"]) & (
+        qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK ^ qemu_aer.PCI_EXP_DEVSTA_CED
+    )
+    if root_device_errors:
+        faults.append(f"root DeviceStatus error=0x{root_device_errors:04x}")
+    root_uncorrectable = int(root["rootErrorStatus"]) & (
+        qemu_aer.PCI_ERR_ROOT_UNCOR_MASK
+    )
+    if root_uncorrectable:
+        faults.append(
+            f"root uncorrectable reception=0x{root_uncorrectable:08x}"
+        )
+    return faults
+
+
+def outer_snapshot_correctable_noise(snapshot: dict[str, Any]) -> list[str]:
+    """Return pre-existing Correctable surfaces that would confound a case."""
+
+    endpoint = snapshot["endpointState"]
+    root = snapshot["rootState"]
+    noise: list[str] = []
+    values = (
+        ("endpoint CES", int(endpoint["correctableErrorStatus"])),
+        (
+            "endpoint DeviceStatus.CED",
+            int(endpoint["deviceStatus"]) & qemu_aer.PCI_EXP_DEVSTA_CED,
+        ),
+        ("root CES", int(root["correctableErrorStatus"])),
+        (
+            "root DeviceStatus.CED",
+            int(root["deviceStatus"]) & qemu_aer.PCI_EXP_DEVSTA_CED,
+        ),
+        ("Root Error Status low 0x7f", int(root["rootErrorStatus"]) & 0x7F),
+    )
+    for label, value in values:
+        if value:
+            noise.append(f"{label}=0x{value:x}")
+    return noise
+
+
+def transition_qemu(
+    monitor: Path,
+    command: str,
+    expected_status: str,
+) -> dict[str, str]:
+    output = hmp_command(monitor, command)
+    status = hmp_command(monitor, "info status")
+    if expected_status.lower() not in status.lower():
+        raise SafetyViolation(
+            f"QEMU {command!r} did not reach {expected_status!r}: {status!r}"
+        )
+    return {
+        "command": command,
+        "output": output,
+        "status": status,
+        "observedAt": utc_now(),
+    }
+
+
+def qemu_runtime_state(monitor: Path) -> str:
+    """Return the observable outer-QEMU state without contacting ESXi."""
+
+    try:
+        status = hmp_command(monitor, "info status").lower()
+    except Exception:
+        return "unknown"
+    if "vm status: paused" in status:
+        return "paused"
+    if "vm status: running" in status:
+        return "running"
+    return "unknown"
+
+
+def write_gate_tuple(
+    client: qemu_aer.QTestClient,
+    topology: dict[str, Any],
+    requested: GateTuple,
+    mask: int,
+    *,
+    clear_correctable: bool,
+    root_path: RootPathState | None = None,
+) -> None:
+    endpoint = topology["endpoint"]
+    root = topology["root"]
+    eb, ed, ef = endpoint["bus"], endpoint["device"], endpoint["function"]
+    rb, rd, rf = root["bus"], root["device"], root["function"]
+    epcie = endpoint["pcieCapabilityOffset"]
+    eaer = endpoint["aerCapabilityOffset"]
+    rpcie = root["pcieCapabilityOffset"]
+    raer = root["aerCapabilityOffset"]
+
+    # Block Correctable messages while the bit-specific mask and Root Command
+    # are staged.  No Uncorrectable enable, mask, or severity bit is exposed.
+    endpoint_control = qemu_aer.config_read16(
+        client, eb, ed, ef, epcie + qemu_aer.PCI_EXP_DEVCTL
+    )
+    qemu_aer.config_write16(
+        client,
+        eb,
+        ed,
+        ef,
+        epcie + qemu_aer.PCI_EXP_DEVCTL,
+        endpoint_control & ~qemu_aer.PCI_EXP_DEVCTL_CERE,
+    )
+
+    correctable_mask = qemu_aer.config_read32(
+        client, eb, ed, ef, eaer + qemu_aer.PCI_ERR_COR_MASK
+    )
+    desired_mask = (
+        correctable_mask | mask
+        if requested.endpoint_masked
+        else correctable_mask & ~mask
+    )
+    qemu_aer.config_write32(
+        client,
+        eb,
+        ed,
+        ef,
+        eaer + qemu_aer.PCI_ERR_COR_MASK,
+        desired_mask,
+    )
+
+    root_command = qemu_aer.config_read32(
+        client, rb, rd, rf, raer + qemu_aer.PCI_ERR_ROOT_COMMAND
+    )
+    desired_root_command = (
+        root_command | qemu_aer.PCI_ERR_ROOT_CMD_COR_EN
+        if requested.root_cor_enabled
+        else root_command & ~qemu_aer.PCI_ERR_ROOT_CMD_COR_EN
+    )
+    qemu_aer.config_write32(
+        client,
+        rb,
+        rd,
+        rf,
+        raer + qemu_aer.PCI_ERR_ROOT_COMMAND,
+        desired_root_command,
+    )
+
+    if root_path is not None:
+        bridge_control = qemu_aer.config_read16(
+            client, rb, rd, rf, qemu_aer.PCI_BRIDGE_CONTROL
+        )
+        desired_bridge_control = (
+            bridge_control | qemu_aer.PCI_BRIDGE_CTL_SERR
+            if root_path.bridge_serr
+            else bridge_control & ~qemu_aer.PCI_BRIDGE_CTL_SERR
+        )
+        qemu_aer.config_write16(
+            client,
+            rb,
+            rd,
+            rf,
+            qemu_aer.PCI_BRIDGE_CONTROL,
+            desired_bridge_control,
+        )
+        root_device_control = qemu_aer.config_read16(
+            client, rb, rd, rf, rpcie + qemu_aer.PCI_EXP_DEVCTL
+        )
+        desired_root_device_control = (
+            root_device_control | qemu_aer.PCI_EXP_DEVCTL_CERE
+            if root_path.root_cere
+            else root_device_control & ~qemu_aer.PCI_EXP_DEVCTL_CERE
+        )
+        qemu_aer.config_write16(
+            client,
+            rb,
+            rd,
+            rf,
+            rpcie + qemu_aer.PCI_EXP_DEVCTL,
+            desired_root_device_control,
+        )
+
+    if clear_correctable:
+        qemu_aer.config_write16(
+            client,
+            eb,
+            ed,
+            ef,
+            epcie + qemu_aer.PCI_EXP_DEVSTA,
+            qemu_aer.PCI_EXP_DEVSTA_CED,
+        )
+        qemu_aer.config_write32(
+            client,
+            eb,
+            ed,
+            ef,
+            eaer + qemu_aer.PCI_ERR_COR_STATUS,
+            0xFFFFFFFF,
+        )
+        qemu_aer.config_write16(
+            client,
+            rb,
+            rd,
+            rf,
+            rpcie + qemu_aer.PCI_EXP_DEVSTA,
+            qemu_aer.PCI_EXP_DEVSTA_CED,
+        )
+        qemu_aer.config_write32(
+            client,
+            rb,
+            rd,
+            rf,
+            raer + qemu_aer.PCI_ERR_COR_STATUS,
+            0xFFFFFFFF,
+        )
+        qemu_aer.config_write32(
+            client,
+            rb,
+            rd,
+            rf,
+            raer + qemu_aer.PCI_ERR_ROOT_STATUS,
+            (
+                qemu_aer.PCI_ERR_ROOT_COR_RCV
+                | qemu_aer.PCI_ERR_ROOT_MULTI_COR_RCV
+            ),
+        )
+
+    final_endpoint_control = qemu_aer.config_read16(
+        client, eb, ed, ef, epcie + qemu_aer.PCI_EXP_DEVCTL
+    )
+    if requested.endpoint_cere:
+        final_endpoint_control |= qemu_aer.PCI_EXP_DEVCTL_CERE
+    else:
+        final_endpoint_control &= ~qemu_aer.PCI_EXP_DEVCTL_CERE
+    qemu_aer.config_write16(
+        client,
+        eb,
+        ed,
+        ef,
+        epcie + qemu_aer.PCI_EXP_DEVCTL,
+        final_endpoint_control,
+    )
+
+
+def gate_non_target_checks(
+    before: dict[str, Any],
+    after: dict[str, Any],
+    mask: int,
+) -> dict[str, bool]:
+    before_endpoint = before["endpointState"]
+    after_endpoint = after["endpointState"]
+    before_root = before["rootState"]
+    after_root = after["rootState"]
+    return {
+        "endpointDeviceControlNonCereUnchanged": not bool(
+            (
+                int(before_endpoint["deviceControl"])
+                ^ int(after_endpoint["deviceControl"])
+            )
+            & ~qemu_aer.PCI_EXP_DEVCTL_CERE
+        ),
+        "endpointCorrectableMaskNonTargetUnchanged": not bool(
+            (
+                int(before_endpoint["correctableErrorMask"])
+                ^ int(after_endpoint["correctableErrorMask"])
+            )
+            & ~mask
+        ),
+        "rootErrorCommandNonCorUnchanged": not bool(
+            (
+                int(before_root["rootErrorCommand"])
+                ^ int(after_root["rootErrorCommand"])
+            )
+            & ~qemu_aer.PCI_ERR_ROOT_CMD_COR_EN
+        ),
+        "rootBridgeControlNonSerrUnchanged": not bool(
+            (
+                int(before_root["bridgeControl"])
+                ^ int(after_root["bridgeControl"])
+            )
+            & ~qemu_aer.PCI_BRIDGE_CTL_SERR
+        ),
+        "rootDeviceControlNonCereUnchanged": not bool(
+            (
+                int(before_root["deviceControl"])
+                ^ int(after_root["deviceControl"])
+            )
+            & ~qemu_aer.PCI_EXP_DEVCTL_CERE
+        ),
+    }
+
+
+def sample_gate_timeline(
+    socket_path: Path,
+    endpoint_bdf: str,
+    root_bdf: str,
+    mask: int,
+    delays: Iterable[float] = GATE_STABILITY_DELAYS,
+    *,
+    started_at: float | None = None,
+    stop_on_safety_fault: bool = True,
+) -> list[dict[str, Any]]:
+    samples: list[dict[str, Any]] = []
+    started = time.monotonic() if started_at is None else started_at
+    for target_delay in delays:
+        remaining = float(target_delay) - (time.monotonic() - started)
+        if remaining > 0:
+            time.sleep(remaining)
+        actual_elapsed = time.monotonic() - started
+        snapshot = outer_qemu_aer_snapshot(
+            socket_path, endpoint_bdf, root_bdf
+        )
+        safety_faults = outer_snapshot_safety_faults(snapshot)
+        samples.append(
+            {
+                "delaySeconds": target_delay,
+                "targetDelaySeconds": target_delay,
+                "actualElapsedSeconds": actual_elapsed,
+                "capturedAt": utc_now(),
+                "readback": gate_readback(snapshot, mask),
+                "safetyFaults": safety_faults,
+                "snapshot": snapshot,
+            }
+        )
+        if safety_faults and stop_on_safety_fault:
+            break
+    return samples
+
+
+def apply_gate_lease(
+    monitor: Path,
+    socket_path: Path,
+    endpoint_bdf: str,
+    root_bdf: str,
+    mask: int,
+    requested: GateTuple,
+    *,
+    enable_root_path: bool,
+) -> dict[str, Any]:
+    lease: dict[str, Any] = {
+        "requested": requested.as_dict(),
+        "rootPathLease": {
+            "managed": enable_root_path,
+            "requested": (
+                RootPathState(True, True).as_dict()
+                if enable_root_path
+                else None
+            ),
+        },
+        "startedAt": utc_now(),
+        "timeline": {},
+        "outcome": "APPLYING",
+    }
+    paused = False
+    writes_started = False
+    resume_allowed = False
+    original: dict[str, Any] | None = None
+    try:
+        lease["timeline"]["pause"] = transition_qemu(monitor, "stop", "paused")
+        paused = True
+        original = outer_qemu_aer_snapshot(
+            socket_path, endpoint_bdf, root_bdf
+        )
+        faults = outer_snapshot_safety_faults(original)
+        if faults:
+            raise SafetyViolation(
+                "unsafe state before gate application: " + "; ".join(faults)
+            )
+        # A clean pre-write snapshot is safe to resume if a later observation
+        # makes the case inconclusive.  Until this point, fail closed and leave
+        # QEMU paused when the baseline itself contains an unsafe condition.
+        resume_allowed = True
+        correctable_noise = outer_snapshot_correctable_noise(original)
+        if correctable_noise:
+            raise InconclusiveObservation(
+                "Correctable background state appeared between baseline clear "
+                "and gate application: " + "; ".join(correctable_noise)
+            )
+        lease["original"] = {
+            "capturedAt": utc_now(),
+            "readback": gate_readback(original, mask),
+            "snapshot": original,
+        }
+        original_root_path = root_path_from_snapshot(original)
+        lease["rootPathLease"]["original"] = original_root_path.as_dict()
+        requested_root_path = (
+            RootPathState(True, True)
+            if enable_root_path
+            else original_root_path
+        )
+        client = qemu_aer.QTestClient(socket_path)
+        try:
+            writes_started = True
+            resume_allowed = False
+            write_gate_tuple(
+                client,
+                original,
+                requested,
+                mask,
+                clear_correctable=True,
+                root_path=requested_root_path if enable_root_path else None,
+            )
+        finally:
+            client.close()
+        paused_applied = outer_qemu_aer_snapshot(
+            socket_path, endpoint_bdf, root_bdf
+        )
+        paused_checks = gate_non_target_checks(original, paused_applied, mask)
+        paused_checks["requestedTupleReadBack"] = (
+            gate_tuple_from_snapshot(paused_applied, mask) == requested
+        )
+        paused_checks["requestedRootPathReadBack"] = (
+            root_path_from_snapshot(paused_applied) == requested_root_path
+        )
+        paused_faults = outer_snapshot_safety_faults(paused_applied)
+        paused_checks["noUncorrectableSideEffect"] = not paused_faults
+        lease["timeline"]["pausedApplied"] = {
+            "capturedAt": utc_now(),
+            "readback": gate_readback(paused_applied, mask),
+            "checks": paused_checks,
+            "safetyFaults": paused_faults,
+            "snapshot": paused_applied,
+        }
+        resume_allowed = all(paused_checks.values())
+    except Exception as error:
+        if writes_started and original is not None:
+            try:
+                client = qemu_aer.QTestClient(socket_path)
+                try:
+                    write_gate_tuple(
+                        client,
+                        original,
+                        gate_tuple_from_snapshot(original, mask),
+                        mask,
+                        clear_correctable=False,
+                        root_path=(
+                            root_path_from_snapshot(original)
+                            if enable_root_path
+                            else None
+                        ),
+                    )
+                finally:
+                    client.close()
+                rolled_back = outer_qemu_aer_snapshot(
+                    socket_path, endpoint_bdf, root_bdf
+                )
+                rollback_checks = gate_non_target_checks(
+                    original, rolled_back, mask
+                )
+                rollback_checks["originalTupleReadBack"] = (
+                    gate_tuple_from_snapshot(rolled_back, mask)
+                    == gate_tuple_from_snapshot(original, mask)
+                )
+                rollback_checks["originalRootPathReadBack"] = (
+                    root_path_from_snapshot(rolled_back)
+                    == root_path_from_snapshot(original)
+                )
+                lease["partialApplyRollback"] = {
+                    "readback": gate_readback(rolled_back, mask),
+                    "checks": rollback_checks,
+                    "snapshot": rolled_back,
+                }
+                if not all(rollback_checks.values()):
+                    raise SafetyViolation(
+                        "gate apply failed and paused rollback did not read back"
+                    )
+                resume_allowed = True
+            except Exception as restore_error:
+                lease["outcome"] = "ROLLBACK_FAILED"
+                lease["applyFault"] = {
+                    "type": type(error).__name__,
+                    "message": str(error),
+                }
+                lease["rollbackFault"] = {
+                    "type": type(restore_error).__name__,
+                    "message": str(restore_error),
+                }
+                lease["finishedAt"] = utc_now()
+                raise GateLeaseApplyFailure(
+                    "gate apply failed and paused rollback also failed: "
+                    f"{type(error).__name__}: {error}; "
+                    f"{type(restore_error).__name__}: {restore_error}",
+                    lease,
+                    safety=True,
+                ) from restore_error
+            lease["outcome"] = "ROLLED_BACK_AFTER_APPLY_FAILURE"
+            lease["applyFault"] = {
+                "type": type(error).__name__,
+                "message": str(error),
+            }
+            lease["finishedAt"] = utc_now()
+            raise GateLeaseApplyFailure(
+                "gate apply failed after writes; paused rollback read back",
+                lease,
+                safety=isinstance(error, SafetyViolation),
+            ) from error
+        raise
+    finally:
+        if paused:
+            if resume_allowed:
+                try:
+                    lease["timeline"]["resume"] = transition_qemu(
+                        monitor, "cont", "running"
+                    )
+                except Exception as resume_error:
+                    lease["outcome"] = "RESUME_FAILED_AFTER_APPLY"
+                    lease["resumeFault"] = {
+                        "type": type(resume_error).__name__,
+                        "message": str(resume_error),
+                    }
+                    lease["finishedAt"] = utc_now()
+                    if writes_started and original is not None:
+                        raise GateLeaseApplyFailure(
+                            "QEMU could not resume after gate application",
+                            lease,
+                            safety=True,
+                        ) from resume_error
+                    raise
+            else:
+                lease["timeline"]["heldPaused"] = {
+                    "reason": (
+                        "gate mutation did not pass paused readback and "
+                        "safety checks"
+                    ),
+                    "observedAt": utc_now(),
+                }
+
+    if not resume_allowed:
+        paused_checks = lease["timeline"]["pausedApplied"]["checks"]
+        if not paused_checks["noUncorrectableSideEffect"]:
+            lease["outcome"] = "SAFETY_FAULT_DURING_APPLY"
+        elif not paused_checks["requestedRootPathReadBack"]:
+            lease["outcome"] = "ROOT_PATH_BLOCKED"
+        else:
+            lease["outcome"] = "HARDWIRED_OR_PAUSED_READBACK_MISMATCH"
+        lease["effective"] = lease["timeline"]["pausedApplied"]["readback"]
+        lease["rootPathLease"]["effective"] = lease["effective"]["rootPath"]
+        lease["rootPathLease"]["stable"] = False
+        lease["finishedAt"] = utc_now()
+        return lease
+
+    samples = sample_gate_timeline(
+        socket_path, endpoint_bdf, root_bdf, mask
+    )
+    lease["timeline"]["resumedSamples"] = samples
+    paused_checks = lease["timeline"]["pausedApplied"]["checks"]
+    resumed_match = all(
+        gate_tuple_from_snapshot(item["snapshot"], mask) == requested
+        for item in samples
+    )
+    root_path_match = all(
+        root_path_from_snapshot(item["snapshot"])
+        == (
+            RootPathState(True, True)
+            if enable_root_path
+            else root_path_from_snapshot(original)
+        )
+        for item in samples
+    )
+    resumed_faults = [
+        {
+            "delaySeconds": item["delaySeconds"],
+            "faults": faults,
+        }
+        for item in samples
+        if (faults := outer_snapshot_safety_faults(item["snapshot"]))
+    ]
+    lease["resumedSafetyFaults"] = resumed_faults
+    if resumed_faults:
+        try:
+            lease["timeline"]["safetyHold"] = transition_qemu(
+                monitor, "stop", "paused"
+            )
+            lease["qemuHeldPaused"] = True
+        except Exception as hold_error:
+            lease["outcome"] = "SAFETY_FAULT_AND_HOLD_FAILED"
+            lease["safetyHoldFault"] = {
+                "type": type(hold_error).__name__,
+                "message": str(hold_error),
+            }
+            lease["finishedAt"] = utc_now()
+            raise GateLeaseApplyFailure(
+                "Uncorrectable evidence appeared after gate apply and QEMU "
+                "could not be confirmed paused",
+                lease,
+                safety=True,
+            ) from hold_error
+    if resumed_faults or not paused_checks["noUncorrectableSideEffect"]:
+        lease["outcome"] = "SAFETY_FAULT_AFTER_APPLY"
+    elif not paused_checks["requestedRootPathReadBack"] or not root_path_match:
+        lease["outcome"] = "ROOT_PATH_BLOCKED"
+    elif not all(paused_checks.values()):
+        lease["outcome"] = "HARDWIRED_OR_PAUSED_READBACK_MISMATCH"
+    elif not resumed_match:
+        lease["outcome"] = "OVERRIDDEN_OR_UNSTABLE_AFTER_RESUME"
+    else:
+        lease["outcome"] = "EFFECTIVE"
+    lease["effective"] = samples[-1]["readback"]
+    lease["rootPathLease"]["effective"] = (
+        samples[-1]["readback"]["rootPath"]
+    )
+    lease["rootPathLease"]["stable"] = root_path_match
+    lease["finishedAt"] = utc_now()
+    return lease
+
+
+def restore_gate_lease(
+    monitor: Path,
+    socket_path: Path,
+    endpoint_bdf: str,
+    root_bdf: str,
+    mask: int,
+    lease: dict[str, Any],
+    *,
+    safe_stop: bool,
+) -> dict[str, Any]:
+    original_snapshot = lease["original"]["snapshot"]
+    root_path_managed = bool(lease["rootPathLease"]["managed"])
+    original_root_path = root_path_from_snapshot(original_snapshot)
+    requested = (
+        GateTuple(False, True, False)
+        if safe_stop
+        else gate_tuple_from_snapshot(original_snapshot, mask)
+    )
+    result: dict[str, Any] = {
+        "mode": "SAFE_STOP" if safe_stop else "RESTORE_ORIGINAL",
+        "requested": requested.as_dict(),
+        "rootPathLease": {
+            "managed": root_path_managed,
+            "requested": (
+                original_root_path.as_dict() if root_path_managed else None
+            ),
+            "original": original_root_path.as_dict(),
+        },
+        "startedAt": utc_now(),
+        "timeline": {},
+        "outcome": "RESTORING",
+    }
+    paused = False
+    resume_allowed = False
+    try:
+        result["timeline"]["pause"] = transition_qemu(
+            monitor, "stop", "paused"
+        )
+        paused = True
+        before = outer_qemu_aer_snapshot(
+            socket_path, endpoint_bdf, root_bdf
+        )
+        result["timeline"]["before"] = {
+            "capturedAt": utc_now(),
+            "readback": gate_readback(before, mask),
+            "snapshot": before,
+        }
+        client = qemu_aer.QTestClient(socket_path)
+        try:
+            write_gate_tuple(
+                client,
+                before,
+                requested,
+                mask,
+                clear_correctable=not safe_stop,
+                root_path=original_root_path if root_path_managed else None,
+            )
+        finally:
+            client.close()
+        paused_restored = outer_qemu_aer_snapshot(
+            socket_path, endpoint_bdf, root_bdf
+        )
+        checks = gate_non_target_checks(before, paused_restored, mask)
+        checks["requestedTupleReadBack"] = (
+            gate_tuple_from_snapshot(paused_restored, mask) == requested
+        )
+        checks["requestedRootPathReadBack"] = (
+            root_path_from_snapshot(paused_restored) == original_root_path
+        )
+        restore_safety_faults = outer_snapshot_safety_faults(paused_restored)
+        if not safe_stop:
+            checks["noUncorrectableEvidenceAtRestore"] = not restore_safety_faults
+        if not safe_stop:
+            checks.update(
+                {
+                    "endpointCorrectableStatusCleared": (
+                        int(
+                            paused_restored["endpointState"][
+                                "correctableErrorStatus"
+                            ]
+                        )
+                        == 0
+                    ),
+                    "rootCorrectableStatusCleared": (
+                        int(
+                            paused_restored["rootState"][
+                                "correctableErrorStatus"
+                            ]
+                        )
+                        == 0
+                    ),
+                    "rootCorrectableReceptionCleared": not bool(
+                        int(paused_restored["rootState"]["rootErrorStatus"])
+                        & (
+                            qemu_aer.PCI_ERR_ROOT_COR_RCV
+                            | qemu_aer.PCI_ERR_ROOT_MULTI_COR_RCV
+                        )
+                    ),
+                }
+            )
+        result["timeline"]["pausedApplied"] = {
+            "capturedAt": utc_now(),
+            "readback": gate_readback(paused_restored, mask),
+            "checks": checks,
+            "safetyFaults": restore_safety_faults,
+            "snapshot": paused_restored,
+        }
+        resume_allowed = not safe_stop and all(checks.values())
+    finally:
+        if paused:
+            if safe_stop or not resume_allowed:
+                result["timeline"]["heldPaused"] = {
+                    "reason": (
+                        "FAIL_SAFETY or incomplete restore preserves evidence "
+                        "and prevents further device activity until review"
+                    ),
+                    "observedAt": utc_now(),
+                }
+            else:
+                result["timeline"]["resume"] = transition_qemu(
+                    monitor, "cont", "running"
+                )
+
+    paused_checks = result["timeline"]["pausedApplied"]["checks"]
+    if safe_stop:
+        effective = result["timeline"]["pausedApplied"]["readback"]
+        result["rootPathLease"]["effective"] = effective["rootPath"]
+        result["rootPathLease"]["stable"] = (
+            root_path_from_snapshot(
+                result["timeline"]["pausedApplied"]["snapshot"]
+            )
+            == original_root_path
+        )
+        result["outcome"] = (
+            "SAFE_STOP_HELD_PAUSED"
+            if all(paused_checks.values())
+            else "SAFE_STOP_INCOMPLETE_HELD_PAUSED"
+        )
+        result["effective"] = effective
+        result["finishedAt"] = utc_now()
+        return result
+    if not resume_allowed:
+        effective = result["timeline"]["pausedApplied"]["readback"]
+        result["rootPathLease"]["effective"] = effective["rootPath"]
+        result["rootPathLease"]["stable"] = (
+            root_path_from_snapshot(
+                result["timeline"]["pausedApplied"]["snapshot"]
+            )
+            == original_root_path
+        )
+        result["outcome"] = "RESTORE_INCOMPLETE_HELD_PAUSED"
+        result["effective"] = effective
+        result["finishedAt"] = utc_now()
+        return result
+
+    samples = sample_gate_timeline(
+        socket_path,
+        endpoint_bdf,
+        root_bdf,
+        mask,
+        delays=(0.0, 0.1),
+    )
+    result["timeline"]["resumedSamples"] = samples
+    resumed_safety_faults = [
+        {
+            "delaySeconds": item["delaySeconds"],
+            "faults": item["safetyFaults"],
+        }
+        for item in samples
+        if item["safetyFaults"]
+    ]
+    result["resumedSafetyFaults"] = resumed_safety_faults
+    if resumed_safety_faults:
+        result["timeline"]["safetyHold"] = transition_qemu(
+            monitor, "stop", "paused"
+        )
+        result["outcome"] = "RESTORE_SAFETY_FAULT_HELD_PAUSED"
+        result["effective"] = samples[-1]["readback"]
+        result["rootPathLease"]["effective"] = (
+            samples[-1]["readback"]["rootPath"]
+        )
+        result["rootPathLease"]["stable"] = False
+        result["finishedAt"] = utc_now()
+        return result
+    stable = all(
+        gate_tuple_from_snapshot(item["snapshot"], mask) == requested
+        for item in samples
+    )
+    root_path_stable = all(
+        root_path_from_snapshot(item["snapshot"]) == original_root_path
+        for item in samples
+    )
+    result["rootPathLease"]["effective"] = (
+        samples[-1]["readback"]["rootPath"]
+    )
+    result["rootPathLease"]["stable"] = root_path_stable
+    if all(paused_checks.values()) and stable and root_path_stable:
+        result["outcome"] = "RESTORED"
+    else:
+        result["outcome"] = "RESTORE_INCOMPLETE"
+    result["effective"] = samples[-1]["readback"]
+    result["finishedAt"] = utc_now()
+    return result
+
+
+def evaluate_frozen_transport(
+    requested: GateTuple,
+    mask: int,
+    before: dict[str, Any],
+    after: dict[str, Any],
+) -> dict[str, Any]:
+    before_endpoint = before["endpointState"]
+    after_endpoint = after["endpointState"]
+    before_root = before["rootState"]
+    after_root = after["rootState"]
+    before_root_status = int(before_root["rootErrorStatus"])
+    after_root_status = int(after_root["rootErrorStatus"])
+    root_received = bool(
+        after_root_status & qemu_aer.PCI_ERR_ROOT_COR_RCV
+    )
+    source_matches = (
+        int(after_root["errorSourceIdentification"]) & 0xFFFF
+    ) == int(before["endpoint"]["requesterId"])
+    root_path_open = bool(
+        int(before_root["bridgeControl"]) & qemu_aer.PCI_BRIDGE_CTL_SERR
+    ) and bool(
+        int(before_root["deviceControl"]) & qemu_aer.PCI_EXP_DEVCTL_CERE
+    )
+    expects_root_reception = requested.endpoint_cere and not (
+        requested.endpoint_masked
+    )
+    checks: dict[str, bool] = {
+        "effectiveTupleMatchesRequest": (
+            gate_tuple_from_snapshot(before, mask) == requested
+        ),
+        "effectiveTupleStableAfter": (
+            gate_tuple_from_snapshot(after, mask) == requested
+        ),
+        "requestedBitClearBefore": not bool(
+            int(before_endpoint["correctableErrorStatus"]) & mask
+        ),
+        "requestedBitRecordedAfter": bool(
+            int(after_endpoint["correctableErrorStatus"]) & mask
+        ),
+        "rootStatusMessageNumberStable": (
+            before_root_status & 0xFFFFFF80
+        )
+        == (after_root_status & 0xFFFFFF80),
+        "rootAuxiliaryPathOpen": root_path_open,
+        "noUncorrectableSideEffect": not outer_snapshot_safety_faults(after),
+    }
+    if expects_root_reception:
+        checks.update(
+            {
+                "rootCorrectableReceptionObserved": root_received,
+                "correctableSourceMatches": root_received and source_matches,
+                "rootMultipleCorrectableClear": not bool(
+                    after_root_status
+                    & qemu_aer.PCI_ERR_ROOT_MULTI_COR_RCV
+                ),
+            }
+        )
+        conclusion = (
+            "FROZEN_FABRIC_RECEPTION_OBSERVED"
+            if all(checks.values())
+            else "FROZEN_FABRIC_RECEPTION_MISMATCH"
+        )
+    else:
+        checks["rootCorrectableReceptionBlocked"] = not root_received
+        conclusion = (
+            "FROZEN_ENDPOINT_GATE_BLOCKED_ROOT_RECEPTION"
+            if all(checks.values())
+            else "FROZEN_ENDPOINT_GATE_MISMATCH"
+        )
+    return {
+        "scope": (
+            "QEMU fabric deposition while ESXi execution is frozen; "
+            "not evidence of VMware service or interrupt handling"
+        ),
+        "requested": requested.as_dict(),
+        "beforeGate": gate_readback(before, mask),
+        "afterGate": gate_readback(after, mask),
+        "rootStatusLowBefore": before_root_status & 0x7F,
+        "rootStatusLowAfter": after_root_status & 0x7F,
+        "rootSourceMeaningful": root_received,
+        "checks": checks,
+        "conclusion": conclusion,
+        "verdict": "PASS" if all(checks.values()) else "FAIL",
+    }
+
+
 def clear_outer_qemu_aer_baseline(
     monitor: Path,
     socket_path: Path,
@@ -406,6 +1451,7 @@ def clear_outer_qemu_aer_baseline(
     policy: str,
 ) -> dict[str, Any]:
     paused = False
+    resume_allowed = True
     try:
         stop_output = hmp_command(monitor, "stop")
         paused = True
@@ -415,6 +1461,13 @@ def clear_outer_qemu_aer_baseline(
                 f"QEMU did not confirm paused state before QTest writes: {status_output!r}"
             )
         before = outer_qemu_aer_snapshot(socket_path, endpoint_bdf, root_bdf)
+        safety_faults = outer_snapshot_safety_faults(before)
+        if safety_faults:
+            resume_allowed = False
+            raise SafetyViolation(
+                "refusing to clear a baseline containing Uncorrectable evidence: "
+                + "; ".join(safety_faults)
+            )
         client = qemu_aer.QTestClient(socket_path)
         try:
             endpoint = before["endpoint"]
@@ -425,36 +1478,22 @@ def clear_outer_qemu_aer_baseline(
             eaer = endpoint["aerCapabilityOffset"]
             rpcie = root["pcieCapabilityOffset"]
             raer = root["aerCapabilityOffset"]
-            endpoint_control = qemu_aer.config_read16(
-                client, eb, ed, ef, epcie + 0x08
-            )
-            qemu_aer.config_write32(
+            qemu_aer.config_write16(
                 client,
                 eb,
                 ed,
                 ef,
-                epcie + 0x08,
-                endpoint_control | (0x000F << 16),
+                epcie + qemu_aer.PCI_EXP_DEVSTA,
+                qemu_aer.PCI_EXP_DEVSTA_CED,
             )
             qemu_aer.config_write32(client, eb, ed, ef, eaer + 0x10, 0xFFFFFFFF)
-            qemu_aer.config_write32(
-                client,
-                eb,
-                ed,
-                ef,
-                eaer + qemu_aer.PCI_ERR_UNCOR_STATUS,
-                0xFFFFFFFF,
-            )
-            root_control = qemu_aer.config_read16(
-                client, rb, rd, rf, rpcie + 0x08
-            )
-            qemu_aer.config_write32(
+            qemu_aer.config_write16(
                 client,
                 rb,
                 rd,
                 rf,
-                rpcie + 0x08,
-                root_control | (0x000F << 16),
+                rpcie + qemu_aer.PCI_EXP_DEVSTA,
+                qemu_aer.PCI_EXP_DEVSTA_CED,
             )
             qemu_aer.config_write32(client, rb, rd, rf, raer + 0x10, 0xFFFFFFFF)
             qemu_aer.config_write32(
@@ -462,20 +1501,22 @@ def clear_outer_qemu_aer_baseline(
                 rb,
                 rd,
                 rf,
-                raer + qemu_aer.PCI_ERR_UNCOR_STATUS,
-                0xFFFFFFFF,
-            )
-            qemu_aer.config_write32(
-                client,
-                rb,
-                rd,
-                rf,
                 raer + qemu_aer.PCI_ERR_ROOT_STATUS,
-                qemu_aer.PCI_ERR_ROOT_STATUS_W1C,
+                (
+                    qemu_aer.PCI_ERR_ROOT_COR_RCV
+                    | qemu_aer.PCI_ERR_ROOT_MULTI_COR_RCV
+                ),
             )
         finally:
             client.close()
         after = outer_qemu_aer_snapshot(socket_path, endpoint_bdf, root_bdf)
+        after_safety_faults = outer_snapshot_safety_faults(after)
+        if after_safety_faults:
+            resume_allowed = False
+            raise SafetyViolation(
+                "Correctable baseline clear exposed Uncorrectable evidence: "
+                + "; ".join(after_safety_faults)
+            )
         checks = {
             "endpointCorrectableStatusClean": (
                 after["endpointState"]["correctableErrorStatus"] == 0
@@ -506,9 +1547,11 @@ def clear_outer_qemu_aer_baseline(
                 after["rootState"]["deviceStatus"]
                 & qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK
             ),
-            "rootErrorStatusClean": after["rootState"]["rootErrorStatus"] == 0,
-            "rootErrorSourceClean": (
-                after["rootState"]["errorSourceIdentification"] == 0
+            "rootErrorStatusClean": not bool(
+                after["rootState"]["rootErrorStatus"] & 0x7F
+            ),
+            "rootErrorSourceIgnoredWithoutReception": not bool(
+                after["rootState"]["rootErrorStatus"] & 0x7F
             ),
             "rootIsUpstreamOfEndpoint": (
                 after["rootState"]["secondaryBus"]
@@ -526,7 +1569,7 @@ def clear_outer_qemu_aer_baseline(
                 "rootUncorrectableStatusClean",
                 "rootDeviceStatusClean",
                 "rootErrorStatusClean",
-                "rootErrorSourceClean",
+                "rootErrorSourceIgnoredWithoutReception",
                 "rootIsUpstreamOfEndpoint",
             )
         )
@@ -553,7 +1596,8 @@ def clear_outer_qemu_aer_baseline(
         }
     finally:
         if paused:
-            hmp_command(monitor, "cont")
+            if resume_allowed:
+                hmp_command(monitor, "cont")
 
 
 def guest_phase_block(text: str, phase: str) -> str | None:
@@ -612,11 +1656,29 @@ def parse_guest_targets(text: str, phase: str, aer_offset: int) -> list[dict[str
 
 
 def guest_aer_event_lines(text: str) -> list[str]:
+    """Return guest kernel AER event lines, excluding sysfs counter labels."""
+
     event = re.compile(
-        r"PCIe Bus Error|severity=(?:Corrected|Uncorrected|Fatal)|aer_dev_(?:correctable|nonfatal|fatal)",
+        r"PCIe Bus Error|severity=(?:Corrected|Uncorrected|Fatal)",
         re.IGNORECASE,
     )
     return [line for line in text.splitlines() if event.search(line)]
+
+
+def guest_aer_counter_totals(text: str, phase: str) -> dict[str, int]:
+    """Parse the aggregate Linux AER sysfs counters printed for one phase."""
+
+    block = guest_phase_block(text, phase)
+    if block is None:
+        return {}
+    totals: dict[str, int] = {}
+    for name, value in re.findall(
+        r"^TOTAL_ERR_(COR|FATAL|NONFATAL)\s+([0-9]+)$",
+        block,
+        re.MULTILINE,
+    ):
+        totals[name.lower()] = int(value)
+    return totals
 
 
 def new_lines(before: str, after: str) -> list[str]:
@@ -633,16 +1695,25 @@ def new_lines(before: str, after: str) -> list[str]:
 
 def aer_log_lines(lines: Iterable[str]) -> list[str]:
     pattern = re.compile(
-        r"AER|PCIe Bus Error|Corrected|Receiver Error|Bad TLP|Bad DLLP|Replay",
+        r"\bAER\b|PCIe Bus Error|severity=(?:Corrected|Uncorrected|Fatal)"
+        r"|Receiver Error|Bad TLP|Bad DLLP"
+        r"|Replay (?:Timer Timeout|Number Rollover)",
         re.IGNORECASE,
     )
-    return [
-        line
-        for line in lines
-        if pattern.search(line)
-        and "PCI-AER-MATRIX" not in line
-        and not ("sshd-session" in line and "AER" in line)
-    ]
+    result = []
+    for line in lines:
+        lower = line.lower()
+        if not pattern.search(line):
+            continue
+        if "pci-aer-matrix" in lower:
+            continue
+        # ESXi audits the SCP/log-collection commands in syslog.  Their paths
+        # deliberately contain "aer-correctable"; these are transport records,
+        # not PCI error events.
+        if "sshd-session" in lower and "running command" in lower:
+            continue
+        result.append(line)
+    return result
 
 
 @dataclass
@@ -650,6 +1721,7 @@ class ApiSession:
     host_address: str
     user: str
     password: str
+    http_connection_timeout: int | None = None
 
     def __post_init__(self) -> None:
         saved: dict[str, str | None] = {}
@@ -672,12 +1744,25 @@ class ApiSession:
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-            self.service_instance = SmartConnect(
-                host=self.host_address,
-                user=self.user,
-                pwd=self.password,
-                sslContext=context,
-            )
+            last_connect_error: Exception | None = None
+            for attempt in range(3):
+                try:
+                    self.service_instance = SmartConnect(
+                        host=self.host_address,
+                        user=self.user,
+                        pwd=self.password,
+                        sslContext=context,
+                        httpConnectionTimeout=self.http_connection_timeout,
+                    )
+                    break
+                except Exception as connect_error:
+                    last_connect_error = connect_error
+                    if attempt == 2:
+                        raise
+                    time.sleep(2)
+            else:  # pragma: no cover - defensive; the final attempt raises.
+                assert last_connect_error is not None
+                raise last_connect_error
         finally:
             for name, value in saved.items():
                 if value is None:
@@ -693,8 +1778,14 @@ class ApiSession:
             )
         self.host = hosts[0]
 
-    def close(self) -> None:
-        Disconnect(self.service_instance)
+    def close(self, *, remote_logout: bool = True) -> None:
+        if remote_logout:
+            Disconnect(self.service_instance)
+            return
+        stub = getattr(self.service_instance, "_stub", None)
+        drop_connections = getattr(stub, "DropConnections", None)
+        if callable(drop_connections):
+            drop_connections()
 
     def _inventory(self, object_type: type) -> list[Any]:
         view = self.content.viewManager.CreateContainerView(
@@ -755,6 +1846,168 @@ class ApiSession:
                     }
                 )
         return users
+
+
+def _active_user_probe_worker(
+    sender: Any,
+    host: str,
+    user: str,
+    password: str,
+    bdf: str,
+    http_timeout_seconds: int,
+) -> None:
+    """Collect owner evidence in a disposable process and API session."""
+
+    api: ApiSession | None = None
+    payload: dict[str, Any]
+    try:
+        api = ApiSession(
+            host,
+            user,
+            password,
+            http_connection_timeout=http_timeout_seconds,
+        )
+        payload = {
+            "ok": True,
+            "users": api.active_passthrough_users(bdf),
+            "capturedAt": utc_now(),
+        }
+    except Exception as error:
+        payload = {
+            "ok": False,
+            "error": {
+                "type": type(error).__name__,
+                "message": str(error),
+            },
+            "capturedAt": utc_now(),
+        }
+    if api is not None:
+        # The parent enforces the hard deadline.  A responsive endpoint gets
+        # a normal logout before success is reported; a stalled logout is
+        # terminated with this disposable process.
+        try:
+            api.close(remote_logout=True)
+        except Exception:
+            pass
+    try:
+        sender.send(payload)
+    except (BrokenPipeError, EOFError, OSError):
+        pass
+    finally:
+        sender.close()
+
+
+@dataclass
+class ActiveUserProbeProcess:
+    process: Any
+    receiver: Any
+    started_at: str
+    started_monotonic: float
+    closed: bool = False
+
+    def _stop(self, *, graceful: bool) -> None:
+        if self.closed:
+            return
+        still_alive = False
+        try:
+            if graceful and self.process.is_alive():
+                self.process.join(OWNER_PROBE_TERMINATE_GRACE_SECONDS)
+            if self.process.is_alive():
+                self.process.terminate()
+                self.process.join(OWNER_PROBE_TERMINATE_GRACE_SECONDS)
+            if self.process.is_alive():
+                kill = getattr(self.process, "kill", None)
+                if callable(kill):
+                    kill()
+                    self.process.join(OWNER_PROBE_TERMINATE_GRACE_SECONDS)
+            still_alive = self.process.is_alive()
+        finally:
+            try:
+                self.receiver.close()
+            finally:
+                if not still_alive:
+                    try:
+                        self.process.close()
+                    except ValueError:
+                        pass
+                self.closed = True
+        if still_alive:
+            raise RuntimeError(
+                "independent active-user API probe could not be terminated"
+            )
+
+    def cancel(self) -> None:
+        self._stop(graceful=False)
+
+    def result(self, hard_timeout_seconds: float) -> dict[str, Any]:
+        remaining = hard_timeout_seconds - (
+            time.monotonic() - self.started_monotonic
+        )
+        payload_received = False
+        try:
+            if remaining <= 0 or not self.receiver.poll(remaining):
+                raise TimeoutError(
+                    "independent active-user API probe exceeded "
+                    f"{hard_timeout_seconds:.1f}s hard deadline"
+                )
+            try:
+                payload = self.receiver.recv()
+                payload_received = True
+            except EOFError as error:
+                raise RuntimeError(
+                    "independent active-user API probe exited without a result"
+                ) from error
+            if not isinstance(payload, dict) or payload.get("ok") is not True:
+                detail = (
+                    payload.get("error")
+                    if isinstance(payload, dict)
+                    else {"type": "InvalidPayload", "message": repr(payload)}
+                )
+                raise RuntimeError(
+                    "independent active-user API probe failed: "
+                    + json.dumps(detail, sort_keys=True)
+                )
+            return payload
+        finally:
+            self._stop(graceful=payload_received)
+
+
+def start_active_user_probe(
+    host: str,
+    user: str,
+    password: str,
+    bdf: str,
+) -> ActiveUserProbeProcess:
+    context = multiprocessing.get_context("spawn")
+    receiver, sender = context.Pipe(duplex=False)
+    process = context.Process(
+        target=_active_user_probe_worker,
+        args=(
+            sender,
+            host,
+            user,
+            password,
+            bdf,
+            OWNER_PROBE_HTTP_TIMEOUT_SECONDS,
+        ),
+        name="aer-owner-sample",
+        daemon=True,
+    )
+    started_at = utc_now()
+    started_monotonic = time.monotonic()
+    try:
+        process.start()
+    except Exception:
+        receiver.close()
+        sender.close()
+        raise
+    sender.close()
+    return ActiveUserProbeProcess(
+        process=process,
+        receiver=receiver,
+        started_at=started_at,
+        started_monotonic=started_monotonic,
+    )
 
 
 class EsxiScp:
@@ -991,6 +2244,8 @@ class ActiveVm:
     remote_dir: str | None = None
     serial_name: str | None = None
     vm_name: str | None = None
+    window_seconds: int | None = None
+    window_open_observed_monotonic: float | None = None
 
     def start(self) -> dict[str, Any]:
         self.vm_name = validate_safe_id(f"aer-{self.run_id}-{self.case_id}", "VM name")
@@ -1076,11 +2331,32 @@ class ActiveVm:
                 timeout=30,
             )
             if probe.returncode == 0 and "injection window open" in probe.stdout:
+                self.window_open_observed_monotonic = time.monotonic()
                 break
             time.sleep(2)
         else:
             raise BlockedEnvironment(
                 "active DirectPath guest did not open the AER injection window"
+            )
+
+        window_deadline = time.monotonic() + 5
+        while time.monotonic() < window_deadline:
+            window_probe = self.ssh.run(
+                f"grep -E 'AER-WINDOW seconds=[0-9]+' "
+                f"{shlex.quote(serial_path)} 2>/dev/null | tail -1",
+                check=False,
+                timeout=30,
+            )
+            match = re.search(
+                r"AER-WINDOW seconds=([0-9]+)", window_probe.stdout
+            )
+            if match:
+                self.window_seconds = int(match.group(1))
+                break
+            time.sleep(0.2)
+        if self.window_seconds is None:
+            raise BlockedEnvironment(
+                "guest did not publish a parseable AER window duration"
             )
 
         users = self.api.active_passthrough_users(self.bdf)
@@ -1095,7 +2371,31 @@ class ActiveVm:
             "remoteVmx": remote_vmx,
             "serial": serial_path,
             "activeUsers": users,
+            "windowSeconds": self.window_seconds,
         }
+
+    def require_window_remaining(self, minimum_seconds: float) -> dict[str, float]:
+        if (
+            self.window_seconds is None
+            or self.window_open_observed_monotonic is None
+        ):
+            raise InconclusiveObservation(
+                "active guest AER window timing is unavailable"
+            )
+        elapsed = time.monotonic() - self.window_open_observed_monotonic
+        remaining = float(self.window_seconds) - elapsed
+        result = {
+            "windowSeconds": float(self.window_seconds),
+            "elapsedSinceOpenObserved": elapsed,
+            "remainingSeconds": remaining,
+            "requiredRemainingSeconds": minimum_seconds,
+        }
+        if remaining < minimum_seconds:
+            raise InconclusiveObservation(
+                "active guest AER window is too close to automatic poweroff: "
+                + json.dumps(result, sort_keys=True)
+            )
+        return result
 
     def copy_guest_serial(self, destination: Path, *, required: bool) -> bool:
         if not self.remote_dir or not self.serial_name:
@@ -1206,6 +2506,9 @@ def evaluate_observation(
     injection_accepted: bool,
     host_responsive: bool,
     guest_text: str | None,
+    gate_tuple: GateTuple | None = None,
+    frozen_transport: dict[str, Any] | None = None,
+    post_resume_active_users: list[dict[str, Any]] | None = None,
 ) -> tuple[str, dict[str, Any], dict[str, Any]]:
     expected_owner = EXPECTED_CURRENT_OWNER[owner_state]
     safety_checks: list[str] = []
@@ -1222,6 +2525,10 @@ def evaluate_observation(
         phase.get("activePassthroughUsers") for phase in (before, injection, after)
     ]
     observations["activePassthroughUsersTimeline"] = active_user_timelines
+    if gate_tuple is not None:
+        observations["immediatePostResumeActivePassthroughUsers"] = (
+            post_resume_active_users
+        )
     if all(isinstance(users, list) for users in active_user_timelines):
         active_user_keys = [
             {
@@ -1239,11 +2546,33 @@ def evaluate_observation(
             for users in active_user_timelines
         )
         if owner_state == "PassthruActive":
-            checks["activeVmUseStableThroughInjection"] = (
-                no_inspection_errors
-                and len(active_user_keys[0]) == 1
-                and active_user_keys[0] == active_user_keys[1]
-            )
+            if gate_tuple is not None:
+                post_resume_errors = (
+                    post_resume_active_users is None
+                    or any(
+                        isinstance(item, dict)
+                        and item.get("inspectionError")
+                        for item in (post_resume_active_users or [])
+                    )
+                )
+                post_resume_keys = {
+                    (item.get("vm"), item.get("vmMoId"), item.get("deviceKey"))
+                    for item in (post_resume_active_users or [])
+                    if isinstance(item, dict)
+                    and not item.get("inspectionError")
+                }
+                checks["activeVmUseStableThroughInjection"] = (
+                    no_inspection_errors
+                    and not post_resume_errors
+                    and len(active_user_keys[0]) == 1
+                    and active_user_keys[0] == post_resume_keys
+                )
+            else:
+                checks["activeVmUseStableThroughInjection"] = (
+                    no_inspection_errors
+                    and len(active_user_keys[0]) == 1
+                    and active_user_keys[0] == active_user_keys[1]
+                )
             # The probe guest powers itself off immediately after emitting its
             # post-injection marker.  Depending on collection timing, the
             # after phase may still see the same owner or may see the expected
@@ -1251,8 +2580,10 @@ def evaluate_observation(
             checks["activeVmReleasedOrStillSameAfter"] = (
                 no_inspection_errors
                 and (
-                    active_user_keys[2] == active_user_keys[0]
-                    or not active_user_keys[2]
+                    all(
+                        keys == active_user_keys[0] or not keys
+                        for keys in active_user_keys[1:]
+                    )
                 )
             )
         else:
@@ -1283,9 +2614,15 @@ def evaluate_observation(
     if not checks["hostAerSnapshotsComplete"]:
         return "INCONCLUSIVE", checks, observations
     checks["requestedBitClearBefore"] = not bool(int(before_ces) & mask)
-    checks["requestedBitObserved"] = bool(
+    post_resume_host_bit_observed = bool(
         (int(injection_ces) | int(after_ces)) & mask
     )
+    if gate_tuple is None:
+        checks["requestedBitObserved"] = post_resume_host_bit_observed
+    else:
+        observations["host"][
+            "requestedBitObservedPostResume"
+        ] = post_resume_host_bit_observed
     checks["uncorrectableStatusUnchanged"] = len(set(int(value) for value in ues_values)) == 1
     checks["hostUncorrectableStatusRemainsZero"] = all(
         int(value) == 0 for value in ues_values
@@ -1325,7 +2662,7 @@ def evaluate_observation(
                     "esxiRootHasNoUncorrectableReception",
                 )
             )
-            if oracle == "esxi803":
+            if oracle == "esxi803" and gate_tuple is None:
                 checks["esxiRootCorrectableSurfaceUnchanged"] = (
                     len(set(root_ces)) == 1 and len(set(root_status)) == 1
                 )
@@ -1350,13 +2687,21 @@ def evaluate_observation(
             checks["outerRequestedBitClearBefore"] = not bool(
                 int(outer_endpoint[0]["correctableErrorStatus"]) & mask
             )
-            checks["outerRequestedBitObserved"] = bool(
+            post_resume_outer_bit_observed = bool(
                 (
                     int(outer_endpoint[1]["correctableErrorStatus"])
                     | int(outer_endpoint[2]["correctableErrorStatus"])
                 )
                 & mask
             )
+            if gate_tuple is None:
+                checks["outerRequestedBitObserved"] = (
+                    post_resume_outer_bit_observed
+                )
+            else:
+                observations[
+                    "outerRequestedBitObservedPostResume"
+                ] = post_resume_outer_bit_observed
             checks["outerUncorrectableStatusUnchanged"] = len(
                 {
                     int(item["uncorrectableErrorStatus"])
@@ -1381,10 +2726,13 @@ def evaluate_observation(
                 int(item["uncorrectableErrorStatus"]) == 0
                 for item in outer_root
             )
-            checks["outerRootDeviceStatusRemainsZero"] = all(
+            checks["outerRootDeviceStatusCorrectableOnly"] = all(
                 not (
                     int(item["deviceStatus"])
-                    & qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK
+                    & (
+                        qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK
+                        ^ qemu_aer.PCI_EXP_DEVSTA_CED
+                    )
                 )
                 for item in outer_root
             )
@@ -1393,10 +2741,6 @@ def evaluate_observation(
                     int(item["rootErrorStatus"])
                     & qemu_aer.PCI_ERR_ROOT_UNCOR_MASK
                 )
-                for item in outer_root
-            )
-            checks["outerUncorrectableSourceRemainsZero"] = all(
-                not (int(item["errorSourceIdentification"]) & 0xFFFF0000)
                 for item in outer_root
             )
             checks["outerRootIsUpstreamOfEndpoint"] = all(
@@ -1410,9 +2754,8 @@ def evaluate_observation(
                     "outerEndpointUncorrectableStatusRemainsZero",
                     "outerEndpointDeviceStatusCorrectableOnly",
                     "outerRootUncorrectableStatusRemainsZero",
-                    "outerRootDeviceStatusRemainsZero",
+                    "outerRootDeviceStatusCorrectableOnly",
                     "outerRootHasNoUncorrectableReception",
-                    "outerUncorrectableSourceRemainsZero",
                 )
             )
             first_endpoint = outer_endpoint[0]
@@ -1422,7 +2765,8 @@ def evaluate_observation(
                 for item in outer_root[1:]
             )
             source_matches = any(
-                (
+                bool(int(item["rootErrorStatus"]) & qemu_aer.PCI_ERR_ROOT_COR_RCV)
+                and (
                     int(item["errorSourceIdentification"]) & 0xFFFF
                 )
                 == int(outer_snapshots[0]["endpoint"]["requesterId"])
@@ -1462,7 +2806,7 @@ def evaluate_observation(
                 "correctableSourceMatches": source_matches,
                 "conclusion": routing_conclusion,
             }
-            if oracle == "esxi803":
+            if oracle == "esxi803" and gate_tuple is None:
                 checks["outerRootCorrectableSurfaceUnchanged"] = (
                     len(
                         {
@@ -1498,6 +2842,20 @@ def evaluate_observation(
             "beforeCandidates": before_targets,
             "afterCandidates": after_targets,
             "aerEventLines": guest_aer_event_lines(guest_text),
+            "aerCounterTotals": {
+                "before": guest_aer_counter_totals(
+                    guest_text, "before-injection"
+                ),
+                "after": guest_aer_counter_totals(
+                    guest_text, "after-injection"
+                ),
+            },
+        }
+        before_counters = observations["guest"]["aerCounterTotals"]["before"]
+        after_counters = observations["guest"]["aerCounterTotals"]["after"]
+        observations["guest"]["aerCounterDelta"] = {
+            name: after_counters[name] - before_counters[name]
+            for name in sorted(before_counters.keys() & after_counters.keys())
         }
         checks["guestPairedEvidenceComplete"] = (
             len(before_targets) == 1 and len(after_targets) == 1
@@ -1516,7 +2874,7 @@ def evaluate_observation(
             and guest_after["uncorrectableStatus"] == 0
         )
         safety_checks.append("guestUncorrectableStatusRemainsZero")
-        if oracle == "esxi803":
+        if oracle == "esxi803" and gate_tuple is None:
             checks["guestRequestedBitClearBefore"] = (
                 guest_before["correctableStatus"] is not None
                 and not bool(int(guest_before["correctableStatus"]) & mask)
@@ -1531,6 +2889,48 @@ def evaluate_observation(
             checks["guestNativeAerEventSuppressed"] = not observations["guest"][
                 "aerEventLines"
             ]
+        elif oracle == "esxi803":
+            observations["guest"]["controlledPostResumeProfile"] = {
+                "requestedBitClearBefore": (
+                    guest_before["correctableStatus"] is not None
+                    and not bool(int(guest_before["correctableStatus"]) & mask)
+                ),
+                "requestedBitObservedAfter": (
+                    guest_after["correctableStatus"] is not None
+                    and bool(int(guest_after["correctableStatus"]) & mask)
+                ),
+                "aerHeaderHidden": (
+                    guest_before["aerHeader"] == 0
+                    and guest_after["aerHeader"] == 0
+                ),
+                "aerCapabilityDiscoverable": (
+                    guest_before["aerHeader"] not in (None, 0)
+                    and guest_after["aerHeader"] not in (None, 0)
+                ),
+                "nativeAerEventObserved": bool(
+                    observations["guest"]["aerEventLines"]
+                ),
+                "nativeAerCounterDelta": observations["guest"][
+                    "aerCounterDelta"
+                ],
+            }
+
+    if gate_tuple is not None:
+        observations["controlledGate"] = {
+            "requested": gate_tuple.as_dict(),
+            "frozenTransport": frozen_transport,
+            "rootCommandInterpretation": (
+                "R controls Root Error Command Correctable reporting/service; "
+                "frozen ERR_COR deposition is evaluated from E and M, independently of R"
+            ),
+        }
+        checks["controlledFrozenTransportComplete"] = isinstance(
+            frozen_transport, dict
+        )
+        checks["controlledFrozenTransportMatchesGate"] = bool(
+            isinstance(frozen_transport, dict)
+            and frozen_transport.get("verdict") == "PASS"
+        )
 
     if not checks["requestedBitClearBefore"]:
         return "INCONCLUSIVE", checks, observations
@@ -1559,13 +2959,15 @@ def run_case(
     run_id: str,
     bit_name: str,
     mask: int,
+    gate_tuple: GateTuple | None,
     ssh: EsxiSsh,
     transfer: EsxiScp,
     api: ApiSession,
     output_dir: Path,
 ) -> dict[str, Any]:
+    gate_suffix = f"-g{gate_tuple.label}" if gate_tuple is not None else ""
     case_id = validate_safe_id(
-        f"{args.owner_state.lower()}-{bit_name}", "case id"
+        f"{args.owner_state.lower()}-{bit_name}{gate_suffix}", "case id"
     )
     case_dir = output_dir / case_id
     case_dir.mkdir(parents=True, exist_ok=False)
@@ -1581,7 +2983,12 @@ def run_case(
         "qemuDevice": args.qemu_device,
         "esxiBdf": args.esxi_bdf,
         "oracle": args.oracle,
-        "claimScope": "ENDPOINT_STATUS_PROJECTION_AND_BOUNDED_OBSERVATION",
+        "requestedGate": gate_tuple.as_dict() if gate_tuple is not None else None,
+        "claimScope": (
+            "QEMU_FROZEN_FABRIC_AND_ESXI_POST_RESUME_BLACKBOX"
+            if gate_tuple is not None
+            else "ENDPOINT_STATUS_PROJECTION_AND_BOUNDED_OBSERVATION"
+        ),
         "claimsExcluded": [
             "VMware private implementation",
             "physical-link error generation",
@@ -1598,13 +3005,18 @@ def run_case(
     before: dict[str, Any] | None = None
     injection_phase: dict[str, Any] | None = None
     after: dict[str, Any] | None = None
+    gate_lease: dict[str, Any] | None = None
+    frozen_transport: dict[str, Any] | None = None
+    post_resume_active_users: list[dict[str, Any]] | None = None
+    safety_latched = False
+    monitor = Path(args.qemu_monitor)
+    qtest_socket = Path(args.qtest_socket) if args.qtest_socket else None
     try:
         initial_users = api.active_passthrough_users(args.esxi_bdf)
         if initial_users:
             raise BlockedEnvironment(
                 f"target BDF already has powered-on VM users: {initial_users}"
             )
-        monitor = Path(args.qemu_monitor)
         if not monitor.exists():
             raise BlockedEnvironment(f"QEMU monitor is not present: {monitor}")
         info_pci = hmp_command(monitor, "info pci")
@@ -1621,7 +3033,7 @@ def run_case(
                 )
             baseline_clear = clear_outer_qemu_aer_baseline(
                 monitor,
-                Path(args.qtest_socket),
+                qtest_socket,
                 args.outer_endpoint_bdf,
                 args.outer_root_bdf,
                 args.qtest_baseline_policy,
@@ -1664,7 +3076,7 @@ def run_case(
             if args.qtest_clean_baseline:
                 final_owner_clear = clear_outer_qemu_aer_baseline(
                     monitor,
-                    Path(args.qtest_socket),
+                    qtest_socket,
                     args.outer_endpoint_bdf,
                     args.outer_root_bdf,
                     args.qtest_baseline_policy,
@@ -1678,6 +3090,45 @@ def run_case(
                 )
                 time.sleep(1)
 
+        if gate_tuple is not None:
+            if qtest_socket is None:
+                raise BlockedEnvironment("--gate-tuples requires --qtest-socket")
+            try:
+                gate_lease = apply_gate_lease(
+                    monitor,
+                    qtest_socket,
+                    args.outer_endpoint_bdf,
+                    args.outer_root_bdf,
+                    mask,
+                    gate_tuple,
+                    enable_root_path=args.enable_root_path,
+                )
+            except GateLeaseApplyFailure as error:
+                gate_lease = error.lease
+                record["gateLease"] = {"apply": gate_lease}
+                save_json(case_dir / "gate-lease-apply.json", gate_lease)
+                if error.safety:
+                    safety_latched = True
+                    raise SafetyViolation(str(error)) from error
+                raise InconclusiveObservation(str(error)) from error
+            record["gateLease"] = {"apply": gate_lease}
+            save_json(case_dir / "gate-lease-apply.json", gate_lease)
+            record["effectiveGate"] = gate_lease.get("effective")
+            save_json(case_dir / "case.json", record)
+            if gate_lease["outcome"] in (
+                "SAFETY_FAULT_DURING_APPLY",
+                "SAFETY_FAULT_AFTER_APPLY",
+            ):
+                safety_latched = True
+                raise SafetyViolation(
+                    "Uncorrectable evidence appeared while applying the gate lease"
+                )
+            if gate_lease["outcome"] != "EFFECTIVE":
+                raise InconclusiveObservation(
+                    "requested gate tuple is not writable and stable: "
+                    f"{gate_lease['outcome']}"
+                )
+
         marker = validate_safe_id(
             f"{run_id}-{case_id}-BEFORE", "remote log marker"
         )
@@ -1690,7 +3141,7 @@ def run_case(
             args.esxi_bdf,
             args.esxi_root_bdf,
             monitor,
-            Path(args.qtest_socket) if args.qtest_socket else None,
+            qtest_socket,
             args.outer_endpoint_bdf,
             args.outer_root_bdf,
             args.log_lines,
@@ -1713,13 +3164,16 @@ def run_case(
         if not isinstance(before_root_aer, dict):
             baseline_faults.append("ESXi root AER snapshot missing")
         else:
-            for key in ("uncorrectableStatus", "rootErrorStatus"):
-                value = before_root_aer.get(key)
-                if value is None or int(value) != 0:
-                    baseline_faults.append(f"ESXi root {key}={value!r}")
-            source = before_root_aer.get("errorSourceIdentification")
-            if source is None or int(source) != 0:
-                baseline_faults.append(f"ESXi root source={source!r}")
+            value = before_root_aer.get("uncorrectableStatus")
+            if value is None or int(value) != 0:
+                baseline_faults.append(
+                    f"ESXi root uncorrectableStatus={value!r}"
+                )
+            value = before_root_aer.get("rootErrorStatus")
+            if value is None or int(value) & 0x7F:
+                baseline_faults.append(
+                    f"ESXi root rootErrorStatusLow={value!r}"
+                )
         before_outer = before.get("outerQemuAer")
         if args.qtest_socket:
             if not isinstance(before_outer, dict):
@@ -1740,10 +3194,10 @@ def run_case(
                     baseline_faults.append("outer root UES is non-zero")
                 if int(root_state["deviceStatus"]) & qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK:
                     baseline_faults.append("outer root Device Status is non-zero")
-                if int(root_state["rootErrorStatus"]) != 0:
-                    baseline_faults.append("outer Root Error Status is non-zero")
-                if int(root_state["errorSourceIdentification"]) != 0:
-                    baseline_faults.append("outer Root Error Source is non-zero")
+                if int(root_state["rootErrorStatus"]) & 0x7F:
+                    baseline_faults.append(
+                        "outer Root Error Status low 0x7f is non-zero"
+                    )
                 if not (
                     int(root_state["secondaryBus"])
                     <= int(before_outer["endpoint"]["bus"])
@@ -1766,7 +3220,7 @@ def run_case(
                 args.esxi_bdf,
                 args.esxi_root_bdf,
                 monitor,
-                Path(args.qtest_socket) if args.qtest_socket else None,
+                qtest_socket,
                 args.outer_endpoint_bdf,
                 args.outer_root_bdf,
                 args.log_lines,
@@ -1806,29 +3260,368 @@ def run_case(
                 raise InconclusiveObservation(
                     "guest requested Correctable bit is dirty before injection"
                 )
-
-        record["injectionAttempted"] = True
-        record["injection"] = {
-            "startedAt": utc_now(),
-            "command": command,
-            "safetyClass": "CORRECTABLE_ALLOW_LIST_ONLY",
-        }
-        save_json(case_dir / "case.json", record)
-        injection_output = hmp_command(monitor, command)
-        save_text(case_dir / "injection-hmp.txt", injection_output)
-        injection_accepted = bool(
-            re.search(
-                rf"OK id:\s*{re.escape(args.qemu_device)}(?:\s|$)",
-                injection_output,
+            record["activeVmWindowBeforeInjection"] = (
+                active_vm.require_window_remaining(15.0)
             )
-        )
-        record["injection"].update(
-            {
-                "finishedAt": utc_now(),
-                "accepted": injection_accepted,
-                "output": "injection-hmp.txt",
+
+        if gate_tuple is not None:
+            assert qtest_socket is not None
+            frozen_flow: dict[str, Any] = {
+                "scope": "freeze-inject-observe-release",
+                "startedAt": utc_now(),
             }
-        )
+            record["freezeInjectObserveRelease"] = frozen_flow
+            injection_paused = False
+            post_resume_faults: list[dict[str, Any]] = []
+            post_resume_sampling_error: str | None = None
+            post_resume_gate_mismatch: dict[str, bool] | None = None
+            try:
+                frozen_flow["pause"] = transition_qemu(
+                    monitor, "stop", "paused"
+                )
+                injection_paused = True
+                frozen_before = outer_qemu_aer_snapshot(
+                    qtest_socket,
+                    args.outer_endpoint_bdf,
+                    args.outer_root_bdf,
+                )
+                save_json(
+                    case_dir / "frozen-transport-before.json",
+                    frozen_before,
+                )
+                frozen_flow["before"] = {
+                    "capturedAt": utc_now(),
+                    "readback": gate_readback(frozen_before, mask),
+                    "snapshot": "frozen-transport-before.json",
+                }
+                frozen_faults = outer_snapshot_safety_faults(frozen_before)
+                if frozen_faults:
+                    safety_latched = True
+                    raise SafetyViolation(
+                        "unsafe frozen pre-injection state: "
+                        + "; ".join(frozen_faults)
+                    )
+                if gate_tuple_from_snapshot(frozen_before, mask) != gate_tuple:
+                    raise InconclusiveObservation(
+                        "effective gate tuple changed before frozen injection"
+                    )
+                frozen_root_path = root_path_from_snapshot(frozen_before)
+                if not frozen_root_path.open:
+                    frozen_flow["gateBlock"] = {
+                        "outcome": "ROOT_PATH_BLOCKED",
+                        "rootPath": frozen_root_path.as_dict(),
+                        "injectionSuppressed": True,
+                    }
+                    raise InconclusiveObservation(
+                        "ROOT_PATH_BLOCKED: BridgeCtl.SERR and Root "
+                        "DeviceCtl.CERE are not both effective"
+                    )
+                if (
+                    int(
+                        frozen_before["endpointState"][
+                            "correctableErrorStatus"
+                        ]
+                    )
+                    & mask
+                ):
+                    raise InconclusiveObservation(
+                        "requested Correctable bit became dirty before injection"
+                    )
+                if int(frozen_before["rootState"]["rootErrorStatus"]) & 0x7F:
+                    raise InconclusiveObservation(
+                        "Root Error Status low 0x7f became dirty before injection"
+                    )
+
+                record["injectionAttempted"] = True
+                record["injection"] = {
+                    "startedAt": utc_now(),
+                    "command": command,
+                    "safetyClass": "CORRECTABLE_ALLOW_LIST_ONLY",
+                    "executionState": "QEMU_PAUSED_ESXI_FROZEN",
+                }
+                save_json(case_dir / "case.json", record)
+                injection_output = hmp_command(monitor, command)
+                save_text(case_dir / "injection-hmp.txt", injection_output)
+                injection_accepted = bool(
+                    re.search(
+                        rf"OK id:\s*{re.escape(args.qemu_device)}(?:\s|$)",
+                        injection_output,
+                    )
+                )
+                frozen_after = outer_qemu_aer_snapshot(
+                    qtest_socket,
+                    args.outer_endpoint_bdf,
+                    args.outer_root_bdf,
+                )
+                save_json(
+                    case_dir / "frozen-transport-after.json",
+                    frozen_after,
+                )
+                frozen_transport = evaluate_frozen_transport(
+                    gate_tuple,
+                    mask,
+                    frozen_before,
+                    frozen_after,
+                )
+                frozen_transport["snapshotFiles"] = {
+                    "before": "frozen-transport-before.json",
+                    "after": "frozen-transport-after.json",
+                }
+                frozen_flow["observation"] = frozen_transport
+                record["injection"].update(
+                    {
+                        "finishedAt": utc_now(),
+                        "accepted": injection_accepted,
+                        "output": "injection-hmp.txt",
+                        "immediateQtestSnapshot": (
+                            "frozen-transport-after.json"
+                        ),
+                    }
+                )
+                post_faults = outer_snapshot_safety_faults(frozen_after)
+                if post_faults:
+                    safety_latched = True
+                    raise SafetyViolation(
+                        "Correctable injection produced Uncorrectable evidence: "
+                        + "; ".join(post_faults)
+                    )
+            finally:
+                if injection_paused:
+                    if safety_latched:
+                        frozen_flow["heldPaused"] = {
+                            "reason": (
+                                "Correctable-only safety invariant failed; "
+                                "gate restore must complete before resume"
+                            ),
+                            "observedAt": utc_now(),
+                        }
+                    else:
+                        frozen_flow["resume"] = transition_qemu(
+                            monitor, "cont", "running"
+                        )
+                    if record["injectionAttempted"] and not safety_latched:
+                        active_user_probe: ActiveUserProbeProcess | None = None
+                        active_user_probe_start_error: str | None = None
+                        try:
+                            post_resume_started = time.monotonic()
+                            if active_vm is not None:
+                                try:
+                                    active_user_probe = start_active_user_probe(
+                                        api.host_address,
+                                        api.user,
+                                        api.password,
+                                        args.esxi_bdf,
+                                    )
+                                    frozen_flow["postResumeActiveUserProbe"] = {
+                                        "mode": (
+                                            "INDEPENDENT_PROCESS_AND_API_SESSION"
+                                        ),
+                                        "startedAt": active_user_probe.started_at,
+                                        "httpConnectionTimeoutSeconds": (
+                                            OWNER_PROBE_HTTP_TIMEOUT_SECONDS
+                                        ),
+                                        "hardTimeoutSeconds": (
+                                            OWNER_PROBE_HARD_TIMEOUT_SECONDS
+                                        ),
+                                    }
+                                except Exception as probe_start_error:
+                                    active_user_probe_start_error = (
+                                        f"{type(probe_start_error).__name__}: "
+                                        f"{probe_start_error}"
+                                    )
+                                    frozen_flow[
+                                        "postResumeActiveUserProbe"
+                                    ] = {
+                                        "mode": (
+                                            "INDEPENDENT_PROCESS_AND_API_SESSION"
+                                        ),
+                                        "startError": (
+                                            active_user_probe_start_error
+                                        ),
+                                    }
+                            post_resume_samples = sample_gate_timeline(
+                                qtest_socket,
+                                args.outer_endpoint_bdf,
+                                args.outer_root_bdf,
+                                mask,
+                                delays=(0.0, 0.05, 0.25, 1.0),
+                                started_at=post_resume_started,
+                            )
+                            post_resume_faults = [
+                                {
+                                    "delaySeconds": item["delaySeconds"],
+                                    "actualElapsedSeconds": item[
+                                        "actualElapsedSeconds"
+                                    ],
+                                    "faults": item["safetyFaults"],
+                                }
+                                for item in post_resume_samples
+                                if item["safetyFaults"]
+                            ]
+                            frozen_flow["postResumeSafetyFaults"] = (
+                                post_resume_faults
+                            )
+                            if post_resume_faults:
+                                safety_latched = True
+                                try:
+                                    frozen_flow[
+                                        "postResumeSafetyHold"
+                                    ] = transition_qemu(
+                                        monitor, "stop", "paused"
+                                    )
+                                except Exception as hold_error:
+                                    frozen_flow[
+                                        "postResumeSafetyHoldFault"
+                                    ] = (
+                                        f"{type(hold_error).__name__}: "
+                                        f"{hold_error}"
+                                    )
+                                if active_user_probe is not None:
+                                    active_user_probe.cancel()
+                                    active_user_probe = None
+                            elif active_vm is not None:
+                                if active_user_probe_start_error is not None:
+                                    raise RuntimeError(
+                                        "independent active-user API probe "
+                                        "could not start: "
+                                        + active_user_probe_start_error
+                                    )
+                                assert active_user_probe is not None
+                                active_user_payload = active_user_probe.result(
+                                    OWNER_PROBE_HARD_TIMEOUT_SECONDS
+                                )
+                                active_user_probe = None
+                                post_resume_active_users = (
+                                    active_user_payload["users"]
+                                )
+                                record[
+                                    "immediatePostResumeActivePassthroughUsers"
+                                ] = post_resume_active_users
+                                frozen_flow[
+                                    "postResumeActiveUserProbe"
+                                ].update(
+                                    {
+                                        "capturedAt": active_user_payload[
+                                            "capturedAt"
+                                        ],
+                                        "outcome": "COMPLETED",
+                                    }
+                                )
+                            save_json(
+                                case_dir / "post-resume-qtest-timeline.json",
+                                post_resume_samples,
+                            )
+                            frozen_flow["postResumeQtestTimeline"] = {
+                                "snapshot": "post-resume-qtest-timeline.json",
+                                "samples": [
+                                    {
+                                        "delaySeconds": item["delaySeconds"],
+                                        "actualElapsedSeconds": item[
+                                            "actualElapsedSeconds"
+                                        ],
+                                        "capturedAt": item["capturedAt"],
+                                        "readback": item["readback"],
+                                    }
+                                    for item in post_resume_samples
+                                ],
+                            }
+                            tuple_stable = all(
+                                gate_tuple_from_snapshot(
+                                    item["snapshot"], mask
+                                )
+                                == gate_tuple
+                                for item in post_resume_samples
+                            )
+                            root_path_stable = all(
+                                root_path_from_snapshot(
+                                    item["snapshot"]
+                                ).open
+                                for item in post_resume_samples
+                            )
+                            frozen_flow["postResumeGateChecks"] = {
+                                "requestedTupleStable": tuple_stable,
+                                "rootAuxiliaryPathRemainsOpen": root_path_stable,
+                            }
+                            if not tuple_stable or not root_path_stable:
+                                post_resume_gate_mismatch = {
+                                    "requestedTupleStable": tuple_stable,
+                                    "rootAuxiliaryPathRemainsOpen": (
+                                        root_path_stable
+                                    ),
+                                }
+                        except Exception as sample_error:
+                            post_resume_sampling_error = (
+                                f"{type(sample_error).__name__}: {sample_error}"
+                            )
+                            frozen_flow["postResumeSamplingError"] = (
+                                post_resume_sampling_error
+                            )
+                        finally:
+                            if active_user_probe is not None:
+                                active_user_probe.cancel()
+                frozen_flow["finishedAt"] = utc_now()
+                save_json(case_dir / "case.json", record)
+            if post_resume_faults:
+                safety_latched = True
+                raise SafetyViolation(
+                    "Uncorrectable evidence appeared after ESXi resumed: "
+                    + json.dumps(post_resume_faults, sort_keys=True)
+                )
+            if post_resume_sampling_error is not None:
+                raise InconclusiveObservation(
+                    "post-resume QTest timeline could not be captured: "
+                    + post_resume_sampling_error
+                )
+            if post_resume_gate_mismatch is not None:
+                raise InconclusiveObservation(
+                    "ESXi rewrote the controlled gate or auxiliary root path "
+                    "during the post-resume sampling window: "
+                    + json.dumps(post_resume_gate_mismatch, sort_keys=True)
+                )
+        else:
+            record["injectionAttempted"] = True
+            record["injection"] = {
+                "startedAt": utc_now(),
+                "command": command,
+                "safetyClass": "CORRECTABLE_ALLOW_LIST_ONLY",
+                "executionState": "QEMU_RUNNING_LEGACY_MODE",
+            }
+            save_json(case_dir / "case.json", record)
+            injection_output = hmp_command(monitor, command)
+            save_text(case_dir / "injection-hmp.txt", injection_output)
+            injection_accepted = bool(
+                re.search(
+                    rf"OK id:\s*{re.escape(args.qemu_device)}(?:\s|$)",
+                    injection_output,
+                )
+            )
+            record["injection"].update(
+                {
+                    "finishedAt": utc_now(),
+                    "accepted": injection_accepted,
+                    "output": "injection-hmp.txt",
+                }
+            )
+            if qtest_socket is not None:
+                immediate = outer_qemu_aer_snapshot(
+                    qtest_socket,
+                    args.outer_endpoint_bdf,
+                    args.outer_root_bdf,
+                )
+                save_json(
+                    case_dir / "immediate-qtest-after-injection.json",
+                    immediate,
+                )
+                record["injection"]["immediateQtestSnapshot"] = (
+                    "immediate-qtest-after-injection.json"
+                )
+                immediate_faults = outer_snapshot_safety_faults(immediate)
+                if immediate_faults:
+                    safety_latched = True
+                    raise SafetyViolation(
+                        "Correctable injection produced Uncorrectable evidence: "
+                        + "; ".join(immediate_faults)
+                    )
         if not injection_accepted:
             raise InjectionFailure("QEMU did not acknowledge Correctable AER injection")
         ssh.run(
@@ -1844,7 +3637,7 @@ def run_case(
             args.esxi_bdf,
             args.esxi_root_bdf,
             monitor,
-            Path(args.qtest_socket) if args.qtest_socket else None,
+            qtest_socket,
             args.outer_endpoint_bdf,
             args.outer_root_bdf,
             args.log_lines,
@@ -1866,7 +3659,7 @@ def run_case(
             args.esxi_bdf,
             args.esxi_root_bdf,
             monitor,
-            Path(args.qtest_socket) if args.qtest_socket else None,
+            qtest_socket,
             args.outer_endpoint_bdf,
             args.outer_root_bdf,
             args.log_lines,
@@ -1892,8 +3685,13 @@ def run_case(
             injection_accepted=injection_accepted,
             host_responsive=host_responsive,
             guest_text=guest_text,
+            gate_tuple=gate_tuple,
+            frozen_transport=frozen_transport,
+            post_resume_active_users=post_resume_active_users,
         )
         record["verdict"] = verdict
+        if verdict == "FAIL_SAFETY":
+            safety_latched = True
         record["checks"] = checks
         record["observations"] = observations
         record["observations"]["hostLogDelta"] = result_log_observations(case_dir)
@@ -1917,25 +3715,111 @@ def run_case(
         record["verdict"] = "FAIL"
         record["fault"] = {"type": type(error).__name__, "message": str(error)}
     except SafetyViolation as error:
+        safety_latched = True
         record["verdict"] = "FAIL_SAFETY"
         record["fault"] = {"type": type(error).__name__, "message": str(error)}
     except Exception as error:
         record["verdict"] = "INCONCLUSIVE" if record["injectionAttempted"] else "BLOCKED_ENV"
         record["fault"] = {"type": type(error).__name__, "message": str(error)}
     finally:
-        if active_vm is not None:
+        if gate_lease is not None and qtest_socket is not None:
+            restore_safe = safety_latched or record["verdict"] == "FAIL_SAFETY"
+            expected_restore = (
+                "SAFE_STOP_HELD_PAUSED" if restore_safe else "RESTORED"
+            )
             try:
-                record["cleanup"] = active_vm.cleanup()
-                if record["cleanup"].get("remainingActiveUsers"):
-                    record["verdict"] = (
-                        "FAIL" if record["injectionAttempted"] else "BLOCKED_ENV"
+                restore = restore_gate_lease(
+                    monitor,
+                    qtest_socket,
+                    args.outer_endpoint_bdf,
+                    args.outer_root_bdf,
+                    mask,
+                    gate_lease,
+                    safe_stop=restore_safe,
+                )
+                record.setdefault("gateLease", {})["restore"] = restore
+                save_json(case_dir / "gate-lease-restore.json", restore)
+                if restore["outcome"] != expected_restore:
+                    raise SafetyViolation(
+                        "gate lease restore did not reach "
+                        f"{expected_restore}: {restore['outcome']}"
                     )
-            except Exception as error:
-                record["cleanup"] = {
-                    "error": f"{type(error).__name__}: {error}",
+            except Exception as restore_error:
+                record["restoreFault"] = {
+                    "type": type(restore_error).__name__,
+                    "message": str(restore_error),
                 }
-                if record["injectionAttempted"]:
-                    record["verdict"] = "FAIL"
+                record["verdict"] = "FAIL_SAFETY"
+                if not restore_safe:
+                    try:
+                        safe_restore = restore_gate_lease(
+                            monitor,
+                            qtest_socket,
+                            args.outer_endpoint_bdf,
+                            args.outer_root_bdf,
+                            mask,
+                            gate_lease,
+                            safe_stop=True,
+                        )
+                        record.setdefault("gateLease", {})[
+                            "safeStopFallback"
+                        ] = safe_restore
+                        save_json(
+                            case_dir / "gate-lease-safe-stop.json",
+                            safe_restore,
+                        )
+                        if (
+                            safe_restore["outcome"]
+                            != "SAFE_STOP_HELD_PAUSED"
+                        ):
+                            record["restoreFault"][
+                                "safeStopFallback"
+                            ] = safe_restore["outcome"]
+                    except Exception as safe_error:
+                        record["restoreFault"]["safeStopFallback"] = (
+                            f"{type(safe_error).__name__}: {safe_error}"
+                        )
+        final_qemu_state = qemu_runtime_state(monitor)
+        record["qemuStateBeforeCleanup"] = final_qemu_state
+        if (
+            final_qemu_state != "running"
+            and record["verdict"] != "FAIL_SAFETY"
+            and (record["injectionAttempted"] or gate_lease is not None)
+        ):
+            record["verdict"] = "FAIL_SAFETY"
+            record["qemuStateFault"] = (
+                "outer QEMU was not confirmed running after controlled "
+                "mutation and restore"
+            )
+        if active_vm is not None:
+            if final_qemu_state != "running":
+                record["cleanup"] = {
+                    "deferred": True,
+                    "reason": (
+                        "outer QEMU is not confirmed running "
+                        f"(state={final_qemu_state}); do not attempt "
+                        "SSH/SCP/API cleanup against a possibly frozen ESXi"
+                    ),
+                    "requiredAction": (
+                        "inspect safety evidence, recover or quarantine the "
+                        "lab, then remove the runner-created VM"
+                    ),
+                }
+            else:
+                try:
+                    record["cleanup"] = active_vm.cleanup()
+                    if record["cleanup"].get("remainingActiveUsers"):
+                        record["verdict"] = (
+                            "FAIL"
+                            if record["injectionAttempted"]
+                            else "BLOCKED_ENV"
+                        )
+                except Exception as error:
+                    record["cleanup"] = {
+                        "error": f"{type(error).__name__}: {error}",
+                    }
+                    if record["injectionAttempted"]:
+                        record["verdict"] = "FAIL"
         record["finishedAt"] = utc_now()
         save_json(case_dir / "result.json", record)
         write_sha256s(case_dir)
@@ -2009,6 +3893,20 @@ def selftest() -> None:
     assert parse_error_bits("advisory_nonfatal,0x2000") == [
         ("advisory_nonfatal", 0x2000)
     ]
+    assert [gate.label for gate in parse_gate_tuples("000,101,111")] == [
+        "000",
+        "101",
+        "111",
+    ]
+    for invalid_gates in ("", "00", "000,", "000,000", "012"):
+        try:
+            parse_gate_tuples(invalid_gates)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(
+                f"invalid gate tuple list was accepted: {invalid_gates!r}"
+            )
     command = build_injection_command("test_fn1", 0x1)
     assert command == "pcie_aer_inject_error -c test_fn1 0x00000001"
     try:
@@ -2017,6 +3915,122 @@ def selftest() -> None:
         pass
     else:
         raise AssertionError("uncorrectable mask reached the command builder")
+
+    def synthetic_outer(
+        gate: GateTuple,
+        *,
+        injected: bool,
+        override_cere: bool | None = None,
+    ) -> dict[str, Any]:
+        requester_id = 0x0101
+        endpoint_cere = (
+            gate.endpoint_cere
+            if override_cere is None
+            else override_cere
+        )
+        routed = (
+            injected
+            and gate.endpoint_cere
+            and not gate.endpoint_masked
+        )
+        return {
+            "endpoint": {"requesterId": requester_id},
+            "endpointState": {
+                "deviceControl": (
+                    qemu_aer.PCI_EXP_DEVCTL_CERE if endpoint_cere else 0
+                ),
+                "deviceStatus": (
+                    qemu_aer.PCI_EXP_DEVSTA_CED if injected else 0
+                ),
+                "correctableErrorStatus": 0x1 if injected else 0,
+                "correctableErrorMask": (
+                    0x1 if gate.endpoint_masked else 0
+                ),
+                "uncorrectableErrorStatus": 0,
+            },
+            "rootState": {
+                "bridgeControl": qemu_aer.PCI_BRIDGE_CTL_SERR,
+                "deviceControl": qemu_aer.PCI_EXP_DEVCTL_CERE,
+                "deviceStatus": 0,
+                "correctableErrorStatus": 0,
+                "uncorrectableErrorStatus": 0,
+                "rootErrorCommand": (
+                    qemu_aer.PCI_ERR_ROOT_CMD_COR_EN
+                    if gate.root_cor_enabled
+                    else 0
+                ),
+                "rootErrorStatus": (
+                    qemu_aer.PCI_ERR_ROOT_COR_RCV if routed else 0
+                ),
+                "errorSourceIdentification": requester_id if routed else 0,
+            },
+        }
+
+    unsafe_prewrite = synthetic_outer(
+        GateTuple(True, False, False),
+        injected=False,
+    )
+    unsafe_prewrite["endpointState"]["uncorrectableErrorStatus"] = 0x1
+    transition_commands: list[str] = []
+    saved_transition_qemu = globals()["transition_qemu"]
+    saved_outer_snapshot = globals()["outer_qemu_aer_snapshot"]
+
+    def fake_transition_qemu(
+        _monitor: Path,
+        command: str,
+        expected: str,
+    ) -> dict[str, str]:
+        transition_commands.append(command)
+        return {"command": command, "expected": expected}
+
+    try:
+        globals()["transition_qemu"] = fake_transition_qemu
+        globals()["outer_qemu_aer_snapshot"] = (
+            lambda _socket, _endpoint, _root: unsafe_prewrite
+        )
+        try:
+            apply_gate_lease(
+                Path("selftest-monitor"),
+                Path("selftest-qtest"),
+                "0000:01:00.1",
+                "0000:00:08.0",
+                0x1,
+                GateTuple(True, False, False),
+                enable_root_path=True,
+            )
+        except SafetyViolation:
+            pass
+        else:
+            raise AssertionError(
+                "unsafe pre-write baseline did not fail gate application"
+            )
+    finally:
+        globals()["transition_qemu"] = saved_transition_qemu
+        globals()["outer_qemu_aer_snapshot"] = saved_outer_snapshot
+    assert transition_commands == ["stop"], transition_commands
+
+    for gate in parse_gate_tuples(
+        "000,001,010,011,100,101,110,111"
+    ):
+        frozen = evaluate_frozen_transport(
+            gate,
+            0x1,
+            synthetic_outer(gate, injected=False),
+            synthetic_outer(gate, injected=True),
+        )
+        assert frozen["verdict"] == "PASS", (gate.label, frozen)
+    overridden = evaluate_frozen_transport(
+        GateTuple(True, False, False),
+        0x1,
+        synthetic_outer(GateTuple(True, False, False), injected=False),
+        synthetic_outer(
+            GateTuple(True, False, False),
+            injected=True,
+            override_cere=False,
+        ),
+    )
+    assert overridden["verdict"] == "FAIL"
+    assert not overridden["checks"]["effectiveTupleStableAfter"]
 
     before_text = synthetic_lspci(0)
     after_text = synthetic_lspci(1)
@@ -2035,6 +4049,54 @@ def selftest() -> None:
     assert guest_before[0]["correctableStatus"] == 0
     assert guest_after[0]["correctableStatus"] == 1
     assert guest_after[0]["aerHeader"] == 0
+    assert guest_aer_event_lines(
+        "aer_dev_correctable:\nTOTAL_ERR_COR 0\n"
+    ) == []
+    assert guest_aer_event_lines(
+        "pcieport 0000:00:01.0: PCIe Bus Error: severity=Corrected\n"
+    )
+    counter_guest = guest.replace(
+        "=== AER injection window open ===",
+        "aer_dev_correctable:\nTOTAL_ERR_COR 0\n"
+        "aer_dev_fatal:\nTOTAL_ERR_FATAL 0\n"
+        "aer_dev_nonfatal:\nTOTAL_ERR_NONFATAL 0\n"
+        "=== AER injection window open ===",
+    ).replace(
+        "=== AER guest probe done ===",
+        "aer_dev_correctable:\nTOTAL_ERR_COR 0\n"
+        "aer_dev_fatal:\nTOTAL_ERR_FATAL 0\n"
+        "aer_dev_nonfatal:\nTOTAL_ERR_NONFATAL 0\n"
+        "=== AER guest probe done ===",
+    )
+    assert guest_aer_counter_totals(counter_guest, "before-injection") == {
+        "cor": 0,
+        "fatal": 0,
+        "nonfatal": 0,
+    }
+    assert guest_aer_counter_totals(counter_guest, "after-injection") == {
+        "cor": 0,
+        "fatal": 0,
+        "nonfatal": 0,
+    }
+    assert aer_log_lines(
+        [
+            "sshd-session: User root running command 'scp -f "
+            "/vmfs/volumes/pci-mmio-local/aer-correctable/guest.log'",
+            "CpuSched: J6AsyncReplayManager changed by grep -6",
+            "PCI-AER-MATRIX injection-complete",
+        ]
+    ) == []
+    assert aer_log_lines(
+        [
+            "pcieport 0000:00:01.0: PCIe Bus Error: severity=Corrected",
+            "AER: Corrected error received",
+            "Replay Timer Timeout",
+        ]
+    ) == [
+        "pcieport 0000:00:01.0: PCIe Bus Error: severity=Corrected",
+        "AER: Corrected error received",
+        "Replay Timer Timeout",
+    ]
     active_user = {"vm": "selftest", "vmMoId": "vm-1", "deviceKey": 16000}
     target = {
         "Current Owner": "VM Passthru",
@@ -2117,6 +4179,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--qtest-socket")
     parser.add_argument("--qtest-clean-baseline", action="store_true")
     parser.add_argument(
+        "--gate-tuples",
+        help=(
+            "strict comma-separated E/M/R tuples (000-111): Endpoint CERE, "
+            "selected Endpoint Correctable Mask bit, Root Command COR_EN"
+        ),
+    )
+    parser.add_argument(
+        "--enable-root-path",
+        action="store_true",
+        help=(
+            "with --gate-tuples, lease Root BridgeCtl.SERR=1 and Root "
+            "DeviceCtl.CERE=1 as an explicit auxiliary path separate from R"
+        ),
+    )
+    parser.add_argument(
         "--qtest-baseline-policy",
         choices=("strict", "status-routing"),
         default="strict",
@@ -2156,6 +4233,25 @@ def main() -> None:
         parser.error("--output is required unless --selftest is used")
     try:
         bits = parse_error_bits(args.error_bits)
+        gate_tuples = parse_gate_tuples(args.gate_tuples)
+        if gate_tuples and not args.qtest_socket:
+            raise ValueError("--gate-tuples requires --qtest-socket")
+        if gate_tuples and not args.qtest_clean_baseline:
+            raise ValueError(
+                "--gate-tuples requires --qtest-clean-baseline so every "
+                "controlled case starts from verified clean status surfaces"
+            )
+        if gate_tuples and not args.enable_root_path:
+            raise ValueError(
+                "--gate-tuples requires --enable-root-path so E/M negative "
+                "controls cannot be confounded by a closed upstream path"
+            )
+        if gate_tuples and args.qtest_baseline_policy != "strict":
+            raise ValueError(
+                "--gate-tuples requires --qtest-baseline-policy strict"
+            )
+        if args.enable_root_path and not gate_tuples:
+            raise ValueError("--enable-root-path requires --gate-tuples")
         for label, value in (
             ("ESXi BDF", args.esxi_bdf),
             ("ESXi root BDF", args.esxi_root_bdf),
@@ -2195,6 +4291,23 @@ def main() -> None:
         parser.error(f"output directory is not empty: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    gate_plan: list[GateTuple | None] = gate_tuples or [None]
+    case_plan = [
+        (bit_name, mask, gate_tuple)
+        for bit_name, mask in bits
+        for gate_tuple in gate_plan
+    ]
+    planned_case_ids = [
+        (
+            f"{args.owner_state.lower()}-{bit_name}"
+            + (
+                f"-g{gate_tuple.label}"
+                if gate_tuple is not None
+                else ""
+            )
+        )
+        for bit_name, _, gate_tuple in case_plan
+    ]
     run_result: dict[str, Any] = {
         "schemaVersion": 1,
         "runId": run_id,
@@ -2215,9 +4328,12 @@ def main() -> None:
             "qtestSocket": args.qtest_socket,
             "qtestCleanBaseline": args.qtest_clean_baseline,
             "qtestBaselinePolicy": args.qtest_baseline_policy,
+            "gateTuples": [gate.as_dict() for gate in gate_tuples],
+            "enableRootPath": args.enable_root_path,
             "outerEndpointBdf": args.outer_endpoint_bdf,
             "outerRootBdf": args.outer_root_bdf,
             "oracle": args.oracle,
+            "plannedCaseIds": planned_case_ids,
         },
         "cases": {},
         "verdict": "BLOCKED_ENV",
@@ -2226,6 +4342,8 @@ def main() -> None:
 
     password: str | None = None
     api: ApiSession | None = None
+    plan_completed = False
+    run_fault = False
     try:
         password = caveat_field(args.caveat, "Password")
         ssh = EsxiSsh(args.host, password, user=args.user)
@@ -2237,12 +4355,13 @@ def main() -> None:
             "qemuCommand": qemu_command_line(args.qemu_name),
         }
         save_json(output_dir / "result.json", run_result)
-        for bit_name, mask in bits:
+        for case_index, (bit_name, mask, gate_tuple) in enumerate(case_plan):
             case = run_case(
                 args=args,
                 run_id=run_id,
                 bit_name=bit_name,
                 mask=mask,
+                gate_tuple=gate_tuple,
                 ssh=ssh,
                 transfer=transfer,
                 api=api,
@@ -2255,23 +4374,46 @@ def main() -> None:
                 run_result["safetyStop"] = {
                     "triggered": True,
                     "afterCase": case["caseId"],
-                    "remainingCasesSkipped": [
-                        name
-                        for name, _ in bits
-                        if f"{args.owner_state.lower()}-{name}"
-                        not in run_result["cases"]
-                    ],
+                    "remainingCasesSkipped": planned_case_ids[case_index + 1 :],
                 }
                 break
+        else:
+            plan_completed = True
     except Exception as error:
+        run_fault = True
         run_result["verdict"] = "BLOCKED_ENV"
         run_result["fault"] = {"type": type(error).__name__, "message": str(error)}
+        run_result["incompletePlan"] = {
+            "completedCaseIds": list(run_result["cases"]),
+            "remainingCaseIds": [
+                case_id
+                for case_id in planned_case_ids
+                if case_id not in run_result["cases"]
+            ],
+        }
     finally:
+        final_qemu_state = qemu_runtime_state(Path(args.qemu_monitor))
+        run_result["finalQemuState"] = final_qemu_state
         if api is not None:
-            api.close()
+            try:
+                api.close(remote_logout=final_qemu_state == "running")
+                run_result["apiCloseMode"] = (
+                    "REMOTE_LOGOUT"
+                    if final_qemu_state == "running"
+                    else "LOCAL_DROP_ONLY"
+                )
+            except Exception as close_error:
+                run_result["apiCloseFault"] = {
+                    "type": type(close_error).__name__,
+                    "message": str(close_error),
+                }
         run_result["finishedAt"] = utc_now()
-        if run_result["cases"]:
+        if run_result["cases"] and (
+            plan_completed or "safetyStop" in run_result
+        ):
             run_result["verdict"] = aggregate_verdict(run_result["cases"].values())
+        elif run_fault:
+            run_result["verdict"] = "BLOCKED_ENV"
         save_json(output_dir / "result.json", run_result)
         write_sha256s(output_dir)
         password = None

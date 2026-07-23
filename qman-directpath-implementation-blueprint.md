@@ -2342,20 +2342,38 @@ argv/QOM manifest，升级不能静默改变 property 默认值。stock QEMU 5.0
 
 ### 12.2 AER parity profile
 
-ESXi 8.0 U3 的被测外部模型目前只证明了 guest surface/status projection：guest 不发现
-endpoint AER capability，ACPI 不授予 AER ownership，raw capability body 可以看到部分
-物理 status。不能把它直接命名为“host 已收到并处理 PCI errors”。2026-07-23 的门控读回为
-endpoint `CERE=0`、Root Port `CERE=0`、Root `COR_EN=0`；因此当前 Correctable 结果不证明
-ERR_COR delivery、Root service、IRQ 或 host health handling。
+ESXi 8.0 U3 的被测外部模型必须按两个 profile 实现和验收：
+
+| Profile | 已验证边界 | 禁止外推 |
+| --- | --- | --- |
+| 历史 `e1000e/status-projection` | guest 不发现 endpoint AER capability，ACPI 不授予 AER ownership，raw body 可看到部分 status；endpoint/Root Port CERE 与 Root COR_EN 均为 0 | ERR_COR delivery、Root service、IRQ、clear 与 health handling |
+| `virtio/controlled-route` | PassthruIdle Receiver 的 8 个 E/M/R tuple 8/8；只有 `g100/g101` 的 frozen outer-QEMU snapshot 出现 Root `COR_RCV+Source`。Active guest 可发现 AER header `0x00020001` 且 raw CES `0→1`，但 Linux AER totals `0→0`、无 kernel event | ESXi service/IRQ 归因、bounded log 之外的处理、guest write、lifecycle recovery 与物理设备行为 |
+
+controlled-route result SHA-256 为
+`655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。
+frozen snapshot 是 ESXi vCPU 暂停时读取的 QEMU fabric 状态，不是 ESXi service/IRQ receipt；
+恢复运行后的有界日志窗没有语义 AER/PCI error event，也不能解释成 no service。capability
+可发现、raw status 可见和 service/event delivery 是三个独立观察面。
+
+[Broadcom KB 312208](https://knowledge.broadcom.com/external/article/312208/)规定
+DirectPath PCI error 由 ESXi 处理、而不是作为错误交给 guest；它没有公开
+notification/service/recovery 实现，也不要求所有 profile 都隐藏 guest AER header 或 raw
+status；
+[KB 424082](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)
+只公开 `pcipDisablePciErrReporting` 的配置含义。
+[Linux AER](https://docs.kernel.org/PCI/pcieaer-howto.html)和
+[QEMU 11.0.2 AER 源码](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
+只作为通用/reference oracle，不能反推 VMware 私有 service 实现。
 
 产品化需要同时实现：
 
 1. 使用 versioned `aerPolicy`，分别声明 guest capability、`_OSC` ownership、body read、body
    write、endpoint reporting owner、Root service owner、Correctable threshold 与 lifecycle
    clear policy；不允许用一个 `hideAer=true` 代替这些语义。
-2. VFIO extended-capability chain 跳过 AER header时保持 next pointer 正确；CES/CEM/CERE、
-   Root Command 等字段的 read mask、write mask 和 side effect 分别定义。隐藏 header 不代表
-   hidden body 的 guest write 已隔离。
+2. 只在 profile 要求隐藏时，VFIO extended-capability chain 才跳过 AER header并保持 next
+   pointer 正确；CES/CEM/CERE、Root Command 等字段的 read mask、write mask 和 side effect
+   分别定义。隐藏 header 不代表 hidden body 的 guest write 已隔离，公开 header 也不代表
+   guest 已获得 service。
 3. synthetic Root Port 是否创建 AER Root service、`_OSC` 是否授予 AER，必须与 endpoint
    surface 一起由 profile 固定；不能只改 config space 或 ACPI 一侧。
 4. host agent 分开采集 `STATUS_DEPOSITED`、`MESSAGE_RECEIVED`、`LOG/COUNTER_OBSERVED`、

@@ -24,7 +24,7 @@
     },
     {
       "path": "tools/generate_vmware_evidence_index.py",
-      "sha256": "17d2c0a32f78ac1f5b7d0d8ccba128bf0f2d564d05f4ed8cd5108e68353bbd2d"
+      "sha256": "84e05ab3d1ae863981c2cb7715aeef593bff818cfd7b68b514aeadfacc9f4170"
     },
     {
       "path": "tests/test_vmware_evidence_index.py",
@@ -33,7 +33,7 @@
   ],
   "limitations": [
     "Historical pyVmomi task identifiers and initiating actors are not uniformly retained.",
-    "Historical VMware runs do not all conform to contracts/vmware-experiment-result.schema.json; VMW-AER-COR-001 has a canonical aggregate result but its raw runs remain external artifacts.",
+    "Historical VMware runs do not all conform to contracts/vmware-experiment-result.schema.json; VMW-AER-COR-001 has profile-specific canonical pairs but their raw runs remain external artifacts.",
     "Representative run IDs do not imply that every legacy case has a canonical result.",
     "Derived acceptance links changed when M06 was narrowed to TS-F4-06; this index is traceability evidence, not case completion evidence.",
     "This reference-governance result cannot close a Qman product case, risk, implementation milestone, qualification profile, or release gate."

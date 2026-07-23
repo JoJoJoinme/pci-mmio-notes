@@ -18,7 +18,7 @@
 - Native、passthrough 配置未生效、passthrough 空闲、guest 驱动前、guest 驱动活动、恢复 Native 等 owner phase。
 - VM attach、reboot、clean/forced poweroff、重新分配和 owner restore 等生命周期边界。
 - endpoint、upstream Root Port、ESXi、guest 四层证据的同时采集。
-- hidden AER capability body 的 guest 读写边界。
+- hidden/visible 两种 AER capability profile 的 guest body 读写边界。
 - nested QEMU/ESXi 的行为验证，以及同一用例进入真实设备 E4 qualification 时的边界。
 - Qman 应如何保存策略、阻断不安全写入、关联 owner lease、执行清理和触发 quarantine。
 
@@ -40,7 +40,7 @@
 | L0：刺激与运行来源 | outer QEMU/HMP 或物理注入器、QEMU/ESXi/firmware build、启动实例 | 注入命令、目标 qdev/BDF、注入 ACK、二进制与配置 hash、boot ID、单调时间戳 | HMP 返回 `OK` 只证明请求被注入器接受，不证明 endpoint 发出了 Error Message |
 | L1：PCIe endpoint/fabric | endpoint config space、upstream Root Port config space | AER header、CES、CEM、Device Control/Status、Root Command/Status/Source ID，T0—T5 raw dump 与差异 | status 置位不等于 host 已产生日志、IRQ、health 事件或 quarantine |
 | L2：ESXi owner 与 host policy | Current Owner、passthrough 配置、VM task/event、kernel policy、host 日志与存活性 | owner/readback、VMX 与 `vmware.log`、`vmkernel.log`、`vobd.log`、syslog marker、uptime | 未见日志不等于 ESXi 内部未消费；`host responsive` 不等于 Case 通过 |
-| L3：VM/guest 表面 | guest PCI config、ACPI `_OSC`、driver、sysfs、dmesg、heartbeat、生命周期结果 | capability chain、raw body、Device Control/Status、`aer_dev_*`、driver bind、串口 marker、重启/复用结果 | guest 看不到 capability 或日志，不等于 guest 无法写 hidden body；必须单独验证写过滤 |
+| L3：VM/guest 表面 | guest PCI config、ACPI `_OSC`、driver、sysfs、dmesg、heartbeat、生命周期结果 | capability chain、raw body、Device Control/Status、`aer_dev_*`、driver bind、串口 marker、重启/复用结果 | capability hidden/visible 与 service/event delivery 不等价；两种 profile 都必须单独验证 body 写过滤 |
 
 Qman 不是 VMware 黑盒实验的第五个测量层。Qman 的 admission、lease、health 和 quarantine 行为是由上述观察结果派生的产品设计，必须再由 Qman 自己的 E3/E4 Case 验证。
 
@@ -105,6 +105,12 @@ Qman 不是 VMware 黑盒实验的第五个测量层。Qman 的 admission、leas
 
 这三条是预注册假设，不是 VMware 实现事实。若有效黑盒结果与其不同，结果记为 `DIVERGED`，保留原始证据并更新 VMware behavior profile，不能修改实验输出迎合假设。
 
+2026-07-23 已完成两层正控。QEMU 11 公开模型对全部 B0—B7 与 `000`—`111`
+执行 64/64 PASS；ESXi 8.0.3 的受控 `virtio-net-pci` PassthruIdle profile 对 B0
+执行八种 gate 并得到 8/8 PASS。后者只有 `g100/g101` 在 **outer QEMU 暂停期间**
+记录 Root reception 与匹配 Source。该 frozen snapshot 是 QEMU fabric transport 证据，
+不是 ESXi service、IRQ 或私有实现证明。
+
 ### 3.4 Lifecycle transition
 
 | 代号 | 转换 |
@@ -141,6 +147,12 @@ Firmware 不进入 2688 个主组合。`M27` 增加 EFI/Legacy BIOS 的补充 A/
 | E：guest 写边界 | M28 | B0 | O4；O0 作为 host-side control | 分别写 CES/CEM/CERE | active、detach、reuse | 4 个操作序列 |
 | F：物理复核 | M29 | 以设备可安全注入的 bit 为准，至少一个 unmasked 与一个 normally-masked bit | O0、O2、O4、O5 | 至少 `M=0/1` 和 `R=0/1` 边界 | L0、L3、L4、L5、L6 | 由物理设备注入能力生成，不得伪造固定数量 |
 
+当前执行覆盖只命中 B2 route 主轴的一部分：QEMU 已覆盖 B0—B7 × 全部八种 gate；
+ESXi virtio 已覆盖 B0 × O2 × 全部八种 gate，并在 O4 对 `g100/g101` 各完成一次
+Correctable-only active 观察。O4 样本证明 capability/raw CES 可见、owner 稳定和无
+Uncorrectable side effect，但没有识别 ESXi service/IRQ，也不满足三次重复。O0、host
+policy、repeat/multiple/W1C sequence、lifecycle、guest write 和物理复核仍未完成。
+
 收敛规则：
 
 1. 每个核心 tuple 至少重复 3 次，且至少有一次 A-B-A 恢复验证；三次必须绑定不同 run ID，不能复制 artifact。
@@ -166,6 +178,13 @@ T0 不能使用上一 Case 的 after dump 代替。若无法 cold boot，每个�
 
 Host 负日志使用唯一 BEFORE/AFTER marker 与日志游标截取。`tail -n` 只能作为辅助文件，不能作为“指定窗口没有事件”的唯一证据。
 
+受控 route runner 在 T2/T3 之间增加 `freeze-inject-observe-release` 子协议：暂停 outer
+QEMU，确认 ESXi execution 已冻结，读取 gate/root-path 与安全 baseline，执行
+Correctable-only 注入，立即读取 endpoint/Root，然后恢复 outer QEMU 并采集 post-resume
+timeline。暂停期间看到的 Root Status/Source 只能归入 L0/L1 fabric transport；只有恢复后
+独立观察到的寄存器变化、API/task、日志、counter 或 owner/health transition 才属于 ESXi
+黑盒行为。日志未命中一律写为 bounded negative，不能作为 service/IRQ 的反证。
+
 ### 5.2 四态 oracle
 
 VMware 黑盒 Case 使用以下四态，不把“与假设不同”误写成“VMware 故障”：
@@ -189,7 +208,7 @@ Qman conformance 使用同一输入 profile，但产品判定映射为 `PASS/FAI
 | M25 | mask、CERE、Root Command 和 host policy 的单变量门控行为被区分 | `IMPLEMENTATION_BLOCKED` | M24 | R13 |
 | M26 | Root Status/Source、multiple、独立 W1C 与 re-arm 行为被验证 | `IMPLEMENTATION_BLOCKED` | M25 | R13 |
 | M27 | owner、VM lifecycle、firmware A/B 和重新分配不存在未建模残留 | `IMPLEMENTATION_BLOCKED` | M24、M25、M26 | R13 |
-| M28 | guest 对 hidden AER body/route 字段的写边界被验证并进入过滤策略 | `IMPLEMENTATION_BLOCKED` | M24、M27 | R13 |
+| M28 | guest 对 profile-specific AER capability/body/route 字段的读写边界被验证并进入过滤策略 | `IMPLEMENTATION_BLOCKED` | M24、M27 | R13 |
 | M29 | exact 物理 tuple 的真实 AER、reset/clear、health/quarantine 和安全复用通过 qualification | `HARDWARE_BLOCKED` | M24—M28、C09 | R13 |
 
 ### 6.1 M24：全部 Correctable status bit
@@ -224,6 +243,11 @@ Oracle：每个 bit 的 mask A/B 只允许 M 改变；B0 的八个 gate tuple �
 
 Host policy 的 2×2 行与 gate 行分开执行；不能在改变 `P` 的同一行再改变 `G`。这组结果只回答四个公开配置组合的外部差异，不推断各参数在 ESXi 内部经过哪条路径。
 
+当前已观察切片：`virtio-net-pci`、O2、B0、八种 gate 均能获得稳定 readback；仅
+`E=1,M=0` 的 `g100/g101` 在 frozen QEMU fabric 中形成 Root reception。八行 gate restore
+均成功，Uncorrectable surface 保持为零。该结果满足 M25 的一条 profile/owner/bit 判别切片，
+但没有 O0/O4、host policy、三次重复或正向 ESXi service 证据，不能关闭 M25。
+
 ### 6.3 M26：Root Status、Source、multiple 与 W1C
 
 目的：摸清公开可观察的 root 状态机边界，不为 VMware 内部处理过程命名。
@@ -246,6 +270,9 @@ Host policy 的 2×2 行与 gate 行分开执行；不能在改变 `P` 的同一
 
 Oracle：sequence 的每一步必须可独立归因。一个早期步骤失败后，后续依赖步骤不得继续并汇总成 PASS；应终止该 sequence 并判为 `INCONCLUSIVE` 或 `DIVERGED`。
 
+当前 `g100/g101` 的单次 frozen Root Status/Source 只证明 first reception 的 transport
+判别力，不包含 repeat/multiple、独立 W1C、OR 累积或 re-arm，因此不能关闭 M26。
+
 ### 6.4 M27：owner phase 与 VM lifecycle
 
 目的：确认 AER status、gate、surface 和 host 外部状态在 owner/VM 转换中的保留、清除或隔离行为。
@@ -261,9 +288,11 @@ Oracle：sequence 的每一步必须可独立归因。一个早期步骤失败�
 
 Oracle：每个 lifecycle row 都必须明确观察到“保留”“已清除”“拒绝复用/隔离”三者之一。状态消失但没有 reset/clear/owner 证据，或 VM-B 在首访前缺快照，均为 `INCONCLUSIVE`。Forced poweroff 后出现清理失败时，测试停止复用并保留隔离状态。
 
-### 6.5 M28：guest 对 hidden AER state 的写边界
+### 6.5 M28：guest 对 profile-specific AER state 的写边界
 
-目的：验证 AER header hidden、`_OSC` denied 时，guest 是否仍能改写物理/host-owned AER body 或路由控制。
+目的：分别验证 header hidden 与 visible profile 中，guest 是否能改写物理/host-owned
+AER body 或路由控制；同时把 `_OSC` ownership、capability discovery、raw status 和
+service/event delivery 分开判定。
 
 独立操作序列：
 
@@ -308,24 +337,42 @@ Oracle：没有安全的物理错误注入或等价设备自测能力时为 `BLO
 - 2026-07-23 的 PassthruIdle Correctable-only 矩阵中，8 个请求 bit 均从对应 bit clean 的
   baseline 独立沉积；PassthruActive 的 Receiver 与 Advisory Non-Fatal 代表位也投影到 guest
   raw body，且 owner 保持稳定。
-- 被测 EFI DirectPath guest 中，AER Extended Capability header 被隐藏，guest `_OSC` 不获得 AER；raw capability body 可观察到物理 status 变化。
+- 历史 e1000e EFI DirectPath guest 中，AER Extended Capability header 被隐藏，guest
+  `_OSC` 不获得 AER；raw capability body 可观察到物理 status 变化。
 - 在既有观察窗口和日志源内，未发现对应 guest/ESXi AER log；这只是负观测，不证明内部未处理。
 - QEMU VMware-profile 的 OVMF/SeaBIOS surface 结果可证明该自定义 QEMU profile 的 firmware 表面，不证明 VMware DirectPath SeaBIOS 行为。
 
+新增 `virtio-net-pci 1af4:1041` route-enabled profile 作为并列证据，不覆盖上述 e1000e
+结论：
+
+- root-path fixture 独立 lease `BridgeCtl.SERR=1` 与 Root `DeviceCtl.CERE=1`，再遍历
+  B0 的 `G=000`—`111`。
+- 八种 gate 均沉积请求 CES/CED；只有 `g100/g101` 在 frozen QEMU fabric 中记录 Root
+  Correctable reception 与匹配 endpoint Source。
+- `g100` 与 `g101` 的 Root deposition 相同，符合 QEMU 公开模型中 R 控制 notification
+  eligibility 而非 Root Status 沉积的判别假设。
+- 八行均恢复受控 gate 且没有 Uncorrectable side effect；这不等于设备 reset、health、
+  quarantine 或 tenant reuse 已验证。
+- ESXi post-resume 日志未见匹配项只作为 bounded negative，不推出没有 service/IRQ。
+- PassthruActive virtio guest 可发现 AER capability（header `0x00020001`），raw CES
+  `0→1`；Linux AER totals 仍为 `0→0` 且没有实际 kernel AER event。capability/status
+  visibility 因而不能替代 service/event delivery 证据。
+
 ### 7.2 必须降级或改写的结论
 
-1. 既有 endpoint CERE 为 `0`；Receiver bit 虽 unmasked，也没有形成“消息路由已打开”的条件。因此既有结果不能证明 ESXi 收到 ERR_COR 后的 root service、notification、日志或 health 行为。
-2. 既有 upstream Root Error Command 为 `0x00000006`，其中 COR_EN 为 `0`；必须通过 M25 分离 endpoint message 与 root notification。
+1. 历史 e1000e endpoint CERE 为 `0`；Receiver bit 虽 unmasked，也没有形成“消息路由已打开”的条件。因此该 profile 不能证明 ESXi 收到 ERR_COR 后的 root service、notification、日志或 health 行为。
+2. 历史 e1000e upstream Root Error Command 为 `0x00000006`，其中 COR_EN 为 `0`；virtio fixture 虽已通过 M25 分离 E/M/R 的 frozen transport，但仍不能用 frozen Root reception 代替 ESXi service/notification 证据。
 3. C02d 前 Root Error Status 已为脏值 `0x00000024`，root Correctable Status 也已有 `0x1`。所以“Root Port unchanged”只能写为“相对该非零基线未观察到变化”，不能写为干净状态下无变化。
 4. C03 继承了前一轮 CES=`1`，说明 Case 之间存在状态残留；C03 不能支持 Correctable clear/lifecycle 结论。
 5. runner 的 `injected-and-host-responsive` 只表示注入器 ACK 且 host 可响应，不是语义 PASS。
 6. 当前日志主要是 before/after tail，不能严格证明 marker 窗口内无事件。
 7. VMware DirectPath guest 只验证了 EFI；“VMware 的 OVMF/SeaBIOS 行为相同”仍未验证。
 8. 现有实验只有 guest read，没有 guest write；M28 完成前，“host-owned AER”只能表述为设计目标或部分可见性观察。
-9. AER canonical result 与 summary 已 hash 固定，并由 `VMW-AER-COR-001` 登记到 VMware
-   evidence index；raw run 位于 repo-sibling `_artifacts`，未随仓库提交。主矩阵绑定旧 runner
-   hash，当前 runner 只完成 Receiver smoke，因此 runner bytes/逐 run 可重建性仍是明确 limitation。
-   M06 只能消费这条 AER 证据，不能再用 firmware/MMIO/EDU 证据代替。
+9. 历史 e1000e AER canonical result 与 summary 已 hash 固定，并由 `VMW-AER-COR-001`
+   登记到 VMware evidence index；不能把其中的 endpoint/effective gate 原地改成 virtio。
+   virtio route-enabled 结果必须通过并列 canonical result/summary 登记，且不能修改旧
+   e1000e 文件。M06 只能消费明确登记且带 profile 边界的 AER 证据，不能用
+   firmware/MMIO/EDU 证据代替。
 
 ### 7.3 2026-07-23 实际运行账本
 
@@ -334,18 +381,34 @@ Oracle：没有安全的物理错误注入或等价设备自测能力时为 `BLO
 冻结摘要见
 [`evidence/esxi8-aer-correctable-20260723-summary.json`](evidence/esxi8-aer-correctable-20260723-summary.json)。
 两个文件由 `VMW-AER-COR-001` 登记；artifact locator 均相对仓库根，使用 `../_artifacts/...`。
+它们只描述历史 e1000e profile。两项 QEMU EMR 与 virtio Idle/Active 结果由并列的
+`evidence/esxi8-aer-correctable-virtio-route-20260723-{summary,result}.json` 登记，不修改
+历史 canonical pair。
 
 | run | 覆盖 | result hash | manifest/hash 边界 | routing |
 | --- | --- | --- | --- | --- |
 | QEMU positive control | 8 bit × 3 gate，24/24 | `a0583d56…19c7` | result hash | QEMU route oracle PASS；非 VMware 证据 |
+| QEMU EMR control | B0 × 8 gate，8/8 | `5e018ff1…99` | result hash | QEMU route oracle PASS；非 VMware 证据 |
+| QEMU EMR all bits | 8 bit × 8 gate，64/64 | `40880169…a4` | result hash | QEMU route oracle PASS；非 VMware 证据 |
 | `20260723T002305Z-76d79e36` | PassthruIdle 8 bit | `4681aaa5…33a8` | `SHA256SUMS=be517173…bcc6` | `NOT_TESTABLE_ENDPOINT_CERE_DISABLED` |
 | `20260723T003751Z-16496a4c` | Active Receiver | `42368f80…ea8` | `SHA256SUMS=af691a6a…3d97` | `NOT_TESTABLE_ENDPOINT_CERE_DISABLED` |
 | `20260723T001720Z-e19407a0` | Active Advisory Non-Fatal | `705b8118…e6a2` | `SHA256SUMS=e868e968…dd1` | `NOT_TESTABLE_ENDPOINT_CERE_DISABLED` |
 | `20260723T004345Z-fae1a783` | final-runner Idle Receiver smoke | `4378ae1e…673b` | `SHA256SUMS=e69cd307…15eb` | `NOT_TESTABLE_ENDPOINT_CERE_DISABLED` |
+| `20260723-esxi8-aer-virtio-idle-emr-v2` | virtio Idle B0 × 8 gate，8/8 | `65533774…bf1` | 并列 canonical 已登记 | frozen fabric 仅 `g100/g101` reception；不是 ESXi service/IRQ 证明 |
+| `20260723-esxi8-aer-virtio-active-emr-representative-v2` | Active g100 PASS；g101 未注入 | `4fe5e837…aaae` | aggregate INCONCLUSIVE；保留 harness history | 只消费有效 g100 subcase，不外推 g101 |
+| `20260723-esxi8-aer-virtio-active-g101-final-v1` | Active g101 | `c4511cb3…0d72` | PASS；guest semantic parser 已修正 | header visible、CES `0→1`、counter `0→0`、无 guest event |
+| `20260723-esxi8-aer-virtio-active-g100-parser-final-v1` | Active g100 final parser smoke | `bd455a4d…75c0` | PASS；最终 runner live-smoked | guest/host semantic event 均未观察到 |
 
-完整 64-hex digest 保存在上述两个 JSON 中；表中缩写只用于阅读，不能作为验证输入。
+历史条目的完整 digest 保存在上述两个 JSON 中；QEMU/Idle 三项的完整 result digest 分别为
+`5e018ff1617c2d3bd85d935b7548d4e0248d6c8b3dffa46fc8d122ef011aab99`、
+`40880169d5a4deaf01019af7d0e4618886464256cd5513f1e6d06be14cff52a4` 和
+`655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。
+Active 完整 digest 见表所指的并列 virtio canonical summary；表中缩写只用于阅读，不能作为
+验证输入。
 
-现有 `M06` 建议收窄为：Receiver Correctable 与一个 Non-Fatal 基线、guest AER header/`_OSC` surface、raw body read，以及明确的上述 limitations。M24—M29 不得被现有 M06 自动关闭。
+现有 `M06` 建议收窄为：Receiver Correctable 与一个 Non-Fatal 基线、profile-specific
+guest AER header/`_OSC` surface、raw body read、event/counter observation，以及明确的
+上述 limitations。M24—M29 不得被现有 M06 自动关闭。
 
 ## 8. Qman 设计建议
 
@@ -420,7 +483,7 @@ Nested 证据不能确认：
 
 ## 10. Runner 与可执行命令
 
-### 10.1 QEMU 公开模型正控：8 bit × 3 gate
+### 10.1 QEMU 公开模型正控：8 bit × 8 gate
 
 ```bash
 python3 vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py \
@@ -428,7 +491,11 @@ python3 vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py \
   --output <EMPTY_OUTPUT_DIRECTORY>
 ```
 
-该 runner 每个 tuple 启动 fresh QEMU，使用可写 CERE 的 `virtio-net-pci,aer=on`，覆盖 8 个 Correctable bit 与三类可判别 gate：`CERE=0`、`CERE=1/CEM=1`、`CERE=1/CEM=0/Root COR_EN=0`。它要求 endpoint/root UES 为 0、Device Status 不出现非 CED 位、Root Status 不出现 Uncorrectable 位，并校验 Correctable Source ID。它只证明 QEMU 的公开寄存器/消息路由模型，不是 VMware 行为，也不是物理链路证据。
+该 runner 每个 tuple 启动 fresh QEMU，使用可写 CERE 的 `virtio-net-pci,aer=on`，覆盖
+8 个 Correctable bit 与 `G=000`—`111` 全部八种 gate。它要求 endpoint/root UES 为 0、
+Device Status 不出现非 CED 位、Root Status 不出现 Uncorrectable 位，并校验 Correctable
+Source ID。2026-07-23 的完整运行结果为 64/64 PASS；它只证明 QEMU 的公开寄存器/消息
+路由模型，不是 VMware 行为，也不是物理链路证据。
 
 QEMU firmware surface 对照仍由下列脚本执行：
 
@@ -459,9 +526,35 @@ runner 只有 `-c` Correctable allow-list 注入表面。每个 case 记录请�
 
 `status-routing` 基线策略只允许 QEMU `e1000e` 已观察到的 sticky `DevSta.CED`；endpoint CES、endpoint/root UES、root Device Status、Root Status、Source 和上游拓扑必须干净。Active owner 建立前后各做一次 clear/readback。任何 UES、非 CED Device Status 或 Root Uncorrectable 状态变化都产生 `FAIL_SAFETY` 并停止剩余注入。
 
-当前 runner 已覆盖 PassthruIdle 8-bit deposition 和 PassthruActive 代表 bit；它尚未控制 ESXi 下的完整 2×2×2 gate tuple、host boot-policy 2×2、Native 全量、T5 lifecycle、guest write 和三次重复，因此不能宣告 M25—M29 完成。
+历史 e1000e command 继续使用上述 `status-routing` 策略。受控 virtio route 矩阵使用：
 
-### 10.3 新 runner 占位：root sequence
+```bash
+python3 vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py \
+  --host <ESXI_ADDRESS> \
+  --owner-state PassthruIdle \
+  --error-bits receiver_error \
+  --gate-tuples 000,001,010,011,100,101,110,111 \
+  --enable-root-path \
+  --qemu-monitor <HMP_SOCKET> \
+  --qtest-socket <QTEST_SOCKET> \
+  --qtest-clean-baseline \
+  --qtest-baseline-policy strict \
+  --outer-endpoint-bdf <OUTER_ENDPOINT_BDF> \
+  --outer-root-bdf <OUTER_ROOT_BDF> \
+  --esxi-bdf <ESXI_ENDPOINT_BDF> \
+  --esxi-root-bdf <ESXI_ROOT_BDF> \
+  --output <EMPTY_OUTPUT_DIRECTORY>
+```
+
+该模式把 root path 与 EMR gate 作为受控、可恢复 lease；暂停 outer QEMU 后的 immediate
+snapshot 只判定 frozen fabric transport，恢复后的 timeline/日志另行解释。当前 runner
+已覆盖历史 e1000e PassthruIdle 8-bit deposition、PassthruActive 代表 bit，以及 virtio
+PassthruIdle Receiver 的完整 2×2×2 gate tuple和 Active `g100/g101` 单次观察。Active
+guest 的 capability 可发现与 raw CES 可见并未伴随 Linux AER totals 增量或 kernel event。
+host boot-policy 2×2、Native 全量、T5 lifecycle、guest write、三次重复和物理 E4 仍未完成，
+因此不能宣告 M25—M29 完成。
+
+### 10.3 待补 runner：root repeat/W1C sequence
 
 ```powershell
 # PLACEHOLDER: vmware-esxi8-lab/Invoke-EsxiAerRootSequence.ps1
@@ -528,7 +621,7 @@ artifact-manifest.sha256
 1. M24—M28 runner 的每个请求值都有有效 readback，T0—T5 四层 artifact 完整并 hash 固定。
 2. 收敛矩阵的 required row 三次可重复；差异已扩展验证并进入版本化 VMware behavior profile。
 3. AER canonical result、summary、raw artifact digest、实验描述和 limitations 被正式登记到
-   VMware evidence index。当前此项对聚合文件已满足；raw artifact 外置和旧 runner bytes 未归档
-   仍阻止“任意环境可完整重建”的更强声明。
+   VMware evidence index。历史 e1000e 与 virtio route-enabled 使用并列 canonical pair；
+   raw artifact 外置和部分旧 runner bytes 未归档仍阻止“任意环境可完整重建”的更强声明。
 4. Qman profile 明确 guest read/write、host ownership、lifecycle clear 和 quarantine 边界，并有对应产品 Case，而不是只实现“隐藏 header”。
 5. M29 在 exact physical tuple 上完成后，才允许对相应平台/设备 profile 宣告 E4 qualification；其他设备继续保持未验证。

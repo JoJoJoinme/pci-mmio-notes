@@ -557,19 +557,40 @@ PMCSR 看到 `0x8100`，但没有 native PME IRQ delta。三种 `_OSC` grant 均
 
 ### Correctable/Non-Fatal AER
 
-Correctable Receiver Error 和 Non-Fatal Unsupported Request 均已做 host/guest/config/log
-三方采集。2026-07-23 又完成 PassthruIdle 的 8 个 Correctable bit 和 PassthruActive 的
-Receiver/Advisory Non-Fatal 代表位：请求 CES 均能沉积并投影到 guest raw body，owner 保持
-稳定，Uncorrectable surface 与非 CED Device Status 没有增量。ESXi guest 中 endpoint AER
-Extended Capability header 为 0，ACPI `_OSC` 不授予 AER。
+Correctable AER 结果必须分成两个 profile，不能再概括为“ESXi 行的 CERE 全部为 0”：
 
-这只支持“隐藏 capability discovery、保留部分 raw status projection”的外部模型。所有新
-ESXi 行的 endpoint/root CERE 与 Root COR_EN 均为 0，routing 必须记作
-`NOT_TESTABLE_ENDPOINT_CERE_DISABLED`；限定日志窗未见事件不能推出 ERR_COR 已送达后被静默
-处理。Stock QEMU 的 Root Port/e1000e/VFIO 默认公开 AER，完整对标需要版本化 capability/body
-读写、message route、lifecycle clear 与 recovery policy。完整寄存器、run/hash 和限制见
+| Profile | 已执行 | 外部结论 |
+| --- | --- | --- |
+| 历史 `e1000e/status-projection` | Correctable Receiver、Non-Fatal Unsupported Request、PassthruIdle 8 bit、PassthruActive Receiver/Advisory Non-Fatal 代表位 | endpoint/root CERE 与 Root COR_EN 均为 0；请求 CES 能沉积并投影到 guest raw body，guest AER header 为 0、`_OSC` 不授予 AER，owner 保持稳定。它只证明 surface/status projection，不能证明 ERR_COR delivery |
+| `virtio/controlled-route` | PassthruIdle Receiver 完整 8 个 E/M/R tuple；PassthruActive `g100/g101` | Idle 8/8；只有 `g100/g101` 的 frozen snapshot 出现 Root `COR_RCV` 与 Source。Active guest 可发现 AER header `0x00020001` 且 raw CES `0→1`，但 Linux AER totals `0→0`、无 kernel event |
+
+controlled-route result SHA-256 为
+`655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。
+这里的 E/M/R 分别是 Endpoint CERE、该 Correctable bit 的 Mask 与 Root COR_EN；辅助 Root
+path 在八格中固定打开。`g100` 与 `g101` 都沉积 Root status，说明本 profile 下 R 不决定
+Root status deposition；它是否触发 ESXi 可观察的 service/IRQ 必须单独验证。
+
+关键证据边界是：frozen snapshot 在 ESXi vCPU 暂停时直接读取 outer QEMU fabric 配置空间，
+证明的是 QEMU fabric 在 ESXi 已编程 gate 下的沉积和路由，不是 ESXi service、IRQ、日志清除
+或 recovery。排除 SCP 路径和采集命令噪声后，恢复运行的有界 `vmkernel.log`/VM log
+采集窗未观察到语义 AER/PCI error event，只能写成
+“bounded log absence”，不能推出 no service。Stock QEMU 的 Root Port/e1000e/VFIO 默认
+surface 也不能自动等价于 VMware；完整对标仍需要版本化 capability/body 读写、notification、
+lifecycle clear 与 recovery policy。完整寄存器、run/hash 和限制见
 [`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md) 与
 [`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)。
+
+公开合同只到以下边界：
+
+- [Broadcom KB 312208](https://knowledge.broadcom.com/external/article/312208/) 规定
+  DirectPath PCI error 由 ESXi 处理、而不是作为错误交给 guest；它没有要求每个 guest
+  profile 都隐藏 capability/header/raw status，也没有公开 Correctable
+  notification/service/clear/reset 算法。
+- [Broadcom KB 424082](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)
+  公开 `pcipDisablePciErrReporting` 的含义，但没有定义它对应哪些 AER gate。
+- [Linux AER 文档](https://docs.kernel.org/PCI/pcieaer-howto.html)与
+  [QEMU 11.0.2 `pcie_aer.c`](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
+  只提供通用机制和 QEMU reference oracle，不能作为 VMware 内部实现证明。
 
 ### P2P
 
@@ -640,7 +661,9 @@ NVM/firmware/driver contract 的设备模型。
 | ESXi ACS 全局 bypass 增量项 | `_artifacts/vmware-directpath-runs/20260714-esxi8-no-acs-global-bypass-v1/` |
 | 虚拟 FLR callback | `_artifacts/vmware-directpath-runs/20260713-esxi8-flr-vm-power-v1/` |
 | PME `_OSC`/status 注入 | `_artifacts/vmware-directpath-runs/20260714-esxi8-pme-v3/` |
-| Correctable AER 8-bit/gate/Active | `_artifacts/vmware-directpath-runs/20260723-aer-correctable/` |
+| Correctable AER 历史 e1000e status/Active | `_artifacts/vmware-directpath-runs/20260723-aer-correctable/` |
+| Correctable AER virtio PassthruIdle Receiver 8 EMR | `_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-idle-emr-v2/`；`result.json` SHA-256=`655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1` |
+| Correctable AER virtio PassthruActive g100/g101 | `_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-active-emr-representative-v2/`、`20260723-esxi8-aer-virtio-active-g101-final-v1/` 与最终 parser smoke；按 case/result hash 区分有效观察和未注入的 harness 行 |
 | P2P ACS/no-ACS policy | `_artifacts/vmware-directpath-runs/20260714-esxi8-p2p-*/` |
 | RMRR 自动 hole/低 RAM 拒绝 | `_artifacts/vmware-directpath-runs/20260713-esxi8-rmrr-auto-v9-flr/`、`20260713-esxi8-rmrr-unsupported-v9-flr/` |
 | Option ROM 正控与 ESXi 负例 | `_artifacts/vmware-directpath-runs/20260713-qemu-optionrom-minimal-compressed-padded-v33/`、`20260713-esxi8-optionrom-minimal-compressed-padded-v4/` |
@@ -765,7 +788,7 @@ q35 的 zero/zero + 1GB BAR 是已验证负例，不能只把上面 property 名
 | reset 方法与总线依赖 | 让 VFIO 执行 FLR/bus reset；同 dependency 整组分配；endpoint generation register 记录回调 | 虚拟 FLR power-on/off callback pass；bridge dependency pass；SBR/D3 与真实状态清除待 E4 |
 | Dynamic candidate | orchestrator 按 allowed class 选 BDF，记录运行时 lease，关机释放；目标 host 重新选择 | X00-X03 pass；不能持久化固定 BDF |
 | MSI-X/MSI/INTx | 保留 capability，启用 host interrupt remapping；禁止 unsafe interrupts | MSI-X E3 pass；EDU MSI-only E3 pass；INTx nested fail/direct pass，待 E4 |
-| PCIe AER policy | synthetic endpoint status 注入/观察；guest config-space proxy 按 profile 过滤 capability 与 body read/write，host event/recovery 另证 | Correctable status projection 与 guest discovery 已观察；ERR_COR delivery、host service、guest write、T5 recovery 和物理 E4 未验证；stock VFIO 不自动等价 |
+| PCIe AER policy | synthetic endpoint status 注入/观察；guest config-space proxy 按 profile 过滤 capability 与 body read/write，host event/recovery 另证 | 双 profile：e1000e 完成 hidden-header/status projection；virtio Idle 8 EMR 已 8/8，Active 完成 visible-header/raw-CES/no-event 切片，只有 g100/g101 frozen Root `COR_RCV+Source`。frozen fabric 不代证 ESXi service/IRQ；guest write、notification 归因、T5 recovery 和物理 E4 未验证 |
 | Option ROM | 默认 `rombar=0`；显式启用时固定 ROM hash，并分别验证 host 保存与 guest 执行 | 默认隐藏 pass；QEMU ROM 正控 pass；ESXi enabled 样本为可重复“不执行”负例 |
 | PME 与 `_OSC` | endpoint 提供可控 PME_Status/message，ACPI 层决定 native PME；host policy 可过滤 | patched endpoint 三种 `_OSC` mask pass；PME status 可见但无 native PME IRQ，符合 KB ignored 模型 |
 | P2P 与 ACS relaxation | 两个 peer-DMA endpoint + ACS/IOMMU policy；不能把单个开关当成功 | 默认/relax-only 被 IOMMU fault 阻断；`allowP2P=TRUE` 才成功，ACS/no-ACS A/B 已跑 |
@@ -782,6 +805,9 @@ machine patch。把缺失语义硬塞成一个 `-global` 参数，会得到表�
 ## 13. 参考
 
 - [Broadcom KB 312208：VMDirectPath/Dynamic DirectPath 平台与设备要求](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
+- [Broadcom KB 424082：`pcipDisablePciErrReporting` 等 Advanced Settings 映射](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)
+- [Linux PCIe AER Driver Guide](https://docs.kernel.org/PCI/pcieaer-howto.html)
+- [QEMU 11.0.2 `hw/pci/pcie_aer.c`](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
 - [vSphere API：VirtualPCIPassthrough DynamicBackingInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html)
 - [vSphere API：Host AssignableHardwareManager](https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareManager.html)
 - [ESXCLI 8.0.3：hardware pci pcipassthru set](https://developer.broadcom.com/xapis/esxcli-command-reference/8.0.3/namespace/esxcli_hardware.html)

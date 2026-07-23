@@ -93,6 +93,17 @@
       "riskIds": ["R09", "R33", "R34", "R36"]
     },
     {
+      "id": "QMAN-E3-AER-QEMU-REFERENCE-001",
+      "resultPath": "evidence/qman-qemu-aer-emr-20260723-summary.json",
+      "resultSha256": "9d28dd2d3c1f7a4f054000cdce675f6a841453b29ad750d72238df6aed3db9c1",
+      "subject": "QEMU_CONTROL_REFERENCE",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F4-06"],
+      "caseIds": ["M06"],
+      "riskIds": ["R13"]
+    },
+    {
       "id": "QMAN-E3-QMP-GATE-001",
       "resultPath": "evidence/qman-qmp-gate-20260721-summary.json",
       "resultSha256": "6cd59b5bf4d69a8b5d203190334060b03b8c7f6abd6e8296985c694991a5e7fc",

@@ -37,12 +37,12 @@ class ReleaseGateTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "VMware reference: sources=24, experiments=37, tech_stories=40 "
+            "VMware reference: sources=25, experiments=37, tech_stories=40 "
             "(NOT_APPLICABLE=5, PARTIAL=28, UNKNOWN=3, VERIFIED=4)",
             result.stdout,
         )
         self.assertIn(
-            "Qman evidence: records=10 (E2=2, E3=8; reference=5, component=5, "
+            "Qman evidence: records=11 (E2=2, E3=9; reference=6, component=5, "
             "end_to_end=0, "
             "product_case_closures=0, risk_closures=0)",
             result.stdout,

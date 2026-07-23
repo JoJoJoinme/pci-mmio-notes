@@ -161,21 +161,34 @@ D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server �
 ### 3.1 Correctable AER 黑盒入口
 
 先运行 QEMU 公开模型正控。它为每个 tuple 启动 fresh QEMU，并验证 8 个 Correctable bit
-在 CERE blocked、endpoint masked、Root COR_EN disabled 三类 gate 下的寄存器与 Root Source
-行为：
+在 `G=(E,M,R)` 的 `000`—`111` 全部八种 gate 下的寄存器与 Root Source 行为。2026-07-23
+的完整运行是 64/64 PASS；只有 `E=1,M=0` 的 `g100/g101` 记录 Root reception，R 只改变
+notification eligibility，不抑制 QEMU Root Status 沉积：
 
 ```powershell
 wsl -d Ubuntu-22.04 -- python3 `
   /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py `
   --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
-  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/qemu-cor-24
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/qemu-cor-emr-64
 ```
 
+对应 64-row `result.json` SHA-256 为
+`40880169d5a4deaf01019af7d0e4618886464256cd5513f1e6d06be14cff52a4`。
+
 ESXi runner 只暴露 `pcie_aer_inject_error -c` 和封闭的八位 allow-list；没有 Uncorrectable
-注入参数。使用 QTest 时，`status-routing` 只容许 live e1000e 已观察到的 sticky CED，CES、
-UES、Root Status/Source、root Device Status 和上游拓扑必须 clean/readback。Active VM 在 owner
-建立前后各清一次基线。任何 UES、非 CED Device Status 或 Root Uncorrectable 增量都会
-`FAIL_SAFETY` 并停止剩余 case。
+注入参数。当前保留两个并列 profile，不能用后一个覆盖前一个：
+
+- 历史 `e1000e 8086:10d3` 使用 `status-routing`，只容许已观察到的 sticky CED；其
+  endpoint/root CERE 与 Root COR_EN 均为 0，结论限于 status/guest projection。
+- 受控 `virtio-net-pci 1af4:1041,aer=on` 使用 `strict` baseline；runner 独立 lease
+  upstream `BridgeCtl.SERR` 与 Root `DeviceCtl.CERE`，再设置 EMR tuple，并在 finally
+  恢复原 gate。
+
+两种模式都要求 CES、UES、Root Status/Source、root Device Status 和上游拓扑按各自策略
+clean/readback。Active VM 在 owner 建立前后各清一次基线。任何 UES、非 CED Device Status
+或 Root Uncorrectable 增量都会 `FAIL_SAFETY` 并停止剩余 case。
+
+历史 e1000e deposition：
 
 ```powershell
 wsl -d Ubuntu-22.04 -- python3 `
@@ -190,10 +203,52 @@ wsl -d Ubuntu-22.04 -- python3 `
   --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/esxi-cor-idle-8
 ```
 
-case 的 `PASS` 仅表示冻结 observation oracle 满足。必须读取
-`observations.messageRouting.conclusion`：CERE 为 0 时只能是
-`NOT_TESTABLE_ENDPOINT_CERE_DISABLED`，不能写成“ESXi 收到 ERR_COR 后静默”。日志为空只表示
-`NOT_OBSERVED_IN_CAPTURED_TAIL_WINDOW`。完整矩阵与 Qman 设计消费见
+受控 virtio Idle Receiver EMR：
+
+```bash
+QEMU_ESXI_TEST_FN1_MODEL=virtio-net-pci \
+QEMU_ESXI_TEST_FN1_AER=on \
+./vmware-esxi8-lab/start-qemu-esxi8-mf.sh
+```
+
+确认 ESXi SSH ready、`01:00.1` 为 `1af4:1041` 且 Current Owner 为 `VM Passthru` 后，再执行：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py `
+  --host 172.31.91.10 --owner-state PassthruIdle `
+  --error-bits receiver_error `
+  --gate-tuples 000,001,010,011,100,101,110,111 `
+  --enable-root-path `
+  --qemu-monitor /root/vm/esxi8-mf/monitor.sock `
+  --qtest-socket /root/vm/esxi8-mf/qtest.sock --qtest-clean-baseline `
+  --qtest-baseline-policy strict `
+  --outer-endpoint-bdf 0000:01:00.1 --outer-root-bdf 0000:00:08.0 `
+  --esxi-bdf 0000:01:00.1 --esxi-root-bdf 0000:00:08.0 `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/esxi-virtio-idle-emr-8
+```
+
+该矩阵的已固定结果为 8/8 PASS，raw `result.json` SHA-256：
+`655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。只有
+`g100/g101` 在 outer QEMU 暂停期间出现 Root reception/Source；这个 frozen snapshot
+证明 QEMU fabric transport，不证明 ESXi service、IRQ 或私有实现。恢复 ESXi 后的
+register timeline、owner 和日志是另一层黑盒观察。Active `g100/g101` 已各完成一次
+Correctable-only 注入：virtio guest 的 AER header 为 `0x00020001`，raw CES `0→1`，
+`TOTAL_ERR_COR/FATAL/NONFATAL` 均保持 `0→0`，且没有实际 `PCIe Bus Error` 或 AER
+`severity=` kernel event。`aer_dev_correctable:`、`aer_dev_fatal:` 和
+`aer_dev_nonfatal:` 只是 sysfs 标题，不是事件；ESXi 的 SCP 审计路径和采集命令也必须从
+host AER event 匹配中排除。
+最终 active g101/g100 result SHA-256 分别为
+`c4511cb3514fd27b992a44af44c7dbdcf339c1a364730adcd06fb884ba700d72` 与
+`bd455a4d9278e53687cf16dd2cfefe161bad78ec946249725a614dce2dd975c0`；治理入口见
+[`../evidence/esxi8-aer-correctable-virtio-route-20260723-result.json`](../evidence/esxi8-aer-correctable-virtio-route-20260723-result.json)。
+
+case 的 `PASS` 仅表示对应 observation oracle 满足。历史 CERE=0 行必须读取
+`observations.messageRouting.conclusion`，只能写
+`NOT_TESTABLE_ENDPOINT_CERE_DISABLED`，不能写成“ESXi 收到 ERR_COR 后静默”。所有 profile
+的日志为空都只表示 `NOT_OBSERVED_IN_CAPTURED_TAIL_WINDOW`，即 bounded negative，不是
+“无 service/IRQ”的证明。capability/header 可见性、raw status projection、Linux AER
+counter 和 service/event delivery 必须分别判定。完整矩阵与 Qman 设计消费见
 [`../vmware-aer-correctable-validation-plan.md`](../vmware-aer-correctable-validation-plan.md)。
 
 ### 3.2 O00-O10 owner activation 复现入口

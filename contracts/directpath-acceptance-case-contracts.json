@@ -5,7 +5,7 @@
   "portableContractId": "QMAN-DIRECTPATH-PORTABLE-CONTROL",
   "portableContractRevision": "2026-07-23.11",
   "sourcePolicySha256": "sha256:31e238a95c033c466d80b13686be01c3211b2b4a6df5c64533fad30da85986c0",
-  "sourceDesignSha256": "sha256:88f02435f1c98ad4d4399618198e1de6dd0f65696da289a2ba1e6ba14a17b853",
+  "sourceDesignSha256": "sha256:177dfe0baad0a3539f1a20744347b7d9e152abd32a0a3aa6da364044604975ee",
   "oracleClasses": [
     "authoritativeWrites",
     "cleanup",
@@ -7704,9 +7704,9 @@
       "designMatrix": {
         "section": "19",
         "title": "AER correctable/nonfatal",
-        "passCondition": "host/guest surface 符合 profile，且 deposition/route/log/recovery 不互相代证",
-        "sourceEvidence": "frozen surface/status baseline 已有；route、guest write、lifecycle、产品实现与物理 qualification 未闭环",
-        "rowDigest": "sha256:06034f223d9a7e6a9824d4f59328b3a343e7e1825664733a3d0bfbc06cd20687"
+        "passCondition": "host/guest surface 符合 profile，且 capability/status/service/deposition/route/log/recovery 不互相代证",
+        "sourceEvidence": "e1000e hidden-header/status projection 已有；virtio Idle 8 EMR 8/8、Active visible-header/raw-CES/no-event 已观察，仅 g100/g101 frozen Root `COR_RCV+Source`。ESXi service/IRQ、guest write、lifecycle、产品实现与物理 qualification 未闭环",
+        "rowDigest": "sha256:8839611cb1d904619dbe5da249b618bc7f633de66d18cec3760eec1f9838f08e"
       },
       "classification": {
         "scope": "PRODUCT",
@@ -7800,11 +7800,11 @@
         {
           "assertionId": "M06-PASS-001",
           "sourceKind": "DESIGN_PASS_CONDITION",
-          "statement": "host/guest surface 符合 profile，且 deposition/route/log/recovery 不互相代证",
-          "statementSha256": "sha256:bf1264e3715587377f1ed72f38379b06f6edb0a3158b3e72d493c75900b44a39",
+          "statement": "host/guest surface 符合 profile，且 capability/status/service/deposition/route/log/recovery 不互相代证",
+          "statementSha256": "sha256:d9e429f3707b32f6759d79be8f7c1b63a87c1ba317642b39cd44f549f9ac9099",
           "requiredOracleClass": "physicalOracle",
           "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
-          "assertionDigest": "sha256:da856a5d72878864b6ae5086272bba8f7a64eaf957bc3d3d9253ca05a49b1ed5"
+          "assertionDigest": "sha256:bbf3e60162efad5b83f2c3f728fbdaa91cdeb57718f3247d74b5bce655e7e045"
         }
       ],
       "evidenceBoundary": {
@@ -7815,7 +7815,7 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:ea52ac50eb579464766305e76257aa4706150e7e0aa278d12202fda776921acb"
+      "caseContractDigest": "sha256:ccfde170d1728660635967da4a7dbe23ded68ca5c8a4143f1a769a994656ee42"
     },
     {
       "caseId": "M07",
@@ -10980,5 +10980,5 @@
       "caseContractDigest": "sha256:2e07060fbb50e474496e631f98ce4ea56ceb2b856e0f978f77c937e9cae887ac"
     }
   ],
-  "registryDigest": "sha256:8d2c22ce8f41c7cd30ea5c5c17ca0eb0061f8df44d63af00fe1dd6473035ce15"
+  "registryDigest": "sha256:250b2204ab5a14b93b1b96b491d6d7ea53483c38a2d4352e0156f199ca7e369b"
 }

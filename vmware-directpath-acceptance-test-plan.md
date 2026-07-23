@@ -289,7 +289,7 @@ D05 的 candidate exclusion 由 reference model 单元测试覆盖；真实 DPDK
 | S00 | 默认 passthrough device 带 Expansion ROM | 分别判断 ROM BAR 是否可见、firmware 是否执行 |
 | S01 | `pcipSaveOPROM=TRUE` 加 `<device>.opromEnabled=TRUE` | OVMF 执行目标 ROM，restart 可重复 |
 | S02 | Guest 启用 PME，endpoint 发出 PME | 判断 ESXi 是否忽略，以及是否要改 guest `_OSC` policy |
-| S03 | 注入 Correctable Receiver Error 与 Non-Fatal Unsupported Request | 已执行 frozen-profile surface/status baseline；确认 guest AER header/ACPI ownership 被过滤、raw status body 保留；日志仅能写“采集窗未观察到”，且因 endpoint CERE=0 不能证明 ERR_COR delivery |
+| S03 | 注入 Correctable Receiver Error 与 Non-Fatal Unsupported Request | 双 profile：历史 e1000e 为 hidden-header/raw-status projection；virtio Idle 8 EMR 已 8/8，Active guest 可见 header/raw CES 但 AER totals 不增、无 kernel event。只有 `g100/g101` frozen Root `COR_RCV+Source`；frozen fabric 不代证 ESXi service/IRQ |
 | S04 | 两 endpoint 执行真实 peer DMA | 对比默认、`allowP2P`、`relaxACSforP2P`；只看 ACS bit 不算通过 |
 | S05 | Endpoint 带关联 RMRR | 观察 memory-map 自动调整或精确 overlap failure |
 | X00 | 两个相同 ID 的 Dynamic DirectPath candidate | 记录 allowed list、`assignedId` 和关机解绑 |
@@ -298,10 +298,16 @@ D05 的 candidate exclusion 由 reference model 单元测试覆盖；真实 DPDK
 
 Stock QEMU 6.2 足以做第一批 ACS、topology、BAR、VT-d、interrupt、基本 reset 和
 AER 注入。随后已用 instrumented endpoint/DMAR patch 完成 PME、P2P、RMRR 与虚拟 FLR；
-AER 已证明 stock QEMU 的 guest surface 不等价；QEMU 11 的 8-bit × 3-gate 正控还证明
-status deposition、endpoint gate 与 Root Status/Source 可以被实验区分。当前 ESXi e1000e
-profile 的 CERE=0，因此只覆盖 status projection，完整 filtering/routing/recovery 仍需独立
-实现和验证。真实硬件仍
+AER 已证明 stock QEMU 的 guest surface 不等价；QEMU 11 的 8 Correctable bits × 8 E/M/R
+tuple reference 已 64/64 通过，证明 status deposition、endpoint gate、mask 与 Root
+Status/Source 可以由 oracle 分离。ESXi 侧必须保留两个 profile：历史 e1000e 的 CERE/Root
+COR_EN 为 0，只覆盖 status projection；virtio controlled-route 已完成 PassthruIdle Receiver
+8 tuple，只有 `g100/g101` 的 frozen snapshot 出现 Root `COR_RCV+Source`，结果 SHA-256
+`655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。后者只证明
+outer QEMU fabric route。Active virtio 还观察到 AER header `0x00020001`、raw CES
+`0→1`，但 Linux AER totals `0→0` 且无 kernel AER event；capability/status visibility
+不证明 ESXi/guest service/IRQ。完整 notification 归因、guest write、
+lifecycle/recovery 仍需独立实现和验证。真实硬件仍
 负责电气 reset、vendor state、真实 ACS/INTx 和 SR-IOV driver/firmware 结论。
 
 ### 7.6 生命周期与产品限制
@@ -417,9 +423,10 @@ qemu-system-x86_64 \
 7. 扩展到 M04-M07、A04-A06 和 Dynamic DirectPath。
 8. 执行 O00-O09，分离 desired/effective owner，并对 idle/busy、完整 dependency 与 exact
    early-boot claim 做 A/B；L06-L09 始终作为 Qman 负向门。
-9. 执行 AER M24—M28：先用 fresh QEMU 正控验证 oracle，再分别验证 8-bit deposition、
-   CERE/CEM/root gate、Root W1C/Source、owner/lifecycle 与 guest write filter；不能把“隐藏
-   header”当作完成。
+9. AER M24—M28 已完成 QEMU 64/64 reference 与 ESXi virtio PassthruIdle Receiver 8 EMR
+   route 切片和 Active visible-header/raw-CES/no-event 切片；继续验证 notification/IRQ、
+   Root W1C、owner/lifecycle 与 guest write filter。不能把“隐藏/公开 header”、frozen
+   fabric、raw CES 或 bounded log absence 当作 ESXi service 完成。
 10. 在裸机 ESXi 上用至少一个真实 NIC/NVMe 重放已通过用例；只有 large BAR/P2P
    场景再引入 GPU/FPGA。
 
@@ -472,7 +479,7 @@ virtual VT-d 与共享 NFS。
 | S00 | pass | outer e1000e 有 ROM BAR，DirectPath guest 默认不见该 ROM BAR |
 | S01 | tested-negative | QEMU UEFI ROM 正控通过；ESXi 默认隐藏通过；`pcipSaveOPROM+opromEnabled` 样本仍未执行，记录为当前 build/endpoint 负结论 |
 | S02 | pass | 三种 `_OSC` mask 与受控 PME 注入通过；status 可见但无 native PME IRQ，符合被测 ignored-PME 模型 |
-| S03 | partial-observed | boot-only 开启 ESXi PCI error reporting后，历史 Correctable/Non-Fatal 与新 Correctable 8-bit status-projection 已采集；effective CERE=0、Root COR_EN=0，ERR_COR route/service、guest write、lifecycle recovery 和物理 E4 尚未验证 |
+| S03 | partial-observed | 历史 e1000e Correctable/Non-Fatal 为 hidden-header/status-projection profile；virtio Idle Receiver 8 EMR 已 8/8，仅 g100/g101 frozen Root `COR_RCV+Source`，result SHA-256=`655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。Active guest 可见 AER header/raw CES，但 counters 不增且无 kernel event。ESXi service/IRQ、guest write、lifecycle recovery 和物理 E4 尚未验证 |
 | S04 | pass-policy | default/relax-only 触发 IOMMU fault；`allowP2P=TRUE` 允许 peer DMA，ACS/no-ACS A/B 已跑 |
 | S05 | pass-policy | 自动 PCI-hole RMRR 被识别并启动；低 RAM overlap 在 ESXi host boot 阶段拒绝 |
 | SR-IOV | partial-endpoint | raw SR-IOV/VFE 可构造；ESXi 无功能 VF，igbn I350 路径停在 Invalid NVM Checksum；需支持型 PF 或完整模型 |
@@ -498,6 +505,12 @@ virtual VT-d 与共享 NFS。
 
 - Broadcom KB 312208，VMDirectPath/Dynamic DirectPath requirements：
   https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html
+- Broadcom KB 424082，`pcipDisablePciErrReporting` 等 Advanced Settings 映射：
+  https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html
+- Linux PCIe AER Driver Guide（通用机制，不是 VMware 实现）：
+  https://docs.kernel.org/PCI/pcieaer-howto.html
+- QEMU 11.0.2 `hw/pci/pcie_aer.c`（reference oracle）：
+  https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c
 - vSphere API `HostPciPassthruInfo`：
   https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruInfo.html
 - ESXCLI 8.0.3 `hardware pci pcipassthru set --apply-now`：

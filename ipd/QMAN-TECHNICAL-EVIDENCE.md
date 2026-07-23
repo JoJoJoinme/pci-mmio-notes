@@ -5,7 +5,7 @@
 治理快照：G0 `DONE`；G1 `IN_PROGRESS`；G2-G6 `NOT_STARTED`；Acceptance `101/101` 已分类
 （1 `EXECUTABLE` reference、94 `IMPLEMENTATION_BLOCKED`、6 `HARDWARE_BLOCKED`）；C20 的 E2
 reference runner 只证明算法，不关闭 PRODUCT Case；R01-R39 全部 `OPEN`
-实验日期：`2026-07-21 Asia/Shanghai`
+实验日期：`2026-07-21—2026-07-23 Asia/Shanghai`
 环境：`WSL2 Ubuntu-22.04 + KVM + QEMU 11.0.2 + OVMF 2022.02`
 
 本文把 [`ipd/README.md`](README.md) 中的 Tech Story 接到 Qman 自身证据链。机器索引位于
@@ -51,6 +51,7 @@ artifact hash drift => evidence invalidated
 | `QMAN-E3-AUTHORITATIVE-SNAPSHOT-FAULT-001` | E3 | host-local SQLite snapshot component 的未提交 epoch 不可见、并发 CAS 单胜与严格递增 epoch 已通过真实 subprocess/并发故障注入；signature/payload/stale/minimum-epoch/boot drift 均 fail closed；删除最新行后 earlier-valid 状态仍可被接受，实验证实外部单调锚是必要边界 | TS-F1-01、F8-02；R04 前提 | G1 产品 publisher、生产 trust root、外部单调防回滚锚、power-loss durability；不关闭 Case/R04/G1 |
 | `QMAN-E3-STATIC-LAUNCH-ENVELOPE-001` | E3 | v5 将 sealed capture provider、签名 full-host snapshot、完整 group 授权范围、6 次一致的 live full scan、lease authorization、production-provenance raw cdev/IOMMUFD 与 fd-only stock QEMU 串成一条链；QMP/QOM 看到 realized `vfio-pci`，trace 中 bind、IOAS allocate、attach 均返回 0；无独立 DMA receipt 时不提交 `ATTACHED`，保留 claims 并 quarantine | TS-F1-01、F3-02/03/05、F5-04、F8-02；C21/S05 与 R04/R05/R26/R27 前提 | 该结果只是未来 cdev backend 前提；当前 Legacy path grant/sandbox/receipt、生产 G1 authority/trust/rollback anchor、真实 reset/driver restore、独立 DMA/IRQ observer、pidfd/产品 controller、物理 E4 仍缺；Case/Risk/G1/G2 均未关闭 |
 | `QMAN-E3-MMIO-OBSERVED-001` | E3 | QEMU floor 与 OVMF aperture 必须配对；双 64 GiB BAR 默认失败、128 GiB 配对成功 | TS-F4-01/02/04；M23 前提 | Qman observedPlan commit/rollback、物理 BAR qualification |
+| `QMAN-E3-AER-QEMU-REFERENCE-001` | E3 / `REFERENCE_ONLY` | stock QEMU 11.0.2 的 8 个 Correctable bit × 8 个 E/M/R tuple 共 64/64 通过；Endpoint status deposition、report/mask gate、Root Status/Source 与 Root Command state 可由 oracle 分离 | TS-F4-06；M06/R13 的 reference 前提，不关闭二者 | ESXi service/IRQ、Qman `aerPolicy`/host agent、lifecycle recovery、物理 E4 与任何 support/release claim |
 
 当前 Acceptance 已 `101/101` 分类，所有 Risk 仍为 `OPEN`。这些结果增加
 “为什么要这样设计”的技术证据，不改变 G0 `DONE`、G1 `IN_PROGRESS`、G2-G6 `NOT_STARTED`、claim
@@ -290,6 +291,43 @@ isolation。因此
 
 证据：[`qman-static-launch-envelope-20260721-summary.json`](../evidence/qman-static-launch-envelope-20260721-summary.json)。
 
+### 3.10 QEMU Correctable AER 64/64 只固定 reference oracle
+
+`QMAN-E3-AER-QEMU-REFERENCE-001` 使用 stock QEMU 11.0.2 的公开
+`pcie_aer_inject_error` HMP 路径和 QTest 配置空间读写，在无 Guest 的受控拓扑中执行
+8 个 Correctable bit 与全部 8 个 E/M/R tuple：
+
+- E=Endpoint CERE，M=当前 Correctable bit 的 mask，R=Root COR_EN；Root path 的其他门固定打开。
+- 64/64 均满足 Endpoint CES/CED deposition；只有 E=1、M=0 的 `g100/g101` 把
+  Root `COR_RCV` 和 Source 沉积到 Root Port。
+- QEMU 公开源码显示 R 控制 Root notification eligibility，而不是已经发生的 Root status
+  deposition；因此 `g100/g101` 的 Root status 相同不是“R 无效”。
+- raw result 位于
+  `E:/Code/PCI/_artifacts/vmware-directpath-runs/20260723-qemu11-aer-emr-allbits-v1/result.json`，
+  SHA-256=`40880169d5a4deaf01019af7d0e4618886464256cd5513f1e6d06be14cff52a4`。
+
+该条目只有 `REFERENCE_ONLY` 语义：它固定 QEMU oracle，不证明 ESXi 的 service/IRQ，也不证明
+Qman 已实现 config filter、host service、审计、clear/reset 或 recovery。ESXi
+`virtio/controlled-route` 的 PassthruIdle Receiver 8/8 和 Active
+visible-header/raw-CES/no-event 都是 VMware observation，不能转授给这条 Qman evidence；
+本次也没有关闭任何产品 Case/Risk。机器索引
+[`qman-evidence-index.json`](../contracts/qman-evidence-index.json) 只把 QEMU 64/64 登记为
+`REFERENCE_ONLY`，对应 result 是
+[`qman-qemu-aer-emr-20260723-summary.json`](../evidence/qman-qemu-aer-emr-20260723-summary.json)。
+
+公开边界：
+
+- [Broadcom KB 312208](https://knowledge.broadcom.com/external/article/312208/)：规定
+  DirectPath PCI error 由 ESXi 处理、而不是作为错误交给 guest；没有公开
+  notification/service/recovery 实现，也不规定所有 guest profile 的
+  capability/header/raw status 都必须隐藏。
+- [Broadcom KB 424082](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)：
+  公开 `pcipDisablePciErrReporting` 的配置含义，不公开 E/M/R 实现。
+- [Linux PCIe AER Driver Guide](https://docs.kernel.org/PCI/pcieaer-howto.html)：通用 AER
+  status、Requester ID 与 notification 模型。
+- [QEMU 11.0.2 `pcie_aer.c`](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)：
+  本条 reference oracle 的源码依据，不是 VMware 实现证据。
+
 ## 4. 可复现入口
 
 实验复用了本地历史任务中沉淀的 WSL/QEMU 环境；可提交、可复现的权威环境说明为
@@ -344,6 +382,12 @@ wsl -d Ubuntu-22.04 -- env `
   QEMU_BIN=/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
   MACHINE=pc-q35-11.0 `
   bash /mnt/e/Code/PCI/github-export/qemu-q35-ovmf-dual-64g-validate.sh
+
+# QEMU 11 Correctable AER: 8 bits x 8 E/M/R tuples
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py `
+  --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID-qemu-aer-emr-allbits
 
 # Qman reference model
 wsl -d Ubuntu-22.04 -- bash `

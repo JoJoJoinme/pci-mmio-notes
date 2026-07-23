@@ -60,12 +60,12 @@
     {
       "path": "qemu-static-dynamic-directpath-design.md",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:88f02435f1c98ad4d4399618198e1de6dd0f65696da289a2ba1e6ba14a17b853"
+      "sha256": "sha256:177dfe0baad0a3539f1a20744347b7d9e152abd32a0a3aa6da364044604975ee"
     },
     {
       "path": "qman-directpath-implementation-blueprint.md",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:93356b0c289f7481b1d605bf3e4123f7c0464f6a92c9067f6eb03d3a0d77cd27"
+      "sha256": "sha256:0072efdffabf98a8356870e6b963c280966a132520b8e4c8beb129c102562164"
     },
     {
       "path": "contracts/ipd-tree.json",
@@ -80,7 +80,7 @@
     {
       "path": "contracts/vmware-behavior-model.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:d7b974e512baf2f10c4b3729f2f2094aca61f11956a2fd4a5cfde43c76a67c0b"
+      "sha256": "sha256:532573fcb0cf9113c138d5c95275050b3882ccf5658e5f2a885046875f1e6b8b"
     },
     {
       "path": "contracts/compatibility-profile-policy.json",
@@ -100,7 +100,7 @@
     {
       "path": "contracts/directpath-acceptance-case-contracts.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:274319ed104c9b8871ceca886a31b755605f676ce72eac1a5a78d21d4d27bec7"
+      "sha256": "sha256:f646e11c5f31205c970500ec77781913933fdb7c6717e512dd3c7c74c25ee691"
     },
     {
       "path": "contracts/directpath-case-completion-record.schema.json",
@@ -300,7 +300,7 @@
     {
       "path": "vmware-directpath-acceptance-test-plan.md",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:23d9e126e14dba2a3d318b23115bdd3def4b86e746ba5e983b85095f8332b318"
+      "sha256": "sha256:ecbbfc5c97ff9b92d3c4fde1564ae47a64b14a60f828739b93121c28354d34c6"
     },
     {
       "path": "acceptance/cases",

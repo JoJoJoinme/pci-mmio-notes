@@ -74,9 +74,10 @@ The accepted platform/backend/control-plane/HCL/cluster choices are machine-read
 Qman/reference-side technical evidence is tracked separately in
 [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md) and the
 [`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json).
-The current ten E2/E3 records—five `REFERENCE_ONLY` and five `COMPONENT_ONLY`—
+The current eleven E2/E3 records—six `REFERENCE_ONLY` and five `COMPONENT_ONLY`—
 reproduce design premises, including the bounded C20 capability closure, and verify
-bounded default-deny QMP, per-device VFIO/IOMMUFD provider, and host-local Static
+bounded default-deny QMP, the QEMU Correctable-AER EMR oracle, per-device
+VFIO/IOMMUFD provider, and host-local Static
 lease/FSM fault components. None
 closes a Qman product Case, physical Risk, or production support claim.
 
@@ -184,8 +185,10 @@ planner 见 [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-pa
 和双域 capable 规则见 [`kernel-patches/`](kernel-patches/README.md)。patched IOMMU group
 继续用于 VFIO，安全 lease 则使用忽略 override 后保守重建的 physical isolation domain。
 
-PCIe AER 必须按 endpoint status deposition、message routing、bounded log observation、
-recovery/health 四轨解释，不能互相代证。Correctable 8-bit 黑盒矩阵、effective gate、
+PCIe AER 必须把 capability/header visibility、raw status deposition、message routing、
+guest/host service event、bounded log observation 与 recovery/health 分开解释，不能互相
+代证。历史 e1000e 为 hidden-header/raw-status profile；virtio Active 为
+visible-header/raw-CES/no-event profile。Correctable 8-bit 黑盒矩阵、effective gate、
 ESXi/guest projection、安全停止条件和 QEMU 公开模型正控见
 [`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md) 与
 [`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)；

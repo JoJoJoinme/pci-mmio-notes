@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E3-AER-QEMU-REFERENCE-001",
+  "observedAt": "2026-07-23T05:10:14Z",
+  "subject": "QEMU_CONTROL_REFERENCE",
+  "evidenceGrade": "E3",
+  "claimBoundary": "REFERENCE_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "8b4a55b5778086dd023f1c10009bb34e75013463",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py": "3241cb179a1eec5925b05dcb27e0388604e764085194c268271bd7272e3d2c3b"
+    }
+  },
+  "sut": {
+    "environment": "WSL2/KVM with stock QEMU 11.0.2 q35/qtest, one pcie-root-port and one virtio-net-pci endpoint with AER enabled",
+    "components": [
+      {
+        "name": "QEMU",
+        "version": "11.0.2",
+        "sha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+      },
+      {
+        "name": "Correctable AER EMR matrix runner",
+        "version": "repository working-tree runner",
+        "sha256": "3241cb179a1eec5925b05dcb27e0388604e764085194c268271bd7272e3d2c3b"
+      }
+    ]
+  },
+  "hypotheses": [
+    "Endpoint Correctable status deposition, Endpoint reporting/mask gates, Root status deposition and Root notification eligibility are separate observable states.",
+    "Root Error Command.COR_EN controls notification eligibility after Root reception and does not suppress Root Correctable Status or Error Source deposition in the QEMU 11.0.2 reference model."
+  ],
+  "observations": [
+    {
+      "name": "eight-correctable-bits-by-eight-emr-tuples",
+      "result": {
+        "requestedBits": 8,
+        "requestedGateTuples": 8,
+        "caseCount": 64,
+        "passed": 64,
+        "failed": 0,
+        "verdict": "PASS"
+      }
+    },
+    {
+      "name": "endpoint-status-deposition",
+      "result": {
+        "allTuples": "The requested single Correctable Error Status bit and Device Status.CED were recorded.",
+        "uncorrectableSideEffects": 0
+      }
+    },
+    {
+      "name": "fabric-routing-oracle",
+      "result": {
+        "rootReceptionAndMatchingSource": [
+          "g100",
+          "g101"
+        ],
+        "rootReceptionBlocked": [
+          "g000",
+          "g001",
+          "g010",
+          "g011",
+          "g110",
+          "g111"
+        ],
+        "interpretation": "E=1 and M=0 are required for Root deposition; changing R alone does not change Root Status or Correctable Source deposition."
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": [
+      "TS-F4-06"
+    ],
+    "caseIds": [
+      "M06"
+    ],
+    "riskIds": [
+      "R13"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/20260723-qemu11-aer-emr-allbits-v1/result.json",
+      "sha256": "40880169d5a4deaf01019af7d0e4618886464256cd5513f1e6d06be14cff52a4",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/20260723-qemu11-aer-emr-allbits-v1/result.json.sha256",
+      "sha256": "926bedfa93e5be6a805dcc9e7aa9d7eddc05472b2ac8abedab576e2f8074c060",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py",
+      "sha256": "3241cb179a1eec5925b05dcb27e0388604e764085194c268271bd7272e3d2c3b",
+      "retention": "COMMITTED"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This is a QEMU control reference, not VMware behavior and not a Qman product implementation result.",
+    "The matrix proves virtual config-space status and routing semantics; it does not reproduce physical link errors, device-internal recovery or electrical behavior.",
+    "The Root COR_EN conclusion is notification eligibility derived from the public QEMU model; this run did not independently attribute an MSI, MSI-X or INTx trace to the Root Port.",
+    "No Qman host service, guest filter, clear/reset lifecycle, health policy, quarantine behavior or physical qualification is implemented or closed by this evidence."
+  ]
+}

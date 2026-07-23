@@ -3456,7 +3456,7 @@ Dynamic 冷启动允许在显式 allowed set 内更换物理 identity，但必�
 | Surface | 基线行为 |
 | --- | --- |
 | PCIe topology/LinkCap | 按 profile 重建，不把 host link 原样当合同 |
-| AER | 已观察：guest AER header/`_OSC` hidden/denied、raw status body 可投影；未证明：ERR_COR route、host service、guest write、recovery；Qman owner/health 是显式产品策略 |
+| AER | 双 profile：历史 e1000e 只证明 guest header/`_OSC` hidden/denied 与 raw status projection；virtio Idle 8 EMR 已 8/8，Active guest 可见 header `0x00020001` 和 raw CES `0→1`，但 AER totals `0→0`、无 kernel event。只有 `g100/g101` frozen Root `COR_RCV+Source`；frozen fabric 不代证 ESXi service/IRQ，Qman owner/health 是显式产品策略 |
 | PME | ACPI `_OSC` 按 profile；默认不向 guest 提交 native PME IRQ |
 | Option ROM | 默认隐藏；显式路径固定 ROM hash |
 | MSI/MSI-X | 保留并要求 interrupt remapping；记录 vector budget |
@@ -3471,11 +3471,25 @@ Dynamic 冷启动允许在显式 allowed set 内更换物理 identity，但必�
 [`vmware-esxi8-lab/qemu-patches/`](vmware-esxi8-lab/qemu-patches/)，生产实现需要重写成通用、
 有测试的 property/object，而不是保留 lab-only 开关。
 当前黑盒样本中 guest 仍可见部分 raw status body，但这不等于 PCI error 被投递给
-guest。被测 `e1000e` 的 endpoint/Root Port CERE 与 Root COR_EN 均为 0，所以当前结果
-只能冻结 surface/status projection。产品合同必须把 capability/header、body read、body
+guest。历史 `e1000e/status-projection` 的 endpoint/Root Port CERE 与 Root COR_EN 均为 0；
+新增 `virtio/controlled-route` 已完成 PassthruIdle Receiver 的完整 8 个 E/M/R tuple，8/8
+通过，只有 `g100` 与 `g101` 在 outer QEMU 暂停期间的 frozen snapshot 出现 Root
+`COR_RCV` 和 Source，其余六格被 endpoint reporting 或 mask 阻断。结果 SHA-256 为
+`655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。
+
+这个 frozen 读回只证明 QEMU fabric 在 ESXi 已编程 gate 下的 status/message route；它不是
+ESXi service、IRQ、clear 或 recovery 证据。恢复运行后的有界日志窗没有匹配项也只能记为
+bounded absence，不能写成 no service。Active virtio 的 capability/header 可发现与 raw
+CES 可见也没有伴随 Linux AER totals 增量或 kernel event。产品合同必须把
+capability/header、body read、body
 write、endpoint reporting、Root service、host event、health/recovery 分字段版本化；Qman 可以
 选择“host owner、guest 无 notification”的更严格安全策略，但必须标成产品决策，不能伪称
-已由本轮 VMware delivery 实验证明。详见
+已由本轮 VMware service 实验证明。公开边界见
+[Broadcom KB 312208](https://knowledge.broadcom.com/external/article/312208/)、
+[KB 424082](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)、
+[Linux AER](https://docs.kernel.org/PCI/pcieaer-howto.html)和
+[QEMU 11.0.2 AER 源码](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)；
+Linux/QEMU 只提供 reference oracle，不证明 VMware 内部实现。详见
 [`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)。
 
 ## 14. Lifecycle capability
@@ -3940,7 +3954,7 @@ C12、M08、M12、M13、S06、S08 是 6 个
 | M03 | SeaBIOS profile | below-4G、ROM、device count 和 large-BAR placement 独立结论 | large-BAR 边界已有；ROM/device count 继续沿用独立矩阵 |
 | M04 | RMRR compatible/overlap | 自动 hole 或精确拒绝 | 已有 synthetic ESXi |
 | M05 | ROM default/explicit | 默认隐藏；显式 hash/marker | 已有默认与 QEMU 正控 |
-| M06 | AER correctable/nonfatal | host/guest surface 符合 profile，且 deposition/route/log/recovery 不互相代证 | frozen surface/status baseline 已有；route、guest write、lifecycle、产品实现与物理 qualification 未闭环 |
+| M06 | AER correctable/nonfatal | host/guest surface 符合 profile，且 capability/status/service/deposition/route/log/recovery 不互相代证 | e1000e hidden-header/status projection 已有；virtio Idle 8 EMR 8/8、Active visible-header/raw-CES/no-event 已观察，仅 g100/g101 frozen Root `COR_RCV+Source`。ESXi service/IRQ、guest write、lifecycle、产品实现与物理 qualification 未闭环 |
 | M07 | PME `_OSC` | ownership 和 IRQ 行为符合 profile | 已有 |
 | M08 | MSI-X/MSI/INTx | remap 和功能证据 | MSI-X/MSI 已有；物理 INTx 待验收 |
 | M09 | ATS/PRI/PASID | 默认隐藏；显式 profile 完整清理 | 待真实支持设备 |
@@ -4181,7 +4195,7 @@ capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP
 | K18 | DMA 到 host reserved memory 必须由 RMRR 声明；VM RAM 不得重叠，ESXi 可自动调整 memory map | 解析 DMAR/IVMD 和 device scope；保留 guest GPA hole 并只在可安全建立精确 identity mapping 时启动 | `HW-QUAL` + `BACKEND-GAP` | 任意 host reserved page 不能盲目映射给 userspace/guest；当前默认拒绝真实 RMRR device，R07/R27 |
 | K19 | Dynamic 需尽量容纳所有 allowable device 的 RMRR；不可能时缩小 allowed set 或拒绝 | plan 阶段对 selector-wide candidate RMRR 取 union，任一 candidate 不可安全容纳时不宣告该 selector 可迁移 | `SW-CLOSE` + K18 gate | 只按当次 selected BDF 规划会使下次 Dynamic 选卡失败，R07/R08 |
 | K20 | MSI-X、MSI、INTx 都可用，但推荐 MSI/MSI-X | MSI/MSI-X 需 interrupt remapping 和 vector budget；INTx 需验证 shared-line mask/unmask/EOI、延迟和 DoS 界限 | `HW-QUAL` | 当前只对 MSI/MSI-X 有较强证据；INTx 在物理验收前默认禁用，R06/R27 |
-| K21 | 公开 VMware 合同描述 PCI error 由 ESXi 处理、不向 guest 虚拟化，且 uncorrectable error 可能使 host 无法恢复；本地黑盒目前只验证了 guest surface/status projection | Qman 以版本化 AER read/write/route policy 实现 host ownership；审计分开记录 status、message、log、health、recovery，Correctable 阈值与 fatal quarantine 分离 | `BACKEND-GAP` + `HW-QUAL` | 当前 endpoint CERE=0，不能用 CES/无日志证明 ESXi delivery/service；stock vfio-pci surface 不等价，真实 fatal/NMI/reset 只能由合格设备、故障域和 fencing 限制，M24—M29/R13 |
+| K21 | 公开 VMware 合同规定 PCI error 由 ESXi 处理、而不是作为错误交给 guest，且 uncorrectable error 可能使 host 无法恢复；它没有公开 notification/service/recovery 实现，也不要求每个 profile 都隐藏 capability/raw status。本地黑盒已有 e1000e hidden-header/status projection、virtio Idle 8 EMR frozen route 和 Active visible-header/raw-CES/no-event 切片 | Qman 以版本化 AER read/write/route/service policy 实现 host ownership；审计分开记录 status、message、log、health、recovery，Correctable 阈值与 fatal quarantine 分离 | `BACKEND-GAP` + `HW-QUAL` | virtio 只有 g100/g101 frozen Root `COR_RCV+Source`；frozen QEMU fabric 不证明 ESXi service/IRQ，有界日志缺席不证明 no service。stock vfio-pci surface 不等价，真实 fatal/NMI/reset 只能由合格设备、故障域和 fencing 限制，M24—M29/R13 |
 | K22 | Expansion ROM 可支持但默认不执行；开启后 power-on/restart 由 VM firmware 重执行 | 默认 `rombar=0`；显式 profile 固定 ROM hash/signature、`rombar`/`romfile`、OVMF/SeaBIOS marker 和 reboot re-exec | `SW-CLOSE` + `HW-QUAL` | ROM supply chain、reset 后可重执行性和 host-driver rebind 依赖需逐设备验收，R03/R12 |
 | K23 | PME 不向 guest 通知；BIOS `_OSC` 默认可能又授予 guest native PME control | ACPI `_OSC`、vfio-pci PM config 和 PME message 作为一个 profile；parity 默认 host-owned、不注入 guest IRQ | `BACKEND-GAP` + `HW-QUAL` | 只改 `_OSC` 或只吞 message 都可能使 guest driver 将设备留在低功耗；需受控 PME 注入，R24 |
 
@@ -4227,7 +4241,7 @@ qualification DB 中的精确组合返回 true，绝不是风险豁免。
 | `p2pDirectPath` | 显式允许 peer DMA | 当前拒绝 | ESXi synthetic 证据已有；IOMMUFD backend gap | K15，backend 支持和真机验收前不开启 |
 | `rmrrDevice` | reserved-memory identity DMA | 默认拒绝，精确 platform 可条件开启 | synthetic memory-map 证据已有 | K18/K19，安全 identity mapping + E4 |
 | `expansionRom` | 默认不执行，可显式开启 | 默认关闭，签名/hash profile 可条件开启 | 默认隐藏和 QEMU 正控已验证 | K22 |
-| `guestAerVirtualization` | PCI errors 不向 guest 虚拟化 | false，host-owned | lab surface 已验证；通用 filter 未产品化 | K21，完成 QEMU config/event policy |
+| `guestAerVirtualization` | PCI error service/notification 由 ESXi 持有 | false，host-owned service；capability/status visibility 由 profile 决定 | lab 已验证 hidden/visible 两种 surface 与 raw status/no-event 切片；通用 filter 未产品化 | K21，完成 QEMU config/read-write/event policy |
 | `guestPmeNotification` | PME 被 host 忽略，不通知 guest | false，host-owned | lab injection 已验证；通用 profile 未产品化 | K23 |
 | `snapshot` | DirectPath VM 不可 snapshot | false | VMware 已验证；Qman gate 未实现 | K28 + bypass negative test |
 | `suspendResume` | DirectPath VM 不可 suspend/resume | false | 同上 | K28 |
@@ -4497,6 +4511,9 @@ nonce，向独立 monotonic authority 实时取得最长 300 秒的 `AnchorFresh
 ## 26. 公开依据
 
 - [Broadcom KB 312208：VMDirectPath/Dynamic DirectPath 平台和设备要求](https://knowledge.broadcom.com/external/article/312208/vsphere-vmdirectpath-io-and-dynamic-dire.html)
+- [Broadcom KB 424082：`pcipDisablePciErrReporting` 等 Advanced Settings 映射](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)
+- [Linux PCIe AER Driver Guide](https://docs.kernel.org/PCI/pcieaer-howto.html)
+- [QEMU 11.0.2 `hw/pci/pcie_aer.c`](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
 - [Broadcom Compatibility Guide](https://compatibilityguide.broadcom.com/)
 - [vSphere 8.0 U3 API：HostPciPassthruInfo](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruInfo.html)
 - [vSphere 8.0 U3 API：HostPciPassthruSystem](https://developer.broadcom.com/xapis/vsphere-web-services-api/8.0U3/vim.host.PciPassthruSystem.html)

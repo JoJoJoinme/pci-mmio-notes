@@ -49,17 +49,30 @@ qualification profile。参考实验仍不得冒充 Qman 产品实现或支持�
   文件，6 项 planned 与 2 项 physical-blocked 显式保持 no-run；由 TS 派生的 acceptance 关联没有
   Qman Case、实现、qualification 或 release 关闭权限。`VMW-TRACE-001` 仅由 `PLANNED` 收敛为
   `PARTIAL`，因为历史 pyVmomi task/actor 链和统一 canonical run result 仍不完整。
-- Correctable AER 已由 `VMW-AER-COR-001` 登记
-  [canonical result](evidence/esxi8-aer-correctable-20260723-result.json) 和
-  [hash summary](evidence/esxi8-aer-correctable-20260723-summary.json)，覆盖 QEMU 24-row 正控、
-  ESXi PassthruIdle 8-bit、PassthruActive Receiver/Advisory Non-Fatal 代表样本。当前 effective
-  endpoint/root CERE 与 Root COR_EN 均关闭，所以只冻结 status deposition、guest projection
-  和安全负断言；ERR_COR delivery、host service、guest write、lifecycle recovery 与物理
-  qualification 仍保持未完成。
+- Correctable AER 现在必须按两个 profile 解读。历史 `e1000e/status-projection` profile
+  的 effective endpoint/root CERE 与 Root COR_EN 均关闭，只证明 status deposition、guest
+  projection 和安全负断言。新增 `virtio/controlled-route` profile 已完成 PassthruIdle
+  Receiver 的 8 个 E/M/R tuple，8/8 通过：只有 `g100`、`g101` 在 outer QEMU 暂停期间的
+  frozen snapshot 出现 Root `COR_RCV` 和 Source，其余六格分别被 endpoint reporting 或
+  Correctable mask 阻断；结果 SHA-256 为
+  `655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。该 frozen
+  结果是 QEMU fabric 证据，不是 ESXi service/IRQ 证据；恢复运行后的有界日志窗未观察到匹配
+  记录，也不能推出 ESXi 没有 service。Active `g100/g101` 中，virtio guest 可发现 AER
+  capability（header `0x00020001`）并看到 raw CES `0→1`，但 Linux AER totals 保持
+  `0→0` 且没有实际 kernel AER event；这证明 capability/status visibility 与
+  service/event delivery 必须分开。guest write、lifecycle recovery、notification/IRQ
+  归因和物理 qualification 仍保持未完成。公开边界以
+  [Broadcom KB 312208](https://knowledge.broadcom.com/external/article/312208/)、
+  [KB 424082](https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html)、
+  [Linux AER 文档](https://docs.kernel.org/PCI/pcieaer-howto.html)和
+  [QEMU 11.0.2 AER 源码](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
+  为准；后两者只定义参考机制，不证明 VMware 私有实现。
 - owner activation 已有纯函数 planner 和 O09 可执行参考场景。
-- Qman 技术证据索引已登记 10 条 hash 固定结果：2 条 E2、8 条 E3，覆盖 reference model、
+- Qman 技术证据机器索引已登记 11 条 hash 固定结果：2 条 E2、9 条 E3，覆盖 reference model、
   C20 capability closure、raw QMP/BDF、逐设备 DMA provider、双 64 GiB BAR/OVMF A/B 和最小
-  default-deny QMP gate；其中 5 条为 `REFERENCE_ONLY`、5 条为 `COMPONENT_ONLY`。VFIO 组件在
+  default-deny QMP gate，并新增 QEMU Correctable AER 64/64 reference；其中 6 条为
+  `REFERENCE_ONLY`、5 条为 `COMPONENT_ONLY`。新增记录只作为 M06/R13 的参考前提，没有
+  Case/Risk 关闭权限。VFIO 组件在
   双 QEMU Guest 中稳定拒绝 no-IOMMU，并真实完成 VFIO cdev/IOMMUFD bind、IOAS attach 与清理；
   Static lease/FSM 组件在 WSL 原生文件系统上通过 7 个真实 subprocess/SIGKILL/SQLite 故障场景；
   future-cdev Static launch-envelope 组件还把有效 lease、fresh raw fd、stock-QEMU、QMP/QOM

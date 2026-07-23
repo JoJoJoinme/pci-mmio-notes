@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "subject": "VMWARE_ESXI_VIRTIO_CONTROLLED_ROUTE_PROFILE",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observationStatus": "PARTIAL",
+  "asOf": "2026-07-23",
+  "scope": "PCIe Correctable AER external behavior through public PCI configuration space, guest output and public ESXi logs; no VMware private-code reconstruction",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "apiVersion": "8.0.3.0",
+    "outerQemu": "QEMU emulator version 11.0.2",
+    "outerQemuSha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393",
+    "machine": "q35/KVM with an explicit pcie-root-port",
+    "endpoint": {
+      "qdevId": "test_fn1",
+      "outerBdf": "0000:01:00.1",
+      "esxiBdf": "0000:01:00.1",
+      "guestBdf": "0000:02:00.0",
+      "model": "virtio-net-pci,disable-legacy=on,aer=on",
+      "vendorId": "0x1af4",
+      "deviceId": "0x1041"
+    },
+    "upstreamRoot": {
+      "outerBdf": "0000:00:08.0",
+      "esxiBdf": "0000:00:08.0",
+      "secondaryBus": 1,
+      "subordinateBus": 1
+    },
+    "runtimePolicy": {
+      "enablePCIErrors": true,
+      "pcipDisablePciErrReporting": false
+    },
+    "guest": "EFI Linux 5.15 initramfs AER probe"
+  },
+  "safetyBoundary": {
+    "injectionClass": "Correctable-only",
+    "hmpForm": "pcie_aer_inject_error -c DEVICE MASK",
+    "uncorrectableInjectionSurface": false,
+    "bits": {
+      "receiver_error": "0x00000001",
+      "bad_tlp": "0x00000040",
+      "bad_dllp": "0x00000080",
+      "replay_number_rollover": "0x00000100",
+      "replay_timer_timeout": "0x00001000",
+      "advisory_nonfatal": "0x00002000",
+      "corrected_internal_error": "0x00004000",
+      "header_log_overflow": "0x00008000"
+    },
+    "precondition": "Endpoint/root Correctable and Uncorrectable status is cleared and read back from a strict baseline before every injection",
+    "stopCondition": "Any UES, non-CED Device Status or Root Uncorrectable reception delta pauses QEMU and stops the run",
+    "finalState": "All registered ESXi cases restored the original 000 gate and closed the auxiliary Root path; outer QEMU was running and no active DirectPath user remained"
+  },
+  "gateModel": {
+    "tuple": "G=(E,M,R)",
+    "E": "Endpoint PCIe Device Control Correctable Error Reporting Enable",
+    "M": "selected Endpoint Correctable Error Mask bit",
+    "R": "Root Error Command Correctable Error Reporting Enable",
+    "auxiliaryRootPathLease": {
+      "bridgeControlSerr": 1,
+      "rootDeviceControlCere": 1,
+      "note": "The auxiliary Root path is managed separately from R and restored after every case"
+    }
+  },
+  "runs": [
+    {
+      "kind": "QEMU_PUBLIC_MODEL_RECEIVER_EMR_CONTROL",
+      "runId": "20260723-qemu11-aer-emr-control-v1",
+      "artifactLocator": "../_artifacts/vmware-directpath-runs/20260723-qemu11-aer-emr-control-v1/result.json",
+      "resultSha256": "5e018ff1617c2d3bd85d935b7548d4e0248d6c8b3dffa46fc8d122ef011aab99",
+      "verdict": "PASS",
+      "caseCount": 8
+    },
+    {
+      "kind": "QEMU_PUBLIC_MODEL_ALL_BITS_EMR_CONTROL",
+      "runId": "20260723-qemu11-aer-emr-allbits-v1",
+      "artifactLocator": "../_artifacts/vmware-directpath-runs/20260723-qemu11-aer-emr-allbits-v1/result.json",
+      "resultSha256": "40880169d5a4deaf01019af7d0e4618886464256cd5513f1e6d06be14cff52a4",
+      "verdict": "PASS",
+      "caseCount": 64
+    },
+    {
+      "kind": "VMWARE_PASSTHRU_IDLE_RECEIVER_EMR",
+      "runId": "20260723-esxi8-aer-virtio-idle-emr-v2",
+      "artifactLocator": "../_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-idle-emr-v2/result.json",
+      "resultSha256": "655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1",
+      "sha256SumsSha256": "0ae342f9456d3281d38fd4f6671ecf4e35c9845096704b6f593dd1d5c2e72593",
+      "verdict": "PASS",
+      "caseCount": 8
+    },
+    {
+      "kind": "VMWARE_PASSTHRU_ACTIVE_MIXED_HARNESS_HISTORY",
+      "runId": "20260723-esxi8-aer-virtio-active-emr-representative-v2",
+      "artifactLocator": "../_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-active-emr-representative-v2/result.json",
+      "resultSha256": "4fe5e83789f8c509476e32630cc3b20960ca995e0637ccb53bcdde479089aaae",
+      "sha256SumsSha256": "6f859160250091bdc82632afe03e0974cba296f7e956fa662e6fe01d25adae2e",
+      "verdict": "INCONCLUSIVE",
+      "interpretation": "g100 injected and passed; g101 did not inject because only 14.611 seconds remained in the guest window versus the 15-second safety minimum. The aggregate is retained as harness history, not used to infer g101 behavior."
+    },
+    {
+      "kind": "VMWARE_PASSTHRU_ACTIVE_G101",
+      "runId": "20260723-esxi8-aer-virtio-active-g101-final-v1",
+      "artifactLocator": "../_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-active-g101-final-v1/result.json",
+      "resultSha256": "c4511cb3514fd27b992a44af44c7dbdcf339c1a364730adcd06fb884ba700d72",
+      "sha256SumsSha256": "a42fbce3e4357863a915961926f1c5e193b4c5ff5df8bbbd0b31fba8747c5e1f",
+      "verdict": "PASS",
+      "gate": "101",
+      "parserBoundary": "Guest event and counter parsing is corrected. The old host matcher labels SCP path audit lines as MATCH_OBSERVED; raw host deltas are reclassified below and are not treated as AER events."
+    },
+    {
+      "kind": "VMWARE_PASSTHRU_ACTIVE_G100_FINAL_PARSER_SMOKE",
+      "runId": "20260723-esxi8-aer-virtio-active-g100-parser-final-v1",
+      "artifactLocator": "../_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-active-g100-parser-final-v1/result.json",
+      "resultSha256": "bd455a4d9278e53687cf16dd2cfefe161bad78ec946249725a614dce2dd975c0",
+      "sha256SumsSha256": "27760305a60274a58f7e1cb1aad53323c8623ff0986a8f32aab577cecfe31a45",
+      "verdict": "PASS",
+      "gate": "100",
+      "interpretation": "Live smoke of the final guest and host semantic event parsers; both reported zero actual event lines."
+    }
+  ],
+  "observedBehavior": {
+    "qemuControl": {
+      "endpointDeposition": "All 64 rows deposited exactly the requested Endpoint CES/CED bit.",
+      "rootDeposition": "Only E=1,M=0 rows g100 and g101 recorded Root COR_RCV; all E=0 or M=1 rows blocked Root deposition.",
+      "rootCommand": "In the public QEMU 11.0.2 model, R controls Root notification eligibility and does not suppress Root status deposition after an ERR_COR message has arrived.",
+      "source": "The Root Source readback matched requester 01:00.1; where the source was already 0x0101 at baseline, this establishes consistency rather than a source-register transition."
+    },
+    "esxiIdle": {
+      "caseCount": 8,
+      "passed": 8,
+      "rootReceptionGates": [
+        "100",
+        "101"
+      ],
+      "blockedGates": [
+        "000",
+        "001",
+        "010",
+        "011",
+        "110",
+        "111"
+      ],
+      "claimScope": "Frozen outer-QEMU fabric deposition plus ESXi post-resume black-box observation; not ESXi service or interrupt attribution"
+    },
+    "esxiActive": {
+      "g100": "PASS with the final guest and host parsers",
+      "g101": "PASS; raw host audit lines were reclassified as collection noise",
+      "guestAerCapabilityDiscoverable": true,
+      "guestAerHeader": "0x00020001",
+      "guestCes": {
+        "before": "0x00000000",
+        "after": "0x00000001"
+      },
+      "guestUes": {
+        "before": "0x00000000",
+        "after": "0x00000000"
+      },
+      "guestAerCounterTotals": {
+        "before": {
+          "correctable": 0,
+          "fatal": 0,
+          "nonfatal": 0
+        },
+        "after": {
+          "correctable": 0,
+          "fatal": 0,
+          "nonfatal": 0
+        }
+      },
+      "guestKernelAerEvents": 0,
+      "semanticHostAerOrPciErrorEvents": 0,
+      "ownerStableThroughInjection": true,
+      "hostResponsiveAfterInjection": true,
+      "uncorrectableSideEffectsObserved": false
+    },
+    "profileComparison": {
+      "historicalE1000e": "AER header hidden in the guest while raw status was projected; Endpoint/Root CERE and Root COR_EN were disabled.",
+      "controlledVirtio": "AER capability and raw CES were visible in the active guest, while Linux AER counters did not increase and no kernel AER event was observed.",
+      "conclusion": "Guest capability visibility, raw status projection and guest service/event delivery are independent observable surfaces."
+    },
+    "boundedLogs": "After excluding SCP audit paths, collection markers and grep-process noise, no semantic AER/PCI error event was observed in the captured host or guest windows. This does not prove that ESXi performed no internal service."
+  },
+  "externalBehaviorModel": [
+    "Endpoint Correctable status deposition is independent from Root message deposition.",
+    "For the QEMU-controlled fabric, E=1 and M=0 are required for Root deposition; R is a separate Root notification-eligibility dimension.",
+    "The frozen Root snapshots establish QEMU fabric behavior under gates observable as programmed by ESXi, not VMware's private service algorithm.",
+    "ESXi DirectPath guest AER capability visibility is profile-dependent in the tested build.",
+    "A visible AER capability and raw CES transition do not by themselves constitute Linux guest AER service/event delivery.",
+    "Bounded host-log absence cannot identify or exclude an ESXi interrupt or service path."
+  ],
+  "parserCorrections": {
+    "guest": "Old active-v2 output counted aer_dev_correctable/fatal/nonfatal sysfs section labels as events. Raw logs show TOTAL_ERR_COR/FATAL/NONFATAL stayed zero and no PCIe Bus Error or semantic severity event occurred.",
+    "host": "Old output matched aer-correctable in SCP audit paths and Replay inside a collection-process name. The final parser excludes collection audit records and uses semantic PCI/AER terms.",
+    "validation": "The executed final-parser hash passed self-tests and the live g100 active smoke. The current runner additionally passes a fail-closed self-test proving that an unsafe pre-write baseline leaves QEMU paused."
+  },
+  "runnerHashes": {
+    "qemuMatrixExecutedAndCurrentSha256": "3241cb179a1eec5925b05dcb27e0388604e764085194c268271bd7272e3d2c3b",
+    "esxiIdleExecutedSha256": "930fc222abbad94cf31ae90d75866465eca659934a350b5ea3d6b8c3d35d0943",
+    "esxiActiveV2ExecutedSha256": "cda212e463c9cfc384970467955559927e62c5800fe218d715c42a45767eb314",
+    "esxiActiveG101ExecutedSha256": "428b650ae447e5a1828c5781a271257529fe0c419fe254d94a68cf105570bab3",
+    "esxiActiveG100FinalExecutedSha256": "ac83b17a7945644e543651398bac463cd86844dc7b0df11565ab2e72849746f3",
+    "esxiMatrixCurrentSha256": "9a4770d5edec5e6234b2930006ab283c51d7063ab6eb88f75834f2effbd37d1f",
+    "postRunSafetyChange": "The current runner differs from the executed g100 hash only by fail-closed unsafe-pre-write baseline handling and its self-test; no behavioral result was re-attributed to the new hash.",
+    "guestProbeInitSha256": "10fc99c203f2938e4e3a7ec4b3730d68d1e69aeeb50ad56865b6bf9ff0cb3f2d",
+    "guestProbeIsoSha256": "34b5f7c70d1be7d9bf760dcee2d4abdd9d943730c3876e7a482a91d6ffebc4f7"
+  },
+  "claimsExcluded": [
+    "VMware private implementation or algorithms",
+    "ESXi interrupt, Root service or notification-path attribution",
+    "An inference of no ESXi internal service from bounded log absence",
+    "Guest write isolation for the visible or hidden AER body",
+    "Root W1C repeat, re-arm and multiple-message lifecycle behavior",
+    "Physical-link error generation or physical device recovery",
+    "Reset cleanliness, health, quarantine or safe tenant reuse",
+    "Other ESXi builds, devices, firmware, guest profiles or Qman product conformance"
+  ],
+  "limitations": [
+    "Only Receiver Error was exercised across all eight ESXi E/M/R gates; all eight Correctable bits were covered only by the QEMU public-model control.",
+    "Active g100 and g101 are single successful observations, not the required three-run repeatability matrix.",
+    "R=0 and R=1 produced the same frozen Root deposition, but no observation identifies the resulting ESXi interrupt or service behavior.",
+    "The raw run directories are external sibling artifacts and are not committed to this repository; their result and manifest digests are pinned here.",
+    "The observation is limited to one nested q35/OVMF ESXi build and one synthetic virtio endpoint."
+  ]
+}

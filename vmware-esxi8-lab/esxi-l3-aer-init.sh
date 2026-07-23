@@ -68,7 +68,7 @@ dump_target_state() {
     devsta=$(read_le16 "$config" $((pcie_cap + 10)))
   fi
 
-  # The instrumented e1000e endpoint and QEMU Root Port both place AER at
+  # The instrumented e1000e, modern virtio-net and EDU endpoints place AER at
   # 0x100.  ESXi may hide the capability header while retaining the backing
   # register body, so this test intentionally records both discovery and raw
   # bytes instead of following only the extended-capability chain.
@@ -106,7 +106,7 @@ dump_aer_state() {
     vendor=$(cat "$d/vendor")
     device=$(cat "$d/device")
     case "$vendor:$device" in
-      0x8086:0x10d3|0x1af4:0x1110)
+      0x8086:0x10d3|0x1af4:0x1041|0x1af4:0x1110)
         bdf=${d##*/}
         printf '\n--- target %s vendor=%s device=%s ---\n' "$bdf" "$vendor" "$device"
         dump_target_state "$phase" "$d"

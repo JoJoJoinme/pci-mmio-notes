@@ -116,8 +116,8 @@
 - `authoritative-snapshot.schema.json`：bounded snapshot publisher 的完整 envelope、full-host scope、
   exact launch identity/group 与 component HMAC 边界；跨字段 hash/signature、epoch、boot、store identity
   仍由实现验证，schema 本身不是生产 trust root。
-- `qman-evidence-index.json`：Qman 技术证据的权威索引；当前登记 10 条结果（E2=2、E3=8）：
-  5 条 `REFERENCE_ONLY`、5 条 `COMPONENT_ONLY`，均不关闭产品 Case、Risk 或 milestone。人类可读入口为
+- `qman-evidence-index.json`：Qman 技术证据的权威索引；当前登记 11 条结果（E2=2、E3=9）：
+  6 条 `REFERENCE_ONLY`、5 条 `COMPONENT_ONLY`，均不关闭产品 Case、Risk 或 milestone。人类可读入口为
   `ipd/QMAN-TECHNICAL-EVIDENCE.md`。
 - `project-status.json`：当前 milestone、能力声明、决策注册表和冻结规则。
 - `risk-status.json`：R01-R39 的可变治理字段。风险名称、后果、预防控制和检测依据仍以

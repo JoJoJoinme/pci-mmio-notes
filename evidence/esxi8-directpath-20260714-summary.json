@@ -136,7 +136,7 @@
   "nonBar": {
     "aer": {
       "verdict": "pass",
-      "summary": "Correctable and Non-Fatal status bodies remained raw-readable while the guest AER header/ownership and host/guest AER logging were suppressed",
+      "summary": "In the historical e1000e profile, Correctable and Non-Fatal status bodies remained raw-readable while the guest AER header was hidden; no matching host or guest AER log event was observed in the captured windows",
       "report": "vmware-aer-blackbox-results.md"
     },
     "pme": {

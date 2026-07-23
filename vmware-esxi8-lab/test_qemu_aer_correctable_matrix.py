@@ -100,7 +100,9 @@ CORRECTABLE_BITS: dict[str, int] = {
 ORACLE_NOT_RECORDED = "INJECTION_NOT_RECORDED"
 ORACLE_CERE_BLOCKED = "RECORDED_CERE_BLOCKED"
 ORACLE_MASKED = "RECORDED_MASKED"
+ORACLE_CERE_AND_MASK_BLOCKED = "RECORDED_CERE_AND_MASK_BLOCKED"
 ORACLE_ROUTED_ROOT_CMD_DISABLED = "ROUTED_ROOT_COMMAND_DISABLED"
+ORACLE_ROUTED_ROOT_CMD_ENABLED = "ROUTED_ROOT_COMMAND_ENABLED"
 
 
 @dataclass(frozen=True)
@@ -108,28 +110,73 @@ class Gate:
     name: str
     endpoint_cere: bool
     mask_bit: bool
+    root_cor_enable: bool
     expected_oracle: str
 
 
 GATES: dict[str, Gate] = {
-    "cere-blocked": Gate(
-        name="cere-blocked",
+    "g000": Gate(
+        name="g000",
         endpoint_cere=False,
         mask_bit=False,
+        root_cor_enable=False,
         expected_oracle=ORACLE_CERE_BLOCKED,
     ),
-    "routed-root-command-disabled": Gate(
-        name="routed-root-command-disabled",
+    "g001": Gate(
+        name="g001",
+        endpoint_cere=False,
+        mask_bit=False,
+        root_cor_enable=True,
+        expected_oracle=ORACLE_CERE_BLOCKED,
+    ),
+    "g010": Gate(
+        name="g010",
+        endpoint_cere=False,
+        mask_bit=True,
+        root_cor_enable=False,
+        expected_oracle=ORACLE_CERE_AND_MASK_BLOCKED,
+    ),
+    "g011": Gate(
+        name="g011",
+        endpoint_cere=False,
+        mask_bit=True,
+        root_cor_enable=True,
+        expected_oracle=ORACLE_CERE_AND_MASK_BLOCKED,
+    ),
+    "g100": Gate(
+        name="g100",
         endpoint_cere=True,
         mask_bit=False,
+        root_cor_enable=False,
         expected_oracle=ORACLE_ROUTED_ROOT_CMD_DISABLED,
     ),
-    "masked-at-endpoint": Gate(
-        name="masked-at-endpoint",
+    "g101": Gate(
+        name="g101",
+        endpoint_cere=True,
+        mask_bit=False,
+        root_cor_enable=True,
+        expected_oracle=ORACLE_ROUTED_ROOT_CMD_ENABLED,
+    ),
+    "g110": Gate(
+        name="g110",
         endpoint_cere=True,
         mask_bit=True,
+        root_cor_enable=False,
         expected_oracle=ORACLE_MASKED,
     ),
+    "g111": Gate(
+        name="g111",
+        endpoint_cere=True,
+        mask_bit=True,
+        root_cor_enable=True,
+        expected_oracle=ORACLE_MASKED,
+    ),
+}
+
+GATE_ALIASES: dict[str, str] = {
+    "cere-blocked": "g000",
+    "routed-root-command-disabled": "g100",
+    "masked-at-endpoint": "g110",
 }
 
 
@@ -617,8 +664,12 @@ def clear_and_configure_case(
     root_command = config_read32(
         client, rb, rd, rf, raer + PCI_ERR_ROOT_COMMAND
     )
+    if gate.root_cor_enable:
+        root_command |= PCI_ERR_ROOT_CMD_COR_EN
+    else:
+        root_command &= ~PCI_ERR_ROOT_CMD_COR_EN
     config_write32(client, rb, rd, rf, raer + PCI_ERR_ROOT_COMMAND,
-                   root_command & ~PCI_ERR_ROOT_CMD_COR_EN)
+                   root_command)
 
 
 def classify_oracle(
@@ -639,10 +690,18 @@ def classify_oracle(
         after_root["errorSourceIdentification"] & 0xFFFF
     ) == endpoint_requester_id
     if routed and source_matches:
+        if after_root["rootErrorCommand"] & PCI_ERR_ROOT_CMD_COR_EN:
+            return ORACLE_ROUTED_ROOT_CMD_ENABLED
         return ORACLE_ROUTED_ROOT_CMD_DISABLED
-    if after_endpoint["correctableErrorMask"] & bit:
+    masked = bool(after_endpoint["correctableErrorMask"] & bit)
+    cere_enabled = bool(
+        after_endpoint["deviceControl"] & PCI_EXP_DEVCTL_CERE
+    )
+    if masked and not cere_enabled:
+        return ORACLE_CERE_AND_MASK_BLOCKED
+    if masked:
         return ORACLE_MASKED
-    if not after_endpoint["deviceControl"] & PCI_EXP_DEVCTL_CERE:
+    if not cere_enabled:
         return ORACLE_CERE_BLOCKED
     return ORACLE_NOT_RECORDED
 
@@ -683,9 +742,9 @@ def evaluate_case(
         "rootCereEnabled": bool(
             before_root["deviceControl"] & PCI_EXP_DEVCTL_CERE
         ),
-        "rootCorrectableCommandDisabled": not bool(
+        "rootCorrectableCommandMatchesGate": bool(
             before_root["rootErrorCommand"] & PCI_ERR_ROOT_CMD_COR_EN
-        ),
+        ) == gate.root_cor_enable,
         "endpointCereMatchesGate": bool(
             before_endpoint["deviceControl"] & PCI_EXP_DEVCTL_CERE
         ) == gate.endpoint_cere,
@@ -714,7 +773,10 @@ def evaluate_case(
         ),
         "oracleMatchesGate": oracle == gate.expected_oracle,
     }
-    if gate.expected_oracle == ORACLE_ROUTED_ROOT_CMD_DISABLED:
+    if gate.expected_oracle in (
+        ORACLE_ROUTED_ROOT_CMD_DISABLED,
+        ORACLE_ROUTED_ROOT_CMD_ENABLED,
+    ):
         checks.update(
             {
                 "rootCorrectableReceived": bool(
@@ -729,9 +791,9 @@ def evaluate_case(
                 "rootCorrectableSourceMatches": (
                     after_root["errorSourceIdentification"] & 0xFFFF
                 ) == endpoint_requester_id,
-                "rootCommandStillDisabled": not bool(
+                "rootCommandStillMatchesGate": bool(
                     after_root["rootErrorCommand"] & PCI_ERR_ROOT_CMD_COR_EN
-                ),
+                ) == gate.root_cor_enable,
             }
         )
     else:
@@ -784,6 +846,11 @@ def run_case(
         "bitName": bit_name,
         "bit": bit,
         "gate": gate.name,
+        "gateTuple": {
+            "endpointCere": gate.endpoint_cere,
+            "correctableMaskBit": gate.mask_bit,
+            "rootCorrectableCommand": gate.root_cor_enable,
+        },
         "expectedOracleState": gate.expected_oracle,
         "verdict": "RUNNING",
     }
@@ -935,8 +1002,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--gate",
         action="append",
-        choices=tuple(GATES),
-        help="run only this gate; repeat for multiple gates (default: all three)",
+        choices=tuple(GATES) + tuple(GATE_ALIASES),
+        help=(
+            "run only this gEMR tuple; repeat for multiple gates (default: all "
+            "eight). Legacy aliases cere-blocked, masked-at-endpoint, and "
+            "routed-root-command-disabled remain accepted"
+        ),
     )
     parser.add_argument("--socket-timeout", type=int, default=10)
     return parser.parse_args()
@@ -963,7 +1034,8 @@ def main() -> None:
         raise RuntimeError(f"expected QEMU 11, got: {version}")
 
     bit_names = args.bit or list(CORRECTABLE_BITS)
-    gate_names = args.gate or list(GATES)
+    requested_gate_names = args.gate or list(GATES)
+    gate_names = [GATE_ALIASES.get(name, name) for name in requested_gate_names]
     result: dict[str, Any] = {
         "schemaVersion": 1,
         "case": "QEMU-11-stock-AER-Correctable-single-bit-gate-matrix",
@@ -995,7 +1067,9 @@ def main() -> None:
             ORACLE_NOT_RECORDED,
             ORACLE_CERE_BLOCKED,
             ORACLE_MASKED,
+            ORACLE_CERE_AND_MASK_BLOCKED,
             ORACLE_ROUTED_ROOT_CMD_DISABLED,
+            ORACLE_ROUTED_ROOT_CMD_ENABLED,
         ],
         "cases": [],
         "verdict": "RUNNING",

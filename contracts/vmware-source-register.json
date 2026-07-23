@@ -22,7 +22,7 @@
         "Suspend/resume, snapshots, Fault Tolerance, and vMotion are unavailable for VMDirectPath VMs.",
         "Server, device, Guest OS, Guest driver, and workload support must be checked against compatibility and vendor guidance."
       ],
-      "limitations": "Requirements and recommendations do not disclose the internal capability, placement, transaction, or recovery implementation."
+      "limitations": "Requirements and recommendations do not disclose the internal capability, placement, transaction, notification, service, or recovery implementation. The statement that PCI errors are handled by ESXi rather than presented to the guest is an error-handling ownership contract; it does not require every guest profile to hide the AER capability header or raw status registers."
     },
     {
       "id": "VMW-SRC-002",
@@ -262,6 +262,16 @@
         "ESXi 8.0 U2/U3 can also create, edit, and run virtual hardware version 20."
       ],
       "limitations": "Compatibility with a virtual hardware version does not by itself establish the passthrough-device limit or Qman qualification for that ESXi/vHW pair."
+    },
+    {
+      "id": "VMW-SRC-025",
+      "type": "BROADCOM_KB",
+      "title": "ESXi advanced system settings mapping to VMkernel boot options",
+      "url": "https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html",
+      "claims": [
+        "VMkernel.Boot.pcipDisablePciErrReporting is the published setting for disabling error reporting for PCI passthrough devices."
+      ],
+      "limitations": "The setting description does not disclose its exact Endpoint CERE, Correctable Mask, Root Error Command, interrupt, logging, clear, reset or cross-version side effects; FALSE therefore cannot be treated as proof that the complete AER route is open."
     }
   ]
 }

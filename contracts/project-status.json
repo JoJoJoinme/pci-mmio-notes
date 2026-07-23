@@ -43,6 +43,9 @@
     "aerCorrectableValidationPlan": "vmware-aer-correctable-validation-plan.md",
     "aerCorrectableCanonicalResult": "evidence/esxi8-aer-correctable-20260723-result.json",
     "aerCorrectableSummary": "evidence/esxi8-aer-correctable-20260723-summary.json",
+    "aerCorrectableVirtioRouteCanonicalResult": "evidence/esxi8-aer-correctable-virtio-route-20260723-result.json",
+    "aerCorrectableVirtioRouteSummary": "evidence/esxi8-aer-correctable-virtio-route-20260723-summary.json",
+    "qemuAerEmrTechnicalEvidence": "evidence/qman-qemu-aer-emr-20260723-summary.json",
     "referenceModel": "pci-resource-model/README.md"
   },
   "openDecisions": [],
@@ -122,15 +125,15 @@
         "isReleaseEvidence": false
       },
       "qmanTechnicalEvidence": {
-        "asOf": "2026-07-22",
-      "records": 10,
-      "grades": {"E2": 2, "E3": 8, "E4": 0},
-      "claimBoundaries": {
-        "REFERENCE_ONLY": 5,
-        "COMPONENT_ONLY": 5,
-        "END_TO_END_PRODUCT": 0,
-        "PHYSICAL_QUALIFICATION": 0
-      },
+        "asOf": "2026-07-23",
+        "records": 11,
+        "grades": {"E2": 2, "E3": 9, "E4": 0},
+        "claimBoundaries": {
+          "REFERENCE_ONLY": 6,
+          "COMPONENT_ONLY": 5,
+          "END_TO_END_PRODUCT": 0,
+          "PHYSICAL_QUALIFICATION": 0
+        },
       "productCasesClosed": 0,
       "risksClosed": 0,
       "statusUpdated": false
