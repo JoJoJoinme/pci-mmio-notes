@@ -118,7 +118,7 @@ class G0MachineContractTests(unittest.TestCase):
             self.assertEqual(path, documents[name])
             self.assertTrue((ROOT / path).exists())
         milestones = {item["id"]: item for item in self.project["milestones"]}
-        self.assertEqual("2026-07-22", self.project["asOf"])
+        self.assertEqual("2026-07-23", self.project["asOf"])
         self.assertEqual("G1", self.project["currentMilestone"])
         self.assertEqual("DONE", milestones["G0"]["status"])
         self.assertEqual("IN_PROGRESS", milestones["G1"]["status"])

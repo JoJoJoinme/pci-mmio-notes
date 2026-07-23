@@ -490,6 +490,18 @@ def collect_case(
             "esxcfg-advcfg -l | grep -i ACS || true; "
             "grep -i 'enableACSCheckForRP' /bootbank/boot.cfg /altbootbank/boot.cfg 2>/dev/null || true"
         ),
+        "boot-config.txt": (
+            "printf '%s\\n' '=== /bootbank/boot.cfg ==='; "
+            "cat /bootbank/boot.cfg 2>/dev/null || true; "
+            "printf '%s\\n' '=== /altbootbank/boot.cfg ==='; "
+            "cat /altbootbank/boot.cfg 2>/dev/null || true"
+        ),
+        "passthru-map.txt": (
+            "cat /etc/vmware/passthru.map 2>/dev/null || true; "
+            "printf '%s  %s\\n' "
+            "\"$(sha256sum /etc/vmware/passthru.map 2>/dev/null | awk '{print $1}')\" "
+            "'/etc/vmware/passthru.map'"
+        ),
         "vmkernel-pci-log.txt": (
             "grep -Ei 'PCI|ACS|IOMMU|passthru|reset' /var/log/vmkernel.log | "
             "tail -2000 || true"

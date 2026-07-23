@@ -2342,17 +2342,50 @@ argv/QOM manifest，升级不能静默改变 property 默认值。stock QEMU 5.0
 
 ### 12.2 AER parity profile
 
-ESXi 8.0 U3 的被测外部模型是 host-owned PCI errors：guest 不发现 endpoint/Root Port AER service，
-ACPI 不授予 AER ownership，Correctable/Non-Fatal status 可按 profile 保留物理可观察性，但不向
-guest 注入 AER notification。
+ESXi 8.0 U3 的被测外部模型目前只证明了 guest surface/status projection：guest 不发现
+endpoint AER capability，ACPI 不授予 AER ownership，raw capability body 可以看到部分
+物理 status。不能把它直接命名为“host 已收到并处理 PCI errors”。2026-07-23 的门控读回为
+endpoint `CERE=0`、Root Port `CERE=0`、Root `COR_EN=0`；因此当前 Correctable 结果不证明
+ERR_COR delivery、Root service、IRQ 或 host health handling。
 
 产品化需要同时实现：
 
-1. VFIO extended-capability chain 跳过 AER header，保持 next pointer 正确。
-2. synthetic Root Port 条件化不创建 AER Root service。
-3. `_OSC` 不授予 AER；不能只改 config space 或只改 ACPI 一侧。
-4. host agent 收集 Linux AER/health 事件并关联 assignment/bundle。
-5. fatal/DPC/uncorrectable 进入 health/quarantine/no-reassignment policy，不承诺软件可恢复。
+1. 使用 versioned `aerPolicy`，分别声明 guest capability、`_OSC` ownership、body read、body
+   write、endpoint reporting owner、Root service owner、Correctable threshold 与 lifecycle
+   clear policy；不允许用一个 `hideAer=true` 代替这些语义。
+2. VFIO extended-capability chain 跳过 AER header时保持 next pointer 正确；CES/CEM/CERE、
+   Root Command 等字段的 read mask、write mask 和 side effect 分别定义。隐藏 header 不代表
+   hidden body 的 guest write 已隔离。
+3. synthetic Root Port 是否创建 AER Root service、`_OSC` 是否授予 AER，必须与 endpoint
+   surface 一起由 profile 固定；不能只改 config space 或 ACPI 一侧。
+4. host agent 分开采集 `STATUS_DEPOSITED`、`MESSAGE_RECEIVED`、`LOG/COUNTER_OBSERVED`、
+   `HEALTH_TRANSITION` 与 `RECOVERY_RESULT`，并关联 `deviceUid`、`assignedId`、lease
+   generation/fencing token、VM、bundle、host boot ID 和有效 owner phase。`assignedId` 标识
+   本次 assignment 实例，不能代替物理 identity，也不能让旧 lease 事件污染新 owner。
+5. 每次 reuse 前独立验证 endpoint/root W1C、reset 与 readback；清理不完整时拒绝重新分配。
+   Correctable status 单次置位不自动等于 unhealthy/quarantine；阈值和时间窗属于显式 Qman
+   策略。fatal/DPC/uncorrectable 或 clear/reset 失败进入 health/quarantine/no-reassignment，
+   不承诺软件一定可恢复。
+6. Legacy VFIO 与未来 cdev/IOMMUFD 复用同一 `aerPolicy`、owner state machine、审计 schema
+   和 oracle；backend adapter 只提供 config filter、event source、clear/reset 与 readback。
+
+建议的最小合同：
+
+```text
+aer.guestCapability          = hidden | visible
+aer.guestOscOwnership        = denied | granted
+aer.guestBodyRead            = passthrough | zero | synthesized
+aer.guestBodyWrite           = deny | filtered-w1c | passthrough
+aer.endpointReportingOwner   = host | guest | shared
+aer.rootServiceOwner         = host | guest
+aer.correctableHealthPolicy  = observe-only | threshold | quarantine
+aer.lifecycleClearPolicy     = verified-reset | explicit-w1c | quarantine-on-unclean
+```
+
+M24—M29 的详细 tuple、T0—T5 artifact 和四态 oracle 见
+[`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)。Nested
+QEMU/ESXi 只能形成 reference/virtual-integration 证据；真实 GPU/HBA/加速卡的链路、reset、
+health 与安全复用仍须 exact tuple 的 E4 qualification。
 
 ### 12.3 其他 surface 默认值
 

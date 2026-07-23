@@ -90,7 +90,7 @@ if [[ "$profile" != probe ]]; then
   cp "$root/init" "$original_init"
   trap cleanup EXIT
   if [[ "$profile" == aer ]]; then
-    cp "$workspace/_artifacts/esxi-l3-aer-init.sh" "$root/init"
+    cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-aer-init.sh" "$root/init"
   elif [[ "$profile" == aer-surface ]]; then
     cp "$workspace/github-export/vmware-esxi8-lab/esxi-l3-aer-surface-init.sh" "$root/init"
   elif [[ "$profile" == reboot ]]; then
@@ -158,7 +158,7 @@ if [[ "$profile" == edu || "$profile" == p2p ]]; then
   cp "$module_build_dir/edu_probe.ko" "$root/lib/modules/edu_probe.ko"
 fi
 
-for app in dd insmod ip ping poweroff reboot sync; do
+for app in dd hexdump insmod ip od ping poweroff reboot sync; do
   ln -sf busybox "$root/bin/$app"
 done
 

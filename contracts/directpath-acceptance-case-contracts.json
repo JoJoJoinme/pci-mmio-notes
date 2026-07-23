@@ -3,9 +3,9 @@
   "registryId": "QMAN-DIRECTPATH-ACCEPTANCE-CASE-CONTRACTS",
   "generationAlgorithm": "DERIVED-CLOSED-CASE-CONTRACT-V1",
   "portableContractId": "QMAN-DIRECTPATH-PORTABLE-CONTROL",
-  "portableContractRevision": "2026-07-22.10",
+  "portableContractRevision": "2026-07-23.11",
   "sourcePolicySha256": "sha256:31e238a95c033c466d80b13686be01c3211b2b4a6df5c64533fad30da85986c0",
-  "sourceDesignSha256": "sha256:987badcb7006d896127889f76c24ace9fecefe60c95c3bf6bae87319073935e2",
+  "sourceDesignSha256": "sha256:88f02435f1c98ad4d4399618198e1de6dd0f65696da289a2ba1e6ba14a17b853",
   "oracleClasses": [
     "authoritativeWrites",
     "cleanup",
@@ -7148,7 +7148,7 @@
     {
       "caseId": "M00",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:c7148672dbf592e68da31949714f8b899ee1a3890c0b6d1e2ace8b1fdb706bea",
       "designMatrix": {
         "section": "19",
@@ -7228,12 +7228,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:2dcf1073b673bdfad996560ec319deb9716ba9628e5d7e3ef64dd8174dcf640d"
+      "caseContractDigest": "sha256:16fc40b081c40e7e5005266deb49ee4910448f6f0d2e261f6d7b2a561266113a"
     },
     {
       "caseId": "M01",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:1c9ff0e3ffe1fbc726d9d8c39b2e1bbd17d6ea39edf90ff15e99373d0244f64c",
       "designMatrix": {
         "section": "19",
@@ -7314,12 +7314,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:89f17f8397ef2394b6665700ac1bd7cc8415a9dce17b2d6060b640f98af8b7ae"
+      "caseContractDigest": "sha256:edfbe51db87e3268b994f5e7332ab046414866c69570993ac6ba09173d83855c"
     },
     {
       "caseId": "M02",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:0e58b59ce77c140ddbefece66c1e96e2817b69d6225b40dd362581e30caed53b",
       "designMatrix": {
         "section": "19",
@@ -7408,12 +7408,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:22e7ab615280de165aca9e0fe5d33acc2114dea6bb69c03c0505a48d4765e359"
+      "caseContractDigest": "sha256:c361e69879c12b489397b42a310674d0b1d1c6727ba535be90e0ca6f17368bd3"
     },
     {
       "caseId": "M03",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:bff45c1070165a7137220b834549c8ea4623c53bbdfccb234fbc8c3026133311",
       "designMatrix": {
         "section": "19",
@@ -7508,12 +7508,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:31a37d0afa5ad71b3282453f5024c0d09d3a3a85e582cb57df04e76ca9e4a987"
+      "caseContractDigest": "sha256:db6c7cee3b3bf2cfcf24a15fd9f41fd21916f0358c47454e5424b5dd4d648d04"
     },
     {
       "caseId": "M04",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:9fcaa374960d633e694448168a7ec30513bb6ed075b10c107172b0ccb68752d9",
       "designMatrix": {
         "section": "19",
@@ -7596,12 +7596,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:46d328be682eabc864d364c7bc8c17f7a1fea95cb94646dcd9a0257460935a77"
+      "caseContractDigest": "sha256:f50ab0e9aded16b61d7316af0cfcf57909a483c61cbb348551ba79a91c514826"
     },
     {
       "caseId": "M05",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:26a739d810c5efff7e2fcef5cc13575e6215f38dd39af1e34252890080197dc5",
       "designMatrix": {
         "section": "19",
@@ -7694,19 +7694,19 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:e9e023e0f3f554e9680ebf1c7407401c4a067a70f4bcfae5604cfa3edf93874a"
+      "caseContractDigest": "sha256:739a3ccbfa95ed9cda985bfa2d4dd29c2893b874d3769d0939197627e6254778"
     },
     {
       "caseId": "M06",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
-      "definitionRecordSha256": "sha256:54828bd216a7acb66dcb0aaa6478ccecb47d4fd3b42e4b6911ab80304ac00b82",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
+      "definitionRecordSha256": "sha256:1cd13b7820921d8ad7f1080ce058a95966f220e53022db5b87b057c7181f56e8",
       "designMatrix": {
         "section": "19",
         "title": "AER correctable/nonfatal",
-        "passCondition": "host/guest surface 符合 profile",
-        "sourceEvidence": "已有",
-        "rowDigest": "sha256:e58c1bd617c8f93183403d64fcb462bc04bac76a3c80d707f9fd032961287f0e"
+        "passCondition": "host/guest surface 符合 profile，且 deposition/route/log/recovery 不互相代证",
+        "sourceEvidence": "frozen surface/status baseline 已有；route、guest write、lifecycle、产品实现与物理 qualification 未闭环",
+        "rowDigest": "sha256:06034f223d9a7e6a9824d4f59328b3a343e7e1825664733a3d0bfbc06cd20687"
       },
       "classification": {
         "scope": "PRODUCT",
@@ -7717,45 +7717,71 @@
           "R13"
         ],
         "techStoryIds": [
-          "TS-F4-02",
-          "TS-F4-04"
+          "TS-F4-06"
         ],
         "dependsOnCaseIds": [
           "S00"
         ]
       },
       "testObligationIds": [
-        "TEST-GUEST-RESOURCE-ADMISSION"
+        "TEST-PCI-ERROR-POLICY"
       ],
       "parityObligationIds": [
-        "PARITY-EXACT-CHIPSET-ADDRESS-IDENTITY",
-        "PARITY-GUEST-PROFILE-ADMISSION"
+        "PARITY-PCI-ERROR-POLICY"
       ],
       "requiredPortIds": [
+        "PORT-HOST-AGENT",
+        "PORT-INVENTORY-SNAPSHOT",
         "PORT-QEMU-LAUNCHER",
-        "PORT-RESOURCE-PLANNER",
+        "PORT-RELEASE-RECOVERY",
         "PORT-RUNTIME-VERIFIER"
       ],
       "requiredOperationIds": [
-        "OP-PLAN-GUEST-RESOURCES",
+        "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD",
+        "OP-CAPTURE-HOST-SNAPSHOT",
+        "OP-PREPARE-HOST-BUNDLE",
+        "OP-PROVE-CLEAN-RELEASE",
+        "OP-QUARANTINE-BUNDLE",
+        "OP-RECONCILE-HOST",
+        "OP-REMEDIATE-QUARANTINE",
         "OP-SPAWN-QEMU",
         "OP-STOP-QEMU",
+        "OP-TEARDOWN-HOST-BUNDLE",
         "OP-VERIFY-RUNTIME-PLAN"
       ],
       "requiredTransitionIds": [
+        "TR-OWNER-APPLYING-QUARANTINED",
+        "TR-QUARANTINE-REMEDIATING",
+        "TR-QUARANTINE-REMEDIATING-FREE",
+        "TR-QUARANTINE-REMEDIATING-QUARANTINED",
+        "TR-RELOCATE-HOST-RECOVERED-SOURCE-RECONCILE",
+        "TR-RELOCATE-NONCLEANUP-QUARANTINED",
+        "TR-RELOCATE-SOURCE-CLEANUP-QUARANTINED",
+        "TR-RELOCATE-SOURCE-RECONCILE-RELEASING",
+        "TR-RELOCATE-SOURCE-RELEASING-TARGET-SOLVE",
         "TR-RELOCATE-SOURCE-STOP-RELEASING",
         "TR-RELOCATE-TARGET-ATTACHING-ATTACHED",
+        "TR-RELOCATE-TARGET-ATTACHING-ROLLING-BACK",
         "TR-RELOCATE-TARGET-RESERVED-ATTACHING",
-        "TR-RELOCATE-TARGET-SOLVE-RESERVED",
+        "TR-RELOCATE-TARGET-ROLLBACK-STOPPED-UNSAT",
         "TR-RUN-ATTACHED-RELEASING",
         "TR-RUN-PREPARING-ATTACHED",
-        "TR-RUN-REQUESTED-FAILED",
-        "TR-RUN-REQUESTED-PLANNED"
+        "TR-RUN-PREPARING-ROLLING-BACK",
+        "TR-RUN-RELEASING-FREE",
+        "TR-RUN-RELEASING-QUARANTINED",
+        "TR-RUN-ROLLBACK-FREE",
+        "TR-RUN-ROLLBACK-QUARANTINED"
       ],
-      "requiredFaultClasses": [],
+      "requiredFaultClasses": [
+        "CLEAN_RELEASE_FAILURE"
+      ],
       "requiredArtifactSchemaRefs": [
         "contracts/directpath-acceptance-scenario.schema.json",
+        "contracts/directpath-authority-entities.schema.json#/$defs/ENTITY-CLEAN-RELEASE-ACCEPTANCE",
+        "contracts/directpath-clean-release-receipt.schema.json",
         "contracts/directpath-execution-evidence-index.schema.json",
+        "contracts/directpath-qualification-record.schema.json",
+        "contracts/directpath-qualification-subject-manifest.schema.json",
         "contracts/directpath-runner-manifest.schema.json"
       ],
       "requiredOracleClasses": [
@@ -7768,17 +7794,17 @@
         "mustOccur",
         "physicalOracle"
       ],
-      "minimumRepeat": 1,
-      "minimumDurationSeconds": 1,
+      "minimumRepeat": 3,
+      "minimumDurationSeconds": 10,
       "assertions": [
         {
           "assertionId": "M06-PASS-001",
           "sourceKind": "DESIGN_PASS_CONDITION",
-          "statement": "host/guest surface 符合 profile",
-          "statementSha256": "sha256:7ccdc61911c0be4581df02e4e6a08913ce2a3db83ea34a915c81ff59eebb60b9",
+          "statement": "host/guest surface 符合 profile，且 deposition/route/log/recovery 不互相代证",
+          "statementSha256": "sha256:bf1264e3715587377f1ed72f38379b06f6edb0a3158b3e72d493c75900b44a39",
           "requiredOracleClass": "physicalOracle",
           "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
-          "assertionDigest": "sha256:6d26fd25e56cd97a57a30c55706dfcd7502027880f8ee24a53204ef6590cacdb"
+          "assertionDigest": "sha256:da856a5d72878864b6ae5086272bba8f7a64eaf957bc3d3d9253ca05a49b1ed5"
         }
       ],
       "evidenceBoundary": {
@@ -7789,12 +7815,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:4e9404829b08a971311a8c6994f6a166dcb40db84fc2cb017ba6779dc6a2e2a5"
+      "caseContractDigest": "sha256:ea52ac50eb579464766305e76257aa4706150e7e0aa278d12202fda776921acb"
     },
     {
       "caseId": "M07",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:cc20a8ea7a3c56ee370cc07d7e4a336620f85e3df377a22fabff6aecbe114b37",
       "designMatrix": {
         "section": "19",
@@ -7886,12 +7912,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:f8359682d6eb66ad937fb9fc9737162181f95ad09dfabd7aeaf29b9db157cb59"
+      "caseContractDigest": "sha256:73ddac849ef44e73ca5a8c013447e84092048751ee3a9b5836e7876c77507b61"
     },
     {
       "caseId": "M08",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:e1e71b1cae5d3fa93ed4fc960e01ab52417f5ab9122950ad061ea47e7e0bab61",
       "designMatrix": {
         "section": "19",
@@ -7990,12 +8016,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:1d96460667096236dfd87f6764871360760146bc1c0225199812e6d25f3990c9"
+      "caseContractDigest": "sha256:8e79be02986c439aacf1e06c31f2cf3e0bb5c6d2ee498238c6732f5f03a3d7d4"
     },
     {
       "caseId": "M09",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:204fa7d8703169fe3b04a01561669f7609a9fd952419c58c58361f27f9bb1a1c",
       "designMatrix": {
         "section": "19",
@@ -8117,12 +8143,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:da07a0612534b8fb9c209d05cd9293ee6159e7e603c0fee9318d458bc7b9c743"
+      "caseContractDigest": "sha256:0ca88eed45debf2d684ec95c5c9e887933dc57755497294f88b655270d5c8032"
     },
     {
       "caseId": "M10",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:a8104df40280ba69e411851a8e887e04b59f2f2256038e751f05fb05eac5cf2b",
       "designMatrix": {
         "section": "19",
@@ -8221,12 +8247,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:c332e57196d9a909a97323a2062f281c984d77b32ff96c1e4770af4b68542e41"
+      "caseContractDigest": "sha256:3d1da9e88af1cdf2b0121f021cbf53324efba9e1db25a2e73f9406443a14a81e"
     },
     {
       "caseId": "M11",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:a81ede5b83541582a3c5df2f7e72902dc5c488e48ecc5216fe10bf0eef2f93d7",
       "designMatrix": {
         "section": "19",
@@ -8319,12 +8345,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:363d2e2e05712cdc7c0ef0ce6697170ab41fe82e2f3bd2177d6002d709d3f085"
+      "caseContractDigest": "sha256:dcbc1b6fde95bd6563538c766ccf8840672fe0b22a52f1c236d574f53e49950e"
     },
     {
       "caseId": "M12",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:ad6cef3248084e730cb2e3925b52e584bfde7aa0308584be0ab0ae903e5c6b95",
       "designMatrix": {
         "section": "19",
@@ -8419,12 +8445,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:576ec54f4ef5d5edca4f424fd39e80549e49ee9169e24bd81e3292012cc2e3c4"
+      "caseContractDigest": "sha256:7e622cf96829ecce0a9b586933c2fc0b3f09f78411113303f788b61d9d4f5884"
     },
     {
       "caseId": "M13",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:0a106d85acf4ea2bae4b58b5932911c22492dff79c89442f16cd4ba1e5102a30",
       "designMatrix": {
         "section": "19",
@@ -8518,12 +8544,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:383dbe9513beda401553f9f4c6a0a9dacee03f8171c82500603e7221b85ce7c3"
+      "caseContractDigest": "sha256:3289adf0367ecd6b4e9c325ce9c452db99c21c52a6d26f3170c793b2bb4dbf02"
     },
     {
       "caseId": "M14",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:86d99432a49d889b92a54fe0893941d5dc6b7a9199503dc62bc7a76c42fd3067",
       "designMatrix": {
         "section": "19",
@@ -8615,12 +8641,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:e4b93703f3821d4e8f7b17e251000c0a9563a8e7e6dfd7b02724c35b8db8bfa6"
+      "caseContractDigest": "sha256:6d6b351fc8f3dd920163d302d280b73231a76245c5eadc22d754c29c8d73273e"
     },
     {
       "caseId": "M15",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:61d2b8d8976dc6e4a9922f99fa25ed7328d21367164cca81bb29dc4e84272901",
       "designMatrix": {
         "section": "19",
@@ -8733,12 +8759,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:d43f9207d09a96b584bd7c7db4465a31cf689735d94b28cc261ec2f1be21ff9d"
+      "caseContractDigest": "sha256:2bb0fa4e8e3dbcfd67d11ba901cc1138f2c43a26f041edcceadf90410d51f2a5"
     },
     {
       "caseId": "M16",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:7de9ce8b4a52acc04b20e75f3c5651d3fb33b942f569685a4920eba6b9393eac",
       "designMatrix": {
         "section": "19",
@@ -8831,12 +8857,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:527255e1f771d7eb70aa368d3e3a7e86d76968c011fddbad4eac0bb126962959"
+      "caseContractDigest": "sha256:9962994b74b5c82c487a2a474d9c7bab2aa3708205658f6f57ca4879b014d15c"
     },
     {
       "caseId": "M17",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:5f259f8f637449ad404eefb2bacc5c28933d768af1b40e1245d2731880be7ad5",
       "designMatrix": {
         "section": "19",
@@ -8929,12 +8955,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:459449779b4290349564cc70ac88e2a6f800f0a6027e14d1e0d5f59a8c40d822"
+      "caseContractDigest": "sha256:1cbd83887cbdf98eae115470d3cbe82377ac7acdb6f134bbaae6123c232b104e"
     },
     {
       "caseId": "M18",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:2e1506f49c19613426c52b4072b1ad514b4785a148a439c911f3b2d8d7894117",
       "designMatrix": {
         "section": "19",
@@ -9016,12 +9042,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:10a979cf2c7600041383f36214288afcd45ce207dd492309303c2ffaad6f8d0f"
+      "caseContractDigest": "sha256:e5d63b88ce272cfe6e9813193c3be3c995e3a2a96417492d92adfc3cf9bd5e6a"
     },
     {
       "caseId": "M19",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:ad3d8f03442f8e5f0f7390b15040feeba94cde608db739ddf6549e05267f71b8",
       "designMatrix": {
         "section": "19",
@@ -9102,12 +9128,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:cdacccd07d52d0b7f5d5e09e08c64bc85c4aa0f7f0dad429ab6b5840fb63c7dc"
+      "caseContractDigest": "sha256:6527ae80ff9f50f6ed0325e5720cfbb68882e43c15ff7916f205f6e328c475a9"
     },
     {
       "caseId": "M20",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:34a418d7fc263a56dcd20d1816ff821a737b1e5f0e4d0637237be1435b6a7567",
       "designMatrix": {
         "section": "19",
@@ -9188,12 +9214,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:22ba2d4bb75bcde9992eef9b0856cfcd70a7b0dd3063a3595f6d667030b6e27c"
+      "caseContractDigest": "sha256:5385abff759949b2250d06c04208ca094ba16fb74ff70c567f584b628c68f1af"
     },
     {
       "caseId": "M21",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:97a5b5fdca43df89e1cb1c7cfaa2926904becc196bfc04f7837c37afcad12ffa",
       "designMatrix": {
         "section": "19",
@@ -9316,12 +9342,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:09b7431ce0423cbbe6e99fa9595e130592d6e991c5dd45feea8db73ddf39a0c8"
+      "caseContractDigest": "sha256:a755962780146378a88eb868b2d2cfcc52cf86d9e48c6b0f3d75db002aac5641"
     },
     {
       "caseId": "M22",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:fd26e0d39995152bda9c41c89f0a869cd602b0266527f023e581add72171b0e2",
       "designMatrix": {
         "section": "19",
@@ -9413,12 +9439,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:552687ffa84fbd8ecbe735ba38aa767980dcb33e52a85ad2033bba89e8b1fc65"
+      "caseContractDigest": "sha256:0a3708bb27a6793d8a5736fb981469171dd1f80c9c036b8344fb56300bbf540c"
     },
     {
       "caseId": "M23",
       "definitionPath": "acceptance/cases/registry-M.json",
-      "definitionFileSha256": "sha256:6c762b72f18a5ed9fe15abcb3d3b1d9baf4e8f17038b89e32ee197d24bcbdf96",
+      "definitionFileSha256": "sha256:dfe14634eb61afd8fb2f12c152ecc5597964fdc48865eac08185676721e1793c",
       "definitionRecordSha256": "sha256:e0ffac5ea6d116f557710c0052988a1a8e6749c43f416bdfd3ead82b63c8da1b",
       "designMatrix": {
         "section": "19",
@@ -9510,7 +9536,7 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:6806c32cd0978f823ff3b7d9d4000990c6d81b618bd0235ce5e9dfff29fc58ae"
+      "caseContractDigest": "sha256:d16f81c5dda0b0052a945ddb13283b04ab099da923335e09660d1b3684c270c0"
     },
     {
       "caseId": "F00",
@@ -10954,5 +10980,5 @@
       "caseContractDigest": "sha256:2e07060fbb50e474496e631f98ce4ea56ceb2b856e0f978f77c937e9cae887ac"
     }
   ],
-  "registryDigest": "sha256:1b784776b853d4a3a02b440175bfdb0b42ca2f5961c1332d57a320cb78acb4b9"
+  "registryDigest": "sha256:8d2c22ce8f41c7cd30ea5c5c17ca0eb0061f8df44d63af00fe1dd6473035ce15"
 }

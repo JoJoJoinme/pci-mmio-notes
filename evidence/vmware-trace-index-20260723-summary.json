@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260723-vmware-evidence-index-v2",
+  "observedAt": "2026-07-23",
+  "subject": "VMWARE_ESXI_REFERENCE_GOVERNANCE",
+  "verdict": "PARTIAL",
+  "statement": "The repository mechanically traces every VMware experiment from Tech Story to representative run and hash-bound evidence, derives non-closing acceptance associations from requiredTechStories, and gives PCI error policy its own portable test and parity obligations.",
+  "counts": {
+    "experiments": 37,
+    "evidenceBound": 29,
+    "noRun": 8,
+    "derivedAcceptanceLinks": 270
+  },
+  "closureAuthority": {
+    "acceptanceCases": "NONE",
+    "qmanImplementation": "NONE",
+    "qmanQualification": "NONE",
+    "release": "NONE"
+  },
+  "artifacts": [
+    {
+      "path": "tools/evaluate_release.py",
+      "sha256": "c4a3ae22ea5f46e9e18783b10c024f71cf2c171a8ae9193ef8763d027e6d0819"
+    },
+    {
+      "path": "tools/generate_vmware_evidence_index.py",
+      "sha256": "17d2c0a32f78ac1f5b7d0d8ccba128bf0f2d564d05f4ed8cd5108e68353bbd2d"
+    },
+    {
+      "path": "tests/test_vmware_evidence_index.py",
+      "sha256": "8e7390624690ce409372707629d19826da97f4f1029abc01175bc6f99ac32df3"
+    }
+  ],
+  "limitations": [
+    "Historical pyVmomi task identifiers and initiating actors are not uniformly retained.",
+    "Historical VMware runs do not all conform to contracts/vmware-experiment-result.schema.json; VMW-AER-COR-001 has a canonical aggregate result but its raw runs remain external artifacts.",
+    "Representative run IDs do not imply that every legacy case has a canonical result.",
+    "Derived acceptance links changed when M06 was narrowed to TS-F4-06; this index is traceability evidence, not case completion evidence.",
+    "This reference-governance result cannot close a Qman product case, risk, implementation milestone, qualification profile, or release gate."
+  ]
+}

@@ -107,6 +107,24 @@ CASES: dict[str, dict[str, Any]] = {
         "expected": {"capable": True, "resetContains": "Function"},
         "variable": "Make PMCSR state bits read-only while preserving FLR",
     },
+    "root-virtio-flr-no-iommu": {
+        "env": {
+            "QEMU_ESXI_TOPOLOGY": "root",
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_FLR": "on",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_VIRTIO_ROOT_CAP": "on",
+            "QEMU_ESXI_IOMMU": "0",
+            "QEMU_ESXI_QEMU_BINARY": CAPABILITY_QEMU,
+        },
+        "targets": ["0000:00:09.0", "0000:00:08.0"],
+        "subject": "0000:00:09.0",
+        "expected": {"capable": False, "resetContains": "Function"},
+        "variable": (
+            "Remove only the platform DMA-remapping unit from the same "
+            "root-complex Type-0 FLR endpoint used by root-virtio-flr-only"
+        ),
+    },
     "root-virtio-class-network": {
         "env": {
             "QEMU_ESXI_TOPOLOGY": "root",
@@ -341,6 +359,22 @@ CASES: dict[str, dict[str, Any]] = {
         "expected": {"capable": False},
         "variable": (
             "Disable root-port ACS while explicitly enabling the ESXi "
+            "root-port ACS admission check"
+        ),
+    },
+    "pcie-virtio-acs-strict-positive": {
+        "env": {
+            "QEMU_ESXI_VIRTIO_NET": "1",
+            "QEMU_ESXI_VIRTIO_FLR": "off",
+            "QEMU_ESXI_VIRTIO_PM": "off",
+            "QEMU_ESXI_DISABLE_ACS": "0",
+        },
+        "bootOptions": " enableACSCheckForRP=TRUE disableACSCheck=FALSE",
+        "targets": ["0000:01:01.0", "0000:00:08.0"],
+        "subject": "0000:01:01.0",
+        "expected": {"capable": True, "reset": "Bridge reset"},
+        "variable": (
+            "Keep real root-port ACS present while enabling the strict "
             "root-port ACS admission check"
         ),
     },

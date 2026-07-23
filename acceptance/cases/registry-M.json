@@ -69,13 +69,13 @@
     },
     {
       "id": "M06",
-      "title": "AER correctable and nonfatal events follow the selected host and guest surface policy",
+      "title": "PCI error status, routing, guest surface, lifecycle and recovery follow the selected profile",
       "status": "IMPLEMENTATION_BLOCKED",
       "scope": "PRODUCT",
       "riskIds": ["R13"],
-      "requiredTechStories": ["TS-F4-02", "TS-F4-04"],
+      "requiredTechStories": ["TS-F4-06"],
       "dependsOnCaseIds": ["S00"],
-      "blocker": "The versioned product QEMU profile and paired host/guest AER observation runner are not implemented.",
+      "blocker": "The reference Correctable runner now separates deposition, routing, bounded logs and guest projection, but the Qman versioned read/write/route policy, host event path, lifecycle cleanup and physical qualification are not implemented.",
       "targetMilestone": "G6"
     },
     {

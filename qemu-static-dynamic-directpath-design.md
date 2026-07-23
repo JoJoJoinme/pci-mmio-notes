@@ -34,7 +34,7 @@ Qman/reference-side 的 E2/E3/E4 定义、WSL/QEMU 实测、hash 与关闭权限
 
 私有 Qman 源码不是本设计收敛的前置条件。target-independent 语义以
 [`directpath-portable-control-contract.json`](contracts/directpath-portable-control-contract.json)
-revision `2026-07-22.10` 为机器权威：35 个 operation、17 个可变 authority aggregate、4 个非
+revision `2026-07-23.11` 为机器权威：35 个 operation、17 个可变 authority aggregate、4 个非
 authority projection、FSM/CAS/reason/trust/qualification 都有 closed schema，并确定性导出 293 个
 mapping item 与逐项 Case/test/八类 oracle requirement digest。35 个 operation 另有 70 个逐
 operation/direction 的 closed request/result payload profile，Scenario fixture 必须绑定唯一 portable fragment、
@@ -3456,7 +3456,7 @@ Dynamic 冷启动允许在显式 allowed set 内更换物理 identity，但必�
 | Surface | 基线行为 |
 | --- | --- |
 | PCIe topology/LinkCap | 按 profile 重建，不把 host link 原样当合同 |
-| AER | host ownership；不向 guest 投递 AER notification；config surface 按实测 profile 过滤 |
+| AER | 已观察：guest AER header/`_OSC` hidden/denied、raw status body 可投影；未证明：ERR_COR route、host service、guest write、recovery；Qman owner/health 是显式产品策略 |
 | PME | ACPI `_OSC` 按 profile；默认不向 guest 提交 native PME IRQ |
 | Option ROM | 默认隐藏；显式路径固定 ROM hash |
 | MSI/MSI-X | 保留并要求 interrupt remapping；记录 vector budget |
@@ -3471,8 +3471,12 @@ Dynamic 冷启动允许在显式 allowed set 内更换物理 identity，但必�
 [`vmware-esxi8-lab/qemu-patches/`](vmware-esxi8-lab/qemu-patches/)，生产实现需要重写成通用、
 有测试的 property/object，而不是保留 lab-only 开关。
 当前黑盒样本中 guest 仍可见部分 raw status body，但这不等于 PCI error 被投递给
-guest；产品合同以“host 处理、guest 无 notification”为硬语义，再用 versioned profile
-对齐 config-space 可见性。
+guest。被测 `e1000e` 的 endpoint/Root Port CERE 与 Root COR_EN 均为 0，所以当前结果
+只能冻结 surface/status projection。产品合同必须把 capability/header、body read、body
+write、endpoint reporting、Root service、host event、health/recovery 分字段版本化；Qman 可以
+选择“host owner、guest 无 notification”的更严格安全策略，但必须标成产品决策，不能伪称
+已由本轮 VMware delivery 实验证明。详见
+[`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)。
 
 ## 14. Lifecycle capability
 
@@ -3936,7 +3940,7 @@ C12、M08、M12、M13、S06、S08 是 6 个
 | M03 | SeaBIOS profile | below-4G、ROM、device count 和 large-BAR placement 独立结论 | large-BAR 边界已有；ROM/device count 继续沿用独立矩阵 |
 | M04 | RMRR compatible/overlap | 自动 hole 或精确拒绝 | 已有 synthetic ESXi |
 | M05 | ROM default/explicit | 默认隐藏；显式 hash/marker | 已有默认与 QEMU 正控 |
-| M06 | AER correctable/nonfatal | host/guest surface 符合 profile | 已有 |
+| M06 | AER correctable/nonfatal | host/guest surface 符合 profile，且 deposition/route/log/recovery 不互相代证 | frozen surface/status baseline 已有；route、guest write、lifecycle、产品实现与物理 qualification 未闭环 |
 | M07 | PME `_OSC` | ownership 和 IRQ 行为符合 profile | 已有 |
 | M08 | MSI-X/MSI/INTx | remap 和功能证据 | MSI-X/MSI 已有；物理 INTx 待验收 |
 | M09 | ATS/PRI/PASID | 默认隐藏；显式 profile 完整清理 | 待真实支持设备 |
@@ -4177,7 +4181,7 @@ capability 中视为 `FEATURE_DISABLED`，不得从命令行、API 或手工 QMP
 | K18 | DMA 到 host reserved memory 必须由 RMRR 声明；VM RAM 不得重叠，ESXi 可自动调整 memory map | 解析 DMAR/IVMD 和 device scope；保留 guest GPA hole 并只在可安全建立精确 identity mapping 时启动 | `HW-QUAL` + `BACKEND-GAP` | 任意 host reserved page 不能盲目映射给 userspace/guest；当前默认拒绝真实 RMRR device，R07/R27 |
 | K19 | Dynamic 需尽量容纳所有 allowable device 的 RMRR；不可能时缩小 allowed set 或拒绝 | plan 阶段对 selector-wide candidate RMRR 取 union，任一 candidate 不可安全容纳时不宣告该 selector 可迁移 | `SW-CLOSE` + K18 gate | 只按当次 selected BDF 规划会使下次 Dynamic 选卡失败，R07/R08 |
 | K20 | MSI-X、MSI、INTx 都可用，但推荐 MSI/MSI-X | MSI/MSI-X 需 interrupt remapping 和 vector budget；INTx 需验证 shared-line mask/unmask/EOI、延迟和 DoS 界限 | `HW-QUAL` | 当前只对 MSI/MSI-X 有较强证据；INTx 在物理验收前默认禁用，R06/R27 |
-| K21 | PCI error 始终由 ESXi 处理，不向 guest 虚拟化；uncorrectable error 可能使 host 无法恢复 | QEMU profile 截获/过滤 AER ownership/config/event path，host agent 记录并 quarantine，guest 不收到 AER notification | `BACKEND-GAP` + `HW-QUAL` | stock vfio-pci guest surface 不等价；真实 fatal/NMI 无法用软件保证恢复，只能用合格设备、故障域和 fencing 限制，R13 |
+| K21 | 公开 VMware 合同描述 PCI error 由 ESXi 处理、不向 guest 虚拟化，且 uncorrectable error 可能使 host 无法恢复；本地黑盒目前只验证了 guest surface/status projection | Qman 以版本化 AER read/write/route policy 实现 host ownership；审计分开记录 status、message、log、health、recovery，Correctable 阈值与 fatal quarantine 分离 | `BACKEND-GAP` + `HW-QUAL` | 当前 endpoint CERE=0，不能用 CES/无日志证明 ESXi delivery/service；stock vfio-pci surface 不等价，真实 fatal/NMI/reset 只能由合格设备、故障域和 fencing 限制，M24—M29/R13 |
 | K22 | Expansion ROM 可支持但默认不执行；开启后 power-on/restart 由 VM firmware 重执行 | 默认 `rombar=0`；显式 profile 固定 ROM hash/signature、`rombar`/`romfile`、OVMF/SeaBIOS marker 和 reboot re-exec | `SW-CLOSE` + `HW-QUAL` | ROM supply chain、reset 后可重执行性和 host-driver rebind 依赖需逐设备验收，R03/R12 |
 | K23 | PME 不向 guest 通知；BIOS `_OSC` 默认可能又授予 guest native PME control | ACPI `_OSC`、vfio-pci PM config 和 PME message 作为一个 profile；parity 默认 host-owned、不注入 guest IRQ | `BACKEND-GAP` + `HW-QUAL` | 只改 `_OSC` 或只吞 message 都可能使 guest driver 将设备留在低功耗；需受控 PME 注入，R24 |
 

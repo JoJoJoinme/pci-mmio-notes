@@ -150,6 +150,16 @@
       "requiredQmanMeaning": "Firmware, machine profile, BAR/MMIO, reserved ranges, and full-memory requirements are versioned admission inputs with post-start verification."
     },
     {
+      "id": "PARITY-PCI-ERROR-POLICY",
+      "classification": "MUST_MATCH",
+      "vmwareReferenceStatus": "PARTIAL",
+      "verifiedSlices": ["correctable-status-projection-for-frozen-nested-profile"],
+      "unverifiedSlices": ["route-enabled-delivery", "guest-write-isolation", "lifecycle-clear-reuse", "physical-health-recovery"],
+      "experimentIds": ["VMW-AER-COR-001"],
+      "minimalOpenExperimentIds": ["VMW-AER-COR-001"],
+      "requiredQmanMeaning": "PCI error capability, status deposition, message routing, guest writes, bounded observability, lifecycle cleanup and recovery are separate versioned policy surfaces; one cannot prove another."
+    },
+    {
       "id": "PARITY-EXACT-CHIPSET-ADDRESS-IDENTITY",
       "classification": "ACCEPTABLE_DIFFERENCE",
       "vmwareReferenceStatus": "NOT_APPLICABLE",
@@ -393,7 +403,7 @@
       "executionState": "PLANNED",
       "legacyIds": [],
       "evidencePaths": [],
-      "runnerPaths": [],
+      "runnerPaths": ["vmware-esxi8-lab/test_esxi_static_identity_replacement.py"],
       "limitations": ["requires-controlled-device-replacement"]
     },
     {
@@ -453,6 +463,32 @@
       "limitations": [
         "verified-only-for-frozen-nested-profile",
         "repository-hash-metadata-migrated-to-canonical-lf-without-rerun"
+      ]
+    },
+    {
+      "id": "VMW-AER-COR-001",
+      "title": "Correctable AER status projection and effective gate observation",
+      "executionState": "PARTIAL",
+      "legacyIds": ["S03", "C00-C03", "COR-8"],
+      "evidencePaths": [
+        "evidence/esxi8-aer-correctable-20260723-summary.json",
+        "evidence/esxi8-aer-correctable-20260723-result.json"
+      ],
+      "evidenceSha256": {
+        "evidence/esxi8-aer-correctable-20260723-summary.json": "de2d6e078cc570afedb6e1ca7e258d53e4d12e9f7749ac50f7ce04dc67db5e32",
+        "evidence/esxi8-aer-correctable-20260723-result.json": "d1f32e458b819a76622638fcc0e8e5a4965446b922a87012373310c8a22f55aa"
+      },
+      "runnerPaths": [
+        "vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py",
+        "vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py"
+      ],
+      "limitations": [
+        "endpoint-cere-disabled",
+        "root-cere-and-correctable-command-disabled",
+        "status-projection-not-message-delivery",
+        "no-guest-write-or-t5-lifecycle-matrix",
+        "synthetic-endpoint-not-physical-link-or-device-recovery",
+        "single-esxi-build-and-efi-guest"
       ]
     },
     {
@@ -532,7 +568,10 @@
         "evidence/esxi8-dynamic-envelope-20260711-summary.json",
         "evidence/esxi8-directpath-summary.json"
       ],
-      "runnerPaths": ["vmware-esxi8-lab/test_esxi_dynamic_directpath.py"],
+      "runnerPaths": [
+        "vmware-esxi8-lab/test_esxi_dynamic_directpath.py",
+        "vmware-esxi8-lab/test_esxi_dynamic_solver_behavior.py"
+      ],
       "limitations": ["no-subsystem-revision-custom-label-matrix"]
     },
     {
@@ -546,7 +585,8 @@
       ],
       "runnerPaths": [
         "vmware-esxi8-lab/test_esxi_dynamic_bar_envelope.py",
-        "vmware-esxi8-lab/test_esxi_dynamic_bar_aggregate.py"
+        "vmware-esxi8-lab/test_esxi_dynamic_bar_aggregate.py",
+        "vmware-esxi8-lab/test_esxi_dynamic_solver_behavior.py"
       ],
       "limitations": ["no-global-optimality-proof", "no-heterogeneous-rmrr"]
     },
@@ -559,7 +599,7 @@
         "evidence/esxi8-dynamic-envelope-20260711-summary.json",
         "evidence/esxi8-passthru-activation-20260718-summary.json"
       ],
-      "runnerPaths": ["vmware-esxi8-lab/README.md"],
+      "runnerPaths": ["vmware-esxi8-lab/test_esxi_dynamic_solver_behavior.py"],
       "limitations": ["no-concurrent-two-vm-fault-injection"]
     },
     {
@@ -714,9 +754,9 @@
       "title": "Machine TS-to-case-to-run-to-artifact traceability",
       "executionState": "PARTIAL",
       "legacyIds": [],
-      "evidencePaths": ["evidence/vmware-trace-index-20260722-summary.json"],
+      "evidencePaths": ["evidence/vmware-trace-index-20260723-summary.json"],
       "evidenceSha256": {
-        "evidence/vmware-trace-index-20260722-summary.json": "a1ee313de34d7ba84b8e3cdd0964ff483bd6542c5df0512787b398ba23f697c1"
+        "evidence/vmware-trace-index-20260723-summary.json": "618456ec384dabf05dc35fb86603e9a483eac6ada87817f342fe2fd7aeb15f96"
       },
       "runnerPaths": [
         "tools/generate_vmware_evidence_index.py",
@@ -873,6 +913,13 @@
       "sourceIds": [],
       "experimentIds": [],
       "observableContract": "Qman API, launcher, and QMP bypass prevention must be proven by Qman."
+    },
+    {
+      "techStoryId": "TS-F4-06",
+      "status": "PARTIAL",
+      "sourceIds": ["VMW-SRC-001"],
+      "experimentIds": ["VMW-AER-COR-001"],
+      "observableContract": "The frozen ESXi profile exposes hidden guest AER discovery with raw Correctable status projection; route-enabled delivery, guest writes, lifecycle cleanup and physical recovery remain unverified."
     },
     {
       "techStoryId": "TS-F5-01",

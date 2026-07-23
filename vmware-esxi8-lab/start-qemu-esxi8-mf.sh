@@ -101,6 +101,49 @@ fi
 test_devices=()
 test_fn0_rom_options=""
 test_fn_aer_options=""
+test_fn0_model="${QEMU_ESXI_TEST_FN0_MODEL:-e1000e}"
+test_fn1_model="${QEMU_ESXI_TEST_FN1_MODEL:-e1000e}"
+test_fn0_mac="${QEMU_ESXI_TEST_FN0_MAC:-52:54:00:08:00:00}"
+test_fn1_mac="${QEMU_ESXI_TEST_FN1_MAC:-52:54:00:08:00:01}"
+test_fn0_identity_options=""
+test_fn1_identity_options=""
+
+case "$test_fn0_model" in
+  e1000e)
+    if [[ -n "${QEMU_ESXI_TEST_FN0_SUBSYS_VENDOR:-}" ]]; then
+      test_fn0_identity_options+=",subsys_ven=${QEMU_ESXI_TEST_FN0_SUBSYS_VENDOR}"
+    fi
+    if [[ -n "${QEMU_ESXI_TEST_FN0_SUBSYS_DEVICE:-}" ]]; then
+      test_fn0_identity_options+=",subsys=${QEMU_ESXI_TEST_FN0_SUBSYS_DEVICE}"
+    fi
+    ;;
+  virtio-net-pci)
+    test_fn0_identity_options+=",disable-legacy=on"
+    ;;
+  *)
+    echo "unsupported QEMU_ESXI_TEST_FN0_MODEL: $test_fn0_model" >&2
+    exit 2
+    ;;
+esac
+
+case "$test_fn1_model" in
+  e1000e)
+    if [[ -n "${QEMU_ESXI_TEST_FN1_SUBSYS_VENDOR:-}" ]]; then
+      test_fn1_identity_options+=",subsys_ven=${QEMU_ESXI_TEST_FN1_SUBSYS_VENDOR}"
+    fi
+    if [[ -n "${QEMU_ESXI_TEST_FN1_SUBSYS_DEVICE:-}" ]]; then
+      test_fn1_identity_options+=",subsys=${QEMU_ESXI_TEST_FN1_SUBSYS_DEVICE}"
+    fi
+    ;;
+  virtio-net-pci)
+    test_fn1_identity_options+=",disable-legacy=on"
+    ;;
+  *)
+    echo "unsupported QEMU_ESXI_TEST_FN1_MODEL: $test_fn1_model" >&2
+    exit 2
+    ;;
+esac
+
 if [[ "${QEMU_ESXI_HIDE_AER:-0}" == "1" ]]; then
   test_fn_aer_options=",x-hide-aer=on"
 fi
@@ -129,8 +172,8 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
   pcie)
     test_devices+=(
       -device "pcie-root-port,$root_port_options"
-      -device "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=test_rp,addr=0x00.0,multifunction=on$test_fn0_rom_options$test_fn_aer_options"
-      -device "e1000e,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=test_rp,addr=0x00.1$test_fn_aer_options"
+      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=test_rp,addr=0x00.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn_aer_options"
+      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=test_rp,addr=0x00.1$test_fn1_identity_options$test_fn_aer_options"
     )
     if [[ "${QEMU_ESXI_PRIMARY_DEDICATED_ROOT_PORT:-0}" == "1" ]]; then
       primary_root_port_options="id=test_primary_rp,bus=pcie.0,chassis=10,slot=10,addr=0x0a.0"
@@ -168,8 +211,8 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     ;;
   root)
     test_devices+=(
-      -device "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=pcie.0,addr=0x08.0,multifunction=on$test_fn0_rom_options$test_fn_aer_options"
-      -device "e1000e,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=pcie.0,addr=0x08.1$test_fn_aer_options"
+      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=pcie.0,addr=0x08.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn_aer_options"
+      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=pcie.0,addr=0x08.1$test_fn1_identity_options$test_fn_aer_options"
     )
     ivshmem_bus=pcie.0
     ivshmem_addr=0x09.0
@@ -186,8 +229,8 @@ case "${QEMU_ESXI_TOPOLOGY:-pcie}" in
     test_devices+=(
       -device "pcie-root-port,$root_port_options"
       -device "pcie-pci-bridge,id=test_legacy,bus=test_rp,addr=0x00.0"
-      -device "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=test_legacy,addr=0x01.0,multifunction=on$test_fn0_rom_options$test_fn_aer_options"
-      -device "e1000e,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=test_legacy,addr=0x01.1$test_fn_aer_options"
+      -device "$test_fn0_model,id=test_fn0,netdev=test0,mac=$test_fn0_mac,bus=test_legacy,addr=0x01.0,multifunction=on$test_fn0_identity_options$test_fn0_rom_options$test_fn_aer_options"
+      -device "$test_fn1_model,id=test_fn1,netdev=test1,mac=$test_fn1_mac,bus=test_legacy,addr=0x01.1$test_fn1_identity_options$test_fn_aer_options"
     )
     ivshmem_bus=test_legacy
     ivshmem_addr=0x02.0
@@ -404,15 +447,30 @@ if [[ "${QEMU_ESXI_IVSHMEM_ALT_SIZE:-0}" != "0" ]]; then
 fi
 
 trace_options=()
+normalize_trace_events() {
+  local source=$1
+  local destination=$2
+
+  if [[ ! -r "$source" ]]; then
+    echo "trace event list is not readable: $source" >&2
+    exit 2
+  fi
+  tr -d '\r' < "$source" > "$destination"
+}
+
 if [[ "${QEMU_ESXI_TRACE:-0}" == "1" ]]; then
-  trace_events="${QEMU_ESXI_TRACE_EVENTS:-$script_dir/qemu-esxi8-trace-events}"
+  trace_events_source="${QEMU_ESXI_TRACE_EVENTS:-$script_dir/qemu-esxi8-trace-events}"
+  trace_events="/tmp/qemu-esxi8-$instance-trace-events"
+  normalize_trace_events "$trace_events_source" "$trace_events"
   trace_options+=(
     -trace "events=$trace_events,file=$vm_dir/qemu-trace.log"
   )
 fi
 if [[ "$nvme_sriov_present" == "1" || "$igb_sriov_present" == "1" ]]; then
+  sriov_trace_events="/tmp/qemu-esxi8-$instance-sriov-trace-events"
+  normalize_trace_events "$script_dir/qemu-sriov-trace-events" "$sriov_trace_events"
   trace_options+=(
-    -trace "events=$script_dir/qemu-sriov-trace-events,file=$vm_dir/qemu-sriov-trace.log"
+    -trace "events=$sriov_trace_events,file=$vm_dir/qemu-sriov-trace.log"
   )
 fi
 

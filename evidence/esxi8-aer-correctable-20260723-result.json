@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "caseId": "VMW-AER-COR-001",
+  "legacyIds": [
+    "S03",
+    "C00-C03",
+    "COR-8"
+  ],
+  "subject": "VMWARE_ESXI",
+  "runId": "20260723-aer-correctable-suite-v1",
+  "startedAt": "2026-07-23T00:17:20.194308+00:00",
+  "finishedAt": "2026-07-23T00:44:54.483423+00:00",
+  "sutProfile": {
+    "environmentClass": "NESTED_INSTRUMENTED_REFERENCE",
+    "esxiVersion": "8.0.3",
+    "esxiBuild": "24280767",
+    "apiVersion": "8.0.3.0",
+    "virtualHardware": "20",
+    "serverModel": "QEMU 11.0.2 q35/KVM nested ESXi lab",
+    "biosVersion": "open-source OVMF EFI lab profile",
+    "deviceIdentity": "QEMU e1000e 8086:10d3 at outer/ESXi 0000:01:00.1 behind 0000:00:08.0",
+    "deviceFirmware": "QEMU synthetic e1000e NVM",
+    "guestOs": "Linux 5.15 EFI initramfs AER probe",
+    "guestDriver": "Linux e1000e plus raw PCI config probe",
+    "workload": "Correctable-only synthetic AER: PassthruIdle eight bits, PassthruActive Receiver and Advisory Non-Fatal representatives, and QEMU 24-row gate positive control"
+  },
+  "techStories": [
+    "TS-F4-06"
+  ],
+  "basisKinds": [
+    "OFFICIAL_CONTRACT",
+    "OBSERVED_BEHAVIOR"
+  ],
+  "sourceIds": [
+    "VMW-SRC-001"
+  ],
+  "inputs": {
+    "injectionClass": "Correctable-only",
+    "correctableBits": [
+      "0x00000001",
+      "0x00000040",
+      "0x00000080",
+      "0x00000100",
+      "0x00001000",
+      "0x00002000",
+      "0x00004000",
+      "0x00008000"
+    ],
+    "esxiRuns": [
+      "20260723T002305Z-76d79e36",
+      "20260723T003751Z-16496a4c",
+      "20260723T001720Z-e19407a0",
+      "20260723T004345Z-fae1a783"
+    ],
+    "effectiveEndpointCere": false,
+    "effectiveEndpointCorrectableMask": "0x0000e000",
+    "effectiveRootCere": false,
+    "effectiveRootErrorCommand": "0x00000006",
+    "effectiveRootCorrectableCommandEnabled": false,
+    "qemuMatrixExecutedSha256": "fa7aa752e16af889e0ab82c038dc122ce0b24b17675b5a764f78cdf75d13e029",
+    "esxiMatrixExecutedSha256": "e12bf9a19e229f7df4006e62dd84e34f18f7d60f8af1578de33105c0d9f4048c",
+    "esxiMatrixCurrentSha256": "f5c7998fdfaefc8ba2fb82654ec4d7eefa5c1d3f76b64814756cf04ad5aa29fb"
+  },
+  "expected": [
+    "Each requested Correctable bit is evaluated independently from a requested-bit-clean baseline without any Uncorrectable status or non-CED Device Status delta.",
+    "Endpoint status deposition, message routing, bounded host/guest observation and recovery are reported as separate outcomes.",
+    "When effective endpoint CERE is disabled, message routing is classified as not testable rather than as delivered-and-silenced.",
+    "The QEMU positive control distinguishes CERE-blocked, endpoint-masked and route-enabled-with-Root-COR_EN-disabled behavior and checks Correctable Source ID."
+  ],
+  "observed": [
+    "All eight PassthruIdle rows deposited exactly the requested Correctable Error Status bit; Receiver and Advisory Non-Fatal also projected into the active guest raw capability body.",
+    "Endpoint/root/guest Uncorrectable Error Status remained zero, no non-CED Device Status appeared, and no Root Uncorrectable reception appeared.",
+    "Every ESXi row had endpoint CERE disabled; Root CERE and Root COR_EN were also disabled, so ERR_COR delivery, Root service, interrupt and host handling were not tested.",
+    "The guest AER Extended Capability header remained zero, _OSC did not grant AER, and captured guest/ESXi log windows contained no matching event; this negative observation is not proof of no internal service.",
+    "QEMU 11.0.2 completed 24 of 24 positive-control rows and recorded Root COR_RCV plus the matching Correctable Source only for the CERE-enabled, unmasked route case."
+  ],
+  "verdict": "PARTIAL",
+  "artifacts": [
+    {
+      "path": "evidence/esxi8-aer-correctable-20260723-summary.json",
+      "sha256": "de2d6e078cc570afedb6e1ca7e258d53e4d12e9f7749ac50f7ce04dc67db5e32",
+      "kind": "SUMMARY"
+    },
+    {
+      "path": "../_artifacts/vmware-directpath-runs/20260723-aer-correctable/qemu-correctable-24-v2/result.json",
+      "sha256": "a0583d56bbbb969aff5d65471a9e9c993c562f7e6d46022a6317ef39c1cc19c7",
+      "kind": "L0_TRACE"
+    },
+    {
+      "path": "../_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-idle-correctable-8-v2/result.json",
+      "sha256": "4681aaa52669b2d47cada43b8e1984fd81c8b1a3f6c733a0cdb5874eaaba33a8",
+      "kind": "SUMMARY"
+    },
+    {
+      "path": "../_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-active-receiver-v6/result.json",
+      "sha256": "42368f80e066bcae72cbc29df5c39641ff6e650664f078c96bc0d3263e698ea8",
+      "kind": "SUMMARY"
+    },
+    {
+      "path": "../_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-active-advisory-v1/result.json",
+      "sha256": "705b81181aaeb6a11472f82168761a73ce926f83aecf40c6befc2d8f0a2fe6a2",
+      "kind": "SUMMARY"
+    },
+    {
+      "path": "../_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-idle-receiver-final-smoke/result.json",
+      "sha256": "4378ae1e16e41b2e4a2e7ef2ae83754594926ddc589849e89697fd06efac673b",
+      "kind": "SUMMARY"
+    }
+  ],
+  "limitations": [
+    "The endpoint CERE, Root CERE and Root COR_EN gates were disabled in every ESXi row, so route-enabled delivery and host service are not proven.",
+    "The raw run directories are external sibling artifacts and are not committed to this repository; their result and manifest digests are pinned here and in the registered summary.",
+    "The primary matrix rows used runner hash e12bf9a19e229f7df4006e62dd84e34f18f7d60f8af1578de33105c0d9f4048c; the current runner hash f5c7998fdfaefc8ba2fb82654ec4d7eefa5c1d3f76b64814756cf04ad5aa29fb was live-smoked only with PassthruIdle Receiver after a stale ManagedObject handling fix.",
+    "Guest writes to the hidden AER body, T5 clear/reboot/detach/reuse, complete Native-owner coverage and three-run repeatability are not tested.",
+    "Synthetic status injection does not reproduce real Bad TLP, Bad DLLP, replay, Header Log queue overflow, electrical link behavior, physical reset cleanliness, health or quarantine.",
+    "The observation is limited to one ESXi build, nested q35/OVMF, QEMU e1000e and an EFI Linux guest; it is not Qman product conformance or physical qualification."
+  ]
+}

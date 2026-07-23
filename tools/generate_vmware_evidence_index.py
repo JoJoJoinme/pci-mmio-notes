@@ -34,6 +34,12 @@ RUN_IDS = {
     "VMW-ADMISSION-001": ["20260715-firmware-layout-matrix-final"],
     "VMW-ADMISSION-002": ["20260711-single-4g-true-size4"],
     "VMW-GUEST-VERIFY-001": ["20260712-esxi8-edu-msi-dma-reset-v4"],
+    "VMW-AER-COR-001": [
+        "20260723T002305Z-76d79e36",
+        "20260723T003751Z-16496a4c",
+        "20260723T001720Z-e19407a0",
+        "20260723T004345Z-fae1a783",
+    ],
     "VMW-RESET-001": ["20260712-esxi8-edu-msi-dma-reset-v4"],
     "VMW-TEARDOWN-001": ["20260714-esxi8-edu-dma-teardown-v5"],
     "VMW-CRASH-001": ["20260711-host-crash"],
@@ -47,7 +53,7 @@ RUN_IDS = {
     "VMW-CLUSTER-FAILURE-001": ["20260711-host-crash"],
     "VMW-OPS-001": ["20260718-esxi8-owner-activation-v1"],
     "VMW-EVIDENCE-001": ["20260714-esxi8-edu-dma-teardown-v5"],
-    "VMW-TRACE-001": ["20260722-vmware-evidence-index-v1"],
+    "VMW-TRACE-001": ["20260723-vmware-evidence-index-v2"],
 }
 
 NO_RUN_REASONS = {
@@ -290,7 +296,7 @@ def build() -> dict[str, Any]:
 
     return {
         "schemaVersion": 1,
-        "asOf": "2026-07-22",
+        "asOf": "2026-07-23",
         "subject": "VMWARE_ESXI",
         "sourceModel": "contracts/vmware-behavior-model.json",
         "hashAlgorithm": "SHA-256",

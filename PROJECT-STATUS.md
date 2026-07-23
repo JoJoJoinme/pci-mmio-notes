@@ -1,6 +1,6 @@
 # Qman DirectPath 项目状态
 
-状态日期：2026-07-22
+状态日期：2026-07-23
 当前里程碑：`G1-HOST-INVENTORY-AND-QUALIFICATION-BASELINE`
 最终目标：`V3-FULL-DIRECTPATH`
 当前可宣告范围：`REFERENCE_AND_QUALIFICATION_MODEL_ONLY`
@@ -38,17 +38,24 @@ qualification profile。参考实验仍不得冒充 Qman 产品实现或支持�
 当前已确认的资产：
 
 - K01-K31、R01-R39、C/O/S/D/M/F 验收矩阵已经写入详细设计。
-- `pci-resource-model` 的 294 个收集用例在 2026-07-22 重跑：Windows 289 passed / 5 platform skips，WSL 294 passed；
+- `pci-resource-model` 的 294 个收集用例在 2026-07-23 重跑：Windows 289 passed / 5 platform skips，WSL 294 passed；
   C20 固定点覆盖 22 个场景，VFIO provider 定向覆盖 27 个场景，Static lease/FSM 定向覆盖
   41 个场景；raw launch handle、QEMU render 与 launch envelope 分别定向覆盖 26、32、30 个场景；
   authoritative snapshot 与 QEMU authorization binding 另有 25 个定向测试和 21 个 subtests。
 - VMware ESXi 8.0.3 和 QEMU/OVMF/SeaBIOS 已积累实验与规范化摘要。
-- VMware F1-F8/39 Tech Story 可观察模型已建立：4 `VERIFIED`、27 `PARTIAL`、3 `UNKNOWN`、
+- VMware F1-F8/40 Tech Story 可观察模型已建立：4 `VERIFIED`、28 `PARTIAL`、3 `UNKNOWN`、
   5 `NOT_APPLICABLE`；这些状态只描述 VMware reference coverage。
-- VMware 36 个实验已有 hash-checked machine index：28 项已执行记录绑定代表 run 和 evidence
+- VMware 37 个实验已有 hash-checked machine index：29 项已执行记录绑定代表 run 和 evidence
   文件，6 项 planned 与 2 项 physical-blocked 显式保持 no-run；由 TS 派生的 acceptance 关联没有
   Qman Case、实现、qualification 或 release 关闭权限。`VMW-TRACE-001` 仅由 `PLANNED` 收敛为
   `PARTIAL`，因为历史 pyVmomi task/actor 链和统一 canonical run result 仍不完整。
+- Correctable AER 已由 `VMW-AER-COR-001` 登记
+  [canonical result](evidence/esxi8-aer-correctable-20260723-result.json) 和
+  [hash summary](evidence/esxi8-aer-correctable-20260723-summary.json)，覆盖 QEMU 24-row 正控、
+  ESXi PassthruIdle 8-bit、PassthruActive Receiver/Advisory Non-Fatal 代表样本。当前 effective
+  endpoint/root CERE 与 Root COR_EN 均关闭，所以只冻结 status deposition、guest projection
+  和安全负断言；ERR_COR delivery、host service、guest write、lifecycle recovery 与物理
+  qualification 仍保持未完成。
 - owner activation 已有纯函数 planner 和 O09 可执行参考场景。
 - Qman 技术证据索引已登记 10 条 hash 固定结果：2 条 E2、8 条 E3，覆盖 reference model、
   C20 capability closure、raw QMP/BDF、逐设备 DMA provider、双 64 GiB BAR/OVMF A/B 和最小
@@ -64,7 +71,7 @@ qualification profile。参考实验仍不得冒充 Qman 产品实现或支持�
 - 101 个设计 Case 已全部机器分类：1 个 `EXECUTABLE` reference Case（O09）、
   94 个 `IMPLEMENTATION_BLOCKED`（包括只有 E2 reference runner 的 PRODUCT C20）、
   6 个 `HARDWARE_BLOCKED`，未分类数为 0。
-- portable revision `2026-07-22.10` 已冻结 293 个有序映射项，并把完整 Git tree、独立 BuildAttestation、
+- portable revision `2026-07-23.11` 已冻结 295 个有序映射项，并把完整 Git tree、独立 BuildAttestation、
   六类互斥 runner control artifact、typed Measurement、双签 QualificationRunManifest、Case completion、
   trust history/live freshness 纳入 target-independent baseline；这只证明设计可交接，不证明私有实现。
 - 35 个 operation 的 common envelope 已分别绑定 70 个 closed request/result payload profile；Scenario Step

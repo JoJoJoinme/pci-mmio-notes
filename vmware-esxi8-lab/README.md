@@ -145,7 +145,7 @@ D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server �
 | A06 | 物理链路与虚拟链路呈现 | link speed/width 变量 | L1/L2 两侧 `LnkSta` |
 | D00/I00 | DMA 翻译、requester 与中断重映射 | trace 模式和流量脚本 | QEMU trace、guest workload |
 | D01 | power-off 前后 DMA domain 切换 | `test_esxi_edu.py --verify-dma-teardown` | 同 SID/IOVA 的 live/post-off VT-d translation 与 invalidation |
-| C00-C03 | Correctable/Non-Fatal AER ownership | `Invoke-EsxiAerCase.ps1` | QEMU HMP、ESXi config/log、guest raw config/dmesg |
+| C00-C03 / COR-8 | AER surface/status projection 与公开 gate 对照 | `test_esxi_aer_correctable_matrix.py`、`test_qemu_aer_correctable_matrix.py`；旧 `Invoke-EsxiAerCase.ps1` 仅保留历史基线 | Correctable-only allow-list、endpoint/root/ESXi/guest 快照、effective gates、owner、bounded logs、safety stop |
 | R00/R01 | reset 与 guest reboot | trace + `test_esxi_guest_reboot.py` | reset trace、efivar phase、两次 I/O |
 | L00-L03 | 电源与生命周期 | `Test-EsxiDirectPathLifecycle.ps1` | API 错误、重启后 BAR、串口 |
 | T00 | 重复启动稳定性 | `Test-EsxiDirectPathStress.ps1` | 每轮结果与失败日志 |
@@ -155,10 +155,48 @@ D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server �
 | L02/L04 | vMotion 与 host crash | `test_esxi_vmotion_matrix.py`、`test_esxi_host_crash_recovery.py` | task fault、恢复状态 |
 | CAP00-CAP22 | `passthruCapable` 资格判定 | `test_esxi_passthru_capability_matrix.py` | IOMMU、FLR/bridge reset、ACS policy、class code、真实 Type-1 bridge、dependency、restore |
 | O00-O10 | owner activation、deferred/reboot、consumer Busy、依赖扩组、VM 独占 lease | `test_esxi_owner_activation.py` + 受控 vSwitch | Configured/Current Owner、SOAP fault、ESXCLI、host/vSwitch snapshot、`vmware.log` |
-| S01-S05 | Option ROM、PME、AER、P2P、RMRR | `test_esxi_optionrom.py`、`test_esxi_pme.py`、AER runner、`test_esxi_p2p_matrix.py`、`test_esxi_rmrr_matrix.py` | guest/config/log/QEMU trace 三方结果 |
+| S01-S05 | Option ROM、PME、AER、P2P、RMRR | `test_esxi_optionrom.py`、`test_esxi_pme.py`、上述两个 AER runner、`test_esxi_p2p_matrix.py`、`test_esxi_rmrr_matrix.py` | guest/config/log/QEMU trace；AER 必须分 deposition/route/log/recovery |
 | SRIOV | PF/VF 公开 surface | `test_esxi_sriov.py`、`collect_esxi_sriov_driver_surface.py` | raw capability、driver state、VF inventory |
 
-### 3.1 O00-O10 owner activation 复现入口
+### 3.1 Correctable AER 黑盒入口
+
+先运行 QEMU 公开模型正控。它为每个 tuple 启动 fresh QEMU，并验证 8 个 Correctable bit
+在 CERE blocked、endpoint masked、Root COR_EN disabled 三类 gate 下的寄存器与 Root Source
+行为：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py `
+  --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/qemu-cor-24
+```
+
+ESXi runner 只暴露 `pcie_aer_inject_error -c` 和封闭的八位 allow-list；没有 Uncorrectable
+注入参数。使用 QTest 时，`status-routing` 只容许 live e1000e 已观察到的 sticky CED，CES、
+UES、Root Status/Source、root Device Status 和上游拓扑必须 clean/readback。Active VM 在 owner
+建立前后各清一次基线。任何 UES、非 CED Device Status 或 Root Uncorrectable 增量都会
+`FAIL_SAFETY` 并停止剩余 case。
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py `
+  --host 172.31.91.10 --owner-state PassthruIdle `
+  --error-bits receiver_error,bad_tlp,bad_dllp,replay_number_rollover,replay_timer_timeout,advisory_nonfatal,corrected_internal_error,header_log_overflow `
+  --qemu-monitor /root/vm/esxi8-mf/monitor.sock `
+  --qtest-socket /root/vm/esxi8-mf/qtest.sock --qtest-clean-baseline `
+  --qtest-baseline-policy status-routing `
+  --outer-endpoint-bdf 0000:01:00.1 --outer-root-bdf 0000:00:08.0 `
+  --esxi-bdf 0000:01:00.1 --esxi-root-bdf 0000:00:08.0 `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/esxi-cor-idle-8
+```
+
+case 的 `PASS` 仅表示冻结 observation oracle 满足。必须读取
+`observations.messageRouting.conclusion`：CERE 为 0 时只能是
+`NOT_TESTABLE_ENDPOINT_CERE_DISABLED`，不能写成“ESXi 收到 ERR_COR 后静默”。日志为空只表示
+`NOT_OBSERVED_IN_CAPTURED_TAIL_WINDOW`。完整矩阵与 Qman 设计消费见
+[`../vmware-aer-correctable-validation-plan.md`](../vmware-aer-correctable-validation-plan.md)。
+
+### 3.2 O00-O10 owner activation 复现入口
 
 统一脚本只从 Caveat 读取密码，不把凭据写入 argv、结果或仓库。`snapshot` 是只读；`api-set` 和
 `admission-pair` 必须显式带 `--execute`。`--target` 是 SOAP 的 request set，`--observe` 只增加
@@ -569,6 +607,18 @@ P2P default/relax-only 的 IOMMU fault 是预期拒绝；详见主结果报告�
 
 生命周期脚本的通过条件必须包含“预期拒绝也得到正确错误类型”，不能只检查命令返回非零。
 
+同 BDF 身份替换的黑盒 runner 会在保持 ESXi system disk、host UUID、BDF 和 topology 不变时，
+分别替换 MAC/DSN、subsystem 与 device model，并在每个变体后恢复 card-A baseline：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_static_identity_replacement.py `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID-static-identity
+```
+
+该 runner 会重启 outer ESXi、创建/销毁 VM 并改变 synthetic endpoint identity。目前只完成
+`py_compile/--help`，尚无 canonical run，`VMW-STATIC-IDENTITY-001` 仍为 `PLANNED`；不能把
+runner 存在写成 VMware 已验证行为。
+
 双主机与 host crash：
 
 ```powershell
@@ -607,6 +657,18 @@ wsl -d Ubuntu-22.04 -- python3 /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/te
 X01 异构 BAR、X02 candidate 耗尽/释放恢复、X03 powered-off relocate 已由
 `test_esxi_dynamic_bar_envelope.py` 与 `test_esxi_vmotion_matrix.py` 完成。第一次把两个
 candidate 放进同一 outer root port 的失败也保留为 dependency 负例。
+
+完整 candidate set、runtime `assignedId`、multi-requirement all-or-fail、双 VM 并发 task
+overlap 和 global matching 判别由下列 runner 预注册：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_dynamic_solver_behavior.py `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID-dynamic-solver
+```
+
+它只根据公开 API、task 时间、binding/assignedId 和候选集合分类外部行为，不命名 VMware
+私有 solver 或锁实现。当前脚本仅通过 `py_compile/--help`，还没有 live canonical run；因此
+global optimality、双 VM 原子抢占和失败回滚仍保持未验证。
 
 ## 10. 产物与结果合同
 

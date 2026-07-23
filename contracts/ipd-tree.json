@@ -301,6 +301,12 @@
           "title": "在 API、QMP 和进程边界阻止绕过准入的 raw QEMU 启动",
           "primaryUserStory": "US-F4-02",
           "supports": ["US-F4-01", "US-F4-02", "US-F4-03"]
+        },
+        {
+          "id": "TS-F4-06",
+          "title": "版本化 PCI error surface、route、guest write 与 recovery policy",
+          "primaryUserStory": "US-F4-03",
+          "supports": ["US-F4-01", "US-F4-02", "US-F4-03"]
         }
       ],
       "supplements": [
@@ -311,6 +317,7 @@
         {"kind": "REFERENCE_OBSERVATION", "path": "qemu-vmware-mmio-comparison.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "qemu-q35-firmware-dual-64g-results.md"},
         {"kind": "REFERENCE_OBSERVATION", "path": "qemu-vmdirectpath-nonbar-local-validation.md"},
+        {"kind": "REFERENCE_OBSERVATION", "path": "vmware-aer-correctable-validation-plan.md"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-mmio-observed-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qemu-control-20260721-summary.json"},
         {"kind": "QMAN_VERIFICATION", "path": "evidence/qman-qmp-gate-20260721-summary.json"}

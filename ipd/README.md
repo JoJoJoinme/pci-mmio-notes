@@ -135,7 +135,8 @@ EPIC-PCI-01  Qman 生产级 PCI DirectPath 服务
 │  │  └─ TS-F4-05 在 API、QMP 和进程边界阻止绕过准入的 raw QEMU 启动
 │  └─ US-F4-03 成功启动后 Guest 获得稳定的 slot、BAR、IRQ/IOMMU 与驱动表面
 │     ├─ TS-F4-02 冻结版本化 Q35/OVMF/QEMU 配置 profile
-│     └─ TS-F4-04 启动后核验 BAR、bridge、IRQ 与 IOMMU 实际状态
+│     ├─ TS-F4-04 启动后核验 BAR、bridge、IRQ 与 IOMMU 实际状态
+│     └─ TS-F4-06 版本化 PCI error surface、route、guest write 与 recovery policy
 │
 ├─ F5 设备生命周期与故障恢复
 │  ├─ US-F5-01 VM 正常关机后设备能安全释放

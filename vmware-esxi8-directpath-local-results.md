@@ -1,6 +1,6 @@
 # ESXi 8 VMDirectPath 本地黑盒验证结果报告
 
-日期：2026-07-11 至 2026-07-18
+日期：2026-07-11 至 2026-07-23
 目标版本：VMware ESXi 8.0.3 build 24280767
 外层平台：WSL2 + QEMU 6.2/11.0.2 + KVM，两台嵌套 ESXi + VCSA 8.0.3
 最新运行态：WSL 6.6.123.2 自编译 KVM 内核，QEMU 11.0.2 capability-lab build
@@ -558,13 +558,18 @@ PMCSR 看到 `0x8100`，但没有 native PME IRQ delta。三种 `_OSC` grant 均
 ### Correctable/Non-Fatal AER
 
 Correctable Receiver Error 和 Non-Fatal Unsupported Request 均已做 host/guest/config/log
-三方采集。ESXi guest 中 endpoint AER Extended Capability header 被置 0，ACPI `_OSC`
-不授予 AER；raw capability body 的 CES/UES 仍跟随物理 endpoint 置位，而 guest PCIe
-Device Status、上游 Root Error Status、guest `dmesg` 和 ESXi `vmkernel/vobd` 都没有
-对应事件。该现象支持“隐藏发现/ownership、保留部分 raw status”的外部模型。Stock
-QEMU 的 Root Port/e1000e/VFIO 默认公开 AER，`x-pcie-extcap-init=off` 也不够；对标需
-显式 config-space chain filter 与 Root Port AER disable。完整寄存器值见
-[`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md)。
+三方采集。2026-07-23 又完成 PassthruIdle 的 8 个 Correctable bit 和 PassthruActive 的
+Receiver/Advisory Non-Fatal 代表位：请求 CES 均能沉积并投影到 guest raw body，owner 保持
+稳定，Uncorrectable surface 与非 CED Device Status 没有增量。ESXi guest 中 endpoint AER
+Extended Capability header 为 0，ACPI `_OSC` 不授予 AER。
+
+这只支持“隐藏 capability discovery、保留部分 raw status projection”的外部模型。所有新
+ESXi 行的 endpoint/root CERE 与 Root COR_EN 均为 0，routing 必须记作
+`NOT_TESTABLE_ENDPOINT_CERE_DISABLED`；限定日志窗未见事件不能推出 ERR_COR 已送达后被静默
+处理。Stock QEMU 的 Root Port/e1000e/VFIO 默认公开 AER，完整对标需要版本化 capability/body
+读写、message route、lifecycle clear 与 recovery policy。完整寄存器、run/hash 和限制见
+[`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md) 与
+[`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)。
 
 ### P2P
 
@@ -599,7 +604,8 @@ NVM/firmware/driver contract 的设备模型。
 ## 9. Case 与证据索引
 
 所有复现入口见 [`vmware-esxi8-lab/README.md`](vmware-esxi8-lab/README.md)。关键
-本地证据目录如下；这些目录包含多 MB trace、ISO 和 VM 日志，因此不提交 Git：
+本地证据目录如下；路径以工作区 `E:\Code\PCI` 为根（从仓库根看等价于
+`../_artifacts/...`）。这些目录包含多 MB trace、ISO 和 VM 日志，因此不提交 Git：
 
 | 范围 | 本地证据目录 |
 | --- | --- |
@@ -634,6 +640,7 @@ NVM/firmware/driver contract 的设备模型。
 | ESXi ACS 全局 bypass 增量项 | `_artifacts/vmware-directpath-runs/20260714-esxi8-no-acs-global-bypass-v1/` |
 | 虚拟 FLR callback | `_artifacts/vmware-directpath-runs/20260713-esxi8-flr-vm-power-v1/` |
 | PME `_OSC`/status 注入 | `_artifacts/vmware-directpath-runs/20260714-esxi8-pme-v3/` |
+| Correctable AER 8-bit/gate/Active | `_artifacts/vmware-directpath-runs/20260723-aer-correctable/` |
 | P2P ACS/no-ACS policy | `_artifacts/vmware-directpath-runs/20260714-esxi8-p2p-*/` |
 | RMRR 自动 hole/低 RAM 拒绝 | `_artifacts/vmware-directpath-runs/20260713-esxi8-rmrr-auto-v9-flr/`、`20260713-esxi8-rmrr-unsupported-v9-flr/` |
 | Option ROM 正控与 ESXi 负例 | `_artifacts/vmware-directpath-runs/20260713-qemu-optionrom-minimal-compressed-padded-v33/`、`20260713-esxi8-optionrom-minimal-compressed-padded-v4/` |
@@ -666,6 +673,8 @@ Git 内可审计摘要：
 - [`evidence/esxi8-workstation-noiommu-20260718.md`](evidence/esxi8-workstation-noiommu-20260718.md)
 - [`evidence/esxi8-workstation-noiommu-20260718-summary.json`](evidence/esxi8-workstation-noiommu-20260718-summary.json)
 - [`evidence/qemu-vfio-noiommu-split-20260718.md`](evidence/qemu-vfio-noiommu-split-20260718.md)
+- [`evidence/esxi8-aer-correctable-20260723-result.json`](evidence/esxi8-aer-correctable-20260723-result.json)
+- [`evidence/esxi8-aer-correctable-20260723-summary.json`](evidence/esxi8-aer-correctable-20260723-summary.json)
 
 ## 10. 剩余边界与解锁方法
 
@@ -756,7 +765,7 @@ q35 的 zero/zero + 1GB BAR 是已验证负例，不能只把上面 property 名
 | reset 方法与总线依赖 | 让 VFIO 执行 FLR/bus reset；同 dependency 整组分配；endpoint generation register 记录回调 | 虚拟 FLR power-on/off callback pass；bridge dependency pass；SBR/D3 与真实状态清除待 E4 |
 | Dynamic candidate | orchestrator 按 allowed class 选 BDF，记录运行时 lease，关机释放；目标 host 重新选择 | X00-X03 pass；不能持久化固定 BDF |
 | MSI-X/MSI/INTx | 保留 capability，启用 host interrupt remapping；禁止 unsafe interrupts | MSI-X E3 pass；EDU MSI-only E3 pass；INTx nested fail/direct pass，待 E4 |
-| PCIe AER ownership | host 侧注入/记录；guest config-space proxy 过滤 AER header/ownership，按目标策略镜像 status | Correctable/Non-Fatal surface 已验证；stock VFIO 不自动等价 |
+| PCIe AER policy | synthetic endpoint status 注入/观察；guest config-space proxy 按 profile 过滤 capability 与 body read/write，host event/recovery 另证 | Correctable status projection 与 guest discovery 已观察；ERR_COR delivery、host service、guest write、T5 recovery 和物理 E4 未验证；stock VFIO 不自动等价 |
 | Option ROM | 默认 `rombar=0`；显式启用时固定 ROM hash，并分别验证 host 保存与 guest 执行 | 默认隐藏 pass；QEMU ROM 正控 pass；ESXi enabled 样本为可重复“不执行”负例 |
 | PME 与 `_OSC` | endpoint 提供可控 PME_Status/message，ACPI 层决定 native PME；host policy 可过滤 | patched endpoint 三种 `_OSC` mask pass；PME status 可见但无 native PME IRQ，符合 KB ignored 模型 |
 | P2P 与 ACS relaxation | 两个 peer-DMA endpoint + ACS/IOMMU policy；不能把单个开关当成功 | 默认/relax-only 被 IOMMU fault 阻断；`allowP2P=TRUE` 才成功，ACS/no-ACS A/B 已跑 |

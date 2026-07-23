@@ -74,7 +74,7 @@ E2/E3/E4 表达证据强度；它不能代替 `basis_kind` 或 `subject`。旧�
 ## 3. 按 Feature 挂接当前资料
 
 表中的“证据”均是当前可复用输入，不代表 Feature 已完成。
-每个 Feature 下的 39 个 Tech Story 已统一映射到
+每个 Feature 下的 40 个 Tech Story 已统一映射到
 [`VMWARE-BEHAVIOR-MODEL.md`](VMWARE-BEHAVIOR-MODEL.md)；该映射只更新 VMware reference
 coverage，不更新 Qman implementation/qualification 状态。
 
@@ -102,13 +102,13 @@ launch 和 Legacy surface 结果均不关闭产品 Case、Risk 或 release miles
 | --- | --- | --- |
 | `qemu-static-dynamic-directpath-design.md` | `NORMATIVE_DESIGN` | 技术合同；不是产品树或完成状态 |
 | `qman-directpath-implementation-blueprint.md` | `IMPLEMENTATION_BLUEPRINT` | 从技术合同派生；不能覆盖产品范围和状态 |
-| `ipd/VMWARE-BEHAVIOR-MODEL.md` | `OFFICIAL_CONTRACT` + `REFERENCE_OBSERVATION` | VMware F1-F8/39 TS 的唯一可观察模型入口；不声称私有源码实现 |
+| `ipd/VMWARE-BEHAVIOR-MODEL.md` | `OFFICIAL_CONTRACT` + `REFERENCE_OBSERVATION` | VMware F1-F8/40 TS 的唯一可观察模型入口；不声称私有源码实现 |
 | `contracts/vmware-source-register.json` | `OFFICIAL_CONTRACT` | 官方 source/claim/baseline/limitations 注册表 |
 | `contracts/vmware-behavior-model.json` | `REFERENCE_OBSERVATION` | TS→VMW experiment→evidence 的机器覆盖合同 |
 | `contracts/vmware-experiment-result.schema.json` | `ACCEPTANCE` | 新 VMware run 的统一环境、观察、限制和 artifact hash schema |
 | `ipd/QMAN-TECHNICAL-EVIDENCE.md` | `QMAN_VERIFICATION` 导航 | Qman/参考 subject 的证据等级、结论、限制和复现入口；不直接改变 milestone |
 | `contracts/qman-evidence-index.json` | `STATUS_GATE` | TS→Case→Risk→result/hash 机器索引；由 evaluator 检查关闭权限和 hash 漂移 |
-| `contracts/vmware-evidence-index.json` | `REFERENCE_OBSERVATION` + `STATUS_GATE` | 36 个 VMware 实验的 TS→experiment→代表 run→artifact/hash 索引；Acceptance 关联为派生且不关闭 Qman 状态 |
+| `contracts/vmware-evidence-index.json` | `REFERENCE_OBSERVATION` + `STATUS_GATE` | 37 个 VMware 实验的 TS→experiment→代表 run→artifact/hash 索引；Acceptance 关联为派生且不关闭 Qman 状态 |
 | `contracts/qman-technical-evidence.schema.json` | `ACCEPTANCE` | Qman E2/E3/E4 result 的 subject、SUT、mapping、artifact、limitation 和 closure 合同 |
 | `contracts/product-decisions.json` | `NORMATIVE_DECISION` | ADR-002/003/005/007/010 的 owner/date/decision/影响映射；关闭设计选择，不关闭实现 |
 | `contracts/compatibility-profile-policy.json` | `NORMATIVE_DESIGN` | 六个平台行、Legacy-first、HCL archetype、单一控制面和 online cold-relocation 机器合同 |

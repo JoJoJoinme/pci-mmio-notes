@@ -2,7 +2,7 @@
 
 状态：`REFERENCE MODEL / EXPERIMENT DRIVEN`
 基线：`ESXi 8.0.3 build 24280767 / API 8.0.3.0 / vHW20`
-覆盖：`EPIC-PCI-01 / F1-F8 / 39 Tech Stories`
+覆盖：`EPIC-PCI-01 / F1-F8 / 40 Tech Stories`
 
 本文所说“补齐 VMware 实现”，指补齐 VMware 的 **官方外部合同、可观察行为和带明确标签的
 机制推断**，不是声称拿到了 VMware 私有源码。机器可读覆盖矩阵位于
@@ -62,11 +62,11 @@ VMware 的 SKU 支持列表。官方材料没有证明 HCL 参与 `passthruCapab
 策略按消费 GPU、专业 GPU、HBA 和加速卡的技术 trait 定义。真实实验仍必须记录准确 specimen、
 firmware、host 和 Guest/driver/workload 以便复现；这些字段是证据元数据，不自动成为公开 HCL key。
 
-当前 39 个 Tech Story 的 VMware 观察覆盖为：
+当前 40 个 Tech Story 的 VMware 观察覆盖为：
 
 ```text
 VERIFIED       4   当前冻结 nested profile 已直接观察到完整外部语义
-PARTIAL       27   有观察，但缺物理设备、并发、故障或更广 profile
+PARTIAL       28   有观察，但缺物理设备、并发、故障或更广 profile
 UNKNOWN        3   尚无直接 VMware 实验
 NOT_APPLICABLE 5   Qman 内部机制，不能由 VMware 黑盒证明
 ```
@@ -87,6 +87,7 @@ VMware 只提供外部语义参考，不能证明这些 Qman profile。
 | Static identity、排他与 release-before-reuse | `MUST_MATCH` | `PARTIAL` | `VMW-STATIC-IDENTITY-001`、`VMW-STATIC-002` |
 | Dynamic selector、全量求解、原子 reservation、runtime assignedId | `MUST_MATCH` | 整体 `PARTIAL`；assignedId 切片 `VERIFIED` | `VMW-DYNAMIC-001`、`VMW-DYNAMIC-003`、`VMW-DYNAMIC-004` |
 | firmware/MMIO/full reservation/post-start verify | `MUST_MATCH` | 整体 `PARTIAL`；冻结 profile 的 post-start 切片 `VERIFIED` | `VMW-ADMISSION-001/002`、`VMW-GUEST-VERIFY-001`；ARM 由 `QMAN-ARM-VIRT-UEFI-001` 自证 |
+| PCI error surface、message route、guest write、lifecycle recovery | `MUST_MATCH` | `PARTIAL`；仅 Correctable status projection 切片已观察 | `VMW-AER-COR-001`；route-enabled、guest write、T5 lifecycle 和物理 health 仍未闭环 |
 | VMware 与 Qman 的精确 chipset、bridge identity、BAR 地址相同 | `ACCEPTABLE_DIFFERENCE` | `NOT_APPLICABLE` | Qman 只需冻结自身 guest ABI 并证明等价准入结果 |
 | legacy group/container、IOMMUFD/cdev、fd handoff 与单控制面内部实现 | `ACCEPTABLE_DIFFERENCE` | `NOT_APPLICABLE` | `QMAN-BACKEND-CONFORMANCE-001` |
 | DMA/IRQ teardown、reset 与 clean release | `MUST_MATCH` | `PARTIAL` | `VMW-TEARDOWN-001`、`VMW-QUARANTINE-001` |
@@ -144,6 +145,7 @@ chipset identity。`OUT_OF_SCOPE` 指 Qman 不提供该能力；对于 runtime h
 | TS-F4-03 full reservation | 全 VM 内存 reservation 是官方要求，page budget/RMRR 会影响 admission | `PARTIAL` | M04/M07/S05；补多桥、RAM pressure、ROM/aux BAR/RMRR 组合 |
 | TS-F4-04 post-start verification | Guest BAR/root window、bridge、IRQ 与 VT-d mapping 已在每轮关联 | `VERIFIED` | LF/M/D/I 当前 nested profile 已闭环；物理 device-trait profile 仍须单独 qualification |
 | TS-F4-05 raw QEMU/QMP gate | VMware task/API 负例可参考，QMP/launcher ACL 是 Qman 自身安全边界 | `NOT_APPLICABLE` | 由 Qman API/launcher/QMP 攻击 Case 自证 |
+| TS-F4-06 PCI error policy | 已观察 guest header/`_OSC` 隐藏与 raw status projection；当前 CERE=0，message route、guest write、recovery 未证明 | `PARTIAL` | `VMW-AER-COR-001`；补完整 gate、Root W1C/Source、owner/lifecycle、guest write 与物理 qualification |
 
 ### F5 设备生命周期与故障恢复
 
@@ -192,7 +194,7 @@ VM stopped。host crash、unreachable source、BMC/power fence 和 HA restart �
 | --- | --- | --- | --- |
 | TS-F8-01 manifest/events/audit | API/task/log/ESXCLI 提供分散状态；没有统一 assignment manifest/lease timeline | `PARTIAL` | activation/Dynamic runners；增加 actor+task+VM+host+device 关联实验 |
 | TS-F8-02 evidence/hash | 部分 summary 已有 artifact hash，但 schema 和覆盖不统一 | `PARTIAL` | 迁移所有 `VMW-*` 到统一 result schema，缺 hash 时不升级状态 |
-| TS-F8-03 US→Case→Evidence | 36 个实验已有 hash-checked TS→experiment→代表 run→artifact 索引；acceptance Case 只从 `requiredTechStories` 派生且无关闭权限 | `PARTIAL` | 历史 pyVmomi task ID/actor 链和统一 canonical run result 尚未补齐，不能升级为 `VERIFIED` |
+| TS-F8-03 US→Case→Evidence | 37 个实验已有 hash-checked TS→experiment→代表 run→artifact 索引；acceptance Case 只从 `requiredTechStories` 派生且无关闭权限 | `PARTIAL` | 历史 pyVmomi task ID/actor 链和统一 canonical run result 尚未补齐，不能升级为 `VERIFIED` |
 | TS-F8-04 Qman fail-closed evaluator | VMware 观察不能证明 Qman release gate | `NOT_APPLICABLE` | 由 Qman risk/case/evidence evaluator 自证 |
 
 ## 4. 独立实验命名空间
@@ -206,7 +208,7 @@ C/O/S/D/M/F Case 共用权威命名空间。
 | A00-A06、CAP00-CAP22 | `VMW-A*`、`VMW-CAP*` | capability/topology/dependency |
 | LF00-LF06、M00-M07 | `VMW-LF*`、`VMW-M*` | firmware/layout/MMIO |
 | D00-D01/D06、I00-I02、R00-R04 | `VMW-D*`、`VMW-I*`、`VMW-R*` | VMware DMA/IRQ/reset |
-| S00-S05 | `VMW-S*` | ROM/PME/AER/P2P/RMRR；lab C00-C03 是 `VMW-S03` 子变体 |
+| S00-S05 | `VMW-S*` | ROM/PME/AER/P2P/RMRR；lab C00-C03 与 2026-07-23 Correctable 矩阵统一登记为 `VMW-AER-COR-001` |
 | X00-X03 | `VMW-X*` | Dynamic/cold relocate |
 | L00-L05 | `VMW-L*` | VMware lifecycle |
 | O00-O08/O10 | `VMW-O*` | owner activation；O09 仍是 Qman reference-model Case |
@@ -261,9 +263,15 @@ Qman 同时必须优先执行 `QMAN-BACKEND-CONFORMANCE-001`：同一 API、sele
 - `VMW-CAP-TRAIT-001`、`VMW-DEP-MIXED-001`：IOMMU/ACS/reset/dependency 正负 A/B 和整组 Busy。
 - `VMW-DYN-SELECTOR-001`：subsystem/revision/customLabel 与非法 selector A/B。
 - `VMW-MMIO-TOPO-001`：多级桥、辅助 BAR、sub-4KB、ReBAR、alignment 与 limit+1。
+- `VMW-AER-COR-001`：已执行 Correctable 8-bit PassthruIdle、Active 代表 bit 与 QEMU gate 正控；
+  canonical result 与 hash summary 分别见
+  [`esxi8-aer-correctable-20260723-result.json`](../evidence/esxi8-aer-correctable-20260723-result.json)
+  和 [`esxi8-aer-correctable-20260723-summary.json`](../evidence/esxi8-aer-correctable-20260723-summary.json)；
+  结论限定为 status projection。下一步补 route-enabled CERE/CEM/Root Command、Root W1C/Source、
+  guest write、owner/lifecycle 与 E4 physical health。
 - `QMAN-ARM-VIRT-UEFI-001`：ARM virt/UEFI 的 PCIe、BAR/window、MSI/ITS、DMA/IOMMU、reset 与
   clean release；这是 Qman E3/E4，不是 VMware 实验。
-- `VMW-TRACE-001` 已通过 `contracts/vmware-evidence-index.json` 完成 36/36 实验登记，并固定已执行
+- `VMW-TRACE-001` 已通过 `contracts/vmware-evidence-index.json` 完成 37/37 实验登记，并固定已执行
   reference evidence 的文件 hash；当前仍是 `PARTIAL`。下一步把 actor、pyVmomi task、VM、
   source/target host、device、assignedId 与 canonical result 串成同一次 run，不能用现有派生索引
   冒充完整审计链。

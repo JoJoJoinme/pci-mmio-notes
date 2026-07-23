@@ -2,7 +2,7 @@
 
 日期：2026-07-18
 
-> 治理说明（2026-07-21）：本文保留为既有实验计划和复现说明。F1-F8/39 Tech Story 的
+> 治理说明（2026-07-23）：本文保留为既有实验计划和复现说明。F1-F8/40 Tech Story 的
 > canonical VMware 行为入口现为
 > [`ipd/VMWARE-BEHAVIOR-MODEL.md`](ipd/VMWARE-BEHAVIOR-MODEL.md)，机器映射为
 > [`contracts/vmware-behavior-model.json`](contracts/vmware-behavior-model.json)。本文原有
@@ -289,7 +289,7 @@ D05 的 candidate exclusion 由 reference model 单元测试覆盖；真实 DPDK
 | S00 | 默认 passthrough device 带 Expansion ROM | 分别判断 ROM BAR 是否可见、firmware 是否执行 |
 | S01 | `pcipSaveOPROM=TRUE` 加 `<device>.opromEnabled=TRUE` | OVMF 执行目标 ROM，restart 可重复 |
 | S02 | Guest 启用 PME，endpoint 发出 PME | 判断 ESXi 是否忽略，以及是否要改 guest `_OSC` policy |
-| S03 | 注入 Correctable Receiver Error 与 Non-Fatal Unsupported Request | 已执行；确认 guest AER header/ACPI ownership 被过滤，raw status body 保留，host/guest 日志均静默 |
+| S03 | 注入 Correctable Receiver Error 与 Non-Fatal Unsupported Request | 已执行 frozen-profile surface/status baseline；确认 guest AER header/ACPI ownership 被过滤、raw status body 保留；日志仅能写“采集窗未观察到”，且因 endpoint CERE=0 不能证明 ERR_COR delivery |
 | S04 | 两 endpoint 执行真实 peer DMA | 对比默认、`allowP2P`、`relaxACSforP2P`；只看 ACS bit 不算通过 |
 | S05 | Endpoint 带关联 RMRR | 观察 memory-map 自动调整或精确 overlap failure |
 | X00 | 两个相同 ID 的 Dynamic DirectPath candidate | 记录 allowed list、`assignedId` 和关机解绑 |
@@ -298,7 +298,10 @@ D05 的 candidate exclusion 由 reference model 单元测试覆盖；真实 DPDK
 
 Stock QEMU 6.2 足以做第一批 ACS、topology、BAR、VT-d、interrupt、基本 reset 和
 AER 注入。随后已用 instrumented endpoint/DMAR patch 完成 PME、P2P、RMRR 与虚拟 FLR；
-AER 已证明 stock QEMU 的 guest surface 不等价，完整过滤仍需 QEMU patch。真实硬件仍
+AER 已证明 stock QEMU 的 guest surface 不等价；QEMU 11 的 8-bit × 3-gate 正控还证明
+status deposition、endpoint gate 与 Root Status/Source 可以被实验区分。当前 ESXi e1000e
+profile 的 CERE=0，因此只覆盖 status projection，完整 filtering/routing/recovery 仍需独立
+实现和验证。真实硬件仍
 负责电气 reset、vendor state、真实 ACS/INTx 和 SR-IOV driver/firmware 结论。
 
 ### 7.6 生命周期与产品限制
@@ -370,7 +373,7 @@ early boot 用精确 claim 抢在 native consumer 之前完成绑定。没有 ea
 | Resizable BAR | 固定 host BAR size，不依赖 guest 改 ReBAR | 记录 guest capability 和 effective BAR size |
 | Expansion ROM | 默认 `rombar=0`；显式路径固定 ROM hash 并保留执行 marker | 默认隐藏已定案；ESXi enabled 负样本与 QEMU 正控都必须保留 |
 | PME/`_OSC` | instrumented endpoint 注入 PME_Status/message；Root-port hotplug 参数不等于 ownership | 已比较三种 ACPI grant 与实际注入；对标默认采用 host ownership/不转发 native PME IRQ |
-| AER | stock QEMU 无完整等价参数；`vfio-pci` 需过滤 `PCI_EXT_CAP_ID_ERR`，Root Port 需 `aer=off` 类开关 | guest header/body、ACPI `_OSC`、host/guest log 三方比较 |
+| AER | stock QEMU 无完整等价参数；`vfio-pci` 需版本化读/写过滤，Root Port service 需显式 profile | 四轨独立判定：endpoint CES/CED；CERE/CEM/Root Command/Status/Source 路由；有界 host/guest log；W1C/reset/lifecycle/recovery。status 或无日志不得代证相邻轨道 |
 | P2P | launcher policy 显式允许整组 peer DMA；ACS relaxation 与 allow policy 分开 | 已证明 `allowP2P` 决定被测 peer DMA，`relaxACSforP2P` 单独不够 |
 | RMRR | 解析 host reserved range，保留同一范围并拒绝 System RAM overlap | patched DMAR 自动 hole 与 low-RAM reject 两条路径已验证 |
 | Memory pinning | Prealloc/hugepage memory + 足够 memlock | 负载下无 VFIO mapping failure |
@@ -414,7 +417,9 @@ qemu-system-x86_64 \
 7. 扩展到 M04-M07、A04-A06 和 Dynamic DirectPath。
 8. 执行 O00-O09，分离 desired/effective owner，并对 idle/busy、完整 dependency 与 exact
    early-boot claim 做 A/B；L06-L09 始终作为 Qman 负向门。
-9. 只针对仍未回答的 reset/PME/RMRR 问题实现 instrumented endpoint；AER 转为实现并验证 config-space filter。
+9. 执行 AER M24—M28：先用 fresh QEMU 正控验证 oracle，再分别验证 8-bit deposition、
+   CERE/CEM/root gate、Root W1C/Source、owner/lifecycle 与 guest write filter；不能把“隐藏
+   header”当作完成。
 10. 在裸机 ESXi 上用至少一个真实 NIC/NVMe 重放已通过用例；只有 large BAR/P2P
    场景再引入 GPU/FPGA。
 
@@ -467,7 +472,7 @@ virtual VT-d 与共享 NFS。
 | S00 | pass | outer e1000e 有 ROM BAR，DirectPath guest 默认不见该 ROM BAR |
 | S01 | tested-negative | QEMU UEFI ROM 正控通过；ESXi 默认隐藏通过；`pcipSaveOPROM+opromEnabled` 样本仍未执行，记录为当前 build/endpoint 负结论 |
 | S02 | pass | 三种 `_OSC` mask 与受控 PME 注入通过；status 可见但无 native PME IRQ，符合被测 ignored-PME 模型 |
-| S03 | pass | boot-only 开启 ESXi PCI error reporting 后，Correctable 与 Non-Fatal 均完成 host/guest/config/log 三方采集 |
+| S03 | partial-observed | boot-only 开启 ESXi PCI error reporting后，历史 Correctable/Non-Fatal 与新 Correctable 8-bit status-projection 已采集；effective CERE=0、Root COR_EN=0，ERR_COR route/service、guest write、lifecycle recovery 和物理 E4 尚未验证 |
 | S04 | pass-policy | default/relax-only 触发 IOMMU fault；`allowP2P=TRUE` 允许 peer DMA，ACS/no-ACS A/B 已跑 |
 | S05 | pass-policy | 自动 PCI-hole RMRR 被识别并启动；低 RAM overlap 在 ESXi host boot 阶段拒绝 |
 | SR-IOV | partial-endpoint | raw SR-IOV/VFE 可构造；ESXi 无功能 VF，igbn I350 路径停在 Invalid NVM Checksum；需支持型 PF 或完整模型 |

@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "subject": "VMWARE_ESXI_FROZEN_PROFILE",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observationStatus": "PARTIAL",
+  "asOf": "2026-07-23",
+  "scope": "PCIe Correctable AER external behavior only; no VMware private implementation inference",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "outerQemu": "QEMU emulator version 11.0.2",
+    "outerQemuSha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393",
+    "machine": "q35/KVM with an explicit pcie-root-port",
+    "endpoint": {
+      "qdevId": "test_fn1",
+      "outerBdf": "0000:01:00.1",
+      "esxiBdf": "0000:01:00.1",
+      "model": "e1000e",
+      "vendorId": "0x8086",
+      "deviceId": "0x10d3"
+    },
+    "upstreamRoot": {
+      "outerBdf": "0000:00:08.0",
+      "esxiBdf": "0000:00:08.0",
+      "secondaryBus": 1,
+      "subordinateBus": 1
+    },
+    "runtimePolicy": {
+      "enablePCIErrors": true,
+      "pcipDisablePciErrReporting": false
+    },
+    "guest": "EFI Linux 5.15 initramfs AER probe"
+  },
+  "safetyBoundary": {
+    "injectionClass": "Correctable-only",
+    "hmpForm": "pcie_aer_inject_error -c DEVICE MASK",
+    "uncorrectableInjectionSurface": false,
+    "bits": {
+      "receiver_error": "0x00000001",
+      "bad_tlp": "0x00000040",
+      "bad_dllp": "0x00000080",
+      "replay_number_rollover": "0x00000100",
+      "replay_timer_timeout": "0x00001000",
+      "advisory_nonfatal": "0x00002000",
+      "corrected_internal_error": "0x00004000",
+      "header_log_overflow": "0x00008000"
+    },
+    "precondition": "Endpoint CES and endpoint/root UES, Root Status and Source are W1C-cleared and read back; only the explicitly recorded sticky e1000e Device Status.CED is tolerated",
+    "stopCondition": "Any UES, non-CED Device Status or Root Uncorrectable reception delta yields FAIL_SAFETY and stops remaining injections"
+  },
+  "runs": [
+    {
+      "kind": "QEMU_PUBLIC_MODEL_POSITIVE_CONTROL",
+      "artifactLocator": "_artifacts/vmware-directpath-runs/20260723-aer-correctable/qemu-correctable-24-v2",
+      "resultSha256": "a0583d56bbbb969aff5d65471a9e9c993c562f7e6d46022a6317ef39c1cc19c7",
+      "verdict": "PASS",
+      "caseCount": 24,
+      "coverage": "8 Correctable bits x CERE-blocked, endpoint-masked and routed-with-Root-COR_EN-disabled gates"
+    },
+    {
+      "kind": "VMWARE_PASSTHRU_IDLE_8_BIT",
+      "runId": "20260723T002305Z-76d79e36",
+      "artifactLocator": "_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-idle-correctable-8-v2",
+      "resultSha256": "4681aaa52669b2d47cada43b8e1984fd81c8b1a3f6c733a0cdb5874eaaba33a8",
+      "sha256SumsSha256": "be517173555e08e48c8f70ebb9110823407702145dee6a4ae0aef16852d5bcc6",
+      "verdict": "PASS",
+      "caseCount": 8
+    },
+    {
+      "kind": "VMWARE_PASSTHRU_ACTIVE_UNMASKED_REPRESENTATIVE",
+      "runId": "20260723T003751Z-16496a4c",
+      "artifactLocator": "_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-active-receiver-v6",
+      "resultSha256": "42368f80e066bcae72cbc29df5c39641ff6e650664f078c96bc0d3263e698ea8",
+      "sha256SumsSha256": "af691a6a18a05c8efb0362b7cf9ab116fc23173e640dd6550ca4e5c3cade3d97",
+      "verdict": "PASS",
+      "bit": "receiver_error"
+    },
+    {
+      "kind": "VMWARE_PASSTHRU_ACTIVE_MASKED_REPRESENTATIVE",
+      "runId": "20260723T001720Z-e19407a0",
+      "artifactLocator": "_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-active-advisory-v1",
+      "resultSha256": "705b81181aaeb6a11472f82168761a73ce926f83aecf40c6befc2d8f0a2fe6a2",
+      "sha256SumsSha256": "e868e968088ccf7277d955aab65e90acb16f0e2eb7ae5c4b9a367159e10d0dd1",
+      "verdict": "PASS",
+      "bit": "advisory_nonfatal"
+    },
+    {
+      "kind": "RUNNER_NEGATIVE_CONTROL",
+      "runId": "20260723T003146Z-84cf620c",
+      "artifactLocator": "_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-active-receiver-v5",
+      "resultSha256": "52167725bc0a923e4fe4914e1159d22115a8af2d630a2ee2630388ca5927b462",
+      "sha256SumsSha256": "fe8ba966959e55ebb1a4ab054aeda7cb7085e48f6bf1be48362e57eb0d78c6ed",
+      "verdict": "FAIL",
+      "interpretation": "The only failed evidence dimension was an active-user API sample lost to an unrelated stale ManagedObject reference; all AER safety/status checks passed. The raw FAIL is retained and is not promoted to VMware behavior evidence."
+    },
+    {
+      "kind": "FINAL_RUNNER_HASH_SMOKE",
+      "runId": "20260723T004345Z-fae1a783",
+      "artifactLocator": "_artifacts/vmware-directpath-runs/20260723-aer-correctable/esxi-idle-receiver-final-smoke",
+      "resultSha256": "4378ae1e16e41b2e4a2e7ef2ae83754594926ddc589849e89697fd06efac673b",
+      "sha256SumsSha256": "e69cd30792dd3dbe2b93efcb3b65958009e16ddbeabf67098b44ed8b25a15ebc",
+      "verdict": "PASS",
+      "interpretation": "Confirms the final runner hash after the stale deleted ManagedObject handling fix; AER allow-list, safety checks and oracle are unchanged."
+    }
+  ],
+  "effectiveGates": {
+    "endpointDeviceControlCere": false,
+    "endpointCorrectableMask": "0x0000e000",
+    "rootBridgeSerr": true,
+    "rootDeviceControlCere": false,
+    "rootErrorCommand": "0x00000006",
+    "rootCorrectableCommandEnabled": false,
+    "unmaskedBits": [
+      "receiver_error",
+      "bad_tlp",
+      "bad_dllp",
+      "replay_number_rollover",
+      "replay_timer_timeout"
+    ],
+    "maskedBits": [
+      "advisory_nonfatal",
+      "corrected_internal_error",
+      "header_log_overflow"
+    ]
+  },
+  "observedBehavior": {
+    "statusDeposition": "All eight PassthruIdle cases deposited exactly the requested CES bit from a requested-bit-clean baseline; Receiver and Advisory Non-Fatal also projected to the active Guest raw body",
+    "messageRouting": "NOT_TESTABLE_ENDPOINT_CERE_DISABLED for every ESXi case; Root reception and a matching Correctable Source were not observed",
+    "guestSurface": "AER Extended Capability header remained zero, raw CES changed with the endpoint, _OSC did not grant AER and no Guest AER event line was observed",
+    "boundedHostLogs": "No matching event was observed in the captured vmkernel/vobd/syslog tail window; this is not proof that ESXi did not service an event",
+    "owner": "PassthruIdle had no powered-on VM users; both Active representative cases retained the same unique VM/device user through injection and released it after the probe powered off",
+    "safety": "Endpoint/root/Guest UES remained zero, non-CED Device Status did not appear, Root Uncorrectable reception did not appear and the host stayed responsive"
+  },
+  "qemuControlBehavior": {
+    "cereDisabled": "CES and CED set; Root Status and Source remain zero",
+    "endpointMasked": "CES and CED set; Root Status and Source remain zero",
+    "cereEnabledUnmaskedRootCommandDisabled": "CES and CED set; Root COR_RCV records and Correctable Source matches the endpoint requester; disabling Root COR_EN does not suppress Root status recording in this QEMU model"
+  },
+  "runnerHashes": {
+    "qemuMatrixExecutedSha256": "fa7aa752e16af889e0ab82c038dc122ce0b24b17675b5a764f78cdf75d13e029",
+    "esxiMatrixExecutedSha256": "e12bf9a19e229f7df4006e62dd84e34f18f7d60f8af1578de33105c0d9f4048c",
+    "esxiMatrixCurrentSha256": "f5c7998fdfaefc8ba2fb82654ec4d7eefa5c1d3f76b64814756cf04ad5aa29fb",
+    "postRunChange": "Only stale deleted ManagedObject handling changed; the allow-list, safety checks and AER oracle are unchanged; the final hash passed a live PassthruIdle Receiver smoke run",
+    "guestProbeInitSha256": "44412d0444d0b2c92277e44f5c32d23c7ff7b2e2ca436ced80e0e1b3306702e3",
+    "guestProbeIsoSha256": "9c74b04f3273573fb63abc92939d06ac1b6ddef6358d63cdb53d14bbd5971135"
+  },
+  "claimsExcluded": [
+    "VMware private implementation or algorithms",
+    "ERR_COR delivery or ESXi Root service for the frozen CERE-disabled profile",
+    "interrupt delivery or host service inferred from log absence",
+    "real Bad TLP, Bad DLLP, replay, electrical or link behavior",
+    "a real Header Log queue overflow",
+    "physical device internal state, reset cleanliness, health, quarantine or safe tenant reuse",
+    "other ESXi builds, devices, firmware, machine profiles or Qman product conformance"
+  ]
+}

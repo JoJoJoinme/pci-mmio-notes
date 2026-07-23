@@ -49,8 +49,8 @@ class VMwareEvidenceIndexTests(unittest.TestCase):
     def test_index_is_complete_hash_checked_and_non_closing(self) -> None:
         counts, errors = self.validate(self.index)
         self.assertEqual([], errors)
-        self.assertEqual(36, counts["records"])
-        self.assertEqual(28, counts["evidence_bound"])
+        self.assertEqual(37, counts["records"])
+        self.assertEqual(29, counts["evidence_bound"])
         self.assertEqual(8, counts["no_run"])
         self.assertGreater(counts["artifacts"], counts["evidence_bound"])
         policy = self.index["tracePolicy"]
@@ -247,12 +247,12 @@ class VMwareEvidenceIndexTests(unittest.TestCase):
                 _, errors = self.validate(self.index, model)
                 self.assertTrue(errors)
 
-        trace_summary = load("evidence/vmware-trace-index-20260722-summary.json")
+        trace_summary = load("evidence/vmware-trace-index-20260723-summary.json")
         trace_summary["closureAuthority"]["release"] = "FULL"
         original_load_json = evaluate_release.load_json
 
         def load_with_mutated_trace(path: Path) -> dict:
-            if path.name == "vmware-trace-index-20260722-summary.json":
+            if path.name == "vmware-trace-index-20260723-summary.json":
                 return trace_summary
             return original_load_json(path)
 

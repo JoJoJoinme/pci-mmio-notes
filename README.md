@@ -61,9 +61,9 @@ The single product hierarchy is maintained in [`ipd/README.md`](ipd/README.md):
 VMware/QEMU evidence, reference code, and historical inputs are attached without
 being promoted to product completion in [`ipd/MATERIAL-MAP.md`](ipd/MATERIAL-MAP.md).
 The VMware side is reconstructed as an official-contract plus observable-behavior
-model, mapped across all 39 Tech Stories, in
+model, mapped across all 40 Tech Stories, in
 [`ipd/VMWARE-BEHAVIOR-MODEL.md`](ipd/VMWARE-BEHAVIOR-MODEL.md).
-Its 36 experiments are also registered in the hash-checked
+Its 37 experiments are also registered in the hash-checked
 [`contracts/vmware-evidence-index.json`](contracts/vmware-evidence-index.json):
 executed reference work binds representative run IDs and evidence files, while
 planned/physical items remain explicit no-run records. Derived acceptance links
@@ -184,9 +184,12 @@ planner 见 [`evidence/esxi8-passthru-activation-20260718.md`](evidence/esxi8-pa
 和双域 capable 规则见 [`kernel-patches/`](kernel-patches/README.md)。patched IOMMU group
 继续用于 VFIO，安全 lease 则使用忽略 override 后保守重建的 physical isolation domain。
 
-PCIe Correctable/Non-Fatal AER 的三层寄存器、ESXi/guest 日志和 QEMU 对标结论，
-见 `vmware-aer-blackbox-results.md`；QEMU OVMF/SeaBIOS surface A/B 入口为
-`qemu-aer-surface-validate.sh`。
+PCIe AER 必须按 endpoint status deposition、message routing、bounded log observation、
+recovery/health 四轨解释，不能互相代证。Correctable 8-bit 黑盒矩阵、effective gate、
+ESXi/guest projection、安全停止条件和 QEMU 公开模型正控见
+[`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md) 与
+[`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)；
+QEMU OVMF/SeaBIOS surface A/B 入口为 `qemu-aer-surface-validate.sh`。
 
 ## Short conclusion
 

@@ -1473,11 +1473,11 @@ class PortableHandoffContractTests(unittest.TestCase):
             for item in self.mapping_template["mappings"]
         ]
         self.assertEqual(expected, actual)
-        self.assertEqual(293, len(actual))
+        self.assertEqual(295, len(actual))
         self.assertEqual(len(actual), len(set(actual)))
         verification_matrix = self.contract["mappingSurface"]["verificationMatrix"]
         self.assertEqual(1, self.contract["mappingSurface"]["verificationMatrixVersion"])
-        self.assertEqual(293, len(verification_matrix))
+        self.assertEqual(295, len(verification_matrix))
         self.assertEqual(
             actual,
             [(row["kind"], row["contractItemId"]) for row in verification_matrix],
@@ -1541,9 +1541,9 @@ class PortableHandoffContractTests(unittest.TestCase):
         self.assertIsNone(source["sha256"])
 
         schema_mappings = self.mapping_schema["properties"]["mappings"]
-        self.assertEqual(293, schema_mappings["minItems"])
-        self.assertEqual(293, schema_mappings["maxItems"])
-        self.assertEqual(293, len(schema_mappings["prefixItems"]))
+        self.assertEqual(295, schema_mappings["minItems"])
+        self.assertEqual(295, schema_mappings["maxItems"])
+        self.assertEqual(295, len(schema_mappings["prefixItems"]))
         for index, prefix in enumerate(schema_mappings["prefixItems"]):
             constants = prefix["allOf"][1]["properties"]
             row = verification_matrix[index]

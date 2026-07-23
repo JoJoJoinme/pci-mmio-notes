@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-07-22",
+  "asOf": "2026-07-23",
   "project": "Qman DirectPath parity and PCI passthrough control plane",
   "targetRelease": "V3",
   "deliveryModel": "SINGLE_TARGET_MULTI_WAVE",
@@ -40,6 +40,9 @@
     "detailedDesign": "qemu-static-dynamic-directpath-design.md",
     "implementationBlueprint": "qman-directpath-implementation-blueprint.md",
     "acceptancePlan": "vmware-directpath-acceptance-test-plan.md",
+    "aerCorrectableValidationPlan": "vmware-aer-correctable-validation-plan.md",
+    "aerCorrectableCanonicalResult": "evidence/esxi8-aer-correctable-20260723-result.json",
+    "aerCorrectableSummary": "evidence/esxi8-aer-correctable-20260723-summary.json",
     "referenceModel": "pci-resource-model/README.md"
   },
   "openDecisions": [],
@@ -88,11 +91,11 @@
   ],
   "observations": {
     "portableImplementationContract": {
-      "asOf": "2026-07-22",
-      "contractRevision": "2026-07-22.10",
+      "asOf": "2026-07-23",
+      "contractRevision": "2026-07-23.11",
       "portableSpecReady": true,
-      "mappingItems": 293,
-      "verificationMatrixRows": 293,
+      "mappingItems": 295,
+      "verificationMatrixRows": 295,
       "targetCodeMapped": false,
       "productImplemented": false,
       "qualified": false,
@@ -100,15 +103,15 @@
       "artifactConstructionOrder": "TARGET_CODE_C_TO_MAPPING_CORE_M_TO_CATALOG_AND_EVIDENCE_CONTENT_TO_EXTERNAL_CATALOG_ANCHOR_A_TO_EVIDENCE_REVISION_E_TO_DETACHED_FINAL_MAP"
     },
     "vmwareEvidenceTrace": {
-      "asOf": "2026-07-22",
-      "records": 36,
-      "evidenceBound": 28,
+      "asOf": "2026-07-23",
+      "records": 37,
+      "evidenceBound": 29,
       "noRun": 8,
-      "derivedAcceptanceLinks": 271,
+      "derivedAcceptanceLinks": 270,
       "closureAuthority": "NONE"
     },
       "referenceUnitTests": {
-        "asOf": "2026-07-22",
+        "asOf": "2026-07-23",
         "command": "python -m unittest discover -s pci-resource-model/tests -t pci-resource-model",
         "result": "PASS",
         "testsCollected": 294,

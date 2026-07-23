@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "QMAN-DIRECTPATH-PORTABLE-CONTROL",
-  "revision": "2026-07-22.10",
+  "revision": "2026-07-23.11",
   "subject": "QMAN_V3_DIRECTPATH_PORTABLE_IMPLEMENTATION",
   "purpose": "A target-repository-independent implementation contract for VMware-aligned Static, Dynamic, managed-owner, lifecycle, and dual-online-host cold-relocation behavior.",
   "normativeSources": [
@@ -60,17 +60,17 @@
     {
       "path": "qemu-static-dynamic-directpath-design.md",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:987badcb7006d896127889f76c24ace9fecefe60c95c3bf6bae87319073935e2"
+      "sha256": "sha256:88f02435f1c98ad4d4399618198e1de6dd0f65696da289a2ba1e6ba14a17b853"
     },
     {
       "path": "qman-directpath-implementation-blueprint.md",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:cbcd468b6a69ad72616819114a632c7581d36272d919119b1aed42911f1115be"
+      "sha256": "sha256:93356b0c289f7481b1d605bf3e4123f7c0464f6a92c9067f6eb03d3a0d77cd27"
     },
     {
       "path": "contracts/ipd-tree.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:9280c2857fdc50b233daa649dbaae2b0230fbdad6ee538d46c08baeed5ccd571"
+      "sha256": "sha256:8a5cf1933fc959ea057a2f76d5b0df05f0b1867934ea526ae8f82f6cf58d04bd"
     },
     {
       "path": "contracts/product-decisions.json",
@@ -80,7 +80,7 @@
     {
       "path": "contracts/vmware-behavior-model.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:f29c890e85875479c294f853365ee9e45be8cf560b30095f9e5ef8eb7f7e54f3"
+      "sha256": "sha256:d7b974e512baf2f10c4b3729f2f2094aca61f11956a2fd4a5cfde43c76a67c0b"
     },
     {
       "path": "contracts/compatibility-profile-policy.json",
@@ -100,7 +100,7 @@
     {
       "path": "contracts/directpath-acceptance-case-contracts.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:f2d678f0be1a8ceb0e7be2f49ee65277a8e37446cb00ae3037bf913fcbb70ea1"
+      "sha256": "sha256:274319ed104c9b8871ceca886a31b755605f676ce72eac1a5a78d21d4d27bec7"
     },
     {
       "path": "contracts/directpath-case-completion-record.schema.json",
@@ -285,7 +285,7 @@
     {
       "path": "contracts/qman-integration-map.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:53723a572ef06e7e2fe8010494c20338cd7404c4ee4949a32352b0202a0f5ff5"
+      "sha256": "sha256:61db28e0b009e742491c29d0b49e7a1f21ceda0bc7696e8e0bd779553c114e3f"
     },
     {
       "path": "tools/generate_directpath_case_contracts.py",
@@ -300,12 +300,12 @@
     {
       "path": "vmware-directpath-acceptance-test-plan.md",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:007fb628ad84f7a0618bb3da24190cd33affeb1f2d77c8b4c4c582d37c152022"
+      "sha256": "sha256:23d9e126e14dba2a3d318b23115bdd3def4b86e746ba5e983b85095f8332b318"
     },
     {
       "path": "acceptance/cases",
       "hashScope": "REPOSITORY_TREE_V1",
-      "sha256": "sha256:f01f89c6df3a72f306136886e284f4182ef86fc8453dff266c0a5d278d8a7efa"
+      "sha256": "sha256:f7881a42ddc546cb466a4e4a1a3904a3cd92f31bccb7700c077754a7e3d28f2b"
     }
   ],
   "normativeSourceClosureRule": {
@@ -1055,12 +1055,14 @@
       "techStoryIds": [
         "TS-F1-01",
         "TS-F1-02",
-        "TS-F1-03"
+        "TS-F1-03",
+        "TS-F4-06"
       ],
       "caseIds": [
         "C15",
         "C16",
-        "C21"
+        "C21",
+        "M06"
       ]
     },
     {
@@ -1212,9 +1214,11 @@
       "techStoryIds": [
         "TS-F3-03",
         "TS-F5-02",
-        "TS-F5-03"
+        "TS-F5-03",
+        "TS-F4-06"
       ],
       "caseIds": [
+        "M06",
         "S03",
         "S04",
         "S07",
@@ -1250,9 +1254,11 @@
       ],
       "techStoryIds": [
         "TS-F4-02",
-        "TS-F4-05"
+        "TS-F4-05",
+        "TS-F4-06"
       ],
       "caseIds": [
+        "M06",
         "M16",
         "S15",
         "F09"
@@ -1268,9 +1274,11 @@
       ],
       "techStoryIds": [
         "TS-F4-04",
+        "TS-F4-06",
         "TS-F8-02"
       ],
       "caseIds": [
+        "M06",
         "M08",
         "M21",
         "M22",
@@ -1289,6 +1297,7 @@
         "OP-REMEDIATE-QUARANTINE"
       ],
       "techStoryIds": [
+        "TS-F4-06",
         "TS-F5-01",
         "TS-F5-02",
         "TS-F5-03",
@@ -1296,6 +1305,7 @@
       ],
       "caseIds": [
         "F00",
+        "M06",
         "S07",
         "S08",
         "S11",
@@ -5585,7 +5595,6 @@
         "M03",
         "M04",
         "M05",
-        "M06",
         "M07",
         "M08",
         "M09",
@@ -5611,6 +5620,16 @@
         "TS-F4-04"
       ],
       "evidenceMinimum": "Exact planner, firmware/machine matrix, BAR/bridge/MMIO/RMRR/device-count boundary, timeout denial, and observed-plan match."
+    },
+    {
+      "id": "TEST-PCI-ERROR-POLICY",
+      "caseIds": [
+        "M06"
+      ],
+      "techStoryIds": [
+        "TS-F4-06"
+      ],
+      "evidenceMinimum": "Versioned PCI error capability and body read/write policy; independently observed status deposition, message routing, bounded logs, lifecycle clear/reuse and recovery; synthetic reference evidence is separated from exact-device physical qualification."
     },
     {
       "id": "TEST-LIFECYCLE-NEGATIVE-GATES",
@@ -5809,6 +5828,21 @@
         "TEST-GUEST-RESOURCE-ADMISSION"
       ],
       "portableRequirement": "Firmware, machine profile, BAR/MMIO, reserved ranges, and full-memory requirements are versioned admission inputs with post-start verification."
+    },
+    {
+      "id": "PARITY-PCI-ERROR-POLICY",
+      "classification": "MUST_MATCH",
+      "implementationPortIds": [
+        "PORT-INVENTORY-SNAPSHOT",
+        "PORT-HOST-AGENT",
+        "PORT-QEMU-LAUNCHER",
+        "PORT-RUNTIME-VERIFIER",
+        "PORT-RELEASE-RECOVERY"
+      ],
+      "testObligationIds": [
+        "TEST-PCI-ERROR-POLICY"
+      ],
+      "portableRequirement": "PCI error capability, status deposition, message routing, guest writes, bounded observability, lifecycle cleanup and recovery are separate versioned policy surfaces; one cannot prove another."
     },
     {
       "id": "PARITY-EXACT-CHIPSET-ADDRESS-IDENTITY",
@@ -6034,6 +6068,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -6088,7 +6123,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -6106,6 +6140,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -6155,7 +6190,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CANONICALIZATION_PROFILE_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:b6dd423ec0874127ff149b2ce898a89438277c7e2377fa1352aa292a9805ba36"
+        "requirementDigest": "sha256:1e017dbd5922f4d00f8f497b0ef5f951019402d734df6de286445fe528b9d401"
       },
       {
         "kind": "CANONICALIZATION",
@@ -6165,6 +6200,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -6219,7 +6255,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -6237,6 +6272,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -6286,7 +6322,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CANONICALIZATION_PROFILE_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:6b146140f89b3581b242661dd9b34f08f55cfab5e767c027504b19e27bc2c496"
+        "requirementDigest": "sha256:23caccb8b16c5e405843e2bb010829ca0711dd6954c23bd12aae03f67a546653"
       },
       {
         "kind": "CANONICALIZATION",
@@ -6296,6 +6332,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -6350,7 +6387,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -6368,6 +6404,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -6417,7 +6454,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CANONICALIZATION_PROFILE_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:4cbf2ee4570ceac924f53658b6e4b099eab70f6cb9f26e7e58cacf7a4db1f0e5"
+        "requirementDigest": "sha256:80a3403c06720a084685fe747eb7510ad20f39ffd072a251cebe88556a0f8bec"
       },
       {
         "kind": "CANONICALIZATION",
@@ -6427,6 +6464,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -6481,7 +6519,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -6499,6 +6536,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -6548,7 +6586,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CANONICALIZATION_PROFILE_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:4bb858f9a1baede5f1e33e87e066aa0f60b4a665b215c81f5541634000bdf2c8"
+        "requirementDigest": "sha256:24b837344a9639361dcffb0ca9c9de135e9ca7575f3ae3e4b8560e286f52dce2"
       },
       {
         "kind": "GUARD",
@@ -6558,6 +6596,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -6612,7 +6651,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -6630,6 +6668,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -6679,7 +6718,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "GUARD_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:43e5ccd7f7076ed1dc3df83e09ff37e24b1868243184db9b447f486c53e7e3a6"
+        "requirementDigest": "sha256:e48d3030a51ee7da6b10eaacdd2835615ee86c2dc28b31946e2940930bc4d135"
       },
       {
         "kind": "GUARD",
@@ -6689,6 +6728,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -6743,7 +6783,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -6761,6 +6800,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -6810,7 +6850,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "GUARD_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:c48da9bcb55a1c9645a91c9353197a1a885ad2fa37e1b0e080a4ad92f3810fec"
+        "requirementDigest": "sha256:772abe1d0578169dc9f58d676d88be6d20e7bfb6a86712073b07342ffafe4d39"
       },
       {
         "kind": "EQUIVALENCE",
@@ -6929,6 +6969,7 @@
         "contractItemId": "PORT-INVENTORY-SNAPSHOT",
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS"
         ],
@@ -6948,6 +6989,7 @@
           "C19",
           "C20",
           "C21",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -6967,7 +7009,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:a4578ea64d78231294505aa04f6660773b206f94adb5eeb44586c058391c6562"
+        "requirementDigest": "sha256:dbbd206ee612168d839333f2874b1b888879114d5f8ac69f06a5f5ef4a03b979"
       },
       {
         "kind": "PORT",
@@ -7121,7 +7163,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -7151,7 +7192,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:e571b1e62cea9ca82cb9c25b6dfaa8b322bda259453b39d0d761436833b2de88"
+        "requirementDigest": "sha256:63a67230456dff5fabb4dc583a09c7c518ddede0ef448f61ca7071de3fdf6a51"
       },
       {
         "kind": "PORT",
@@ -7246,6 +7287,7 @@
         "contractItemId": "PORT-HOST-AGENT",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -7261,6 +7303,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -7282,7 +7325,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:4e6da25dc71aefd15f4cc00051e1d700df93cca44a118390a48b3b65f2554867"
+        "requirementDigest": "sha256:4518aa59c829fbeed9e2cfdd9181642b11021a01d3c9898dd961375292a1b535"
       },
       {
         "kind": "PORT",
@@ -7326,6 +7369,7 @@
         "contractItemId": "PORT-QEMU-LAUNCHER",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE"
         ],
@@ -7338,7 +7382,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -7356,6 +7399,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -7379,13 +7423,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:11d2b55a35d7ff20612aa8d80d0321666eff1003c8749dd0b4220fb502f9e8d5"
+        "requirementDigest": "sha256:55118fb53c0e1048e54d34321bb2d0a5098082a8eb279b0de30aa6e757cf2682"
       },
       {
         "kind": "PORT",
         "contractItemId": "PORT-RUNTIME-VERIFIER",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
         "requiredCaseIds": [
@@ -7397,7 +7442,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -7415,6 +7459,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "F00",
           "F01",
           "F02",
@@ -7432,7 +7477,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:8f5861e72794137171c161ec16d9af1f1a026ead48db732b79f1e14b469a43a8"
+        "requirementDigest": "sha256:03de1a18bf866b83aa9cf3af833882f2c8fc080ce4098929f4f5cd540d129289"
       },
       {
         "kind": "PORT",
@@ -7440,6 +7485,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -7471,6 +7517,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -7495,7 +7542,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:34a4d459a984f0df6d8d55f1c6245f40456e3dd737277bf6717fe32eaf67211c"
+        "requirementDigest": "sha256:8c0106854bfc3f9ad33ac5e7a6539fd55061599dd3beb673bbf48900723b5560"
       },
       {
         "kind": "PORT",
@@ -7595,6 +7642,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -7649,7 +7697,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -7667,6 +7714,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -7716,7 +7764,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:db01d1384d4bfc0cb6120fe9506a04822e18aa5ab67cf0e513faecf42f90bef7"
+        "requirementDigest": "sha256:b9c0554c9b4be8e25782503bfc6541abfa58bb2337eeba2758da39aadcc29792"
       },
       {
         "kind": "ENTITY",
@@ -7726,6 +7774,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -7780,7 +7829,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -7798,6 +7846,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -7847,7 +7896,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:7a32f9e7e12400c8fdcfd262b44e5aeb10c04579bfb5a1b6061581b5b96f6c34"
+        "requirementDigest": "sha256:e5394a2eefc2dd06450f2773a0bcfcf79018565376ba72ab7a504ebd6e89ddd3"
       },
       {
         "kind": "ENTITY",
@@ -7857,6 +7906,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -7911,7 +7961,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -7929,6 +7978,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -7978,7 +8028,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:205beb059fccfb1f3331d87a732a8c70ba3298d1afa32e9e47e65a2431323664"
+        "requirementDigest": "sha256:59f1236938b89e1aa7e3aaee086e6cdec1a4f3a78212457f3eb6587c43161ff4"
       },
       {
         "kind": "ENTITY",
@@ -7988,6 +8038,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -8042,7 +8093,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -8060,6 +8110,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -8109,7 +8160,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:aa57a1b92e42f8ad2f99cf78d71aaa275723391e434e6f466142cd71f46218fc"
+        "requirementDigest": "sha256:964024895edee9334f8523d102ac22a8df6a006beccbf5849575df0f1ea7a4ce"
       },
       {
         "kind": "ENTITY",
@@ -8119,6 +8170,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -8173,7 +8225,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -8191,6 +8242,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -8240,7 +8292,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:5cf26016f834eff803c3dc77d829a33772f5514571fcc17c662088d088b866df"
+        "requirementDigest": "sha256:bbdf89434cc02b65c1f7450fc55cf9df8782c7d80e32db37518a798731e8245d"
       },
       {
         "kind": "ENTITY",
@@ -8250,6 +8302,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -8304,7 +8357,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -8322,6 +8374,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -8371,7 +8424,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:2c3d1f58260d4b72d96443ec2029c960d9f8a655288eba6748b0e518f4ca6983"
+        "requirementDigest": "sha256:3e6b7e1af1bb4c4365f712498d274af5b719a55b1791da1521fab3e01b6dea24"
       },
       {
         "kind": "ENTITY",
@@ -8381,6 +8434,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -8435,7 +8489,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -8453,6 +8506,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -8502,7 +8556,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:06a50a3d76fb8117a4402fc62507ab128eee798b8d9cfd08720dca87cdccacbf"
+        "requirementDigest": "sha256:381743caede77ba738079074370416c3e72616c3b13df7e8f4422bcc50701f33"
       },
       {
         "kind": "ENTITY",
@@ -8512,6 +8566,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -8566,7 +8621,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -8584,6 +8638,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -8633,7 +8688,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:15be5df10b7507a23f5475327d4ea22e41b955ee1ce9bf7c379de5733796af7d"
+        "requirementDigest": "sha256:83ef72d9d80dc03b2adecb2c45def3b404dcbcd786d0d8e0d40be84fa100bc12"
       },
       {
         "kind": "ENTITY",
@@ -8643,6 +8698,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -8697,7 +8753,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -8715,6 +8770,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -8764,7 +8820,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:3d8b889a795fe4afc3d1b8e88ea0a2335ca2858c2f24c643733fb2d7ce0039a1"
+        "requirementDigest": "sha256:f48fef08b0fca131345edd28c401b26d7ede75135ea8d36e1ba20ccf6d368045"
       },
       {
         "kind": "ENTITY",
@@ -8774,6 +8830,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -8828,7 +8885,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -8846,6 +8902,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -8895,7 +8952,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:1d919dbed1f874fdbc48e7a07ffda52bd721964ae841780acd85681f43cf2c0b"
+        "requirementDigest": "sha256:a70df31053e999ffbe878761522193c0f101a49540eb745566cbccadb7e7d199"
       },
       {
         "kind": "ENTITY",
@@ -8904,6 +8961,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -8947,6 +9005,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -8971,7 +9030,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:e79e5e7fd5cf6dfa5ac5ad21e14fcd8f5d41ff34480e7408c714db4795b918e2"
+        "requirementDigest": "sha256:908597c6b3375612f7c839e9612f253be7e7d5e98108d8cb95fed6a165ac2e67"
       },
       {
         "kind": "ENTITY",
@@ -8980,6 +9039,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -9022,7 +9082,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -9040,6 +9099,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -9089,7 +9149,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:e23e44ce7a281e8c0d387658c7a2dfc0f8dd1111c8fc4c75e911c4a9a9098f0c"
+        "requirementDigest": "sha256:87a7dc9c96db7c7a24cdaa8af3a4d69abc14e425c8e312352922b6374342b47f"
       },
       {
         "kind": "ENTITY",
@@ -9099,6 +9159,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -9153,7 +9214,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -9171,6 +9231,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -9220,7 +9281,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:875f34d8939c2978d5b1cf1296c0d87ef71c498090917f51ad4d1f6740bc6a87"
+        "requirementDigest": "sha256:72e020594d61422bb39e74fd2a7188aecd7b0889f9b7e5636a454d4c620b4db0"
       },
       {
         "kind": "ENTITY",
@@ -9230,6 +9291,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -9284,7 +9346,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -9302,6 +9363,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -9351,7 +9413,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:f5c6e0d8a215329c0ee5d12a887e439bce127de6cadc1c93981897d30e17bff0"
+        "requirementDigest": "sha256:f6f2b531537227e17601d3d337bb1f37840e04e9a93ab90d10afe705322f8294"
       },
       {
         "kind": "ENTITY",
@@ -9361,6 +9423,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -9415,7 +9478,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -9433,6 +9495,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -9482,7 +9545,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:7f1f7968a06120d31d1af79137028cc3a5d9d787a958e02fb9be3c9d187ec4ec"
+        "requirementDigest": "sha256:d919809533c1c4aef7210cd90df22810eee04d1813e636c9866746947d80840f"
       },
       {
         "kind": "ENTITY",
@@ -9492,6 +9555,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -9546,7 +9610,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -9564,6 +9627,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -9613,7 +9677,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:cf5e3262d812c3c26f836728447052d7092dea743f6df56e2f49c519f771bccd"
+        "requirementDigest": "sha256:3a22ff2c9e73c32241cd6a95b0571c1006291c4f03430886a3f696ce50ab9c59"
       },
       {
         "kind": "ENTITY",
@@ -9623,6 +9687,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -9677,7 +9742,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -9695,6 +9759,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -9744,7 +9809,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:3d4f59db8fcc5473432a9b94253c0010c1dc6365642dccfc625267ecab85b6d1"
+        "requirementDigest": "sha256:55748f34781f885fc2be41e0006a3521d0a7aa4a1c92398d925eae0ce5ef63ec"
       },
       {
         "kind": "ENTITY",
@@ -9754,6 +9819,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -9808,7 +9874,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -9826,6 +9891,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -9875,7 +9941,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:289e48b147991000106aec0c31c93a81257b93d45103d940559f91853f2edade"
+        "requirementDigest": "sha256:51368bec8a052994b72f6374872a6d8b614687f1ff953fe6924531bfafcdb40b"
       },
       {
         "kind": "ENTITY",
@@ -9885,6 +9951,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -9939,7 +10006,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -9957,6 +10023,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -10006,7 +10073,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:4a4a340fdbbe5c092f3d36b180e407fb3ae68b69b40d54ab8c468608944a1174"
+        "requirementDigest": "sha256:96514f9cc997f617b735530e2c773f21b120a6abb312691e43b7d3d5ab521372"
       },
       {
         "kind": "ENTITY",
@@ -10016,6 +10083,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -10070,7 +10138,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -10088,6 +10155,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -10137,7 +10205,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:67996666cb55461a1d52a1e6d377eef79751daca861383eb584e9161e229933c"
+        "requirementDigest": "sha256:8490a57d35be2867625f937a06b423ee3baa4a83cff859195897a0fbccb6fa70"
       },
       {
         "kind": "ENTITY",
@@ -10145,6 +10213,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -10176,6 +10245,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -10200,7 +10270,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:014d650b4452c3f95dad7752366c7183050be95b34d84659695d875a770ba24b"
+        "requirementDigest": "sha256:391db1e5c20d8452d722d5225924b6a1b169a801d943f39d96ecd6cd3f6e3bae"
       },
       {
         "kind": "ENTITY",
@@ -10209,6 +10279,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -10251,7 +10322,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -10269,6 +10339,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -10318,7 +10389,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:6ffba02cecb0d072e1165f57f0eb7860bb4bbc5a5e7567fff91fa8a5793af9c0"
+        "requirementDigest": "sha256:37806ab7f15a0b4bf35735b4556a21cd210bfd1eb9ce69d256319041c32b69c3"
       },
       {
         "kind": "ENTITY",
@@ -10328,6 +10399,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -10382,7 +10454,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -10400,6 +10471,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -10449,7 +10521,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:938599f67b7478a3833532115f4358db56914029137bf8ca4c25427f41000d82"
+        "requirementDigest": "sha256:8543662364bec416440b0090647829cb4d03688c3309ea458d9f00bd5b8da4ce"
       },
       {
         "kind": "ENTITY",
@@ -10459,6 +10531,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -10513,7 +10586,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -10531,6 +10603,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -10580,7 +10653,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:3664dbb61237535a14dbcdb12d431b0c00764a3071f59e2e2b7be655cf12f903"
+        "requirementDigest": "sha256:ddc0c484738ceda8fc0488a3b6f1aa4839f8a4fc1eb2beaf03850dab094c05d3"
       },
       {
         "kind": "ENTITY",
@@ -10590,6 +10663,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -10644,7 +10718,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -10662,6 +10735,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -10711,7 +10785,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:09ee5163d499f557734aa3bc0d8aa541bcc8957bbbb42b3be498b1cda74f6773"
+        "requirementDigest": "sha256:d7bff38b04d7fe660344f5768f85cd90b3695a58f9c93aeeb02d130ba4fa4f85"
       },
       {
         "kind": "ENTITY",
@@ -10721,6 +10795,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -10775,7 +10850,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -10793,6 +10867,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -10842,7 +10917,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:5b38b428947c429a27c314184facd7c049cfd31bc6b00bb67e259383b9c02267"
+        "requirementDigest": "sha256:de6a81e0883320636ca5687ab0c0c82b62896c610f3ccbb1399dbfccd2ec2408"
       },
       {
         "kind": "ENTITY",
@@ -10852,6 +10927,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -10906,7 +10982,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -10924,6 +10999,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -10973,7 +11049,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
-        "requirementDigest": "sha256:948f0e86b445c4791f69d724b4254cdcbbac90a31ee9c2647ed6038759e9ebde"
+        "requirementDigest": "sha256:f01ce6475db41129284de32c82397d6c3f41349c6cd52caa14d70bb076be1bd2"
       },
       {
         "kind": "OPERATION",
@@ -11172,6 +11248,7 @@
         "contractItemId": "OP-CAPTURE-HOST-SNAPSHOT",
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS"
         ],
@@ -11191,6 +11268,7 @@
           "C19",
           "C20",
           "C21",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -11210,7 +11288,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:b7a95c8f9ff1a2868bbd81d724773f95adb41017289690e2b50ceabde7321c78"
+        "requirementDigest": "sha256:69d80655d26a020ce0f7f876538d9825fa5ba5e1fbe7101ad55fe7ba29f4a0bf"
       },
       {
         "kind": "OPERATION",
@@ -11430,7 +11508,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -11460,7 +11537,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:50289069e2cce866ac391f64f2067546c96cbe76c4a310eb7496ed63a1df546a"
+        "requirementDigest": "sha256:d1f945f382a2061e3d95bd50876f454c9df75afd03ea3ae63afed36fd78298ce"
       },
       {
         "kind": "OPERATION",
@@ -11770,6 +11847,7 @@
         "contractItemId": "OP-PREPARE-HOST-BUNDLE",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -11785,6 +11863,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -11806,13 +11885,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:be280f3ada971c929e9be9bd99414b3bb0fb68d24888fc22c74fcdec6b2a6ebf"
+        "requirementDigest": "sha256:4422aaac7a5884ca47a3d17d6d08b6737ec5da26e7bf3040fac1e0019474ef21"
       },
       {
         "kind": "OPERATION",
         "contractItemId": "OP-TEARDOWN-HOST-BUNDLE",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -11828,6 +11908,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -11849,13 +11930,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:7df5d519f2407dfc53ed27f5c2fc148313e4ea0cbee42916cd375a6c547dea1e"
+        "requirementDigest": "sha256:b5cfebdd910beb4235b4d69244d1185f893952a0bfcb0a0dda3a859daec9319d"
       },
       {
         "kind": "OPERATION",
         "contractItemId": "OP-RECONCILE-HOST",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -11871,6 +11953,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -11892,7 +11975,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:f79188d57aa2a1fdc5f6e1d8245dd90041168aac0d354e8e1e72551049b2e95f"
+        "requirementDigest": "sha256:64a6e93c62862ede2c9fc2011d5580aa70880c6557046f2b6f46a7147dfe73d7"
       },
       {
         "kind": "OPERATION",
@@ -11973,6 +12056,7 @@
         "contractItemId": "OP-SPAWN-QEMU",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE"
         ],
@@ -11985,7 +12069,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -12003,6 +12086,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -12026,13 +12110,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:3aef872881092788c1000f7bfc117b11770eaa7cd564b8bbe92fa21bf463d41a"
+        "requirementDigest": "sha256:694d55615772ab98487b3efbeba26df70b231af0e02571573e39f597106a4cf0"
       },
       {
         "kind": "OPERATION",
         "contractItemId": "OP-STOP-QEMU",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE"
         ],
@@ -12045,7 +12130,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -12063,6 +12147,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -12086,13 +12171,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:be37e60b89b3ad4c5874a0aeb48899337530eb04e3221aef9b8dc75df42d5bb5"
+        "requirementDigest": "sha256:a340f3b85f8670ab1687e6d41a20cb1011fa4782b9ec15d404fdffa73f4dda65"
       },
       {
         "kind": "OPERATION",
         "contractItemId": "OP-VERIFY-RUNTIME-PLAN",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
         "requiredCaseIds": [
@@ -12104,7 +12190,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -12122,6 +12207,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "F00",
           "F01",
           "F02",
@@ -12139,7 +12225,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:cfccdf3e20a68ca71467f8b2fddc0fbcd9403647a7a2c979e06024f1a9284edb"
+        "requirementDigest": "sha256:f86955d70cf6287a242647e441b87b1d744ac87acda4f43b721bd43e6e15e079"
       },
       {
         "kind": "OPERATION",
@@ -12147,6 +12233,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -12178,6 +12265,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -12202,7 +12290,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:d700c0f8fabef8b6257bb00b0bfa035914eb4d3c80b272c3ccfd15cf93d0238e"
+        "requirementDigest": "sha256:2c7df61aeb1a44eb68113f13c2fd48cfb85c48804d243956bb8876c621d7ed72"
       },
       {
         "kind": "OPERATION",
@@ -12210,6 +12298,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -12241,6 +12330,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -12265,7 +12355,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:2607baf203c444382b9ff0706a58d6e1121eecb09378f2e40baf1e48163b683e"
+        "requirementDigest": "sha256:3503cdd7041646609517734a8c3c06c71e605b574ca2648c36895c0d6aac9703"
       },
       {
         "kind": "OPERATION",
@@ -12273,6 +12363,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -12304,6 +12395,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -12328,7 +12420,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:90b30f2f56a74c3c39b46ce9de2fd0267ed71e207927a85931d351e97419536d"
+        "requirementDigest": "sha256:a3660355563233d3e482b5a50036570452ab38ca6fd0c5b8f87f19809ef00a1d"
       },
       {
         "kind": "OPERATION",
@@ -12336,6 +12428,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -12367,6 +12460,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -12391,7 +12485,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:3cdf8c51dfcb3ddac770ddc5bdc6364d9c4922aa489b4a9fc43b5dd3b86c939a"
+        "requirementDigest": "sha256:b26bb4481d02883c40edbdeb2329e36b7625bdc189a847a744df345f8e7def63"
       },
       {
         "kind": "OPERATION",
@@ -12521,6 +12615,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -12564,6 +12659,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -12588,7 +12684,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "STATE_MACHINE_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:b91116bf444077d9b20da3d019f646a2bcd3da2094bc1b55c0ee3d5a588e8780"
+        "requirementDigest": "sha256:46f1a4ad06a80678555ea08bdf14569ebe8ba589b29abf3d15c9e920c2560fb5"
       },
       {
         "kind": "STATE_MACHINE",
@@ -12597,6 +12693,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -12639,7 +12736,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -12657,6 +12753,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -12706,7 +12803,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "STATE_MACHINE_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:f9fa9d9e5772cf675765305ea32a35a606250ed44e78f23ed8ab9a677b360641"
+        "requirementDigest": "sha256:e154baa0987eb1fab33c960e743b7ab4a2c7fa95ea21df9b9457d0d45a682efe"
       },
       {
         "kind": "STATE_MACHINE",
@@ -12715,6 +12812,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -12757,7 +12855,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -12775,6 +12872,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -12824,7 +12922,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "STATE_MACHINE_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:686eae79574184c7f1bfd84e3a8429dc6a66420a005864678d2a137c7d038b07"
+        "requirementDigest": "sha256:4a3dd01a85d8d1ff1dd3844a5242707323d5280e4abbdd01a23dc3b181a43b68"
       },
       {
         "kind": "STATE_MACHINE",
@@ -12832,6 +12930,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -12863,6 +12962,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -12887,7 +12987,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "STATE_MACHINE_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:9010bc7bc80607cdca4a2917e08535d15501b3e849fae7758457ad5b4bc48690"
+        "requirementDigest": "sha256:45e2f033d8e0be52df206ebe0757f66716e3d9e1fc507ba66d0cd101a9e6951a"
       },
       {
         "kind": "TRANSITION",
@@ -13150,6 +13250,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -13181,6 +13282,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -13205,7 +13307,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:0aaaf27e352cb6f32605bf880cb3ab572f521171050054b2f0a868588c235fcc"
+        "requirementDigest": "sha256:0ffcd2e9888b225b39c683f258f1efc15fa24afafa344869d9f1660c0da361c7"
       },
       {
         "kind": "TRANSITION",
@@ -13315,7 +13417,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -13373,7 +13474,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:91f755af38aef8f70a3a0314acdaf2870973b099b846b5435be5fd492978627b"
+        "requirementDigest": "sha256:79df544078af17297fc2de8ef9c61a1a27d27e30ef2931fd6c34c5dea77f131a"
       },
       {
         "kind": "TRANSITION",
@@ -13405,7 +13506,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -13463,7 +13563,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:4b525237f7ac25135230a28d8e7e8284878272c2c923dd9e5e15a74b316242eb"
+        "requirementDigest": "sha256:a3f0ae23df3f8c656ebd0e7abf4ce8d275599a55d38ba6cd422f24a5b88f6959"
       },
       {
         "kind": "TRANSITION",
@@ -13557,6 +13657,7 @@
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
@@ -13582,7 +13683,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -13600,6 +13700,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -13632,7 +13733,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:c50b899acbb9924269ced2e0276e3ba6565530696be3f723365ea3e4da22bdbf"
+        "requirementDigest": "sha256:090bbdf66233f80d5c89ae1a041f35119fc1a1c75ceb8a6d2993446ed0f000d9"
       },
       {
         "kind": "TRANSITION",
@@ -13640,6 +13741,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -13672,6 +13774,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -13700,7 +13803,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:4e74edc1015aee5379aad7de2f8dfce628977f9982c3750db36cb4a4d054aa94"
+        "requirementDigest": "sha256:b2831fd5819b6b596f29e61f312d3dee8c260d3da16828e6cf37948d51024135"
       },
       {
         "kind": "TRANSITION",
@@ -13709,6 +13812,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -13749,7 +13853,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -13767,6 +13870,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -13798,7 +13902,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:e509130f068931b6269dd68f4f4e419ea3cc14f06335225914c10ab775c865e0"
+        "requirementDigest": "sha256:26d2c62e8130bf50d427e35b98a75c624841c8fa82ed7a110c63ebcdb7035b1c"
       },
       {
         "kind": "TRANSITION",
@@ -13806,6 +13910,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -13838,6 +13943,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -13866,7 +13972,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:6ab131f55fda86883887d7783eb67b62867f27cb0df6152ac8a14a093adad1cb"
+        "requirementDigest": "sha256:19b65669946e3b511c08801facc395e67cf9a8b51a7b9b17eb92cf87cc76bef9"
       },
       {
         "kind": "TRANSITION",
@@ -13874,6 +13980,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -13906,6 +14013,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -13934,7 +14042,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:2afa4e3bcaee259d511e81dceee1437223bba171829c41d84149e0974f819a69"
+        "requirementDigest": "sha256:873d4ec333795453a6078adbcd038f405f210a80a34a0c4dd5cce6f5fe0e6ed8"
       },
       {
         "kind": "TRANSITION",
@@ -13942,6 +14050,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -13974,6 +14083,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -14002,7 +14112,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:1a09e7035b8df27444ecdab76ce01e06a70b823f350f9babe2486ce9376d5f0b"
+        "requirementDigest": "sha256:7d319e859324e6f59bced8437f23a2cc36069ba5cc594329a89a6cca1e58d8d1"
       },
       {
         "kind": "TRANSITION",
@@ -14010,6 +14120,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -14042,6 +14153,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -14070,7 +14182,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:b8eb0ee6fb2f9d71725bad9655ac449666f0112cfa5cd5bf85132d27b0509e0d"
+        "requirementDigest": "sha256:f721c3fccafd59710801e61738d0e4108098da6ddee7d9a7c4a738854b91148a"
       },
       {
         "kind": "TRANSITION",
@@ -14110,6 +14222,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
@@ -14151,7 +14264,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -14169,6 +14281,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -14204,7 +14317,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:b20cb1a6b72f84c1204767a27b774ea2dbf50ab8325c440bf37571f1e73f7ed7"
+        "requirementDigest": "sha256:131768fb901b0277d73b1c7351b1b668d33db432bc47189f2bed8f13384b9e0c"
       },
       {
         "kind": "TRANSITION",
@@ -14212,6 +14325,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -14244,6 +14358,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -14272,7 +14387,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:e60c9ed3b58585aa89079f79dcc40c2b38e6f0b3ac6681afe9afca789be11aca"
+        "requirementDigest": "sha256:04afe2decfad960d67c950bb405bf5e0d70e16bf0ae3e1672f89131b10aae39b"
       },
       {
         "kind": "TRANSITION",
@@ -14305,7 +14420,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -14367,7 +14481,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:21b0758a90c2c4c4e31faf16d6bb0269f29149537486f395455710ec615b152a"
+        "requirementDigest": "sha256:0c82b340485a390d04923003c4abbb3ec934e0144fca8082289a32bd1fefbb55"
       },
       {
         "kind": "TRANSITION",
@@ -14431,6 +14545,7 @@
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -14455,7 +14570,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -14473,6 +14587,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -14501,7 +14616,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:862731b80ec719a4675f55e543deb0301e45f0b4468328390dd4653910f7e7da"
+        "requirementDigest": "sha256:45600cbe4cfd54e3eec6daac8d81c4688e95566ed34527e00cc6b5b19f75584d"
       },
       {
         "kind": "TRANSITION",
@@ -14509,6 +14624,7 @@
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -14532,7 +14648,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -14550,6 +14665,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -14571,7 +14687,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:ccf0fcec4b17ade7f7efa1aa38bed1e84b988eaedda6275228c53405e722836a"
+        "requirementDigest": "sha256:4c8ae5010af79b60300a5dcc675b82f676f7ff76cbc6cc222612324a40775950"
       },
       {
         "kind": "TRANSITION",
@@ -14579,6 +14695,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -14611,6 +14728,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -14639,7 +14757,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:5c9f8429e941f2d5e7fb87c69fb1be0b3787ca61597bce63d190c2634adf94e7"
+        "requirementDigest": "sha256:b8590f9bc65b69006f964e2db33ab3ddcb07a0dc3abbb94e40d6fe1c7f9eec6e"
       },
       {
         "kind": "TRANSITION",
@@ -14647,6 +14765,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -14679,6 +14798,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -14707,7 +14827,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:ed1162e7290ece194c5da0c0d0b780117ea7695c022f6186397ac002d7d95215"
+        "requirementDigest": "sha256:99cbac6c726d3b63ffccee11ced3692a8a509ea5aa898bbe738acedacf98cc55"
       },
       {
         "kind": "TRANSITION",
@@ -14831,6 +14951,7 @@
         "contractItemId": "TR-RELOCATE-HOST-RECOVERED-SOURCE-RECONCILE",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -14846,6 +14967,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -14867,7 +14989,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:b73345391fef384b1e147f593ffa5cc6f69f4c29d06aa1afba44821d84225e18"
+        "requirementDigest": "sha256:c6e0cc4096e05c5cf8a9646c06fe6eac716da8af6e49a4181d1db59dd002f91a"
       },
       {
         "kind": "TRANSITION",
@@ -14917,6 +15039,7 @@
         "contractItemId": "TR-RELOCATE-SOURCE-RECONCILE-RELEASING",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -14932,6 +15055,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -14953,7 +15077,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:db2386815b5b1ddb05a9ec7a6e0f787bc6923b7c2a92af90f38d75a8d89e6389"
+        "requirementDigest": "sha256:cd13f244e7cac07606277091d18fa4ee6bb841f4cb6aec235403cfaa1ee94bdf"
       },
       {
         "kind": "TRANSITION",
@@ -15004,6 +15128,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -15036,6 +15161,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -15064,7 +15190,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:5b1b8b69972e6a84459ae1ecc8c75b8d7190e64f414311c81a585c0e4bec5de1"
+        "requirementDigest": "sha256:da0a6d5406eda3fb833bfb3071d3d36f51db0b7f7f66e72860e78a510a40e104"
       },
       {
         "kind": "TRANSITION",
@@ -15072,6 +15198,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -15104,6 +15231,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -15132,7 +15260,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:47668b6b96d1c9c20c0e8480eda2931493c9f96fad4d0124e87156e2eb6e0d2f"
+        "requirementDigest": "sha256:c03e6234a33c57852288fc168aeca84a53962697b31908e6bb52495a2b2f5b00"
       },
       {
         "kind": "TRANSITION",
@@ -15140,6 +15268,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -15171,6 +15300,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -15195,7 +15325,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:84c758c6181383efe3209a82a3273606cd8f062c8bc3f6c84e1b1598f7c4d562"
+        "requirementDigest": "sha256:296f6d4a01765ade7080fb882a7b5c8b60b5a240638aba061b190fa64e527995"
       },
       {
         "kind": "TRANSITION",
@@ -15203,6 +15333,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -15234,6 +15365,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -15258,7 +15390,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:b760b63922689637b8d73f5832fa26da28bbe3b042e01307e04c8fc9e5857a78"
+        "requirementDigest": "sha256:4d9ed6f4b41bbc6c15c4ec05c6678a4da01d4a85456a89c3edfbc14598a88ecf"
       },
       {
         "kind": "TRANSITION",
@@ -15266,6 +15398,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -15297,6 +15430,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -15321,7 +15455,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TRANSITION_OPERATION_UNION_WITH_CRASH_SIDE_EFFECT_OR_ALL",
-        "requirementDigest": "sha256:4d4cc15c4f9c1146168257c20326e67d58803131b39d8285e2b7fdbdd0e7d8de"
+        "requirementDigest": "sha256:315ffc9f0a87ab2a45c70a143bee060d9a9337a762254c8b0d99d01abad93402"
       },
       {
         "kind": "CAS_RULE",
@@ -15331,6 +15465,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -15385,7 +15520,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -15403,6 +15537,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -15452,7 +15587,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:5a445284aa40846843f327064a12ad7a776167366b1cfb30998d05419fb05b50"
+        "requirementDigest": "sha256:6145d43e19b502c7cb6c96e7a56d5c50c4f2409dd9b44f95f3781e9f9744d131"
       },
       {
         "kind": "CAS_RULE",
@@ -15462,6 +15597,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
@@ -15515,7 +15651,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -15533,6 +15668,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -15568,7 +15704,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:8956b2656bbbf5b2a3146580f71f117f4100bbff16f5f3a31369497c758b546c"
+        "requirementDigest": "sha256:1aca916bb33534178d143480cc0c3c7cba376aa88245a7286f242318da057a3a"
       },
       {
         "kind": "CAS_RULE",
@@ -15577,6 +15713,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
@@ -15618,7 +15755,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -15636,6 +15772,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -15671,7 +15808,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:860d48f86ecc93cb203ac041ad7f8f692cf7b1d02982a2e1b012b3c11a6ff502"
+        "requirementDigest": "sha256:060d64ac1dd95975c226a1d5ea58a3ce9da8b7c634088d8428b12e2c1d11ac54"
       },
       {
         "kind": "CAS_RULE",
@@ -15716,7 +15853,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -15774,7 +15910,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:9864c544834119cf8b8b82a221ac98820572620a04315793cf239400e980bd3d"
+        "requirementDigest": "sha256:dbc018fba1f79227677127c9552a125977727903e9fc7d8595ea77f9af68e9ec"
       },
       {
         "kind": "CAS_RULE",
@@ -15784,6 +15920,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -15838,7 +15975,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -15856,6 +15992,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -15905,7 +16042,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:9fd268ffdd9add0bd7f21737bb04244ae7e36cc0f65b5c352876b85616aa6452"
+        "requirementDigest": "sha256:50569a1ef65e19967fe7b59b1ecd8b7f34f6516ed13ee6c9fe674d224b695ae9"
       },
       {
         "kind": "CAS_RULE",
@@ -15915,6 +16052,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -15969,7 +16107,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -15987,6 +16124,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -16036,7 +16174,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:68ecabedc4f36cca18cbd909176b6b46b3e65f2ced7fd0d1ff9104edf6f6608a"
+        "requirementDigest": "sha256:91822efff0b27959c1e7a6dbd9d23446a4ba39b928130aa2d25dc451c533d184"
       },
       {
         "kind": "CAS_RULE",
@@ -16046,6 +16184,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -16100,7 +16239,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -16118,6 +16256,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -16167,7 +16306,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:c695eb526071937ee7ad82b75593a7de96de8329ce3af734e00d72d584dfbea1"
+        "requirementDigest": "sha256:24ff797c2f5da71d2afc06a5201e2ead6baec2636e7efe3fb2852c1d3755b967"
       },
       {
         "kind": "CAS_RULE",
@@ -16176,6 +16315,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -16218,7 +16358,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -16236,6 +16375,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -16285,7 +16425,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:302c19406aac78768569b88569d434f5c1ced68a2352a1d6447b542c3c7b7303"
+        "requirementDigest": "sha256:102a3524b7c898f0d14e48a794c9a1603c2225adf76bb5178fe4b3dea7c933ea"
       },
       {
         "kind": "CAS_RULE",
@@ -16295,6 +16435,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -16349,7 +16490,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -16367,6 +16507,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -16416,7 +16557,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:ce7f681f5ad1fa7791d5eb9a7ce60672fdada389855c187b8f846ef165ae608a"
+        "requirementDigest": "sha256:2b2f0d77e50ddf23767263e55f128eeb5ba39f144d582de2155ace86c0e3d51d"
       },
       {
         "kind": "CAS_RULE",
@@ -16425,6 +16566,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
@@ -16466,7 +16608,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -16484,6 +16625,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -16519,7 +16661,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:5303ddd75f713891597a5437a8666eb7163415f7dae3e9b7b178b3f855951db9"
+        "requirementDigest": "sha256:ab52120b3719dc3536b1b9b44f728d0b49f3b04e95ae6763fb903af119944ffe"
       },
       {
         "kind": "CAS_RULE",
@@ -16527,6 +16669,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -16559,6 +16702,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -16587,7 +16731,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:3d4128049c9a881ba99a4ac430bcae22debf54cac5c106ac140cdd865d925557"
+        "requirementDigest": "sha256:8d12a0d55f08d4e04521ae4533156931a437ab6da4125f9eadb0ac63efb2be28"
       },
       {
         "kind": "CAS_RULE",
@@ -16595,6 +16739,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -16627,6 +16772,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -16655,7 +16801,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:e74d5a99003927d098b5aeeeb13c2748b0ed72bab69c4b2d5c30eb876709d12a"
+        "requirementDigest": "sha256:1019baada3b74099a80a08557db0a400bf6c07e53b04773bced679e759413ced"
       },
       {
         "kind": "CAS_RULE",
@@ -16663,6 +16809,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -16695,6 +16842,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -16723,7 +16871,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CAS_RULE_REFERENCING_TRANSITION_UNION_OR_ALL",
-        "requirementDigest": "sha256:791788455d8d60987365e9c9ad9c0a7abc1c57d55dcf2c065969c9c536a844eb"
+        "requirementDigest": "sha256:ba725ef7f2590fbd5697e72a44a83592043017d3dec8ab5504ee994a851c7e4a"
       },
       {
         "kind": "REASON",
@@ -16781,6 +16929,7 @@
         "contractItemId": "SNAPSHOT_INCOMPLETE",
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS"
         ],
@@ -16800,6 +16949,7 @@
           "C19",
           "C20",
           "C21",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -16819,7 +16969,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:dfcb9593609a21ca5ac548cc39e721db4e1dc5a17b1a9358f7f9f76d2246b888"
+        "requirementDigest": "sha256:998b8265e6c7cde988388daba951a2722dcf7f7785a43cdea553c216f339a1c8"
       },
       {
         "kind": "REASON",
@@ -17237,6 +17387,7 @@
         "contractItemId": "DEVICE_IOMMU_BACKING_UNKNOWN",
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS"
         ],
@@ -17256,6 +17407,7 @@
           "C19",
           "C20",
           "C21",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -17275,7 +17427,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:f6c3516afcfecf643c5849d48391c6c01912c7fbafe7e1fb60fab632674fc382"
+        "requirementDigest": "sha256:4f5e5a793d5ff1bb3cdcf308fc0f6c8949387e35e93f737ceb68cc9ecb1adb35"
       },
       {
         "kind": "REASON",
@@ -17285,6 +17437,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -17339,7 +17492,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -17357,6 +17509,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -17406,7 +17559,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:db956faff16fe69b259d145425cdbb34cfe627d2d03b036fe9c4a9ec088d356c"
+        "requirementDigest": "sha256:b2c17bcd55f5ed26f92d35ffed3100249ac3c26ef1ce640e7bd1ce71dc5bc32b"
       },
       {
         "kind": "REASON",
@@ -17473,6 +17626,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -17527,7 +17681,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -17545,6 +17698,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -17594,7 +17748,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:e7684883b9a64db4baf3fbcd45e53fa0a498ef5138d01b563dde6173a56e2378"
+        "requirementDigest": "sha256:84a20174d5b82a321e2d40c12ce8c67ff2e1db955480a0f5b0268a236656d805"
       },
       {
         "kind": "REASON",
@@ -17661,6 +17815,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -17715,7 +17870,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -17733,6 +17887,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -17782,7 +17937,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:836ee50e3dbb85b28a640f7875b70c1f0c0aabab9922340f294aed0fb313d2d0"
+        "requirementDigest": "sha256:721acee6cbf38bb16140e1f50cf53cb682ca97f5a9d84f6c06609b79d91de847"
       },
       {
         "kind": "REASON",
@@ -17837,6 +17992,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -17868,6 +18024,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -17892,7 +18049,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:a49e89c343098d029522f591fdecd2e830715db867bebd60500bfc2eb98773ee"
+        "requirementDigest": "sha256:02956193b3e2a92e65a59bc0e20f731b08ae4cfff02c5e155bc30fb2d259f81d"
       },
       {
         "kind": "REASON",
@@ -17959,6 +18116,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -18013,7 +18171,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -18031,6 +18188,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -18080,7 +18238,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:dd6b7b37d5c7225fb9212382271cc0d424081f315fedd3c79f4f4119dede803c"
+        "requirementDigest": "sha256:2573720510f912c811ee75dbe20dd2b34a6cff1f06528d336833adafd0f372ba"
       },
       {
         "kind": "REASON",
@@ -18090,6 +18248,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -18144,7 +18303,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -18162,6 +18320,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -18211,7 +18370,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:e3f2fd4d376e1d12663e423c590e48c988823bde2654bf2de92aa19480289f45"
+        "requirementDigest": "sha256:43f8fdc5b31572d5484ab397abc6609cb24f6603418921e84e64577512232ca8"
       },
       {
         "kind": "REASON",
@@ -18321,6 +18480,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -18375,7 +18535,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -18393,6 +18552,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -18442,13 +18602,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:f11b9397e66d9ffeb399fbca3c0e63c938703693c22b6b999e2e323b7055a1e8"
+        "requirementDigest": "sha256:2c3e0597ee0c758803ef033c8e0bed828c1b1d89b314a0cb173721575ec71f32"
       },
       {
         "kind": "REASON",
         "contractItemId": "RESET_DOMAIN_CHANGED",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -18464,6 +18625,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -18485,13 +18647,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:69df09e050f6a362ebf03b20d6a6579a0b11afd33de25fe7e14f3e321363cd09"
+        "requirementDigest": "sha256:fad1542308ae22a6289e63ecf4dac84c6d45a912c8bfc4dfd2a40946769d9009"
       },
       {
         "kind": "REASON",
         "contractItemId": "RESET_FAILED",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -18507,6 +18670,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -18528,7 +18692,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:a77fd24d3fe552ed747086e5e59cb4b621ab0a300423386013770985c03d16e3"
+        "requirementDigest": "sha256:5e6d56948cfd241887238db7da87d3f4678bbef913a6e2c8300febd324791a5d"
       },
       {
         "kind": "REASON",
@@ -18536,6 +18700,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -18567,6 +18732,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -18591,7 +18757,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:a88b0549f36c5db274ca686cc84eb200e6f36397958f7d49dfd131cd98a78778"
+        "requirementDigest": "sha256:1591c73351bf27e5fae2bdb860131155b824af6bc2c0d55a0e0ce2d209c17f79"
       },
       {
         "kind": "REASON",
@@ -18601,6 +18767,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -18655,7 +18822,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -18673,6 +18839,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -18722,7 +18889,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:f3f28446b3cd6bfb62bf60608edeb742d1e4ddf5aa62f5e1855ac727d8e1ba5f"
+        "requirementDigest": "sha256:ce69da76c78086fa3072c2c32a7fe12cfc39b02da885db992f6758191eb5f048"
       },
       {
         "kind": "REASON",
@@ -18732,6 +18899,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -18786,7 +18954,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -18804,6 +18971,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -18853,7 +19021,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:62bb415b0e53ea5758369d07cf0ba807be33bd0a9654e67fa183f1f29fcba16d"
+        "requirementDigest": "sha256:e85d1cee16ae47207beb1b1ae6f7441964d346f05422e73cbacf46fce375eaf4"
       },
       {
         "kind": "REASON",
@@ -18894,6 +19062,7 @@
         "requiredTestObligationIds": [
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -18921,6 +19090,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -18942,7 +19112,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:0547e13aad2350b5bf4f6ae5ceb03772da9b7ec732b0eed3752ef4d1a7a40014"
+        "requirementDigest": "sha256:60f968e11ff3f24f510cadd0c6439108a779318485e5190f78938267db134e27"
       },
       {
         "kind": "REASON",
@@ -19116,6 +19286,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -19159,6 +19330,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -19183,7 +19355,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:b19a0086dc2d2eded9ac716d5699f3335fc78e10dc88c39080f3a2f3f83559d2"
+        "requirementDigest": "sha256:784ce200da206b6910c937552c596b6de2efc6b470f467250f34d109c5c1c4a7"
       },
       {
         "kind": "REASON",
@@ -19225,6 +19397,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -19268,6 +19441,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -19292,7 +19466,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:5b2d9c98715f292728625e71e26578576c9edb8de0fa162807a91bf1e2498f9e"
+        "requirementDigest": "sha256:21a0610ff567dae487585064fd2b2f82f18b88844268ff23a279aedc9d8137e5"
       },
       {
         "kind": "REASON",
@@ -19335,6 +19509,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -19389,7 +19564,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -19407,6 +19581,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -19456,7 +19631,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:0a1e003b314cf467ddf1c5d135e98507a05295a467c9220551fd75e6470da947"
+        "requirementDigest": "sha256:4c1b176162c72432f1eaa3e1787caf978af96a6bf3122e25dbbb5bc60fdbe2e4"
       },
       {
         "kind": "REASON",
@@ -19464,6 +19639,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -19496,6 +19672,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -19524,7 +19701,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:2cbdb48cc7d4e6192cc8c4934833e20f1939b386fb44918eba1bc51b687e7fb8"
+        "requirementDigest": "sha256:20bdd72d2807dbc1133875a7d1abd3d2d49731cf12baf06614b3fb08e71ccabd"
       },
       {
         "kind": "REASON",
@@ -19618,6 +19795,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -19647,7 +19825,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -19665,6 +19842,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -19696,7 +19874,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:18ff9db97d8c4d124e0fdfb73e822e9ee767cb07f5dabf173ff3d6bdcfcd27d8"
+        "requirementDigest": "sha256:a2eccf43115373785f4342e4b82ec8b93b6009c9090b46bdee20967c63506a00"
       },
       {
         "kind": "REASON",
@@ -19816,7 +19994,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -19846,7 +20023,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:dea08e5557f7b286cc757f905f34761ca25570585448e7877bed3ea015fc56ae"
+        "requirementDigest": "sha256:667c01ea77fbddc2090ac8869265e17b199cb3a6593c358c20f8bb454724b176"
       },
       {
         "kind": "REASON",
@@ -19865,7 +20042,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -19918,7 +20094,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:a285d28db9ed551d97e0890ffdcf7770337bdd33f0c23fa6efcdb92ac08ab4c8"
+        "requirementDigest": "sha256:699c878a0eb60abd6308dd45b81e0474ebc4316e0b21f32360296ea45b812f1a"
       },
       {
         "kind": "REASON",
@@ -19935,7 +20111,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -19965,7 +20140,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:6b6911c1f3bf8bc4ac78ddbca075c72d185d16aec48264b973675e2503ddf1b5"
+        "requirementDigest": "sha256:15a3d745b583dd4426415b24bf706bce231f9ae5619cc145a266e9792175f305"
       },
       {
         "kind": "REASON",
@@ -19984,7 +20159,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -20037,7 +20211,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:93fb7ddbee9c20b0b0d25b55bc4c52b6b313b0e022b3a868218a25b47e1d9fea"
+        "requirementDigest": "sha256:9f207684fcb8041ee430da97bd19824fc74605a3198bac70cf4277ddac8b5df8"
       },
       {
         "kind": "REASON",
@@ -20089,6 +20263,7 @@
         "contractItemId": "MANDATORY_BAR_UNASSIGNED",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
         "requiredCaseIds": [
@@ -20100,7 +20275,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -20118,6 +20292,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "F00",
           "F01",
           "F02",
@@ -20135,7 +20310,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:cfd61dc647f33d6d3e543e8b730d7784c44d99474438cfd439d8bcff7ede6e13"
+        "requirementDigest": "sha256:36c87b3f61c9c14518b7468503a7b9d63d5de5695d02aadc8c58562bc84b6320"
       },
       {
         "kind": "REASON",
@@ -20179,6 +20354,7 @@
         "contractItemId": "BACKEND_APERTURE_ENCODING_GAP",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE"
         ],
@@ -20191,7 +20367,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -20209,6 +20384,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -20232,7 +20408,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:b86157a16675f99e2cde203984b83a7be51194f280fa55528ae8bf6bc399b634"
+        "requirementDigest": "sha256:379d17074a875c5f21b21a2ff87e004d2005bbc8ee7a17dbf5f4e2429aa872a0"
       },
       {
         "kind": "REASON",
@@ -20277,6 +20453,7 @@
         "contractItemId": "UNSUPPORTED_IOCTL_ABI",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -20292,6 +20469,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -20313,7 +20491,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:56d3c5f89e4a84944ea89f500f902db67925dec5a13e4dc10d31090c56df5770"
+        "requirementDigest": "sha256:61c031115835a6b58852d4d8fb568294f9b30da7bf420e21062301103eda7889"
       },
       {
         "kind": "REASON",
@@ -20360,6 +20538,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -20414,7 +20593,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -20432,6 +20610,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -20481,7 +20660,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:776b0ac31383e54d56fcc42e9c48e0e6c34fdf586f45f02ec3beaa2d051440c9"
+        "requirementDigest": "sha256:3638206e2f324c22aaaa309a093657f9918eaddf66db4ecf98b282a495a27e99"
       },
       {
         "kind": "REASON",
@@ -20489,6 +20668,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -20520,6 +20700,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -20544,7 +20725,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:6baef4e91771e0f4c37e2e38d50a053cb65639f900595ec9232d5c8fc9233a95"
+        "requirementDigest": "sha256:ac28534a5b4a3fcb4cd22abc65051ebb5dca304756adf431cfe4e8b876133bad"
       },
       {
         "kind": "REASON",
@@ -20595,6 +20776,7 @@
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -20619,7 +20801,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -20637,6 +20818,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -20665,13 +20847,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:672c60f80c9301a5e5d41712b956dcd8fa693c532ffbd20e8b87eee7d646f40d"
+        "requirementDigest": "sha256:44a30ca72c77c5e6ae64f4d57359d3134e14a264f65aafc4f4d16fcfca6e0c54"
       },
       {
         "kind": "REASON",
         "contractItemId": "QEMU_CRASH",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE"
         ],
@@ -20684,7 +20867,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -20702,6 +20884,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -20725,7 +20908,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:5fad8d4ef8acf4ce36ecc5f27b1728ec4d71233ec7b300bb3fef202bbb30e496"
+        "requirementDigest": "sha256:490548cfc9d1022c6924f08c6e5602e705017c7f5cf60926826a331ff73a1b86"
       },
       {
         "kind": "REASON",
@@ -20734,6 +20917,7 @@
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -20774,7 +20958,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -20792,6 +20975,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -20823,7 +21007,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:1c3d0318952fe55d74b4831f4df5625d3efdb0e22b59b656ad62e11f75fc0872"
+        "requirementDigest": "sha256:3bdca338697b9a45d70852f86a1ca8ea808b644f6e69eb646a630dfd6375a25f"
       },
       {
         "kind": "REASON",
@@ -20831,6 +21015,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -20862,6 +21047,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -20886,7 +21072,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:e9f91ea40afd2f2958a648d9e58c773d4252bc02c2b5880e01fc3d8b92e9bbcc"
+        "requirementDigest": "sha256:8b0746f361ebdb007546f248c73e9c55d194f095d7d64f64918d7e8c0f651f59"
       },
       {
         "kind": "REASON",
@@ -20894,6 +21080,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -20925,6 +21112,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -20949,13 +21137,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:6ae969743e5f0a01d05c3dde418bc848b8b4db8891966a489193edc378e6f68e"
+        "requirementDigest": "sha256:64baf2c30b772330c86ec24dace095b9eb43a5f5074592cc840fbe5d3150e54e"
       },
       {
         "kind": "REASON",
         "contractItemId": "OBSERVED_PLAN_DRIFT",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
         "requiredCaseIds": [
@@ -20967,7 +21156,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -20985,6 +21173,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "F00",
           "F01",
           "F02",
@@ -21002,13 +21191,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:ee80ad99cf18128fff252f528db4289c48f37b06381429593bf7eb6a48431309"
+        "requirementDigest": "sha256:a8341ffeddda0ce0670c641f23d85370e841f9943efff6b5c62318e2e1d1c0c1"
       },
       {
         "kind": "REASON",
         "contractItemId": "GUEST_PROBE_MISSING",
         "requiredTestObligationIds": [
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
         "requiredCaseIds": [
@@ -21020,7 +21210,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -21038,6 +21227,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "F00",
           "F01",
           "F02",
@@ -21055,13 +21245,14 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:9de7f4147f5baad45a6717ab6ad75169cfeb92a0365b35cfd5269e6c55824253"
+        "requirementDigest": "sha256:cd455a40f92682884ad25adae25c0358f4c1c1a3323e18dd6d958cad4660e8fb"
       },
       {
         "kind": "REASON",
         "contractItemId": "OWNERSHIP_UNCERTAIN",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -21078,6 +21269,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -21103,7 +21295,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:9443b2c5b4ee67a0e87d6968b95e7be84de93954ede270428cf449f1c260f2d5"
+        "requirementDigest": "sha256:56cf495c02ca53d250eb5cc2ad37007b1c69adc3d00942674553baa3f0b8040b"
       },
       {
         "kind": "REASON",
@@ -21111,6 +21303,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-COLD-RELOCATION",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
@@ -21143,6 +21336,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "D12",
           "F03",
           "F04",
@@ -21171,7 +21365,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:f21484ef095e6ca28ffd5409eaa76ee8364f982c4279dd1f9c35e1616dcaf22b"
+        "requirementDigest": "sha256:93ad168b24f26f2f5e26d780515967785df6f646ef589867845b4b7e873065fc"
       },
       {
         "kind": "REASON",
@@ -21338,6 +21532,7 @@
         "contractItemId": "HOST_RECONCILE_INCOMPLETE",
         "requiredTestObligationIds": [
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-CRASH-RECONCILE-AUDIT"
         ],
@@ -21353,6 +21548,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "C21",
           "F08",
@@ -21374,7 +21570,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:84d07836ca2379dcc0db175b8dcd581654b9be6d97df08cc9a99af542f46a895"
+        "requirementDigest": "sha256:aa9086d919a465d18a5c4a0da5127d94ebd3e2526d7f4f5dd3b21557a21b1ffb"
       },
       {
         "kind": "REASON",
@@ -21382,6 +21578,7 @@
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
           "TEST-STATIC-LIFECYCLE",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-BACKEND-CONFORMANCE",
           "TEST-DEVICE-TRAITS",
           "TEST-CRASH-RECONCILE-AUDIT"
@@ -21413,6 +21610,7 @@
           "S08",
           "S11",
           "S12",
+          "M06",
           "C17",
           "F08",
           "S15",
@@ -21437,7 +21635,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:f6c4e4666cc1169b1c8ba79cfc9283f9fa30bd87ce20ef8e555efa86200c51b3"
+        "requirementDigest": "sha256:d39c5aadc3f0a767fb6c1238e9c53eaee8ed450587338fd82bd6ce7d2d80825e"
       },
       {
         "kind": "REASON",
@@ -21697,6 +21895,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -21751,7 +21950,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -21769,6 +21967,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -21818,7 +22017,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:3cdc40b3ff72888baab6257ba44048f7f0ba524f099f7ad30235b619b7fbd1f1"
+        "requirementDigest": "sha256:9aa3ac9a4dd20078bd2f7cc37ce3433f5394e52b34dcf11b8662887f111ec90c"
       },
       {
         "kind": "CONFIG",
@@ -21828,6 +22027,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -21882,7 +22082,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -21900,6 +22099,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -21949,7 +22149,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:8693b616307166efe57b8e3215fa09693d27087c9ab591cd5f3dddbb71a3dcb2"
+        "requirementDigest": "sha256:ee5b747d532a45ed9076f32ce0f7fe7e852bab6bd92cac93aa3aca2e95875db7"
       },
       {
         "kind": "CONFIG",
@@ -21959,6 +22159,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -22013,7 +22214,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -22031,6 +22231,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -22080,7 +22281,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:f7687316ec4c91d7a36703c6e011402a7907c16a3a5e8d755d8fd6f05287ecad"
+        "requirementDigest": "sha256:8b5c4bb79d8201cd8baeae921deba12c0e5fd0e05c182b27aa1961fa2984f9d0"
       },
       {
         "kind": "CONFIG",
@@ -22090,6 +22291,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -22144,7 +22346,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -22162,6 +22363,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -22211,7 +22413,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:e7732e323845740281bfd6e4539bd9d9e3525ab6e9162d992b0eea7cc90a9d2d"
+        "requirementDigest": "sha256:55d75dffddc288533f0cbe2425c42a766f5f8315ebd81d8390157763fe8e6dc3"
       },
       {
         "kind": "CONFIG",
@@ -22221,6 +22423,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -22275,7 +22478,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -22293,6 +22495,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -22342,7 +22545,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:1655384f25ebd0132f7ba4802f853bcd7efc03a308cd2c2ad253499c1d91432a"
+        "requirementDigest": "sha256:dea23fa3cefd81b573e9eedd540a76771b8da0e928891455b49a420155cdd16e"
       },
       {
         "kind": "CONFIG",
@@ -22352,6 +22555,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -22406,7 +22610,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -22424,6 +22627,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -22473,7 +22677,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:001c9f5c58a80c35e29f3a076dc51166eeee134235ac5dc6bc45a831795db633"
+        "requirementDigest": "sha256:ff95cec4325dde5fd164cf8badb04b1a7c898eb94f4ac07925abd3feb7cb6e54"
       },
       {
         "kind": "CONFIG",
@@ -22483,6 +22687,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -22537,7 +22742,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -22555,6 +22759,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -22604,7 +22809,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:f4f1f4112115cd690da1b79ff16ea079ec25b1ed73bad9947d43b305e81980e2"
+        "requirementDigest": "sha256:baddc60af7e60b365d867d86db91360f426f3bafe77090878dd037db1dc93ec9"
       },
       {
         "kind": "CONFIG",
@@ -22614,6 +22819,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -22668,7 +22874,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -22686,6 +22891,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -22735,7 +22941,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:42c13ffc94c7e33f2ee0c5e79b93dd872ea8a5c782035f42c0895b5198132b2e"
+        "requirementDigest": "sha256:f82240e840c8e1e032ab5a150bb0de33955400dd1e75f6a3ee5356a8876b8174"
       },
       {
         "kind": "CONFIG",
@@ -22745,6 +22951,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -22799,7 +23006,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -22817,6 +23023,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -22866,7 +23073,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:6764dd2cf53982374fa659182ddc5427dda654e13385013a8fa78fe7476cfad8"
+        "requirementDigest": "sha256:4fb552118538f27fc9207bda634339ba677b91dfc82aed25b8bf77606daff5e9"
       },
       {
         "kind": "CONFIG",
@@ -22876,6 +23083,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -22930,7 +23138,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -22948,6 +23155,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -22997,7 +23205,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:4fd19289e0977d984754289c2b65c9b571c03d4a49036194e58ad179c7e904c7"
+        "requirementDigest": "sha256:cd068c85485ebdf513116a6d89238fe39eb5313e6b6bf428f9ee04cb58a29430"
       },
       {
         "kind": "CONFIG",
@@ -23007,6 +23215,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -23061,7 +23270,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -23079,6 +23287,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -23128,7 +23337,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:594a1b54f7d94ccba7a69717dc633a975e66135e23a45617c25522cd71b0125e"
+        "requirementDigest": "sha256:39d4c4c2bfc934150811e33f0a3481ac7aac7c027ba284e08fa5c2b4967506fc"
       },
       {
         "kind": "CONFIG",
@@ -23138,6 +23347,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -23192,7 +23402,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -23210,6 +23419,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -23259,7 +23469,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:ace0fcdf2fb7b81da75e6a4994724e7947dc77babc092c6f4d83932a2f51258f"
+        "requirementDigest": "sha256:97e3e822c6014073a3e44563e8a30a3ad2c90d0166af8cf1bb467d29767b149c"
       },
       {
         "kind": "CONFIG",
@@ -23269,6 +23479,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -23323,7 +23534,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -23341,6 +23551,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -23390,7 +23601,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:ba94037b7991a275f2c1525e17a4479715b036c2e89e0e362531eff33c9776f1"
+        "requirementDigest": "sha256:50a3532a2c61222685028e3ad7951853ad6949a6e0d71d8cb95cd2d4e3b8f3e4"
       },
       {
         "kind": "CONFIG",
@@ -23400,6 +23611,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -23454,7 +23666,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -23472,6 +23683,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -23521,7 +23733,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:a5c1e42ea108e288544d6654c6ddfc3755ab2323621e98342387801b3ef8da99"
+        "requirementDigest": "sha256:72fd34b0227f1d4f4d5b00b08f515dbf104a4fb735d838b865ade08eadd6340d"
       },
       {
         "kind": "CONFIG",
@@ -23531,6 +23743,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -23585,7 +23798,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -23603,6 +23815,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -23652,7 +23865,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:32e5b8838f7112af8830030a6737bfbf57d85869bb5de1a95d7d27fabcb49b28"
+        "requirementDigest": "sha256:3e20931ccb540e3c208468a4f8bfaeb8b4eb4ea82e3993787e3a030ae652d4a9"
       },
       {
         "kind": "CONFIG",
@@ -23662,6 +23875,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -23716,7 +23930,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -23734,6 +23947,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -23783,7 +23997,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:75f95a5b2e6d053c3c43be5e426faea6b624b98cfccbe105e567a679ae43e623"
+        "requirementDigest": "sha256:8c5cdf6c49f311c09ce475c0aeeb59a6bf1446bd3190b13c8fb460925cb46956"
       },
       {
         "kind": "CONFIG",
@@ -23793,6 +24007,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -23847,7 +24062,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -23865,6 +24079,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -23914,7 +24129,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "CONFIG_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:0b1afe052959cb6bc98044807284164aade52d8c726b089120e14b4d12fb489d"
+        "requirementDigest": "sha256:704c6e77c25a70f3309a521a553ddca584e9ecd1a02eebb8d2cf7a94b15ac214"
       },
       {
         "kind": "MIGRATION",
@@ -23924,6 +24139,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -23978,7 +24194,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -23996,6 +24211,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -24045,7 +24261,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "MIGRATION_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:ce2dc60974649dbcd1df1ee771d1e6ae9eca27b21153ae1c649179d1daf8ea8e"
+        "requirementDigest": "sha256:f23bf6e14d310bb886ab2e1f9328d8fe232eb7a5e428f4c92f47dce08f1c6ee0"
       },
       {
         "kind": "MIGRATION",
@@ -24055,6 +24271,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -24109,7 +24326,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -24127,6 +24343,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -24176,7 +24393,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "MIGRATION_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:052b5b6292031b151d8c4d134cc0c0fa217182d52af3ced7c4a458d9651a4afc"
+        "requirementDigest": "sha256:132356ca3c76cf892abed11fa09bf73faa49dd775f8205ff7cf1c8106ca11208"
       },
       {
         "kind": "MIGRATION",
@@ -24186,6 +24403,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -24240,7 +24458,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -24258,6 +24475,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -24307,7 +24525,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "MIGRATION_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:540aee1497495b252bb66cd1cae9a93d85eeec5ea517fda107217f72dae30f1d"
+        "requirementDigest": "sha256:9ff49ef47d1ae1b01869dcfa858ba7ad69e1dd5d1a3649cb334eabede70e04d1"
       },
       {
         "kind": "MIGRATION",
@@ -24317,6 +24535,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -24371,7 +24590,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -24389,6 +24607,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -24438,7 +24657,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "MIGRATION_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:f47664ab3dddad6fff3a5ab03680f187b6e68edb6c8612ecd5d7722bfc366aee"
+        "requirementDigest": "sha256:ec0b80fa1101e2d6aa211f8036aa63b9741caecf95f15bb4cd681267d9cff398"
       },
       {
         "kind": "MIGRATION",
@@ -24448,6 +24667,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -24502,7 +24722,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -24520,6 +24739,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -24569,7 +24789,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "MIGRATION_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:14dbde864a97917173170f315bbfcfe6eda242201ccaebf2b788952689d26e8b"
+        "requirementDigest": "sha256:89a4d17d5402a823d064ca51330db5269ed564e051de9670aa8ed3bd0889e329"
       },
       {
         "kind": "MIGRATION",
@@ -24579,6 +24799,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -24633,7 +24854,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -24651,6 +24871,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -24700,7 +24921,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "MIGRATION_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:b213c44dd3f7f1e5768e29d0702791be1b57b5329946e190ef24acc2e4b97723"
+        "requirementDigest": "sha256:34ae71d73188bada2d7c26509316e5525469a958a64691dd682221b669ed3382"
       },
       {
         "kind": "MIGRATION",
@@ -24710,6 +24931,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -24764,7 +24986,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -24782,6 +25003,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -24831,7 +25053,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "MIGRATION_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:2ef95b9a0e632a50a532ea38449bd5d2c9f2194ad5c20b1728fe61643cf8dc7a"
+        "requirementDigest": "sha256:844b4e85b032c405f07d1ec422091b29f955bbe493c0190a54fe62a3b9ec2b26"
       },
       {
         "kind": "TELEMETRY",
@@ -24841,6 +25063,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -24895,7 +25118,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -24913,6 +25135,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -24962,7 +25185,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:59690d89eba3228e824d29505bfa876980da991aacc4d7457ce78604984ef0a3"
+        "requirementDigest": "sha256:211707aacd07347d24cdc864434aa7ec8a77ce34e90c0367648b0bcc9e57a584"
       },
       {
         "kind": "TELEMETRY",
@@ -24972,6 +25195,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -25026,7 +25250,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -25044,6 +25267,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -25093,7 +25317,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:82591b9dfe6bd61d85b5c64a4fffac33cf30cacecb67a9e985aa61290584a475"
+        "requirementDigest": "sha256:1d14b2039e386b26f2875a42d0ead381fa72546f34fa89bd342e6ffb0c15730a"
       },
       {
         "kind": "TELEMETRY",
@@ -25103,6 +25327,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -25157,7 +25382,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -25175,6 +25399,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -25224,7 +25449,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:41c623d1c3412fb4968b790fbbae0a9b03802e616b56ad19374111d756a50688"
+        "requirementDigest": "sha256:4bef9b9f1e748b499cd15beb5df5298e17e36c8761121be0d174723b41b83c1d"
       },
       {
         "kind": "TELEMETRY",
@@ -25234,6 +25459,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -25288,7 +25514,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -25306,6 +25531,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -25355,7 +25581,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:822249f24fd689fac190702e135446306f3d2ac8370299476d800f4816ae8565"
+        "requirementDigest": "sha256:fe7d964007102fd00d812bc7c7476caa863c00fe69b64323e4672e0366ee39ac"
       },
       {
         "kind": "TELEMETRY",
@@ -25365,6 +25591,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -25419,7 +25646,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -25437,6 +25663,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -25486,7 +25713,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:efc397dcd0caa3dda733601a3445b4a1bccadfffd26c3941f2a35eb9b9961815"
+        "requirementDigest": "sha256:587429b49638139a5cc80cfef6b64384fce8865890d8f140a25f8a059f23c45a"
       },
       {
         "kind": "TELEMETRY",
@@ -25496,6 +25723,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -25550,7 +25778,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -25568,6 +25795,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -25617,7 +25845,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:3af439c7763f4118a39c9b229680ba2177704c302fb9aaeb0f58af3e65bf9acc"
+        "requirementDigest": "sha256:e51712e5dc7387baf2fe3364a81d4a7ed3f40424f99f0d6e20969264f3d2aed5"
       },
       {
         "kind": "TELEMETRY",
@@ -25627,6 +25855,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -25681,7 +25910,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -25699,6 +25927,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -25748,7 +25977,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:63e26a9bec0291762d52aafdd205b0a7ab42f11612bc5ae9275c76364329d66e"
+        "requirementDigest": "sha256:f4080c799941054eba5af30a080c5a28c627bf650d729a42e0ba43d0aafe28cd"
       },
       {
         "kind": "TELEMETRY",
@@ -25758,6 +25987,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -25812,7 +26042,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -25830,6 +26059,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -25879,7 +26109,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:e1da1745ec900c072ee358563d01057f70eb79fd1639edc5b657607284bf374c"
+        "requirementDigest": "sha256:cd06708b5f7ff3774652d0b46b279a9c53b25bc8d1f14f7eede4cc366754148b"
       },
       {
         "kind": "TELEMETRY",
@@ -25889,6 +26119,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -25943,7 +26174,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -25961,6 +26191,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -26010,7 +26241,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:ef47fd306cc84eea0ee975fc377e74938b10fcba80d42eefb94490c92bba8d83"
+        "requirementDigest": "sha256:2beb30a5ddb71050c8c669bc2f62b0a727f73d195cd495bc5ced961ba8f941ea"
       },
       {
         "kind": "TELEMETRY",
@@ -26020,6 +26251,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -26074,7 +26306,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -26092,6 +26323,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -26141,7 +26373,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:bba85a264204ae721ea224fc2b238a72e2a0b8f4ebfa4944bfef858a0b806a4d"
+        "requirementDigest": "sha256:4413488c1092e4fbbcffda7aeee0294d51186b68b07e079cb3089171ba300645"
       },
       {
         "kind": "TELEMETRY",
@@ -26151,6 +26383,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -26205,7 +26438,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -26223,6 +26455,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -26272,7 +26505,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:81895f372ccbbdbeb77d97bc1ac7699c79d320024380f2fad5182dd6ea04cb66"
+        "requirementDigest": "sha256:3e90142205eec456ed8a4a487602f36b810c77acd2e38fd79d7af89cf20dbd89"
       },
       {
         "kind": "TELEMETRY",
@@ -26282,6 +26515,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -26336,7 +26570,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -26354,6 +26587,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -26403,7 +26637,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:c0389c1fba610a17dc2fa3b3900dc880c0649a1d6df241099b1fb78bd2eb9aab"
+        "requirementDigest": "sha256:87fffdb56bbc277430f0814f9c5eeec650cf25959a432232fc370f3785ee2979"
       },
       {
         "kind": "TELEMETRY",
@@ -26413,6 +26647,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -26467,7 +26702,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -26485,6 +26719,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -26534,7 +26769,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:a01686965d0278d5082db98bca0881cbf8ee99904615df3fb254967cf1e91829"
+        "requirementDigest": "sha256:547b07325c06b9c3f0b8ff0797d5fedb6046edc7ea998bc954520c395d6ecc69"
       },
       {
         "kind": "TELEMETRY",
@@ -26544,6 +26779,7 @@
           "TEST-OWNER-ACTIVATION",
           "TEST-STATIC-LIFECYCLE",
           "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
           "TEST-LIFECYCLE-NEGATIVE-GATES",
           "TEST-DYNAMIC",
           "TEST-COLD-RELOCATION",
@@ -26598,7 +26834,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -26616,6 +26851,7 @@
           "M21",
           "M22",
           "M23",
+          "M06",
           "S09",
           "S10",
           "S13",
@@ -26665,7 +26901,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TELEMETRY_TYPED_TRACE_OR_ALL",
-        "requirementDigest": "sha256:a1e90d485eb46030cfe101db046860d69da0b98bb87ed8e562fb971bb5678e2a"
+        "requirementDigest": "sha256:936edeb1eea3351142caad6de81807bc0ff7158b456ce051667c6c17f1c9d9d8"
       },
       {
         "kind": "TEST",
@@ -26783,7 +27019,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -26813,7 +27048,29 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "TEST_SELF",
-        "requirementDigest": "sha256:1adc1737a259ae814ad40563f69e800298015c77b7fbaf6a135b15816f28d463"
+        "requirementDigest": "sha256:b4b5a7ba5d9a3e760ae02936b969c34f29b6e318403d4b4683b2a73be745f773"
+      },
+      {
+        "kind": "TEST",
+        "contractItemId": "TEST-PCI-ERROR-POLICY",
+        "requiredTestObligationIds": [
+          "TEST-PCI-ERROR-POLICY"
+        ],
+        "requiredCaseIds": [
+          "M06"
+        ],
+        "requiredOracleClasses": [
+          "authoritativeWrites",
+          "cleanup",
+          "finalStates",
+          "idempotencyOracle",
+          "immediateResults",
+          "mustNotOccur",
+          "mustOccur",
+          "physicalOracle"
+        ],
+        "typedCoverageRule": "TEST_SELF",
+        "requirementDigest": "sha256:40edc58cb50618b44eb3f482005b32cd815e86b245a7e4ace90a21ccd3f5c19e"
       },
       {
         "kind": "TEST",
@@ -27172,7 +27429,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -27202,7 +27458,29 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PARITY_DECLARED_TESTS_OR_ALL",
-        "requirementDigest": "sha256:91f7ca1c0220b0521ea9bfb155054240e36b5bd497fe95bd5edb9517ba5e7905"
+        "requirementDigest": "sha256:3462f3311a42e7d82ee950e636dff682ab52e5f8418a75a7700f89b0e850e339"
+      },
+      {
+        "kind": "PARITY_OBLIGATION",
+        "contractItemId": "PARITY-PCI-ERROR-POLICY",
+        "requiredTestObligationIds": [
+          "TEST-PCI-ERROR-POLICY"
+        ],
+        "requiredCaseIds": [
+          "M06"
+        ],
+        "requiredOracleClasses": [
+          "authoritativeWrites",
+          "cleanup",
+          "finalStates",
+          "idempotencyOracle",
+          "immediateResults",
+          "mustNotOccur",
+          "mustOccur",
+          "physicalOracle"
+        ],
+        "typedCoverageRule": "PARITY_DECLARED_TESTS_OR_ALL",
+        "requirementDigest": "sha256:b1d395fdf201579593e6387097f419b32d3f8ccf04893e9ca4081682ee61274b"
       },
       {
         "kind": "PARITY_OBLIGATION",
@@ -27219,7 +27497,6 @@
           "M03",
           "M04",
           "M05",
-          "M06",
           "M07",
           "M08",
           "M09",
@@ -27249,7 +27526,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PARITY_DECLARED_TESTS_OR_ALL",
-        "requirementDigest": "sha256:79a2363346ac8a597919cf04b5a65afe84dccbd8e4b4ee926b92b452f0e7480d"
+        "requirementDigest": "sha256:3a1101c9cb98e403868f023acd22b13acfe2dc4b28f166b03a118322e17794e0"
       },
       {
         "kind": "PARITY_OBLIGATION",

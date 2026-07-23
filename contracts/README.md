@@ -102,12 +102,12 @@
   Legacy `AUTHORIZED_DEVICE_PATH` 与 future cdev fd passing 的差异。
 - `vmware-source-register.json`：Broadcom KB、Compatibility Guide 和 vSphere API 的
   source/claim/baseline/limitations 注册表。
-- `vmware-behavior-model.json`：39 个 Tech Story 到 VMware `VMW-*` 实验、现有 evidence、
+- `vmware-behavior-model.json`：40 个 Tech Story 到 VMware `VMW-*` 实验、现有 evidence、
   覆盖状态和缺口的机器映射；人类可读入口为 `ipd/VMWARE-BEHAVIOR-MODEL.md`。
 - `vmware-experiment-result.schema.json`：新 `VMW-*` run 必须提交的 SUT profile、输入、
   预期、观察、verdict、limitations 和 artifact SHA-256 合同。
-- `vmware-evidence-index.json`：36 个 VMware 实验的 TS→实验→代表 run→evidence/hash
-  机器索引。已执行的 28 项固定现有 evidence 文件 hash；6 个 planned 与 2 个 physical-blocked
+- `vmware-evidence-index.json`：37 个 VMware 实验的 TS→实验→代表 run→evidence/hash
+  机器索引。已执行的 29 项固定现有 evidence 文件 hash；6 个 planned 与 2 个 physical-blocked
   项显式记录 `noRunReason`。Acceptance Case 只通过 `requiredTechStories` 派生关联，索引没有
   Qman Case、实现、qualification 或 release 的关闭权限。证据或模型变更后用
   `python tools/generate_vmware_evidence_index.py` 确定性重建，并用 `--check` 检查漂移。

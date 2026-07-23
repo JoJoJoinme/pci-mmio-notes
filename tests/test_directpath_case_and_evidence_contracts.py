@@ -336,7 +336,7 @@ class DirectPathCaseAndEvidenceContractTests(unittest.TestCase):
         self.assertIn("300 seconds", freshness["x-qmanFreshnessRule"])
 
     def test_portable_surface_includes_repository_acceptance(self) -> None:
-        self.assertEqual(293, len(self.portable["mappingSurface"]["verificationMatrix"]))
+        self.assertEqual(295, len(self.portable["mappingSurface"]["verificationMatrix"]))
         entities = {item["id"] for item in self.portable["dataEntities"]}
         self.assertIn("ENTITY-CLEAN-RELEASE-ACCEPTANCE", entities)
 

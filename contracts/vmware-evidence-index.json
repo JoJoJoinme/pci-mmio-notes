@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-07-22",
+  "asOf": "2026-07-23",
   "subject": "VMWARE_ESXI",
   "sourceModel": "contracts/vmware-behavior-model.json",
   "hashAlgorithm": "SHA-256",
-  "recordCount": 36,
+  "recordCount": 37,
   "tracePolicy": {
     "techStoryAssociation": "EXACT_FROM_VMWARE_BEHAVIOR_MODEL",
     "acceptanceCaseAssociation": "DERIVED_FROM_ACCEPTANCE_REQUIRED_TECH_STORIES",
@@ -401,7 +401,7 @@
         },
         {
           "path": "vmware-esxi8-directpath-local-results.md",
-          "sha256": "a8a167899f60b7556349f15e0be78c0492c4dc03a9b0c18a71b73547ffc69ef5"
+          "sha256": "305b5e82956f2a7af6867a4241fdf1dc392fefad3ff449da03df4e1b7424a412"
         }
       ],
       "noRunReason": null,
@@ -491,7 +491,7 @@
       "evidence": [
         {
           "path": "vmware-esxi8-directpath-local-results.md",
-          "sha256": "a8a167899f60b7556349f15e0be78c0492c4dc03a9b0c18a71b73547ffc69ef5"
+          "sha256": "305b5e82956f2a7af6867a4241fdf1dc392fefad3ff449da03df4e1b7424a412"
         },
         {
           "path": "evidence/esxi8-host-crash-20260711-summary.json",
@@ -525,7 +525,6 @@
         "M02",
         "M03",
         "M05",
-        "M06",
         "M07",
         "M08",
         "M09",
@@ -635,7 +634,6 @@
       "derivedAcceptanceCaseIds": [
         "M03",
         "M05",
-        "M06",
         "M07",
         "M08",
         "M12",
@@ -664,6 +662,46 @@
       "limitations": [
         "verified-only-for-frozen-nested-profile",
         "repository-hash-metadata-migrated-to-canonical-lf-without-rerun"
+      ]
+    },
+    {
+      "experimentId": "VMW-AER-COR-001",
+      "executionState": "PARTIAL",
+      "techStoryIds": [
+        "TS-F4-06"
+      ],
+      "legacyCaseIds": [
+        "S03",
+        "C00-C03",
+        "COR-8"
+      ],
+      "derivedAcceptanceCaseIds": [
+        "M06"
+      ],
+      "runIds": [
+        "20260723T002305Z-76d79e36",
+        "20260723T003751Z-16496a4c",
+        "20260723T001720Z-e19407a0",
+        "20260723T004345Z-fae1a783"
+      ],
+      "evidence": [
+        {
+          "path": "evidence/esxi8-aer-correctable-20260723-summary.json",
+          "sha256": "de2d6e078cc570afedb6e1ca7e258d53e4d12e9f7749ac50f7ce04dc67db5e32"
+        },
+        {
+          "path": "evidence/esxi8-aer-correctable-20260723-result.json",
+          "sha256": "d1f32e458b819a76622638fcc0e8e5a4965446b922a87012373310c8a22f55aa"
+        }
+      ],
+      "noRunReason": null,
+      "limitations": [
+        "endpoint-cere-disabled",
+        "root-cere-and-correctable-command-disabled",
+        "status-projection-not-message-delivery",
+        "no-guest-write-or-t5-lifecycle-matrix",
+        "synthetic-endpoint-not-physical-link-or-device-recovery",
+        "single-esxi-build-and-efi-guest"
       ]
     },
     {
@@ -1249,12 +1287,12 @@
       "legacyCaseIds": [],
       "derivedAcceptanceCaseIds": [],
       "runIds": [
-        "20260722-vmware-evidence-index-v1"
+        "20260723-vmware-evidence-index-v2"
       ],
       "evidence": [
         {
-          "path": "evidence/vmware-trace-index-20260722-summary.json",
-          "sha256": "a1ee313de34d7ba84b8e3cdd0964ff483bd6542c5df0512787b398ba23f697c1"
+          "path": "evidence/vmware-trace-index-20260723-summary.json",
+          "sha256": "618456ec384dabf05dc35fb86603e9a483eac6ada87817f342fe2fd7aeb15f96"
         }
       ],
       "noRunReason": null,

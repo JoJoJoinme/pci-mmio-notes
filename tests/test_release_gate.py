@@ -33,12 +33,12 @@ class ReleaseGateTests(unittest.TestCase):
         self.assertIn("Current milestone: G1", result.stdout)
         self.assertIn("Target release: V3 (SINGLE_TARGET_MULTI_WAVE)", result.stdout)
         self.assertIn(
-            "IPD: epics=1, features=8, user_stories=28, tech_stories=39",
+            "IPD: epics=1, features=8, user_stories=28, tech_stories=40",
             result.stdout,
         )
         self.assertIn(
-            "VMware reference: sources=24, experiments=36, tech_stories=39 "
-            "(NOT_APPLICABLE=5, PARTIAL=27, UNKNOWN=3, VERIFIED=4)",
+            "VMware reference: sources=24, experiments=37, tech_stories=40 "
+            "(NOT_APPLICABLE=5, PARTIAL=28, UNKNOWN=3, VERIFIED=4)",
             result.stdout,
         )
         self.assertIn(
