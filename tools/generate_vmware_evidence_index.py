@@ -15,6 +15,7 @@ MODEL_RELATIVE = "contracts/vmware-behavior-model.json"
 ACCEPTANCE_POLICY_RELATIVE = "contracts/acceptance-policy.json"
 OUTPUT_RELATIVE = "contracts/vmware-evidence-index.json"
 NO_RUN_STATES = {"PLANNED", "BLOCKED_PHYSICAL"}
+MAX_JSON_NESTING_DEPTH = 256
 
 
 # A representative existing run is enough to bind an executed experiment to its
@@ -105,9 +106,30 @@ def load_json(path: Path) -> dict[str, Any]:
     def reject_non_finite(token: str) -> Any:
         raise ValueError(f"non-finite JSON number {token!r}")
 
+    text = path.read_text(encoding="utf-8")
+    depth = 0
+    in_string = False
+    escaped = False
+    for character in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character in "[{":
+            depth += 1
+            if depth > MAX_JSON_NESTING_DEPTH:
+                raise ValueError(f"invalid JSON in {path}: nesting is too deep")
+        elif character in "]}":
+            depth = max(depth - 1, 0)
     try:
         value = json.loads(
-            path.read_text(encoding="utf-8"),
+            text,
             object_pairs_hook=unique_object,
             parse_constant=reject_non_finite,
         )

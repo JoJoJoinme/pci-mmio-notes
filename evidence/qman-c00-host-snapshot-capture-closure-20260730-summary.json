@@ -32,7 +32,7 @@
       "contracts/directpath-capability-policy.schema.json": "fc22b5535db3627719e31f4aa8eb4db4467fa04e4218c31a6c20820e2da0d46d",
       "contracts/directpath-identity-v1.schema.json": "179e985446b7f7e1fefa1c9f49a2785eb0d1484c7d63b6f40ab5880bce371eb1",
       "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
-      "contracts/directpath-portable-control-contract.json": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe"
+      "contracts/directpath-portable-control-contract.json": "10500cca064bcba93f1905dfa8f614878eacc51feda29754aebe16184ecdbc90"
     }
   },
   "sut": {

@@ -35,7 +35,7 @@
       "contracts/directpath-inventory-verification-receipt.schema.json": "245fb70b77bebc2c8e9b4229966a03306a17f4ab06597aee34e9390186537adb",
       "contracts/directpath-inventory-verifier-algorithm.schema.json": "903a8b2bd750e7c3078f7edd7f56077a8832d7eb1852520fef74661137579221",
       "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
-      "contracts/directpath-portable-control-contract.json": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe"
+      "contracts/directpath-portable-control-contract.json": "10500cca064bcba93f1905dfa8f614878eacc51feda29754aebe16184ecdbc90"
     }
   },
   "sut": {

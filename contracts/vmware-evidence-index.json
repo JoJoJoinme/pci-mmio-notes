@@ -1332,7 +1332,7 @@
       "evidence": [
         {
           "path": "evidence/vmware-trace-index-20260730-v5-summary.json",
-          "sha256": "3c14423372fa933286c8adcb906f73d9e3677b6e77bba01dd4d3310c10936261"
+          "sha256": "fd0e48b42ac7d252f6f234d10f5e75e15e5a3fb45f1503d6dad20d84a83d92c5"
         }
       ],
       "noRunReason": null,

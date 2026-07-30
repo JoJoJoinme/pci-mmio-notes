@@ -67,6 +67,7 @@ PROJECT_FREEZE_RULES = [
     "Do not mark a milestone complete without executable acceptance evidence.",
     "Do not bypass OPEN, CONTROL_IMPLEMENTED, or INVALIDATED risk states.",
 ]
+MAX_JSON_NESTING_DEPTH = 256
 REQUIRED_PRODUCT_DECISION_IDS = (
     "ADR-002",
     "ADR-003",
@@ -401,6 +402,26 @@ def parse_json_bytes(payload: bytes, label: str) -> dict[str, Any]:
         text = payload.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise ValueError(f"invalid UTF-8 in {label}: {exc}") from exc
+    depth = 0
+    in_string = False
+    escaped = False
+    for character in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character in "[{":
+            depth += 1
+            if depth > MAX_JSON_NESTING_DEPTH:
+                raise ValueError(f"invalid JSON in {label}: nesting is too deep")
+        elif character in "]}":
+            depth = max(depth - 1, 0)
     try:
         value = json.loads(
             text,

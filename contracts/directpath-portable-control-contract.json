@@ -94,7 +94,7 @@
     {
       "path": "contracts/vmware-behavior-model.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:4e50645dcbf9436f9f57c028b7df51ddb484810c87933e43eac10ba3d87d1f88"
+      "sha256": "sha256:be2c019ba88cf01f2eead07aad29890a136f2c8acddc302efad7e1bdd809cb6b"
     },
     {
       "path": "contracts/compatibility-profile-policy.json",

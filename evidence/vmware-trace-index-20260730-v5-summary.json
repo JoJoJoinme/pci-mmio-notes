@@ -20,11 +20,11 @@
   "artifacts": [
     {
       "path": "tools/evaluate_release.py",
-      "sha256": "b67ecdc61607d8e3e379385530671a789fe6653194adb4feb7d88f464f507d91"
+      "sha256": "564b8bbd93c635d07d95a1d5bfdb044c801ce484f557d6eef9c63be5e7f88cb6"
     },
     {
       "path": "tools/generate_vmware_evidence_index.py",
-      "sha256": "af6169348395db83dfbdc01acfbcc38ee68295bbf2eeda5093b714bc82527d8d"
+      "sha256": "c2d5caee5e36c6023189ecc7da75881978282fef8b551704e5ea414312251bc6"
     },
     {
       "path": "tests/test_vmware_evidence_index.py",

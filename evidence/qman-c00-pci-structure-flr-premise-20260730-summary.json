@@ -37,7 +37,7 @@
       "contracts/directpath-host-snapshot-publication-trace.schema.json": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
       "contracts/directpath-inventory-verifier-algorithm.schema.json": "903a8b2bd750e7c3078f7edd7f56077a8832d7eb1852520fef74661137579221",
       "contracts/directpath-inventory-verification-receipt.schema.json": "245fb70b77bebc2c8e9b4229966a03306a17f4ab06597aee34e9390186537adb",
-      "contracts/directpath-portable-control-contract.json": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe",
+      "contracts/directpath-portable-control-contract.json": "10500cca064bcba93f1905dfa8f614878eacc51feda29754aebe16184ecdbc90",
       "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
       "contracts/directpath-operation-admission-binding.schema.json": "75b2d1bcf0a8223e024fdbcc2093356fbf07b010a7f067a13d905941fd9abb5a",
       "acceptance/cases/registry-C.json": "baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a"

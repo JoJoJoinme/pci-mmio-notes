@@ -818,7 +818,7 @@
       "legacyIds": [],
       "evidencePaths": ["evidence/vmware-trace-index-20260730-v5-summary.json"],
       "evidenceSha256": {
-        "evidence/vmware-trace-index-20260730-v5-summary.json": "3c14423372fa933286c8adcb906f73d9e3677b6e77bba01dd4d3310c10936261"
+        "evidence/vmware-trace-index-20260730-v5-summary.json": "fd0e48b42ac7d252f6f234d10f5e75e15e5a3fb45f1503d6dad20d84a83d92c5"
       },
       "runnerPaths": [
         "tools/generate_vmware_evidence_index.py",
