@@ -20059,5 +20059,10 @@
         }
       }
     }
-  }
+  },
+  "x-qmanCaptureHostSnapshotTrustReferenceRules": [
+    "trustedKeyRing exact-projects the publication VerifiedTrustContext current ring as {documentKind:TRUST_KEY_RING,documentId:keyRingId,documentVersion:keyRingSequence,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-trust-key-ring.schema.json,contentHash:SHA-256 of the exact verified current key-ring canonical bytes}; keyRingDigest alone is not the exact document-byte hash",
+    "trustRootSet exact-projects the same VerifiedTrustContext pinned root as {documentKind:TRUST_ROOT_SET,documentId:rootSetId,documentVersion:1,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-trust-root-set.schema.json,contentHash:SHA-256 of the exact verified root-set canonical bytes}",
+    "rollbackAnchor exact-projects the same VerifiedTrustContext external anchor as {documentKind:TRUST_ROLLBACK_ANCHOR,documentId:trustAnchorDigest,documentVersion:trustAnchorVersion,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-trust-rollback-anchor.schema.json,contentHash:SHA-256 of the exact verified anchor canonical bytes}; the trust context must be live at request issuedAt"
+  ]
 }

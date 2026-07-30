@@ -109,7 +109,7 @@
     {
       "path": "contracts/directpath-acceptance-scenario.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:009671c131046b2f76ef95444e36e68bfe06f3cf9646b2413d908a1750e208d2"
+      "sha256": "sha256:32691e207174f8b1ad75e6945f8dbfb840814f890d7ce49c67b4a7aa94f6567f"
     },
     {
       "path": "contracts/directpath-acceptance-case-contract.schema.json",
@@ -154,12 +154,12 @@
     {
       "path": "contracts/directpath-operation-envelope.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:a34aaa199809129c02491b0cd445756223552eccb9feeb5cb50fc99b9e43056e"
+      "sha256": "sha256:14da3707c8e97bd4c0a473215974c35439078ef6d644918d1f19f09bf235ccd4"
     },
     {
       "path": "contracts/directpath-operation-payload.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea"
+      "sha256": "sha256:1660dcf1d8b959c433261ced62195b954d4e521bef722d0673b95444a245d163"
     },
     {
       "path": "contracts/directpath-query-read-trace.schema.json",
@@ -169,7 +169,7 @@
     {
       "path": "contracts/directpath-host-snapshot-publication-trace.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63"
+      "sha256": "sha256:1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4"
     },
     {
       "path": "contracts/directpath-host-snapshot-rollback-anchor.schema.json",

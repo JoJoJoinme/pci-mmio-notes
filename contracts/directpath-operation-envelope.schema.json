@@ -182,6 +182,7 @@
         "ENTITY-CONTROLLER-AUTHORITY",
         "ENTITY-HOST-AUTHORITY",
         "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+        "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY",
         "ENTITY-AVAILABILITY-AUTHORITY",
         "ENTITY-HOST-SNAPSHOT",
         "ENTITY-DEVICE-RECORD",
@@ -496,7 +497,7 @@
         "releaseOwnershipGuardCapabilityOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/releaseOwnershipGuardCapability"}]},
         "payloadSchemaAuthority": {"const": "PORTABLE_CONTRACT"},
         "payloadSchemaRef": {"$ref": "#/$defs/schemaRef"},
-        "payloadSchemaSha256": {"const": "sha256:d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea"},
+        "payloadSchemaSha256": {"const": "sha256:1660dcf1d8b959c433261ced62195b954d4e521bef722d0673b95444a245d163"},
         "payloadCanonicalProfile": {"const": "CANONICAL-JSON-V1"},
         "payloadHash": {"$ref": "#/$defs/digest"},
         "correlation": {"$ref": "#/$defs/correlation"},
@@ -747,7 +748,7 @@
         },
         "payloadSchemaAuthority": {"const": "PORTABLE_CONTRACT"},
         "payloadSchemaRef": {"$ref": "#/$defs/schemaRef"},
-        "payloadSchemaSha256": {"const": "sha256:d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea"},
+        "payloadSchemaSha256": {"const": "sha256:1660dcf1d8b959c433261ced62195b954d4e521bef722d0673b95444a245d163"},
         "payloadCanonicalProfile": {"const": "CANONICAL-JSON-V1"},
         "payloadHash": {"$ref": "#/$defs/digest"},
         "correlation": {"$ref": "#/$defs/correlation"},
@@ -826,6 +827,13 @@
     "authoritativeStates accepts only a state from the named frozen FSM and has at most one row per [stateMachineId,aggregateId]",
     "committedResourceVersions has at most one row per [entityType,resourceId]; a create has previousResourceVersionOrNull null and committedResourceVersion 1, otherwise committedResourceVersion equals previousResourceVersionOrNull plus one",
     "receiptHashes identifies each receipt by a closed schema reference and exact schema/document hashes; a digest without its receipt type, identity, and schema binding is not authoritative",
-    "Every RESULT portable contract hash, target commit, operation tuple, command identity, correlation identity, and payload schema binding exactly equals the accepted REQUEST"
+    "Every RESULT portable contract hash, target commit, operation tuple, command identity and correlation identity exactly equals the accepted REQUEST. payloadSchemaAuthority, payloadSchemaSha256 and payloadCanonicalProfile remain request-equal, while payloadSchemaRef changes only from the operation's unique REQUEST profile fragment to its unique RESULT profile fragment; payloadHash independently binds the detached result payload."
+  ],
+  "x-qmanCaptureHostSnapshotEnvelopeRules": [
+    "OP-CAPTURE-HOST-SNAPSHOT carries null operationLeaseCapabilityOrNull and null releaseOwnershipGuardCapabilityOrNull. correlation has hostIds exactly [requestPayload.body.hostId], deviceUids empty because device identities are not accepted until capture verification, assignmentIdOrNull/runIdOrNull/relocationIdOrNull null, and the complete correlation object is byte-equal in REQUEST and RESULT",
+    "Its authority snapshotEpoch is the exact current HostSnapshot epoch or null for genesis; hostEpochs is exactly one [hostId,hostEpoch] from requestPayload.body.hostBootIdentity; runGenerations and memberGenerations are empty; resourceVersions is the canonical closed set of current HostAuthority, AvailabilityAuthority, CapabilityPolicyAuthority, and HostSnapshotFreshnessPolicyAuthority expectations. controllerGeneration comes from an independently current controller authority, not from caller payload bytes",
+    "A component verifier may establish the request/payload/hash/read-set projection but cannot attest transport authentication, controller-generation currentness, idempotency ownership, repository acceptance, or deadline enforcement without product receipts",
+    "For a SUCCEEDED result, authority is the resolved post-decision projection, not an echo of the request CAS read set: controllerGeneration and the singleton hostEpochs exact-equal the request, snapshotEpoch exact-equals hostSnapshotAfter.snapshotEpoch, runGenerations/memberGenerations remain empty, and resourceVersions is the sorted closed four-authority set selecting after HostAuthority/AvailabilityAuthority versions for COMMITTED and byte-identical current versions for NO_CHANGE while retaining the current capability/freshness policy authority versions.",
+    "For SUCCEEDED COMMITTED, authoritativeStates is empty and committedResourceVersions is exactly the sorted HostAuthority and AvailabilityAuthority before/after pair. receiptHashes is exactly five rows: RECEIPT-HOST-SNAPSHOT-ROLLBACK-PREFLIGHT over the retained rollbackAuthorityPreflightReceipt bytes, RECEIPT-HOST-SNAPSHOT-ANCHOR-PREPARE over the retained prepareReceipt bytes, RECEIPT-HOST-SNAPSHOT-ANCHOR-COMMIT over the finalized anchor receipt bytes, RECEIPT-HOST-SNAPSHOT-ANCHOR-FRESHNESS over the after-freshness state bytes, and RECEIPT-HOST-SNAPSHOT-REPOSITORY-COMMIT over the durable repositoryCommitRecord bytes. For SUCCEEDED NO_CHANGE, authoritativeStates and committedResourceVersions are empty and receiptHashes is exactly the preflight, finalized-anchor-receipt and after-freshness rows; prepare and repository-commit rows are forbidden. Each schemaSha256 hashes the exact loaded schema document bytes and each receiptSha256 hashes the exact canonical receipt/state bytes. Result envelope/payload/context bytes and hashes, whole trace hashes, and caller-selected extra labels are forbidden from this set."
   ]
 }

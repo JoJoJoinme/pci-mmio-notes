@@ -108,27 +108,50 @@ The package owns deterministic computation and verification:
   time binding, and target execution remain blockers, so the result is fixed to
   `COMPONENT_CALLER_SUPPLIED_ROLLBACK_AUTHORITY_BYTES_ONLY`,
   `productAuthorized=false`;
-- a factory-only HostSnapshot publication mutation-closure stage.  It consumes
-  only replayed decision and rollback contexts plus exact caller-supplied
-  repository transaction, AvailabilityAuthority, audit, pending-outbox, and
-  durable commit-row bytes.  For committed branches it derives exactly one
-  DeviceRecord INSERT per persisted record plus the HostSnapshot INSERT,
-  HostAuthority and AvailabilityAuthority UPDATEs, and audit/outbox/commit
-  INSERTs—exactly `N+6`, capped at 4,102.  It independently reconstructs all
-  five digest projections, the acyclic mutation-set fixed point, outbox
-  payload, audit/outbox/commit self-digests, DeviceRecord-set digest, and the
-  resolved four-authority vector; `NO_CHANGE` requires all four row artifacts
-  to be absent and derives an empty write set.  The supplied transaction must
-  bind the four-authority expectation and commit inside the retained external
-  reservation window before finalization.  Its locally closed CAS-result shape
-  is retained inside the context digest and replayed exactly, but this stage
-  does not bind the full operation-payload schema/envelope.  It also does not
-  authenticate the repository port, observe the CAS/atomic commit, define
-  aggregate/event-ID or `createdAt` semantics, prove durable commit-context/
-  commit-clock visibility, or deliver the anchor-gated outbox event.  Its fixed
-  boundary is
-  `COMPONENT_CALLER_SUPPLIED_REPOSITORY_ROWS_AND_TRANSACTION_ONLY` with
+- a factory-only `OP-CAPTURE-HOST-SNAPSHOT` request stage.  It verifies exact
+  canonical request-envelope and detached request-payload bytes, the loaded
+  operation-payload schema digest, payload/request hashes, independently
+  selected portable revision and target commit, controller generation,
+  deadline ordering, host-only correlation and the closed four-authority CAS
+  vector.  The later mutation stage exact-projects its trust/policy/authority
+  references onto the retained publication read set.  Transport
+  authentication, controller-authority currentness, idempotency ownership and
+  target acceptance remain product receipts, so the request context stays
+  `COMPONENT_CALLER_SUPPLIED_OPERATION_EXCHANGE_ONLY`,
   `productAuthorized=false`;
+- a factory-only HostSnapshot publication mutation-closure stage.  It consumes
+  that replayed verified operation request plus replayed decision/rollback
+  contexts and exact caller-supplied repository transaction,
+  AvailabilityAuthority, audit, pending-outbox and durable commit-row bytes.
+  For committed branches it derives one DeviceRecord INSERT per persisted
+  record plus HostSnapshot INSERT, HostAuthority/AvailabilityAuthority UPDATE
+  and audit/outbox/commit INSERTs: exactly `N+6`, capped at 4,102.  It
+  reconstructs all digest projections, the acyclic mutation-set fixed point,
+  outbox payload, audit/outbox/commit self-digests, DeviceRecord-set digest and
+  resolved four-authority vector; `NO_CHANGE` requires all row artifacts absent
+  and an empty write set.  Transaction and commit rows exact-bind requestHash,
+  request/decision context digests and expectationHash.  COMMITTED advances the
+  commit clock by exactly one; NO_CHANGE leaves it unchanged.  Audit/outbox IDs
+  use separate deterministic domains over the same pre-mutation subject,
+  aggregateId is hostId and both createdAt values equal committedAt.  Post-commit
+  rollback/mutation/result/resolved-vector/trace digests are forbidden from the
+  commit row, preserving a one-way hash DAG.  Repository/CAS authenticity,
+  independent visibility and anchor-gated delivery remain product blockers, so
+  the boundary is
+  `COMPONENT_CALLER_SUPPLIED_REPOSITORY_ROWS_AND_TRANSACTION_ONLY`,
+  `productAuthorized=false`;
+- a factory-only successful operation-result stage.  It accepts only a replayed
+  mutation root plus exact RESULT envelope/payload bytes, and only
+  `SUCCEEDED + COMMITTED/NO_CHANGE`.  It reconstructs the resolved post-state
+  authority, capability-policy hash, exact output and specialized CAS result,
+  the two committed authority versions for COMMITTED (zero for NO_CHANGE), and
+  an acyclic five/three-receipt set covering rollback preflight, prepare,
+  finalized anchor receipt, freshness and durable commit as applicable.
+  completedAt follows the verified freshness observation and cannot exceed the
+  accepted request deadline.  Result hashes point one-way to the mutation
+  closure and never enter repository commit preimages.  Authentic result
+  transport and idempotent result storage/replay remain target receipts, so
+  this context is component-only and `productAuthorized=false`;
 - a factory-only `VerifiedHostSnapshotAnchorBinding` that accepts only one
   schema-valid `COMMITTED` external HostSnapshot rollback anchor and its exact
   live verifier-nonce freshness envelope.  It verifies root quorums,
@@ -471,7 +494,7 @@ Run:
 cd qman-directpath-core
 python -m pip install -e ".[test]"
 python -m pytest -q tests/test_host_snapshot_anchor.py tests/test_read_guard.py
-python -m pytest -q tests/test_publication_capture.py tests/test_publication_decision.py tests/test_publication_rollback.py tests/test_publication_mutation.py
+python -m pytest -q tests/test_publication_capture.py tests/test_publication_decision.py tests/test_publication_rollback.py tests/test_publication_operation.py tests/test_publication_mutation.py tests/test_publication_operation_result.py
 python -m pytest -q tests/test_aer_core.py tests/test_aer_retained_sequence.py tests/test_aer_normative_contract.py
 python -m pytest -q -p no:cacheprovider
 python -m unittest discover -s tests

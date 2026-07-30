@@ -1,60 +1,66 @@
 {
   "schemaVersion": 1,
   "id": "QMAN-E2-C00-HOST-SNAPSHOT-PUBLICATION-CLOSURE-001",
-  "observedAt": "2026-07-30T04:36:16.288094Z",
+  "observedAt": "2026-07-30T07:52:35.5504501Z",
   "subject": "QMAN_COMPONENT",
   "evidenceGrade": "E2",
   "claimBoundary": "COMPONENT_ONLY",
   "verdict": "PASS",
   "sourceState": {
-    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "baseCommit": "bda6787a6614628cdb8220a281a3342693a82fe3",
     "dirtyWorkingTree": true,
     "runnerHashes": {
-      "qman-directpath-core/tests/test_publication_decision.py": "d3c9f595efc174fdb8b8bd8622d377f8dde9e3e9558ebe9504cc0a314bd889b2",
-      "qman-directpath-core/tests/test_publication_rollback.py": "bab24babe6547e95346e79c024968e431367e9996200eed970c06da20553e05f",
-      "qman-directpath-core/tests/test_publication_mutation.py": "3968d11bcf04e08591ac7f03e82a87322b2f6bea43b62dd5722bc9c17e650a3e",
-      "qman-directpath-core/tests/test_aer_normative_contract.py": "b714bded95731c80a4df9809f78300ed557f7539d4571acff221762971dfb0f2",
+      ".github/workflows/ci.yml": "6d7455b4d06ae4bc5c82e81d417018c1f8b6c7113c0169911dfff61438190c5c",
+      "qman-directpath-core/tests/test_publication_operation.py": "d19e8da7df1b7f5e0bc9d3845b68b85c5e1ea3abba2762785176b033b86d1f19",
+      "qman-directpath-core/tests/test_publication_mutation.py": "c5fb0bda833795794dbe48ba9b3844da6a3c92964e52901aab9d37a425afea30",
+      "qman-directpath-core/tests/test_publication_operation_result.py": "36486a1e8dbbb81b4d0ae3622d0e33de07d84a4dc0a3ede8a0a5cd648af50956",
       "tests/test_snapshot_publication_contract.py": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f"
     },
     "inputHashes": {
+      "qman-directpath-core/qman_directpath_core/publication_operation.py": "0092e3334e9ed244fec75d90b7f7b937055be91a16d1befd82da6cb73292f7b5",
       "qman-directpath-core/qman_directpath_core/publication_capture.py": "8741617a4f84e54bc38365e02c5e0659118202368a15304dfadb5df7fe692b97",
       "qman-directpath-core/qman_directpath_core/publication_decision.py": "e8ee101581b1ca03baa222315506285c4a7bbbea74b7f174d836a3a7ae8226b2",
       "qman-directpath-core/qman_directpath_core/publication_rollback.py": "3e2c09a24381597aacf37efae671c8b702c1dd9ec7d016ca789fe68d1ae25450",
-      "qman-directpath-core/qman_directpath_core/publication_mutation.py": "43d098b787963b8fa56fa7cec946e512ebd6129f1922e237c7049e9e1019ea79",
-      "qman-directpath-core/qman_directpath_core/trust.py": "c164bbb616f22e908be703f20d02d8b4d9eb22cf660a73074ca25bfc40c6a9d4",
+      "qman-directpath-core/qman_directpath_core/publication_mutation.py": "32338ed4d08214110cd419c34704eedfeac5f7322c383caab73964b3e6d9931e",
+      "qman-directpath-core/qman_directpath_core/trust.py": "a02d4763f34ddccc87bc74cde4e6b6dfc76863a016849cdd49b74f82b4a5d8d8",
       "qman-directpath-core/qman_directpath_core/inventory.py": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
-      "qman-directpath-core/qman_directpath_core/__init__.py": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
-      "contracts/directpath-host-snapshot-publication-trace.schema.json": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
+      "qman-directpath-core/qman_directpath_core/canonical.py": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
+      "qman-directpath-core/qman_directpath_core/_verified.py": "6d686f87d62554bda59f5c860adaec006a3cf4947ef81388733574bc5f49df2d",
+      "qman-directpath-core/qman_directpath_core/errors.py": "84c852d0c740a960e733a9d37f56e31a808fdfdfcfc67c29bb898f10cbad10b7",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
+      "contracts/directpath-host-snapshot-publication-trace.schema.json": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4",
       "contracts/directpath-host-snapshot-rollback-anchor.schema.json": "93bf9de4a26c8bb7c7537287351d64183c008cf946c3b2e2d5c9f45e3adad18c",
       "contracts/directpath-anchor-freshness-envelope.schema.json": "c69c1015cf8d9212a1f563460fd3bea0e981697f9991206f89c215f4f3cb0951",
       "contracts/directpath-authority-entities.schema.json": "a95ea1412ca5fad5f2f5e90c0da912cf1be4cd29ce4d8f37ca852d42ce5d5a6a",
-      "contracts/directpath-operation-payload.schema.json": "d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea",
+      "contracts/directpath-operation-envelope.schema.json": "14da3707c8e97bd4c0a473215974c35439078ef6d644918d1f19f09bf235ccd4",
+      "contracts/directpath-operation-payload.schema.json": "1660dcf1d8b959c433261ced62195b954d4e521bef722d0673b95444a245d163",
       "contracts/directpath-portable-entities.schema.json": "fe4123596d622b5c06974f6f3a34effa1494c4dfd985ef1afe4d2d1b42767b01",
       "contracts/directpath-identity-v1.schema.json": "179e985446b7f7e1fefa1c9f49a2785eb0d1484c7d63b6f40ab5880bce371eb1",
       "contracts/directpath-capability-policy.schema.json": "fc22b5535db3627719e31f4aa8eb4db4467fa04e4218c31a6c20820e2da0d46d",
       "contracts/directpath-inventory-verification-receipt.schema.json": "245fb70b77bebc2c8e9b4229966a03306a17f4ab06597aee34e9390186537adb",
       "contracts/directpath-inventory-verifier-algorithm.schema.json": "903a8b2bd750e7c3078f7edd7f56077a8832d7eb1852520fef74661137579221",
       "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
-      "contracts/directpath-portable-control-contract.json": "10500cca064bcba93f1905dfa8f614878eacc51feda29754aebe16184ecdbc90"
+      "contracts/directpath-portable-control-contract.json": "2f055abcd0e82375cf0d17cd3496f98507fb6153c8736e562001489171011a3b"
     }
   },
   "sut": {
-    "environment": "Windows Python deterministic component and contract tests in the local authorized workspace; no ESXi, QEMU, HMP, QTest, VFIO, target Qman repository, external authority transport, or physical-hardware action",
+    "environment": "Windows Python deterministic component and contract tests in the local authorized workspace; self-consistent canonical fixtures only; no target Qman process, accepted transport exchange, product repository port, ESXi, QEMU, HMP, QTest, VFIO, external authority transport, or physical-hardware action",
     "components": [
       {
-        "name": "qman-directpath-core HostSnapshot publication decision verifier",
+        "name": "qman-directpath-core HostSnapshot operation request and result verifier",
         "version": "0.1.0 working tree",
-        "sha256": "e8ee101581b1ca03baa222315506285c4a7bbbea74b7f174d836a3a7ae8226b2"
-      },
-      {
-        "name": "qman-directpath-core HostSnapshot dual-trust rollback closure verifier",
-        "version": "0.1.0 working tree",
-        "sha256": "3e2c09a24381597aacf37efae671c8b702c1dd9ec7d016ca789fe68d1ae25450"
+        "sha256": "0092e3334e9ed244fec75d90b7f7b937055be91a16d1befd82da6cb73292f7b5"
       },
       {
         "name": "qman-directpath-core HostSnapshot publication mutation closure verifier",
         "version": "0.1.0 working tree",
-        "sha256": "43d098b787963b8fa56fa7cec946e512ebd6129f1922e237c7049e9e1019ea79"
+        "sha256": "32338ed4d08214110cd419c34704eedfeac5f7322c383caab73964b3e6d9931e"
+      },
+      {
+        "name": "portable HostSnapshot publication trace and operation contracts",
+        "version": "working tree",
+        "sha256": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4"
       },
       {
         "name": "Python",
@@ -63,55 +69,48 @@
     ]
   },
   "hypotheses": [
-    "A factory-only verifier can derive GENESIS, INCARNATION_GENESIS, SUCCESSOR, REFRESH, or NO_CHANGE from exact retained capture and structural read-set bytes without accepting a caller-selected publication decision.",
-    "Publication-time trust can verify immutable committed inventory at the retained decision time while a separately live recovery trust verifies the finalized anchor and freshness at recovery time, provided root, key-ring history, authority namespaces, monotonic anchor state, exact freshness receipt digests/times, and independently configured trust-anchor paths are bound.",
-    "Committed branches can deterministically reconstruct the exact N+6 mutation set, digest projections, mutation fixed point, audit/outbox/commit self-digests, DeviceRecord-set digest, and resolved four-authority vector, while NO_CHANGE remains an exact zero-write branch.",
-    "These byte relationships remain component premises until authentic authority transport, repository CAS and transaction clocks, atomic visibility, outbox delivery, target mapping, and end-to-end execution are independently observed."
+    "A factory-only request verifier can close the canonical request envelope and detached payload, deployment binding, controller generation, operation identity, correlation, authority-vector shape, request window, payload hash, and null-projection request hash before mutation verification consumes the exact retained request.",
+    "A factory-only mutation verifier can bind that request to the retained publication read set and durable commit context, reconstruct COMMITTED N+6 mutations or exact NO_CHANGE zero writes, and retain the operation-result schema/envelope blocker until a final result context is verified.",
+    "A factory-only successful-result verifier can replay the mutation closure and exact-project the detached result payload, post-state authority, committed version set, closed pre-existing receipt set, policy hash, correlation, completion window, payload hash, and null-projection result hash without feeding result bytes back into the commit DAG.",
+    "Consistent fixtures and deterministic replay prove component algorithms only. They cannot prove target transport acceptance, idempotency ownership, repository CAS execution or clocks, atomic visibility, post-anchor outbox delivery, authentic result exchange, durable result replay, target mapping, or product authorization."
   ],
   "observations": [
     {
-      "name": "publication-decision-positive-and-adversarial-matrix",
+      "name": "publication-request-mutation-result-directed-matrix",
       "result": {
-        "command": "python -m pytest tests/test_publication_decision.py -q -p no:cacheprovider",
+        "command": "python -m pytest tests/test_publication_operation.py tests/test_publication_mutation.py tests/test_publication_operation_result.py -q -p no:cacheprovider",
         "workingDirectory": "qman-directpath-core",
-        "testsPassed": 39,
+        "testsPassed": 46,
+        "skips": 0,
         "failures": 0,
         "errors": 0,
-        "elapsedSeconds": 585.37
+        "elapsedSeconds": 185.15
       }
     },
     {
-      "name": "publication-rollback-positive-and-adversarial-matrix",
+      "name": "publication-result-focused-matrix",
       "result": {
-        "command": "python -m pytest tests/test_publication_rollback.py -q -p no:cacheprovider",
+        "command": "python -m pytest tests/test_publication_operation_result.py -q -p no:cacheprovider",
         "workingDirectory": "qman-directpath-core",
-        "testsPassed": 26,
+        "testsPassed": 13,
+        "skips": 0,
         "failures": 0,
         "errors": 0,
-        "elapsedSeconds": 589.56
-      }
-    },
-    {
-      "name": "dual-trust-freshness-minimal-counterexamples",
-      "result": {
-        "command": "python -m pytest tests/test_publication_rollback.py -q -p no:cacheprovider -k \"recovery_trust or trust_freshness\"",
-        "workingDirectory": "qman-directpath-core",
-        "testsPassed": 3,
-        "testsDeselected": 23,
-        "failures": 0,
-        "errors": 0,
-        "elapsedSeconds": 68.42
-      }
-    },
-    {
-      "name": "publication-mutation-positive-and-adversarial-matrix",
-      "result": {
-        "command": "python -m pytest tests/test_publication_mutation.py -q -p no:cacheprovider",
-        "workingDirectory": "qman-directpath-core",
-        "testsPassed": 14,
-        "failures": 0,
-        "errors": 0,
-        "elapsedSeconds": 53.87
+        "elapsedSeconds": 82.61,
+        "coveredBranches": [
+          "SUCCEEDED COMMITTED with two committed resource versions and five retained receipts",
+          "SUCCEEDED NO_CHANGE with zero committed resource versions and three retained receipts"
+        ],
+        "adversarialClasses": [
+          "factory-context forgery and replay mismatch",
+          "tampered redundant public claims in a factory result context",
+          "fully resealed request-authority echo",
+          "tampered redundant request echo rejected before use",
+          "fully resealed output, CAS, post-state authority, committed-version, receipt-set, policy and correlation substitution",
+          "independent payloadHash and resultHash mismatch",
+          "completedAt before after-freshness observation or after request deadline",
+          "oversized result rejected before expensive upstream replay"
+        ]
       }
     },
     {
@@ -120,68 +119,64 @@
         "command": "python -m pytest tests/test_snapshot_publication_contract.py -q -p no:cacheprovider",
         "workingDirectory": ".",
         "testsPassed": 14,
-        "failures": 0,
-        "errors": 0
-      }
-    },
-    {
-      "name": "portable-core-full-regression",
-      "result": {
-        "command": "python -m pytest -q -p no:cacheprovider",
-        "workingDirectory": "qman-directpath-core",
-        "testsPassed": 414,
-        "subtestsPassed": 305,
-        "skips": 0,
+        "subtestsPassed": 66,
         "failures": 0,
         "errors": 0,
-        "elapsedSeconds": 2447.47
-      }
-    },
-    {
-      "name": "post-generator-portable-control-reader-regression",
-      "result": {
-        "command": "python -m pytest -q tests/test_aer_normative_contract.py -p no:cacheprovider",
-        "workingDirectory": "qman-directpath-core",
-        "testsPassed": 18,
-        "skips": 0,
-        "failures": 0,
-        "errors": 0,
-        "elapsedSeconds": 75.04,
-        "scope": "The final generator refresh changed only portable control metadata among qman-directpath-core test inputs; this is the sole core test module that reads that generated file."
+        "elapsedSeconds": 10.93
       }
     },
     {
       "name": "publication-closure-invariants",
       "result": {
-        "fiveDecisionsDerivedWithoutCallerDecision": true,
-        "fourAuthorityExpectationRecomputed": true,
-        "fullPublicationDeviceRecordCap": 4096,
-        "dualTrustFreshnessReceiptDigestTimeAndPathBound": true,
-        "forwardKeyRingHistoryPrefixSupported": true,
-        "sameRootNamespaceAndPathSubstitutionRejected": true,
-        "rollbackPreflightAndPrepareCompletionOrdered": true,
-        "repositoryCommitTimeAcceptedFromCaller": false,
-        "commitValidityWindowExported": true,
+        "requestEnvelopeAndDetachedPayloadReplayedFromExactCanonicalBytes": true,
+        "requestReadSetAndFourAuthorityVectorBoundBeforeMutation": true,
+        "sameCommandDifferentResealedRequestRejected": true,
+        "durableCommitContextAndClockReconstructed": true,
         "committedMutationCountFormula": "N+6",
         "maximumCommittedMutations": 4102,
         "noChangeWriteCount": 0,
+        "resultVerifierAcceptsOnlySuccessfulCommittedOrNoChangeMutationContexts": true,
+        "committedResultResourceVersionCount": 2,
+        "committedResultReceiptCount": 5,
+        "noChangeResultResourceVersionCount": 0,
+        "noChangeResultReceiptCount": 3,
+        "resultReceiptSetReferencesOnlyPreExistingVerifiedArtifacts": true,
+        "resultBytesExcludedFromRepositoryCommitPreimage": true,
+        "mutationResultSchemaBlockerRetainedUntilFinalResultContext": true,
+        "resultSchemaBlockerConsumedOnlyByFactoryVerifiedResultContext": true,
         "productAuthorized": false
       }
     },
     {
-      "name": "static-verification",
+      "name": "ci-runner-definition",
       "result": {
-        "ruff": "PASS",
-        "compileall": "PASS"
+        "path": ".github/workflows/ci.yml",
+        "sha256": "6d7455b4d06ae4bc5c82e81d417018c1f8b6c7113c0169911dfff61438190c5c",
+        "productShapedCoreTestCommand": "python -m pytest -q tests -p no:cacheprovider",
+        "workingDirectory": "qman-directpath-core",
+        "workflowDefinitionOnly": true,
+        "workflowRunObserved": false
       }
     },
     {
       "name": "authority-boundary",
       "result": {
-        "decisionBoundary": "COMPONENT_CALLER_SUPPLIED_PUBLICATION_READ_SET_BYTES_ONLY",
-        "rollbackBoundary": "COMPONENT_CALLER_SUPPLIED_ROLLBACK_AUTHORITY_BYTES_ONLY",
+        "requestBoundary": "COMPONENT_CALLER_SUPPLIED_OPERATION_EXCHANGE_ONLY",
         "mutationBoundary": "COMPONENT_CALLER_SUPPLIED_REPOSITORY_ROWS_AND_TRANSACTION_ONLY",
+        "resultBoundary": "COMPONENT_CALLER_SUPPLIED_OPERATION_RESULT_AND_MUTATION_ONLY",
+        "resultAuthorityDisposition": "COMPONENT_RESULT_BYTES_AND_TRACE_PROJECTION_VERIFIED_PRODUCT_EXCHANGE_NOT_PROVEN",
         "productAuthorized": false,
+        "productEvidenceBlockers": [
+          "TARGET_ACCEPTED_OPERATION_REQUEST_IDEMPOTENCY_AND_DEADLINE_RECEIPT_REQUIRED",
+          "TARGET_CONTROLLER_GENERATION_AUTHORITY_RECEIPT_REQUIRED",
+          "TARGET_PRODUCT_REPOSITORY_TRANSACTION_PORT_REQUIRED",
+          "TARGET_REPOSITORY_FOUR_AUTHORITY_CAS_RECEIPT_REQUIRED",
+          "TARGET_ATOMIC_PUBLICATION_VISIBILITY_RECEIPT_REQUIRED",
+          "TARGET_OUTBOX_POST_ANCHOR_DELIVERY_RECEIPT_REQUIRED",
+          "TARGET_DURABLE_COMMIT_CONTEXT_AND_COMMIT_CLOCK_RECEIPT_REQUIRED",
+          "TARGET_AUTHENTIC_OPERATION_RESULT_EXCHANGE_RECEIPT_REQUIRED",
+          "TARGET_IDEMPOTENT_RESULT_STORE_AND_REPLAY_RECEIPT_REQUIRED"
+        ],
         "productCasesClosed": 0,
         "risksClosed": 0,
         "milestoneStatusChanged": false
@@ -203,6 +198,21 @@
   },
   "artifacts": [
     {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "6d7455b4d06ae4bc5c82e81d417018c1f8b6c7113c0169911dfff61438190c5c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/publication_operation.py",
+      "sha256": "0092e3334e9ed244fec75d90b7f7b937055be91a16d1befd82da6cb73292f7b5",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/publication_capture.py",
+      "sha256": "8741617a4f84e54bc38365e02c5e0659118202368a15304dfadb5df7fe692b97",
+      "retention": "LOCAL_RAW"
+    },
+    {
       "path": "qman-directpath-core/qman_directpath_core/publication_decision.py",
       "sha256": "e8ee101581b1ca03baa222315506285c4a7bbbea74b7f174d836a3a7ae8226b2",
       "retention": "LOCAL_RAW"
@@ -214,47 +224,47 @@
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/publication_mutation.py",
-      "sha256": "43d098b787963b8fa56fa7cec946e512ebd6129f1922e237c7049e9e1019ea79",
+      "sha256": "32338ed4d08214110cd419c34704eedfeac5f7322c383caab73964b3e6d9931e",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/trust.py",
-      "sha256": "c164bbb616f22e908be703f20d02d8b4d9eb22cf660a73074ca25bfc40c6a9d4",
+      "sha256": "a02d4763f34ddccc87bc74cde4e6b6dfc76863a016849cdd49b74f82b4a5d8d8",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/canonical.py",
+      "sha256": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/contracts.py",
+      "sha256": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/__init__.py",
-      "sha256": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
+      "sha256": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "qman-directpath-core/tests/test_publication_decision.py",
-      "sha256": "d3c9f595efc174fdb8b8bd8622d377f8dde9e3e9558ebe9504cc0a314bd889b2",
-      "retention": "LOCAL_RAW"
-    },
-    {
-      "path": "qman-directpath-core/tests/test_publication_rollback.py",
-      "sha256": "bab24babe6547e95346e79c024968e431367e9996200eed970c06da20553e05f",
+      "path": "qman-directpath-core/tests/test_publication_operation.py",
+      "sha256": "d19e8da7df1b7f5e0bc9d3845b68b85c5e1ea3abba2762785176b033b86d1f19",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "qman-directpath-core/tests/test_publication_mutation.py",
-      "sha256": "3968d11bcf04e08591ac7f03e82a87322b2f6bea43b62dd5722bc9c17e650a3e",
+      "sha256": "c5fb0bda833795794dbe48ba9b3844da6a3c92964e52901aab9d37a425afea30",
       "retention": "LOCAL_RAW"
     },
     {
-      "path": "qman-directpath-core/tests/test_aer_normative_contract.py",
-      "sha256": "b714bded95731c80a4df9809f78300ed557f7539d4571acff221762971dfb0f2",
-      "retention": "LOCAL_RAW"
-    },
-    {
-      "path": "tests/test_snapshot_publication_contract.py",
-      "sha256": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
+      "path": "qman-directpath-core/tests/test_publication_operation_result.py",
+      "sha256": "36486a1e8dbbb81b4d0ae3622d0e33de07d84a4dc0a3ede8a0a5cd648af50956",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "contracts/directpath-host-snapshot-publication-trace.schema.json",
-      "sha256": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
+      "sha256": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4",
       "retention": "LOCAL_RAW"
     },
     {
@@ -273,13 +283,33 @@
       "retention": "LOCAL_RAW"
     },
     {
+      "path": "contracts/directpath-operation-envelope.schema.json",
+      "sha256": "14da3707c8e97bd4c0a473215974c35439078ef6d644918d1f19f09bf235ccd4",
+      "retention": "LOCAL_RAW"
+    },
+    {
       "path": "contracts/directpath-operation-payload.schema.json",
-      "sha256": "d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea",
+      "sha256": "1660dcf1d8b959c433261ced62195b954d4e521bef722d0673b95444a245d163",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-portable-hash-subjects.schema.json",
+      "sha256": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-capability-policy.schema.json",
+      "sha256": "fc22b5535db3627719e31f4aa8eb4db4467fa04e4218c31a6c20820e2da0d46d",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "contracts/directpath-portable-control-contract.json",
-      "sha256": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe",
+      "sha256": "2f055abcd0e82375cf0d17cd3496f98507fb6153c8736e562001489171011a3b",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "tests/test_snapshot_publication_contract.py",
+      "sha256": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
       "retention": "LOCAL_RAW"
     }
   ],
@@ -289,11 +319,13 @@
     "statusUpdated": false
   },
   "limitations": [
-    "The publication read receipt, authority bytes, trusted times, configured authority paths, verifier nonces, and repository rows are caller or adapter inputs. The component verifies their retained relationships but does not directly fetch them from an independent product authority.",
-    "Dual-trust verification binds the exact publication and recovery freshness receipt digests, verified/expires times, independently expected trust-anchor paths, root set, key-ring history prefix, authority namespaces, and monotonic trust-anchor state. It does not prove direct authority path ownership, fresh nonce transport, HSM/KMS custody, or an external service's linearizable current read.",
-    "The locally closed CAS-result shape and repository transaction rows are caller-supplied. They do not prove a real SERIALIZABLE transaction, four-authority CAS execution, trusted commit clock, commit durability, or atomic visibility.",
-    "The mutation stage does not authenticate the complete operation request/result exchange, define aggregate or event-ID and createdAt semantics, or prove post-anchor outbox delivery and recovery.",
-    "There is no target Qman collector/publisher execution, repository port, target-code mapping, produced-binary build/runner attestation, E3 end-to-end product execution, E4 physical qualification, or signed CaseCompletionRecord.",
+    "The request and result envelope/payload bytes are local canonical fixtures supplied to the component. Exact hashes, correlation, authority projections, timestamps, replay, and closed schemas do not prove transport authentication, target acceptance, idempotency ownership, deadline enforcement, or authentic result delivery.",
+    "The verified request is now consumed by mutation verification, but publication read receipts, authority bytes, trusted times, configured authority paths, verifier nonces, repository transactions, and committed row artifacts remain caller or adapter inputs. The component does not fetch them from an independent current product authority.",
+    "The locally closed CAS result, N+6 mutation set, durable commit context, commit clocks, post-state authority, committed versions, and receipt set do not prove a real SERIALIZABLE target transaction, four-authority CAS execution, durability, atomic visibility, or post-anchor outbox delivery.",
+    "The mutation context deliberately retains TARGET_OPERATION_RESULT_SCHEMA_AND_ENVELOPE_BINDING_REQUIRED. Only construction and replay of the final factory-verified result context consumes that component blocker; it does not consume the remaining controller-authority, target repository, product visibility, authentic exchange, or durable idempotent-result blockers.",
+    "The CI workflow file now runs product-shaped core tests from qman-directpath-core, and its exact local bytes are retained here. No GitHub Actions workflow execution receipt was observed by this record.",
+    "The tests use self-consistent component fixtures and adversarial resealing. They are not observations from a target Qman collector/publisher, repository port, external rollback authority transport, target build, ESXi, QEMU, VFIO, or physical hardware.",
+    "There is no target-code mapping, produced-binary build/runner attestation, E3 end-to-end Qman product execution, E4 physical qualification, or signed CaseCompletionRecord.",
     "This record cannot close C00, R38, G1-G6, any product capability, qualification profile, support statement, HCL entry, or release gate."
   ]
 }

@@ -2,10 +2,11 @@
 
 This module consumes factory-produced publication decision and rollback
 contexts, then replays the deterministic mutation/hash closure over retained
-rows.  It does not open a repository transaction, authenticate the structural
-operation binding, execute compare-and-swap, observe atomic visibility, or
-deliver the pending outbox event.  Every returned context is therefore
-permanently non-authorizing product evidence.
+rows.  It consumes and exact-binds a verified operation request but does not
+authenticate target transport/acceptance, open a repository transaction,
+execute compare-and-swap, observe atomic visibility, or deliver the pending
+outbox event.  Every returned context is therefore permanently non-authorizing
+product evidence.
 """
 
 from __future__ import annotations
@@ -36,6 +37,10 @@ from .publication_decision import (
     VerifiedHostSnapshotPublicationDecisionContext,
     replay_host_snapshot_publication_decision,
 )
+from .publication_operation import (
+    VerifiedHostSnapshotPublicationOperationRequestContext,
+    replay_host_snapshot_publication_operation_request,
+)
 from .publication_rollback import (
     VerifiedHostSnapshotPublicationRollbackContext,
     replay_host_snapshot_publication_rollback_closure,
@@ -54,14 +59,14 @@ HOST_SNAPSHOT_PUBLICATION_MUTATION_AUTHORITY_DISPOSITION: Final = (
 )
 HOST_SNAPSHOT_PUBLICATION_MUTATION_PRODUCT_AUTHORIZED: Final = False
 HOST_SNAPSHOT_PUBLICATION_MUTATION_PRODUCT_EVIDENCE_BLOCKERS: Final = (
-    "TARGET_OPERATION_BINDING_AUTHORITY_REQUIRED",
+    "TARGET_ACCEPTED_OPERATION_REQUEST_IDEMPOTENCY_AND_DEADLINE_RECEIPT_REQUIRED",
+    "TARGET_CONTROLLER_GENERATION_AUTHORITY_RECEIPT_REQUIRED",
     "TARGET_PRODUCT_REPOSITORY_TRANSACTION_PORT_REQUIRED",
     "TARGET_REPOSITORY_FOUR_AUTHORITY_CAS_RECEIPT_REQUIRED",
     "TARGET_ATOMIC_PUBLICATION_VISIBILITY_RECEIPT_REQUIRED",
     "TARGET_OUTBOX_POST_ANCHOR_DELIVERY_RECEIPT_REQUIRED",
     "TARGET_OPERATION_RESULT_SCHEMA_AND_ENVELOPE_BINDING_REQUIRED",
-    "TARGET_AGGREGATE_EVENT_ID_AND_CREATED_AT_BINDING_REQUIRED",
-    "TARGET_DURABLE_COMMIT_CONTEXT_AND_COMMIT_CLOCK_SEMANTICS_REQUIRED",
+    "TARGET_DURABLE_COMMIT_CONTEXT_AND_COMMIT_CLOCK_RECEIPT_REQUIRED",
 )
 
 REPOSITORY_TRANSACTION_SCHEMA_REF: Final = (
@@ -130,8 +135,13 @@ RESOLVED_AUTHORITY_VECTOR_DOMAIN: Final = (
 MUTATION_CONTEXT_DOMAIN: Final = (
     b"QMAN-DIRECTPATH/HOST-SNAPSHOT-PUBLICATION-MUTATION-CONTEXT/V1\x00"
 )
+AUDIT_EVENT_ID_DOMAIN: Final = (
+    b"QMAN-DIRECTPATH/HOST-SNAPSHOT-PUBLICATION-AUDIT-EVENT-ID/V1\x00"
+)
+OUTBOX_EVENT_ID_DOMAIN: Final = (
+    b"QMAN-DIRECTPATH/HOST-SNAPSHOT-PUBLICATION-OUTBOX-EVENT-ID/V1\x00"
+)
 
-_ID_PATTERN: Final = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@/-]*$")
 _DIGEST_PATTERN: Final = re.compile(r"^sha256:[0-9a-f]{64}$")
 _COMMITTED_DECISIONS: Final = frozenset(
     {
@@ -224,13 +234,11 @@ class VerifiedHostSnapshotPublicationMutationContext(FactoryVerified):
     """Replayable structural mutation/hash closure for one publication."""
 
     limits: PublicationMutationVerifierLimits
+    operation_request: VerifiedHostSnapshotPublicationOperationRequestContext
     decision: VerifiedHostSnapshotPublicationDecisionContext
     rollback: VerifiedHostSnapshotPublicationRollbackContext
     repository_transaction: Mapping[str, Any]
     repository_transaction_canonical_bytes: bytes
-    command_id: str
-    target_repository_object_format: str
-    target_repository_commit: str
     availability_authority_after_artifact_or_null: Mapping[str, Any] | None
     availability_authority_after_artifact_canonical_bytes_or_null: bytes | None
     audit_record_artifact_or_null: Mapping[str, Any] | None
@@ -589,49 +597,335 @@ def _require_equal(
     )
 
 
-def _validate_operation_binding(
-    command_id: Any,
-    target_repository_object_format: Any,
-    target_repository_commit: Any,
-) -> tuple[str, str, str]:
+def _require_json_equal(
+    actual: Any,
+    expected: Any,
+    *,
+    path: str,
+    message: str,
+) -> None:
     require(
-        isinstance(command_id, str)
-        and 1 <= len(command_id) <= 512
-        and _ID_PATTERN.fullmatch(command_id) is not None,
-        "PUBLICATION_MUTATION_OPERATION_BINDING_INVALID",
-        "publicationMutation.commandId",
-        "commandId is not one closed portable identifier",
+        canonical_json_bytes(_thaw_json(actual))
+        == canonical_json_bytes(_thaw_json(expected)),
+        "PUBLICATION_MUTATION_BINDING_MISMATCH",
+        path,
+        message,
     )
+
+
+def _entity_ref(
+    artifact: Mapping[str, Any],
+    *,
+    entity_type: str,
+    entity_id: str,
+    resource_version: int,
+    generation_or_null: int | None,
+) -> dict[str, Any]:
+    return {
+        "entityType": entity_type,
+        "entityId": entity_id,
+        "resourceVersion": resource_version,
+        "generationOrNull": generation_or_null,
+        "contentHash": artifact["instanceBytesSha256"],
+    }
+
+
+def _document_ref(
+    artifact: Mapping[str, Any],
+    *,
+    document_kind: str,
+    document_id: str,
+    document_version: int,
+    schema_ref: str,
+) -> dict[str, Any]:
+    return {
+        "documentKind": document_kind,
+        "documentId": document_id,
+        "documentVersion": document_version,
+        "canonicalProfile": "CANONICAL-JSON-V1",
+        "schemaRef": schema_ref,
+        "contentHash": artifact["instanceBytesSha256"],
+    }
+
+
+def _trust_document_ref(
+    *,
+    document_kind: str,
+    document_id: str,
+    document_version: int,
+    schema_ref: str,
+    canonical_sha256: str,
+) -> dict[str, Any]:
+    return {
+        "documentKind": document_kind,
+        "documentId": document_id,
+        "documentVersion": document_version,
+        "canonicalProfile": "CANONICAL-JSON-V1",
+        "schemaRef": schema_ref,
+        "contentHash": canonical_sha256,
+    }
+
+
+def _verify_operation_request_read_set(
+    operation_request: VerifiedHostSnapshotPublicationOperationRequestContext,
+    decision: VerifiedHostSnapshotPublicationDecisionContext,
+    rollback: VerifiedHostSnapshotPublicationRollbackContext,
+) -> None:
+    """Bind the accepted-shaped request to every retained publication input."""
+
     require(
-        target_repository_object_format in {"SHA1", "SHA256"},
-        "PUBLICATION_MUTATION_OPERATION_BINDING_INVALID",
-        "publicationMutation.targetRepositoryObjectFormat",
-        "target repository object format must be SHA1 or SHA256",
+        operation_request.issued_at
+        <= decision.read_set.began_at
+        <= operation_request.deadline_at,
+        "PUBLICATION_MUTATION_OPERATION_TIME_INVALID",
+        "publicationMutation.operationRequest",
+        "publication read linearization time is outside the request window",
     )
-    expected_length = (
-        40 if target_repository_object_format == "SHA1" else 64
-    )
+    trust = rollback.trust
     require(
-        isinstance(target_repository_commit, str)
-        and len(target_repository_commit) == expected_length
-        and re.fullmatch(r"[0-9a-f]+", target_repository_commit) is not None,
-        "PUBLICATION_MUTATION_OPERATION_BINDING_INVALID",
-        "publicationMutation.targetRepositoryCommit",
-        "target repository commit has the wrong lowercase object-ID shape",
+        trust.verified_at
+        <= operation_request.issued_at
+        <= trust.freshness_expires_at,
+        "PUBLICATION_MUTATION_OPERATION_TRUST_STALE",
+        "publicationMutation.operationRequest.issuedAt",
+        "publication trust context was not live when the request was issued",
     )
-    return (
-        command_id,
-        target_repository_object_format,
-        target_repository_commit,
+
+    body = operation_request.request_payload["body"]
+    batch = decision.capture.capture_batch
+    host_before_artifact = decision.read_set.host_authority_before_artifact
+    host_before = decision.read_set.host_authority_before
+    availability_artifact = (
+        decision.read_set.availability_authority_before_artifact
+    )
+    availability = decision.read_set.availability_authority_before
+    capability_artifact = decision.read_set.capability_policy_artifact
+    capability = capability_artifact["state"]
+    capability_authority_artifact = (
+        decision.read_set.capability_policy_authority_artifact
+    )
+    capability_authority = (
+        decision.read_set.capability_policy_authority
+    )
+    freshness_artifact = decision.read_set.freshness_policy_artifact
+    freshness = freshness_artifact["state"]
+    freshness_authority_artifact = (
+        decision.read_set.freshness_policy_authority_artifact
+    )
+    freshness_authority = decision.read_set.freshness_policy_authority
+
+    expected_body = {
+        "hostId": batch["hostId"],
+        "hostBootIdentity": {
+            "hostId": batch["hostId"],
+            "kernelBootId": batch["kernelBootId"],
+            "hostEpoch": batch["hostEpoch"],
+        },
+        "currentHostAuthority": _entity_ref(
+            host_before_artifact,
+            entity_type="ENTITY-HOST-AUTHORITY",
+            entity_id=host_before["hostId"],
+            resource_version=host_before["resourceVersion"],
+            generation_or_null=host_before["agentGeneration"],
+        ),
+        "currentAvailabilityAuthority": _entity_ref(
+            availability_artifact,
+            entity_type="ENTITY-AVAILABILITY-AUTHORITY",
+            entity_id=availability["availabilityAuthorityId"],
+            resource_version=availability["resourceVersion"],
+            generation_or_null=None,
+        ),
+        "capabilityPolicy": _document_ref(
+            capability_artifact,
+            document_kind="CAPABILITY_POLICY",
+            document_id=capability["policyId"],
+            document_version=capability["policyVersion"],
+            schema_ref="contracts/directpath-capability-policy.schema.json",
+        ),
+        "capabilityPolicyAuthority": _entity_ref(
+            capability_authority_artifact,
+            entity_type="ENTITY-CAPABILITY-POLICY-AUTHORITY",
+            entity_id=capability_authority["policyAuthorityId"],
+            resource_version=capability_authority["resourceVersion"],
+            generation_or_null=None,
+        ),
+        "trustedKeyRing": _trust_document_ref(
+            document_kind="TRUST_KEY_RING",
+            document_id=trust.key_ring_id,
+            document_version=trust.key_ring_sequence,
+            schema_ref="contracts/directpath-trust-key-ring.schema.json",
+            canonical_sha256=trust.current_key_ring_canonical_sha256,
+        ),
+        "trustRootSet": _trust_document_ref(
+            document_kind="TRUST_ROOT_SET",
+            document_id=trust.root_set_id,
+            document_version=1,
+            schema_ref="contracts/directpath-trust-root-set.schema.json",
+            canonical_sha256=trust.root_set_canonical_sha256,
+        ),
+        "rollbackAnchor": _trust_document_ref(
+            document_kind="TRUST_ROLLBACK_ANCHOR",
+            document_id=trust.trust_anchor_digest,
+            document_version=trust.trust_anchor_version,
+            schema_ref=(
+                "contracts/directpath-trust-rollback-anchor.schema.json"
+            ),
+            canonical_sha256=trust.trust_anchor_canonical_sha256,
+        ),
+        "hostSnapshotRollbackAnchorOrNull": None,
+        "hostSnapshotAnchorFreshnessOrNull": None,
+        "snapshotFreshnessPolicy": _document_ref(
+            freshness_artifact,
+            document_kind="HOST_SNAPSHOT_FRESHNESS_POLICY",
+            document_id=freshness["policyId"],
+            document_version=freshness["policyVersion"],
+            schema_ref=(
+                "contracts/"
+                "directpath-host-snapshot-publication-trace.schema.json"
+                "#/$defs/freshnessPolicy"
+            ),
+        ),
+        "snapshotFreshnessPolicyAuthority": _entity_ref(
+            freshness_authority_artifact,
+            entity_type=(
+                "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY"
+            ),
+            entity_id=freshness_authority[
+                "freshnessPolicyAuthorityId"
+            ],
+            resource_version=freshness_authority["resourceVersion"],
+            generation_or_null=None,
+        ),
+    }
+    predecessor_anchor_artifact = (
+        decision.read_set.predecessor_rollback_anchor_artifact_or_null
+    )
+    predecessor_anchor = (
+        decision.read_set.predecessor_rollback_anchor_or_null
+    )
+    predecessor_freshness_artifact = (
+        decision.read_set.predecessor_rollback_freshness_artifact_or_null
+    )
+    predecessor_freshness = (
+        decision.read_set.predecessor_rollback_freshness_or_null
+    )
+    if predecessor_anchor_artifact is not None:
+        require(
+            predecessor_anchor is not None
+            and predecessor_freshness_artifact is not None
+            and predecessor_freshness is not None,
+            "PUBLICATION_MUTATION_OPERATION_READ_SET_INVALID",
+            "publicationMutation.operationRequest.predecessor",
+            "predecessor anchor and freshness must be retained together",
+        )
+        expected_body["hostSnapshotRollbackAnchorOrNull"] = _document_ref(
+            predecessor_anchor_artifact,
+            document_kind="HOST_SNAPSHOT_ROLLBACK_ANCHOR",
+            document_id=predecessor_anchor["anchorDigest"],
+            document_version=predecessor_anchor["anchorVersion"],
+            schema_ref=(
+                "contracts/"
+                "directpath-host-snapshot-rollback-anchor.schema.json"
+            ),
+        )
+        expected_body["hostSnapshotAnchorFreshnessOrNull"] = _document_ref(
+            predecessor_freshness_artifact,
+            document_kind="ANCHOR_FRESHNESS_ENVELOPE",
+            document_id=predecessor_freshness["envelopeId"],
+            document_version=predecessor_freshness["resourceVersion"],
+            schema_ref=(
+                "contracts/directpath-anchor-freshness-envelope.schema.json"
+            ),
+        )
+        observed_at = _timestamp(
+            predecessor_freshness["observedAt"],
+            (
+                "publicationMutation.operationRequest."
+                "hostSnapshotAnchorFreshnessOrNull.observedAt"
+            ),
+        )
+        expires_at = _timestamp(
+            predecessor_freshness["expiresAt"],
+            (
+                "publicationMutation.operationRequest."
+                "hostSnapshotAnchorFreshnessOrNull.expiresAt"
+            ),
+        )
+        require(
+            observed_at <= operation_request.issued_at <= expires_at,
+            "PUBLICATION_MUTATION_OPERATION_PREDECESSOR_STALE",
+            "publicationMutation.operationRequest.issuedAt",
+            "predecessor rollback freshness was not live at request issuance",
+        )
+    else:
+        require(
+            predecessor_anchor is None
+            and predecessor_freshness_artifact is None
+            and predecessor_freshness is None,
+            "PUBLICATION_MUTATION_OPERATION_READ_SET_INVALID",
+            "publicationMutation.operationRequest.predecessor",
+            "genesis must not retain a partial predecessor authority",
+        )
+    _require_json_equal(
+        body,
+        expected_body,
+        path="publicationMutation.operationRequest.requestPayload.body",
+        message="request body does not exactly project the publication read set",
+    )
+
+    current_inventory = decision.read_set.current_inventory_or_null
+    expected_snapshot_epoch = (
+        None if current_inventory is None else current_inventory.snapshot_epoch
+    )
+    expected_resource_versions = [
+        {
+            "entityType": expected_body[name]["entityType"],
+            "resourceId": expected_body[name]["entityId"],
+            "expectedResourceVersion": expected_body[name][
+                "resourceVersion"
+            ],
+        }
+        for name in (
+            "currentHostAuthority",
+            "currentAvailabilityAuthority",
+            "capabilityPolicyAuthority",
+            "snapshotFreshnessPolicyAuthority",
+        )
+    ]
+    expected_resource_versions.sort(key=canonical_json_bytes)
+    expected_authority = {
+        "controllerGeneration": operation_request.controller_generation,
+        "snapshotEpoch": expected_snapshot_epoch,
+        "hostEpochs": [
+            {
+                "id": batch["hostId"],
+                "generation": batch["hostEpoch"],
+            }
+        ],
+        "runGenerations": [],
+        "memberGenerations": [],
+        "resourceVersions": expected_resource_versions,
+    }
+    _require_json_equal(
+        operation_request.authority,
+        expected_authority,
+        path="publicationMutation.operationRequest.requestEnvelope.authority",
+        message="request authority is not the exact four-authority read vector",
     )
 
 
 def _verify_transaction_expectation(
     transaction: Mapping[str, Any],
+    operation_request: VerifiedHostSnapshotPublicationOperationRequestContext,
     decision: VerifiedHostSnapshotPublicationDecisionContext,
 ) -> None:
     cas = decision.cas_operands
     expected = {
+        "operationId": "OP-CAPTURE-HOST-SNAPSHOT",
+        "commandId": operation_request.command_id,
+        "requestHash": operation_request.request_hash,
+        "operationRequestContextDigest": operation_request.context_digest,
+        "decisionContextDigest": decision.context_digest,
         "repositoryId": decision.read_set.repository_id,
         "transactionId": decision.read_set.transaction_id,
         "isolation": "SERIALIZABLE",
@@ -667,9 +961,12 @@ def _verify_transaction_expectation(
 
 def _verify_transaction_outcome(
     transaction: Mapping[str, Any],
+    operation_request: VerifiedHostSnapshotPublicationOperationRequestContext,
     decision: VerifiedHostSnapshotPublicationDecisionContext,
     rollback: VerifiedHostSnapshotPublicationRollbackContext,
 ) -> datetime | None:
+    clock_before = transaction["commitClockBefore"]
+    clock_after = transaction["commitClockAfter"]
     if decision.write_required:
         require(
             decision.publication_decision in _COMMITTED_DECISIONS,
@@ -709,6 +1006,18 @@ def _verify_transaction_outcome(
             "publicationMutation.repositoryTransaction.committedAtOrNull",
             "repository commit is later than rollback-anchor finalization",
         )
+        require(
+            committed_at <= operation_request.deadline_at,
+            "PUBLICATION_MUTATION_OPERATION_TIME_INVALID",
+            "publicationMutation.repositoryTransaction.committedAtOrNull",
+            "repository commit is later than the accepted request deadline",
+        )
+        require(
+            clock_after == clock_before + 1,
+            "PUBLICATION_MUTATION_COMMIT_CLOCK_INVALID",
+            "publicationMutation.repositoryTransaction.commitClockAfter",
+            "committed publication must advance the repository clock exactly once",
+        )
         return committed_at
 
     _require_equal(
@@ -729,6 +1038,12 @@ def _verify_transaction_outcome(
         "PUBLICATION_MUTATION_NO_CHANGE_WRITE",
         "publicationMutation.repositoryTransaction",
         "NO_CHANGE cannot retain a repository commit ID or time",
+    )
+    require(
+        clock_after == clock_before,
+        "PUBLICATION_MUTATION_COMMIT_CLOCK_INVALID",
+        "publicationMutation.repositoryTransaction.commitClockAfter",
+        "NO_CHANGE must preserve the repository commit clock exactly",
     )
     return None
 
@@ -852,14 +1167,17 @@ def _verify_availability_scope(
     )
 
 
+def _event_id(domain: bytes, subject: Mapping[str, Any], prefix: str) -> str:
+    digest = sha256_digest(domain + canonical_json_bytes(subject))
+    return prefix + ":" + digest.removeprefix("sha256:")
+
+
 def _verify_committed_row_bindings(
+    operation_request: VerifiedHostSnapshotPublicationOperationRequestContext,
     decision: VerifiedHostSnapshotPublicationDecisionContext,
     rollback: VerifiedHostSnapshotPublicationRollbackContext,
     transaction: Mapping[str, Any],
     *,
-    command_id: str,
-    target_repository_object_format: str,
-    target_repository_commit: str,
     availability: _VerifiedArtifact,
     audit: _VerifiedArtifact,
     outbox: _VerifiedArtifact,
@@ -883,13 +1201,48 @@ def _verify_committed_row_bindings(
         "committed mutation requires retained rollback reservation keys",
     )
 
-    expected_audit = {
+    event_subject = {
         "operationId": "OP-CAPTURE-HOST-SNAPSHOT",
-        "commandId": command_id,
+        "commandId": operation_request.command_id,
+        "requestHash": operation_request.request_hash,
+        "operationRequestContextDigest": operation_request.context_digest,
+        "decisionContextDigest": decision.context_digest,
+        "expectationHash": decision.expectation_hash,
+        "repositoryId": transaction["repositoryId"],
         "transactionId": transaction["transactionId"],
         "commitId": transaction["commitIdOrNull"],
-        "targetRepositoryObjectFormat": target_repository_object_format,
-        "targetRepositoryCommit": target_repository_commit,
+        "aggregateId": snapshot["hostId"],
+        "createdAt": transaction["committedAtOrNull"],
+        "commitClockBefore": transaction["commitClockBefore"],
+        "commitClockAfter": transaction["commitClockAfter"],
+        "anchorReservationId": reservation_id,
+        "anchorPrepareReceiptDigest": prepare_digest,
+        "anchorCandidateProjectionDigest": (
+            rollback.candidate_projection_digest
+        ),
+    }
+    expected_audit_event_id = _event_id(
+        AUDIT_EVENT_ID_DOMAIN,
+        event_subject,
+        "audit",
+    )
+    expected_outbox_event_id = _event_id(
+        OUTBOX_EVENT_ID_DOMAIN,
+        event_subject,
+        "outbox",
+    )
+    expected_audit = {
+        "auditEventId": expected_audit_event_id,
+        "operationId": "OP-CAPTURE-HOST-SNAPSHOT",
+        "commandId": operation_request.command_id,
+        "transactionId": transaction["transactionId"],
+        "commitId": transaction["commitIdOrNull"],
+        "targetRepositoryObjectFormat": (
+            operation_request.target_repository_object_format
+        ),
+        "targetRepositoryCommit": (
+            operation_request.target_repository_commit
+        ),
         "hostId": snapshot["hostId"],
         "anchorReservationId": reservation_id,
         "anchorPrepareReceiptDigest": prepare_digest,
@@ -903,6 +1256,7 @@ def _verify_committed_row_bindings(
             availability.state["resourceVersion"]
         ),
         "priorAuditDigestOrNull": None,
+        "createdAt": transaction["committedAtOrNull"],
     }
     for name, value in expected_audit.items():
         _require_equal(
@@ -913,6 +1267,8 @@ def _verify_committed_row_bindings(
         )
 
     expected_outbox = {
+        "outboxEventId": expected_outbox_event_id,
+        "aggregateId": snapshot["hostId"],
         "transactionId": transaction["transactionId"],
         "commitId": transaction["commitIdOrNull"],
         "anchorReservationId": reservation_id,
@@ -926,6 +1282,7 @@ def _verify_committed_row_bindings(
         "availabilityAuthorityResourceVersion": (
             availability.state["resourceVersion"]
         ),
+        "createdAt": transaction["committedAtOrNull"],
     }
     for name, value in expected_outbox.items():
         _require_equal(
@@ -966,9 +1323,17 @@ def _verify_committed_row_bindings(
     )
 
     expected_commit = {
+        "operationId": "OP-CAPTURE-HOST-SNAPSHOT",
+        "commandId": operation_request.command_id,
+        "requestHash": operation_request.request_hash,
+        "operationRequestContextDigest": operation_request.context_digest,
+        "decisionContextDigest": decision.context_digest,
+        "expectationHash": decision.expectation_hash,
         "commitId": transaction["commitIdOrNull"],
         "transactionId": transaction["transactionId"],
         "repositoryId": transaction["repositoryId"],
+        "commitClockBefore": transaction["commitClockBefore"],
+        "commitClockAfter": transaction["commitClockAfter"],
         "committedAt": transaction["committedAtOrNull"],
         "anchorReservationId": reservation_id,
         "anchorPrepareReceiptDigest": prepare_digest,
@@ -1468,13 +1833,11 @@ def _context_digest(receipt: Mapping[str, Any]) -> str:
 
 def verify_host_snapshot_publication_mutation_closure(
     schemas: ContractSchemas,
+    operation_request: VerifiedHostSnapshotPublicationOperationRequestContext,
     decision: VerifiedHostSnapshotPublicationDecisionContext,
     rollback: VerifiedHostSnapshotPublicationRollbackContext,
     *,
     repository_transaction: JsonDocument,
-    command_id: str,
-    target_repository_object_format: str,
-    target_repository_commit: str,
     availability_authority_after_artifact_or_none: JsonDocument | None,
     audit_record_artifact_or_none: JsonDocument | None,
     outbox_record_artifact_or_none: JsonDocument | None,
@@ -1488,6 +1851,16 @@ def verify_host_snapshot_publication_mutation_closure(
         "PUBLICATION_MUTATION_INPUT_INVALID",
         "publicationMutation.schemas",
         "expected ContractSchemas",
+    )
+    require_factory_verified(
+        operation_request,
+        VerifiedHostSnapshotPublicationOperationRequestContext,
+        code="PUBLICATION_MUTATION_OPERATION_REQUEST_INVALID",
+        path="publicationMutation.operationRequest",
+        message=(
+            "operation request must come from "
+            "verify_host_snapshot_publication_operation_request"
+        ),
     )
     require_factory_verified(
         decision,
@@ -1533,6 +1906,9 @@ def verify_host_snapshot_publication_mutation_closure(
         ),
     )
 
+    operation_request = replay_host_snapshot_publication_operation_request(
+        operation_request
+    )
     decision = replay_host_snapshot_publication_decision(decision)
     rollback = replay_host_snapshot_publication_rollback_closure(rollback)
     require(
@@ -1545,19 +1921,20 @@ def verify_host_snapshot_publication_mutation_closure(
         "rollback context does not consume this exact decision/read-set",
     )
     require(
-        rollback._schemas is schemas and decision.read_set._schemas is schemas,
+        rollback._schemas is schemas
+        and decision.read_set._schemas is schemas
+        and operation_request._schemas is schemas,
         "PUBLICATION_MUTATION_SCHEMA_IDENTITY_MISMATCH",
         "publicationMutation.schemas",
-        "decision/rollback contexts use a different ContractSchemas instance",
+        (
+            "operation/decision/rollback contexts use a different "
+            "ContractSchemas instance"
+        ),
     )
-    (
-        checked_command_id,
-        checked_target_format,
-        checked_target_commit,
-    ) = _validate_operation_binding(
-        command_id,
-        target_repository_object_format,
-        target_repository_commit,
+    _verify_operation_request_read_set(
+        operation_request,
+        decision,
+        rollback,
     )
     budget = _Budget(checked_limits)
     transaction, transaction_raw = _load_document(
@@ -1572,9 +1949,14 @@ def verify_host_snapshot_publication_mutation_closure(
         transaction,
         "publicationMutation.repositoryTransaction",
     )
-    _verify_transaction_expectation(transaction, decision)
+    _verify_transaction_expectation(
+        transaction,
+        operation_request,
+        decision,
+    )
     committed_at = _verify_transaction_outcome(
         transaction,
+        operation_request,
         decision,
         rollback,
     )
@@ -1661,12 +2043,10 @@ def verify_host_snapshot_publication_mutation_closure(
         assert outbox is not None
         assert commit is not None
         _verify_committed_row_bindings(
+            operation_request,
             decision,
             rollback,
             transaction,
-            command_id=checked_command_id,
-            target_repository_object_format=checked_target_format,
-            target_repository_commit=checked_target_commit,
             availability=availability,
             audit=audit,
             outbox=outbox,
@@ -1742,14 +2122,25 @@ def verify_host_snapshot_publication_mutation_closure(
     receipt = {
         "subjectType": "HOST_SNAPSHOT_PUBLICATION_MUTATION_CONTEXT",
         "schemaVersion": 1,
+        "operationRequestContextDigest": operation_request.context_digest,
+        "requestHash": operation_request.request_hash,
+        "idempotencyKey": operation_request.idempotency_key,
+        "idempotencyScopeHash": operation_request.idempotency_scope_hash,
         "decisionContextDigest": decision.context_digest,
         "rollbackContextDigest": rollback.context_digest,
         "repositoryTransactionCanonicalSha256": sha256_digest(
             transaction_raw
         ),
-        "commandId": checked_command_id,
-        "targetRepositoryObjectFormat": checked_target_format,
-        "targetRepositoryCommit": checked_target_commit,
+        "commandId": operation_request.command_id,
+        "targetRepositoryObjectFormat": (
+            operation_request.target_repository_object_format
+        ),
+        "targetRepositoryCommit": (
+            operation_request.target_repository_commit
+        ),
+        "expectationHash": decision.expectation_hash,
+        "commitClockBefore": transaction["commitClockBefore"],
+        "commitClockAfter": transaction["commitClockAfter"],
         "availabilityAuthorityAfterArtifactCanonicalSha256OrNull": (
             None
             if availability is None
@@ -1795,13 +2186,11 @@ def verify_host_snapshot_publication_mutation_closure(
     receipt_raw = canonical_json_bytes(receipt)
     return VerifiedHostSnapshotPublicationMutationContext._construct(
         limits=checked_limits,
+        operation_request=operation_request,
         decision=decision,
         rollback=rollback,
         repository_transaction=_freeze_json(transaction),
         repository_transaction_canonical_bytes=transaction_raw,
-        command_id=checked_command_id,
-        target_repository_object_format=checked_target_format,
-        target_repository_commit=checked_target_commit,
         availability_authority_after_artifact_or_null=(
             None if availability is None else availability.wrapper
         ),
@@ -1871,16 +2260,12 @@ def replay_host_snapshot_publication_mutation_closure(
     )
     replayed = verify_host_snapshot_publication_mutation_closure(
         context._schemas,
+        context.operation_request,
         context.decision,
         context.rollback,
         repository_transaction=(
             context.repository_transaction_canonical_bytes
         ),
-        command_id=context.command_id,
-        target_repository_object_format=(
-            context.target_repository_object_format
-        ),
-        target_repository_commit=context.target_repository_commit,
         availability_authority_after_artifact_or_none=(
             context.availability_authority_after_artifact_canonical_bytes_or_null
         ),
@@ -1899,10 +2284,15 @@ def replay_host_snapshot_publication_mutation_closure(
         replayed.context_receipt_canonical_bytes
         == context.context_receipt_canonical_bytes
         and replayed.mutations_canonical_bytes
-        == context.mutations_canonical_bytes,
+        == context.mutations_canonical_bytes
+        and replayed == context
+        and replayed._schemas is context._schemas,
         "PUBLICATION_MUTATION_CONTEXT_REPLAY_MISMATCH",
         "publicationMutation.context",
-        "mutation context differs when replayed from retained bytes",
+        (
+            "mutation context claims differ when replayed from retained "
+            "exact inputs"
+        ),
     )
     require(
         canonical_json_bytes(

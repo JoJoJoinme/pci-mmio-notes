@@ -74,13 +74,16 @@
   独立 visibility 与 target mapping/runner 仍必须由 Qman 产品证据提供，不能由自哈希字段替代。
   同一 schema 还机器定义四 authority CAS expectation/resolved vector、五种 publication decision、
   zero-unresolved preflight、PREPARED/COMMITTED anchor、`N+6` mutation DAG、audit/pending outbox/
-  durable commit rows、visibility probes 和 delivery witness。portable core 的 decision、rollback 与
-  mutation factory 已分别重放其中的 read-set/decision、外部 anchor crypto/recovery window 和
-  deterministic write-set/hash closure。rollback 的两阶段 trust 要求同
+  durable commit rows、visibility probes 和 delivery witness。portable core 的 decision、rollback、
+  operation-request、mutation 与 successful-result factory 已分别重放 read-set/decision、外部
+  anchor crypto/recovery window、精确 REQUEST envelope/payload、绑定 request/decision context 的
+  deterministic write-set/event/time/commit-clock DAG，以及 post-state authority、CAS、版本和
+  五项/三项 receipt 的 RESULT closure。rollback 的两阶段 trust 要求同
   root/key-ring/trust-anchor namespace、exact history prefix 与单调 anchor，并分别绑定独立配置
-  path、freshness receipt digest 和验证窗口；这些值仍只消费 caller-supplied receipts/rows，
-  不证明 trust-authority direct path/nonce transport、真实 repository CAS、atomic visibility
-  或 delivery，固定 `productAuthorized=false`。
+  path、freshness receipt digest 和验证窗口；result hash 只允许单向引用 mutation/commit，
+  禁止回写 commit preimage。以上仍只消费 caller-supplied exchange/receipts/rows，不证明
+  trust-authority direct path/nonce transport、真实 repository CAS、atomic visibility、delivery
+  或 authenticated/idempotent operation exchange，固定 `productAuthorized=false`。
 - [`directpath-capability-policy.schema.json`](directpath-capability-policy.schema.json)、
   [`directpath-dependency-closure-request.schema.json`](directpath-dependency-closure-request.schema.json) 与
   [`directpath-reset-contract-set.schema.json`](directpath-reset-contract-set.schema.json)：分别固定 self-hashed

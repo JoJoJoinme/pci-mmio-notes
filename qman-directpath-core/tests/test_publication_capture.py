@@ -103,13 +103,14 @@ class PublicationFixture:
     def __init__(
         self,
         *,
+        schemas: ContractSchemas | None = None,
         generic_provider: bool = False,
         unavailable_pci: bool = False,
         pci_observed_at: str = CAPTURED_AT,
         two_devices: bool = False,
         maximum_evidence_age_micros: int = 2_000_000,
     ) -> None:
-        self.schemas = ContractSchemas(CONTRACTS)
+        self.schemas = schemas or ContractSchemas(CONTRACTS)
         self.inventory = InventoryFixture()
         if two_devices:
             identity = copy.deepcopy(self.inventory.identity)

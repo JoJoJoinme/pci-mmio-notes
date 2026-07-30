@@ -170,9 +170,15 @@ def _cas(predecessor: dict | None) -> dict:
 
 
 class RollbackFixture:
-    def __init__(self, branch: str = "SUCCESSOR") -> None:
+    def __init__(
+        self,
+        branch: str = "SUCCESSOR",
+        *,
+        schemas: ContractSchemas | None = None,
+    ) -> None:
         self.branch = branch
         self.publication = PublicationFixture(
+            schemas=schemas,
             maximum_evidence_age_micros=32_000_000
         )
         self.schemas = self.publication.schemas

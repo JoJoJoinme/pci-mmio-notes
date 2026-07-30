@@ -99,14 +99,17 @@ class VerifiedTrustContext(FactoryVerified):
 
     root_set_id: str
     root_set_digest: str
+    root_set_canonical_sha256: str
     key_ring_id: str
     key_ring_sequence: int
     key_ring_digest: str
+    current_key_ring_canonical_sha256: str
     verified_history_digest: str
     trust_anchor_digest: str
     trust_anchor_version: int
     trust_anchor_resource_version: int
     trust_anchor_authority_id: str
+    trust_anchor_canonical_sha256: str
     freshness_receipt_digest: str
     freshness_anchor_path: str
     freshness_expires_at: datetime
@@ -1179,8 +1182,12 @@ def verify_trust_context(
     """
 
     verified_now = _utc_now(now)
-    root_set, _ = _validate_root_set(schemas, pinned_root_set, pinned_root_digest)
-    _, _, rings, history_digest = _validate_ring_history(
+    root_set, root_set_raw = _validate_root_set(
+        schemas,
+        pinned_root_set,
+        pinned_root_digest,
+    )
+    _, ring_raw_documents, rings, history_digest = _validate_ring_history(
         schemas, key_ring_documents, root_set, verified_now
     )
     anchor, anchor_raw = _validate_trust_anchor(
@@ -1217,14 +1224,19 @@ def verify_trust_context(
     return VerifiedTrustContext._construct(
         root_set_id=root_set["rootSetId"],
         root_set_digest=root_set["rootSetDigest"],
+        root_set_canonical_sha256=sha256_digest(root_set_raw),
         key_ring_id=current.key_ring_id,
         key_ring_sequence=current.sequence,
         key_ring_digest=current.digest,
+        current_key_ring_canonical_sha256=sha256_digest(
+            ring_raw_documents[-1]
+        ),
         verified_history_digest=history_digest,
         trust_anchor_digest=anchor["anchorDigest"],
         trust_anchor_version=anchor["anchorVersion"],
         trust_anchor_resource_version=anchor["resourceVersion"],
         trust_anchor_authority_id=anchor["authorityId"],
+        trust_anchor_canonical_sha256=sha256_digest(anchor_raw),
         freshness_receipt_digest=freshness["freshnessReceiptDigest"],
         freshness_anchor_path=freshness["anchorPath"],
         freshness_expires_at=freshness_expires,

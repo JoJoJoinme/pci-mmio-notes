@@ -89,16 +89,22 @@ rollback context binds each phase's signed freshness-receipt digest, validation
 window, and path.  Direct authority path/nonce transport is still product
 adapter evidence.  The verifier never accepts a caller-reported repository
 commit time; instead it exports the exact reservation keys and commit-validity
-window for a later authentic commit-record verifier.  A third mutation-closure
-stage consumes that chain and exact
-caller-supplied repository rows, derives the complete `N+6` write set, all five
-digest projections, the acyclic mutation fixed point, audit/outbox/commit
-self-digests, and the resolved four-authority vector; `NO_CHANGE` is an exact
-zero-write branch.  These stages still do not prove an authenticated operation
-exchange/result-schema binding, aggregate/event-ID/createdAt/commit-clock
-semantics, trusted product transaction clock, product SERIALIZABLE/CAS execution,
-atomic visibility, post-anchor outbox delivery, or mapped Qman code and therefore
-remain `productAuthorized=false`.
+window for a later authentic commit-record verifier.  A verified
+`OP-CAPTURE-HOST-SNAPSHOT` request now binds exact canonical envelope/payload
+bytes, deployment revision/commit, request and payload hashes, deadline,
+host-only correlation and the four-authority read set.  The mutation stage
+consumes that request plus the decision/rollback chain and exact caller-supplied
+repository rows, derives the complete `N+6` write set, the acyclic mutation
+fixed point, deterministic audit/outbox IDs, host aggregate and committedAt
+bindings, exact `+1`/unchanged commit-clock semantics, commit-context bindings
+and the resolved four-authority vector; `NO_CHANGE` is exact zero-write.  A
+successful result verifier then derives the post-state authority, exact output
+and CAS result, committed-version set and closed five/three receipt set from the
+mutation root, with result hashes forbidden from commit preimages.  These
+stages still do not prove authenticated request/result transport, idempotency
+ownership/storage, trusted product transaction clock, product
+SERIALIZABLE/CAS execution, independent atomic visibility, post-anchor outbox
+delivery or mapped Qman code and therefore remain `productAuthorized=false`.
 Verifier-produced contexts have no
 public constructor and cannot be relabeled with `dataclasses.replace`.  Exact
 publisher/profile currentness remains separate from owner-independent

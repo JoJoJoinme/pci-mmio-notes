@@ -63,6 +63,11 @@ QUERY_TRACE_SCHEMA_FILES = {
     "query_read_trace": "directpath-query-read-trace.schema.json",
 }
 
+OPERATION_EXCHANGE_SCHEMA_FILES = {
+    "operation_envelope": "directpath-operation-envelope.schema.json",
+    "operation_payload": "directpath-operation-payload.schema.json",
+}
+
 
 def _linear_unique_items(
     _validator: object,
@@ -101,6 +106,7 @@ class ContractSchemas:
         contract_directory: str | Path,
         *,
         include_query_read_trace: bool = False,
+        include_operation_exchange: bool = False,
     ):
         self.directory = Path(contract_directory).resolve()
         schemas: dict[str, dict[str, Any]] = {}
@@ -110,6 +116,8 @@ class ContractSchemas:
         selected_schema_files = dict(SCHEMA_FILES)
         if include_query_read_trace:
             selected_schema_files.update(QUERY_TRACE_SCHEMA_FILES)
+        if include_operation_exchange:
+            selected_schema_files.update(OPERATION_EXCHANGE_SCHEMA_FILES)
         for kind, filename in selected_schema_files.items():
             path = self.directory / filename
             try:

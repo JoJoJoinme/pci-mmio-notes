@@ -18,13 +18,13 @@
     },
     "inputHashes": {
       "qman-directpath-core/qman_directpath_core/host_snapshot_anchor.py": "b1b0afb32cbe17476ca641be3f1a9c4741c3b0b2189d658185aac4bf242de287",
-      "qman-directpath-core/qman_directpath_core/contracts.py": "705ce15801be25825797890fa1c8d4f4130ac68169bd995b1a624ce67803b123",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
       "qman-directpath-core/qman_directpath_core/authority.py": "1b0f45620ebf6d4c1adf9d36e59bc815131d4771de47b3b27c05ee6cdc35696c",
       "qman-directpath-core/qman_directpath_core/read_guard.py": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360",
       "qman-directpath-core/qman_directpath_core/operation_admission.py": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f",
       "qman-directpath-core/qman_directpath_core/query_read_trace.py": "93809a1d2dc16ed083fbd38c721424e8a06ebde7ee6b466b591fb1ee7c8592fa",
-      "qman-directpath-core/qman_directpath_core/__init__.py": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
-      "qman-directpath-core/qman_directpath_core/trust.py": "c164bbb616f22e908be703f20d02d8b4d9eb22cf660a73074ca25bfc40c6a9d4",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
+      "qman-directpath-core/qman_directpath_core/trust.py": "a02d4763f34ddccc87bc74cde4e6b6dfc76863a016849cdd49b74f82b4a5d8d8",
       "qman-directpath-core/qman_directpath_core/inventory.py": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
       "qman-directpath-core/qman_directpath_core/canonical.py": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
       "qman-directpath-core/qman_directpath_core/_verified.py": "6d686f87d62554bda59f5c860adaec006a3cf4947ef81388733574bc5f49df2d",
@@ -190,7 +190,7 @@
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/__init__.py",
-      "sha256": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
+      "sha256": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
       "retention": "LOCAL_RAW"
     },
     {

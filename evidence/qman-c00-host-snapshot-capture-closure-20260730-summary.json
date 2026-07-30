@@ -10,8 +10,8 @@
     "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
     "dirtyWorkingTree": true,
     "runnerHashes": {
-      "qman-directpath-core/tests/test_publication_capture.py": "18a5defdff1fef7e510dbf93eceae948870d4e8e9ba9f57a90da0512f2bdeee5",
-      "qman-directpath-core/tests/test_inventory.py": "87e0a358e9efbeeb3666a813896cc5d3d4a9d42439b9b7d6c22cb575f1f811bc",
+      "qman-directpath-core/tests/test_publication_capture.py": "f02c26fa32070bf5ab4edb4883dd9d10040a40f87c4796455c65a64b97a46ed9",
+      "qman-directpath-core/tests/test_inventory.py": "6a220661343d3fa7ec0cb9446d75c1cbf13cbe4e5775da67cd08835e112c5a92",
       "qman-directpath-core/tests/test_snapshot_semantics.py": "396becfd86c3f58f06a7268ef38faae2a8be7b83cad4341f176bdc38bd84cf0c",
       "qman-directpath-core/tests/test_canonical.py": "af87966c7f743f2fd95b6b545d0259fea7857e0114789d5b4d34689f70c2829a",
       "tests/test_snapshot_publication_contract.py": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f"
@@ -23,16 +23,16 @@
       "qman-directpath-core/qman_directpath_core/snapshot_semantics.py": "93695d900b5702682fb6434d82a88a5fe31f48951bad79ba36c70a50a1fb7969",
       "qman-directpath-core/qman_directpath_core/policy.py": "e68848f6131d2c0537c9f37f75059bf87c1cbbf2166691b0c5fd81f3ee2a3b8c",
       "qman-directpath-core/qman_directpath_core/canonical.py": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
-      "qman-directpath-core/qman_directpath_core/contracts.py": "705ce15801be25825797890fa1c8d4f4130ac68169bd995b1a624ce67803b123",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
       "qman-directpath-core/qman_directpath_core/_verified.py": "6d686f87d62554bda59f5c860adaec006a3cf4947ef81388733574bc5f49df2d",
       "qman-directpath-core/qman_directpath_core/errors.py": "84c852d0c740a960e733a9d37f56e31a808fdfdfcfc67c29bb898f10cbad10b7",
-      "qman-directpath-core/qman_directpath_core/__init__.py": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
-      "contracts/directpath-host-snapshot-publication-trace.schema.json": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
+      "contracts/directpath-host-snapshot-publication-trace.schema.json": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4",
       "contracts/directpath-portable-entities.schema.json": "fe4123596d622b5c06974f6f3a34effa1494c4dfd985ef1afe4d2d1b42767b01",
       "contracts/directpath-capability-policy.schema.json": "fc22b5535db3627719e31f4aa8eb4db4467fa04e4218c31a6c20820e2da0d46d",
       "contracts/directpath-identity-v1.schema.json": "179e985446b7f7e1fefa1c9f49a2785eb0d1484c7d63b6f40ab5880bce371eb1",
       "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
-      "contracts/directpath-portable-control-contract.json": "10500cca064bcba93f1905dfa8f614878eacc51feda29754aebe16184ecdbc90"
+      "contracts/directpath-portable-control-contract.json": "2f055abcd0e82375cf0d17cd3496f98507fb6153c8736e562001489171011a3b"
     }
   },
   "sut": {
@@ -51,7 +51,7 @@
       {
         "name": "portable HostSnapshot publication trace contract",
         "version": "working tree",
-        "sha256": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63"
+        "sha256": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4"
       },
       {
         "name": "Python",
@@ -238,22 +238,22 @@
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/contracts.py",
-      "sha256": "705ce15801be25825797890fa1c8d4f4130ac68169bd995b1a624ce67803b123",
+      "sha256": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/__init__.py",
-      "sha256": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
+      "sha256": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "qman-directpath-core/tests/test_publication_capture.py",
-      "sha256": "18a5defdff1fef7e510dbf93eceae948870d4e8e9ba9f57a90da0512f2bdeee5",
+      "sha256": "f02c26fa32070bf5ab4edb4883dd9d10040a40f87c4796455c65a64b97a46ed9",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "qman-directpath-core/tests/test_inventory.py",
-      "sha256": "87e0a358e9efbeeb3666a813896cc5d3d4a9d42439b9b7d6c22cb575f1f811bc",
+      "sha256": "6a220661343d3fa7ec0cb9446d75c1cbf13cbe4e5775da67cd08835e112c5a92",
       "retention": "LOCAL_RAW"
     },
     {
@@ -268,7 +268,7 @@
     },
     {
       "path": "contracts/directpath-host-snapshot-publication-trace.schema.json",
-      "sha256": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
+      "sha256": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4",
       "retention": "LOCAL_RAW"
     },
     {
@@ -293,7 +293,7 @@
     },
     {
       "path": "contracts/directpath-portable-control-contract.json",
-      "sha256": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe",
+      "sha256": "2f055abcd0e82375cf0d17cd3496f98507fb6153c8736e562001489171011a3b",
       "retention": "LOCAL_RAW"
     },
     {

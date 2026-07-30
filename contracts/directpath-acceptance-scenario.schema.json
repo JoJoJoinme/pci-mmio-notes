@@ -289,7 +289,7 @@
         "direction": {"enum": ["REQUEST", "RESULT"]},
         "payloadSchemaAuthority": {"const": "PORTABLE_CONTRACT"},
         "payloadSchemaRef": {"type": "string", "minLength": 1},
-        "payloadSchemaSha256": {"const": "sha256:d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea"},
+        "payloadSchemaSha256": {"const": "sha256:1660dcf1d8b959c433261ced62195b954d4e521bef722d0673b95444a245d163"},
         "payloadCanonicalProfile": {"const": "CANONICAL-JSON-V1"},
         "payloadPathOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"}]},
         "payloadHashOrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}]},
