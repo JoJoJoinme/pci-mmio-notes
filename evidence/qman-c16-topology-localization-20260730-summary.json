@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E2-C16-TOPOLOGY-LOCALIZATION-001",
+  "observedAt": "2026-07-29T18:21:17.3972194Z",
+  "subject": "QMAN_REFERENCE_MODEL",
+  "evidenceGrade": "E2",
+  "claimBoundary": "REFERENCE_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "pci-resource-model/tests/test_linux_sysfs.py": "78970275992a79d32cc36814d85d31e8ca510f6e6a0ce8b7e35dfb84c8dc59dd",
+      "pci-resource-model/tests/test_capability.py": "0ed296dd00e4bfa7605b4f4848498654ae2566f8a30563a2f6d1900ea4eaed04"
+    },
+    "inputHashes": {
+      "pci-resource-model/pci_resource_model/linux_sysfs.py": "3be67398958335712ac0a0abbca9bc8664cd8146c3e2d4ed7c2f4818d7f05d5b",
+      "pci-resource-model/pci_resource_model/capability.py": "56d2b1a2cea71aad734b78c64f93656567ea72aada5f3ae0304b822e821b9a65",
+      "pci-resource-model/examples/mandatory-acs-override.json": "21e982e93bdb327a9f25b0ead0ebc43353c5984c845a0f8f7969bb2fd1d0acb5",
+      "acceptance/cases/C16.json": "aaa5ecd6cb86aba12acaba0e5c9751562d89edfdb28885d9a6c7b80634310afb"
+    }
+  },
+  "sut": {
+    "environment": "Windows Python deterministic reference-model tests; no ESXi, QEMU, HMP, QTest, VFIO, kernel mutation, or physical-hardware action",
+    "components": [
+      {
+        "name": "Python",
+        "version": "3.12.10"
+      },
+      {
+        "name": "pci-resource-model topology reconstruction",
+        "version": "working tree at recorded source state",
+        "sha256": "3be67398958335712ac0a0abbca9bc8664cd8146c3e2d4ed7c2f4818d7f05d5b"
+      }
+    ]
+  },
+  "hypotheses": [
+    "Missing or inconsistent topology provenance must fail closed for the complete connected topology component without invalidating a disjoint complete component.",
+    "Adding an invalid disjoint component or changing input insertion order must not change the exact device projection of a complete component.",
+    "A user-space reconstructed topology domain is only a software estimate and must not satisfy the trusted physical-domain source gate."
+  ],
+  "observations": [
+    {
+      "name": "focused-c16-topology-suite",
+      "result": {
+        "command": "python -m pytest -q tests/test_linux_sysfs.py",
+        "workingDirectory": "pci-resource-model",
+        "testsPassed": 15,
+        "subtestsPassed": 26,
+        "failures": 0
+      }
+    },
+    {
+      "name": "capability-and-cli-boundary-regression",
+      "result": {
+        "command": "python -m pytest -q tests/test_capability.py tests/test_linux_sysfs.py tests/test_cli.py",
+        "workingDirectory": "pci-resource-model",
+        "testsPassed": 49,
+        "subtestsPassed": 28,
+        "failures": 0
+      }
+    },
+    {
+      "name": "full-reference-suite",
+      "result": {
+        "command": "python -m unittest discover -s tests -v",
+        "workingDirectory": "pci-resource-model",
+        "testsPassed": 294,
+        "testsRun": 299,
+        "platformSkips": 5,
+        "failures": 0,
+        "errors": 0
+      }
+    },
+    {
+      "name": "component-local-fail-closed",
+      "result": {
+        "relationsClosedOver": [
+          "parent",
+          "kernel IOMMU group",
+          "multifunction alias",
+          "shared topology anchor",
+          "shared legacy bus"
+        ],
+        "structuralNegativeClasses": [
+          "dangling parent",
+          "parent cycle",
+          "missing group member",
+          "missing alias member",
+          "asymmetric group",
+          "asymmetric alias",
+          "overlapping non-equivalent groups",
+          "alias set missing self"
+        ],
+        "affectedMembersAndReasonsCanonicalized": true,
+        "disjointCompleteDeviceProjectionStable": true,
+        "randomInsertionOrdersChecked": 16
+      }
+    },
+    {
+      "name": "source-authority-boundary",
+      "result": {
+        "softwareEstimateSource": "software_topology_estimate",
+        "softwareEstimateTrusted": false,
+        "retiredUserspaceSourceTrusted": false,
+        "productKernelNativeSource": "kernel-native-shadow-domain-v1",
+        "productKernelNativePublisherPresent": false
+      }
+    },
+    {
+      "name": "static-verification",
+      "result": {
+        "ruff": "PASS",
+        "compileall": "PASS"
+      }
+    },
+    {
+      "name": "authority-boundary",
+      "result": "REFERENCE_ONLY; productCasesClosed=0; risksClosed=0; C16 remains IMPLEMENTATION_BLOCKED"
+    }
+  ],
+  "mapping": {
+    "techStories": [
+      "TS-F1-01",
+      "TS-F1-03",
+      "TS-F1-04"
+    ],
+    "caseIds": [
+      "C16"
+    ],
+    "riskIds": [
+      "R01",
+      "R35"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "pci-resource-model/pci_resource_model/linux_sysfs.py",
+      "sha256": "3be67398958335712ac0a0abbca9bc8664cd8146c3e2d4ed7c2f4818d7f05d5b",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "pci-resource-model/tests/test_linux_sysfs.py",
+      "sha256": "78970275992a79d32cc36814d85d31e8ca510f6e6a0ce8b7e35dfb84c8dc59dd",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "pci-resource-model/pci_resource_model/capability.py",
+      "sha256": "56d2b1a2cea71aad734b78c64f93656567ea72aada5f3ae0304b822e821b9a65",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "pci-resource-model/tests/test_capability.py",
+      "sha256": "0ed296dd00e4bfa7605b4f4848498654ae2566f8a30563a2f6d1900ea4eaed04",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "acceptance/cases/C16.json",
+      "sha256": "aaa5ecd6cb86aba12acaba0e5c9751562d89edfdb28885d9a6c7b80634310afb",
+      "retention": "COMMITTED"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This result proves only deterministic reference-model behavior; it is not target-Qman repository code, a production HostSnapshot publication, E3 integration, or E4 physical qualification.",
+    "The stability assertion covers the exact per-device/component semantic projection used by this test, not a complete product capabilityHash or signed snapshotHash.",
+    "The kernel-native shadow-domain ABI, kernel atomic generation, production trust root, signer/key lifecycle, external monotonic rollback anchor, and exact target-code mapping are absent.",
+    "The software topology estimate is intentionally untrusted and therefore cannot make an ACS-override device product-eligible.",
+    "This record cannot close C16, R01, R35, G1, any product capability, qualification profile, or release gate."
+  ]
+}

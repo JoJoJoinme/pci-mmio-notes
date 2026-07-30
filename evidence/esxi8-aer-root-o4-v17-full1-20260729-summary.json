@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "id": "ESXI8-AER-ROOT-O4-V17-FULL1-20260729",
+  "subject": "VMWARE_ESXI_BLACKBOX_OBSERVATION",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observedAt": "2026-07-29T04:46:10.491894Z",
+  "observationStatus": "PARTIAL",
+  "executionState": "FULL_PLAN",
+  "claimBoundary": "VMWARE_REFERENCE_ONLY",
+  "usedForBehaviorInference": true,
+  "closureAuthority": "NONE",
+  "scope": "PCIe Correctable AER external register-state behavior for the exact nested ESXi O4/g101 profile; no VMware private implementation inference",
+  "canonicalSlice": {
+    "modelId": "VMW-DIRECTPATH-AER-ROOT-SEQUENCE-BLACKBOX-V1",
+    "ownerPhase": "O4",
+    "ownerState": "PassthruActive",
+    "gate": "g101",
+    "endpointBdf": "0000:01:00.1",
+    "rootPortBdf": "0000:00:08.0",
+    "requesterId": "0x0101",
+    "endpointDeviceIdentity": "virtio-net-pci 1af4:1041",
+    "qemuDevice": "test_fn1",
+    "state": "OBSERVED_MATCH_TO_FROZEN_PUBLIC_ORACLE",
+    "comparisonMeaning": "The exact external Endpoint/Root register transitions matched the preregistered candidate oracle bytes for all four sequences and three repeats; the candidate file itself is not promoted to a whole-profile observed state.",
+    "doesNotUpgradeWholeOracleProfile": true,
+    "doesNotEstablishPrivateMechanism": true,
+    "doesNotGrantQmanClosure": true
+  },
+  "run": {
+    "runId": "20260729-esxi8-aer-root-o4-v17-full1",
+    "startedAt": "2026-07-29T03:34:55.588108Z",
+    "finishedAt": "2026-07-29T04:46:10.491894Z",
+    "plannedCaseCount": 12,
+    "completedCaseCount": 12,
+    "incompleteCaseCount": 0,
+    "enteredInjectionCount": 12,
+    "matchCount": 12,
+    "cleanupCompleteCount": 12,
+    "safetyStopCount": 0,
+    "containmentRequiredCount": 0,
+    "faultCount": 0,
+    "boundaryStop": false,
+    "aggregateObservationState": "MATCH",
+    "completionClass": "FULL_PLAN",
+    "fullPlanComplete": true,
+    "fullPlanExecuted": true,
+    "fullProfileConclusionEligible": true,
+    "finalQemuState": "running"
+  },
+  "environment": {
+    "esxiFullName": "VMware ESXi 8.0.3 build-24280767",
+    "esxiBuild": "24280767",
+    "esxiApiVersion": "8.0.3.0",
+    "esxiSystemUuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "virtualHardware": "20",
+    "outerQemuName": "esxi8-mf",
+    "outerQemuVersion": "11.0.2",
+    "outerQemuPidDuringRun": 37357,
+    "outerQemuCandidateCount": 1,
+    "outerQemuBinary": "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+    "outerQemuBinarySha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393",
+    "qemuAerSourceSha256": "11c8c33412d3c6331cd981fa0b7ade4949789c7ef7628f18a0e339dff8628d7c",
+    "guestFixtureIsoSha256": "3de27d166ee6881bfb60d8da233a0b3e6871532108d01d5741c8a43ba91777de",
+    "guestFixtureBuildAttestationSha256": "103941485d8b1679d6da18312025f5155f4a027f86efa99e5bad2faa66fd67c1"
+  },
+  "verifier": {
+    "verified": true,
+    "requireCompleteSatisfied": true,
+    "caseCount": 12,
+    "offlineExactCaseCount": 12,
+    "rawSourceExactCaseCount": 12,
+    "oracleExactCaseCount": 12,
+    "resultExactCaseCount": 12,
+    "identityExactCaseCount": 12,
+    "campaignIdentityCheckCount": 9,
+    "campaignIdentityFailureCount": 0,
+    "caseManifestEntryCount": 822,
+    "rootManifestEntryCount": 840,
+    "manifestFailureCount": 0,
+    "missingRequiredArtifactCount": 0,
+    "unboundArtifactCount": 0,
+    "terminationCause": null,
+    "runnerSourceSha256": "7d98adb07faa80f54f5c67c38039c8281307dd3d28f63d3d0641299248cb2f65",
+    "oracleProfileStateAtRun": "CANDIDATE_NOT_OBSERVED",
+    "oracleProfileSha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a",
+    "oracleSchemaSha256": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57",
+    "oracleFileDisposition": "The candidate oracle file remains byte-for-byte unchanged; this summary grants authority only to the observed O4/g101 slice."
+  },
+  "observations": {
+    "sequenceRepeatCount": 3,
+    "sequences": {
+      "first-multiple": {
+        "observationDigest": "9a416d636ab74f9aaaff4265fe6da4cb63e28c3f210463fd983821f60da3d3b1",
+        "repeatDigestStable": true,
+        "afterFirst": {
+          "endpointCorrectableErrorStatus": "0x00000001",
+          "endpointCorrectableErrorDetected": true,
+          "rootCorrectableErrorStatus": "0x00000001",
+          "rootErrorSourceId": "0x0101"
+        },
+        "afterRepeated": {
+          "endpointCorrectableErrorStatus": "0x00000001",
+          "endpointCorrectableErrorDetected": true,
+          "rootCorrectableErrorStatus": "0x00000003",
+          "rootErrorSourceId": "0x0101"
+        }
+      },
+      "independent-w1c": {
+        "observationDigest": "c6fe1374e720d82ce6c9edade0fe52a289fcb11b7fa332914c37a095d59eb21b",
+        "repeatDigestStable": true,
+        "initial": {
+          "endpointCorrectableErrorStatus": "0x00000001",
+          "endpointCorrectableErrorDetected": true,
+          "rootCorrectableErrorStatus": "0x00000001",
+          "rootErrorSourceId": "0x0101"
+        },
+        "afterEndpointOnlyClear": {
+          "endpointCorrectableErrorStatus": "0x00000000",
+          "endpointCorrectableErrorDetected": false,
+          "rootCorrectableErrorStatus": "0x00000001",
+          "rootErrorSourceId": "0x0101"
+        },
+        "afterRootOnlyClearWithEndpointReprimed": {
+          "endpointCorrectableErrorStatus": "0x00000001",
+          "endpointCorrectableErrorDetected": true,
+          "rootCorrectableErrorStatus": "0x00000000",
+          "rootErrorSourceIdInterpretation": "NOT_MEANINGFUL_WHEN_ROOT_CORRECTABLE_RECEIVED_IS_CLEAR"
+        }
+      },
+      "bit-or": {
+        "observationDigest": "96708e7d8e7c9efdfaa94e9db5ee335e6f3ba1ed7db5d475480bca1778aa5eb7",
+        "repeatDigestStable": true,
+        "afterB0ThenB1": {
+          "endpointCorrectableErrorStatus": "0x00000041",
+          "endpointCorrectableErrorDetected": true,
+          "rootCorrectableErrorStatus": "0x00000003",
+          "rootErrorSourceId": "0x0101"
+        }
+      },
+      "rearm": {
+        "observationDigest": "7a595815777fd2a9d2f882e3e2624a0a933b9b84d3c7a04e02bb9021208d9d27",
+        "repeatDigestStable": true,
+        "initialAndRearmedState": {
+          "endpointCorrectableErrorStatus": "0x00000001",
+          "endpointCorrectableErrorDetected": true,
+          "rootCorrectableErrorStatus": "0x00000001",
+          "rootErrorSourceId": "0x0101"
+        }
+      }
+    },
+    "guestClassification": {
+      "value": "O4_BOUND_DRIVER_AND_HEARTBEAT",
+      "caseCount": 12
+    },
+    "hostLogClassification": {
+      "value": "NOT_OBSERVED_IN_STRICT_PER_SOURCE_MARKER_WINDOW",
+      "caseCount": 12,
+      "interpretation": "No matching public log line was observed in the bounded per-source windows; this is not evidence that no interrupt or service path ran."
+    },
+    "safetyAndCleanup": {
+      "injectionClass": "Correctable-only",
+      "injectedCorrectableBits": [
+        "Receiver Error (B0)",
+        "Bad TLP (B1)"
+      ],
+      "uncorrectableInjectionSurface": false,
+      "allObservedUncorrectableStatusZero": true,
+      "maximumObservedSafetyPollGapSeconds": 0.04229792801197618,
+      "maximumAllowedSafetyPollGapSeconds": 0.05,
+      "gateRestoreState": "RESTORED",
+      "gateRestoreCount": 12,
+      "remainingActiveUsersAfterCleanup": []
+    }
+  },
+  "frozenIntegrity": {
+    "state": "PASS",
+    "committedCampaignResult": {
+      "path": "evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json",
+      "sha256": "847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f",
+      "byteExactCopyOfCampaignResult": true
+    },
+    "caseManifestEntryCounts": {
+      "o4__bit-or__g101__r01": 65,
+      "o4__bit-or__g101__r02": 86,
+      "o4__bit-or__g101__r03": 65,
+      "o4__first-multiple__g101__r01": 86,
+      "o4__first-multiple__g101__r02": 65,
+      "o4__first-multiple__g101__r03": 65,
+      "o4__independent-w1c__g101__r01": 65,
+      "o4__independent-w1c__g101__r02": 65,
+      "o4__independent-w1c__g101__r03": 65,
+      "o4__rearm__g101__r01": 65,
+      "o4__rearm__g101__r02": 65,
+      "o4__rearm__g101__r03": 65
+    },
+    "artifactsRelativeToSummary": [
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v17-full1/result.json",
+        "sha256": "847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v17-full1/result.json.sha256",
+        "sha256": "0bfdf5e8f5b2429a8075069d8bdfb81644727d80ccdc610ccfb3f8a54d47886f",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v17-full1/artifact-manifest.sha256",
+        "sha256": "e06b1cb224f93ea112fbfe0f10f24bee5d0e65cef3a08f7125d595877fa48836",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v17-full1/campaign-plan.json",
+        "sha256": "2fcb0c967705ef32b464a89c48ecd90e2f4cae94dc80639b364048f34bf3657b",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v17-full1/oracle-profile.json",
+        "sha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v17-full1/oracle-profile.schema.json",
+        "sha256": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v17-full1/source-and-binary-hashes.json",
+        "sha256": "798b7e452a76dc714c59f472a38b014daa0efb9ac442a91becd19542054cd255",
+        "retention": "LOCAL_RAW"
+      }
+    ]
+  },
+  "closureEffects": {
+    "vmwareExperimentId": "VMW-AER-COR-001",
+    "vmwareExperimentStateAfterPromotion": "PARTIAL",
+    "qmanProductCasesClosed": [],
+    "qmanRisksClosed": [],
+    "qmanGateAdvanced": false,
+    "qmanStatusUpdated": false
+  },
+  "limitations": [
+    "This evidence establishes only the exact nested ESXi 8.0.3 build-24280767 O4/g101 synthetic-endpoint slice.",
+    "O0, other E/M/R gates, Root Command notification effects, guest-write isolation, owner/lifecycle reuse, and physical-device health or recovery remain unverified.",
+    "The bounded host-log result must not be interpreted as absence of interrupt delivery or service execution.",
+    "The observed external-state match does not reveal VMware private code, internal control flow, filtering, synthesis, or service implementation.",
+    "Synthetic Correctable injection does not qualify physical links or physical devices.",
+    "VMware reference evidence grants no Qman implementation, qualification, acceptance-case, risk, gate, or release closure."
+  ]
+}

@@ -22,6 +22,7 @@ CONTRACT_PATH = ROOT / "contracts/directpath-portable-control-contract.json"
 SCHEMA_PATH = ROOT / "contracts/qman-integration-map.schema.json"
 TEMPLATE_PATH = ROOT / "contracts/qman-integration-map.template.json"
 SCENARIO_SCHEMA_PATH = ROOT / "contracts/directpath-acceptance-scenario.schema.json"
+CASE_DEFINITION_PATH = ROOT / "acceptance/cases"
 
 
 TYPED_COVERAGE_RULES = {
@@ -42,6 +43,13 @@ TYPED_COVERAGE_RULES = {
     "ENTITY": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
 }
 CONSERVATIVE_COVERAGE_RULE = "CONSERVATIVE_ALL"
+EXPLICIT_CASE_TRACE_KINDS = {
+    "requiredPortIds": "PORT",
+    "requiredOperationIds": "OPERATION",
+    "requiredTransitionIds": "TRANSITION",
+    "requiredEntityIds": "ENTITY",
+    "requiredReasonIds": "REASON",
+}
 
 
 def render(document: Any) -> bytes:
@@ -135,6 +143,64 @@ def ordered_unique(values: list[str]) -> list[str]:
     return result
 
 
+def explicit_case_requirements() -> dict[tuple[str, str], list[str]]:
+    """Load source Case trace overrides without reading generated registries.
+
+    This keeps verification-matrix generation acyclic: the portable contract
+    depends only on the normative Case source tree, while the generated Case
+    registry may continue to consume the portable contract.
+    """
+
+    records: dict[str, dict[str, Any]] = {}
+    for path in sorted(CASE_DEFINITION_PATH.glob("*.json")):
+        document = json.loads(path.read_text(encoding="utf-8"))
+        candidates = document.get("records", [document])
+        if not isinstance(candidates, list):
+            raise ValueError(f"{path.relative_to(ROOT)} records is not an array")
+        for record in candidates:
+            if not isinstance(record, dict):
+                raise ValueError(f"{path.relative_to(ROOT)} contains a non-object Case")
+            case_id = record.get("id")
+            if not isinstance(case_id, str) or not case_id:
+                raise ValueError(f"{path.relative_to(ROOT)} contains an invalid Case ID")
+            if case_id in records:
+                raise ValueError(f"duplicate Case ID {case_id}")
+            records[case_id] = record
+    if len(records) != 101:
+        raise ValueError(
+            f"acceptance/cases must contain 101 unique Cases, got {len(records)}"
+        )
+
+    result: dict[tuple[str, str], list[str]] = {}
+    fields = set(EXPLICIT_CASE_TRACE_KINDS)
+    for case_id, record in records.items():
+        present = {field for field in fields if field in record}
+        if present and present != fields:
+            raise ValueError(
+                f"Case {case_id} explicit trace is partial; missing "
+                f"{sorted(fields - present)}"
+            )
+        if not present:
+            continue
+        for field, kind in EXPLICIT_CASE_TRACE_KINDS.items():
+            values = record[field]
+            if not isinstance(values, list) or any(
+                not isinstance(value, str) or not value for value in values
+            ):
+                raise ValueError(f"Case {case_id} {field} must be a string list")
+            if len(values) != len(set(values)) or values != sorted(values):
+                raise ValueError(
+                    f"Case {case_id} {field} must be unique and ascending"
+                )
+            if field != "requiredTransitionIds" and not values:
+                raise ValueError(f"Case {case_id} {field} must not be empty")
+            for item_id in values:
+                result.setdefault((kind, item_id), []).append(case_id)
+    for identity, case_ids in result.items():
+        result[identity] = sorted(set(case_ids), key=canonical_bytes)
+    return result
+
+
 def derive_verification_matrix(
     contract: dict[str, Any],
     items: list[tuple[str, str, str]],
@@ -169,6 +235,17 @@ def derive_verification_matrix(
         for transition in machine["transitions"]
     }
     parity = {item["id"]: item for item in contract["vmwareParityObligations"]}
+    explicit_requirements = explicit_case_requirements()
+    item_identities = {(kind, item_id) for kind, item_id, _track in items}
+    unknown_explicit_items = set(explicit_requirements) - item_identities
+    if unknown_explicit_items:
+        raise ValueError(
+            "explicit Case trace references unknown mapping items: "
+            + ", ".join(
+                f"{kind}/{item_id}"
+                for kind, item_id in sorted(unknown_explicit_items)
+            )
+        )
 
     def normalize_obligations(candidate_ids: list[str]) -> list[str]:
         unknown = set(candidate_ids) - set(obligation_by_id)
@@ -293,6 +370,7 @@ def derive_verification_matrix(
                 for obligation_id in required_obligations
                 for case_id in obligation_by_id[obligation_id]["caseIds"]
             ]
+            + explicit_requirements.get((kind, item_id), [])
         )
         row: dict[str, Any] = {
             "kind": kind,
@@ -410,8 +488,11 @@ def desired_documents() -> tuple[bytes, bytes, bytes]:
         "REASON unions listing operations; CAS_RULE unions referencing transitions; "
         "EQUIVALENCE uses TEST-DYNAMIC; ENTITY uses its FSM when present; all other "
         "kinds and every empty derivation conservatively require all obligations. "
-        "requiredCaseIds is the exact ordered union of those obligations and every "
-        "row requires all eight scenario oracle classes. requirementDigest is "
+        "requiredCaseIds is the exact ordered union of those obligations followed "
+        "by any source Case whose explicit required Port, Operation, Transition, "
+        "Entity, or Reason set names the row item; the portable generator reads the "
+        "Case source tree, never the generated Case registry. Every row requires all "
+        "eight scenario oracle classes. requirementDigest is "
         "SHA-256(CANONICAL-JSON-V1(row without requirementDigest)). A target mapping "
         "binds this digest by const; scenario self-claims cannot reduce or expand it."
     )

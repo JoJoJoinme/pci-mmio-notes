@@ -37,6 +37,14 @@ ORACLE_CLASSES = [
     "physicalOracle",
 ]
 
+EXPLICIT_TRACE_FIELDS = (
+    "requiredPortIds",
+    "requiredOperationIds",
+    "requiredTransitionIds",
+    "requiredEntityIds",
+    "requiredReasonIds",
+)
+
 
 def render(value: Any) -> bytes:
     return (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
@@ -186,6 +194,194 @@ def artifact_schemas(text: str) -> list[str]:
     return sorted(values)
 
 
+def required_artifact_schemas(
+    definition: dict[str, Any],
+    semantic_text: str,
+) -> list[str]:
+    """Join heuristic defaults with an optional closed, explicit Case list."""
+
+    derived = set(artifact_schemas(semantic_text))
+    explicit = definition.get("requiredArtifactSchemaRefs", [])
+    if not isinstance(explicit, list) or any(
+        not isinstance(item, str) or not item for item in explicit
+    ):
+        raise ValueError(
+            f"Case {definition.get('id')} requiredArtifactSchemaRefs "
+            "must be a string list"
+        )
+    if len(explicit) != len(set(explicit)):
+        raise ValueError(
+            f"Case {definition.get('id')} requiredArtifactSchemaRefs "
+            "must be unique"
+        )
+    if explicit != sorted(explicit):
+        raise ValueError(
+            f"Case {definition.get('id')} requiredArtifactSchemaRefs "
+            "must use ascending schema-ref order"
+        )
+    for schema_ref in explicit:
+        schema_path = schema_ref.split("#", 1)[0]
+        if not schema_path.startswith("contracts/"):
+            raise ValueError(
+                f"Case {definition.get('id')} schema ref must stay under "
+                f"contracts/: {schema_ref}"
+            )
+        if not (ROOT / schema_path).is_file():
+            raise ValueError(
+                f"Case {definition.get('id')} references missing schema "
+                f"{schema_path}"
+            )
+    return sorted(derived.union(explicit))
+
+
+def indexed_records(
+    records: list[dict[str, Any]], id_field: str, label: str
+) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for index, record in enumerate(records):
+        item_id = record.get(id_field)
+        if not isinstance(item_id, str) or not item_id:
+            raise ValueError(f"{label}[{index}].{id_field} is not a non-empty string")
+        if item_id in result:
+            raise ValueError(f"{label} contains duplicate {id_field} {item_id}")
+        result[item_id] = record
+    return result
+
+
+def explicit_id_set(
+    definition: dict[str, Any],
+    field: str,
+    known_ids: set[str],
+    *,
+    allow_empty: bool,
+) -> list[str]:
+    value = definition.get(field)
+    if not isinstance(value, list) or any(
+        not isinstance(item, str) or not item for item in value
+    ):
+        raise ValueError(f"Case {definition.get('id')} {field} must be a string list")
+    if len(value) != len(set(value)):
+        raise ValueError(f"Case {definition.get('id')} {field} must be unique")
+    if value != sorted(value):
+        raise ValueError(
+            f"Case {definition.get('id')} {field} must use ascending ID order"
+        )
+    if not allow_empty and not value:
+        raise ValueError(f"Case {definition.get('id')} {field} must not be empty")
+    unknown = set(value) - known_ids
+    if unknown:
+        raise ValueError(
+            f"Case {definition.get('id')} {field} references unknown IDs "
+            f"{sorted(unknown)}"
+        )
+    return list(value)
+
+
+def resolve_required_trace(
+    definition: dict[str, Any],
+    *,
+    derived_ports: list[str],
+    port_by_id: dict[str, dict[str, Any]],
+    operation_by_id: dict[str, dict[str, Any]],
+    transition_by_id: dict[str, dict[str, Any]],
+    entity_by_id: dict[str, dict[str, Any]],
+    reason_by_id: dict[str, dict[str, Any]],
+) -> tuple[list[str], list[str], list[str], list[str], list[str]]:
+    """Resolve a Case trace, validating every explicit cross-reference.
+
+    Legacy Case records omit all five fields and retain the Tech Story-derived
+    port/operation/transition surface.  Once a Case opts in, all five fields
+    are mandatory so a partial override cannot silently reintroduce the broad
+    Tech Story union for the remaining dimensions.
+    """
+
+    present = [field for field in EXPLICIT_TRACE_FIELDS if field in definition]
+    if present and len(present) != len(EXPLICIT_TRACE_FIELDS):
+        missing = sorted(set(EXPLICIT_TRACE_FIELDS) - set(present))
+        raise ValueError(
+            f"Case {definition.get('id')} explicit trace is partial; missing {missing}"
+        )
+
+    if not present:
+        required_ports = sorted(derived_ports)
+        required_port_set = set(required_ports)
+        required_operations = sorted(
+            operation_id
+            for operation_id, operation in operation_by_id.items()
+            if operation["ownerPortId"] in required_port_set
+        )
+        required_operation_set = set(required_operations)
+        required_transitions = sorted(
+            transition_id
+            for transition_id, transition in transition_by_id.items()
+            if set(transition["operationIds"]).intersection(required_operation_set)
+        )
+        return (
+            required_ports,
+            required_operations,
+            required_transitions,
+            [],
+            [],
+        )
+
+    required_ports = explicit_id_set(
+        definition,
+        "requiredPortIds",
+        set(port_by_id),
+        allow_empty=False,
+    )
+    required_operations = explicit_id_set(
+        definition,
+        "requiredOperationIds",
+        set(operation_by_id),
+        allow_empty=False,
+    )
+    required_transitions = explicit_id_set(
+        definition,
+        "requiredTransitionIds",
+        set(transition_by_id),
+        allow_empty=True,
+    )
+    required_entities = explicit_id_set(
+        definition,
+        "requiredEntityIds",
+        set(entity_by_id),
+        allow_empty=False,
+    )
+    required_reasons = explicit_id_set(
+        definition,
+        "requiredReasonIds",
+        set(reason_by_id),
+        allow_empty=False,
+    )
+
+    operation_set = set(required_operations)
+    owner_ports = {
+        operation_by_id[operation_id]["ownerPortId"]
+        for operation_id in required_operations
+    }
+    if set(required_ports) != owner_ports:
+        raise ValueError(
+            f"Case {definition.get('id')} requiredPortIds must exactly equal "
+            f"required operation owners {sorted(owner_ports)}"
+        )
+    for transition_id in required_transitions:
+        referenced_operations = set(transition_by_id[transition_id]["operationIds"])
+        if not referenced_operations.issubset(operation_set):
+            raise ValueError(
+                f"Case {definition.get('id')} transition {transition_id} references "
+                "operations outside requiredOperationIds "
+                f"{sorted(referenced_operations - operation_set)}"
+            )
+    return (
+        required_ports,
+        required_operations,
+        required_transitions,
+        required_entities,
+        required_reasons,
+    )
+
+
 def generate() -> dict[str, Any]:
     policy = load_json(POLICY)
     portable = load_json(PORTABLE)
@@ -201,6 +397,52 @@ def generate() -> dict[str, Any]:
         for machine in portable["stateMachines"]
         for transition in machine["transitions"]
     ]
+    port_by_id = indexed_records(ports, "id", "requiredPorts")
+    operation_by_id = indexed_records(
+        operations, "id", "backendNeutralOperations"
+    )
+    transition_by_id = indexed_records(transitions, "id", "stateMachine transitions")
+    entity_by_id = indexed_records(portable["dataEntities"], "id", "dataEntities")
+    reason_by_id = indexed_records(
+        portable["errorContract"]["reasonCodes"], "code", "errorContract.reasonCodes"
+    )
+    for operation_id, operation in operation_by_id.items():
+        owner = operation.get("ownerPortId")
+        if owner not in port_by_id:
+            raise ValueError(
+                f"operation {operation_id} references unknown owner port {owner}"
+            )
+        unknown_reasons = set(operation.get("failureReasonCodes", [])) - set(
+            reason_by_id
+        )
+        if unknown_reasons:
+            raise ValueError(
+                f"operation {operation_id} references unknown reason IDs "
+                f"{sorted(unknown_reasons)}"
+            )
+    for transition_id, transition in transition_by_id.items():
+        unknown_operations = set(transition.get("operationIds", [])) - set(
+            operation_by_id
+        )
+        if unknown_operations:
+            raise ValueError(
+                f"transition {transition_id} references unknown operation IDs "
+                f"{sorted(unknown_operations)}"
+            )
+        unknown_reasons = set(transition.get("failureReasonCodes", [])) - set(
+            reason_by_id
+        )
+        if unknown_reasons:
+            raise ValueError(
+                f"transition {transition_id} references unknown reason IDs "
+                f"{sorted(unknown_reasons)}"
+            )
+    for machine in portable["stateMachines"]:
+        if machine.get("entityId") not in entity_by_id:
+            raise ValueError(
+                f"state machine {machine.get('id')} references unknown entity "
+                f"{machine.get('entityId')}"
+            )
     scenario_schema = load_json(SCENARIO_SCHEMA)
     actual_oracles = sorted(
         scenario_schema["$defs"]["oracleMatrix"]["properties"].keys()
@@ -226,22 +468,25 @@ def generate() -> dict[str, Any]:
             for item in parity
             if set(item["testObligationIds"]).intersection(test_ids)
         )
-        required_ports = sorted(
+        derived_ports = sorted(
             item["id"]
             for item in ports
             if set(item["techStoryIds"]).intersection(story_set)
         )
-        required_port_set = set(required_ports)
-        required_operations = sorted(
-            item["id"]
-            for item in operations
-            if item["ownerPortId"] in required_port_set
-        )
-        required_operation_set = set(required_operations)
-        required_transitions = sorted(
-            item["id"]
-            for item in transitions
-            if set(item["operationIds"]).intersection(required_operation_set)
+        (
+            required_ports,
+            required_operations,
+            required_transitions,
+            required_entities,
+            required_reasons,
+        ) = resolve_required_trace(
+            definition,
+            derived_ports=derived_ports,
+            port_by_id=port_by_id,
+            operation_by_id=operation_by_id,
+            transition_by_id=transition_by_id,
+            entity_by_id=entity_by_id,
+            reason_by_id=reason_by_id,
         )
         if not required_ports or not required_operations:
             raise ValueError(f"Case {case_id} has an empty derived executable trace surface")
@@ -305,6 +550,14 @@ def generate() -> dict[str, Any]:
             "dependsOnCaseIds": sorted(definition["dependsOnCaseIds"]),
         }
         minimum_duration = 300 if definition["status"] == "HARDWARE_BLOCKED" else (10 if faults else 1)
+        explicit_entity_reason_trace = (
+            {
+                "requiredEntityIds": required_entities,
+                "requiredReasonIds": required_reasons,
+            }
+            if "requiredEntityIds" in definition
+            else {}
+        )
         record_projection = {
             "caseId": case_id,
             "definitionPath": definition_path,
@@ -317,8 +570,12 @@ def generate() -> dict[str, Any]:
             "requiredPortIds": required_ports,
             "requiredOperationIds": required_operations,
             "requiredTransitionIds": required_transitions,
+            **explicit_entity_reason_trace,
             "requiredFaultClasses": faults,
-            "requiredArtifactSchemaRefs": artifact_schemas(semantic_text),
+            "requiredArtifactSchemaRefs": required_artifact_schemas(
+                definition,
+                semantic_text,
+            ),
             "requiredOracleClasses": ORACLE_CLASSES,
             "minimumRepeat": 3 if faults else 1,
             "minimumDurationSeconds": minimum_duration,

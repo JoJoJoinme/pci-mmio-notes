@@ -15,7 +15,7 @@
     "inputHashes": {
       "pci-resource-model/pci_resource_model/__init__.py": "5e3aa5320cd473d3a0fa62c1da8f6232624e49fb2f56653063268ee57cf243b9",
       "pci-resource-model/pci_resource_model/allocator.py": "ba4df35e42bd006a9b11b9234188ba59ade2da2fd9e1b1893ce5d898e62e6fb1",
-      "pci-resource-model/pci_resource_model/capability.py": "5f9dd13810e62f22b48eb4671b2de8aa13b615193fdd57b8899308bd86f45b13",
+      "evidence/source-snapshots/qman-capability-closure-20260721/capability.py": "5f9dd13810e62f22b48eb4671b2de8aa13b615193fdd57b8899308bd86f45b13",
       "pci-resource-model/pci_resource_model/model.py": "e6349f42d98f10fd3ba8c2e4f3128abac869b181dfad29ee25ebe8d4ed9491ec",
       "pci-resource-model/tests/fixtures/c20-capability-closure.json": "5d5bda002de9f567cf7440759f756edcd30b58dcf0fc55be3619de98d0ba5ae9",
       "pci-resource-model/tests/test_c20_capability_closure.py": "38893408c386f4a8e5b01b3c723f43dd9928afe4b1ea20e6867f5dafe35f9a55"
@@ -41,6 +41,15 @@
     {
       "name": "full-reference-suite",
       "result": {"tests": 112, "failures": 0, "errors": 0, "verdict": "pass"}
+    },
+    {
+      "name": "exact-historical-run-input-retention",
+      "result": {
+        "path": "evidence/source-snapshots/qman-capability-closure-20260721/capability.py",
+        "sha256": "5f9dd13810e62f22b48eb4671b2de8aa13b615193fdd57b8899308bd86f45b13",
+        "retentionSemantics": "EXACT_HISTORICAL_RUN_INPUT",
+        "currentCapabilityValidatedByThisRun": false
+      }
     },
     {
       "name": "four-cell-fixed-point-matrix",
@@ -97,6 +106,7 @@
     "REFERENCE_FACT_VERIFIER is deterministic and forgeable by design; it proves fixture field binding, not a production signature, MAC or trust store.",
     "There is no Qman inventory publisher, production evidence verifier, controller, durable lease store, attach executor or launcher in this result.",
     "The source working tree also contained unrelated untracked work; the base commit plus runnerHashes and inputHashes pin every C20 input used by this record.",
+    "The retained capability.py source snapshot is the exact historical input for this run; this result does not validate the current pci-resource-model/pci_resource_model/capability.py implementation.",
     "No physical PCI device or E4 qualification was exercised."
   ]
 }

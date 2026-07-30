@@ -1441,6 +1441,60 @@ class PortableHandoffContractTests(unittest.TestCase):
         for metric in metrics:
             self.assertEqual(set(), set(metric["labels"]) & forbidden_metric_labels)
 
+    def test_authoritative_mapping_count_narratives_match_machine_contracts(self) -> None:
+        mapping_count = len(self.mapping_template["mappings"])
+        verification_count = len(
+            self.contract["mappingSurface"]["verificationMatrix"]
+        )
+        portable_status = self.project_status["observations"][
+            "portableImplementationContract"
+        ]
+
+        self.assertEqual(mapping_count, len(derive_mapping_items(self.contract)))
+        self.assertEqual(mapping_count, verification_count)
+        self.assertEqual(mapping_count, portable_status["mappingItems"])
+        self.assertEqual(
+            verification_count, portable_status["verificationMatrixRows"]
+        )
+
+        narrative_claims = {
+            "README.md": [
+                r"signed qualification/catalog trust, and "
+                r"(?P<mapping>\d+) ordered mapping requirements",
+            ],
+            "contracts/README.md": [
+                r"`mappingSurface` 当前确定性导出 (?P<mapping>\d+) 个 item",
+                r"normative closure、(?P<mapping>\d+) 项 mapping/verification matrix",
+            ],
+            "handoff/QMAN-DIRECTPATH-IMPLEMENTATION-HANDOFF.md": [
+                r"portable contract 当前导出 \*\*"
+                r"(?P<mapping>\d+) 个有序 mapping item\*\*",
+                r"(?P<mapping>\d+) 个 mapping item 与 "
+                r"(?P<verification>\d+) 条 verification requirement",
+            ],
+            "qemu-static-dynamic-directpath-design.md": [
+                r"确定性导出 (?P<mapping>\d+) 个\s+mapping item",
+            ],
+        }
+        expected_counts = {
+            "mapping": mapping_count,
+            "verification": verification_count,
+        }
+        for relative_path, patterns in narrative_claims.items():
+            narrative = (ROOT / relative_path).read_text(encoding="utf-8")
+            for pattern in patterns:
+                match = re.search(pattern, narrative)
+                self.assertIsNotNone(
+                    match, f"{relative_path} is missing mapping count claim: {pattern}"
+                )
+                assert match is not None
+                for count_kind, declared_count in match.groupdict().items():
+                    self.assertEqual(
+                        expected_counts[count_kind],
+                        int(declared_count),
+                        f"{relative_path} has a stale {count_kind} count",
+                    )
+
     def test_mapping_template_covers_every_surface_item_exactly_and_starts_empty(self) -> None:
         expected_derivation = [
             ("CANONICALIZATION", "canonicalizationContract.profiles[*].id"),
@@ -1473,11 +1527,11 @@ class PortableHandoffContractTests(unittest.TestCase):
             for item in self.mapping_template["mappings"]
         ]
         self.assertEqual(expected, actual)
-        self.assertEqual(295, len(actual))
+        self.assertEqual(299, len(actual))
         self.assertEqual(len(actual), len(set(actual)))
         verification_matrix = self.contract["mappingSurface"]["verificationMatrix"]
         self.assertEqual(1, self.contract["mappingSurface"]["verificationMatrixVersion"])
-        self.assertEqual(295, len(verification_matrix))
+        self.assertEqual(299, len(verification_matrix))
         self.assertEqual(
             actual,
             [(row["kind"], row["contractItemId"]) for row in verification_matrix],
@@ -1541,9 +1595,9 @@ class PortableHandoffContractTests(unittest.TestCase):
         self.assertIsNone(source["sha256"])
 
         schema_mappings = self.mapping_schema["properties"]["mappings"]
-        self.assertEqual(295, schema_mappings["minItems"])
-        self.assertEqual(295, schema_mappings["maxItems"])
-        self.assertEqual(295, len(schema_mappings["prefixItems"]))
+        self.assertEqual(299, schema_mappings["minItems"])
+        self.assertEqual(299, schema_mappings["maxItems"])
+        self.assertEqual(299, len(schema_mappings["prefixItems"]))
         for index, prefix in enumerate(schema_mappings["prefixItems"]):
             constants = prefix["allOf"][1]["properties"]
             row = verification_matrix[index]
@@ -1556,10 +1610,51 @@ class PortableHandoffContractTests(unittest.TestCase):
                 constants["verificationRequirementDigest"]["const"],
             )
 
+    def test_explicit_case_trace_is_overlaid_on_verification_matrix(self) -> None:
+        registry = load("contracts/directpath-acceptance-case-contracts.json")
+        rows = {
+            (row["kind"], row["contractItemId"]): row
+            for row in self.contract["mappingSurface"]["verificationMatrix"]
+        }
+        field_kinds = {
+            "requiredPortIds": "PORT",
+            "requiredOperationIds": "OPERATION",
+            "requiredTransitionIds": "TRANSITION",
+            "requiredEntityIds": "ENTITY",
+            "requiredReasonIds": "REASON",
+        }
+        explicit_case_ids = {"C10", "C15", "C20"}
+        records = {
+            record["caseId"]: record
+            for record in registry["records"]
+            if record["caseId"] in explicit_case_ids
+        }
+        self.assertEqual(explicit_case_ids, set(records))
+        for case_id, record in records.items():
+            for field, kind in field_kinds.items():
+                for item_id in record[field]:
+                    row = rows[(kind, item_id)]
+                    self.assertIn(
+                        case_id,
+                        row["requiredCaseIds"],
+                        f"{case_id}.{field} missing from {kind}/{item_id}",
+                    )
+        self.assertIn(
+            "source Case",
+            self.contract["mappingSurface"]["verificationMatrixRule"],
+        )
+        self.assertIn(
+            "never the generated Case registry",
+            self.contract["mappingSurface"]["verificationMatrixRule"],
+        )
+
     def test_persisted_entity_wire_schemas_are_closed_and_exact(self) -> None:
         authority_ids = {
             "ENTITY-CONTROLLER-AUTHORITY",
             "ENTITY-HOST-AUTHORITY",
+            "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+            "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY",
+            "ENTITY-AVAILABILITY-AUTHORITY",
             "ENTITY-OWNER-ACTIVATION-RUN",
             "ENTITY-ASSIGNMENT-RUN",
             "ENTITY-ASSIGNMENT-BINDING",
@@ -1629,6 +1724,817 @@ class PortableHandoffContractTests(unittest.TestCase):
         handoff_validator._validate_wire_schema_closure(mutated, ROOT, errors)
         self.assertTrue(
             any("ENTITY-CONTROLLER-AUTHORITY wire schema" in error for error in errors),
+            errors,
+        )
+
+    def test_inventory_v3_closure_is_normative_and_version_consistent(self) -> None:
+        normative_sources = set(self.contract["normativeSources"])
+        required_sources = {
+            "contracts/directpath-capability-policy.schema.json",
+            "contracts/directpath-inventory-verification-receipt.schema.json",
+            "contracts/directpath-inventory-verifier-algorithm.schema.json",
+            "contracts/directpath-dependency-closure-request.schema.json",
+            "contracts/directpath-reset-contract-set.schema.json",
+            "tools/generate_directpath_portable_package.py",
+        }
+        self.assertTrue(
+            required_sources.issubset(normative_sources),
+            required_sources - normative_sources,
+        )
+
+        subjects = {
+            item["subject"]: item
+            for item in self.contract["canonicalizationContract"]["hashSubjects"]
+        }
+        expected_subjects = {
+            "DeviceRecord": (
+                "deviceRecordHash",
+                "contracts/directpath-portable-entities.schema.json"
+                "#/$defs/ENTITY-DEVICE-RECORD",
+            ),
+            "InventoryVerifierAlgorithmIdentity": (
+                "algorithmIdentityDigest",
+                "contracts/directpath-inventory-verifier-algorithm.schema.json",
+            ),
+            "InventoryVerificationReceipt": (
+                "receiptDigest",
+                "contracts/directpath-inventory-verification-receipt.schema.json",
+            ),
+            "CapabilityPolicy": (
+                "policyHash",
+                "contracts/directpath-capability-policy.schema.json",
+            ),
+            "DependencyClosureRequest": (
+                "requestDigest (derived output)",
+                "contracts/directpath-dependency-closure-request.schema.json",
+            ),
+            "ResetContractSet": (
+                "contentHash (derived output)",
+                "contracts/directpath-reset-contract-set.schema.json",
+            ),
+        }
+        for subject, (digest_field, schema_ref) in expected_subjects.items():
+            self.assertEqual(digest_field, subjects[subject]["digestField"])
+            self.assertEqual(schema_ref, subjects[subject]["schemaRef"])
+
+        device_record = self.portable_entity_schema["$defs"]["ENTITY-DEVICE-RECORD"]
+        self.assertEqual(3, device_record["properties"]["schemaVersion"]["const"])
+        self.assertIn("dependencyDomains", device_record["required"])
+        device_role = self.portable_entity_schema["$defs"]["deviceRole"]
+        self.assertIn("pciStructureFact", device_role["required"])
+        self.assertEqual(
+            "#/$defs/pciStructureFact",
+            device_role["properties"]["pciStructureFact"]["$ref"],
+        )
+        self.assertIs(
+            False,
+            self.portable_entity_schema["$defs"]["pciStructureFact"][
+                "additionalProperties"
+            ],
+        )
+        reset_contract = self.portable_entity_schema["$defs"]["resetContract"]
+        self.assertIn("pciFlrCapabilityFact", reset_contract["required"])
+        self.assertIn("resetProviderFactId", reset_contract["required"])
+        self.assertIn("state", reset_contract["required"])
+        self.assertEqual(
+            ["KNOWN", "UNKNOWN", "CONFLICT"],
+            reset_contract["properties"]["state"]["enum"],
+        )
+        self.assertEqual(
+            "#/$defs/pciFlrCapabilityFact",
+            reset_contract["properties"]["pciFlrCapabilityFact"]["$ref"],
+        )
+        self.assertIs(
+            False,
+            self.portable_entity_schema["$defs"]["pciFlrCapabilityFact"][
+                "additionalProperties"
+            ],
+        )
+        domains = self.portable_entity_schema["$defs"]["dependencyDomains"]
+        self.assertEqual(7, domains["minItems"])
+        self.assertEqual(7, domains["maxItems"])
+        self.assertIs(False, domains["items"])
+        self.assertEqual(
+            [
+                "FUNCTIONAL",
+                "IOMMU",
+                "MULTIFUNCTION",
+                "PF_VF",
+                "PHYSICAL_ISOLATION",
+                "PLATFORM",
+                "REQUESTER_ALIAS",
+            ],
+            [
+                next(
+                    branch["properties"]["kind"]["const"]
+                    for branch in item["allOf"]
+                    if "properties" in branch
+                )
+                for item in domains["prefixItems"]
+            ],
+        )
+
+        entity = next(
+            item
+            for item in self.contract["dataEntities"]
+            if item["id"] == "ENTITY-DEVICE-RECORD"
+        )
+        self.assertEqual(
+            set(device_record["required"]),
+            set(entity["key"]) | set(entity["requiredFields"]),
+        )
+
+        snapshot_schema = load(
+            "contracts/directpath-portable-hash-subjects.schema.json"
+        )
+        receipt_schema = load(
+            "contracts/directpath-inventory-verification-receipt.schema.json"
+        )
+        algorithm_schema = load(
+            "contracts/directpath-inventory-verifier-algorithm.schema.json"
+        )
+        self.assertEqual(2, algorithm_schema["properties"]["schemaVersion"]["const"])
+        self.assertEqual(
+            "PORTABLE_INVENTORY_VERIFIER_ALGORITHM_V2",
+            algorithm_schema["properties"]["algorithmId"]["const"],
+        )
+        self.assertEqual(
+            "QMAN-DIRECTPATH/INVENTORY-VERIFIER-ALGORITHM/V2",
+            algorithm_schema["properties"]["verifierIdentityHashDomain"]["const"],
+        )
+        schema_bindings = algorithm_schema["properties"]["schemaBindings"]
+        self.assertEqual(7, schema_bindings["minItems"])
+        self.assertEqual(7, schema_bindings["maxItems"])
+        self.assertEqual(7, len(schema_bindings["prefixItems"]))
+        validation_stages = [
+            item["const"]
+            for item in algorithm_schema["properties"]["validationStages"][
+                "prefixItems"
+            ]
+        ]
+        validation_stage_schema = algorithm_schema["properties"][
+            "validationStages"
+        ]
+        self.assertEqual(
+            validation_stage_schema["minItems"],
+            validation_stage_schema["maxItems"],
+        )
+        self.assertEqual(
+            validation_stage_schema["minItems"],
+            len(validation_stages),
+        )
+        self.assertIn(
+            "DEVICE_RECORD_V3_HASH_IDENTITY_MEMBERSHIP_V1",
+            validation_stages,
+        )
+        self.assertIn("PCI_STRUCTURE_RESET_FACT_REPLAY_V1", validation_stages)
+        self.assertIn(
+            "DEVICE_PROVIDER_FACT_SET_DIGEST_REPLAY_V2",
+            validation_stages,
+        )
+        self.assertIn(
+            "HOST_SNAPSHOT_SEMANTIC_PROJECTION_REPLAY_V1",
+            validation_stages,
+        )
+        self.assertIn(
+            "PORTABLE_INVENTORY_VERIFIER_ALGORITHM_V2",
+            receipt_schema["x-qmanVerifierIdentityRule"],
+        )
+        self.assertIn(
+            "exactly seven",
+            receipt_schema["x-qmanVerifierIdentityRule"],
+        )
+        self.assertIn("r+1", snapshot_schema["$defs"]["hostSnapshot"]["x-qmanCurrentPointerRule"])
+        self.assertIn(
+            "resourceVersion",
+            " ".join(
+                self.authority_entity_schema["$defs"]["ENTITY-HOST-AUTHORITY"][
+                    "x-qmanCrossFieldRules"
+                ]
+            ),
+        )
+        self.assertIn(
+            "committed",
+            self.portable_entity_schema["$defs"]["hostSnapshotBinding"][
+                "x-qmanCommittedVersionRule"
+            ],
+        )
+        self.assertIn("committed", receipt_schema["x-qmanCurrentPointerRule"])
+
+        mutated = copy.deepcopy(self.contract)
+        mutated["normativeSources"].remove(
+            "contracts/directpath-inventory-verification-receipt.schema.json"
+        )
+        errors: list[str] = []
+        handoff_validator._validate_wire_schema_closure(mutated, ROOT, errors)
+        self.assertTrue(
+            any(
+                "hash subject InventoryVerificationReceipt" in error
+                and "absent from normativeSources" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_qualification_profile_projection_receipt_hash_chain_is_closed(self) -> None:
+        normative_sources = set(self.contract["normativeSources"])
+        self.assertTrue(
+            {
+                "contracts/directpath-qualification-profile-projection.schema.json",
+                "contracts/directpath-qualification-verification-receipt.schema.json",
+            }.issubset(normative_sources)
+        )
+        subjects = {
+            item["subject"]: item
+            for item in self.contract["canonicalizationContract"]["hashSubjects"]
+        }
+        self.assertEqual(
+            {
+                "schemaRef": (
+                    "contracts/directpath-qualification-verification-receipt"
+                    ".schema.json"
+                ),
+                "digestField": "receiptDigest",
+            },
+            {
+                key: subjects["QualificationVerificationReceipt"][key]
+                for key in ("schemaRef", "digestField")
+            },
+        )
+        hash_subjects = load(
+            "contracts/directpath-portable-hash-subjects.schema.json"
+        )
+        profile = hash_subjects["$defs"]["qualificationProfile"]
+        projection = load(
+            "contracts/directpath-qualification-profile-projection.schema.json"
+        )
+        receipt = load(
+            "contracts/directpath-qualification-verification-receipt.schema.json"
+        )
+        supported_catalog = load(
+            "contracts/directpath-supported-catalog.schema.json"
+        )
+
+        profile_fields = set(profile["required"])
+        projection_fields = profile_fields - {
+            "verificationReceiptHash",
+            "profileHash",
+        }
+        self.assertFalse(projection["additionalProperties"])
+        self.assertEqual(projection_fields, set(projection["required"]))
+        self.assertEqual(projection_fields, set(projection["properties"]))
+        self.assertEqual(projection_fields, set(projection["x-qmanFieldProjection"]))
+        self.assertNotIn("projectionDigest", projection["properties"])
+        self.assertNotIn("verificationReceiptHash", projection["properties"])
+        self.assertNotIn("profileHash", projection["properties"])
+        self.assertEqual(
+            "QualificationRecord.exactQualificationKey",
+            projection["x-qmanFieldProjection"]["profileId"],
+        )
+        semantic = projection["x-qmanProfileSemanticProjection"]
+        self.assertEqual(
+            "QMAN-DIRECTPATH/QUALIFICATION-PROFILE-SEMANTICS/V1",
+            semantic["hashDomain"],
+        )
+        self.assertEqual(
+            {
+                "profileId",
+                "platformProfileId",
+                "platformDigest",
+                "kernelDigest",
+                "qemuDigest",
+                "machineDigest",
+                "firmwareDigest",
+                "backendDigest",
+                "deviceTraitsDigest",
+                "guestAbiClass",
+                "workloadDigest",
+                "revocationSeverity",
+                "revocationBehavior",
+                "supportStatus",
+            },
+            set(semantic["includedProfileFields"]),
+        )
+        self.assertEqual(
+            {
+                "qualificationRecordDigests",
+                "supportedCatalogDigest",
+                "catalogSequence",
+                "verificationReceiptHash",
+                "profileHash",
+            },
+            set(semantic["excludedCurrentnessFields"]),
+        )
+        self.assertEqual(
+            "SINGLETON_SET(QualificationRecord.recordDigest)",
+            projection["x-qmanFieldProjection"]["qualificationRecordDigests"],
+        )
+        self.assertEqual(
+            "SupportedCatalog.catalogDigest",
+            projection["x-qmanFieldProjection"]["supportedCatalogDigest"],
+        )
+        self.assertEqual(
+            "SupportedCatalog.catalogSequence",
+            projection["x-qmanFieldProjection"]["catalogSequence"],
+        )
+        self.assertEqual(
+            "SUPPORTED",
+            projection["properties"]["supportStatus"]["const"],
+        )
+        self.assertEqual(
+            {"NORMAL", "CRITICAL"},
+            set(projection["properties"]["revocationSeverity"]["enum"]),
+        )
+        self.assertEqual(
+            {
+                "DENY_NEW_AND_NEXT_POWER_ON",
+                "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP",
+            },
+            set(projection["properties"]["revocationBehavior"]["enum"]),
+        )
+        self.assertEqual(
+            set(projection["properties"]["revocationBehavior"]["enum"]),
+            set(
+                supported_catalog["properties"]["revocationBehavior"]["enum"]
+            ),
+        )
+        self.assertEqual(
+            "DERIVE_FROM(SupportedCatalog.revocationBehavior)",
+            projection["x-qmanFieldProjection"]["revocationSeverity"],
+        )
+        severity_behavior_pairs = {
+            (
+                branch["if"]["properties"]["revocationSeverity"]["const"],
+                branch["then"]["properties"]["revocationBehavior"]["const"],
+            )
+            for branch in projection["allOf"]
+        }
+        self.assertEqual(
+            {
+                ("NORMAL", "DENY_NEW_AND_NEXT_POWER_ON"),
+                ("CRITICAL", "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP"),
+            },
+            severity_behavior_pairs,
+        )
+        self.assertIn(
+            "total bijection",
+            projection["x-qmanRevocationProjectionRule"],
+        )
+        self.assertIn(
+            "affects supportStatus only",
+            projection["x-qmanRevocationProjectionRule"],
+        )
+
+        expected_derived_fields = {
+            "machineDigest": [
+                "QualificationRecord.kernelQemuFirmwareBackend.machineType",
+                "QualificationRecord.kernelQemuFirmwareBackend.machineVersion",
+            ],
+            "firmwareDigest": [
+                "QualificationRecord.deviceFirmwareAndRom",
+                "QualificationRecord.kernelQemuFirmwareBackend.firmwareKind",
+                "QualificationRecord.kernelQemuFirmwareBackend.firmwareCodeDigest",
+                "QualificationRecord.kernelQemuFirmwareBackend.firmwareVarsBaseDigestOrNull",
+            ],
+            "backendDigest": [
+                "QualificationRecord.kernelQemuFirmwareBackend.backendFamily",
+                "QualificationRecord.kernelQemuFirmwareBackend.configuredIommuType",
+                "QualificationRecord.kernelQemuFirmwareBackend.runtimeCapabilities",
+                "QualificationRecord.iommuInterruptResetProviders",
+            ],
+            "deviceTraitsDigest": [
+                "QualificationRecord.deviceTraits",
+            ],
+        }
+        self.assertEqual(
+            set(expected_derived_fields),
+            set(projection["x-qmanDerivedDigestRules"]),
+        )
+        for field, source_fields in expected_derived_fields.items():
+            rule = projection["x-qmanDerivedDigestRules"][field]
+            self.assertEqual(source_fields, rule["projectionFields"], field)
+            self.assertTrue(
+                rule["domain"].startswith(
+                    "QMAN-DIRECTPATH/QUALIFICATION-PROFILE-"
+                ),
+                field,
+            )
+        self.assertIn(
+            "directpath-qualification-record.schema.json",
+            projection["x-qmanSourceRule"],
+        )
+        self.assertIn(
+            "directpath-supported-catalog.schema.json",
+            projection["x-qmanSourceRule"],
+        )
+        self.assertIn(
+            "ASCII(QMAN-DIRECTPATH/QUALIFICATION-PROFILE-PROJECTION/V1)",
+            projection["x-qmanProjectionDigestRule"],
+        )
+
+        self.assertFalse(receipt["additionalProperties"])
+        self.assertEqual(set(receipt["required"]), set(receipt["properties"]))
+        self.assertNotIn("profileHash", receipt["properties"])
+        self.assertNotIn("verificationReceiptHash", receipt["properties"])
+        self.assertEqual(
+            "PORTABLE_QUALIFICATION_PROFILE_VERIFIER_V1",
+            receipt["properties"]["verifierAlgorithmId"]["const"],
+        )
+        schema_bindings = receipt["properties"]["schemaBindings"]
+        self.assertEqual(10, schema_bindings["minItems"])
+        self.assertEqual(10, schema_bindings["maxItems"])
+        self.assertIs(False, schema_bindings["items"])
+        self.assertEqual(
+            [
+                "contracts/directpath-qualification-profile-projection.schema.json",
+                "contracts/directpath-qualification-verification-receipt.schema.json",
+                "contracts/directpath-portable-hash-subjects.schema.json#/$defs/qualificationProfile",
+                "contracts/directpath-qualification-record.schema.json",
+                "contracts/directpath-supported-catalog.schema.json",
+                "contracts/directpath-catalog-rollback-anchor.schema.json",
+                "contracts/directpath-anchor-freshness-envelope.schema.json",
+                "contracts/directpath-trust-root-set.schema.json",
+                "contracts/directpath-trust-key-ring.schema.json",
+                "contracts/directpath-trust-rollback-anchor.schema.json",
+            ],
+            [
+                item["allOf"][1]["properties"]["schemaRef"]["const"]
+                for item in schema_bindings["prefixItems"]
+            ],
+        )
+
+        for definition_name in (
+            "schemaBinding",
+            "qualificationRecordBinding",
+            "e4Closure",
+            "catalogBinding",
+            "catalogAnchorBinding",
+            "catalogFreshnessBinding",
+            "trustBinding",
+        ):
+            definition = receipt["$defs"][definition_name]
+            self.assertFalse(definition["additionalProperties"], definition_name)
+            self.assertEqual(
+                set(definition["required"]),
+                set(definition["properties"]),
+                definition_name,
+            )
+        self.assertEqual(
+            {
+                "qualificationSubjectManifestDigest",
+                "qualificationCaseMatrixSha256",
+                "caseIds",
+                "e4EvidenceHashes",
+                "e4ClosureDigest",
+            },
+            set(receipt["$defs"]["e4Closure"]["required"]),
+        )
+        self.assertIn(
+            "receiptDigest as null",
+            receipt["x-qmanReceiptRule"],
+        )
+        self.assertIn(
+            "QMAN-DIRECTPATH/QUALIFICATION-VERIFICATION-RECEIPT/V1",
+            receipt["x-qmanReceiptRule"],
+        )
+        self.assertIn(
+            "profileHash=null",
+            receipt["x-qmanReceiptRule"],
+        )
+        profile_hash_rule = profile["x-qmanHashRule"]
+        self.assertIn(
+            "directpath-qualification-profile-projection.schema.json",
+            profile_hash_rule,
+        )
+        self.assertIn(
+            "directpath-qualification-verification-receipt.schema.json",
+            profile_hash_rule,
+        )
+        self.assertIn("verificationReceiptHash", profile_hash_rule)
+        self.assertIn("profileHash to null", profile_hash_rule)
+        self.assertIn("acyclic", profile_hash_rule)
+
+        mutated = copy.deepcopy(self.contract)
+        mutated["normativeSources"].remove(
+            "contracts/directpath-qualification-verification-receipt.schema.json"
+        )
+        errors: list[str] = []
+        handoff_validator._validate_wire_schema_closure(mutated, ROOT, errors)
+        self.assertTrue(
+            any(
+                "hash subject QualificationVerificationReceipt" in error
+                and "absent from normativeSources" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_operation_admission_binding_is_closed_normative_and_non_authoritative(self) -> None:
+        schema_path = "contracts/directpath-operation-admission-binding.schema.json"
+        self.assertIn(schema_path, self.contract["normativeSources"])
+        schema = load(schema_path)
+        self.assertFalse(schema["additionalProperties"])
+        self.assertEqual(set(schema["required"]), set(schema["properties"]))
+        self.assertIn("not proof", schema["description"])
+        self.assertIn("UNIQUE", schema["x-qmanAuthorityBoundary"])
+        self.assertIn("same transaction", schema["x-qmanAuthorityBoundary"])
+        self.assertIn("scopeHash", schema["x-qmanHashRule"])
+
+        for definition_name in (
+            "operationLeaseSpec",
+            "availabilityReadSet",
+            "requestReadSet",
+            "currentAuthorityVector",
+        ):
+            definition = schema["$defs"][definition_name]
+            self.assertFalse(definition["additionalProperties"], definition_name)
+            self.assertEqual(
+                set(definition["required"]),
+                set(definition["properties"]),
+                definition_name,
+            )
+
+        subjects = {
+            item["subject"]: item
+            for item in self.contract["canonicalizationContract"]["hashSubjects"]
+        }
+        self.assertEqual(
+            {
+                "schemaRef": schema_path,
+                "digestField": "bindingHash",
+            },
+            {
+                key: subjects["OperationAdmissionBinding"][key]
+                for key in ("schemaRef", "digestField")
+            },
+        )
+        entity = next(
+            item
+            for item in self.contract["dataEntities"]
+            if item["id"] == "ENTITY-OPERATION-ADMISSION-BINDING"
+        )
+        self.assertEqual(schema_path, entity["wireSchema"])
+        self.assertEqual(
+            set(schema["required"]),
+            set(entity["key"]) | set(entity["requiredFields"]),
+        )
+        self.assertEqual(["bindingHash"], entity["key"])
+
+        mutated = copy.deepcopy(self.contract)
+        mutated["normativeSources"].remove(schema_path)
+        errors: list[str] = []
+        handoff_validator._validate_wire_schema_closure(mutated, ROOT, errors)
+        self.assertTrue(
+            any(
+                "OperationAdmissionBinding" in error
+                and "absent from normativeSources" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_static_admission_command_commit_and_authorities_are_closed(self) -> None:
+        command_path = (
+            "contracts/directpath-static-admission-command.schema.json"
+        )
+        commit_path = (
+            "contracts/directpath-committed-static-admission.schema.json"
+        )
+        normative_sources = set(self.contract["normativeSources"])
+        self.assertTrue({command_path, commit_path} <= normative_sources)
+
+        command = load(command_path)
+        committed = load(commit_path)
+        for schema in (command, committed):
+            self.assertFalse(schema["additionalProperties"])
+            self.assertEqual(
+                set(schema["required"]),
+                set(schema["properties"]),
+            )
+
+        forbidden = " ".join(command["x-qmanForbiddenCallerInputs"])
+        for value in (
+            "CurrentAuthorityVector",
+            "CAS expectation",
+            "OperationLease",
+            "OperationAdmissionBinding",
+            "resourceVersion",
+        ):
+            self.assertIn(value, forbidden)
+
+        capability = committed["$defs"]["operationLeaseCapability"]
+        envelope_capability = self.operation_schema["$defs"][
+            "operationLeaseCapability"
+        ]
+        self.assertEqual(
+            set(envelope_capability["required"]),
+            set(capability["required"]),
+        )
+        self.assertEqual(
+            "ASSIGNMENT_PREPARE",
+            capability["properties"]["leaseType"]["const"],
+        )
+        self.assertIn(
+            "admissionBindingHashOrNull",
+            capability["required"],
+        )
+        self.assertEqual(
+            {"operationId", "idempotencyScopeHash", "idempotencyKey"},
+            set(
+                committed["$defs"]["idempotencyNaturalKey"]["required"]
+            ),
+        )
+        self.assertIn(
+            "policyAuthorityResourceVersion",
+            committed["$defs"]["committedResourceVersions"]["required"],
+        )
+
+        subjects = {
+            item["subject"]: item
+            for item in self.contract["canonicalizationContract"][
+                "hashSubjects"
+            ]
+        }
+        self.assertEqual(
+            (command_path, "commandHash"),
+            (
+                subjects["StaticAdmissionCommand"]["schemaRef"],
+                subjects["StaticAdmissionCommand"]["digestField"],
+            ),
+        )
+        self.assertEqual(
+            (commit_path, "resultHash"),
+            (
+                subjects["CommittedStaticAdmission"]["schemaRef"],
+                subjects["CommittedStaticAdmission"]["digestField"],
+            ),
+        )
+
+        entities = {
+            entity["id"]: entity
+            for entity in self.contract["dataEntities"]
+        }
+        for entity_id in (
+            "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+            "ENTITY-AVAILABILITY-AUTHORITY",
+            "ENTITY-IDEMPOTENCY-RECORD",
+            "ENTITY-OPERATION-LEASE",
+        ):
+            with self.subTest(entity_id=entity_id):
+                entity = entities[entity_id]
+                authority = self.authority_entity_schema["$defs"][
+                    entity_id
+                ]
+                self.assertEqual(
+                    set(authority["required"]),
+                    set(entity["key"]) | set(entity["requiredFields"]),
+                )
+        self.assertIn(
+            "admissionBindingHashOrNull",
+            entities["ENTITY-OPERATION-LEASE"]["requiredFields"],
+        )
+
+    def test_query_read_trace_and_query_output_are_closed_and_non_authoritative(
+        self,
+    ) -> None:
+        schema_path = "contracts/directpath-query-read-trace.schema.json"
+        self.assertIn(schema_path, self.contract["normativeSources"])
+        schema = load(schema_path)
+        self.assertFalse(schema["additionalProperties"])
+        self.assertEqual(set(schema["required"]), set(schema["properties"]))
+        self.assertIn("actual canonical bytes", schema["description"])
+
+        for definition_name in (
+            "repositoryTransaction",
+            "selectedScope",
+            "observedInstance",
+            "availabilityFence",
+            "noFence",
+            "predicateObservation",
+            "readState",
+            "capturedReadState",
+            "outputInstance",
+            "zeroWriteWitness",
+        ):
+            definition = schema["$defs"][definition_name]
+            self.assertFalse(definition["additionalProperties"], definition_name)
+            self.assertEqual(
+                set(definition["required"]),
+                set(definition["properties"]),
+                definition_name,
+            )
+
+        observed = schema["$defs"]["observedInstance"]
+        self.assertTrue(
+            {
+                "canonicalInstanceBase64",
+                "instanceBytesSha256",
+                "schemaRef",
+                "sourcePrimaryKey",
+                "observationDigest",
+            }.issubset(observed["required"])
+        )
+        self.assertIn("not a decoder", observed["x-qmanObservedInstanceRule"])
+
+        predicates = schema["$defs"]["predicateObservation"]["properties"][
+            "predicateId"
+        ]["enum"]
+        self.assertEqual(9, len(predicates))
+        predicate_set = schema["$defs"]["readState"]["properties"][
+            "predicateObservations"
+        ]
+        self.assertEqual(9, predicate_set["minItems"])
+        self.assertEqual(9, predicate_set["maxItems"])
+
+        witness = schema["$defs"]["zeroWriteWitness"]
+        self.assertTrue(
+            witness["properties"]["databaseEnforcedReadOnly"]["const"]
+        )
+        self.assertEqual(0, witness["properties"]["writeStatementCount"]["const"])
+        self.assertEqual(0, witness["properties"]["affectedRowCount"]["const"])
+        self.assertEqual(
+            0,
+            witness["properties"]["repositoryMutationInstances"]["maxItems"],
+        )
+        self.assertEqual(
+            0,
+            witness["properties"]["hostSideEffectInvocations"]["maxItems"],
+        )
+
+        output_instance = schema["$defs"]["outputInstance"]
+        self.assertNotIn("traceDigest", output_instance["properties"])
+        self.assertIn("no fixed point", output_instance["x-qmanOutputRule"])
+        self.assertTrue(
+            any(
+                "before.state and after.state must be byte-equal" in rule
+                for rule in schema["x-qmanEqualityRules"]
+            )
+        )
+        self.assertIn("PRODUCT C15 remains blocked", schema["x-qmanAuthorityBoundary"])
+
+        subjects = {
+            item["subject"]: item
+            for item in self.contract["canonicalizationContract"]["hashSubjects"]
+        }
+        self.assertEqual(
+            {
+                "schemaRef": schema_path,
+                "digestField": "traceDigest",
+            },
+            {
+                key: subjects["QueryReadTrace"][key]
+                for key in ("schemaRef", "digestField")
+            },
+        )
+
+        query_output = self.operation_payload_schema["$defs"][
+            "output_OP_QUERY_DIRECTPATH"
+        ]
+        self.assertTrue(
+            {
+                "capabilityDecisionHash",
+                "semanticDependencyHash",
+                "queryStateHash",
+            }.issubset(query_output["required"])
+        )
+        for field in (
+            "bundleSummaries",
+            "leaseSummaries",
+            "reasons",
+            "evidenceRefs",
+        ):
+            self.assertIn(
+                "CANONICAL-JSON-V1",
+                query_output["properties"][field]["x-qmanSetOrder"],
+                field,
+            )
+        self.assertIn(
+            "no traceDigest",
+            query_output["x-qmanDeterministicOutputRule"],
+        )
+
+        query_operation = next(
+            operation
+            for operation in self.contract["backendNeutralOperations"]
+            if operation["id"] == "OP-QUERY-DIRECTPATH"
+        )
+        self.assertEqual("NONE", query_operation["sideEffect"])
+        self.assertEqual("READ_ONLY", query_operation["idempotency"])
+        self.assertIn(
+            "database-enforced read-only",
+            " ".join(query_operation["postconditions"]),
+        )
+
+        mutated = copy.deepcopy(self.contract)
+        mutated["normativeSources"].remove(schema_path)
+        errors: list[str] = []
+        handoff_validator._validate_wire_schema_closure(mutated, ROOT, errors)
+        self.assertTrue(
+            any(
+                "QueryReadTrace" in error
+                and "absent from normativeSources" in error
+                for error in errors
+            ),
             errors,
         )
 

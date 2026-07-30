@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "QMAN-DIRECTPATH-PORTABLE-CONTROL",
-  "revision": "2026-07-23.11",
+  "revision": "2026-07-30.1",
   "subject": "QMAN_V3_DIRECTPATH_PORTABLE_IMPLEMENTATION",
   "purpose": "A target-repository-independent implementation contract for VMware-aligned Static, Dynamic, managed-owner, lifecycle, and dual-online-host cold-relocation behavior.",
   "normativeSources": [
@@ -11,6 +11,7 @@
     "contracts/product-decisions.json",
     "contracts/vmware-behavior-model.json",
     "contracts/compatibility-profile-policy.json",
+    "contracts/directpath-capability-policy.schema.json",
     "contracts/directpath-acceptance-scenario.schema.json",
     "contracts/directpath-acceptance-case-contract.schema.json",
     "contracts/directpath-acceptance-case-contracts.json",
@@ -22,13 +23,25 @@
     "contracts/directpath-execution-evidence-index.schema.json",
     "contracts/directpath-operation-envelope.schema.json",
     "contracts/directpath-operation-payload.schema.json",
+    "contracts/directpath-query-read-trace.schema.json",
+    "contracts/directpath-host-snapshot-publication-trace.schema.json",
+    "contracts/directpath-host-snapshot-rollback-anchor.schema.json",
+    "contracts/directpath-operation-admission-binding.schema.json",
+    "contracts/directpath-static-admission-command.schema.json",
+    "contracts/directpath-committed-static-admission.schema.json",
     "contracts/directpath-authority-entities.schema.json",
+    "contracts/directpath-inventory-verification-receipt.schema.json",
+    "contracts/directpath-inventory-verifier-algorithm.schema.json",
     "contracts/directpath-portable-entities.schema.json",
+    "contracts/directpath-dependency-closure-request.schema.json",
+    "contracts/directpath-reset-contract-set.schema.json",
     "contracts/directpath-identity-v1.schema.json",
     "contracts/directpath-identity-v1.golden-vectors.json",
     "contracts/directpath-portable-hash-subjects.schema.json",
     "contracts/directpath-assignment-manifest-v2.schema.json",
     "contracts/directpath-clean-release-receipt.schema.json",
+    "contracts/directpath-qualification-profile-projection.schema.json",
+    "contracts/directpath-qualification-verification-receipt.schema.json",
     "contracts/directpath-qualification-record.schema.json",
     "contracts/directpath-qualification-measurement.schema.json",
     "contracts/directpath-qualification-run-request.schema.json",
@@ -51,6 +64,7 @@
     "contracts/directpath-qualification-release-index.schema.json",
     "contracts/directpath-integration-report.schema.json",
     "contracts/qman-integration-map.schema.json",
+    "tools/generate_directpath_portable_package.py",
     "tools/generate_directpath_case_contracts.py",
     "tools/validate_portable_handoff.py",
     "vmware-directpath-acceptance-test-plan.md",
@@ -60,12 +74,12 @@
     {
       "path": "qemu-static-dynamic-directpath-design.md",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:177dfe0baad0a3539f1a20744347b7d9e152abd32a0a3aa6da364044604975ee"
+      "sha256": "sha256:bb4e9858309485be9d7d17342b48f4c168d96e3b9777459c6290f81ec311519f"
     },
     {
       "path": "qman-directpath-implementation-blueprint.md",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:0072efdffabf98a8356870e6b963c280966a132520b8e4c8beb129c102562164"
+      "sha256": "sha256:be9a1f4739f7fa0354290b875a71bfdd27b378e9d2b08365f221d1833a8b0f3c"
     },
     {
       "path": "contracts/ipd-tree.json",
@@ -80,7 +94,7 @@
     {
       "path": "contracts/vmware-behavior-model.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:532573fcb0cf9113c138d5c95275050b3882ccf5658e5f2a885046875f1e6b8b"
+      "sha256": "sha256:4e50645dcbf9436f9f57c028b7df51ddb484810c87933e43eac10ba3d87d1f88"
     },
     {
       "path": "contracts/compatibility-profile-policy.json",
@@ -88,19 +102,24 @@
       "sha256": "sha256:d81788f60bbdacaa4b05106fb04780e351f117888bb13bc8750e1291f3a9eaa2"
     },
     {
+      "path": "contracts/directpath-capability-policy.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:fc22b5535db3627719e31f4aa8eb4db4467fa04e4218c31a6c20820e2da0d46d"
+    },
+    {
       "path": "contracts/directpath-acceptance-scenario.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:51cbddaca3a6ba0d468b6cd4e3533b21a4d40ea5a5eb1de008961d5a8b9376ca"
+      "sha256": "sha256:009671c131046b2f76ef95444e36e68bfe06f3cf9646b2413d908a1750e208d2"
     },
     {
       "path": "contracts/directpath-acceptance-case-contract.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:4f9cac4c84f40ee73ac300534a130cf10bb7ab5ce865038dce0530a5130ef063"
+      "sha256": "sha256:95b724b353a9b093394e2093b29714857a88bff8647baa2552f63aeba8e8105b"
     },
     {
       "path": "contracts/directpath-acceptance-case-contracts.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:f646e11c5f31205c970500ec77781913933fdb7c6717e512dd3c7c74c25ee691"
+      "sha256": "sha256:39db66ed1847a56e8737292ce70f8ea7ad8c353d32f57636d0d3620b638e73c1"
     },
     {
       "path": "contracts/directpath-case-completion-record.schema.json",
@@ -135,27 +154,77 @@
     {
       "path": "contracts/directpath-operation-envelope.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:6e9545f440be290d623c7914f533423cce1a70eabb9ad170bfd9388ff4b9cbbc"
+      "sha256": "sha256:a34aaa199809129c02491b0cd445756223552eccb9feeb5cb50fc99b9e43056e"
     },
     {
       "path": "contracts/directpath-operation-payload.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b"
+      "sha256": "sha256:d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea"
+    },
+    {
+      "path": "contracts/directpath-query-read-trace.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:58430f674f2da0e54fe9366ee3a7ddd4ea0fcf605327150471d638019075f943"
+    },
+    {
+      "path": "contracts/directpath-host-snapshot-publication-trace.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63"
+    },
+    {
+      "path": "contracts/directpath-host-snapshot-rollback-anchor.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:93bf9de4a26c8bb7c7537287351d64183c008cf946c3b2e2d5c9f45e3adad18c"
+    },
+    {
+      "path": "contracts/directpath-operation-admission-binding.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:75b2d1bcf0a8223e024fdbcc2093356fbf07b010a7f067a13d905941fd9abb5a"
+    },
+    {
+      "path": "contracts/directpath-static-admission-command.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:ed6ea5fd90845a4d9ba1b5b758058d9d3827a95ad0a6d4b94f0888238db7acc6"
+    },
+    {
+      "path": "contracts/directpath-committed-static-admission.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:f1e2dc251558c7628ac5b74bbcc209e061335f2075d469f7b1025c00ef5fcde9"
     },
     {
       "path": "contracts/directpath-authority-entities.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:50caf006f55295fd527ab8c0a9d59791997014390209d98f263e2285fb45f1af"
+      "sha256": "sha256:a95ea1412ca5fad5f2f5e90c0da912cf1be4cd29ce4d8f37ca852d42ce5d5a6a"
+    },
+    {
+      "path": "contracts/directpath-inventory-verification-receipt.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:245fb70b77bebc2c8e9b4229966a03306a17f4ab06597aee34e9390186537adb"
+    },
+    {
+      "path": "contracts/directpath-inventory-verifier-algorithm.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:903a8b2bd750e7c3078f7edd7f56077a8832d7eb1852520fef74661137579221"
     },
     {
       "path": "contracts/directpath-portable-entities.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:2ee6d1bc7bc08ed515c16d326302a2242a42e47a90b7acf559257b5391b0cede"
+      "sha256": "sha256:fe4123596d622b5c06974f6f3a34effa1494c4dfd985ef1afe4d2d1b42767b01"
+    },
+    {
+      "path": "contracts/directpath-dependency-closure-request.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:d7939c808fd9f5af18940362fedf4257898be3b7bacc353bedbcf5be810d9f5e"
+    },
+    {
+      "path": "contracts/directpath-reset-contract-set.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:eddde42407a519856d4a95fe658c2b45de8470343d4c18641f5cde893c205336"
     },
     {
       "path": "contracts/directpath-identity-v1.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:33a50b15cf7ed0efd285b0050e8a1d71f96791ec7214d5a3cb05421a69d9766e"
+      "sha256": "sha256:179e985446b7f7e1fefa1c9f49a2785eb0d1484c7d63b6f40ab5880bce371eb1"
     },
     {
       "path": "contracts/directpath-identity-v1.golden-vectors.json",
@@ -165,7 +234,7 @@
     {
       "path": "contracts/directpath-portable-hash-subjects.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:ea627d3b806ef953da88053e7d4ff8a806aa32581ee0a032779cbc27930615c4"
+      "sha256": "sha256:844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7"
     },
     {
       "path": "contracts/directpath-assignment-manifest-v2.schema.json",
@@ -176,6 +245,16 @@
       "path": "contracts/directpath-clean-release-receipt.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
       "sha256": "sha256:ba5d7a57fab55c9222b4123794c94290b459793bd1b5000cdcb3c29f5f800ba2"
+    },
+    {
+      "path": "contracts/directpath-qualification-profile-projection.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:080414fb627026878e9a040a37103cba946b24b2d89b79e24f8bb35bb544c520"
+    },
+    {
+      "path": "contracts/directpath-qualification-verification-receipt.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:2b536865da3292656846afab6fc22fe21829b2f315a51b5515a7fd2c9a90248d"
     },
     {
       "path": "contracts/directpath-qualification-record.schema.json",
@@ -235,7 +314,7 @@
     {
       "path": "contracts/directpath-supported-catalog.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:9cd5c352411f864f2ab403182c2d4b5d2d5246d617cb8f3a31a8ececdaa2f5ae"
+      "sha256": "sha256:2721648e52f9c6d63a27a2ce6615b42fc86dc097b9b98c682e1d667859b35ebd"
     },
     {
       "path": "contracts/directpath-target-symbol-index.schema.json",
@@ -265,7 +344,7 @@
     {
       "path": "contracts/directpath-anchor-freshness-envelope.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:8f7d613b3e23337df8450e56c2469b183a1e53b1b4b07eec9a9e6ebe1f3bb035"
+      "sha256": "sha256:c69c1015cf8d9212a1f563460fd3bea0e981697f9991206f89c215f4f3cb0951"
     },
     {
       "path": "contracts/directpath-catalog-rollback-anchor.schema.json",
@@ -285,17 +364,22 @@
     {
       "path": "contracts/qman-integration-map.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:61db28e0b009e742491c29d0b49e7a1f21ceda0bc7696e8e0bd779553c114e3f"
+      "sha256": "sha256:b3a1326389dbfd1ac9a01cec515a0830310cd4376f66bdce1eb7f96a4d8ad85a"
+    },
+    {
+      "path": "tools/generate_directpath_portable_package.py",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:bdf8b99c772725c2da166ab5dfdfbe49147e55bf39ea1e7cc4033d77da104fda"
     },
     {
       "path": "tools/generate_directpath_case_contracts.py",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:9f7c64b43c0b8ff4e1a360261d1a08b91b456ef543ed029714128892e97afe34"
+      "sha256": "sha256:510fc5284a190ac7e38aa75946ad443d5fe85ac3bc2020d552f26986ee8b8ca0"
     },
     {
       "path": "tools/validate_portable_handoff.py",
       "hashScope": "GIT_BLOB_BYTES",
-      "sha256": "sha256:340f57d1c8284f039db6f58507123412f43bbe768499e6ba882f86b8983df34e"
+      "sha256": "sha256:cad99309b5e284d9cdac55a79d294a54d6897e24a9d4ba0d6d4574079c82c803"
     },
     {
       "path": "vmware-directpath-acceptance-test-plan.md",
@@ -305,7 +389,7 @@
     {
       "path": "acceptance/cases",
       "hashScope": "REPOSITORY_TREE_V1",
-      "sha256": "sha256:f7881a42ddc546cb466a4e4a1a3904a3cd92f31bccb7700c077754a7e3d28f2b"
+      "sha256": "sha256:88adef2bfaf3deee4f6175de385f1960474c6f4875b3e716f3418224457fcb2f"
     }
   ],
   "normativeSourceClosureRule": {
@@ -758,14 +842,149 @@
         "digestField": "contentHash"
       },
       {
+        "subject": "HostInventoryCaptureBatch",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/captureBatch",
+        "digestField": "captureBatchDigest"
+      },
+      {
+        "subject": "HostTopologySemanticProjection",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/topologyProjection",
+        "digestField": "topologyDigest"
+      },
+      {
+        "subject": "HostDeviceSemanticProjection",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/deviceSemanticProjection",
+        "digestField": "deviceSemanticDigest"
+      },
+      {
+        "subject": "HostProviderSemanticProjection",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/providerSemanticProjection",
+        "digestField": "providerFactsDigest"
+      },
+      {
+        "subject": "HostSnapshotNoChangeProjection",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/noChangeProjection",
+        "digestField": "noChangeProjectionHash"
+      },
+      {
+        "subject": "HostSnapshotFreshnessDecision",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/freshnessDecision",
+        "digestField": "decisionDigest"
+      },
+      {
+        "subject": "HostSnapshotRollbackAnchor",
+        "schemaRef": "contracts/directpath-host-snapshot-rollback-anchor.schema.json",
+        "digestField": "anchorDigest"
+      },
+      {
+        "subject": "HostSnapshotRollbackAuthorityPreflightReceipt",
+        "schemaRef": "contracts/directpath-host-snapshot-rollback-anchor.schema.json#/$defs/rollbackAuthorityPreflightReceipt",
+        "digestField": "receiptDigest"
+      },
+      {
+        "subject": "HostSnapshotPublicationCasExpectation",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/snapshotPublicationCasExpectation",
+        "digestField": "expectationHash"
+      },
+      {
+        "subject": "HostSnapshotPublicationResolvedAuthorityVector",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/snapshotPublicationResolvedAuthorityVector",
+        "digestField": "resolvedAuthorityVectorHash"
+      },
+      {
+        "subject": "HostSnapshotPublicationAuditRecord",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/publicationAuditRecord",
+        "digestField": "auditDigest"
+      },
+      {
+        "subject": "HostSnapshotPublicationOutboxRecord",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/publicationOutboxRecord",
+        "digestField": "outboxDigest"
+      },
+      {
+        "subject": "HostSnapshotRepositoryCommitRecord",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/repositoryCommitRecord",
+        "digestField": "commitRecordDigest"
+      },
+      {
+        "subject": "HostSnapshotVisibilityProbe",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/visibilityProbe",
+        "digestField": "probeDigest"
+      },
+      {
+        "subject": "HostSnapshotPublicationTrace",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "digestField": "traceDigest"
+      },
+      {
         "subject": "DeviceRecord identity",
         "schemaRef": "contracts/directpath-identity-v1.schema.json",
         "digestField": "identityFingerprint (derived output)"
       },
       {
+        "subject": "DeviceRecord",
+        "schemaRef": "contracts/directpath-portable-entities.schema.json#/$defs/ENTITY-DEVICE-RECORD",
+        "digestField": "deviceRecordHash"
+      },
+      {
+        "subject": "InventoryVerifierAlgorithmIdentity",
+        "schemaRef": "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "digestField": "algorithmIdentityDigest"
+      },
+      {
+        "subject": "InventoryVerificationReceipt",
+        "schemaRef": "contracts/directpath-inventory-verification-receipt.schema.json",
+        "digestField": "receiptDigest"
+      },
+      {
+        "subject": "CapabilityPolicy",
+        "schemaRef": "contracts/directpath-capability-policy.schema.json",
+        "digestField": "policyHash"
+      },
+      {
+        "subject": "DependencyClosureRequest",
+        "schemaRef": "contracts/directpath-dependency-closure-request.schema.json",
+        "digestField": "requestDigest (derived output)"
+      },
+      {
+        "subject": "ResetContractSet",
+        "schemaRef": "contracts/directpath-reset-contract-set.schema.json",
+        "digestField": "contentHash (derived output)"
+      },
+      {
+        "subject": "QualificationVerificationReceipt",
+        "schemaRef": "contracts/directpath-qualification-verification-receipt.schema.json",
+        "digestField": "receiptDigest"
+      },
+      {
         "subject": "QualificationProfile",
         "schemaRef": "contracts/directpath-portable-hash-subjects.schema.json#/$defs/qualificationProfile",
         "digestField": "profileHash"
+      },
+      {
+        "subject": "QualificationProfileSemantics",
+        "schemaRef": "contracts/directpath-qualification-profile-projection.schema.json",
+        "digestField": "profileSemanticDigest (derived output)"
+      },
+      {
+        "subject": "OperationAdmissionBinding",
+        "schemaRef": "contracts/directpath-operation-admission-binding.schema.json",
+        "digestField": "bindingHash"
+      },
+      {
+        "subject": "QueryReadTrace",
+        "schemaRef": "contracts/directpath-query-read-trace.schema.json",
+        "digestField": "traceDigest"
+      },
+      {
+        "subject": "StaticAdmissionCommand",
+        "schemaRef": "contracts/directpath-static-admission-command.schema.json",
+        "digestField": "commandHash"
+      },
+      {
+        "subject": "CommittedStaticAdmission",
+        "schemaRef": "contracts/directpath-committed-static-admission.schema.json",
+        "digestField": "resultHash"
       },
       {
         "subject": "DependencyBundle",
@@ -813,7 +1032,7 @@
         "digestField": "bundleDigest"
       }
     ],
-    "hashSubjectRule": "Every schemaRef is a closed normative projection. Target storage may add local columns outside these descriptors, but cross-port messages, CAS compare values, signatures, plan/launch authorization and audit references use only the declared canonical descriptor/digest. A target IDL binding must preserve names, types, nullability and set/order semantics or report CONFLICT."
+    "hashSubjectRule": "Every schemaRef is a closed normative projection. Each subject schema's x-qmanHashRule is the algorithm authority; null-field projections, domain-separated projections, and direct complete-object hashes are distinct and must not be guessed from a generic rule. A '(derived output)' digestField is returned by the deterministic core and is not an internal wire property. Target storage may add local columns outside these descriptors, but cross-port messages, CAS compare values, signatures, plan/launch authorization and audit references use only the declared canonical descriptor/digest. A target IDL binding must preserve names, types, nullability and set/order semantics or report CONFLICT."
   },
   "safetyGuards": [
     {
@@ -835,12 +1054,13 @@
         "hostEpoch",
         "runGenerationOrNull",
         "holderControllerGeneration",
+        "admissionBindingHashOrNull",
         "resourceVersion"
       ],
-      "rule": "The exact typed operation lease commits under global CAS before the first owner, driver, reset, VFIO, QEMU, or cleanup side effect; a lease of another type never authorizes the action.",
+      "rule": "The exact typed operation lease commits under global CAS before the first owner, driver, reset, VFIO, QEMU, or cleanup side effect; a lease of another type never authorizes the action. ASSIGNMENT_PREPARE carries the exact non-null admissionBindingHashOrNull of its one immutable OperationAdmissionBinding; every other current lease type carries null.",
       "ownerTransitionRule": "OWNER_TRANSITION is acquired for the complete ownerActivationGroup before any member is unbound or rebound.",
       "failureRule": "Lease acquisition conflict produces no host side effect; loss or ambiguity after a side effect enters reconcile and retains/quarantines the complete scope.",
-      "executorValidationRule": "Every side-effecting port receives and validates the sealed typed operation capability {operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion}; it must match the live global row, exact run/intent and local journal scope before each first/non-idempotent side effect. A BundleLease ID, maintenance token, caller role, or raw controller request is never a substitute."
+      "executorValidationRule": "Every side-effecting port receives and validates the sealed typed operation capability {operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull}; it must match the live global row, exact run/intent, admission binding and local journal scope before each first/non-idempotent side effect. For ASSIGNMENT_PREPARE the non-null binding hash must resolve to the unique immutable binding created with that lease; scopeHash is never a substitute. A BundleLease ID, maintenance token, caller role, or raw controller request is never a substitute."
     },
     {
       "id": "GUARD-RELEASE-OWNERSHIP",
@@ -1412,7 +1632,50 @@
         "lastObservedAt",
         "resourceVersion"
       ],
-      "immutability": "Boot or agent-authority replacement increments hostEpoch/generation. ONLINE or heartbeat state is scheduling evidence only and never proves physical clean release."
+      "immutability": "The only unpublished-incarnation state is lastSnapshotEpoch=0, currentSnapshotContentHash=null and RECONCILING; it is a durable CAS predecessor and never current snapshot authority. Boot or agent-authority replacement increments hostEpoch/generation and returns to that state. OP-CAPTURE exact-preserves hostId, hostEpoch, kernelBootId, agentIdentity, agentGeneration and cooperationState; it may change only the snapshot pointer, lastObservedAt=captureCompletedAt and resourceVersion, and cannot promote RECONCILING. A changed semantic projection or an equal projection at a freshness threshold compares predecessor resourceVersion r and atomically commits the complete DeviceRecord set, signed snapshot, HostAuthority pointer at r+1, global AvailabilityAuthority fence, audit and outbox. Equal semantics strictly before both thresholds writes nothing. Planning additionally requires the matching independently COMMITTED and fresh HostSnapshot rollback anchor; an unfinalized reservation, ONLINE label or heartbeat alone never proves authority or physical clean release."
+    },
+    {
+      "id": "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+      "wireSchema": "contracts/directpath-authority-entities.schema.json#/$defs/ENTITY-CAPABILITY-POLICY-AUTHORITY",
+      "key": [
+        "policyAuthorityId"
+      ],
+      "requiredFields": [
+        "policyId",
+        "policyVersion",
+        "policyDigest",
+        "resourceVersion"
+      ],
+      "immutability": "This is the repository current-policy pointer, not the immutable policy document itself. Activation, replacement, or rollback compares the exact predecessor resourceVersion and atomically advances it; withdrawal removes the current pointer under the same exact CAS, and no guarded decision proceeds without a live pointer. policyVersion is never reused for different bytes. Every guarded decision and admission binds policyAuthorityId, policyId, policyVersion, policyDigest, and resourceVersion from one coherent current read."
+    },
+    {
+      "id": "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY",
+      "wireSchema": "contracts/directpath-authority-entities.schema.json#/$defs/ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY",
+      "key": [
+        "freshnessPolicyAuthorityId"
+      ],
+      "requiredFields": [
+        "policyId",
+        "policyVersion",
+        "policyDigest",
+        "resourceVersion"
+      ],
+      "immutability": "This is the sole repository current HostSnapshot freshness-policy pointer, not the immutable policy document itself. Activation, replacement, or rollback compares the exact predecessor resourceVersion and advances it once; policyVersion is never reused for different bytes. OP-CAPTURE reads and compares freshnessPolicyAuthorityId, policyId, policyVersion, policyDigest, and resourceVersion in the same SERIALIZABLE transaction as HostAuthority and AvailabilityAuthority. A request-selected, stale, target-local, or trace-only policy cannot decide NO_CHANGE."
+    },
+    {
+      "id": "ENTITY-AVAILABILITY-AUTHORITY",
+      "wireSchema": "contracts/directpath-authority-entities.schema.json#/$defs/ENTITY-AVAILABILITY-AUTHORITY",
+      "key": [
+        "availabilityAuthorityId"
+      ],
+      "requiredFields": [
+        "clusterId",
+        "authorityScope",
+        "lastMutationDigest",
+        "lastMutatedAt",
+        "resourceVersion"
+      ],
+      "immutability": "Revision 2026-07-30.1 deliberately uses one conservative GLOBAL_DIRECTPATH_AVAILABILITY row per cluster. Every mutation that can change an availability predicate, selected member version, claim, lease, quarantine, host snapshot, health, owner, generation, or dependency membership locks and advances this row in the same serializable transaction. Admission compares the same row before commit, preventing absence phantoms; narrower fences are forbidden until a later closed overlap-vector contract proves complete coverage."
     },
     {
       "id": "ENTITY-HOST-SNAPSHOT",
@@ -1436,13 +1699,14 @@
         "deviceRecordDigests",
         "providerFactsDigest",
         "policyHash",
+        "snapshotFreshnessPolicyHash",
         "keyRingVersion",
         "signerKeyId",
         "signature",
         "contentHash"
       ],
       "wireSchema": "contracts/directpath-portable-hash-subjects.schema.json#/$defs/hostSnapshot",
-      "immutability": "Content is immutable and signed by HOST_INVENTORY_EVIDENCE authority; a changed observation creates a new epoch. Publication atomically advances ENTITY-HOST-AUTHORITY's current snapshot pointer, and an older correctly signed snapshot cannot authorize new planning or side effects."
+      "immutability": "Content is immutable and signed by HOST_INVENTORY_EVIDENCE authority. The closed no-change projection excludes capture time and evidence transport while retaining every behavioral topology/provider/policy fact; equal projection writes no epoch. Changed projection reads predecessor resourceVersion r, signs hostAuthorityResourceVersion=r+1, compares HostAuthority r and the global AvailabilityAuthority in one serializable transaction, and atomically commits the complete DeviceRecord set, snapshot, both authority rows, audit and outbox. The predecessor operand is never a final snapshot version. Even a correctly signed snapshot cannot authorize planning or side effects unless it is the exact current pointer and exact live external rollback-anchor/freshness subject."
     },
     {
       "id": "ENTITY-DEVICE-RECORD",
@@ -1462,6 +1726,7 @@
         "role",
         "iommuProvider",
         "physicalIsolationDomain",
+        "dependencyDomains",
         "dependencyActions",
         "resetContract",
         "owner",
@@ -1474,7 +1739,7 @@
         "deviceRecordHash"
       ],
       "wireSchema": "contracts/directpath-portable-entities.schema.json#/$defs/ENTITY-DEVICE-RECORD",
-      "immutability": "deviceUid binds immutable identity; BDF is a locator and never identity."
+      "immutability": "schemaVersion=3 is the current V3 wire and a hard current-authority cutover: V1/V2 records cannot become current, and the first V3 publication is one complete full-host successor. deviceUid binds immutable identity; BDF is a locator and never identity. role.pciStructureFact retains and deterministically replays the exact 256-byte conventional PCI configuration capture, including the unmasked header-type byte; resetContract.pciFlrCapabilityFact is derived from that same structure fact and is never a caller-declared capability. Both nested facts bind unique same-capture provider rows before role or reset eligibility is consumed. dependencyDomains remains the exactly-seven typed closure source with per-domain and per-edge provenance; flat dependencyActions is a compatibility projection and never supplies a dependency kind."
     },
     {
       "id": "ENTITY-TRUST-KEY-RING",
@@ -2010,7 +2275,8 @@
       "id": "ENTITY-IDEMPOTENCY-RECORD",
       "wireSchema": "contracts/directpath-authority-entities.schema.json#/$defs/ENTITY-IDEMPOTENCY-RECORD",
       "key": [
-        "scope",
+        "operationId",
+        "idempotencyScopeHash",
         "idempotencyKey"
       ],
       "requiredFields": [
@@ -2018,9 +2284,10 @@
         "state",
         "runId",
         "responseHash",
-        "expiresAt"
+        "expiresAt",
+        "resourceVersion"
       ],
-      "immutability": "The same key and hash replay the same run/result; the same key with a different hash is rejected."
+      "immutability": "The natural key is the exact [operationId,idempotencyScopeHash,idempotencyKey] from the sealed request envelope or repository-derived Static admission scope. The same key and request hash replay the same run/result byte-for-byte; the same key with a different hash is rejected. IN_PROGRESS to COMPLETED compares and increments resourceVersion in the same transaction as the committed result; COMPLETED replay is read-only and cannot create a second run or lease."
     },
     {
       "id": "ENTITY-OPERATION-LEASE",
@@ -2037,10 +2304,41 @@
         "hostEpoch",
         "runGenerationOrNull",
         "holderControllerGeneration",
+        "admissionBindingHashOrNull",
         "state",
         "resourceVersion"
       ],
-      "immutability": "A typed lease authorizes exactly one operation kind and complete scope; changing type or scope requires a new CAS acquisition."
+      "immutability": "A typed lease authorizes exactly one operation kind and complete scope; changing type or scope requires a new CAS acquisition. ASSIGNMENT_PREPARE carries one non-null admissionBindingHashOrNull and is created atomically with that immutable one-to-one binding; every other current lease type carries null. The host revalidates exact live equality before its first covered side effect."
+    },
+    {
+      "id": "ENTITY-OPERATION-ADMISSION-BINDING",
+      "wireSchema": "contracts/directpath-operation-admission-binding.schema.json",
+      "key": [
+        "bindingHash"
+      ],
+      "requiredFields": [
+        "subjectType",
+        "schemaVersion",
+        "guardedCapabilityReadDigest",
+        "capabilityDecisionHash",
+        "authorizationDigest",
+        "authorizationAuthorityVectorDigest",
+        "authorizationEvaluatedAt",
+        "authorizationValidUntil",
+        "authorityDisposition",
+        "authorityBoundary",
+        "productAuthorized",
+        "authorizationBlockers",
+        "beforeAuthorityVectorDigest",
+        "afterAuthorityVectorDigest",
+        "requestReadSetDigest",
+        "availabilityReadSetDigest",
+        "operationLeaseSpec",
+        "casExpectationHash",
+        "evidenceBlobReferences",
+        "validUntil"
+      ],
+      "immutability": "This one-to-one companion is created in the same product repository transaction as its OperationLease and retains the exact decision, authorization, component authority disposition/blockers, read-set/vector evidence, lease specification, CAS expectation and exclusive validity horizon. The portable binding is permanently productAuthorized=false; its self-hash proves only deterministic relationships, while Qman repository serialization, the committed live lease and pre-side-effect revalidation remain independent product authorities."
     },
     {
       "id": "ENTITY-RELEASE-OWNERSHIP-GUARD",
@@ -2129,13 +2427,15 @@
         "six-layer capability/status view",
         "bundle and lease summary",
         "stable reasons",
-        "evidence identities"
+        "evidence identities",
+        "capability decision, semantic dependency, and query-state hashes correlated to one raw QueryReadTrace"
       ],
       "preconditions": [
         "Authorization is evaluated before existence disclosure."
       ],
       "postconditions": [
-        "No device, owner, lease, QEMU, or FSM state changes."
+        "No device, owner, lease, QEMU, or FSM state changes.",
+        "The product repository transaction is database-enforced read-only; before/after read state bytes, repository commit clock, host journal head, side-effect counters, and reset observations remain equal."
       ],
       "failureReasonCodes": [
         "DEVICE_NOT_IN_INVENTORY",
@@ -2212,7 +2512,7 @@
         "planned run",
         "sealed authorization",
         "expected versions and generations",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "ATTACHED AssignmentManifest or FREE/QUARANTINED failure result"
@@ -2267,26 +2567,41 @@
       "id": "OP-CAPTURE-HOST-SNAPSHOT",
       "ownerPortId": "PORT-INVENTORY-SNAPSHOT",
       "sideEffect": "OBSERVATION_ONLY",
-      "idempotency": "NEW_EPOCH_WHEN_CONTENT_CHANGES",
+      "idempotency": "NEW_EPOCH_WHEN_SEMANTICS_CHANGE_OR_FRESHNESS_THRESHOLD_IS_REACHED",
       "input": [
         "hostId",
         "kernelBootId",
         "current HostAuthority host epoch, agent generation, snapshot pointer, and resource version",
-        "current trusted key ring and out-of-band root/rollback-anchor state"
+        "current global AvailabilityAuthority resource version",
+        "current trusted key ring and out-of-band root/trust rollback-anchor state",
+        "current external HostSnapshot rollback anchor and verifier-nonce freshness response, or explicit genesis absence",
+        "maximum signed-snapshot and mandatory-evidence ages in integer microseconds"
       ],
       "output": [
+        "actual raw OP-CAPTURE request/result envelope and payload bytes",
+        "actual canonical full-host capture batch and versioned provider outputs",
+        "complete canonical predecessor DeviceRecord V3 set when a current snapshot exists",
+        "complete canonical after DeviceRecord V3 set",
         "canonical immutable HostSnapshot",
         "content hash",
         "HOST_INVENTORY_EVIDENCE signature and key-ring binding",
         "atomically advanced current HostAuthority snapshot pointer",
+        "atomically advanced global AvailabilityAuthority fence",
+        "committed external HostSnapshot rollback anchor and live freshness response",
+        "publication trace, transaction commit and zero-partial-writes witness",
         "provenance per fact"
       ],
       "preconditions": [
-        "All collectors bind to the same boot identity and collection barrier."
+        "All collectors bind to the same boot identity and collection barrier.",
+        "The external HostSnapshot rollback authority is independent of the target repository, controller, evidence store and integration map.",
+        "Any repository-committed but unfinalized reservation is recovered by reservationId plus candidateProjectionDigest before NO_CHANGE may be returned."
       ],
       "postconditions": [
         "Missing or contradictory mandatory facts are UNKNOWN with provenance, never permissive defaults.",
-        "Snapshot creation and HostAuthority lastSnapshotEpoch/currentSnapshotContentHash advancement are one CAS transaction; a replayed older snapshot is not current authority."
+        "A changed semantic projection commits SUCCESSOR_COMMITTED; an equal projection at either inclusive microsecond freshness threshold commits REFRESH_COMMITTED. Both atomically publish the complete DeviceRecord set, signed snapshot, unchanged-incarnation/cooperation HostAuthority pointer, global AvailabilityAuthority fence, audit and outbox; no partial epoch is observable.",
+        "An equal topology/provider/policy projection strictly before both freshness thresholds performs zero repository and external-anchor writes as NO_CHANGE.",
+        "PREPARED is not authority: repository rollback only aborts/expires it, while a post-COMMIT crash is idempotently finalized from the retained exact candidate.",
+        "A replayed older snapshot, stale anchor, copied freshness response or anchor-finalization gap is not current planning/side-effect authority."
       ],
       "failureReasonCodes": [
         "SNAPSHOT_INCOMPLETE",
@@ -2416,7 +2731,7 @@
         "durable intent and lease",
         "expected snapshot and resource versions",
         "current controller generation",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "ACTIVE readback, PENDING_REBOOT intent, verified rollback, or QUARANTINED result"
@@ -2445,7 +2760,7 @@
         "pending activation intent",
         "current boot identity",
         "HostSnapshot",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "ACTIVE, FAILED, retained PENDING_REBOOT, or QUARANTINED"
@@ -2534,16 +2849,20 @@
         "canonical complete scope",
         "runId or intentId",
         "expected snapshot/member/host/run/controller generations",
-        "expected resource versions"
+        "expected resource versions including the current policy and global availability authorities",
+        "for ASSIGNMENT_PREPARE only, repository-derived verified OperationAdmissionBinding inputs and exact CAS expectation"
       ],
       "output": [
-        "exact typed OperationLease or conflict"
+        "exact typed OperationLease or conflict",
+        "for ASSIGNMENT_PREPARE, the unique immutable OperationAdmissionBinding whose bindingHash is stored on the lease"
       ],
       "preconditions": [
-        "The requested lease type is valid for the next semantic operation and conflicts are computed across the complete scope."
+        "The requested lease type is valid for the next semantic operation and conflicts are computed across the complete scope.",
+        "A public static-admission command contains business intent only. The repository reads and rereads current request, inventory, policy, trust, catalog and global availability authority and derives every read set, authority vector, CAS expectation, lease specification and binding inside one serializable transaction."
       ],
       "postconditions": [
-        "The typed lease is durable before the first owner, driver, reset, VFIO, QEMU, or cleanup side effect; another type cannot authorize the action."
+        "The typed lease is durable before the first owner, driver, reset, VFIO, QEMU, or cleanup side effect; another type cannot authorize the action.",
+        "ASSIGNMENT_PREPARE commits its non-null admissionBindingHashOrNull and exactly one matching immutable binding atomically; a caller-supplied binding, reused scopeHash, or orphan lease is impossible."
       ],
       "failureReasonCodes": [
         "DEPENDENCY_BUSY",
@@ -2567,10 +2886,12 @@
         "one atomic reservation result and lease identities"
       ],
       "preconditions": [
-        "No member is leased or quarantined and all expected generations match."
+        "No member is leased or quarantined and all expected generations match.",
+        "The repository locks and compares the single GLOBAL_DIRECTPATH_AVAILABILITY row before its absence reads; every competing claim/quarantine writer follows the same fence protocol."
       ],
       "postconditions": [
-        "All bundles are PREPARING for one run or none are changed."
+        "All bundles are PREPARING for one run or none are changed.",
+        "For static admission, the reservation, ASSIGNMENT_PREPARE lease, OperationAdmissionBinding, PREPARING run, idempotency result, audit/outbox rows and availability-authority increment commit in one serializable transaction or none commit."
       ],
       "failureReasonCodes": [
         "DEPENDENCY_BUSY",
@@ -2677,9 +2998,10 @@
       "id": "OP-STORE-IDEMPOTENT-RESULT",
       "ownerPortId": "PORT-GLOBAL-REPOSITORY",
       "sideEffect": "GLOBAL_TRANSACTION",
-      "idempotency": "NATURAL_KEY_SCOPE_AND_IDEMPOTENCY_KEY",
+      "idempotency": "NATURAL_KEY_OPERATION_SCOPE_HASH_AND_IDEMPOTENCY_KEY",
       "input": [
-        "scope",
+        "operationId",
+        "idempotencyScopeHash",
         "idempotencyKey",
         "request hash",
         "runId",
@@ -2711,7 +3033,7 @@
         "host epoch",
         "reset contract",
         "backend profile",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "effective-owner receipt",
@@ -2747,7 +3069,7 @@
         "backend receipts",
         "reset contracts",
         "original owner manifest",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "ordered QEMU-exit, DMA/IRQ, IOMMU, reset, state-probe, owner-restore receipts"
@@ -2779,7 +3101,7 @@
         "nonterminal runs",
         "local journal",
         "observed QEMU and VFIO owners",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "new host epoch",
@@ -2809,7 +3131,7 @@
         "qualified backend profile",
         "complete bundle",
         "per-VM sandbox identity",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "AUTHORIZED_DEVICE_PATH or AUTHORIZED_FD_BUNDLE",
@@ -2838,7 +3160,7 @@
         "grant identity",
         "run and lease",
         "QEMU exit proof",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "closed descriptor and detached backend receipt"
@@ -2866,7 +3188,7 @@
         "binary and firmware hashes",
         "per-VM sandbox",
         "restricted QMP policy",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "pid and start time",
@@ -2896,7 +3218,7 @@
         "runId",
         "pid and start time",
         "graceful or forced reason",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "authoritative process-exit receipt"
@@ -3039,7 +3361,7 @@
         "operator identity",
         "fresh snapshot",
         "current controller generation",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "new clean-release proof and cleared generation or retained quarantine"
@@ -3098,7 +3420,7 @@
         "serialized targetAttemptId/targetRunId/targetRunGeneration",
         "source and target host epochs",
         "current controller generation",
-        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion"
+        "sealed typed operation capability: operationLeaseId, leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, runGenerationOrNull, holderControllerGeneration, operationLeaseResourceVersion, admissionBindingHashOrNull"
       ],
       "output": [
         "target ATTACHED Assignment/manifest with a new assignedId",
@@ -4341,7 +4663,8 @@
       "id": "CAS-IDEMPOTENCY",
       "scope": "mutation request",
       "compare": [
-        "scope",
+        "operationId",
+        "idempotencyScopeHash",
         "idempotencyKey",
         "requestHash"
       ],
@@ -4359,11 +4682,13 @@
         "expectedSnapshotEpoch",
         "snapshotContentHash",
         "HostAuthority.lastSnapshotEpoch and currentSnapshotContentHash",
-        "HostAuthority expected resource version"
+        "HostAuthority committed resource version equal to the signed snapshot version",
+        "global AvailabilityAuthority resource version",
+        "external HostSnapshot rollback-anchor digest/version/resourceVersion and live freshness nonce"
       ],
-      "success": "Use the exact immutable signed facts only while they remain the current HostAuthority pointer; snapshot publication itself atomically increments epoch and advances that pointer.",
+      "success": "Use exact immutable signed facts only while they remain the current HostAuthority pointer and exact live external rollback-anchor/freshness subject. Changed content, or equal content whose signed snapshot/evidence age is at either inclusive microsecond threshold, reads predecessor HostAuthority resourceVersion r plus the global availability fence, signs epoch+1 with committed version r+1, exact-preserves host incarnation/cooperation fields, and atomically commits the complete DeviceRecord set, snapshot, HostAuthority pointer/resourceVersion=r+1, advanced availability fence, audit and outbox. Equal content strictly below both thresholds writes nothing. An external PREPARED reservation is finalized only after repository COMMIT; post-COMMIT crash recovery is idempotent by reservationId plus candidateProjectionDigest.",
       "conflictReasonCode": "INVENTORY_EPOCH_CHANGED",
-      "invariant": "Stale, replayed, non-current, wrong-boot, wrong-agent-generation, or unsigned topology/owner/reset/BAR/provider facts cannot authorize planning or a side effect."
+      "invariant": "The predecessor compare version is never written as the final snapshot version. Current HostAuthority.resourceVersion, pinned binding hostAuthorityResourceVersion, signed HostSnapshot.hostAuthorityResourceVersion and COMMITTED rollback-anchor acceptedHostAuthorityResourceVersion are equal; the current pointer, complete DeviceRecord set and availability fence belong to one commit. Repository rollback cannot advance the external last COMMITTED anchor, and a repository-committed but unfinalized candidate cannot authorize or be hidden by NO_CHANGE. Stale, replayed, non-current, rolled-back, freshness-unproven, wrong-boot, wrong-agent-generation, partial, or unsigned topology/owner/reset/BAR/provider facts cannot authorize planning or a side effect."
     },
     {
       "id": "CAS-RESOURCE-VERSION",
@@ -6911,7 +7236,9 @@
           "F01",
           "F02",
           "F04",
-          "F10"
+          "F10",
+          "C10",
+          "C15"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -6924,7 +7251,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:9699164ce5e13d5d2c1b65a505854855b40142b1703d9e844c881084a4fe58ec"
+        "requirementDigest": "sha256:478bf498a9d37731ba93261b79dc8b0ba87d56c384011b8cedaaecddfd121a25"
       },
       {
         "kind": "PORT",
@@ -6949,7 +7276,9 @@
           "F01",
           "F02",
           "F04",
-          "F10"
+          "F10",
+          "C10",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -6962,7 +7291,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:1b4d2c72486f3d1250b7c0d6e9be82a55986851af26b13ec4ea358d016ad719e"
+        "requirementDigest": "sha256:6edf2512bd9dc03c204386cb66693cb97d4ca1507490b4daa87df5cfb8ede8b9"
       },
       {
         "kind": "PORT",
@@ -7267,7 +7596,9 @@
           "F00",
           "F01",
           "F02",
-          "F10"
+          "F10",
+          "C10",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -7280,7 +7611,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:e3238a6dc49d6f4c29cf3ee40d8a4375d713fb11403d01cf403bd8e6b5ad0ff4"
+        "requirementDigest": "sha256:3f113603dbf3f9cc14bcb7365b9caa8a71bfc92f901c73a86fcf550910951341"
       },
       {
         "kind": "PORT",
@@ -7586,7 +7917,8 @@
           "F01",
           "F02",
           "F04",
-          "F10"
+          "F10",
+          "C15"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -7599,7 +7931,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "PORT_TECH_STORY_INTERSECTION_OR_ALL",
-        "requirementDigest": "sha256:eca7ff493ea92759706d05736161e247748da7be193a67ef79daf2747450e61d"
+        "requirementDigest": "sha256:1754afeeeac30aaad68a3ebd7dd8470137cb6439cb55e5ad37c8a82a993ee6e7"
       },
       {
         "kind": "PORT",
@@ -7897,6 +8229,402 @@
         ],
         "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
         "requirementDigest": "sha256:e5394a2eefc2dd06450f2773a0bcfcf79018565376ba72ab7a504ebd6e89ddd3"
+      },
+      {
+        "kind": "ENTITY",
+        "contractItemId": "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+        "requiredTestObligationIds": [
+          "TEST-CAPABILITY-DEPENDENCY",
+          "TEST-OWNER-ACTIVATION",
+          "TEST-STATIC-LIFECYCLE",
+          "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
+          "TEST-LIFECYCLE-NEGATIVE-GATES",
+          "TEST-DYNAMIC",
+          "TEST-COLD-RELOCATION",
+          "TEST-BACKEND-CONFORMANCE",
+          "TEST-DEVICE-TRAITS",
+          "TEST-CRASH-RECONCILE-AUDIT"
+        ],
+        "requiredCaseIds": [
+          "C00",
+          "C01",
+          "C02",
+          "C03",
+          "C04",
+          "C05",
+          "C06",
+          "C07",
+          "C10",
+          "C15",
+          "C16",
+          "C18",
+          "C19",
+          "C20",
+          "C21",
+          "O00",
+          "O01",
+          "O02",
+          "O03",
+          "O04",
+          "O05a",
+          "O05b",
+          "O06",
+          "O07",
+          "O08",
+          "O09",
+          "O10",
+          "S00",
+          "S01",
+          "S02",
+          "S03",
+          "S04",
+          "S05",
+          "S06",
+          "S07",
+          "S08",
+          "S11",
+          "S12",
+          "C11",
+          "C14",
+          "M00",
+          "M01",
+          "M02",
+          "M03",
+          "M04",
+          "M05",
+          "M07",
+          "M08",
+          "M09",
+          "M10",
+          "M11",
+          "M12",
+          "M13",
+          "M14",
+          "M15",
+          "M16",
+          "M17",
+          "M18",
+          "M19",
+          "M20",
+          "M21",
+          "M22",
+          "M23",
+          "M06",
+          "S09",
+          "S10",
+          "S13",
+          "S14",
+          "S15",
+          "S16",
+          "F07",
+          "F08",
+          "F09",
+          "D00",
+          "D01",
+          "D02",
+          "D03",
+          "D04",
+          "D05",
+          "D06",
+          "D07",
+          "D08",
+          "D09",
+          "D10",
+          "D11",
+          "D13",
+          "D14",
+          "D12",
+          "F03",
+          "F04",
+          "F05",
+          "F06",
+          "C17",
+          "C08",
+          "C09",
+          "C12",
+          "C13",
+          "F00",
+          "F01",
+          "F02",
+          "F10"
+        ],
+        "requiredOracleClasses": [
+          "authoritativeWrites",
+          "cleanup",
+          "finalStates",
+          "idempotencyOracle",
+          "immediateResults",
+          "mustNotOccur",
+          "mustOccur",
+          "physicalOracle"
+        ],
+        "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
+        "requirementDigest": "sha256:ead324a0f1fc6421cc4bed63130e229b91296fcc6593e2e5397dc4e690f152c9"
+      },
+      {
+        "kind": "ENTITY",
+        "contractItemId": "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY",
+        "requiredTestObligationIds": [
+          "TEST-CAPABILITY-DEPENDENCY",
+          "TEST-OWNER-ACTIVATION",
+          "TEST-STATIC-LIFECYCLE",
+          "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
+          "TEST-LIFECYCLE-NEGATIVE-GATES",
+          "TEST-DYNAMIC",
+          "TEST-COLD-RELOCATION",
+          "TEST-BACKEND-CONFORMANCE",
+          "TEST-DEVICE-TRAITS",
+          "TEST-CRASH-RECONCILE-AUDIT"
+        ],
+        "requiredCaseIds": [
+          "C00",
+          "C01",
+          "C02",
+          "C03",
+          "C04",
+          "C05",
+          "C06",
+          "C07",
+          "C10",
+          "C15",
+          "C16",
+          "C18",
+          "C19",
+          "C20",
+          "C21",
+          "O00",
+          "O01",
+          "O02",
+          "O03",
+          "O04",
+          "O05a",
+          "O05b",
+          "O06",
+          "O07",
+          "O08",
+          "O09",
+          "O10",
+          "S00",
+          "S01",
+          "S02",
+          "S03",
+          "S04",
+          "S05",
+          "S06",
+          "S07",
+          "S08",
+          "S11",
+          "S12",
+          "C11",
+          "C14",
+          "M00",
+          "M01",
+          "M02",
+          "M03",
+          "M04",
+          "M05",
+          "M07",
+          "M08",
+          "M09",
+          "M10",
+          "M11",
+          "M12",
+          "M13",
+          "M14",
+          "M15",
+          "M16",
+          "M17",
+          "M18",
+          "M19",
+          "M20",
+          "M21",
+          "M22",
+          "M23",
+          "M06",
+          "S09",
+          "S10",
+          "S13",
+          "S14",
+          "S15",
+          "S16",
+          "F07",
+          "F08",
+          "F09",
+          "D00",
+          "D01",
+          "D02",
+          "D03",
+          "D04",
+          "D05",
+          "D06",
+          "D07",
+          "D08",
+          "D09",
+          "D10",
+          "D11",
+          "D13",
+          "D14",
+          "D12",
+          "F03",
+          "F04",
+          "F05",
+          "F06",
+          "C17",
+          "C08",
+          "C09",
+          "C12",
+          "C13",
+          "F00",
+          "F01",
+          "F02",
+          "F10"
+        ],
+        "requiredOracleClasses": [
+          "authoritativeWrites",
+          "cleanup",
+          "finalStates",
+          "idempotencyOracle",
+          "immediateResults",
+          "mustNotOccur",
+          "mustOccur",
+          "physicalOracle"
+        ],
+        "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
+        "requirementDigest": "sha256:973fb37a24ed2e548c0d6948a6f90e9389fecc08cda30fb4241baf05a7a07d34"
+      },
+      {
+        "kind": "ENTITY",
+        "contractItemId": "ENTITY-AVAILABILITY-AUTHORITY",
+        "requiredTestObligationIds": [
+          "TEST-CAPABILITY-DEPENDENCY",
+          "TEST-OWNER-ACTIVATION",
+          "TEST-STATIC-LIFECYCLE",
+          "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
+          "TEST-LIFECYCLE-NEGATIVE-GATES",
+          "TEST-DYNAMIC",
+          "TEST-COLD-RELOCATION",
+          "TEST-BACKEND-CONFORMANCE",
+          "TEST-DEVICE-TRAITS",
+          "TEST-CRASH-RECONCILE-AUDIT"
+        ],
+        "requiredCaseIds": [
+          "C00",
+          "C01",
+          "C02",
+          "C03",
+          "C04",
+          "C05",
+          "C06",
+          "C07",
+          "C10",
+          "C15",
+          "C16",
+          "C18",
+          "C19",
+          "C20",
+          "C21",
+          "O00",
+          "O01",
+          "O02",
+          "O03",
+          "O04",
+          "O05a",
+          "O05b",
+          "O06",
+          "O07",
+          "O08",
+          "O09",
+          "O10",
+          "S00",
+          "S01",
+          "S02",
+          "S03",
+          "S04",
+          "S05",
+          "S06",
+          "S07",
+          "S08",
+          "S11",
+          "S12",
+          "C11",
+          "C14",
+          "M00",
+          "M01",
+          "M02",
+          "M03",
+          "M04",
+          "M05",
+          "M07",
+          "M08",
+          "M09",
+          "M10",
+          "M11",
+          "M12",
+          "M13",
+          "M14",
+          "M15",
+          "M16",
+          "M17",
+          "M18",
+          "M19",
+          "M20",
+          "M21",
+          "M22",
+          "M23",
+          "M06",
+          "S09",
+          "S10",
+          "S13",
+          "S14",
+          "S15",
+          "S16",
+          "F07",
+          "F08",
+          "F09",
+          "D00",
+          "D01",
+          "D02",
+          "D03",
+          "D04",
+          "D05",
+          "D06",
+          "D07",
+          "D08",
+          "D09",
+          "D10",
+          "D11",
+          "D13",
+          "D14",
+          "D12",
+          "F03",
+          "F04",
+          "F05",
+          "F06",
+          "C17",
+          "C08",
+          "C09",
+          "C12",
+          "C13",
+          "F00",
+          "F01",
+          "F02",
+          "F10"
+        ],
+        "requiredOracleClasses": [
+          "authoritativeWrites",
+          "cleanup",
+          "finalStates",
+          "idempotencyOracle",
+          "immediateResults",
+          "mustNotOccur",
+          "mustOccur",
+          "physicalOracle"
+        ],
+        "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
+        "requirementDigest": "sha256:36b04de1b0ee230771f8822c048a3a8185350a380951511253818b25516ae289"
       },
       {
         "kind": "ENTITY",
@@ -10657,6 +11385,138 @@
       },
       {
         "kind": "ENTITY",
+        "contractItemId": "ENTITY-OPERATION-ADMISSION-BINDING",
+        "requiredTestObligationIds": [
+          "TEST-CAPABILITY-DEPENDENCY",
+          "TEST-OWNER-ACTIVATION",
+          "TEST-STATIC-LIFECYCLE",
+          "TEST-GUEST-RESOURCE-ADMISSION",
+          "TEST-PCI-ERROR-POLICY",
+          "TEST-LIFECYCLE-NEGATIVE-GATES",
+          "TEST-DYNAMIC",
+          "TEST-COLD-RELOCATION",
+          "TEST-BACKEND-CONFORMANCE",
+          "TEST-DEVICE-TRAITS",
+          "TEST-CRASH-RECONCILE-AUDIT"
+        ],
+        "requiredCaseIds": [
+          "C00",
+          "C01",
+          "C02",
+          "C03",
+          "C04",
+          "C05",
+          "C06",
+          "C07",
+          "C10",
+          "C15",
+          "C16",
+          "C18",
+          "C19",
+          "C20",
+          "C21",
+          "O00",
+          "O01",
+          "O02",
+          "O03",
+          "O04",
+          "O05a",
+          "O05b",
+          "O06",
+          "O07",
+          "O08",
+          "O09",
+          "O10",
+          "S00",
+          "S01",
+          "S02",
+          "S03",
+          "S04",
+          "S05",
+          "S06",
+          "S07",
+          "S08",
+          "S11",
+          "S12",
+          "C11",
+          "C14",
+          "M00",
+          "M01",
+          "M02",
+          "M03",
+          "M04",
+          "M05",
+          "M07",
+          "M08",
+          "M09",
+          "M10",
+          "M11",
+          "M12",
+          "M13",
+          "M14",
+          "M15",
+          "M16",
+          "M17",
+          "M18",
+          "M19",
+          "M20",
+          "M21",
+          "M22",
+          "M23",
+          "M06",
+          "S09",
+          "S10",
+          "S13",
+          "S14",
+          "S15",
+          "S16",
+          "F07",
+          "F08",
+          "F09",
+          "D00",
+          "D01",
+          "D02",
+          "D03",
+          "D04",
+          "D05",
+          "D06",
+          "D07",
+          "D08",
+          "D09",
+          "D10",
+          "D11",
+          "D13",
+          "D14",
+          "D12",
+          "F03",
+          "F04",
+          "F05",
+          "F06",
+          "C17",
+          "C08",
+          "C09",
+          "C12",
+          "C13",
+          "F00",
+          "F01",
+          "F02",
+          "F10"
+        ],
+        "requiredOracleClasses": [
+          "authoritativeWrites",
+          "cleanup",
+          "finalStates",
+          "idempotencyOracle",
+          "immediateResults",
+          "mustNotOccur",
+          "mustOccur",
+          "physicalOracle"
+        ],
+        "typedCoverageRule": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
+        "requirementDigest": "sha256:238026bbe28394e2cb5dab07597c279cf4cb49a4fed53d1bc24bb332d5b3e5c0"
+      },
+      {
+        "kind": "ENTITY",
         "contractItemId": "ENTITY-RELEASE-OWNERSHIP-GUARD",
         "requiredTestObligationIds": [
           "TEST-CAPABILITY-DEPENDENCY",
@@ -11075,7 +11935,9 @@
           "F01",
           "F02",
           "F04",
-          "F10"
+          "F10",
+          "C10",
+          "C15"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -11088,7 +11950,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:771ec258b21ca05cad3fe186fcb1199b8a719c0d5d4e263a859312079404466d"
+        "requirementDigest": "sha256:10715bc03d829efebe8ff0e31ab708f523c82cd78759eb8412beac9f40f97adb"
       },
       {
         "kind": "OPERATION",
@@ -11152,7 +12014,9 @@
           "F01",
           "F02",
           "F04",
-          "F10"
+          "F10",
+          "C10",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -11165,7 +12029,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:47f98b17e0a471985f3a02de224591097f780e91e1dcecd88d22677b2db1baec"
+        "requirementDigest": "sha256:560e0b4c65fa57d5e0ea734b0d711df7539e9a22cb6ada3fc40d8aac0ae95a38"
       },
       {
         "kind": "OPERATION",
@@ -11612,7 +12476,9 @@
           "F00",
           "F01",
           "F02",
-          "F10"
+          "F10",
+          "C10",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -11625,7 +12491,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:fcd57258bf3c256e4ae68c9b92e360b01ef60cdc9d6ba31880ed41010adf2760"
+        "requirementDigest": "sha256:6fbd53e71cf8e5f5fbe26043aee9f71c6349ea4e4161ebd2eaa9a4f8bb61677f"
       },
       {
         "kind": "OPERATION",
@@ -11655,7 +12521,9 @@
           "F00",
           "F01",
           "F02",
-          "F10"
+          "F10",
+          "C10",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -11668,7 +12536,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:71cff56a67e91e46be607d6f68f30ecc8afbc90b90641b0053212fe06209c025"
+        "requirementDigest": "sha256:ccfe66f4b84d6a0149979678c9b294f0aa9968ae1ef276ec72acc4a9a951f4df"
       },
       {
         "kind": "OPERATION",
@@ -12560,7 +13428,8 @@
           "F01",
           "F02",
           "F04",
-          "F10"
+          "F10",
+          "C15"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -12573,7 +13442,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "OPERATION_OWNER_PORT_OR_ALL",
-        "requirementDigest": "sha256:7c5f1195ede89529cf4a39cb4a2947d088bb501040c2ffbd3ab3ffcbfb39c480"
+        "requirementDigest": "sha256:44b5419a6386444e43c6dc0c88c1b3d2f9fe8130874e6f7d2c98f8602aa90a0d"
       },
       {
         "kind": "OPERATION",
@@ -17012,7 +17881,10 @@
           "F00",
           "F01",
           "F02",
-          "F10"
+          "F10",
+          "C10",
+          "C15",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -17025,7 +17897,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:f98faefad9080b8a5e6f57741e328a4e39e7772cc6c0a5d67de475da2c23c845"
+        "requirementDigest": "sha256:4ec5bca5ca41343ebb14357d47b6f43d25a5e744896d2de9a3106be673a0e92e"
       },
       {
         "kind": "REASON",
@@ -17068,7 +17940,10 @@
           "F00",
           "F01",
           "F02",
-          "F10"
+          "F10",
+          "C10",
+          "C15",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -17081,7 +17956,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:0a2fc4bad5d9b98abb209bceb781f902eeef63dbadb7519f582b7f31fc7f6ec4"
+        "requirementDigest": "sha256:721ba86d43851c7a9da9b12d576d91cc54dde8b72abb889f5f0e6a2acd934f40"
       },
       {
         "kind": "REASON",
@@ -17197,7 +18072,9 @@
           "F00",
           "F01",
           "F02",
-          "F10"
+          "F10",
+          "C10",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -17210,7 +18087,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:2f8e5f5b0b8fcdfd67e43de237c745b312f180b04b11c892560029eca42cd7d5"
+        "requirementDigest": "sha256:565137b18a41a83cb7d04efdfb1486a0e4228376e69bd80ca5ce9a0d834ab986"
       },
       {
         "kind": "REASON",
@@ -18400,7 +19277,9 @@
           "F00",
           "F01",
           "F02",
-          "F10"
+          "F10",
+          "C10",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -18413,7 +19292,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:b64602fb2965a41ca6806516d94c07e13b6f8233d23263b25e35910b005c8db1"
+        "requirementDigest": "sha256:0584d05fb1544124eb1868897485eba0b517d970a15f1f383013a994282864d1"
       },
       {
         "kind": "REASON",
@@ -18634,7 +19513,8 @@
           "F01",
           "F02",
           "F04",
-          "F10"
+          "F10",
+          "C20"
         ],
         "requiredOracleClasses": [
           "authoritativeWrites",
@@ -18647,7 +19527,7 @@
           "physicalOracle"
         ],
         "typedCoverageRule": "REASON_LISTING_OPERATION_UNION_OR_ALL",
-        "requirementDigest": "sha256:fad1542308ae22a6289e63ecf4dac84c6d45a912c8bfc4dfd2a40946769d9009"
+        "requirementDigest": "sha256:34833351a29962dcdbddf96d0b7a9b370c3ad049c1700673438454f3ce98c2f8"
       },
       {
         "kind": "REASON",
@@ -27819,7 +28699,7 @@
         "requirementDigest": "sha256:8e1fbfd90390ed06674a89f2170108d00423a98723d41ea88fe2513b8f079096"
       }
     ],
-    "verificationMatrixRule": "The generator emits exactly one ordered, hash-bound row for every derived mapping item. TEST is self-covered; PARITY uses its declared tests; PORT uses acceptance Tech Story intersection; OPERATION inherits its owner PORT; TRANSITION unions its operations and adds TEST-CRASH-RECONCILE-AUDIT when any operation is side-effecting; STATE_MACHINE unions its transitions; REASON unions listing operations; CAS_RULE unions referencing transitions; EQUIVALENCE uses TEST-DYNAMIC; ENTITY uses its FSM when present; all other kinds and every empty derivation conservatively require all obligations. requiredCaseIds is the exact ordered union of those obligations and every row requires all eight scenario oracle classes. requirementDigest is SHA-256(CANONICAL-JSON-V1(row without requirementDigest)). A target mapping binds this digest by const; scenario self-claims cannot reduce or expand it.",
+    "verificationMatrixRule": "The generator emits exactly one ordered, hash-bound row for every derived mapping item. TEST is self-covered; PARITY uses its declared tests; PORT uses acceptance Tech Story intersection; OPERATION inherits its owner PORT; TRANSITION unions its operations and adds TEST-CRASH-RECONCILE-AUDIT when any operation is side-effecting; STATE_MACHINE unions its transitions; REASON unions listing operations; CAS_RULE unions referencing transitions; EQUIVALENCE uses TEST-DYNAMIC; ENTITY uses its FSM when present; all other kinds and every empty derivation conservatively require all obligations. requiredCaseIds is the exact ordered union of those obligations followed by any source Case whose explicit required Port, Operation, Transition, Entity, or Reason set names the row item; the portable generator reads the Case source tree, never the generated Case registry. Every row requires all eight scenario oracle classes. requirementDigest is SHA-256(CANONICAL-JSON-V1(row without requirementDigest)). A target mapping binds this digest by const; scenario self-claims cannot reduce or expand it.",
     "completionRule": "TARGET_CODE_MAPPED is true only when every derived item exists exactly once and is BOUND to exact target symbols, an explicitly approved CONFLICT, or an authority-backed DEFERRED item on FUTURE_SEPARATELY_QUALIFIED; the target repository commit is pinned and no item remains UNMAPPED.",
     "implementationRule": "PRODUCT_IMPLEMENTED is true only when every CURRENT_RELEASE_REQUIRED mapping is BOUND and VERIFIED by target tests, with no conflict. A FUTURE_SEPARATELY_QUALIFIED item may remain DEFERRED without weakening the current Legacy release. QUALIFIED additionally requires exact physical E4 profile evidence; enabling a deferred track requires a new profile, mapping, implementation, qualification, and release approval."
   }

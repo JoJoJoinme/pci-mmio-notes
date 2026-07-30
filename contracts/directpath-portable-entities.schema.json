@@ -62,6 +62,13 @@
       "items": {"$ref": "#/$defs/deviceUid"},
       "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
     },
+    "deviceUidSet": {
+      "type": "array",
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/deviceUid"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
     "bdfSet": {
       "type": "array",
       "maxItems": 4096,
@@ -89,6 +96,319 @@
         "evidenceHash": {"$ref": "#/$defs/digest"}
       }
     },
+    "pciStructureFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "captureStatus",
+        "providerFactId",
+        "rawConfigSpaceHexOrNull",
+        "rawConfigSpaceSha256OrNull",
+        "failureReasonCodeOrNull",
+        "captureEvidenceDigest",
+        "vendorIdOrNull",
+        "deviceIdOrNull",
+        "revisionIdOrNull",
+        "classCodeOrNull",
+        "subsystemVendorIdOrNull",
+        "subsystemDeviceIdOrNull",
+        "rawHeaderTypeByteOrNull",
+        "headerLayout",
+        "multifunctionOrNull",
+        "subordinateBusNumberOrNull",
+        "subordinateBusPresentOrNull",
+        "pcieCapabilityState",
+        "pcieCapabilityOffsetOrNull",
+        "pcieCapabilityVersionOrNull",
+        "pcieDevicePortTypeOrNull",
+        "rawPcieCapabilitiesRegisterOrNull",
+        "structureFactDigest",
+        "authorityBoundary",
+        "productAuthorized"
+      ],
+      "properties": {
+        "state": {"enum": ["KNOWN", "UNKNOWN"]},
+        "captureStatus": {"enum": ["COMPLETE", "UNAVAILABLE"]},
+        "providerFactId": {"$ref": "#/$defs/id"},
+        "rawConfigSpaceHexOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{512}$"}
+          ]
+        },
+        "rawConfigSpaceSha256OrNull": {"$ref": "#/$defs/nullableDigest"},
+        "failureReasonCodeOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,127}$"}
+          ]
+        },
+        "captureEvidenceDigest": {"$ref": "#/$defs/digest"},
+        "vendorIdOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{4}$"}
+          ]
+        },
+        "deviceIdOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{4}$"}
+          ]
+        },
+        "revisionIdOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{2}$"}
+          ]
+        },
+        "classCodeOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{6}$"}
+          ]
+        },
+        "subsystemVendorIdOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{4}$"}
+          ]
+        },
+        "subsystemDeviceIdOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{4}$"}
+          ]
+        },
+        "rawHeaderTypeByteOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 0, "maximum": 255}
+          ]
+        },
+        "headerLayout": {
+          "enum": ["TYPE_0", "TYPE_1", "CARDBUS", "RESERVED", "UNKNOWN"]
+        },
+        "multifunctionOrNull": {
+          "oneOf": [{"type": "null"}, {"type": "boolean"}]
+        },
+        "subordinateBusNumberOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 0, "maximum": 255}
+          ]
+        },
+        "subordinateBusPresentOrNull": {
+          "oneOf": [{"type": "null"}, {"type": "boolean"}]
+        },
+        "pcieCapabilityState": {
+          "enum": ["PRESENT", "ABSENT", "UNKNOWN"]
+        },
+        "pcieCapabilityOffsetOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 64, "maximum": 252, "multipleOf": 4}
+          ]
+        },
+        "pcieCapabilityVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 1, "maximum": 15}
+          ]
+        },
+        "pcieDevicePortTypeOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "enum": [
+                "ENDPOINT",
+                "LEGACY_ENDPOINT",
+                "ROOT_PORT",
+                "UPSTREAM_PORT",
+                "DOWNSTREAM_PORT",
+                "PCIE_TO_PCI_BRIDGE",
+                "PCI_TO_PCIE_BRIDGE",
+                "ROOT_COMPLEX_INTEGRATED_ENDPOINT",
+                "ROOT_COMPLEX_EVENT_COLLECTOR",
+                "RESERVED"
+              ]
+            }
+          ]
+        },
+        "rawPcieCapabilitiesRegisterOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 0, "maximum": 65535}
+          ]
+        },
+        "structureFactDigest": {"$ref": "#/$defs/digest"},
+        "authorityBoundary": {
+          "const": "COMPONENT_CALLER_SUPPLIED_RAW_CONFIG_BYTES_ONLY"
+        },
+        "productAuthorized": {"const": false}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"captureStatus": {"const": "COMPLETE"}},
+            "required": ["captureStatus"]
+          },
+          "then": {
+            "properties": {
+              "state": {"const": "KNOWN"},
+              "rawConfigSpaceHexOrNull": {"type": "string"},
+              "rawConfigSpaceSha256OrNull": {"$ref": "#/$defs/digest"},
+              "failureReasonCodeOrNull": {"type": "null"},
+              "vendorIdOrNull": {"type": "string"},
+              "deviceIdOrNull": {"type": "string"},
+              "revisionIdOrNull": {"type": "string"},
+              "classCodeOrNull": {"type": "string"},
+              "rawHeaderTypeByteOrNull": {"type": "integer"},
+              "multifunctionOrNull": {"type": "boolean"},
+              "subordinateBusPresentOrNull": {"type": "boolean"},
+              "pcieCapabilityState": {"enum": ["PRESENT", "ABSENT"]}
+            }
+          },
+          "else": {
+            "properties": {
+              "state": {"const": "UNKNOWN"},
+              "rawConfigSpaceHexOrNull": {"type": "null"},
+              "rawConfigSpaceSha256OrNull": {"type": "null"},
+              "failureReasonCodeOrNull": {"type": "string"},
+              "vendorIdOrNull": {"type": "null"},
+              "deviceIdOrNull": {"type": "null"},
+              "revisionIdOrNull": {"type": "null"},
+              "classCodeOrNull": {"type": "null"},
+              "subsystemVendorIdOrNull": {"type": "null"},
+              "subsystemDeviceIdOrNull": {"type": "null"},
+              "rawHeaderTypeByteOrNull": {"type": "null"},
+              "headerLayout": {"const": "UNKNOWN"},
+              "multifunctionOrNull": {"type": "null"},
+              "subordinateBusNumberOrNull": {"type": "null"},
+              "subordinateBusPresentOrNull": {"type": "null"},
+              "pcieCapabilityState": {"const": "UNKNOWN"},
+              "pcieCapabilityOffsetOrNull": {"type": "null"},
+              "pcieCapabilityVersionOrNull": {"type": "null"},
+              "pcieDevicePortTypeOrNull": {"type": "null"},
+              "rawPcieCapabilitiesRegisterOrNull": {"type": "null"}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"headerLayout": {"const": "TYPE_0"}},
+            "required": ["headerLayout"]
+          },
+          "then": {
+            "properties": {
+              "subsystemVendorIdOrNull": {"type": "string"},
+              "subsystemDeviceIdOrNull": {"type": "string"},
+              "subordinateBusNumberOrNull": {"type": "null"},
+              "subordinateBusPresentOrNull": {"const": false}
+            }
+          },
+          "else": {
+            "properties": {
+              "subsystemVendorIdOrNull": {"type": "null"},
+              "subsystemDeviceIdOrNull": {"type": "null"}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"headerLayout": {"const": "TYPE_1"}},
+            "required": ["headerLayout"]
+          },
+          "then": {
+            "properties": {
+              "subordinateBusNumberOrNull": {"type": "integer"},
+              "subordinateBusPresentOrNull": {"type": "boolean"}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"pcieCapabilityState": {"const": "PRESENT"}},
+            "required": ["pcieCapabilityState"]
+          },
+          "then": {
+            "properties": {
+              "pcieCapabilityOffsetOrNull": {"type": "integer"},
+              "pcieCapabilityVersionOrNull": {"type": "integer"},
+              "pcieDevicePortTypeOrNull": {"type": "string"},
+              "rawPcieCapabilitiesRegisterOrNull": {"type": "integer"}
+            }
+          },
+          "else": {
+            "properties": {
+              "pcieCapabilityOffsetOrNull": {"type": "null"},
+              "pcieCapabilityVersionOrNull": {"type": "null"},
+              "pcieDevicePortTypeOrNull": {"type": "null"},
+              "rawPcieCapabilitiesRegisterOrNull": {"type": "null"}
+            }
+          }
+        }
+      ],
+      "x-qmanReplayRule": "For COMPLETE, decode exactly 256 raw bytes, reject all-ones/absent identity and malformed or cyclic conventional capability lists, then derive every identity/header/PCIe field. rawHeaderTypeByteOrNull is never pre-masked: headerLayout uses bits 6:0 and multifunctionOrNull uses bit 7. providerFactId resolves exactly one same-capture provenance.providerFacts row whose evidenceHash equals captureEvidenceDigest. roleFactsDigest equals structureFactDigest and role.provenanceDigest equals captureEvidenceDigest.",
+      "x-qmanDigestRule": "captureEvidenceDigest is the domain-separated digest of the exact device UID, capture disposition, provider identity and raw bytes. structureFactDigest is the domain-separated digest of this complete fact with only structureFactDigest set to null. Both are component digests, not source attestation or product authority."
+    },
+    "pciFlrCapabilityFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "structureFactDigest",
+        "pcieCapabilityOffsetOrNull",
+        "deviceCapabilitiesDwordOrNull",
+        "functionLevelResetCapableOrNull",
+        "flrFactDigest"
+      ],
+      "properties": {
+        "state": {"enum": ["PRESENT", "ABSENT", "UNKNOWN"]},
+        "structureFactDigest": {"$ref": "#/$defs/digest"},
+        "pcieCapabilityOffsetOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 64, "maximum": 252, "multipleOf": 4}
+          ]
+        },
+        "deviceCapabilitiesDwordOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 0, "maximum": 4294967295}
+          ]
+        },
+        "functionLevelResetCapableOrNull": {
+          "oneOf": [{"type": "null"}, {"type": "boolean"}]
+        },
+        "flrFactDigest": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"state": {"const": "PRESENT"}},
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {
+              "pcieCapabilityOffsetOrNull": {"type": "integer"},
+              "deviceCapabilitiesDwordOrNull": {"type": "integer"},
+              "functionLevelResetCapableOrNull": {"type": "boolean"}
+            }
+          },
+          "else": {
+            "properties": {
+              "pcieCapabilityOffsetOrNull": {"type": "null"},
+              "deviceCapabilitiesDwordOrNull": {"type": "null"},
+              "functionLevelResetCapableOrNull": {"type": "null"}
+            }
+          }
+        }
+      ],
+      "x-qmanReplayRule": "PRESENT exact-projects the PCI Express capability offset and Device Capabilities dword from the same raw 256-byte capture bound by structureFactDigest; functionLevelResetCapableOrNull is bit 28. ABSENT means a valid capability traversal found no PCI Express capability. UNKNOWN is accepted only with an unavailable structure fact.",
+      "x-qmanDigestRule": "flrFactDigest is the domain-separated digest of the complete fact with only flrFactDigest set to null. It binds structureFactDigest and therefore the exact raw capture."
+    },
     "physicalPathProvider": {
       "$ref": "directpath-identity-v1.schema.json#/$defs/physicalPathProvider"
     },
@@ -105,6 +425,7 @@
       "required": [
         "structuralRole",
         "functionRole",
+        "pciStructureFact",
         "roleFactsDigest",
         "provenanceDigest"
       ],
@@ -121,6 +442,7 @@
         "functionRole": {
           "$ref": "directpath-identity-v1.schema.json#/$defs/functionRole"
         },
+        "pciStructureFact": {"$ref": "#/$defs/pciStructureFact"},
         "roleFactsDigest": {"$ref": "#/$defs/digest"},
         "provenanceDigest": {"$ref": "#/$defs/digest"}
       }
@@ -193,6 +515,183 @@
     "dependencyAction": {
       "$ref": "directpath-portable-hash-subjects.schema.json#/$defs/dependencyAction"
     },
+    "dependencyActionValue": {
+      "enum": [
+        "PAYLOAD",
+        "LEASE_ONLY",
+        "DETACH",
+        "RESET_WITH",
+        "RESTORE_OWNER",
+        "DENY_IF_PRESENT"
+      ]
+    },
+    "dependencyDomainKind": {
+      "enum": [
+        "IOMMU",
+        "PHYSICAL_ISOLATION",
+        "REQUESTER_ALIAS",
+        "MULTIFUNCTION",
+        "PF_VF",
+        "FUNCTIONAL",
+        "PLATFORM"
+      ]
+    },
+    "dependencyDomainEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targetDeviceUid",
+        "actionState",
+        "requiredActionOrNull",
+        "provenanceDigest"
+      ],
+      "properties": {
+        "targetDeviceUid": {"$ref": "#/$defs/deviceUid"},
+        "actionState": {"enum": ["KNOWN", "UNKNOWN", "CONFLICT"]},
+        "requiredActionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/dependencyActionValue"}
+          ]
+        },
+        "provenanceDigest": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"actionState": {"const": "KNOWN"}},
+            "required": ["actionState"]
+          },
+          "then": {
+            "properties": {
+              "requiredActionOrNull": {
+                "$ref": "#/$defs/dependencyActionValue"
+              }
+            }
+          },
+          "else": {
+            "properties": {"requiredActionOrNull": {"type": "null"}}
+          }
+        }
+      ]
+    },
+    "dependencyDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "state", "provenanceDigest", "edges"],
+      "properties": {
+        "kind": {"$ref": "#/$defs/dependencyDomainKind"},
+        "state": {"enum": ["KNOWN", "UNKNOWN", "CONFLICT"]},
+        "provenanceDigest": {"$ref": "#/$defs/digest"},
+        "edges": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/dependencyDomainEdge"},
+          "x-qmanSetOrder": "ascending complete dependencyDomainEdge CANONICAL-JSON-V1 bytes; exact duplicate edges are rejected while distinct primary/additive actions for one target remain representable"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"state": {"const": "KNOWN"}},
+            "required": ["state"]
+          },
+          "else": {
+            "properties": {"edges": {"maxItems": 0}}
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": ["IOMMU", "PHYSICAL_ISOLATION"]
+              },
+              "state": {"const": "KNOWN"}
+            },
+            "required": ["kind", "state"]
+          },
+          "then": {
+            "properties": {"edges": {"minItems": 1}}
+          }
+        }
+      ],
+      "x-qmanActionRule": "For one target, the primary conservative lattice is LEASE_ONLY -> DETACH -> PAYLOAD. DETACH means detach/hold in the same DMA owner and is not QUIESCE_HOST. RESET_WITH and RESTORE_OWNER are additive actions. DENY_IF_PRESENT is fail closed. A provider fact that requires QUIESCE_HOST or any action outside this closed vocabulary is UNKNOWN or CONFLICT and MUST NOT be relabelled as DETACH."
+    },
+    "dependencyDomains": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "prefixItems": [
+        {
+          "allOf": [
+            {"$ref": "#/$defs/dependencyDomain"},
+            {
+              "properties": {"kind": {"const": "FUNCTIONAL"}},
+              "required": ["kind"]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/dependencyDomain"},
+            {
+              "properties": {"kind": {"const": "IOMMU"}},
+              "required": ["kind"]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/dependencyDomain"},
+            {
+              "properties": {"kind": {"const": "MULTIFUNCTION"}},
+              "required": ["kind"]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/dependencyDomain"},
+            {
+              "properties": {"kind": {"const": "PF_VF"}},
+              "required": ["kind"]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/dependencyDomain"},
+            {
+              "properties": {
+                "kind": {"const": "PHYSICAL_ISOLATION"}
+              },
+              "required": ["kind"]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/dependencyDomain"},
+            {
+              "properties": {"kind": {"const": "PLATFORM"}},
+              "required": ["kind"]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/dependencyDomain"},
+            {
+              "properties": {"kind": {"const": "REQUESTER_ALIAS"}},
+              "required": ["kind"]
+            }
+          ]
+        }
+      ],
+      "items": false,
+      "x-qmanSetOrder": "exactly one domain of each closed kind in ascending CANONICAL-JSON-V1 kind order"
+    },
     "physicalIsolationDomainFact": {
       "type": "object",
       "additionalProperties": false,
@@ -227,13 +726,17 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "state",
         "supported",
         "selectedMethodOrNull",
         "resetAffectedSet",
+        "pciFlrCapabilityFact",
+        "resetProviderFactId",
         "contractDigest",
         "provenanceDigest"
       ],
       "properties": {
+        "state": {"enum": ["KNOWN", "UNKNOWN", "CONFLICT"]},
         "supported": {"type": "boolean"},
         "selectedMethodOrNull": {
           "oneOf": [
@@ -250,11 +753,29 @@
             }
           ]
         },
-        "resetAffectedSet": {"$ref": "#/$defs/nonEmptyDeviceUidSet"},
+        "resetAffectedSet": {"$ref": "#/$defs/deviceUidSet"},
+        "pciFlrCapabilityFact": {"$ref": "#/$defs/pciFlrCapabilityFact"},
+        "resetProviderFactId": {"$ref": "#/$defs/id"},
         "contractDigest": {"$ref": "#/$defs/digest"},
         "provenanceDigest": {"$ref": "#/$defs/digest"}
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {"state": {"const": "KNOWN"}},
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {"resetAffectedSet": {"minItems": 1}}
+          },
+          "else": {
+            "properties": {
+              "supported": {"const": false},
+              "selectedMethodOrNull": {"type": "null"},
+              "resetAffectedSet": {"maxItems": 0}
+            }
+          }
+        },
         {
           "if": {
             "properties": {"supported": {"const": true}},
@@ -312,6 +833,7 @@
           "then": {
             "properties": {
               "adminEnabled": {"const": true},
+              "desiredOwner": {"const": "PASSTHROUGH"},
               "effectiveOwner": {"const": "PASSTHROUGH"},
               "activationDisposition": {"const": "ALREADY_ACTIVE"}
             }
@@ -444,11 +966,13 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "captureStartedAt",
         "capturedAt",
         "providerFacts",
         "providerFactsDigest"
       ],
       "properties": {
+        "captureStartedAt": {"$ref": "#/$defs/timestamp"},
         "capturedAt": {"$ref": "#/$defs/timestamp"},
         "providerFacts": {
           "type": "array",
@@ -459,7 +983,8 @@
           "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [factId,providerId,providerVersion,evidenceHash]; duplicate factId values are rejected"
         },
         "providerFactsDigest": {"$ref": "#/$defs/digest"}
-      }
+      },
+      "x-qmanDigestRule": "providerFactsDigest = SHA-256(ASCII(QMAN-DIRECTPATH/DEVICE-PROVIDER-FACTS/V2) || 0x00 || CANONICAL-JSON-V1 of {subjectType=DEVICE_PROVIDER_FACT_SET,schemaVersion=2,deviceUid,captureStartedAt,capturedAt,providerFacts,providerFactsDigest=null}). providerFacts is the exact canonical same-capture array including observedAt and evidenceHash; the inventory verifier requires captureStartedAt <= every observedAt <= capturedAt and recomputes this value."
     },
     "ENTITY-DEVICE-RECORD": {
       "type": "object",
@@ -477,6 +1002,7 @@
         "role",
         "iommuProvider",
         "physicalIsolationDomain",
+        "dependencyDomains",
         "dependencyActions",
         "resetContract",
         "owner",
@@ -490,7 +1016,7 @@
       ],
       "properties": {
         "subjectType": {"const": "DEVICE_RECORD"},
-        "schemaVersion": {"const": 1},
+        "schemaVersion": {"const": 3},
         "hostId": {"$ref": "#/$defs/id"},
         "deviceUid": {"$ref": "#/$defs/deviceUid"},
         "immutableIdentity": {"$ref": "directpath-identity-v1.schema.json"},
@@ -501,6 +1027,7 @@
         "role": {"$ref": "#/$defs/deviceRole"},
         "iommuProvider": {"$ref": "#/$defs/iommuProvider"},
         "physicalIsolationDomain": {"$ref": "#/$defs/physicalIsolationDomainFact"},
+        "dependencyDomains": {"$ref": "#/$defs/dependencyDomains"},
         "dependencyActions": {
           "type": "array",
           "minItems": 1,
@@ -576,12 +1103,36 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "resetContract": {
+                "properties": {
+                  "selectedMethodOrNull": {"const": "PCI_FLR"}
+                },
+                "required": ["selectedMethodOrNull"]
+              }
+            },
+            "required": ["resetContract"]
+          },
+          "then": {
+            "properties": {
+              "role": {
+                "properties": {
+                  "structuralRole": {"const": "ENDPOINT_PAYLOAD"}
+                },
+                "required": ["structuralRole"]
+              }
+            }
+          }
         }
       ],
-      "x-qmanIdentityRule": "immutableIdentity is the complete IDENTITY-V1 object. identityFingerprint is SHA-256 of its CANONICAL-JSON-V1 bytes; deviceUid is derived by the IDENTITY-V1 rule, and hostId and role.functionRole must equal immutableIdentity.hostStableId and immutableIdentity.pciIds.functionRole. For SLOT_BOUND, physicalPathProvider and physicalPath must equal the immutable identity fields. For STRONG_SERIAL they are current firmware locators only and never identity inputs.",
-      "x-qmanCurrentFactRule": "currentBdf, path, role observations, IOMMU group, domains, dependencies, reset, owner, BAR, interrupt, health and technicalTraits fields are facts from exactly one current HostSnapshot. technicalTraits is a canonical set emitted by the versioned inventory provider from the same retained provider facts; it is qualification routing input, not an HCL support assertion. They never mutate immutableIdentity. A changed fact publishes a new snapshot/device generation and cannot overwrite an older immutable record.",
-      "x-qmanDomainRule": "physicalIsolationDomain.memberDeviceUids, every dependency action target, resetAffectedSet and ownerActivationGroup use deviceUid, while iommuProvider.kernelIommuGroup alone uses current BDF because it is the kernel operational open/bind unit. KNOWN physicalIsolationDomain includes this deviceUid; UNKNOWN or CONFLICT carries an empty member set and denies capability instead of inventing isolation.",
-      "x-qmanHashRule": "deviceRecordHash = SHA-256(CANONICAL-JSON-V1 of this complete closed object with deviceRecordHash conceptually replaced by null). The published object carries the non-null digest; HostSnapshot.deviceRecordDigests contains this exact value."
+      "x-qmanIdentityRule": "immutableIdentity is the complete IDENTITY-V1 object. identityFingerprint is SHA-256 of its CANONICAL-JSON-V1 bytes; deviceUid is derived by the IDENTITY-V1 rule, and hostId and role.functionRole must equal immutableIdentity.hostStableId and immutableIdentity.pciIds.functionRole. A KNOWN role.pciStructureFact exact-matches vendor/device/revision/class identity and, for Type-0, subsystem identity from the retained raw 256-byte config capture; class code never determines header layout. For SLOT_BOUND, physicalPathProvider and physicalPath equal the immutable identity fields. For STRONG_SERIAL they are current firmware locators only and never identity inputs.",
+      "x-qmanCurrentFactRule": "schemaVersion=3 is a hard current-authority cutover: V1/V2 records cannot become current and the first V3 publication is a complete full-host successor snapshot. currentBdf, path, raw PCI structure/FLR facts, role observations, IOMMU group, domains, dependencies, reset, owner, BAR, interrupt, health and technicalTraits fields are facts from exactly one current HostSnapshot. technicalTraits is a canonical set emitted by the versioned inventory provider from the same retained provider facts; it is qualification routing input, not an HCL support assertion. They never mutate immutableIdentity. A changed fact publishes a new snapshot/device generation and cannot overwrite an older immutable record.",
+      "x-qmanDomainRule": "dependencyDomains contains exactly one canonical entry for each of IOMMU, PHYSICAL_ISOLATION, REQUESTER_ALIAS, MULTIFUNCTION, PF_VF, FUNCTIONAL and PLATFORM. Every typed edge uses deviceUid and carries its own action state and nested action provenanceDigest. UNKNOWN or CONFLICT domains carry no edges. KNOWN IOMMU and PHYSICAL_ISOLATION contain this deviceUid. The KNOWN IOMMU target UID set exactly equals iommuProvider.kernelIommuGroup after current BDF-to-deviceUid resolution; PHYSICAL_ISOLATION state, target UIDs and provenance exactly equal physicalIsolationDomain. Flat dependencyActions remains a compatibility projection and is never a source of dependency kind. resetAffectedSet and ownerActivationGroup use deviceUid, while iommuProvider.kernelIommuGroup alone uses current BDF because it is the kernel operational open/bind unit.",
+      "x-qmanResetFactRule": "resetProviderFactId resolves exactly one same-capture provenance.providerFacts row and contractDigest equals that row's evidenceHash. state=KNOWN carries a non-empty verified affected set; UNKNOWN or CONFLICT is fail-closed with supported=false, no selected method and no guessed affected members. selectedMethodOrNull=PCI_FLR requires role.structuralRole=ENDPOINT_PAYLOAD, a KNOWN Type-0 PCI structure fact, a PRESENT PCIe endpoint capability fact with functionLevelResetCapableOrNull=true, and a reset affected set containing the device. Raw FLR declaration is only one premise; it does not prove reset execution, clean state or affected-set qualification.",
+      "x-qmanHashRule": "deviceRecordHash = SHA-256(CANONICAL-JSON-V1 of this complete closed V3 object with deviceRecordHash conceptually replaced by null). The published object carries the non-null digest; HostSnapshot.deviceRecordDigests contains this exact value."
     },
     "ENTITY-QUALIFICATION-PROFILE": {
       "allOf": [
@@ -685,7 +1236,8 @@
         "hostAuthorityResourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
         "snapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
         "snapshotContentHash": {"$ref": "#/$defs/digest"}
-      }
+      },
+      "x-qmanCommittedVersionRule": "hostAuthorityResourceVersion is the committed post-publication HostAuthority resourceVersion signed inside the current HostSnapshot, not the predecessor CAS compare operand. A pinned binding must byte-equal the current HostAuthority and signed HostSnapshot value."
     },
     "resolveCurrentSnapshot": {
       "type": "object",

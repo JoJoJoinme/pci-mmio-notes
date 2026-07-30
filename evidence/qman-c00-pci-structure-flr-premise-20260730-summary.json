@@ -1,0 +1,376 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E2-C00-PCI-STRUCTURE-FLR-PREMISE-001",
+  "observedAt": "2026-07-29T22:48:08.486324Z",
+  "subject": "QMAN_COMPONENT",
+  "evidenceGrade": "E2",
+  "claimBoundary": "COMPONENT_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-directpath-core/tests/test_inventory.py": "87e0a358e9efbeeb3666a813896cc5d3d4a9d42439b9b7d6c22cb575f1f811bc",
+      "qman-directpath-core/tests/test_snapshot_semantics.py": "396becfd86c3f58f06a7268ef38faae2a8be7b83cad4341f176bdc38bd84cf0c",
+      "qman-directpath-core/tests/test_inventory_closure_factory.py": "e253d786b06b097929bc6fe3c45a8ff1af5f412ad1dd812476953b4235efae6f",
+      "qman-directpath-core/tests/test_read_guard.py": "e7e8d1fdfeffd1d69eecd5d720bef117affd21feacab601fc05847db43e2cdb5",
+      "qman-directpath-core/tests/test_closure.py": "ff45444f5e39e724da9b42c5458404f095dc67e0d7ccbd9bc87b51110cb1898b",
+      "qman-directpath-core/tests/test_authority.py": "161f122bb3370fa20be255f7624dc83b64998e9a97da15b313b3f44ad391e11e",
+      "qman-directpath-core/tests/test_operation_admission.py": "4d378e7cb7e4fa5f4bbdc6f7afad872f969697b8d05a42136becc03d49decf7b",
+      "tests/test_snapshot_publication_contract.py": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
+      "tests/test_portable_handoff_contracts.py": "72047d3dca3f637ef9200b29c9e362d55d710ade9ec8f9a06f5dbdb47b46bc47"
+    },
+    "inputHashes": {
+      "qman-directpath-core/qman_directpath_core/pci_config.py": "cfe37e1205b5f20e5d6982907f17999c74fae78ec4e167a071cc6273d135808d",
+      "qman-directpath-core/qman_directpath_core/snapshot_semantics.py": "93695d900b5702682fb6434d82a88a5fe31f48951bad79ba36c70a50a1fb7969",
+      "qman-directpath-core/qman_directpath_core/inventory.py": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "705ce15801be25825797890fa1c8d4f4130ac68169bd995b1a624ce67803b123",
+      "qman-directpath-core/qman_directpath_core/closure.py": "4e278bca30521bf2b4e579ea8a6ca7086572301002193f31f453de032c34acb4",
+      "qman-directpath-core/qman_directpath_core/inventory_closure_factory.py": "12997ba94e89ac8e7260476f4d5e654d11c0baf6b9fff57a9ca5cba8aa4b060b",
+      "qman-directpath-core/qman_directpath_core/resource_plan.py": "78562bda4f975686508444399736fdb9b9388bc1d12f4555c43b082829f2b5aa",
+      "qman-directpath-core/qman_directpath_core/static_capability.py": "da971ab06d639198159f46fa89dbd1b3b3e6a27e9c525a3c335ea131a2d2b72c",
+      "qman-directpath-core/qman_directpath_core/authority.py": "1b0f45620ebf6d4c1adf9d36e59bc815131d4771de47b3b27c05ee6cdc35696c",
+      "qman-directpath-core/qman_directpath_core/read_guard.py": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360",
+      "qman-directpath-core/qman_directpath_core/operation_admission.py": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
+      "contracts/directpath-portable-entities.schema.json": "fe4123596d622b5c06974f6f3a34effa1494c4dfd985ef1afe4d2d1b42767b01",
+      "contracts/directpath-host-snapshot-publication-trace.schema.json": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
+      "contracts/directpath-inventory-verifier-algorithm.schema.json": "903a8b2bd750e7c3078f7edd7f56077a8832d7eb1852520fef74661137579221",
+      "contracts/directpath-inventory-verification-receipt.schema.json": "245fb70b77bebc2c8e9b4229966a03306a17f4ab06597aee34e9390186537adb",
+      "contracts/directpath-portable-control-contract.json": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe",
+      "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
+      "contracts/directpath-operation-admission-binding.schema.json": "75b2d1bcf0a8223e024fdbcc2093356fbf07b010a7f067a13d905941fd9abb5a",
+      "acceptance/cases/registry-C.json": "baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a"
+    }
+  },
+  "sut": {
+    "environment": "Windows Python deterministic component and contract tests in the local authorized workspace; no ESXi, QEMU, HMP, QTest, VFIO, sysfs collector, product repository, external authority service, or physical-hardware action",
+    "components": [
+      {
+        "name": "qman-directpath-core raw PCI structure and FLR replay",
+        "version": "0.1.0 working tree",
+        "sha256": "cfe37e1205b5f20e5d6982907f17999c74fae78ec4e167a071cc6273d135808d"
+      },
+      {
+        "name": "qman-directpath-core DeviceRecord V3 inventory and HostSnapshot semantic replay",
+        "version": "0.1.0 working tree",
+        "sha256": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2"
+      },
+      {
+        "name": "qman-directpath-core factory-only static read guard",
+        "version": "0.1.0 working tree",
+        "sha256": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360"
+      },
+      {
+        "name": "qman-directpath-core bounded structural guest resource-plan verifier",
+        "version": "0.1.0 working tree",
+        "sha256": "78562bda4f975686508444399736fdb9b9388bc1d12f4555c43b082829f2b5aa"
+      },
+      {
+        "name": "qman-directpath-core non-product operation-admission binding",
+        "version": "0.1.0 working tree",
+        "sha256": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f"
+      },
+      {
+        "name": "Python",
+        "version": "3.12.10"
+      }
+    ]
+  },
+  "hypotheses": [
+    "An exact retained 256-byte conventional PCI configuration image can be deterministically replayed into structural role and PCIe FLR capability facts without using class code as a Header Type substitute.",
+    "PCIe Function Level Reset capability must come from capability ID 0x10 Device Capabilities dword bit 28 and a selected PCI_FLR reset method must bind the exact same retained capture and provider fact; copying an unrelated provider evidence hash must fail.",
+    "DeviceRecord V3 and inventory verifier algorithm V2 can reject legacy records, provider observations outside captureStartedAt..capturedAt, forged provider digests, caller-selected HostSnapshot semantic digests, malformed capability chains, and cross-capture reset facts.",
+    "Every generic publication provider must cover at least one DeviceRecord, while the union of PCI-specific fact bindings must remain an exact bijection with the published DeviceRecord set; these cross-field rules still require a product verifier.",
+    "Evidence-only raw bytes and consistently rotated provider fact IDs may leave the semantic no-change projection stable, while Header Type or FLR semantic changes must advance the device, host topology, and no-change digest chain.",
+    "A caller cannot turn factory-derived hardware, technical, admin, or complete-owner-group NO into YES before capability evaluation, and UNKNOWN or CONFLICT reset state must remain fail closed.",
+    "A retained guest resource plan can be bounded and exactly schema/hash/upstream-bound without claiming that this component discovered BAR demand or ran the MMIO/BAR/RMRR/IRQ solver.",
+    "An eligible component decision must carry all component premise boundaries, exact blockers, and productAuthorized=false into the operation-admission binding so serialization cannot launder it into product authority."
+  ],
+  "observations": [
+    {
+      "name": "publication-projection-contract-tests",
+      "result": {
+        "command": "python -m pytest tests/test_snapshot_publication_contract.py -q",
+        "workingDirectory": ".",
+        "testsPassed": 14,
+        "failures": 0,
+        "errors": 0
+      }
+    },
+    {
+      "name": "raw-pci-structure-and-flr-replay",
+      "result": {
+        "retainedConventionalConfigBytes": 256,
+        "classCodeOffsetRange": "0x09..0x0b",
+        "headerTypeOffset": "0x0e",
+        "multifunctionBit": 7,
+        "capabilityPointerRange": "aligned 0x40..0xfc",
+        "capabilityCycleRejected": true,
+        "duplicatePcieCapabilityRejected": true,
+        "pcieCapabilityId": "0x10",
+        "flrSource": "PCIe Device Capabilities dword bit 28",
+        "pciFlrSameProviderIdentityRequired": true,
+        "crossProviderEvidenceHashSubstitutionRejected": true,
+        "typeOnePayloadRejected": true,
+        "unavailableCaptureFailsClosed": true
+      }
+    },
+    {
+      "name": "device-record-v3-inventory-replay",
+      "result": {
+        "deviceRecordSchemaVersion": 3,
+        "legacySchemaAccepted": false,
+        "inventoryVerifierAlgorithm": "PORTABLE_INVENTORY_VERIFIER_ALGORITHM_V2",
+        "closedSchemaBindings": 7,
+        "orderedValidationStages": 12,
+        "providerDigestDomain": "QMAN-DIRECTPATH/DEVICE-PROVIDER-FACTS/V2",
+        "providerCaptureIntervalRequired": true,
+        "providerObservationBeforeCaptureRejected": true,
+        "perDeviceProviderFactsDigestRecomputed": true,
+        "hostTopologyDigestRecomputed": true,
+        "hostProviderFactsDigestRecomputed": true,
+        "sameCapturePciFlrBindingRequired": true
+      }
+    },
+    {
+      "name": "snapshot-semantic-transition-matrix",
+      "result": {
+        "evidenceOnlyReservedRawByteChange": "NO_CHANGE",
+        "evidenceHashOnlyChange": "NO_CHANGE",
+        "providerFactIdOnlyChange": "NO_CHANGE",
+        "headerTypeZeroToOne": "SEMANTIC_CHANGE",
+        "flrBitLoss": "SEMANTIC_CHANGE",
+        "deviceProjectionInputMutationObserved": false,
+        "topologyMemberDigestShrinkReplayed": true,
+        "providerIdentityCoverageReplayed": true
+      }
+    },
+    {
+      "name": "publication-provider-coverage-contract",
+      "result": {
+        "genericProviderEmptyPciBindingsAllowed": true,
+        "genericProviderZeroDeviceCoverageRejected": true,
+        "providerCoveredDeviceUidsExactEqualityRequired": true,
+        "pciBindingUnionDeviceRecordBijectionRequired": true,
+        "crossFieldRulesImplementedByProductVerifier": false
+      }
+    },
+    {
+      "name": "factory-hardware-premise-and-static-gate",
+      "result": {
+        "premiseAuthorityBoundary": "COMPONENT_VERIFIED_INVENTORY_PREMISE_ONLY",
+        "premiseProductAuthorized": false,
+        "callerReportedHardwareYesOverFactoryNoRejected": true,
+        "callerReportedTechnicalYesOverFactoryNoRejected": true,
+        "callerReportedAdminYesOverFactoryNoRejected": true,
+        "callerReportedOwnerActiveYesOverFactoryNoRejected": true,
+        "ownerGateScope": "COMPLETE_RESOLVED_OWNER_ACTIVATION_GROUP",
+        "ownerGroupRequiresPassthroughAlreadyActive": true,
+        "unknownResetAffectedSet": [],
+        "unknownResetFailsClosed": true,
+        "conflictResetFailsClosed": true,
+        "pciFlrDoesNotImplyResetSafeOrClean": true
+      }
+    },
+    {
+      "name": "bounded-structural-guest-resource-plan",
+      "result": {
+        "authorityBoundary": "COMPONENT_CALLER_SUPPLIED_RESOURCE_PLAN_BYTES_ONLY",
+        "productAuthorized": false,
+        "schemaBytesAndDigestBound": true,
+        "canonicalPlanBytesAndHashBound": true,
+        "upstreamAdmissionInventoryClosureResetProfileBound": true,
+        "byteNodeDepthAndArrayBudgetsEnforced": true,
+        "windowOrderAlignmentAndSafeIntervalArithmeticChecked": true,
+        "barDemandDiscovered": false,
+        "mmioBarRmrrIrqSolverExecutedOrProven": false,
+        "allMandatoryResourcesAssignedIndependentlyProven": false,
+        "qemuFirmwareRealizationObserved": false
+      }
+    },
+    {
+      "name": "component-authority-disposition",
+      "result": {
+        "authorityBoundary": "COMPONENT_STATIC_CAPABILITY_RELATIONSHIP_ONLY",
+        "productAuthorized": false,
+        "completeClosedBlockerSetRequired": true,
+        "fourPremiseBoundariesSchemaConst": true,
+        "topLevelAndDispositionBlockersExactEqual": true,
+        "nestedBoundaryOrBlockerLaunderingRejectedAfterBindingHashRecompute": true
+      }
+    },
+    {
+      "name": "static-verification",
+      "result": {
+        "ruff": "PASS",
+        "compileall": "PASS",
+        "schemaDraft": "DRAFT_2020_12_VALID",
+        "portableGeneratorsCurrent": true,
+        "portableHandoffSemanticValidation": "PASS"
+      }
+    },
+    {
+      "name": "authority-boundary",
+      "result": "COMPONENT_ONLY; raw capture bytes are supplied by the caller; productCasesClosed=0; risksClosed=0; C00-C03 remain IMPLEMENTATION_BLOCKED; R03/R29/R38 remain OPEN; G1 and release status unchanged"
+    }
+  ],
+  "mapping": {
+    "techStories": [
+      "TS-F1-01",
+      "TS-F1-04",
+      "TS-F5-01"
+    ],
+    "caseIds": [
+      "C00",
+      "C01",
+      "C02",
+      "C03"
+    ],
+    "riskIds": [
+      "R03",
+      "R29",
+      "R38"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "qman-directpath-core/qman_directpath_core/pci_config.py",
+      "sha256": "cfe37e1205b5f20e5d6982907f17999c74fae78ec4e167a071cc6273d135808d",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/snapshot_semantics.py",
+      "sha256": "93695d900b5702682fb6434d82a88a5fe31f48951bad79ba36c70a50a1fb7969",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/inventory.py",
+      "sha256": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/inventory_closure_factory.py",
+      "sha256": "12997ba94e89ac8e7260476f4d5e654d11c0baf6b9fff57a9ca5cba8aa4b060b",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/resource_plan.py",
+      "sha256": "78562bda4f975686508444399736fdb9b9388bc1d12f4555c43b082829f2b5aa",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/static_capability.py",
+      "sha256": "da971ab06d639198159f46fa89dbd1b3b3e6a27e9c525a3c335ea131a2d2b72c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/authority.py",
+      "sha256": "1b0f45620ebf6d4c1adf9d36e59bc815131d4771de47b3b27c05ee6cdc35696c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/read_guard.py",
+      "sha256": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/operation_admission.py",
+      "sha256": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-portable-entities.schema.json",
+      "sha256": "fe4123596d622b5c06974f6f3a34effa1494c4dfd985ef1afe4d2d1b42767b01",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-host-snapshot-publication-trace.schema.json",
+      "sha256": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-inventory-verifier-algorithm.schema.json",
+      "sha256": "903a8b2bd750e7c3078f7edd7f56077a8832d7eb1852520fef74661137579221",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-inventory-verification-receipt.schema.json",
+      "sha256": "245fb70b77bebc2c8e9b4229966a03306a17f4ab06597aee34e9390186537adb",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-portable-control-contract.json",
+      "sha256": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-portable-hash-subjects.schema.json",
+      "sha256": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-operation-admission-binding.schema.json",
+      "sha256": "75b2d1bcf0a8223e024fdbcc2093356fbf07b010a7f067a13d905941fd9abb5a",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_inventory.py",
+      "sha256": "87e0a358e9efbeeb3666a813896cc5d3d4a9d42439b9b7d6c22cb575f1f811bc",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_snapshot_semantics.py",
+      "sha256": "396becfd86c3f58f06a7268ef38faae2a8be7b83cad4341f176bdc38bd84cf0c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_inventory_closure_factory.py",
+      "sha256": "e253d786b06b097929bc6fe3c45a8ff1af5f412ad1dd812476953b4235efae6f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_read_guard.py",
+      "sha256": "e7e8d1fdfeffd1d69eecd5d720bef117affd21feacab601fc05847db43e2cdb5",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_authority.py",
+      "sha256": "161f122bb3370fa20be255f7624dc83b64998e9a97da15b313b3f44ad391e11e",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_operation_admission.py",
+      "sha256": "4d378e7cb7e4fa5f4bbdc6f7afad872f969697b8d05a42136becc03d49decf7b",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "tests/test_snapshot_publication_contract.py",
+      "sha256": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "acceptance/cases/registry-C.json",
+      "sha256": "baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "The raw 256-byte PCI configuration image or explicit unavailable disposition is supplied by the caller. This component performs no sysfs, kernel, VFIO, QEMU, hypervisor, or physical-device capture.",
+    "The replayed provider fact proves deterministic binding to retained bytes inside the component; it is not a product capture authority, signed HostSnapshot publisher, external monotonic CAS, or durable repository transaction.",
+    "A replayed PCI_FLR capability bit proves only that the standard capability bit was present in the retained image. It does not prove reset safety, reset cleanliness, reset execution, complete affected-function scope, driver restore, DMA quiescence, or device-specific errata.",
+    "The factory hardware premise covers structural role, PCIe/FLR, typed dependency domains, IOMMU/physical/interrupt/reset facts, payload-root admin state, complete resolved owner-activation state, and fail-closed component gates. It remains a caller-supplied signed-inventory relationship, not product collector/publication/currentness or attach authority.",
+    "The guest-resource-plan verifier checks only bounded canonical/schema/hash/upstream bindings and basic window order, alignment, non-overlap, and safe interval arithmetic. It does not discover BAR demand, run or prove the MMIO/BAR/RMRR/IRQ solver, independently prove allMandatoryResourcesAssigned, or observe QEMU/firmware realization.",
+    "The operation-admission binding is permanently COMPONENT_STATIC_CAPABILITY_RELATIONSHIP_ONLY with productAuthorized=false and a closed blocker set. It is not proof of a SERIALIZABLE repository transaction, committed lease, successful CAS, journal fence, or side-effect authorization.",
+    "Publication provider coverage, PCI binding bijection, capture timing, identity, and raw/semantic replay are closed normative x-qman rules plus schema-local constraints. Portable decision, rollback, and mutation verifiers now close additional caller-byte relationships, but this repository still lacks the target-Qman product publication transaction, authentic repository/CAS receipt, visibility proof, and delivery witness.",
+    "Evidence-only raw-byte changes are intentionally excluded from topology semantics, but exact publisher currentness must still advance through the separate signed snapshot, authority-vector, and rollback-anchor chain in a product integration.",
+    "No target Qman repository was available. Of 299 ordered integration-map items, 298 current-release items remain UNMAPPED/NOT_STARTED and the future IOMMUFD-cdev migration item is explicitly DEFERRED/NOT_APPLICABLE_CURRENT_RELEASE; there are zero target code or target test bindings, so no product collector, provider, publisher, planner, controller, repository, or side-effect call site is proven.",
+    "There is no E3 end-to-end target-Qman execution, E4 physical qualification, or signed CaseCompletionRecord for C00-C03 or R03/R29/R38.",
+    "This record cannot close C00-C03, R03, R29, R38, G1-G6, any product capability, qualification profile, support statement, HCL entry, or release gate."
+  ]
+}

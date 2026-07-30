@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-host-snapshot-rollback-anchor.schema.json",
+  "title": "Qman DirectPath externally protected host-snapshot rollback anchor",
+  "description": "A per-host monotonic record held outside the DirectPath controller, product repository, target source tree, integration map, and evidence repository. It prevents a still-valid older HostSnapshot or HostAuthority pointer from becoming current authority after rollback. A copied anchor is not freshness proof; the live record must also be bound by a verifier-nonce AnchorFreshnessEnvelope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "canonicalProfileId",
+    "recordState",
+    "hostId",
+    "kernelBootId",
+    "hostEpoch",
+    "agentIdentity",
+    "agentGeneration",
+    "acceptedSnapshotEpoch",
+    "acceptedSnapshotContentHash",
+    "acceptedHostAuthorityResourceVersion",
+    "candidateProjectionDigest",
+    "anchorVersion",
+    "resourceVersion",
+    "previousAnchorDigestOrNull",
+    "updatedAt",
+    "authorityId",
+    "casPrecondition",
+    "prepareReceipt",
+    "anchorDigest",
+    "receipt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "recordType": {"const": "DIRECTPATH_HOST_SNAPSHOT_ROLLBACK_ANCHOR"},
+    "canonicalProfileId": {"const": "CANONICAL-JSON-V1"},
+    "recordState": {"enum": ["PREPARED", "COMMITTED"]},
+    "hostId": {"$ref": "#/$defs/id"},
+    "kernelBootId": {"$ref": "#/$defs/id"},
+    "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+    "agentIdentity": {"$ref": "#/$defs/id"},
+    "agentGeneration": {"$ref": "#/$defs/safePositiveInteger"},
+    "acceptedSnapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+    "acceptedSnapshotContentHash": {"$ref": "#/$defs/digest"},
+    "acceptedHostAuthorityResourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "candidateProjectionDigest": {"$ref": "#/$defs/digest"},
+    "anchorVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "resourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "previousAnchorDigestOrNull": {"$ref": "#/$defs/nullableDigest"},
+    "updatedAt": {"$ref": "#/$defs/timestamp"},
+    "authorityId": {"$ref": "#/$defs/id"},
+    "casPrecondition": {"$ref": "#/$defs/casPrecondition"},
+    "prepareReceipt": {"$ref": "#/$defs/prepareReceipt"},
+    "anchorDigest": {"$ref": "#/$defs/nullableDigest"},
+    "receipt": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/receipt"}
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"recordState": {"const": "PREPARED"}},
+        "required": ["recordState"]
+      },
+      "then": {
+        "properties": {
+          "anchorDigest": {"type": "null"},
+          "receipt": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"recordState": {"const": "COMMITTED"}},
+        "required": ["recordState"]
+      },
+      "then": {
+        "properties": {
+          "anchorDigest": {"$ref": "#/$defs/digest"},
+          "receipt": {"$ref": "#/$defs/receipt"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"anchorVersion": {"const": 1}},
+        "required": ["anchorVersion"]
+      },
+      "then": {
+        "properties": {
+          "resourceVersion": {"const": 1},
+          "previousAnchorDigestOrNull": {"type": "null"},
+          "casPrecondition": {"$ref": "#/$defs/genesisCasPrecondition"}
+        }
+      },
+      "else": {
+        "properties": {
+          "previousAnchorDigestOrNull": {"$ref": "#/$defs/digest"},
+          "casPrecondition": {"$ref": "#/$defs/successorCasPrecondition"}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]*$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/digest"}
+      ]
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "nullablePositiveInteger": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/safePositiveInteger"}
+      ]
+    },
+    "nullableId": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/id"}
+      ]
+    },
+    "casPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedAnchorVersionOrNull",
+        "expectedResourceVersionOrNull",
+        "expectedKernelBootIdOrNull",
+        "expectedHostEpochOrNull",
+        "expectedAgentIdentityOrNull",
+        "expectedAgentGenerationOrNull",
+        "expectedSnapshotEpochOrNull",
+        "expectedSnapshotContentHashOrNull",
+        "expectedHostAuthorityResourceVersionOrNull",
+        "expectedAnchorDigestOrNull"
+      ],
+      "properties": {
+        "expectedAnchorVersionOrNull": {"$ref": "#/$defs/nullablePositiveInteger"},
+        "expectedResourceVersionOrNull": {"$ref": "#/$defs/nullablePositiveInteger"},
+        "expectedKernelBootIdOrNull": {"$ref": "#/$defs/nullableId"},
+        "expectedHostEpochOrNull": {"$ref": "#/$defs/nullablePositiveInteger"},
+        "expectedAgentIdentityOrNull": {"$ref": "#/$defs/nullableId"},
+        "expectedAgentGenerationOrNull": {"$ref": "#/$defs/nullablePositiveInteger"},
+        "expectedSnapshotEpochOrNull": {"$ref": "#/$defs/nullablePositiveInteger"},
+        "expectedSnapshotContentHashOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "expectedHostAuthorityResourceVersionOrNull": {"$ref": "#/$defs/nullablePositiveInteger"},
+        "expectedAnchorDigestOrNull": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "genesisCasPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedAnchorVersionOrNull",
+        "expectedResourceVersionOrNull",
+        "expectedKernelBootIdOrNull",
+        "expectedHostEpochOrNull",
+        "expectedAgentIdentityOrNull",
+        "expectedAgentGenerationOrNull",
+        "expectedSnapshotEpochOrNull",
+        "expectedSnapshotContentHashOrNull",
+        "expectedHostAuthorityResourceVersionOrNull",
+        "expectedAnchorDigestOrNull"
+      ],
+      "properties": {
+        "expectedAnchorVersionOrNull": {"type": "null"},
+        "expectedResourceVersionOrNull": {"type": "null"},
+        "expectedKernelBootIdOrNull": {"type": "null"},
+        "expectedHostEpochOrNull": {"type": "null"},
+        "expectedAgentIdentityOrNull": {"type": "null"},
+        "expectedAgentGenerationOrNull": {"type": "null"},
+        "expectedSnapshotEpochOrNull": {"type": "null"},
+        "expectedSnapshotContentHashOrNull": {"type": "null"},
+        "expectedHostAuthorityResourceVersionOrNull": {"type": "null"},
+        "expectedAnchorDigestOrNull": {"type": "null"}
+      }
+    },
+    "successorCasPrecondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedAnchorVersionOrNull",
+        "expectedResourceVersionOrNull",
+        "expectedKernelBootIdOrNull",
+        "expectedHostEpochOrNull",
+        "expectedAgentIdentityOrNull",
+        "expectedAgentGenerationOrNull",
+        "expectedSnapshotEpochOrNull",
+        "expectedSnapshotContentHashOrNull",
+        "expectedHostAuthorityResourceVersionOrNull",
+        "expectedAnchorDigestOrNull"
+      ],
+      "properties": {
+        "expectedAnchorVersionOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedResourceVersionOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedKernelBootIdOrNull": {"$ref": "#/$defs/id"},
+        "expectedHostEpochOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedAgentIdentityOrNull": {"$ref": "#/$defs/id"},
+        "expectedAgentGenerationOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedSnapshotEpochOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedSnapshotContentHashOrNull": {"$ref": "#/$defs/digest"},
+        "expectedHostAuthorityResourceVersionOrNull": {"$ref": "#/$defs/safePositiveInteger"},
+        "expectedAnchorDigestOrNull": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "receiptId",
+        "subjectAnchorDigest",
+        "hostId",
+        "kernelBootId",
+        "hostEpoch",
+        "agentIdentity",
+        "agentGeneration",
+        "acceptedSnapshotEpoch",
+        "acceptedSnapshotContentHash",
+        "acceptedHostAuthorityResourceVersion",
+        "anchorVersion",
+        "resourceVersion",
+        "authorityId",
+        "issuedAt",
+        "trustRootDigest",
+        "receiptDigest",
+        "rootSignatures"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "receiptId": {"$ref": "#/$defs/id"},
+        "subjectAnchorDigest": {"$ref": "#/$defs/digest"},
+        "hostId": {"$ref": "#/$defs/id"},
+        "kernelBootId": {"$ref": "#/$defs/id"},
+        "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "agentIdentity": {"$ref": "#/$defs/id"},
+        "agentGeneration": {"$ref": "#/$defs/safePositiveInteger"},
+        "acceptedSnapshotEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "acceptedSnapshotContentHash": {"$ref": "#/$defs/digest"},
+        "acceptedHostAuthorityResourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "anchorVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "resourceVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "authorityId": {"$ref": "#/$defs/id"},
+        "issuedAt": {"$ref": "#/$defs/timestamp"},
+        "trustRootDigest": {"$ref": "#/$defs/digest"},
+        "receiptDigest": {"$ref": "#/$defs/digest"},
+        "rootSignatures": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/rootSignature"},
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of rootKeyId"
+        }
+      }
+    },
+    "rollbackAuthorityPreflightReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "receiptType",
+        "receiptId",
+        "hostId",
+        "authorityId",
+        "predecessorAnchorDigestOrNull",
+        "checkedAt",
+        "expiresAt",
+        "verifierNonce",
+        "unresolvedReservationCount",
+        "trustRootDigest",
+        "receiptDigest",
+        "rootSignatures"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "receiptType": {
+          "const": "HOST_SNAPSHOT_ROLLBACK_AUTHORITY_PREFLIGHT"
+        },
+        "receiptId": {"$ref": "#/$defs/id"},
+        "hostId": {"$ref": "#/$defs/id"},
+        "authorityId": {"$ref": "#/$defs/id"},
+        "predecessorAnchorDigestOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "checkedAt": {"$ref": "#/$defs/timestamp"},
+        "expiresAt": {"$ref": "#/$defs/timestamp"},
+        "verifierNonce": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{22,86}$"
+        },
+        "unresolvedReservationCount": {"const": 0},
+        "trustRootDigest": {"$ref": "#/$defs/digest"},
+        "receiptDigest": {"$ref": "#/$defs/digest"},
+        "rootSignatures": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/rootSignature"},
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of rootKeyId"
+        }
+      }
+    },
+    "prepareReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "reservationId",
+        "hostId",
+        "candidateProjectionDigest",
+        "predecessorAnchorDigestOrNull",
+        "authorityId",
+        "preparedAt",
+        "expiresAt",
+        "retentionPolicy",
+        "rollbackAuthorityPreflightReceiptDigest",
+        "trustRootDigest",
+        "receiptDigest",
+        "rootSignatures"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "reservationId": {"$ref": "#/$defs/id"},
+        "hostId": {"$ref": "#/$defs/id"},
+        "candidateProjectionDigest": {"$ref": "#/$defs/digest"},
+        "predecessorAnchorDigestOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "authorityId": {"$ref": "#/$defs/id"},
+        "preparedAt": {"$ref": "#/$defs/timestamp"},
+        "expiresAt": {"$ref": "#/$defs/timestamp"},
+        "retentionPolicy": {
+          "const": "DURABLE_NON_REUSABLE_RECOVERY_TOMBSTONE"
+        },
+        "rollbackAuthorityPreflightReceiptDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "trustRootDigest": {"$ref": "#/$defs/digest"},
+        "receiptDigest": {"$ref": "#/$defs/digest"},
+        "rootSignatures": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/rootSignature"},
+          "x-qmanCanonicalOrder": "ascending CANONICAL-JSON-V1 bytes of rootKeyId"
+        }
+      }
+    },
+    "rootSignature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootKeyId", "signedAt", "algorithm", "signature"],
+      "properties": {
+        "rootKeyId": {"$ref": "#/$defs/id"},
+        "signedAt": {"$ref": "#/$defs/timestamp"},
+        "algorithm": {"const": "Ed25519"},
+        "signature": {
+          "type": "string",
+          "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"
+        }
+      }
+    }
+  },
+  "x-qmanCanonicalizationRule": "Reject duplicate keys, non-NFC strings, floats, unknown fields, timestamps outside TIMESTAMP-UTC-US-V1, and integers outside the interoperable range before CANONICAL-JSON-V1 encoding.",
+  "x-qmanCandidateProjectionRule": "candidateProjectionDigest is SHA-256 over ASCII(QMAN-DIRECTPATH/HOST-SNAPSHOT-ANCHOR-CANDIDATE/V1), one zero byte, and CANONICAL-JSON-V1 of the exact closed projection {hostId,kernelBootId,hostEpoch,agentIdentity,agentGeneration,acceptedSnapshotEpoch,acceptedSnapshotContentHash,acceptedHostAuthorityResourceVersion,anchorVersion,resourceVersion,previousAnchorDigestOrNull,authorityId,casPrecondition}. PREPARED and COMMITTED forms of one reservation must have the same candidateProjectionDigest and exact-equal projection.",
+  "x-qmanRollbackAuthorityPreflightRule": "Before deciding NO_CHANGE or creating a reservation, the caller supplies a fresh verifierNonce directly to the independent authority. The authority scans the durable non-reusable recovery tombstones for the exact hostId and predecessorAnchorDigestOrNull and returns unresolvedReservationCount=0. checkedAt < expiresAt, expiresAt-checkedAt is at most 300 seconds, and the publication read/prepare linearization point lies in [checkedAt,expiresAt]. Set receiptDigest to null and rootSignatures to [], hash ASCII(QMAN-DIRECTPATH/HOST-SNAPSHOT-ROLLBACK-AUTHORITY-PREFLIGHT/V1), one zero byte, and CANONICAL-JSON-V1 of the complete receipt; each root signature covers ASCII(QMAN-DIRECTPATH/HOST-SNAPSHOT-ROLLBACK-AUTHORITY-PREFLIGHT-SIGNATURE/V1), one zero byte, and CANONICAL-JSON-V1 of exactly {rootKeyId,signedAt,receiptDigest}. A caller count, copied old receipt, target-local scan, or elapsed TTL is invalid.",
+  "x-qmanPrepareReceiptRule": "prepareReceipt.hostId, candidateProjectionDigest, predecessorAnchorDigestOrNull and authorityId exact-equal the candidate record. rollbackAuthorityPreflightReceiptDigest exact-equals the fresh root-signed preflight receipt that found zero unresolved reservations for this exact host/predecessor before preparedAt. preparedAt < expiresAt and retentionPolicy is DURABLE_NON_REUSABLE_RECOVERY_TOMBSTONE. Set receiptDigest to null and rootSignatures to [], hash the complete receipt with CANONICAL-JSON-V1, and verify each signature over ASCII(QMAN-DIRECTPATH/HOST-SNAPSHOT-ANCHOR-PREPARE/V1) || 0x00 || CANONICAL-JSON-V1({rootKeyId,signedAt,receiptDigest}). The independently supplied root set verifies a distinct-principal quorum. reservationId and candidateProjectionDigest are never deleted, reused or rebound, including after expiresAt.",
+  "x-qmanAnchorDigestRule": "For a COMMITTED record, deep-copy the complete record, set anchorDigest to null and receipt to null, retain recordState, prepareReceipt and every other field, encode CANONICAL-JSON-V1, and store SHA-256 of those bytes as anchorDigest. The intermediate calculation object need not satisfy the stored-record schema.",
+  "x-qmanReceiptRule": "Every receipt subject field byte-equals its top-level counterpart and subjectAnchorDigest equals anchorDigest. To compute receiptDigest, deep-copy the receipt, set receiptDigest to null and rootSignatures to [], retain every other field, and hash CANONICAL-JSON-V1 bytes. Each root signature covers ASCII(QMAN-DIRECTPATH/HOST-SNAPSHOT-ROLLBACK-ANCHOR-RECEIPT/V1) || 0x00 || CANONICAL-JSON-V1({rootKeyId,signedAt,receiptDigest}). Distinct valid root principals satisfy the independently supplied root-set quorum.",
+  "x-qmanMonotonicCasRule": "The independent authority compares every casPrecondition field for hostId. Genesis has anchorVersion=resourceVersion=1 and no predecessor. A successor increments anchorVersion and resourceVersion by exactly one, binds previousAnchorDigestOrNull, and has a later updatedAt. Within one [kernelBootId,hostEpoch,agentIdentity,agentGeneration], acceptedSnapshotEpoch and acceptedHostAuthorityResourceVersion strictly increase and a snapshot epoch is never rebound to different content. A new host/agent incarnation must advance hostEpoch and/or agentGeneration, must not reuse an older kernelBootId/agent identity generation tuple, and starts acceptedSnapshotEpoch at 1. Stale CAS, skipped versions, rollback, same-epoch equivocation, or cross-host substitution writes nothing.",
+  "x-qmanPrepareCommitRule": "PREPARED reserves one exact candidate under the predecessor CAS and carries a signed prepareReceipt bound to the fresh zero-unresolved preflight, but it is not rollback authority and has neither anchorDigest nor final receipt. The DirectPath repository compares the same predecessor HostAuthority, AvailabilityAuthority, current capability-policy authority and current freshness-policy authority and atomically commits the immutable DeviceRecord set, HostSnapshot, pointers/fence, publication audit, gated outbox and durable publication commit record. A new repository commit is allowed only when repository committedAt is no later than expiresAt. Only after that repository commit may the external authority finalize the exact PREPARED record as COMMITTED and issue its final receipt. Expiry alone only forbids a new repository commit: the reservation and a non-reusable recovery tombstone remain durably queryable forever. If a retained exact commit record proves committedAt<=expiresAt and binds reservationId, prepareReceipt.receiptDigest and candidateProjectionDigest, finalize remains permitted after expiresAt and is idempotent. Abort or GC requires an independently verifiable repository rollback/non-commit proof for that exact reservation/candidate; elapsed TTL alone is never proof, and an aborted identifier is still never reused. If the publisher crashes after repository COMMIT, startup/reconciler performs that lookup and finalize; repeated finalize returns the same COMMITTED anchor/receipt without consuming another version. NO_CHANGE or another reservation on the same predecessor is forbidden while any unresolved tombstone exists. Until exact COMMITTED anchor plus live freshness exist, the repository pointer and pending outbox cannot authorize planning, host side effects or event delivery.",
+  "x-qmanNoChangeRule": "A semantic NO_CHANGE capture does not create, prepare, or commit a new anchor. The live COMMITTED anchor remains byte-identical and a fresh verifier-nonce response must still prove it current.",
+  "x-qmanFreshnessRule": "The stored record proves monotonic acceptance but not that copied bytes are current. Product authorization additionally requires a live directpath-anchor-freshness-envelope with anchorKind=HOST_SNAPSHOT, an evaluator-supplied nonce, unexpired root quorum signatures, and exact anchor bytes/digest/version/resourceVersion.",
+  "x-qmanAuthorityBoundary": "The authority service, its current record, nonce transport, CAS state, and trust root are independent of the target repository, DirectPath database/controller, evidence repository, integration map, and tested binary. A target-local table, fixture, self-declared key, or copied evidence blob is not rollback authority."
+}

@@ -1,6 +1,6 @@
 # Qman DirectPath 可移植实现交接规范
 
-状态日期：2026-07-22
+状态日期：2026-07-24
 VMware 冻结基线：ESXi 8.0.3 build 24280767 / API 8.0.3.0 / vHW 20
 目标：在未知 Qman 私有仓库结构的前提下，把 V3 DirectPath 外部语义、事务与安全边界冻结到
 可映射、可实现、可验收的程度。
@@ -51,36 +51,42 @@ snapshot、qualification、reset、clean release 或 lifecycle deny gate。
    `contracts/directpath-operation-payload.schema.json`、
    `contracts/directpath-authority-entities.schema.json`、
    `contracts/directpath-portable-entities.schema.json`：35 个 operation 的 common request/result envelope、
-   35×2=70 个 operation-specific closed payload profile、17 个持久化 authority aggregate 和 4 个非 authority
-   wire projection；
-5. `contracts/directpath-identity-v1.schema.json` 与 golden vectors、portable hash subjects、trust/key-ring/
+   35×2=70 个 operation-specific closed payload profile、19 个持久化 authority aggregate 和 4 个非 authority
+   wire projection；其中 DeviceRecord V3 必须精确包含 raw PCI structure/FLR replay fact 与七个 typed dependency domain；
+5. [`contracts/directpath-inventory-verifier-algorithm.schema.json`](../contracts/directpath-inventory-verifier-algorithm.schema.json)、
+   [`contracts/directpath-inventory-verification-receipt.schema.json`](../contracts/directpath-inventory-verification-receipt.schema.json)、
+   [`contracts/directpath-capability-policy.schema.json`](../contracts/directpath-capability-policy.schema.json)、
+   [`contracts/directpath-dependency-closure-request.schema.json`](../contracts/directpath-dependency-closure-request.schema.json) 与
+   [`contracts/directpath-reset-contract-set.schema.json`](../contracts/directpath-reset-contract-set.schema.json)：
+   exact inventory verifier/receipt、Static request policy binding、有界七域/reset closure 及其完整输出合同；
+6. `contracts/directpath-identity-v1.schema.json` 与 golden vectors、portable hash subjects、trust/key-ring/
    rollback/catalog/qualification schemas：跨语言 canonical bytes、身份、签名和反回滚边界；
-6. 本文件：target mapping 和停止条件；
-7. `qman-directpath-implementation-blueprint.md`：模块、事务、持久化与伪代码；
-8. `qemu-static-dynamic-directpath-design.md`：算法、风险和 101 个 Case 的需求来源；
-9. `contracts/qman-integration-map.schema.json` 与
+7. 本文件：target mapping 和停止条件；
+8. `qman-directpath-implementation-blueprint.md`：模块、事务、持久化与伪代码；
+9. `qemu-static-dynamic-directpath-design.md`：算法、风险和 101 个 Case 的需求来源；
+10. `contracts/qman-integration-map.schema.json` 与
    `contracts/qman-integration-map.template.json`：私有代码绑定输出；
-10. `contracts/directpath-integration-report.schema.json` 与
+11. `contracts/directpath-integration-report.schema.json` 与
     `contracts/directpath-qualification-release-index.schema.json`：mapping/conflict/test 和逐 profile、逐 Case
     E4 的完成证据；
-11. `contracts/directpath-acceptance-scenario.schema.json`：产品测试的可执行输入、故障注入、oracle、
-   artifact 与清理证明格式；`handoff/examples/S05-legacy-qemu-start-failure-clean-rollback.json`
-   是 `TEMPLATE` 示例，不是完成证据；`BOUND` 只表示已绑定可运行，只有 `EXECUTED_PASS` 才携带
-   passing evidence，并且仍须通过产品发布门；
-12. `contracts/directpath-acceptance-case-contracts.json` 与
+12. `contracts/directpath-acceptance-scenario.schema.json`：产品测试的可执行输入、故障注入、oracle、
+    artifact 与清理证明格式；`handoff/examples/S05-legacy-qemu-start-failure-clean-rollback.json`
+    是 `TEMPLATE` 示例，不是完成证据；`BOUND` 只表示已绑定可运行，只有 `EXECUTED_PASS` 才携带
+    passing evidence，并且仍须通过产品发布门；
+13. `contracts/directpath-acceptance-case-contracts.json` 与
     `contracts/directpath-case-completion-record.schema.json`：101 个 Case 的不可削弱谓词、依赖、
     trace/fault/artifact/repeat/duration，以及在同一 target/platform/backend/qualification tuple 上多 scenario
     的确定性完成聚合；
-13. `contracts/directpath-case-evaluator-tool-manifest.schema.json` 与
+14. `contracts/directpath-case-evaluator-tool-manifest.schema.json` 与
     `contracts/directpath-build-attestation.schema.json`：Case 求值器自身的目标代码、接口、完整 source tree、
     builder/toolchain/dependency/environment/input/output 和 runtime 证明；它与任何 Scenario RunnerManifest
     相互独立；
-14. `contracts/directpath-source-tree-manifest.schema.json`、
+15. `contracts/directpath-source-tree-manifest.schema.json`、
     `contracts/directpath-runner-manifest.schema.json` 与
     `contracts/directpath-execution-evidence-index.schema.json`：从目标 commit 的完整 Git tracked tree 固定
     runner/build/predicate，并形成六个互斥控制制品和逐 iteration 的 typed evidence DAG；dirty tree、一份
     通用日志或重复 hash 不能满足多个 oracle；
-15. `contracts/directpath-qualification-workload-definition.schema.json`、
+16. `contracts/directpath-qualification-workload-definition.schema.json`、
     `contracts/directpath-qualification-run-request.schema.json`、
     `contracts/directpath-workload-evaluator-manifest.schema.json`、
     `contracts/directpath-workload-evaluation-report.schema.json`、
@@ -95,13 +101,80 @@ snapshot、qualification、reset、clean release 或 lifecycle deny gate。
     inventory、firmware/provider、taxonomy、guest/workload 和
     scenario execution core 的独立 typed measurement，经 fresh nonce、host boot/epoch、起止时间和完整
     measurement/core 双签运行闭包后重算 E4 subject 与 exact qualification key，不能从待签发记录回抄；
-16. `contracts/directpath-trust-key-ring-history.schema.json` 与
+17. `contracts/directpath-trust-key-ring-history.schema.json` 与
     `contracts/directpath-anchor-freshness-envelope.schema.json`：解析 genesis→current 信任链，并用
     verifier 外部 nonce 证明独立 anchor 的实时 freshness；
-17. `contracts/qman-evidence-index.json`：已有参考/component 证据及其不得越权的边界。
+18. `contracts/qman-evidence-index.json`：已有参考/component 证据及其不得越权的边界。
 
 如果叙述例子与 portable contract 的 enum/字段/FSM 冲突，以 machine contract 为准，同时在
 目标 mapping 中登记 `CONFLICT`，不得自行选择一段实现。
+
+`directpath-portable-control-contract.json.normativeSources` 是显式有序列表。portable package generator
+只 hash 列表中逐项声明的路径，不沿 JSON Schema `$ref` 自动发现 normative source；因此第 5 项的五份
+schema 必须分别出现在该列表和 handoff validation closure 中，不能仅靠被其他 schema 引用。
+
+### 3.1 当前 portable core 可复用到什么程度
+
+- inventory verifier 已校验 current HostAuthority before/after bytes、signed current HostSnapshot、
+  完整 DeviceRecord V3 set、同采集 raw PCI structure/FLR facts，以及 IOMMU/physical-isolation 旧投影与 exact 七域 typed facts 的一致性。
+  每个域为 IOMMU、PHYSICAL_ISOLATION、REQUESTER_ALIAS、MULTIFUNCTION、PF_VF、FUNCTIONAL 或
+  PLATFORM；edge 自带 action state、required action 与 provenance，UNKNOWN/CONFLICT 不得猜边。
+- schema-bound verifier algorithm identity 固定 exact schema bytes 和验证阶段；随后生成的
+  inventory verification receipt 是 trusted-process/component receipt。它不是签名、binary/build
+  attestation、独立/线性化 repository read 证明、publication CAS、可执行 provenance 或产品集成证明。
+- publication capture-closure verifier 已消费 exact capture-batch、freshness-policy、DeviceRecord、
+  provider output 与 provider semantic bytes；它从 record provenance 重建 provider coverage，要求
+  complete-host PCI binding 双射，独立重放 raw 256-byte config/closed failure 与 FLR，并重算
+  topology/provider/no-change、capability-policy binding 和 mandatory-evidence freshness。目标 adapter
+  应生成固定 portable provider envelopes，或另行提供 target-commit decoder/build receipt。
+  `HOST_SNAPSHOT_CAPTURE_CLOSURE_VERIFIER_V2` 还固定五份有序 transitive schema digest、十个
+  validation stage，并在 schema walk 前执行 byte/node/depth/count/aggregate budget。它只证明候选
+  DeviceRecord 的 `deviceGeneration == candidateSnapshotEpoch` 且共享 `candidateResourceVersion`；
+  两个坐标仍由 caller stamped。目标 publisher 必须从 repository-current HostAuthority 派生 next
+  snapshot/resource version，在同一 SERIALIZABLE transaction 中 CAS 提交，并以可信 transaction
+  `evaluatedAt` 重做 freshness，不能照抄 component receipt 的坐标或 caller capture-completion clock。
+  该 verifier 的 schema-valid receipt 永远是 `COMPONENT_PREMISE_ONLY`、`productAuthorized=false`，
+  固定保留包括 `TRUSTED_PUBLICATION_EVALUATION_TIME_REQUIRED` 在内的八个 blocker；它不是完整
+  publication transaction、capability-policy authority CAS、collector/publisher、rollback 或 visibility proof。
+- publication decision verifier 已消费 exact HostAuthority、全局 AvailabilityAuthority、两类
+  policy authority、current inventory、predecessor anchor/freshness、zero-unresolved preflight 与
+  structural SERIALIZABLE-read receipt，重算四 authority CAS expectation，并只从 retained facts
+  派生 `GENESIS/INCARNATION_GENESIS/SUCCESSOR/REFRESH/NO_CHANGE`。preflight 签名不得晚于
+  `beganAt`，predecessor/preflight nonce 必须分离，incarnation 的 hostEpoch/agentGeneration
+  分别不得回退且至少一项严格推进。read receipt 和时间仍由 adapter 提供，因此该值不能充当
+  product transaction authority。
+- publication rollback verifier 已把历史 decision trust 与当前 recovery trust 分开：历史
+  predecessor 按原 decision 时点重放，当前 after/freshness 按 recovery 时点的 live trust
+  校验，同时要求同一 root/key-ring/trust-anchor namespace、exact key-ring history prefix 和
+  单调 trust-anchor version；合法前向 key rotation 不要求重签旧 committed snapshot。它验证
+  两阶段都匹配 adapter 独立配置的 trust-anchor path，并在序列化 context 中分别固定
+  freshness receipt digest、`verifiedAt`、expiry 和 path。它验证 exact PREPARED/COMMITTED
+  chain、preflight signature completion、完整 anchor CAS、nonce separation 和 after inventory，只导出
+  reservation recovery keys 与 repository commit 可接受窗口，不接受 caller 提供的
+  `committedAt`。目标 adapter 仍须证明 trust authority 的 direct path/nonce transport；component
+  receipt 不能替代该外部 provenance。
+- publication mutation verifier 再消费上述两个 factory context 与 exact caller-supplied
+  transaction/row bytes，确定性生成 `N+6` 写集（最多 4,102），闭合五种 digest projection、
+  mutation fixed point、payload/audit/outbox/commit self-digest、DeviceRecord-set digest 和
+  resolved four-authority vector；`NO_CHANGE` 必须四个 after row artifact 全空且零写。该层没有
+  authenticated operation exchange/result schema identity、产品 repository/CAS receipt、已定义的
+  aggregate/event-ID/createdAt/commit-clock 语义、独立 atomic-visibility probe 或 post-anchor
+  delivery witness，固定 `productAuthorized=false`。
+- capability policy verifier 固定 self-hash、有效期和 `maxDevices/maxEdges`；Static request verifier 固定
+  persisted entity、request hash、selector、mutation precondition 和 policy binding。唯一的 typed admission
+  constructor 从已验证 Static selector 派生 `ClosureRequest` roots，从已验证 policy 派生 limits。
+- closure resolver 在 4096 device/65536 edge 的硬上限内展开七域与 reset fixed point；成功结果同时给出
+  exact DependencyBundle 和完整 `RESET_CONTRACT_SET`，未知/冲突/缺证明/超限均 fail closed。
+- `RequestReadSet` 固定当前 VM request row，`AvailabilityReadSet` 固定 closure member 的
+  device generation/resourceVersion 以及 blocking lease/quarantine predicate。`read_guard` 只接受
+  factory 生成的 `VerifiedStaticCapabilityContext`，不可分地组合 inventory closure 与同一 admission
+  派生的 qualification binding；它将两类 factory、inventory/qualification receipt、record/signer、
+  catalog/trust/current policy pointer、closure request、bundle/reset set 和 before/after
+  `CurrentAuthorityVector` 逐项重放后，才返回仅限当前 trusted process 使用的 authorization value。
+
+上述闭环仍没有实现 Dynamic request verification/selection、E4 recursive replay、Qman product repository
+adapter/linearizable read/CAS、authoritative provider collector、durable operation lease，以及任何
+VFIO/reset/QEMU/rollback side effect。内网映射不得把 portable value/receipt 当成这些产品证明。
 
 ## 4. VMware 对标边界
 
@@ -390,7 +463,7 @@ C  exact target-code revision
 `M -> QualificationRecord/E4 -> SupportedCatalog -> A -> M` 固定点。final map 不得存进 `C` 或 `E`；
 任何位于 `E` 的 blob 都不得写入包含自己的 Git revision。
 
-portable contract 当前导出 **293 个有序 mapping item**，并为每个 item 固定一条
+portable contract 当前导出 **299 个有序 mapping item**，并为每个 item 固定一条
 `verificationMatrix` 记录。每条记录独立绑定 test obligation、101 Case 的适用并集、八类 oracle 和
 `verificationRequirementDigest`。integration map 中同一 item 必须携带该 digest；目标 test/scenario
 只能满足它，不能通过自报少测、改序、合并 item 或扩大无关 Case 来改变要求。场景的每次 iteration 和
@@ -509,15 +582,50 @@ IDL/schema hash；缺失时才新建，避免维护两套 wire contract。
 - VMware baseline、parity classification、产品边界和 backend policy 已版本化；
 - required ports、canonical objects、FSM、CAS、reason、configuration、telemetry、migration 与 Case
   mapping 可机器检查；
-- 35 个 operation envelope 与 70 个逐 operation/direction closed payload profile、17 个 authority aggregate、
-  4 个 portable projection、identity golden vectors、trust/catalog anti-rollback 和 qualification index 都有
+- 35 个 operation envelope 与 70 个逐 operation/direction closed payload profile、19 个 authority aggregate、
+  4 个 portable projection、1 个 durable operation-admission companion、identity golden vectors、
+  trust/catalog anti-rollback 和 qualification index 都有
   closed schema；Scenario fixture 与 70 个 profile 精确绑定，执行时 `operationExchanges` 证明实际 envelope；
+- DeviceRecord V3 raw PCI structure/FLR replay、exact 七域 typed dependency facts、schema-bound inventory verifier identity、
+  trusted-process inventory receipt、capability policy、verified Static request → ClosureRequest roots/limits、
+  bounded closure/reset-contract-set、RequestReadSet/AvailabilityReadSet 与 deterministic current-vector
+  read guard 均有 closed contract/可重放 portable 实现。最终 guard 只接受完整
+  `VerifiedStaticCapabilityContext`，重放 inventory closure 与同一 admission 的 qualification binding，
+  再绑定 committed HostAuthority version、current policy pointer、trust/catalog/record/signer/profile；
+  verifier-produced context 无公开构造器且禁止 `dataclasses.replace` 伪造。该限制只是进程内误用防护，
+  不能替代 Qman repository 的 linearizable read、OperationLease/CAS。这些新增 schema 已分别进入显式
+  `normativeSources` 和 handoff validation closure；
+- `OP-QUERY-DIRECTPATH` 新增 closed `QueryReadTrace`：target adapter 必须在数据库强制只读 transaction
+  中记录 actual canonical instance bytes、九类 exact predicate matched set、before/after current state、
+  commit clock、host journal head、side-effect counter/reset occurrence 与 zero-write witness。query output
+  固定 bundle/lease/reason/evidence 四个 canonical set 顺序并绑定 decision/semantic/query-state hashes，
+  但不携带 `traceDigest`，避免 output/trace hash 固定点。decoder、SQL/API log、fake provider 或
+  digest-only 记录都不能代替 observed instance；portable/reference PASS 不改变 C15 的
+  `PRODUCT/IMPLEMENTATION_BLOCKED` 边界；
+- QualificationProfile 新增无固定点的 `projection → verification receipt → final profileHash` 合同：
+  projection 只能来自一个 recursive-E4 已验证且属于 current catalog 的 exact record；receipt 精确绑定
+  schema bytes、E4 closure、catalog/anchor/live freshness、trust/root-ring 和最短有效期。catalog
+  freshness receipt、qualification context/dependency digest、exact key 或 platform hash 都不能替代
+  Profile receipt/hash。portable typed core 以 factory-only context 重放该链并绑定 Static request 的
+  四字段 profileBinding、guest ABI 和 PRODUCTION=`SUPPORTED`。profile semantic digest 由 schema
+  固定的 runtime/ABI/workload/revocation/support projection 派生，不再接受 caller hash；注入的
+  recursive-E4 trust port 仍须由 Qman 产品实现和证明，caller/test fake 不是 E4 产品证据；
+- guarded Static admission 新增 closed `OperationAdmissionBinding`：decision/authorization、exact
+  Request/Availability read set、before/after vector、单一 guarded bundle 的 `ASSIGNMENT_PREPARE`
+  lease spec、精确 schema-pinned CAS expectation 和 exclusive validity window 全部 hash-bound。public
+  API 只接受 closed `StaticAdmissionCommand`，repository 自己派生所有 authority/read-set/CAS/lease/binding
+  值；目标实现仍须在同一 SERIALIZABLE transaction 中锁并推进
+  `GLOBAL_DIRECTPATH_AVAILABILITY` authority，原子创建 live
+  OperationLease/reservation/binding/versioned-idempotency/audit/outbox，对 operationLeaseId 建 UNIQUE
+  一对一，把 bindingHash 写入 lease 的 `admissionBindingHashOrNull`，并只返回
+  `CommittedStaticAdmission`。该 portable/reference 链不是 Qman repository/CAS 产品证明；首项 host
+  side effect 前仍要重读完全一致的 live lease/binding capability 并 fsync journal INTENT；
 - 101 个 Case 有生成式 predicate/coverage 合同与 typed completion record；runner、execution index、
   `WorkloadEvaluatorManifest → signed EvaluationContext → EvaluationReport → WorkloadResult` 可重放链、
   `DeviceTaxonomyDefinition → signed ClassificationContext → DeviceClassificationRecord` 独立分类链、
   guest/runtime 完整 tuple prerequisite 实测匹配、
   qualification subject、完整 key-ring history 和 live anchor freshness 均有 closed schema；
-- 293 个 mapping item 与 293 条 verification requirement 一一对应，Case/oracle 由合同派生而非由目标
+- 299 个 mapping item 与 299 条 verification requirement 一一对应，Case/oracle 由合同派生而非由目标
   scenario 自报；
 - Legacy attach、release ownership continuity、owner lease ordering、Dynamic solver 和 cold
   relocation 没有相互矛盾的规范分支；

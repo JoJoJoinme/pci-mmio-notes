@@ -156,8 +156,12 @@
       "verifiedSlices": [
         "historical-e1000e-hidden-header-raw-status-projection",
         "qemu-eight-bits-by-eight-emr-reference",
+        "qemu-root-first-multiple-independent-w1c-bit-or-rearm-reference",
         "virtio-idle-eight-emr-frozen-fabric-routing",
-        "profile-dependent-guest-aer-discovery-and-raw-status-projection"
+        "profile-dependent-guest-aer-discovery-and-raw-status-projection",
+        "esxi-o4-g101-root-first-multiple-independent-w1c-bit-or-rearm",
+        "esxi-o0-g101-root-first-multiple-independent-w1c-bit-or-rearm",
+        "esxi-o0-o4-g101-external-register-snapshot-equivalence"
       ],
       "unverifiedSlices": [
         "esxi-host-notification-interrupt-and-service-attribution",
@@ -485,21 +489,64 @@
         "evidence/esxi8-aer-correctable-20260723-summary.json",
         "evidence/esxi8-aer-correctable-20260723-result.json",
         "evidence/esxi8-aer-correctable-virtio-route-20260723-summary.json",
-        "evidence/esxi8-aer-correctable-virtio-route-20260723-result.json"
+        "evidence/esxi8-aer-correctable-virtio-route-20260723-result.json",
+        "evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json",
+        "evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json",
+        "evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json",
+        "evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json",
+        "contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json",
+        "evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json"
       ],
       "evidenceSha256": {
         "evidence/esxi8-aer-correctable-20260723-summary.json": "de2d6e078cc570afedb6e1ca7e258d53e4d12e9f7749ac50f7ce04dc67db5e32",
         "evidence/esxi8-aer-correctable-20260723-result.json": "d1f32e458b819a76622638fcc0e8e5a4965446b922a87012373310c8a22f55aa",
         "evidence/esxi8-aer-correctable-virtio-route-20260723-summary.json": "08de08bf88eb900086376e698bde8d70414edf0c3fd5ee62e1c4b5887e3079b3",
-        "evidence/esxi8-aer-correctable-virtio-route-20260723-result.json": "fd54b0628f01f591629349498ff135aa2ca475a339858e6c100a5cff6e50c445"
+        "evidence/esxi8-aer-correctable-virtio-route-20260723-result.json": "fd54b0628f01f591629349498ff135aa2ca475a339858e6c100a5cff6e50c445",
+        "evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json": "213dfe8908dac6e38a2c4f47699fcf07d6cafa33bc929d87319097d044c03d4f",
+        "evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json": "b50051385d63aa83e9b7fad051916c64b163d310ee9d8ee48e865502dd0b5c35",
+        "evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json": "5a58f4deeecfe8429bab843ed712d71793a8e42f65a4071c6fc9e23d848bedff",
+        "evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json": "538aaf8c5d44b42c7ceb7c2b985b3c059ef91be28902b805dac4eec117eb310b",
+        "contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json": "cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e",
+        "evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json": "fab09980f8f266e94640914df59833f640b66e063a1625333d9685031109812a"
       },
+      "controlReferences": [
+        {
+          "id": "QEMU-AER-ROOT-SEQUENCE-20260726",
+          "subject": "QEMU_CONTROL_REFERENCE",
+          "basisKind": "EXECUTED_PUBLIC_MODEL_CONTROL",
+          "evidencePath": "evidence/qman-qemu-aer-root-sequence-20260726-summary.json",
+          "sha256": "a8ad0af0d2913d315b3f79abdad88cb0b763a1deceebce52e127978d3670cdb5",
+          "runIds": ["20260726-qemu11-aer-root-sequence-v1"],
+          "publicSources": [
+            {
+              "title": "QEMU 11.0.2 PCIe AER implementation",
+              "url": "https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c"
+            },
+            {
+              "title": "Linux PCIe AER HOWTO",
+              "url": "https://docs.kernel.org/PCI/pcieaer-howto.html"
+            }
+          ],
+          "proves": "The stock-QEMU public-model control can distinguish first/multiple Correctable reception, independent Endpoint/Root W1C, bit OR, and re-arm transitions.",
+          "doesNotProve": [
+            "VMware ESXi repeat, clear, notification, service, interrupt, or recovery behavior",
+            "Qman product implementation or qualification",
+            "physical-link error generation or physical-device health"
+          ],
+          "closureAuthority": "NONE"
+        }
+      ],
       "runnerPaths": [
         "vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py",
-        "vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py"
+        "vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py",
+        "vmware-esxi8-lab/test_qemu_aer_root_sequence.py",
+        "vmware-esxi8-lab/test_esxi_aer_root_sequence.py"
       ],
       "limitations": [
         "historical-e1000e-endpoint-and-root-reporting-disabled",
         "esxi-host-service-and-interrupt-attribution-unverified",
+        "esxi-other-emr-gates-root-sequence-unverified",
+        "esxi-o0-target-native-driver-unbound",
         "guest-write-isolation-unverified",
         "lifecycle-clear-and-reuse-unverified",
         "synthetic-endpoint-not-physical-recovery",
@@ -769,9 +816,9 @@
       "title": "Machine TS-to-case-to-run-to-artifact traceability",
       "executionState": "PARTIAL",
       "legacyIds": [],
-      "evidencePaths": ["evidence/vmware-trace-index-20260723-summary.json"],
+      "evidencePaths": ["evidence/vmware-trace-index-20260730-v5-summary.json"],
       "evidenceSha256": {
-        "evidence/vmware-trace-index-20260723-summary.json": "262315949a1f434418ee3d08b90656684a71fbc266942244dfd5f3d462781b5b"
+        "evidence/vmware-trace-index-20260730-v5-summary.json": "3c14423372fa933286c8adcb906f73d9e3677b6e77bba01dd4d3310c10936261"
       },
       "runnerPaths": [
         "tools/generate_vmware_evidence_index.py",
@@ -934,7 +981,7 @@
       "status": "PARTIAL",
       "sourceIds": ["VMW-SRC-001", "VMW-SRC-025"],
       "experimentIds": ["VMW-AER-COR-001"],
-      "observableContract": "The tested e1000e and virtio profiles expose different guest AER capability surfaces while both can project raw Correctable status. E and M control frozen-fabric Root deposition in the QEMU oracle, R is a separate notification-eligibility dimension, and no current observation attributes an ESXi interrupt or service path. Guest writes, lifecycle cleanup and physical recovery remain unverified."
+      "observableContract": "The tested e1000e and virtio profiles expose different guest AER capability surfaces while both can project raw Correctable status. E and M control frozen-fabric Root deposition in the QEMU oracle, while R is a separate notification-eligibility dimension. The exact ESXi O0/g101 and O4/g101 slices each matched the preregistered root-state oracle for first/multiple reception, independent Endpoint/Root W1C, bit OR, and re-arm across three repeats; all 12 corresponding O0/O4 Endpoint/Root snapshot trees were field-exact. O0 had Current Owner VMkernel but no bound target module. No observation attributes an ESXi interrupt or service path; other gates, guest writes, lifecycle cleanup and physical recovery remain unverified."
     },
     {
       "techStoryId": "TS-F5-01",

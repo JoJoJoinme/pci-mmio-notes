@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "id": "ESXI8-AER-ROOT-O4-V10-INCONCLUSIVE-20260729",
+  "subject": "VMWARE_ESXI_BLACKBOX_ATTEMPT_HISTORY",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observedAt": "2026-07-28T18:24:00.990725Z",
+  "observationStatus": "INCONCLUSIVE",
+  "executionState": "FAIL_CLOSED_AFTER_FIRST_CASE",
+  "claimBoundary": "FROZEN_ATTEMPT_HISTORY_ONLY",
+  "usedForBehaviorInference": false,
+  "closureAuthority": "NONE",
+  "scope": "PCIe Correctable AER external behavior only; no VMware private implementation inference",
+  "run": {
+    "runId": "20260728-esxi8-aer-root-o4-v10",
+    "ownerPhase": "O4",
+    "gate": "g101",
+    "plannedCaseCount": 12,
+    "completedCaseCount": 1,
+    "incompleteCaseCount": 11,
+    "enteredInjectionCount": 1,
+    "cleanupCompleteCount": 1,
+    "safetyStopCount": 0,
+    "cleanupStop": true,
+    "aggregateObservationState": "INCONCLUSIVE",
+    "finalQemuState": "running"
+  },
+  "failClosedTrigger": {
+    "caseId": "o4__first-multiple__g101__r01",
+    "type": "FixtureInvalid",
+    "window": "close-log-window",
+    "maximumSafetyPollIntervalSeconds": 0.05,
+    "maximumObservedPollGapSeconds": 0.05847764402278699,
+    "tailGapSeconds": 0.18494973101769574,
+    "remainingCasesSuppressed": 11
+  },
+  "frozenIntegrity": {
+    "state": "PASS",
+    "rootManifestEntryCount": 72,
+    "rootManifestMismatchCount": 0,
+    "caseManifestEntryCount": 65,
+    "caseManifestMismatchCount": 0,
+    "artifactsRelativeToSummary": [
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260728-esxi8-aer-root-o4-v10/result.json",
+        "sha256": "b619afd19b10846090cd9623167894da87ae2136903a2c623070af8efecc9e08",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260728-esxi8-aer-root-o4-v10/result.json.sha256",
+        "sha256": "300af7d1c639d45f8c25d0221d25fd34d7d826279b6a906c86eb385d8e2e3742",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260728-esxi8-aer-root-o4-v10/artifact-manifest.sha256",
+        "sha256": "6215a0eedfd60bf7404bff3fe699e194f8a63664cf88079f5db360c8187c0c96",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260728-esxi8-aer-root-o4-v10/cases/o4__first-multiple__g101__r01/result.json",
+        "sha256": "d67eed891c18655cc6ae9a3fc5e6fdc2e2b9c91f1468986f390baf29f7600d60",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260728-esxi8-aer-root-o4-v10/cases/o4__first-multiple__g101__r01/artifact-manifest.sha256",
+        "sha256": "e5eac97f39b1b0e2b8091126ce91b69a34bd8faa0a9882d5b375854633350d69",
+        "retention": "LOCAL_RAW"
+      }
+    ]
+  },
+  "exactClosure": {
+    "verifyRunExact": "FAIL",
+    "manifestExact": true,
+    "storedObservationState": "INCONCLUSIVE",
+    "recomputedObservationState": "INCONCLUSIVE",
+    "oracleExactMatch": true,
+    "resultExactMatch": true,
+    "identityExactMatch": true,
+    "rawSourceExactMatch": false,
+    "failedRawConsistencyChecks": [
+      "host-log-classification"
+    ],
+    "storedHostLogClassification": "INCONCLUSIVE_LOG_WINDOW",
+    "rawAndOfflineHostLogClassification": "NOT_OBSERVED_IN_STRICT_PER_SOURCE_MARKER_WINDOW",
+    "rootCause": "The old live worker completed the immutable V2 capture and local rebuild, but the monitored runnable failed before returning its local result. The caller therefore used a stale null local and persisted the fallback classification. This is a runner failure-path consistency defect, not a VMware behavior observation or a V2 raw-chain mismatch."
+  },
+  "interpretation": {
+    "canonicalComparisonO4": {
+      "state": "NOT_ESTABLISHED",
+      "reason": "FULL_PROFILE_NOT_COMPLETE_AND_EXACT_CLOSURE_FAILED"
+    },
+    "canonicalComparisonO0": {
+      "state": "NOT_RUN"
+    },
+    "behaviorAuthority": "NONE"
+  },
+  "limitations": [
+    "This record freezes a fail-closed experimental attempt; it is not a conforming VMware behavior result and carries no behavior authority.",
+    "The one stored case is INCONCLUSIVE, eleven planned cases were deliberately suppressed, and offline raw exact closure failed.",
+    "The complete strict marker window and its absence of matching semantic log lines do not prove that ESXi did not deliver, service, clear, recover, or health-handle a PCIe notification.",
+    "The attempt must not be added to representative VMware run IDs, verified behavior slices, or a Qman product-conformance claim.",
+    "The frozen attempt must not be re-signed or reclassified with the later corrected runner.",
+    "No VMware private code, internal control flow, interrupt delivery, physical link fault, device recovery, or Qman release readiness is inferred."
+  ]
+}

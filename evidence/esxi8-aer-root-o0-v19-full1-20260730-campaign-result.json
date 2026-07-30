@@ -1,0 +1,851 @@
+{
+  "aggregate": {
+    "groups": {
+      "bit-or": {
+        "observationDigests": [
+          "0f2cd1201a78ecfde13996cb8c1a9b5cd7c37f2051c3fc01891c6e8c25dbaf76",
+          "0f2cd1201a78ecfde13996cb8c1a9b5cd7c37f2051c3fc01891c6e8c25dbaf76",
+          "0f2cd1201a78ecfde13996cb8c1a9b5cd7c37f2051c3fc01891c6e8c25dbaf76"
+        ],
+        "observationState": "MATCH",
+        "reason": "all required repeats matched",
+        "repeatCount": 3,
+        "stateCounts": {
+          "BLOCKED": 0,
+          "DIVERGED": 0,
+          "INCONCLUSIVE": 0,
+          "MATCH": 3
+        }
+      },
+      "first-multiple": {
+        "observationDigests": [
+          "45a10045be47114ae60e0e94bcba168a17f8d2decf4f7a0c1ce693217bcaf789",
+          "45a10045be47114ae60e0e94bcba168a17f8d2decf4f7a0c1ce693217bcaf789",
+          "45a10045be47114ae60e0e94bcba168a17f8d2decf4f7a0c1ce693217bcaf789"
+        ],
+        "observationState": "MATCH",
+        "reason": "all required repeats matched",
+        "repeatCount": 3,
+        "stateCounts": {
+          "BLOCKED": 0,
+          "DIVERGED": 0,
+          "INCONCLUSIVE": 0,
+          "MATCH": 3
+        }
+      },
+      "independent-w1c": {
+        "observationDigests": [
+          "eea7d12f357b5d5c8914ec661629479006cd3c4a476fc0caee27c6451e2623ce",
+          "eea7d12f357b5d5c8914ec661629479006cd3c4a476fc0caee27c6451e2623ce",
+          "eea7d12f357b5d5c8914ec661629479006cd3c4a476fc0caee27c6451e2623ce"
+        ],
+        "observationState": "MATCH",
+        "reason": "all required repeats matched",
+        "repeatCount": 3,
+        "stateCounts": {
+          "BLOCKED": 0,
+          "DIVERGED": 0,
+          "INCONCLUSIVE": 0,
+          "MATCH": 3
+        }
+      },
+      "rearm": {
+        "observationDigests": [
+          "301577d34f3f1b5bcec3df2ee769ac6d5c9bc96a394c779dc22c138cc5ed5fed",
+          "301577d34f3f1b5bcec3df2ee769ac6d5c9bc96a394c779dc22c138cc5ed5fed",
+          "301577d34f3f1b5bcec3df2ee769ac6d5c9bc96a394c779dc22c138cc5ed5fed"
+        ],
+        "observationState": "MATCH",
+        "reason": "all required repeats matched",
+        "repeatCount": 3,
+        "stateCounts": {
+          "BLOCKED": 0,
+          "DIVERGED": 0,
+          "INCONCLUSIVE": 0,
+          "MATCH": 3
+        }
+      }
+    },
+    "minimumRepeats": 3,
+    "observationState": "MATCH",
+    "ownerPhase": "O0",
+    "plannedSequences": [
+      "first-multiple",
+      "independent-w1c",
+      "bit-or",
+      "rearm"
+    ],
+    "safetyStop": false
+  },
+  "apiCloseMode": "REMOTE_LOGOUT",
+  "cases": [
+    {
+      "caseId": "o0__first-multiple__g101__r01",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__first-multiple__g101__r01",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__first-multiple__g101__r01/artifact-manifest.sha256",
+        "sha256": "c38d18c345a4abdd556ade2ffb8f7614133a346314774453b74a238c6c0361e4"
+      },
+      "observationDigest": "45a10045be47114ae60e0e94bcba168a17f8d2decf4f7a0c1ce693217bcaf789",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 1,
+      "result": {
+        "path": "cases/o0__first-multiple__g101__r01/result.json",
+        "sha256": "ffe3747081fa22d40723fda2eed05b74404226126ef06e6cc89186c8e1cc57d8"
+      },
+      "safetyStop": false,
+      "sequence": "first-multiple",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__first-multiple__g101__r02",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__first-multiple__g101__r02",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__first-multiple__g101__r02/artifact-manifest.sha256",
+        "sha256": "0cd75e6bbc6d033a7300cf4e9285c0f9e6fd3f7d10f22b205ad788b86a9a1be7"
+      },
+      "observationDigest": "45a10045be47114ae60e0e94bcba168a17f8d2decf4f7a0c1ce693217bcaf789",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 2,
+      "result": {
+        "path": "cases/o0__first-multiple__g101__r02/result.json",
+        "sha256": "78e3fd1af1b94dddd03ba569176173ccdfaa4bd45a51a0845469552342b9d8fe"
+      },
+      "safetyStop": false,
+      "sequence": "first-multiple",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__first-multiple__g101__r03",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__first-multiple__g101__r03",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__first-multiple__g101__r03/artifact-manifest.sha256",
+        "sha256": "e62d2411cf817829b4ce02c62874e02e78e441f543c93555d4927937c94a40c4"
+      },
+      "observationDigest": "45a10045be47114ae60e0e94bcba168a17f8d2decf4f7a0c1ce693217bcaf789",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 3,
+      "result": {
+        "path": "cases/o0__first-multiple__g101__r03/result.json",
+        "sha256": "5ddc59de4e86725c18677970a0aa8c4cccbfd71e46ff6d2d9137944ebb9bd3cb"
+      },
+      "safetyStop": false,
+      "sequence": "first-multiple",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__independent-w1c__g101__r01",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__independent-w1c__g101__r01",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__independent-w1c__g101__r01/artifact-manifest.sha256",
+        "sha256": "d1b1293e554994f4c0e39c2d667c5c339aa0f2368d7d2c310beeeefe41b0c225"
+      },
+      "observationDigest": "eea7d12f357b5d5c8914ec661629479006cd3c4a476fc0caee27c6451e2623ce",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 1,
+      "result": {
+        "path": "cases/o0__independent-w1c__g101__r01/result.json",
+        "sha256": "048249ecb4df7fefd226ee3f692ce38671aa5d2be304a6b2e88cc82949542652"
+      },
+      "safetyStop": false,
+      "sequence": "independent-w1c",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__independent-w1c__g101__r02",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__independent-w1c__g101__r02",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__independent-w1c__g101__r02/artifact-manifest.sha256",
+        "sha256": "091b50b14967de0f8ccfb324a78208a9a04cfcc45983230ec78db8fef2311657"
+      },
+      "observationDigest": "eea7d12f357b5d5c8914ec661629479006cd3c4a476fc0caee27c6451e2623ce",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 2,
+      "result": {
+        "path": "cases/o0__independent-w1c__g101__r02/result.json",
+        "sha256": "2271a6e7d5d77b9a02e7950d7c4070e5e63fcd7d5ddaa1326641691b45eeb565"
+      },
+      "safetyStop": false,
+      "sequence": "independent-w1c",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__independent-w1c__g101__r03",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__independent-w1c__g101__r03",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__independent-w1c__g101__r03/artifact-manifest.sha256",
+        "sha256": "a7e2de54c91f33dc06a7ac2f71e08dac40ad997d4d8b7fde8e22d185454be5ba"
+      },
+      "observationDigest": "eea7d12f357b5d5c8914ec661629479006cd3c4a476fc0caee27c6451e2623ce",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 3,
+      "result": {
+        "path": "cases/o0__independent-w1c__g101__r03/result.json",
+        "sha256": "4129f8ac4dea2d609fd11214b978913fecd3529503d1a3996accc5dff73dc1cb"
+      },
+      "safetyStop": false,
+      "sequence": "independent-w1c",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__bit-or__g101__r01",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__bit-or__g101__r01",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__bit-or__g101__r01/artifact-manifest.sha256",
+        "sha256": "74c8a41c7b8881f7bc50f6b921e217ec5aed015d1059e7ea4a1c91101841c603"
+      },
+      "observationDigest": "0f2cd1201a78ecfde13996cb8c1a9b5cd7c37f2051c3fc01891c6e8c25dbaf76",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 1,
+      "result": {
+        "path": "cases/o0__bit-or__g101__r01/result.json",
+        "sha256": "e1eb3778fde459c19c57b58cac1a9b6c8f6a1c025eac6e38aed74e0fe8383952"
+      },
+      "safetyStop": false,
+      "sequence": "bit-or",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__bit-or__g101__r02",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__bit-or__g101__r02",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__bit-or__g101__r02/artifact-manifest.sha256",
+        "sha256": "3127b0fafed09caae5c18beaca201e3dc8622cc3a7ce6581655a37cc996dfadf"
+      },
+      "observationDigest": "0f2cd1201a78ecfde13996cb8c1a9b5cd7c37f2051c3fc01891c6e8c25dbaf76",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 2,
+      "result": {
+        "path": "cases/o0__bit-or__g101__r02/result.json",
+        "sha256": "881c8bf44781def616e03e509e0b14ccc179428bcd445006da1ce7455b2e3891"
+      },
+      "safetyStop": false,
+      "sequence": "bit-or",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__bit-or__g101__r03",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__bit-or__g101__r03",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__bit-or__g101__r03/artifact-manifest.sha256",
+        "sha256": "6663e173f6e6ab0205ba6c46d7621917f8e1445176d8768ac5e07ab206c3a7b5"
+      },
+      "observationDigest": "0f2cd1201a78ecfde13996cb8c1a9b5cd7c37f2051c3fc01891c6e8c25dbaf76",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 3,
+      "result": {
+        "path": "cases/o0__bit-or__g101__r03/result.json",
+        "sha256": "00a2794d6f9cf918d68268091340c5abce1b4110ca4f6b299cc4bcdc012d2b95"
+      },
+      "safetyStop": false,
+      "sequence": "bit-or",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__rearm__g101__r01",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__rearm__g101__r01",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__rearm__g101__r01/artifact-manifest.sha256",
+        "sha256": "4e24fd2f183ce19eb627f1d4dcce1c98f4989dc325e5a555016cf57d05e17578"
+      },
+      "observationDigest": "301577d34f3f1b5bcec3df2ee769ac6d5c9bc96a394c779dc22c138cc5ed5fed",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 1,
+      "result": {
+        "path": "cases/o0__rearm__g101__r01/result.json",
+        "sha256": "d6fb4a28a4ffb57d9df90819afc576267bbcdea721fec32233f751688d3ba3df"
+      },
+      "safetyStop": false,
+      "sequence": "rearm",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__rearm__g101__r02",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__rearm__g101__r02",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__rearm__g101__r02/artifact-manifest.sha256",
+        "sha256": "bd63b7fb4b5df0e81edc539c1072cda102c1c248b624525d1df7cfe9c8e1df14"
+      },
+      "observationDigest": "301577d34f3f1b5bcec3df2ee769ac6d5c9bc96a394c779dc22c138cc5ed5fed",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 2,
+      "result": {
+        "path": "cases/o0__rearm__g101__r02/result.json",
+        "sha256": "264afd2d7f4fa7d1b1209764111e17e5716c24814b74d26061d8161a3fc4fd4b"
+      },
+      "safetyStop": false,
+      "sequence": "rearm",
+      "verdict": "MATCH"
+    },
+    {
+      "caseId": "o0__rearm__g101__r03",
+      "caseRunId": "20260730-esxi8-aer-root-o0-v19-full1--o0__rearm__g101__r03",
+      "cleanupComplete": true,
+      "containmentRequired": false,
+      "enteredInjection": true,
+      "fault": null,
+      "gate": "g101",
+      "manifest": {
+        "path": "cases/o0__rearm__g101__r03/artifact-manifest.sha256",
+        "sha256": "aa8da19fb52a05e1cf32c940cf41b8a7475efa1a2da99f362fa7f2996c65cf89"
+      },
+      "observationDigest": "301577d34f3f1b5bcec3df2ee769ac6d5c9bc96a394c779dc22c138cc5ed5fed",
+      "observationState": "MATCH",
+      "ownerPhase": "O0",
+      "repeatIndex": 3,
+      "result": {
+        "path": "cases/o0__rearm__g101__r03/result.json",
+        "sha256": "17a27da19a0d3d908cc44038619fed44322ab9daa4323f7ce7bcbff6f17b11b3"
+      },
+      "safetyStop": false,
+      "sequence": "rearm",
+      "verdict": "MATCH"
+    }
+  ],
+  "claimBoundary": {
+    "excluded": [
+      "VMware private code or internal control flow",
+      "physical-link error generation",
+      "interrupt or service attribution from log absence",
+      "physical-device recovery, health or quarantine",
+      "Qman implementation, qualification or release closure"
+    ],
+    "scope": "Exact nested ESXi build/device/owner/gate black-box observation using public configuration registers, public API/inventory, guest raw config and bounded logs"
+  },
+  "environment": {
+    "esxi": {
+      "apiVersion": "8.0.3.0",
+      "bootTime": "2026-07-26T12:00:52.572087+00:00",
+      "build": "24280767",
+      "fullName": "VMware ESXi 8.0.3 build-24280767",
+      "systemUuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+      "version": "8.0.3",
+      "vmwareVersionCommand": "VMware ESXi 8.0.3 build-24280767\nVMware ESXi 8.0 Update 3"
+    },
+    "outerQemu": {
+      "candidateCount": 1,
+      "candidates": [
+        {
+          "commandLine": [
+            "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+            "-L",
+            "/usr/share/qemu",
+            "-name",
+            "esxi8-mf",
+            "-machine",
+            "q35,accel=kvm,kernel-irqchip=split",
+            "-cpu",
+            "host,+vmx,-vmx-tsc-scaling",
+            "-smp",
+            "4",
+            "-m",
+            "8192",
+            "-uuid",
+            "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+            "-device",
+            "intel-iommu,intremap=on,caching-mode=on,device-iotlb=on",
+            "-drive",
+            "if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd",
+            "-drive",
+            "if=pflash,format=raw,file=/root/vm/esxi8-mf/OVMF_VARS.fd",
+            "-drive",
+            "if=none,id=system,file=/root/vm/esxi8-mf/esxi8-system.qcow2,format=qcow2,cache=writeback,discard=unmap",
+            "-drive",
+            "if=none,id=datastore,file=/root/vm/esxi8-mf/esxi8-datastore.qcow2,format=qcow2,cache=writeback,discard=unmap",
+            "-device",
+            "ide-hd,drive=system,bus=ide.0,serial=ESXI8SYS-mf,bootindex=1",
+            "-device",
+            "ide-hd,drive=datastore,bus=ide.1,serial=ESXI8DATA-mf,bootindex=2",
+            "-netdev",
+            "tap,id=mgmt,ifname=tap-esxi8,script=no,downscript=no,vnet_hdr=off",
+            "-device",
+            "e1000e,netdev=mgmt,mac=00:0c:29:ab:af:6d,bus=pcie.0,addr=0x05.0",
+            "-netdev",
+            "user,id=test0,restrict=on",
+            "-netdev",
+            "user,id=test1,restrict=on",
+            "-netdev",
+            "user,id=test2,restrict=on",
+            "-device",
+            "pcie-root-port,id=test_rp,bus=pcie.0,chassis=8,slot=8,addr=0x08.0",
+            "-device",
+            "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=test_rp,addr=0x00.0,multifunction=on",
+            "-device",
+            "virtio-net-pci,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=test_rp,addr=0x00.1,disable-legacy=on,aer=on",
+            "-vga",
+            "std",
+            "-vnc",
+            "127.0.0.1:5",
+            "-monitor",
+            "unix:/root/vm/esxi8-mf/monitor.sock,server,nowait",
+            "-serial",
+            "file:/root/vm/esxi8-mf/serial.log",
+            "-qtest",
+            "unix:/root/vm/esxi8-mf/qtest.sock,server=on,wait=off",
+            "-pidfile",
+            "/root/vm/esxi8-mf/qemu.pid",
+            "-daemonize",
+            "-D",
+            "/root/vm/esxi8-mf/qemu.log"
+          ],
+          "pid": 37357
+        }
+      ],
+      "commandLine": [
+        "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+        "-L",
+        "/usr/share/qemu",
+        "-name",
+        "esxi8-mf",
+        "-machine",
+        "q35,accel=kvm,kernel-irqchip=split",
+        "-cpu",
+        "host,+vmx,-vmx-tsc-scaling",
+        "-smp",
+        "4",
+        "-m",
+        "8192",
+        "-uuid",
+        "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+        "-device",
+        "intel-iommu,intremap=on,caching-mode=on,device-iotlb=on",
+        "-drive",
+        "if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd",
+        "-drive",
+        "if=pflash,format=raw,file=/root/vm/esxi8-mf/OVMF_VARS.fd",
+        "-drive",
+        "if=none,id=system,file=/root/vm/esxi8-mf/esxi8-system.qcow2,format=qcow2,cache=writeback,discard=unmap",
+        "-drive",
+        "if=none,id=datastore,file=/root/vm/esxi8-mf/esxi8-datastore.qcow2,format=qcow2,cache=writeback,discard=unmap",
+        "-device",
+        "ide-hd,drive=system,bus=ide.0,serial=ESXI8SYS-mf,bootindex=1",
+        "-device",
+        "ide-hd,drive=datastore,bus=ide.1,serial=ESXI8DATA-mf,bootindex=2",
+        "-netdev",
+        "tap,id=mgmt,ifname=tap-esxi8,script=no,downscript=no,vnet_hdr=off",
+        "-device",
+        "e1000e,netdev=mgmt,mac=00:0c:29:ab:af:6d,bus=pcie.0,addr=0x05.0",
+        "-netdev",
+        "user,id=test0,restrict=on",
+        "-netdev",
+        "user,id=test1,restrict=on",
+        "-netdev",
+        "user,id=test2,restrict=on",
+        "-device",
+        "pcie-root-port,id=test_rp,bus=pcie.0,chassis=8,slot=8,addr=0x08.0",
+        "-device",
+        "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=test_rp,addr=0x00.0,multifunction=on",
+        "-device",
+        "virtio-net-pci,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=test_rp,addr=0x00.1,disable-legacy=on,aer=on",
+        "-vga",
+        "std",
+        "-vnc",
+        "127.0.0.1:5",
+        "-monitor",
+        "unix:/root/vm/esxi8-mf/monitor.sock,server,nowait",
+        "-serial",
+        "file:/root/vm/esxi8-mf/serial.log",
+        "-qtest",
+        "unix:/root/vm/esxi8-mf/qtest.sock,server=on,wait=off",
+        "-pidfile",
+        "/root/vm/esxi8-mf/qemu.pid",
+        "-daemonize",
+        "-D",
+        "/root/vm/esxi8-mf/qemu.log"
+      ],
+      "name": "esxi8-mf",
+      "pid": 37357,
+      "unique": true
+    }
+  },
+  "executionPolicy": {
+    "mode": "FULL_PROFILE",
+    "stopAfterCaseId": null,
+    "stopAfterOrdinal": null,
+    "version": 1
+  },
+  "finalQemuState": "running",
+  "finishedAt": "2026-07-29T17:14:14.801450Z",
+  "gate": "g101",
+  "incompletePlan": [],
+  "modelId": "VMW-DIRECTPATH-AER-ROOT-SEQUENCE-BLACKBOX-V1",
+  "oracleProfile": {
+    "id": "VMW-AER-ROOT-SEQUENCE-PUBLIC-MODEL-CANDIDATE-V1",
+    "path": "/mnt/e/Code/PCI/github-export/contracts/vmware-aer-root-sequence-public-model-candidate-v1.json",
+    "profileState": "CANDIDATE_NOT_OBSERVED",
+    "schemaSha256": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57",
+    "sha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a"
+  },
+  "ownerPhase": "O0",
+  "plannedCaseIds": [
+    "o0__first-multiple__g101__r01",
+    "o0__first-multiple__g101__r02",
+    "o0__first-multiple__g101__r03",
+    "o0__independent-w1c__g101__r01",
+    "o0__independent-w1c__g101__r02",
+    "o0__independent-w1c__g101__r03",
+    "o0__bit-or__g101__r01",
+    "o0__bit-or__g101__r02",
+    "o0__bit-or__g101__r03",
+    "o0__rearm__g101__r01",
+    "o0__rearm__g101__r02",
+    "o0__rearm__g101__r03"
+  ],
+  "repeat": 3,
+  "runId": "20260730-esxi8-aer-root-o0-v19-full1",
+  "safetyBoundary": {
+    "bits": {
+      "bad_tlp": 64,
+      "receiver_error": 1
+    },
+    "correctableOnly": true,
+    "uncorrectableInjectionSurface": false
+  },
+  "schemaVersion": 1,
+  "sequences": [
+    "first-multiple",
+    "independent-w1c",
+    "bit-or",
+    "rearm"
+  ],
+  "sourceAndBinaryHashes": {
+    "capturedAt": "2026-07-29T16:56:04.497443Z",
+    "environment": {
+      "esxi": {
+        "apiVersion": "8.0.3.0",
+        "bootTime": "2026-07-26T12:00:52.572087+00:00",
+        "build": "24280767",
+        "fullName": "VMware ESXi 8.0.3 build-24280767",
+        "systemUuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+        "version": "8.0.3",
+        "vmwareVersionCommand": "VMware ESXi 8.0.3 build-24280767\nVMware ESXi 8.0 Update 3"
+      },
+      "outerQemu": {
+        "candidateCount": 1,
+        "candidates": [
+          {
+            "commandLine": [
+              "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+              "-L",
+              "/usr/share/qemu",
+              "-name",
+              "esxi8-mf",
+              "-machine",
+              "q35,accel=kvm,kernel-irqchip=split",
+              "-cpu",
+              "host,+vmx,-vmx-tsc-scaling",
+              "-smp",
+              "4",
+              "-m",
+              "8192",
+              "-uuid",
+              "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+              "-device",
+              "intel-iommu,intremap=on,caching-mode=on,device-iotlb=on",
+              "-drive",
+              "if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd",
+              "-drive",
+              "if=pflash,format=raw,file=/root/vm/esxi8-mf/OVMF_VARS.fd",
+              "-drive",
+              "if=none,id=system,file=/root/vm/esxi8-mf/esxi8-system.qcow2,format=qcow2,cache=writeback,discard=unmap",
+              "-drive",
+              "if=none,id=datastore,file=/root/vm/esxi8-mf/esxi8-datastore.qcow2,format=qcow2,cache=writeback,discard=unmap",
+              "-device",
+              "ide-hd,drive=system,bus=ide.0,serial=ESXI8SYS-mf,bootindex=1",
+              "-device",
+              "ide-hd,drive=datastore,bus=ide.1,serial=ESXI8DATA-mf,bootindex=2",
+              "-netdev",
+              "tap,id=mgmt,ifname=tap-esxi8,script=no,downscript=no,vnet_hdr=off",
+              "-device",
+              "e1000e,netdev=mgmt,mac=00:0c:29:ab:af:6d,bus=pcie.0,addr=0x05.0",
+              "-netdev",
+              "user,id=test0,restrict=on",
+              "-netdev",
+              "user,id=test1,restrict=on",
+              "-netdev",
+              "user,id=test2,restrict=on",
+              "-device",
+              "pcie-root-port,id=test_rp,bus=pcie.0,chassis=8,slot=8,addr=0x08.0",
+              "-device",
+              "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=test_rp,addr=0x00.0,multifunction=on",
+              "-device",
+              "virtio-net-pci,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=test_rp,addr=0x00.1,disable-legacy=on,aer=on",
+              "-vga",
+              "std",
+              "-vnc",
+              "127.0.0.1:5",
+              "-monitor",
+              "unix:/root/vm/esxi8-mf/monitor.sock,server,nowait",
+              "-serial",
+              "file:/root/vm/esxi8-mf/serial.log",
+              "-qtest",
+              "unix:/root/vm/esxi8-mf/qtest.sock,server=on,wait=off",
+              "-pidfile",
+              "/root/vm/esxi8-mf/qemu.pid",
+              "-daemonize",
+              "-D",
+              "/root/vm/esxi8-mf/qemu.log"
+            ],
+            "pid": 37357
+          }
+        ],
+        "commandLine": [
+          "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+          "-L",
+          "/usr/share/qemu",
+          "-name",
+          "esxi8-mf",
+          "-machine",
+          "q35,accel=kvm,kernel-irqchip=split",
+          "-cpu",
+          "host,+vmx,-vmx-tsc-scaling",
+          "-smp",
+          "4",
+          "-m",
+          "8192",
+          "-uuid",
+          "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+          "-device",
+          "intel-iommu,intremap=on,caching-mode=on,device-iotlb=on",
+          "-drive",
+          "if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd",
+          "-drive",
+          "if=pflash,format=raw,file=/root/vm/esxi8-mf/OVMF_VARS.fd",
+          "-drive",
+          "if=none,id=system,file=/root/vm/esxi8-mf/esxi8-system.qcow2,format=qcow2,cache=writeback,discard=unmap",
+          "-drive",
+          "if=none,id=datastore,file=/root/vm/esxi8-mf/esxi8-datastore.qcow2,format=qcow2,cache=writeback,discard=unmap",
+          "-device",
+          "ide-hd,drive=system,bus=ide.0,serial=ESXI8SYS-mf,bootindex=1",
+          "-device",
+          "ide-hd,drive=datastore,bus=ide.1,serial=ESXI8DATA-mf,bootindex=2",
+          "-netdev",
+          "tap,id=mgmt,ifname=tap-esxi8,script=no,downscript=no,vnet_hdr=off",
+          "-device",
+          "e1000e,netdev=mgmt,mac=00:0c:29:ab:af:6d,bus=pcie.0,addr=0x05.0",
+          "-netdev",
+          "user,id=test0,restrict=on",
+          "-netdev",
+          "user,id=test1,restrict=on",
+          "-netdev",
+          "user,id=test2,restrict=on",
+          "-device",
+          "pcie-root-port,id=test_rp,bus=pcie.0,chassis=8,slot=8,addr=0x08.0",
+          "-device",
+          "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=test_rp,addr=0x00.0,multifunction=on",
+          "-device",
+          "virtio-net-pci,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=test_rp,addr=0x00.1,disable-legacy=on,aer=on",
+          "-vga",
+          "std",
+          "-vnc",
+          "127.0.0.1:5",
+          "-monitor",
+          "unix:/root/vm/esxi8-mf/monitor.sock,server,nowait",
+          "-serial",
+          "file:/root/vm/esxi8-mf/serial.log",
+          "-qtest",
+          "unix:/root/vm/esxi8-mf/qtest.sock,server=on,wait=off",
+          "-pidfile",
+          "/root/vm/esxi8-mf/qemu.pid",
+          "-daemonize",
+          "-D",
+          "/root/vm/esxi8-mf/qemu.log"
+        ],
+        "name": "esxi8-mf",
+        "pid": 37357,
+        "unique": true
+      }
+    },
+    "hashAlgorithm": "SHA-256",
+    "outerQemuBinary": {
+      "commandLine": [
+        "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+        "-L",
+        "/usr/share/qemu",
+        "-name",
+        "esxi8-mf",
+        "-machine",
+        "q35,accel=kvm,kernel-irqchip=split",
+        "-cpu",
+        "host,+vmx,-vmx-tsc-scaling",
+        "-smp",
+        "4",
+        "-m",
+        "8192",
+        "-uuid",
+        "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+        "-device",
+        "intel-iommu,intremap=on,caching-mode=on,device-iotlb=on",
+        "-drive",
+        "if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd",
+        "-drive",
+        "if=pflash,format=raw,file=/root/vm/esxi8-mf/OVMF_VARS.fd",
+        "-drive",
+        "if=none,id=system,file=/root/vm/esxi8-mf/esxi8-system.qcow2,format=qcow2,cache=writeback,discard=unmap",
+        "-drive",
+        "if=none,id=datastore,file=/root/vm/esxi8-mf/esxi8-datastore.qcow2,format=qcow2,cache=writeback,discard=unmap",
+        "-device",
+        "ide-hd,drive=system,bus=ide.0,serial=ESXI8SYS-mf,bootindex=1",
+        "-device",
+        "ide-hd,drive=datastore,bus=ide.1,serial=ESXI8DATA-mf,bootindex=2",
+        "-netdev",
+        "tap,id=mgmt,ifname=tap-esxi8,script=no,downscript=no,vnet_hdr=off",
+        "-device",
+        "e1000e,netdev=mgmt,mac=00:0c:29:ab:af:6d,bus=pcie.0,addr=0x05.0",
+        "-netdev",
+        "user,id=test0,restrict=on",
+        "-netdev",
+        "user,id=test1,restrict=on",
+        "-netdev",
+        "user,id=test2,restrict=on",
+        "-device",
+        "pcie-root-port,id=test_rp,bus=pcie.0,chassis=8,slot=8,addr=0x08.0",
+        "-device",
+        "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=test_rp,addr=0x00.0,multifunction=on",
+        "-device",
+        "virtio-net-pci,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=test_rp,addr=0x00.1,disable-legacy=on,aer=on",
+        "-vga",
+        "std",
+        "-vnc",
+        "127.0.0.1:5",
+        "-monitor",
+        "unix:/root/vm/esxi8-mf/monitor.sock,server,nowait",
+        "-serial",
+        "file:/root/vm/esxi8-mf/serial.log",
+        "-qtest",
+        "unix:/root/vm/esxi8-mf/qtest.sock,server=on,wait=off",
+        "-pidfile",
+        "/root/vm/esxi8-mf/qemu.pid",
+        "-daemonize",
+        "-D",
+        "/root/vm/esxi8-mf/qemu.log"
+      ],
+      "exists": true,
+      "path": "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+      "sha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+    },
+    "pythonPackages": {
+      "jsonschema": "4.25.1",
+      "pyvmomi": "9.1.0.0"
+    },
+    "qemuAerSource": {
+      "exists": true,
+      "path": "/root/src/qemu-11.0.2/hw/pci/pcie_aer.c",
+      "sha256": "11c8c33412d3c6331cd981fa0b7ade4949789c7ef7628f18a0e339dff8628d7c"
+    },
+    "repositoryInputs": [
+      {
+        "exists": true,
+        "path": "/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_aer_root_sequence.py",
+        "sha256": "7d98adb07faa80f54f5c67c38039c8281307dd3d28f63d3d0641299248cb2f65"
+      },
+      {
+        "exists": true,
+        "path": "/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/esxi_log_window_v2.py",
+        "sha256": "fc5d35088d6e6396c6dce28a0e29c3ac345cdabd7a618b88d25176a1a54064f8"
+      },
+      {
+        "exists": true,
+        "path": "/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py",
+        "sha256": "44c5f6254b534e66cf6b01124306bc9c66a3cd7c1ca3650877c35be7e75c0bd2"
+      },
+      {
+        "exists": true,
+        "path": "/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py",
+        "sha256": "14f0574f7d2d7edd956386194e364de06ccb11686e64fe9177f04f65d265d15c"
+      },
+      {
+        "exists": true,
+        "path": "/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_qemu_aer_root_sequence.py",
+        "sha256": "ee1d9e91bcd4d399ddef8d40336bda62e9cc961abb6a5c878ad2807460ce233b"
+      },
+      {
+        "exists": true,
+        "path": "/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/esxi_passthru_capability.py",
+        "sha256": "d92734e3c66d0264ebf97a7c3cecea38d7af281ccd5e5d62e321a01a30740592"
+      },
+      {
+        "exists": true,
+        "path": "/mnt/e/Code/PCI/github-export/contracts/vmware-aer-root-sequence-public-model-candidate-v1.json",
+        "sha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a"
+      },
+      {
+        "exists": true,
+        "path": "/mnt/e/Code/PCI/github-export/contracts/vmware-aer-root-sequence-oracle-profile.schema.json",
+        "sha256": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57"
+      },
+      {
+        "exists": true,
+        "path": "/root/src/qemu-11.0.2/hw/pci/pcie_aer.c",
+        "sha256": "11c8c33412d3c6331cd981fa0b7ade4949789c7ef7628f18a0e339dff8628d7c"
+      }
+    ]
+  },
+  "startedAt": "2026-07-29T16:56:01.900070Z"
+}

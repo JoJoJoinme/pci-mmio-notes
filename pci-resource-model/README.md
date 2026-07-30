@@ -77,7 +77,9 @@ profile 显式输出已求解的 floor，并要求启动后核对 QOM start/end�
 
 ## 3. capable 模型
 
-[`capability.py`](pci_resource_model/capability.py) 不返回含糊的单一布尔值：
+[`capability.py`](pci_resource_model/capability.py) 不返回含糊的单一布尔值。下列
+`eligible/available/attachable` 是 reference model 的历史内部投影，不是 IPD/Qman 对外四态的
+同名 wire 语义，不能直接复制到产品 API：
 
 ```text
 eligible   = per-device IOMMU-backed DMA + interrupt-remap + assignable Type-0 role
@@ -90,6 +92,11 @@ available  = eligible + complete dependency lease is present and free
 
 attachable = available + BAR allocation + RMRR admission
 ```
+
+产品实现必须按详细设计第 7.1 节和 portable `OP-EVALUATE-CAPABILITY` 同时输出
+`hardwareCapable/technicallyAttachable/policyEligible/adminEnabled/hostActive/available/attachable/eligible/qualified/supported`。
+其中产品 `eligible = attachable`；reference `eligible` 只覆盖静态 capability 前提，不能解释为
+当前请求可分配，更不能解释为 `QUALIFIED` 或 `SUPPORTED`。
 
 关键策略：
 

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-inventory-verification-receipt.schema.json",
+  "title": "Qman DirectPath portable inventory verification receipt",
+  "description": "Closed component receipt for one pure verification of an exact HostAuthority, signed current HostSnapshot and complete DeviceRecord set. This digest is not a signature, binary attestation, repository read proof or CAS receipt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "canonicalProfileId",
+    "inventoryVerifierAlgorithmIdentityDigest",
+    "trustContextDigest",
+    "trustFreshnessReceiptDigest",
+    "trustFreshnessExpiresAt",
+    "hostAuthorityCanonicalDigest",
+    "hostSnapshotCanonicalDigest",
+    "hostId",
+    "kernelBootId",
+    "hostEpoch",
+    "agentGeneration",
+    "observedHostAuthorityResourceVersion",
+    "snapshotHostAuthorityResourceVersion",
+    "snapshotEpoch",
+    "hostSnapshotContentHash",
+    "inventorySignerKeyId",
+    "inventorySignerPrincipalId",
+    "deviceRecords",
+    "verifiedAt",
+    "receiptDigest"
+  ],
+  "properties": {
+    "subjectType": {"const": "INVENTORY_VERIFICATION_RECEIPT"},
+    "schemaVersion": {"const": 1},
+    "canonicalProfileId": {"const": "CANONICAL-JSON-V1"},
+    "inventoryVerifierAlgorithmIdentityDigest": {"$ref": "#/$defs/digest"},
+    "trustContextDigest": {"$ref": "#/$defs/digest"},
+    "trustFreshnessReceiptDigest": {"$ref": "#/$defs/digest"},
+    "trustFreshnessExpiresAt": {"$ref": "#/$defs/timestamp"},
+    "hostAuthorityCanonicalDigest": {"$ref": "#/$defs/digest"},
+    "hostSnapshotCanonicalDigest": {"$ref": "#/$defs/digest"},
+    "hostId": {"$ref": "#/$defs/id"},
+    "kernelBootId": {"$ref": "#/$defs/id"},
+    "hostEpoch": {"$ref": "#/$defs/positiveInteger"},
+    "agentGeneration": {"$ref": "#/$defs/positiveInteger"},
+    "observedHostAuthorityResourceVersion": {"$ref": "#/$defs/positiveInteger"},
+    "snapshotHostAuthorityResourceVersion": {"$ref": "#/$defs/positiveInteger"},
+    "snapshotEpoch": {"$ref": "#/$defs/positiveInteger"},
+    "hostSnapshotContentHash": {"$ref": "#/$defs/digest"},
+    "inventorySignerKeyId": {"$ref": "#/$defs/id"},
+    "inventorySignerPrincipalId": {"$ref": "#/$defs/id"},
+    "deviceRecords": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/deviceRecord"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [deviceUid,deviceRecordHash]; duplicate deviceUid, deviceRecordHash or canonicalDigest values are rejected"
+    },
+    "verifiedAt": {"$ref": "#/$defs/timestamp"},
+    "receiptDigest": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "deviceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deviceUid",
+        "deviceRecordHash",
+        "canonicalDigest"
+      ],
+      "properties": {
+        "deviceUid": {"$ref": "#/$defs/id"},
+        "deviceRecordHash": {"$ref": "#/$defs/digest"},
+        "canonicalDigest": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "x-qmanVerifierIdentityRule": "inventoryVerifierAlgorithmIdentityDigest is the domain-separated component algorithm identity derived from the fixed PORTABLE_INVENTORY_VERIFIER_ALGORITHM_V2 definition and exactly seven schemaBindings in that algorithm subject: authority entities, HostSnapshot publication trace, identity V1, this receipt, the algorithm schema itself, portable entities and portable hash subjects. It is not a binary hash, build attestation or product release identity.",
+  "x-qmanInputBindingRule": "trustFreshnessExpiresAt is copied from the prerequisite VerifiedTrustContext and verifiedAt is within its authenticated freshness interval. hostAuthorityCanonicalDigest is SHA-256 over the exact verified HostAuthority canonical bytes and the before/after bytes and digests are identical. hostSnapshotCanonicalDigest is SHA-256 over the exact final signed HostSnapshot canonical bytes. deviceRecords is a one-to-one complete binding of the verified records: each deviceUid equals the parsed DeviceRecord UID, each deviceRecordHash equals that record's projection hash and appears exactly once in HostSnapshot.deviceRecordDigests, and each canonicalDigest is SHA-256 over that record's exact final canonical bytes. The three descriptor fields are independently unique and descriptors are ordered by CANONICAL-JSON-V1 bytes of [deviceUid,deviceRecordHash].",
+  "x-qmanCurrentPointerRule": "observedHostAuthorityResourceVersion is the committed resourceVersion in the verified before/after HostAuthority bytes; snapshotHostAuthorityResourceVersion is the same committed post-publication value signed inside HostSnapshot. This verifier requires equality and records both source names. The predecessor CAS compare operand r is consumed by publication and is not a receipt field; publication signs r+1 and atomically commits HostAuthority.resourceVersion=r+1.",
+  "x-qmanReceiptRule": "Set receiptDigest to null only in the construction projection, encode exact CANONICAL-JSON-V1 bytes, and compute SHA-256 over ASCII(QMAN-DIRECTPATH/INVENTORY-VERIFICATION-RECEIPT/V1) || 0x00 || projection bytes. The final object carries the non-null digest. The receipt binds the exact canonical authority/snapshot/device-set inputs, verified trust context, component algorithm identity and evaluator time, but does not prove independent or linearizable repository reads, publication CAS, executable provenance or product integration."
+}

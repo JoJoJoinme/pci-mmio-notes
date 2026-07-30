@@ -1,0 +1,1028 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-aer-case-matrix.schema.json",
+  "title": "Qman DirectPath Correctable AER M24-M29 candidate matrix",
+  "description": "Explicit component-premise tuple matrix for M24-M29. The matrix is not yet part of the portable normativeSources closure or the frozen product Case registry, and it grants no E4 or product authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "matrixId",
+    "authorityBoundary",
+    "productAuthorized",
+    "correctableBits",
+    "requiredCaseIds",
+    "cases",
+    "caseTupleCounts",
+    "tupleCount",
+    "matrixDigest"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "QMAN_AER_CASE_MATRIX"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "matrixId": {
+      "const": "QMAN-AER-M24-M29-COMPONENT-MATRIX-V1"
+    },
+    "authorityBoundary": {
+      "const": "COMPONENT_PREMISE"
+    },
+    "productAuthorized": {
+      "const": false
+    },
+    "correctableBits": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": 1
+        },
+        {
+          "const": 64
+        },
+        {
+          "const": 128
+        },
+        {
+          "const": 256
+        },
+        {
+          "const": 4096
+        },
+        {
+          "const": 8192
+        },
+        {
+          "const": 16384
+        },
+        {
+          "const": 32768
+        }
+      ],
+      "items": false,
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "requiredCaseIds": {
+      "$ref": "#/$defs/requiredCaseIds"
+    },
+    "cases": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/m24Case"
+        },
+        {
+          "$ref": "#/$defs/m25Case"
+        },
+        {
+          "$ref": "#/$defs/m26Case"
+        },
+        {
+          "$ref": "#/$defs/m27Case"
+        },
+        {
+          "$ref": "#/$defs/m28Case"
+        },
+        {
+          "$ref": "#/$defs/m29Case"
+        }
+      ],
+      "items": false,
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "caseTupleCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "M24",
+        "M25",
+        "M26",
+        "M27",
+        "M28",
+        "M29"
+      ],
+      "properties": {
+        "M24": {
+          "const": 8
+        },
+        "M25": {
+          "const": 64
+        },
+        "M26": {
+          "const": 24
+        },
+        "M27": {
+          "const": 9
+        },
+        "M28": {
+          "const": 15
+        },
+        "M29": {
+          "const": 13
+        }
+      }
+    },
+    "tupleCount": {
+      "const": 133
+    },
+    "matrixDigest": {
+      "$ref": "#/$defs/digest"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "o0Only": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "O0"
+        }
+      ],
+      "items": false,
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "o4Only": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "O4"
+        }
+      ],
+      "items": false,
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "o0AndO4": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "O0"
+        },
+        {
+          "const": "O4"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "endpointOnly": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "ENDPOINT"
+        }
+      ],
+      "items": false,
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "rootOnly": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "ROOT_PORT"
+        }
+      ],
+      "items": false,
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "endpointAndRoot": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "ENDPOINT"
+        },
+        {
+          "const": "ROOT_PORT"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "correctableBit": {
+      "enum": [
+        1,
+        64,
+        128,
+        256,
+        4096,
+        8192,
+        16384,
+        32768
+      ]
+    },
+    "requiredCaseIds": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "M24"
+        },
+        {
+          "const": "M25"
+        },
+        {
+          "const": "M26"
+        },
+        {
+          "const": "M27"
+        },
+        {
+          "const": "M28"
+        },
+        {
+          "const": "M29"
+        }
+      ],
+      "items": false,
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "m24Tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tupleId",
+        "caseId",
+        "ordinal",
+        "scenario",
+        "correctableBit",
+        "endpointCere",
+        "controlledBitMasked",
+        "rootCorEnabled",
+        "expectedEndpointDeposition",
+        "expectedRootDeposition",
+        "expectedIndependentCesCedW1c",
+        "expectedOwnerPhases",
+        "expectedLayoutRoles",
+        "tupleDigest"
+      ],
+      "properties": {
+        "tupleId": {
+          "type": "string",
+          "pattern": "^M24-B[0-7]$"
+        },
+        "caseId": {
+          "const": "M24"
+        },
+        "ordinal": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "scenario": {
+          "const": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C"
+        },
+        "correctableBit": {
+          "$ref": "#/$defs/correctableBit"
+        },
+        "endpointCere": {
+          "const": false
+        },
+        "controlledBitMasked": {
+          "const": false
+        },
+        "rootCorEnabled": {
+          "const": false
+        },
+        "expectedEndpointDeposition": {
+          "const": true
+        },
+        "expectedRootDeposition": {
+          "const": false
+        },
+        "expectedIndependentCesCedW1c": {
+          "const": true
+        },
+        "expectedOwnerPhases": {
+          "$ref": "#/$defs/o4Only"
+        },
+        "expectedLayoutRoles": {
+          "$ref": "#/$defs/endpointOnly"
+        },
+        "tupleDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "m25Tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tupleId",
+        "caseId",
+        "ordinal",
+        "scenario",
+        "correctableBit",
+        "endpointCere",
+        "controlledBitMasked",
+        "rootCorEnabled",
+        "expectedRootDeposition",
+        "expectedNotificationEligible",
+        "expectedOwnerPhases",
+        "expectedLayoutRoles",
+        "tupleDigest"
+      ],
+      "properties": {
+        "tupleId": {
+          "type": "string",
+          "pattern": "^M25-B[0-7]-G[01]{3}$"
+        },
+        "caseId": {
+          "const": "M25"
+        },
+        "ordinal": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "scenario": {
+          "const": "E_M_R_ROUTE_TRUTH_TABLE"
+        },
+        "correctableBit": {
+          "$ref": "#/$defs/correctableBit"
+        },
+        "endpointCere": {
+          "type": "boolean"
+        },
+        "controlledBitMasked": {
+          "type": "boolean"
+        },
+        "rootCorEnabled": {
+          "type": "boolean"
+        },
+        "expectedRootDeposition": {
+          "type": "boolean"
+        },
+        "expectedNotificationEligible": {
+          "type": "boolean"
+        },
+        "expectedOwnerPhases": {
+          "$ref": "#/$defs/o4Only"
+        },
+        "expectedLayoutRoles": {
+          "$ref": "#/$defs/endpointAndRoot"
+        },
+        "tupleDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "x-qmanTruthRule": "expectedRootDeposition equals endpointCere && !controlledBitMasked. expectedNotificationEligible equals expectedRootDeposition && rootCorEnabled."
+    },
+    "m26Tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tupleId",
+        "caseId",
+        "ordinal",
+        "scenario",
+        "referenceOwnerPhase",
+        "ownerSemanticClass",
+        "gateId",
+        "gate",
+        "sequence",
+        "repeatIndex",
+        "minimumRepeatCount",
+        "sourceSemanticPolicy",
+        "expectedOwnerPhases",
+        "expectedLayoutRoles",
+        "tupleDigest"
+      ],
+      "properties": {
+        "tupleId": {
+          "type": "string",
+          "pattern": "^M26-O[04]-(FIRST_MULTIPLE|INDEPENDENT_W1C|BIT_OR|REARM)-R0[1-3]$"
+        },
+        "caseId": {
+          "const": "M26"
+        },
+        "ordinal": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "scenario": {
+          "const": "RETAINED_ROOT_SEQUENCE"
+        },
+        "referenceOwnerPhase": {
+          "enum": [
+            "O0",
+            "O4"
+          ]
+        },
+        "ownerSemanticClass": {
+          "enum": [
+            "HOST_OWNED_IDLE",
+            "ACTIVE_DIRECTPATH"
+          ]
+        },
+        "gateId": {
+          "const": "g101"
+        },
+        "gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "endpointCere",
+            "controlledBitMasked",
+            "rootCorEnabled"
+          ],
+          "properties": {
+            "endpointCere": {
+              "const": true
+            },
+            "controlledBitMasked": {
+              "const": false
+            },
+            "rootCorEnabled": {
+              "const": true
+            }
+          }
+        },
+        "sequence": {
+          "enum": [
+            "FIRST_MULTIPLE",
+            "INDEPENDENT_W1C",
+            "BIT_OR",
+            "REARM"
+          ]
+        },
+        "repeatIndex": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "minimumRepeatCount": {
+          "const": 3
+        },
+        "sourceSemanticPolicy": {
+          "const": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET"
+        },
+        "expectedOwnerPhases": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/o0Only"
+            },
+            {
+              "$ref": "#/$defs/o4Only"
+            }
+          ]
+        },
+        "expectedLayoutRoles": {
+          "$ref": "#/$defs/rootOnly"
+        },
+        "tupleDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "referenceOwnerPhase": {
+                "const": "O0"
+              }
+            },
+            "required": [
+              "referenceOwnerPhase"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ownerSemanticClass": {
+                "const": "HOST_OWNED_IDLE"
+              },
+              "expectedOwnerPhases": {
+                "$ref": "#/$defs/o0Only"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "referenceOwnerPhase": {
+                "const": "O4"
+              }
+            },
+            "required": [
+              "referenceOwnerPhase"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ownerSemanticClass": {
+                "const": "ACTIVE_DIRECTPATH"
+              },
+              "expectedOwnerPhases": {
+                "$ref": "#/$defs/o4Only"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "m27Tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tupleId",
+        "caseId",
+        "ordinal",
+        "scenario",
+        "expectedOutcome",
+        "expectedOwnerPhases",
+        "expectedLayoutRoles",
+        "tupleDigest"
+      ],
+      "properties": {
+        "tupleId": {
+          "type": "string",
+          "pattern": "^M27-T[0-8]$"
+        },
+        "caseId": {
+          "const": "M27"
+        },
+        "ordinal": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "scenario": {
+          "enum": [
+            "DIRTY_CLEANUP_QUARANTINES",
+            "PHYSICAL_CLEAR_CLEANUP_VERIFIED",
+            "SHADOW_REQUIRES_HOST_CLEANUP",
+            "CLEANUP_THEN_REUSE_PASS",
+            "CLEANUP_THEN_REUSE_FAIL",
+            "STALE_ASSIGNMENT_DENIED",
+            "STALE_LEASE_DENIED",
+            "STALE_OWNER_EPOCH_DENIED",
+            "STALE_BOOT_DENIED"
+          ]
+        },
+        "expectedOutcome": {
+          "enum": [
+            "QUARANTINED",
+            "CLEANUP_VERIFIED",
+            "REUSABLE",
+            "DENIED"
+          ]
+        },
+        "expectedOwnerPhases": {
+          "$ref": "#/$defs/o0AndO4"
+        },
+        "expectedLayoutRoles": {
+          "$ref": "#/$defs/endpointAndRoot"
+        },
+        "tupleDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "m28Tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tupleId",
+        "caseId",
+        "ordinal",
+        "scenario",
+        "functionRole",
+        "expectedOutcome",
+        "expectedOwnerPhases",
+        "expectedLayoutRoles",
+        "tupleDigest"
+      ],
+      "properties": {
+        "tupleId": {
+          "type": "string",
+          "pattern": "^M28-T(0[0-9]|1[0-4])$"
+        },
+        "caseId": {
+          "const": "M28"
+        },
+        "ordinal": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "scenario": {
+          "enum": [
+            "ENDPOINT_BYTE_LANE_W1C",
+            "UNALIGNED_MULTI_BYTE_W1C",
+            "ENDPOINT_ROOT_FIELD_DENIED",
+            "ROOT_STATUS_W1C_FILTERED",
+            "ENDPOINT_READ_MASKED",
+            "ROOT_READ_MASKED",
+            "UNCORRECTABLE_READ_ZEROED",
+            "UNKNOWN_READ_ZEROED",
+            "MISSING_READ_ZEROED",
+            "UNCORRECTABLE_WRITE_DENIED",
+            "HIDDEN_HEADER_VISIBLE_BODY_REWIRED",
+            "HIDDEN_BODY_ZERO",
+            "HIDDEN_BODY_SHADOW",
+            "FORGED_PLAN_REJECTED",
+            "STALE_LAYOUT_REJECTED"
+          ]
+        },
+        "functionRole": {
+          "enum": [
+            "ENDPOINT",
+            "ROOT_PORT",
+            "BOTH",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "expectedOutcome": {
+          "enum": [
+            "FILTERED",
+            "PROJECTED",
+            "ZEROED",
+            "DENIED",
+            "REWIRED",
+            "SHADOWED",
+            "REJECTED"
+          ]
+        },
+        "expectedOwnerPhases": {
+          "$ref": "#/$defs/o4Only"
+        },
+        "expectedLayoutRoles": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/endpointOnly"
+            },
+            {
+              "$ref": "#/$defs/rootOnly"
+            },
+            {
+              "$ref": "#/$defs/endpointAndRoot"
+            }
+          ]
+        },
+        "tupleDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "functionRole": {
+                "const": "ENDPOINT"
+              }
+            },
+            "required": [
+              "functionRole"
+            ]
+          },
+          "then": {
+            "properties": {
+              "expectedLayoutRoles": {
+                "$ref": "#/$defs/endpointOnly"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "functionRole": {
+                "const": "ROOT_PORT"
+              }
+            },
+            "required": [
+              "functionRole"
+            ]
+          },
+          "then": {
+            "properties": {
+              "expectedLayoutRoles": {
+                "$ref": "#/$defs/rootOnly"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "functionRole": {
+                "enum": [
+                  "BOTH",
+                  "NOT_APPLICABLE"
+                ]
+              }
+            },
+            "required": [
+              "functionRole"
+            ]
+          },
+          "then": {
+            "properties": {
+              "expectedLayoutRoles": {
+                "$ref": "#/$defs/endpointAndRoot"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "m29Tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tupleId",
+        "caseId",
+        "ordinal",
+        "scenario",
+        "evidenceClassification",
+        "expectedComponentEligible",
+        "expectedDenyReasonOrNull",
+        "productAuthorized",
+        "expectedOwnerPhases",
+        "expectedLayoutRoles",
+        "tupleDigest"
+      ],
+      "properties": {
+        "tupleId": {
+          "type": "string",
+          "pattern": "^M29-T(0[0-9]|1[0-2])$"
+        },
+        "caseId": {
+          "const": "M29"
+        },
+        "ordinal": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "scenario": {
+          "enum": [
+            "MISSING_INPUT_DENIED",
+            "EXACT_COMPONENT_PREMISE",
+            "FAKE_REPLAYER_CANNOT_AUTHORIZE_PRODUCT",
+            "CANDIDATE_DENIED",
+            "INCONCLUSIVE_DENIED",
+            "NESTED_CANNOT_CLAIM_PHYSICAL",
+            "CONTAINMENT_LANES_INDEPENDENT",
+            "CASE_SET_INCOMPLETE",
+            "DIGEST_TAMPER_DENIED",
+            "EXPIRED_AUTHORITY_DENIED",
+            "LAYOUT_CHANGE_DENIED",
+            "DIMENSION_UNKNOWN_DENIED",
+            "CLEANUP_REUSE_RESET_QUARANTINE_DENIED"
+          ]
+        },
+        "evidenceClassification": {
+          "enum": [
+            "MATCH",
+            "CANDIDATE",
+            "INCONCLUSIVE",
+            "MISMATCH",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "expectedComponentEligible": {
+          "type": "boolean"
+        },
+        "expectedDenyReasonOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Z][A-Z0-9_]*$"
+            }
+          ]
+        },
+        "productAuthorized": {
+          "const": false
+        },
+        "expectedOwnerPhases": {
+          "$ref": "#/$defs/o0AndO4"
+        },
+        "expectedLayoutRoles": {
+          "$ref": "#/$defs/endpointAndRoot"
+        },
+        "tupleDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "m24Case": {
+      "$ref": "#/$defs/caseBaseM24"
+    },
+    "m25Case": {
+      "$ref": "#/$defs/caseBaseM25"
+    },
+    "m26Case": {
+      "$ref": "#/$defs/caseBaseM26"
+    },
+    "m27Case": {
+      "$ref": "#/$defs/caseBaseM27"
+    },
+    "m28Case": {
+      "$ref": "#/$defs/caseBaseM28"
+    },
+    "m29Case": {
+      "$ref": "#/$defs/caseBaseM29"
+    },
+    "caseBaseM24": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "title",
+        "tupleCount",
+        "tuples"
+      ],
+      "properties": {
+        "caseId": {
+          "const": "M24"
+        },
+        "title": {
+          "const": "Correctable deposition and independent Endpoint status clear"
+        },
+        "tupleCount": {
+          "const": 8
+        },
+        "tuples": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/m24Tuple"
+          }
+        }
+      }
+    },
+    "caseBaseM25": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "title",
+        "tupleCount",
+        "tuples"
+      ],
+      "properties": {
+        "caseId": {
+          "const": "M25"
+        },
+        "title": {
+          "const": "Eight Correctable bits by eight E/M/R route tuples"
+        },
+        "tupleCount": {
+          "const": 64
+        },
+        "tuples": {
+          "type": "array",
+          "minItems": 64,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/m25Tuple"
+          }
+        }
+      }
+    },
+    "caseBaseM26": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "title",
+        "tupleCount",
+        "tuples"
+      ],
+      "properties": {
+        "caseId": {
+          "const": "M26"
+        },
+        "title": {
+          "const": "Owner-bound retained Root first/multiple, W1C, OR and rearm sequence"
+        },
+        "tupleCount": {
+          "const": 24
+        },
+        "tuples": {
+          "type": "array",
+          "minItems": 24,
+          "maxItems": 24,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/m26Tuple"
+          }
+        }
+      }
+    },
+    "caseBaseM27": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "title",
+        "tupleCount",
+        "tuples"
+      ],
+      "properties": {
+        "caseId": {
+          "const": "M27"
+        },
+        "title": {
+          "const": "Cleanup, quarantine, reuse and stale-owner fences"
+        },
+        "tupleCount": {
+          "const": 9
+        },
+        "tuples": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/m27Tuple"
+          }
+        }
+      }
+    },
+    "caseBaseM28": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "title",
+        "tupleCount",
+        "tuples"
+      ],
+      "properties": {
+        "caseId": {
+          "const": "M28"
+        },
+        "title": {
+          "const": "Pre-VFIO guest configuration isolation and dynamic layout replay"
+        },
+        "tupleCount": {
+          "const": 15
+        },
+        "tuples": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/m28Tuple"
+          }
+        }
+      }
+    },
+    "caseBaseM29": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "title",
+        "tupleCount",
+        "tuples"
+      ],
+      "properties": {
+        "caseId": {
+          "const": "M29"
+        },
+        "title": {
+          "const": "Evidence, qualification and admission remain non-self-authorizing"
+        },
+        "tupleCount": {
+          "const": 13
+        },
+        "tuples": {
+          "type": "array",
+          "minItems": 13,
+          "maxItems": 13,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/m29Tuple"
+          }
+        }
+      }
+    }
+  },
+  "x-qmanCanonicalization": "CANONICAL-JSON-V1",
+  "x-qmanTupleDigestDomain": "QMAN-DIRECTPATH/AER-CASE-TUPLE/V1\u0000",
+  "x-qmanMatrixDigestDomain": "QMAN-DIRECTPATH/AER-CASE-MATRIX/V1\u0000",
+  "x-qmanTupleDigestRule": "For every tuple, set tupleDigest to null only in its construction projection, encode the complete tuple with CANONICAL-JSON-V1, prepend x-qmanTupleDigestDomain and SHA-256 the bytes.",
+  "x-qmanMatrixDigestRule": "After every tuple digest is final, deep-copy the complete matrix, set only matrixDigest to null, encode with CANONICAL-JSON-V1, prepend x-qmanMatrixDigestDomain and SHA-256 the bytes.",
+  "x-qmanExactCoverageRule": "The six cases, all 133 explicit tuple rows, tuple order, tuple IDs, tuple digests, per-Case counts and total count are exact. A verifier may not replace the rows with dimension sets, a Cartesian product, subset coverage, one representative run, or a relabeled digest.",
+  "x-qmanCandidateBoundary": "M24-M29 are candidate component-premise identifiers in this file until the independent product Case registry and portable normativeSources closure explicitly adopt them. This matrix itself closes no Case or Risk.",
+  "x-qmanE4Boundary": "No tuple asserts E4, physical qualification, real VFIO enforcement, or product authorization."
+}

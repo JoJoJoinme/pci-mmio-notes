@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-07-23",
+  "asOf": "2026-07-30",
   "subject": "VMWARE_ESXI",
   "sourceModel": "contracts/vmware-behavior-model.json",
   "hashAlgorithm": "SHA-256",
@@ -683,12 +683,12 @@
         "20260723T003751Z-16496a4c",
         "20260723T001720Z-e19407a0",
         "20260723T004345Z-fae1a783",
-        "20260723-qemu11-aer-emr-control-v1",
-        "20260723-qemu11-aer-emr-allbits-v1",
         "20260723-esxi8-aer-virtio-idle-emr-v2",
         "20260723-esxi8-aer-virtio-active-emr-representative-v2",
         "20260723-esxi8-aer-virtio-active-g101-final-v1",
-        "20260723-esxi8-aer-virtio-active-g100-parser-final-v1"
+        "20260723-esxi8-aer-virtio-active-g100-parser-final-v1",
+        "20260729-esxi8-aer-root-o4-v17-full1",
+        "20260730-esxi8-aer-root-o0-v19-full1"
       ],
       "evidence": [
         {
@@ -706,12 +706,38 @@
         {
           "path": "evidence/esxi8-aer-correctable-virtio-route-20260723-result.json",
           "sha256": "fd54b0628f01f591629349498ff135aa2ca475a339858e6c100a5cff6e50c445"
+        },
+        {
+          "path": "evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json",
+          "sha256": "213dfe8908dac6e38a2c4f47699fcf07d6cafa33bc929d87319097d044c03d4f"
+        },
+        {
+          "path": "evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json",
+          "sha256": "b50051385d63aa83e9b7fad051916c64b163d310ee9d8ee48e865502dd0b5c35"
+        },
+        {
+          "path": "evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json",
+          "sha256": "5a58f4deeecfe8429bab843ed712d71793a8e42f65a4071c6fc9e23d848bedff"
+        },
+        {
+          "path": "evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json",
+          "sha256": "538aaf8c5d44b42c7ceb7c2b985b3c059ef91be28902b805dac4eec117eb310b"
+        },
+        {
+          "path": "contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json",
+          "sha256": "cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e"
+        },
+        {
+          "path": "evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json",
+          "sha256": "fab09980f8f266e94640914df59833f640b66e063a1625333d9685031109812a"
         }
       ],
       "noRunReason": null,
       "limitations": [
         "historical-e1000e-endpoint-and-root-reporting-disabled",
         "esxi-host-service-and-interrupt-attribution-unverified",
+        "esxi-other-emr-gates-root-sequence-unverified",
+        "esxi-o0-target-native-driver-unbound",
         "guest-write-isolation-unverified",
         "lifecycle-clear-and-reuse-unverified",
         "synthetic-endpoint-not-physical-recovery",
@@ -1301,12 +1327,12 @@
       "legacyCaseIds": [],
       "derivedAcceptanceCaseIds": [],
       "runIds": [
-        "20260723-vmware-evidence-index-v2"
+        "20260730-vmware-evidence-index-v5"
       ],
       "evidence": [
         {
-          "path": "evidence/vmware-trace-index-20260723-summary.json",
-          "sha256": "262315949a1f434418ee3d08b90656684a71fbc266942244dfd5f3d462781b5b"
+          "path": "evidence/vmware-trace-index-20260730-v5-summary.json",
+          "sha256": "3c14423372fa933286c8adcb906f73d9e3677b6e77bba01dd4d3310c10936261"
         }
       ],
       "noRunReason": null,

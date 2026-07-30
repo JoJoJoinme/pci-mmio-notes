@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-reset-contract-set.schema.json",
+  "title": "Qman DirectPath resolved reset-contract set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["subjectType", "schemaVersion", "contracts"],
+  "properties": {
+    "subjectType": {"const": "RESET_CONTRACT_SET"},
+    "schemaVersion": {"const": 1},
+    "contracts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/resolvedResetContract"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of the complete resolvedResetContract"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "idSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/id"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "resolvedResetContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targetDeviceUid",
+        "selectedMethod",
+        "affectedDeviceUids",
+        "contractDigest",
+        "provenanceDigest"
+      ],
+      "properties": {
+        "targetDeviceUid": {"$ref": "#/$defs/id"},
+        "selectedMethod": {
+          "enum": [
+            "PCI_FLR",
+            "VFIO_DEVICE_RESET",
+            "VFIO_HOT_RESET",
+            "SECONDARY_BUS_RESET",
+            "PM_RESET",
+            "VENDOR_QUALIFIED_RESET"
+          ]
+        },
+        "affectedDeviceUids": {"$ref": "#/$defs/idSet"},
+        "contractDigest": {"$ref": "#/$defs/digest"},
+        "provenanceDigest": {"$ref": "#/$defs/digest"}
+      },
+      "x-qmanCrossFieldRule": "affectedDeviceUids contains targetDeviceUid. contractDigest identifies the authenticated source fact; the RESET_CONTRACT_SET content hash additionally binds target, method, affected set, and provenance so a source digest cannot mask changed resolved semantics."
+    }
+  },
+  "x-qmanHashRule": "The DocumentReference contentHash is SHA-256(CANONICAL-JSON-V1 of this complete object). No internal nullable hash field exists."
+}

@@ -1,0 +1,360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/vmware-aer-root-sequence-oracle-profile.schema.json",
+  "title": "VMware DirectPath Correctable AER Root Sequence Oracle Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "subject",
+    "profileState",
+    "comparisonTarget",
+    "gate",
+    "ownerPhases",
+    "sequencePolicy",
+    "sourcePolicy",
+    "hostProjectionPolicy",
+    "hostLogPolicy",
+    "guestPolicy",
+    "expectedStates",
+    "requiredSequences",
+    "timingEnvelope",
+    "environmentBinding",
+    "minimumRepeats",
+    "claimBoundary"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9][A-Z0-9_.-]+$"
+    },
+    "subject": {
+      "const": "VMWARE_ESXI_BLACKBOX_CANDIDATE"
+    },
+    "profileState": {
+      "enum": [
+        "CANDIDATE_NOT_OBSERVED",
+        "FROZEN_OBSERVED_PROFILE"
+      ]
+    },
+    "comparisonTarget": {
+      "const": "QEMU_PUBLIC_MODEL_RETAINED_REGISTER_STATE"
+    },
+    "gate": {
+      "enum": [
+        "g100",
+        "g101"
+      ]
+    },
+    "ownerPhases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "O0",
+        "O4"
+      ],
+      "properties": {
+        "O0": {
+          "$ref": "#/$defs/ownerPhase"
+        },
+        "O4": {
+          "$ref": "#/$defs/ownerPhase"
+        }
+      }
+    },
+    "sequencePolicy": {
+      "const": "QEMU_PUBLIC_MODEL_EXACT_TRANSITIONS_RETAINED_THROUGH_WINDOW"
+    },
+    "sourcePolicy": {
+      "const": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET"
+    },
+    "hostProjectionPolicy": {
+      "const": "ESXI_RAW_VIEW_EQUALS_ONE_TIME_BRACKETED_OUTER_SNAPSHOT"
+    },
+    "hostLogPolicy": {
+      "const": "OBSERVE_ONLY_OFFICIAL_PER_SOURCE_MARKER_ROTATION_CHAIN_V2"
+    },
+    "guestPolicy": {
+      "const": "OBSERVE_ONLY_BUT_O4_REQUIRES_BOUND_DRIVER_AND_HEARTBEAT"
+    },
+    "expectedStates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "O0",
+        "O4"
+      ],
+      "properties": {
+        "O0": {
+          "$ref": "#/$defs/sequenceVectors"
+        },
+        "O4": {
+          "$ref": "#/$defs/sequenceVectors"
+        }
+      }
+    },
+    "requiredSequences": {
+      "const": [
+        "first-multiple",
+        "independent-w1c",
+        "bit-or",
+        "rearm"
+      ]
+    },
+    "timingEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timelineDelaysSeconds",
+        "minimumFinalObservationSecondsO0",
+        "minimumGuestWindowRemainingSecondsO4",
+        "maximumSafetyPollIntervalSeconds",
+        "guestWindowSeconds",
+        "runnerWatchdogGraceSeconds"
+      ],
+      "properties": {
+        "timelineDelaysSeconds": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "minimumFinalObservationSecondsO0": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minimumGuestWindowRemainingSecondsO4": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maximumSafetyPollIntervalSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 0.1
+        },
+        "guestWindowSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runnerWatchdogGraceSeconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "environmentBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedEsxiBuild",
+        "expectedPciId",
+        "qemuAerSourceSha256",
+        "expectedSystemUuid",
+        "outerQemuBinarySha256"
+      ],
+      "properties": {
+        "expectedEsxiBuild": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "expectedPciId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{4}:[0-9a-f]{4}$"
+        },
+        "qemuAerSourceSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "expectedSystemUuid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-fA-F-]{8,64}$"
+        },
+        "outerQemuBinarySha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "minimumRepeats": {
+      "type": "integer",
+      "minimum": 3
+    },
+    "claimBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provesOnMatch",
+        "doesNotProve"
+      ],
+      "properties": {
+        "provesOnMatch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "doesNotProve": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "profileState": {
+            "const": "FROZEN_OBSERVED_PROFILE"
+          }
+        },
+        "required": [
+          "profileState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "environmentBinding": {
+            "properties": {
+              "expectedSystemUuid": {
+                "type": "string"
+              },
+              "outerQemuBinarySha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "stateExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "endpointCorrectableStatus",
+        "endpointCed",
+        "rootErrorStatus",
+        "rootSource",
+        "endpointCere",
+        "controlledBitsMasked",
+        "rootCorEnabled",
+        "rootPathOpen"
+      ],
+      "properties": {
+        "endpointCorrectableStatus": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "endpointCed": {
+          "type": "boolean"
+        },
+        "rootErrorStatus": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "rootSource": {
+          "enum": [
+            "REQUESTER_ID",
+            "ZERO",
+            "IGNORED_WITHOUT_COR_RCV"
+          ]
+        },
+        "endpointCere": {
+          "type": "boolean"
+        },
+        "controlledBitsMasked": {
+          "type": "boolean"
+        },
+        "rootCorEnabled": {
+          "type": "boolean"
+        },
+        "rootPathOpen": {
+          "type": "boolean"
+        }
+      }
+    },
+    "allowedStates": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/stateExpectation"
+      }
+    },
+    "labelVectors": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/allowedStates"
+      },
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9-]+$"
+      }
+    },
+    "sequenceVectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "first-multiple",
+        "independent-w1c",
+        "bit-or",
+        "rearm"
+      ],
+      "properties": {
+        "first-multiple": {
+          "$ref": "#/$defs/labelVectors"
+        },
+        "independent-w1c": {
+          "$ref": "#/$defs/labelVectors"
+        },
+        "bit-or": {
+          "$ref": "#/$defs/labelVectors"
+        },
+        "rearm": {
+          "$ref": "#/$defs/labelVectors"
+        }
+      }
+    },
+    "ownerPhase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currentOwner",
+        "activePassthroughUsers"
+      ],
+      "properties": {
+        "currentOwner": {
+          "enum": [
+            "VMkernel",
+            "VM Passthru"
+          ]
+        },
+        "activePassthroughUsers": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

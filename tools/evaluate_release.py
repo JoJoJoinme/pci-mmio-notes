@@ -243,6 +243,19 @@ VMWARE_EVIDENCE_RECORD_FIELDS = {
     "limitations",
 }
 VMWARE_EVIDENCE_ARTIFACT_FIELDS = {"path", "sha256"}
+VMWARE_CONTROL_REFERENCE_FIELDS = {
+    "id",
+    "subject",
+    "basisKind",
+    "evidencePath",
+    "sha256",
+    "runIds",
+    "publicSources",
+    "proves",
+    "doesNotProve",
+    "closureAuthority",
+}
+VMWARE_CONTROL_PUBLIC_SOURCE_FIELDS = {"title", "url"}
 VMWARE_TRACE_SUMMARY_FIELDS = {
     "schemaVersion",
     "runId",
@@ -3267,6 +3280,165 @@ def validate_vmware_reference(
                             errors.append(
                                 f"VMware experiment {experiment_id} evidence hash drift: {relative}"
                             )
+        control_references = experiment.get("controlReferences", [])
+        if not isinstance(control_references, list):
+            errors.append(
+                f"VMware experiment {experiment_id} controlReferences must be a list"
+            )
+            control_references = []
+        control_ids: set[str] = set()
+        control_paths: set[str] = set()
+        for reference in control_references:
+            if not isinstance(reference, dict):
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference must be an object"
+                )
+                continue
+            if set(reference) != VMWARE_CONTROL_REFERENCE_FIELDS:
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference fields must "
+                    "match the typed non-closing contract"
+                )
+            reference_id = reference.get("id")
+            if (
+                not isinstance(reference_id, str)
+                or not reference_id
+                or reference_id in control_ids
+            ):
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference ID is "
+                    f"invalid or duplicate: {reference_id!r}"
+                )
+            else:
+                control_ids.add(reference_id)
+            subject = reference.get("subject")
+            if (
+                not isinstance(subject, str)
+                or not subject
+                or subject == model.get("subject")
+            ):
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference "
+                    "must declare a non-VMware subject"
+                )
+            if reference.get("basisKind") != "EXECUTED_PUBLIC_MODEL_CONTROL":
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference basisKind "
+                    "must be EXECUTED_PUBLIC_MODEL_CONTROL"
+                )
+            control_path = reference.get("evidencePath")
+            if (
+                not isinstance(control_path, str)
+                or not control_path
+                or control_path in control_paths
+            ):
+                errors.append(
+                    f"VMware experiment {experiment_id} control evidence path is "
+                    f"invalid or duplicate: {control_path!r}"
+                )
+                control_file = None
+            else:
+                control_paths.add(control_path)
+                if control_path in normalized_evidence_paths:
+                    errors.append(
+                        f"VMware experiment {experiment_id} control evidence must not "
+                        "also be VMware evidence"
+                    )
+                control_file = repository_file(
+                    control_path,
+                    (
+                        f"VMware experiment {experiment_id} control reference "
+                        f"{reference_id!r} evidence path"
+                    ),
+                    errors,
+                )
+            control_hash = reference.get("sha256")
+            if not isinstance(control_hash, str) or not HASH_RE.fullmatch(control_hash):
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference SHA-256 "
+                    "is invalid"
+                )
+            elif control_file is not None:
+                actual_hash = hashlib.sha256(control_file.read_bytes()).hexdigest()
+                if actual_hash != control_hash:
+                    errors.append(
+                        f"VMware experiment {experiment_id} control reference hash "
+                        f"drift: {control_path}"
+                    )
+                try:
+                    control_payload = load_json(control_file)
+                except ValueError as error:
+                    errors.append(str(error))
+                else:
+                    if control_payload.get("subject") != subject:
+                        errors.append(
+                            f"VMware experiment {experiment_id} control reference "
+                            "subject does not match the referenced evidence"
+                        )
+            control_run_ids = reference.get("runIds")
+            if (
+                not isinstance(control_run_ids, list)
+                or not control_run_ids
+                or any(
+                    not isinstance(item, str) or not item
+                    for item in control_run_ids
+                )
+                or len(control_run_ids) != len(set(control_run_ids))
+            ):
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference runIds "
+                    "must be non-empty unique strings"
+                )
+            public_sources = reference.get("publicSources")
+            if not isinstance(public_sources, list) or not public_sources:
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference must bind "
+                    "publicSources"
+                )
+                public_sources = []
+            source_urls: set[str] = set()
+            for source in public_sources:
+                if (
+                    not isinstance(source, dict)
+                    or set(source) != VMWARE_CONTROL_PUBLIC_SOURCE_FIELDS
+                    or not isinstance(source.get("title"), str)
+                    or not source.get("title")
+                    or not isinstance(source.get("url"), str)
+                    or not re.fullmatch(r"https://\S+", source.get("url", ""))
+                ):
+                    errors.append(
+                        f"VMware experiment {experiment_id} control public source "
+                        "must contain only a title and HTTPS URL"
+                    )
+                    continue
+                if source["url"] in source_urls:
+                    errors.append(
+                        f"VMware experiment {experiment_id} control public source URLs "
+                        "must be unique"
+                    )
+                source_urls.add(source["url"])
+            if not isinstance(reference.get("proves"), str) or not reference.get(
+                "proves"
+            ):
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference must state "
+                    "what it proves"
+                )
+            does_not_prove = reference.get("doesNotProve")
+            if (
+                not isinstance(does_not_prove, list)
+                or not does_not_prove
+                or any(not isinstance(item, str) or not item for item in does_not_prove)
+            ):
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference must state "
+                    "non-empty doesNotProve boundaries"
+                )
+            if reference.get("closureAuthority") != "NONE":
+                errors.append(
+                    f"VMware experiment {experiment_id} control reference "
+                    "closureAuthority must remain NONE"
+                )
         limitations = experiment.get("limitations")
         if not isinstance(limitations, list) or not limitations or any(
             not isinstance(item, str) for item in limitations

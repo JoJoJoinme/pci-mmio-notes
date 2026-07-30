@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260726-vmware-evidence-index-v3",
+  "observedAt": "2026-07-26",
+  "subject": "VMWARE_ESXI_REFERENCE_GOVERNANCE",
+  "verdict": "PARTIAL",
+  "statement": "The repository mechanically traces every VMware experiment from Tech Story to representative VMware run and hash-bound VMware evidence, derives non-closing acceptance associations from requiredTechStories, and keeps the QEMU Correctable AER root-sequence positive control in a typed non-closing control reference with a distinct subject.",
+  "counts": {
+    "experiments": 37,
+    "evidenceBound": 29,
+    "noRun": 8,
+    "derivedAcceptanceLinks": 270
+  },
+  "closureAuthority": {
+    "acceptanceCases": "NONE",
+    "qmanImplementation": "NONE",
+    "qmanQualification": "NONE",
+    "release": "NONE"
+  },
+  "artifacts": [
+    {
+      "path": "tools/evaluate_release.py",
+      "sha256": "b67ecdc61607d8e3e379385530671a789fe6653194adb4feb7d88f464f507d91"
+    },
+    {
+      "path": "tools/generate_vmware_evidence_index.py",
+      "sha256": "9b3d01a12a6a7bb310a0b4de5d5fadbcc3c6dcc829b10c39659eb438123c00ab"
+    },
+    {
+      "path": "tests/test_vmware_evidence_index.py",
+      "sha256": "ecf22e9b0257b5f50dba893d16c5609730a987850912c0ea599d90bced557237"
+    }
+  ],
+  "limitations": [
+    "Historical pyVmomi task identifiers and initiating actors are not uniformly retained.",
+    "Historical VMware runs do not all conform to contracts/vmware-experiment-result.schema.json; VMW-AER-COR-001 has profile-specific canonical pairs but their raw runs remain external artifacts.",
+    "Representative run IDs do not imply that every legacy case has a canonical result.",
+    "The 2026-07-26 QEMU AER root-sequence run is a separately typed reference positive control and is not a VMware run or VMware evidence; ESXi repeat/multiple/W1C/re-arm, notification/service attribution, guest writes, lifecycle recovery, and physical health remain unverified.",
+    "Derived acceptance links remain non-closing associations; this index is traceability evidence, not case completion evidence.",
+    "This reference-governance result cannot close a Qman product case, risk, implementation milestone, qualification profile, or release gate."
+  ]
+}

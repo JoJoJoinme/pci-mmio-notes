@@ -1,0 +1,622 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-qualification-verification-receipt.schema.json",
+  "title": "Qman DirectPath qualification-profile verification receipt",
+  "description": "Closed component receipt binding one qualification-profile pre-receipt projection to the exact verifier algorithm/schema closure, selected qualification record and recursive E4 closure, current supported catalog and external anchor freshness, and current trust/root-ring verification window. This digest is not a signature, repository read proof, executable provenance attestation or product release claim.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "canonicalProfileId",
+    "verifierAlgorithmId",
+    "verifierAlgorithmVersion",
+    "verifierAlgorithmIdentityDigest",
+    "schemaBindings",
+    "projectionDigest",
+    "profileId",
+    "exactQualificationKey",
+    "qualificationRecordDigests",
+    "qualificationRecord",
+    "e4Closure",
+    "catalog",
+    "catalogAnchor",
+    "catalogFreshness",
+    "trust",
+    "nextApplicableDenyEffectiveAtOrNull",
+    "verifiedAt",
+    "expiresAt",
+    "receiptDigest"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "QUALIFICATION_VERIFICATION_RECEIPT"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "canonicalProfileId": {
+      "const": "CANONICAL-JSON-V1"
+    },
+    "verifierAlgorithmId": {
+      "const": "PORTABLE_QUALIFICATION_PROFILE_VERIFIER_V1"
+    },
+    "verifierAlgorithmVersion": {
+      "const": 1
+    },
+    "verifierAlgorithmIdentityDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "schemaBindings": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "uniqueItems": true,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-qualification-profile-projection.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-qualification-verification-receipt.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-portable-hash-subjects.schema.json#/$defs/qualificationProfile"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-qualification-record.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-supported-catalog.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-catalog-rollback-anchor.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-anchor-freshness-envelope.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-trust-root-set.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-trust-key-ring.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-trust-rollback-anchor.schema.json"
+                }
+              },
+              "required": [
+                "schemaRef"
+              ]
+            }
+          ]
+        }
+      ],
+      "items": false,
+      "x-qmanCanonicalOrder": "the fixed prefixItems order; alternate, missing, duplicate or extra schema bindings are invalid"
+    },
+    "projectionDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "profileId": {
+      "$ref": "#/$defs/id"
+    },
+    "exactQualificationKey": {
+      "$ref": "#/$defs/digest"
+    },
+    "qualificationRecordDigests": {
+      "$ref": "#/$defs/singletonDigestSet"
+    },
+    "qualificationRecord": {
+      "$ref": "#/$defs/qualificationRecordBinding"
+    },
+    "e4Closure": {
+      "$ref": "#/$defs/e4Closure"
+    },
+    "catalog": {
+      "$ref": "#/$defs/catalogBinding"
+    },
+    "catalogAnchor": {
+      "$ref": "#/$defs/catalogAnchorBinding"
+    },
+    "catalogFreshness": {
+      "$ref": "#/$defs/catalogFreshnessBinding"
+    },
+    "trust": {
+      "$ref": "#/$defs/trustBinding"
+    },
+    "nextApplicableDenyEffectiveAtOrNull": {
+      "$ref": "#/$defs/nullableTimestamp"
+    },
+    "verifiedAt": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "expiresAt": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "receiptDigest": {
+      "$ref": "#/$defs/digest"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "nullableTimestamp": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/timestamp"
+        }
+      ]
+    },
+    "digestSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "singletonDigestSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "idSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      },
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "schemaBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaRef",
+        "schemaSha256"
+      ],
+      "properties": {
+        "schemaRef": {
+          "$ref": "#/$defs/id"
+        },
+        "schemaSha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "qualificationRecordBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualificationRecordId",
+        "recordDigest",
+        "exactQualificationKey",
+        "platformProfileHash",
+        "keyRingVersion",
+        "qualificationSignerKeyId",
+        "qualificationSignerPrincipalId",
+        "signerNotBefore",
+        "signerNotAfter",
+        "recordNotBefore",
+        "recordExpiresAt"
+      ],
+      "properties": {
+        "qualificationRecordId": {
+          "$ref": "#/$defs/id"
+        },
+        "recordDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "exactQualificationKey": {
+          "$ref": "#/$defs/digest"
+        },
+        "platformProfileHash": {
+          "$ref": "#/$defs/digest"
+        },
+        "keyRingVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "qualificationSignerKeyId": {
+          "$ref": "#/$defs/id"
+        },
+        "qualificationSignerPrincipalId": {
+          "$ref": "#/$defs/id"
+        },
+        "signerNotBefore": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "signerNotAfter": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "recordNotBefore": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "recordExpiresAt": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "e4Closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualificationSubjectManifestDigest",
+        "qualificationCaseMatrixSha256",
+        "caseIds",
+        "e4EvidenceHashes",
+        "e4ClosureDigest"
+      ],
+      "properties": {
+        "qualificationSubjectManifestDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "qualificationCaseMatrixSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "caseIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "e4EvidenceHashes": {
+          "$ref": "#/$defs/digestSet"
+        },
+        "e4ClosureDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "catalogBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalogId",
+        "catalogSequence",
+        "catalogDigest",
+        "qualificationRecordDigests",
+        "keyRingVersion",
+        "productReleaseSignerKeyId",
+        "productReleaseSignerPrincipalId",
+        "signerNotBefore",
+        "signerNotAfter",
+        "catalogNotBefore",
+        "catalogExpiresAt"
+      ],
+      "properties": {
+        "catalogId": {
+          "$ref": "#/$defs/id"
+        },
+        "catalogSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "catalogDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "qualificationRecordDigests": {
+          "$ref": "#/$defs/digestSet"
+        },
+        "keyRingVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "productReleaseSignerKeyId": {
+          "$ref": "#/$defs/id"
+        },
+        "productReleaseSignerPrincipalId": {
+          "$ref": "#/$defs/id"
+        },
+        "signerNotBefore": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "signerNotAfter": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "catalogNotBefore": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "catalogExpiresAt": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "catalogAnchorBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalogId",
+        "anchorDigest",
+        "anchorVersion",
+        "resourceVersion",
+        "authorityId",
+        "receiptDigest",
+        "trustRootDigest"
+      ],
+      "properties": {
+        "catalogId": {
+          "$ref": "#/$defs/id"
+        },
+        "anchorDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "anchorVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "resourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "authorityId": {
+          "$ref": "#/$defs/id"
+        },
+        "receiptDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "trustRootDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "catalogFreshnessBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "freshnessReceiptDigest",
+        "verifierNonce",
+        "observedAt",
+        "expiresAt",
+        "trustRootDigest"
+      ],
+      "properties": {
+        "freshnessReceiptDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "verifierNonce": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{22,86}$"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "trustRootDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "trustBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trustContextDigest",
+        "rootSetId",
+        "rootSetDigest",
+        "keyRingId",
+        "keyRingSequence",
+        "keyRingDigest",
+        "verifiedHistoryDigest",
+        "keyRingNotBefore",
+        "keyRingExpiresAt",
+        "trustAnchorDigest",
+        "trustAnchorVersion",
+        "trustAnchorResourceVersion",
+        "trustAnchorAuthorityId",
+        "freshnessReceiptDigest",
+        "freshnessExpiresAt"
+      ],
+      "properties": {
+        "trustContextDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "rootSetId": {
+          "$ref": "#/$defs/id"
+        },
+        "rootSetDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "keyRingId": {
+          "$ref": "#/$defs/id"
+        },
+        "keyRingSequence": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "keyRingDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "verifiedHistoryDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "keyRingNotBefore": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "keyRingExpiresAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "trustAnchorDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "trustAnchorVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "trustAnchorResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "trustAnchorAuthorityId": {
+          "$ref": "#/$defs/id"
+        },
+        "freshnessReceiptDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "freshnessExpiresAt": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    }
+  },
+  "x-qmanVerifierAlgorithmRule": "verifierAlgorithmIdentityDigest is SHA-256 over ASCII(QMAN-DIRECTPATH/QUALIFICATION-PROFILE-VERIFIER-ALGORITHM/V1) || 0x00 || CANONICAL-JSON-V1({algorithmId:verifierAlgorithmId,algorithmVersion:verifierAlgorithmVersion,canonicalProfileId,schemaBindings}). schemaBindings are loaded by the verifier from the exact fixed paths in prefixItems; schemaSha256 is SHA-256 of each complete raw schema file before parsing, including the whole portable-hash-subjects file when schemaRef contains a fragment. They are never caller supplied. This component algorithm identity is misuse resistance, not a binary/build attestation or product-repository authority.",
+  "x-qmanProjectionBindingRule": "Reconstruct the complete directpath-qualification-profile-projection.schema.json object from the exact verified QualificationRecord and current SupportedCatalog using only that schema's x-qmanFieldProjection and x-qmanDerivedDigestRules. Recompute its domain-separated projectionDigest and require exact equality here. profileId equals exactQualificationKey; qualificationRecordDigests is the singleton recordDigest set; qualificationRecord fields byte-equal the verified record and signer identity; catalog contains that digest exactly once. A request, stored profile, caller DTO or receipt field cannot select or override any projection value.",
+  "x-qmanE4ClosureRule": "e4Closure fields byte-equal QualificationRecord.qualificationSubjectManifestDigest, qualificationCaseMatrixSha256, caseIds and e4EvidenceHashes after the record schema's complete recursive E4 evidence rule succeeds. Compute e4ClosureDigest over ASCII(QMAN-DIRECTPATH/QUALIFICATION-PROFILE-E4-CLOSURE/V1) || 0x00 || CANONICAL-JSON-V1({qualificationRecordDigest:qualificationRecord.recordDigest,qualificationSubjectManifestDigest,qualificationCaseMatrixSha256,caseIds,e4EvidenceHashes}). The digest never substitutes for resolving and verifying the signed run/subject/index/measurement/Case-completion evidence graph.",
+  "x-qmanCatalogTrustBindingRule": "catalog byte-equals the current verified SupportedCatalog and its independently authorized PRODUCT_RELEASE signer. catalogAnchor byte-equals the current COMMITTED out-of-band rollback anchor and its root-quorum receipt, and must accept this exact catalogId/catalogSequence/catalogDigest. catalogFreshness byte-equals the live nonce-bound SUPPORTED_CATALOG freshness envelope for that anchor. trust byte-equals the independently verified trust context and current key ring; every trustRootDigest equals trust.rootSetDigest, both catalog/record keyRingVersion values equal trust.keyRingSequence, and signer IDs/principals/key intervals replay from that ring. Qualification Engineering and Product Release signer key ID, principal and key material remain distinct. Signature validity, exact catalog membership, anchor monotonicity or live freshness cannot be inferred from a matching digest alone.",
+  "x-qmanValidityRule": "verifiedAt lies inside the record, catalog, current key-ring, both signer-key and both independently authenticated freshness intervals. No applicable catalog deny/revocation entry may have effectiveAt <= verifiedAt. nextApplicableDenyEffectiveAtOrNull is null exactly when no later applicable entry exists; otherwise it is their earliest effectiveAt. expiresAt is strictly later than verifiedAt and equals the earliest of qualificationRecord.recordExpiresAt, catalog.catalogExpiresAt, qualificationRecord.signerNotAfter, catalog.signerNotAfter, trust.keyRingExpiresAt, trust.freshnessExpiresAt, catalogFreshness.expiresAt and the non-null nextApplicableDenyEffectiveAtOrNull. Crossing expiresAt requires complete re-verification and a new receipt/profile; a still-valid stored hash never extends authority.",
+  "x-qmanReceiptRule": "After every binding rule succeeds, deep-copy the complete intended receipt, represent receiptDigest as null only in the construction projection, retain every other field unchanged, encode CANONICAL-JSON-V1 bytes, and compute SHA-256 over ASCII(QMAN-DIRECTPATH/QUALIFICATION-VERIFICATION-RECEIPT/V1) || 0x00 || those bytes. The final schema-valid object carries that non-null receiptDigest. The final QualificationProfile sets verificationReceiptHash to this receiptDigest and only then computes profileHash with profileHash=null. This receipt contains no profileHash or verificationReceiptHash, so the construction order has no fixed point."
+}

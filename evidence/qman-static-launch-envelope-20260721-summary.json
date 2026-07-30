@@ -15,7 +15,7 @@
     "inputHashes": {
       "pci-resource-model/pci_resource_model/vfio_provider.py": "7927fb1bf72f05009729ee972233d115072b8c7853da33a8a60cc6db541cfdf4",
       "pci-resource-model/pci_resource_model/model.py": "e6349f42d98f10fd3ba8c2e4f3128abac869b181dfad29ee25ebe8d4ed9491ec",
-      "pci-resource-model/pci_resource_model/linux_sysfs.py": "faa3ba31cd2ecf06ab6c5149494e3168b38ff3bab556120c4f246e56f40acaca",
+      "evidence/source-snapshots/qman-static-launch-envelope-20260721/linux_sysfs.py": "faa3ba31cd2ecf06ab6c5149494e3168b38ff3bab556120c4f246e56f40acaca",
       "pci-resource-model/pci_resource_model/authoritative_snapshot.py": "7c07d59fdae69d5712a9c533132194304d94e6c296e0ede14b9bbeac56352a42",
       "pci-resource-model/pci_resource_model/vfio_launch_handles.py": "29638ce69b4df9d817d9c2bf94feef4530ee721ec65ce72110b90c189a7bf42f",
       "pci-resource-model/pci_resource_model/static_lease.py": "4904b6698de301a37570cc7f28282054d6523782a0574e72e313ddab0acf0ca5",
@@ -90,6 +90,15 @@
         "iommufd": "/dev/iommu",
         "noIommuNodePresent": false,
         "completeIommuGroupMembers": ["0000:01:00.0"]
+      }
+    },
+    {
+      "name": "exact-historical-run-input-retention",
+      "result": {
+        "path": "evidence/source-snapshots/qman-static-launch-envelope-20260721/linux_sysfs.py",
+        "sha256": "faa3ba31cd2ecf06ab6c5149494e3168b38ff3bab556120c4f246e56f40acaca",
+        "retentionSemantics": "EXACT_HISTORICAL_RUN_INPUT",
+        "currentScannerValidatedByThisRun": false
       }
     },
     {
@@ -237,6 +246,7 @@
     "The bounded snapshot component does not implement the production qualification signer/catalog, host-agent/controller integration, kernel atomic topology generation, or physical-device qualification required by G1 and later milestones.",
     "The exercised fd-only IOMMUFD/cdev launch surface is a future-backend component experiment; it does not validate the Legacy VFIO TYPE1 authorized-device-path launch profile selected for the current product.",
     "The framed 115200-baud evidence transport proves complete, hash-bound extraction of this run's component artifacts; it does not strengthen the underlying DMA, interrupt-isolation, physical-device, or production-platform claims.",
+    "The retained linux_sysfs.py source snapshot is the exact historical input for this run; this result does not validate the current pci-resource-model/pci_resource_model/linux_sysfs.py scanner implementation.",
     "No product Case, Risk, milestone, HCL entry, qualification profile, support claim, or release gate is closed by this result."
   ]
 }

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260730-vmware-evidence-index-v5",
+  "observedAt": "2026-07-30",
+  "subject": "VMWARE_ESXI_REFERENCE_GOVERNANCE",
+  "verdict": "PARTIAL",
+  "statement": "The repository mechanically traces every VMware experiment from Tech Story to representative VMware run and hash-bound VMware evidence, derives non-closing acceptance associations from requiredTechStories, keeps QEMU controls under a distinct typed subject, and binds the schema-valid V17 O4 and V19 O0 canonical results plus the exact-build g101 cross-owner frozen observed register-state profile.",
+  "counts": {
+    "experiments": 37,
+    "evidenceBound": 29,
+    "noRun": 8,
+    "derivedAcceptanceLinks": 270
+  },
+  "closureAuthority": {
+    "acceptanceCases": "NONE",
+    "qmanImplementation": "NONE",
+    "qmanQualification": "NONE",
+    "release": "NONE"
+  },
+  "artifacts": [
+    {
+      "path": "tools/evaluate_release.py",
+      "sha256": "b67ecdc61607d8e3e379385530671a789fe6653194adb4feb7d88f464f507d91"
+    },
+    {
+      "path": "tools/generate_vmware_evidence_index.py",
+      "sha256": "af6169348395db83dfbdc01acfbcc38ee68295bbf2eeda5093b714bc82527d8d"
+    },
+    {
+      "path": "tests/test_vmware_evidence_index.py",
+      "sha256": "7942fb8dd63aeab1cc15b59c16fc005e3a10ba34d843c2776571d0451e11e140"
+    }
+  ],
+  "limitations": [
+    "Historical pyVmomi task identifiers and initiating actors are not uniformly retained.",
+    "Historical VMware runs do not all conform to contracts/vmware-experiment-result.schema.json; VMW-AER-COR-001 now has schema-valid V17 O4 and V19 O0 canonical results, while their full raw bundles remain separately retained local artifacts.",
+    "Representative run IDs do not imply that every legacy case has a canonical result.",
+    "The QEMU AER root-sequence run remains a separately typed reference positive control and is not VMware evidence. V17 and V19 establish only the exact ESXi O4/O0 g101 external register-state slices and their field-exact snapshot equivalence for the frozen build, device, and QEMU binary. They do not establish a bound native-driver O0 path, other gates, notification or service attribution, guest writes, lifecycle recovery, physical health, or VMware private implementation.",
+    "Derived acceptance links remain non-closing associations; this index is traceability evidence, not case completion evidence.",
+    "This reference-governance result cannot close a Qman product case, risk, implementation milestone, qualification profile, or release gate."
+  ]
+}

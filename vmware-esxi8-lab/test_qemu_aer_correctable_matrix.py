@@ -185,19 +185,47 @@ class QTestClient:
         self.connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.connection.settimeout(3)
         self.connection.connect(str(path))
+        self._receive_buffer = b""
 
     def close(self) -> None:
         self.connection.close()
 
-    def command(self, command: str) -> str:
-        self.connection.sendall(command.encode("ascii") + b"\n")
-        response = b""
-        while b"\n" not in response:
+    def _receive_line(self) -> str:
+        while b"\n" not in self._receive_buffer:
             chunk = self.connection.recv(65536)
             if not chunk:
-                raise ConnectionError("QTest socket closed before a response")
-            response += chunk
-        return response.decode("ascii", errors="replace").strip()
+                raise ConnectionError(
+                    "QTest socket closed before a complete response"
+                )
+            self._receive_buffer += chunk
+        line, self._receive_buffer = self._receive_buffer.split(b"\n", 1)
+        return line.decode("ascii", errors="replace").strip()
+
+    def command(self, command: str) -> str:
+        if "\r" in command or "\n" in command:
+            raise ValueError("QTest command must be exactly one line")
+        self.connection.sendall(command.encode("ascii") + b"\n")
+        return self._receive_line()
+
+    def commands(self, commands: list[str] | tuple[str, ...]) -> list[str]:
+        """Send one newline-delimited batch and retain every response line."""
+
+        normalized = tuple(commands)
+        if not normalized:
+            raise ValueError("QTest command batch must not be empty")
+        if any(
+            not isinstance(command, str)
+            or not command
+            or "\r" in command
+            or "\n" in command
+            for command in normalized
+        ):
+            raise ValueError(
+                "every QTest batch command must be one non-empty line"
+            )
+        payload = "".join(f"{command}\n" for command in normalized)
+        self.connection.sendall(payload.encode("ascii"))
+        return [self._receive_line() for _ in normalized]
 
 
 def qtest(client: QTestClient, command: str) -> int | None:
@@ -206,6 +234,52 @@ def qtest(client: QTestClient, command: str) -> int | None:
         raise RuntimeError(f"QTest command failed: {command!r}: {response!r}")
     match = re.search(r"0x[0-9a-fA-F]+|\b\d+\b", response[2:])
     return int(match.group(0), 0) if match else None
+
+
+def qtest_read_blocks(
+    client: QTestClient,
+    blocks: list[tuple[int, int]] | tuple[tuple[int, int], ...],
+) -> list[bytes]:
+    """Read fixed memory blocks in one QTest input batch."""
+
+    normalized = tuple(blocks)
+    if not normalized:
+        raise ValueError("QTest block-read batch must not be empty")
+    for address, size in normalized:
+        if (
+            not isinstance(address, int)
+            or isinstance(address, bool)
+            or address < 0
+            or not isinstance(size, int)
+            or isinstance(size, bool)
+            or size <= 0
+            or size > 4096
+        ):
+            raise ValueError(
+                f"invalid QTest block read: address={address!r}, size={size!r}"
+            )
+    commands = [
+        f"read 0x{address:x} 0x{size:x}"
+        for address, size in normalized
+    ]
+    responses = client.commands(commands)
+    result: list[bytes] = []
+    for index, ((_, size), response) in enumerate(
+        zip(normalized, responses)
+    ):
+        match = re.fullmatch(r"OK 0x([0-9a-fA-F]+)", response)
+        if match is None:
+            raise RuntimeError(
+                f"QTest block read {index} failed: {response!r}"
+            )
+        encoded = match.group(1)
+        if len(encoded) != size * 2:
+            raise RuntimeError(
+                "QTest block read returned the wrong byte count: "
+                f"index={index}, expected={size}, observed={len(encoded) // 2}"
+            )
+        result.append(bytes.fromhex(encoded))
+    return result
 
 
 def wait_socket(path: Path, process: subprocess.Popen[str], timeout: int) -> None:

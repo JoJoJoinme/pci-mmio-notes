@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-static-admission-command.schema.json",
+  "title": "Qman DirectPath Static admission business command",
+  "description": "Closed public business command for requesting one Static admission attempt. The command identifies an already-persisted VM request but contains no caller-authored repository observation or authorization material.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "commandId",
+    "vmId",
+    "runId",
+    "idempotencyKey",
+    "actor",
+    "deadline",
+    "requestReference",
+    "commandHash"
+  ],
+  "properties": {
+    "subjectType": {"const": "STATIC_ADMISSION_COMMAND"},
+    "schemaVersion": {"const": 1},
+    "commandId": {"$ref": "#/$defs/id"},
+    "vmId": {"$ref": "#/$defs/id"},
+    "runId": {"$ref": "#/$defs/id"},
+    "idempotencyKey": {"$ref": "#/$defs/id"},
+    "actor": {"$ref": "#/$defs/id"},
+    "deadline": {"$ref": "#/$defs/timestamp"},
+    "requestReference": {"$ref": "#/$defs/requestReference"},
+    "commandHash": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "requestReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestVersion",
+        "requestHash"
+      ],
+      "properties": {
+        "requestVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "requestHash": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "x-qmanHashRule": "commandHash is SHA-256 of CANONICAL-JSON-V1 over this complete command with commandHash represented as null.",
+  "x-qmanRequestRule": "requestReference is business intent, not currentness proof. The repository must independently read the exact current persisted request and reject a version/hash mismatch inside its admission transaction.",
+  "x-qmanDeadlineRule": "deadline is an exclusive business deadline. A repository uses its trusted clock and must not begin or commit a new admission at or after deadline.",
+  "x-qmanForbiddenCallerInputs": [
+    "RequestReadSet",
+    "AvailabilityReadSet",
+    "CurrentAuthorityVector",
+    "CAS expectation",
+    "OperationLease or OperationLeaseSpec",
+    "OperationAdmissionBinding",
+    "capability decision or authorization",
+    "repository resourceVersion",
+    "availability, lease, quarantine, inventory, policy, trust, catalog, or freshness observations"
+  ],
+  "x-qmanAuthorityBoundary": "The caller supplies only business identity and an immutable request reference. Every repository read set, current vector, CAS operand, lease identifier/specification, admission binding, resource version, and authority observation is derived and verified by the repository adapter; accepting any such caller-authored field is a contract violation."
+}

@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E2-AER-VMWARE-G101-PARITY-001",
+  "observedAt": "2026-07-29T17:53:35.834285Z",
+  "subject": "QMAN_COMPONENT",
+  "evidenceGrade": "E2",
+  "claimBoundary": "COMPONENT_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-directpath-core/qman_directpath_core/aer_retained_sequence.py": "2fd9fca46615049655ab764708f6bfd500f2ad129f515bc3e37582ede882b0ba",
+      "qman-directpath-core/tests/test_aer_retained_sequence.py": "f8d6fac830787f3d3b94289b30542170d55fdc61941581d54bc0362f2c7b0643"
+    },
+    "inputHashes": {
+      "contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json": "cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e",
+      "contracts/vmware-aer-root-sequence-oracle-profile.schema.json": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57",
+      "evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json": "fab09980f8f266e94640914df59833f640b66e063a1625333d9685031109812a",
+      "qman-directpath-core/qman_directpath_core/aer_policy.py": "82fed0d2993fb5c8902ef7d668df7bf5b3a784284c4f83b501d9fa3a7fcf609b",
+      "qman-directpath-core/qman_directpath_core/aer_reference_model.py": "4dbd017dd5f3ba98483ab52a2ab42db99471099b984b4725d8506b4528104d43"
+    }
+  },
+  "sut": {
+    "environment": "Deterministic Python component test on the local authorized workspace; no ESXi, QEMU, HMP, QTest, VFIO, or physical-hardware action",
+    "components": [
+      {
+        "name": "qman-directpath-core retained-state pure simulator",
+        "version": "0.1.0",
+        "sha256": "2fd9fca46615049655ab764708f6bfd500f2ad129f515bc3e37582ede882b0ba"
+      },
+      {
+        "name": "frozen ESXi g101 O0/O4 observed profile",
+        "version": "VMW-AER-ROOT-SEQUENCE-FROZEN-OBSERVED-G101-O0-O4-V1",
+        "sha256": "cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e"
+      }
+    ]
+  },
+  "hypotheses": [
+    "One Qman Correctable-only pure retained-register model reproduces every checkpoint in each exact frozen ESXi O0 and O4 g101 public-observation branch.",
+    "Owner is external evidence rather than a simulator input; equality with both branches does not prove an owner-independent VMware private mechanism.",
+    "The closed simulator accepts only the four frozen sequences and Requester ID 0x0101; invalid sequence or Requester input fails closed."
+  ],
+  "observations": [
+    {
+      "name": "frozen-profile-conformance",
+      "result": {
+        "externalOwnerBranches": 2,
+        "pureModelOwnerInputs": 0,
+        "sequencesPerBranch": 4,
+        "checkpointsPerBranch": 8,
+        "stateFieldsPerCheckpoint": 8,
+        "fieldComparisons": 128,
+        "mismatches": 0,
+        "actualActionHistoryRecorded": true,
+        "checkpointActionPositionsVerified": true
+      }
+    },
+    {
+      "name": "focused-component-tests",
+      "result": {
+        "command": "python -m pytest tests/test_aer_core.py tests/test_aer_retained_sequence.py -q",
+        "workingDirectory": "qman-directpath-core",
+        "testsPassed": 51,
+        "subtestsPassed": 73,
+        "failures": 0
+      }
+    },
+    {
+      "name": "static-verification",
+      "result": {
+        "ruff": "PASS",
+        "compileall": "PASS",
+        "profileSchema": "DRAFT_2020_12_VALID",
+        "profileSha256Locked": true
+      }
+    },
+    {
+      "name": "authority-boundary",
+      "result": "COMPONENT_ONLY; productCasesClosed=0; risksClosed=0; milestone/status unchanged"
+    }
+  ],
+  "mapping": {
+    "techStories": [
+      "TS-F4-06"
+    ],
+    "caseIds": [
+      "M06"
+    ],
+    "riskIds": [
+      "R13"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "qman-directpath-core/qman_directpath_core/aer_retained_sequence.py",
+      "sha256": "2fd9fca46615049655ab764708f6bfd500f2ad129f515bc3e37582ede882b0ba",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_aer_retained_sequence.py",
+      "sha256": "f8d6fac830787f3d3b94289b30542170d55fdc61941581d54bc0362f2c7b0643",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json",
+      "sha256": "cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "contracts/vmware-aer-root-sequence-oracle-profile.schema.json",
+      "sha256": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json",
+      "sha256": "fab09980f8f266e94640914df59833f640b66e063a1625333d9685031109812a",
+      "retention": "COMMITTED"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This is deterministic E2 Qman component evidence, not a mapped target-Qman repository transaction, E3 end-to-end product evidence, or E4 physical qualification.",
+    "The frozen VMware profile covers only exact ESXi build 24280767, the synthetic 1af4:1041 nested endpoint, Requester 0x0101, gate g101, and the retained external register-state windows.",
+    "O0 had Module Name None; equality of the O0/O4 external snapshots does not prove a bound native-driver path, owner-independent VMware internals, or private control flow.",
+    "This pure host-side simulator does not accept an owner or policy object and does not authorize or execute guest config-space writes; product writes still require the verified filter-before-VFIO pipeline.",
+    "IRQ delivery, service attribution, guest-write enforcement, lifecycle recovery, physical device health, and other E/M/R gates remain unverified.",
+    "This record cannot close M06, R13, G1-G6, any Qman product Case, qualification profile, or release gate."
+  ]
+}

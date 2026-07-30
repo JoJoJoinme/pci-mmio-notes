@@ -1,0 +1,559 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-operation-admission-binding.schema.json",
+  "title": "Qman DirectPath portable operation admission binding",
+  "description": "Closed, self-hashed relationship record binding one guarded capability decision to exact caller-supplied currentness observations, read sets, an operation-lease specification, and a CAS expectation. This record is not proof of a repository read, serializable transaction, live lease, successful compare-and-swap, or product integration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "guardedCapabilityReadDigest",
+    "capabilityDecisionHash",
+    "authorizationDigest",
+    "authorizationAuthorityVectorDigest",
+    "authorizationEvaluatedAt",
+    "authorizationValidUntil",
+    "authorityDisposition",
+    "authorityBoundary",
+    "productAuthorized",
+    "authorizationBlockers",
+    "beforeAuthorityVectorDigest",
+    "afterAuthorityVectorDigest",
+    "requestReadSetDigest",
+    "availabilityReadSetDigest",
+    "operationLeaseSpec",
+    "casExpectationHash",
+    "evidenceBlobReferences",
+    "validUntil",
+    "bindingHash"
+  ],
+  "properties": {
+    "subjectType": {"const": "OPERATION_ADMISSION_BINDING"},
+    "schemaVersion": {"const": 1},
+    "guardedCapabilityReadDigest": {"$ref": "#/$defs/digest"},
+    "capabilityDecisionHash": {"$ref": "#/$defs/digest"},
+    "authorizationDigest": {"$ref": "#/$defs/digest"},
+    "authorizationAuthorityVectorDigest": {"$ref": "#/$defs/digest"},
+    "authorizationEvaluatedAt": {"$ref": "#/$defs/timestamp"},
+    "authorizationValidUntil": {"$ref": "#/$defs/timestamp"},
+    "authorityDisposition": {
+      "$ref": "#/$defs/capabilityAuthorityDisposition"
+    },
+    "authorityBoundary": {
+      "const": "COMPONENT_STATIC_CAPABILITY_RELATIONSHIP_ONLY"
+    },
+    "productAuthorized": {"const": false},
+    "authorizationBlockers": {
+      "$ref": "#/$defs/capabilityAuthorizationBlockers"
+    },
+    "beforeAuthorityVectorDigest": {"$ref": "#/$defs/digest"},
+    "afterAuthorityVectorDigest": {"$ref": "#/$defs/digest"},
+    "requestReadSetDigest": {"$ref": "#/$defs/digest"},
+    "availabilityReadSetDigest": {"$ref": "#/$defs/digest"},
+    "operationLeaseSpec": {"$ref": "#/$defs/operationLeaseSpec"},
+    "casExpectationHash": {"$ref": "#/$defs/digest"},
+    "evidenceBlobReferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestReadSet",
+        "availabilityReadSet",
+        "beforeCurrentAuthorityVector",
+        "afterCurrentAuthorityVector",
+        "casExpectation"
+      ],
+      "properties": {
+        "requestReadSet": {
+          "allOf": [
+            {"$ref": "#/$defs/blobReference"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-operation-admission-binding.schema.json#/$defs/requestReadSet"
+                }
+              }
+            }
+          ]
+        },
+        "availabilityReadSet": {
+          "allOf": [
+            {"$ref": "#/$defs/blobReference"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-operation-admission-binding.schema.json#/$defs/availabilityReadSet"
+                }
+              }
+            }
+          ]
+        },
+        "beforeCurrentAuthorityVector": {
+          "allOf": [
+            {"$ref": "#/$defs/blobReference"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-operation-admission-binding.schema.json#/$defs/currentAuthorityVector"
+                }
+              }
+            }
+          ]
+        },
+        "afterCurrentAuthorityVector": {
+          "allOf": [
+            {"$ref": "#/$defs/blobReference"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-operation-admission-binding.schema.json#/$defs/currentAuthorityVector"
+                }
+              }
+            }
+          ]
+        },
+        "casExpectation": {
+          "allOf": [
+            {"$ref": "#/$defs/blobReference"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-operation-payload.schema.json#/$defs/casExpectation"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "validUntil": {"$ref": "#/$defs/timestamp"},
+    "bindingHash": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "schemaRef": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*(?:#(?:/[A-Za-z0-9._~$-]+)+)?$",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "blobReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaRef", "blobSha256"],
+      "properties": {
+        "schemaRef": {"$ref": "#/$defs/schemaRef"},
+        "blobSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "componentPremise": {
+      "type": "object",
+      "required": [
+        "authorityBoundary",
+        "productAuthorized"
+      ],
+      "properties": {
+        "authorityBoundary": {"$ref": "#/$defs/id"},
+        "productAuthorized": {"const": false}
+      }
+    },
+    "capabilityAuthorizationBlockers": {
+      "const": [
+        "PRODUCT_HOST_SNAPSHOT_AUTHORITY_ADAPTER_REQUIRED",
+        "PRODUCT_INVENTORY_COLLECTOR_PUBLISHER_REQUIRED",
+        "PRODUCT_REPOSITORY_LEASE_CAS_REQUIRED",
+        "PRODUCT_RESOURCE_PLANNER_REQUIRED",
+        "TRUSTED_E4_ADAPTER_REQUIRED"
+      ]
+    },
+    "capabilityAuthorityDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorityBoundary",
+        "productAuthorized",
+        "authorizationBlockers",
+        "staticCapabilityContextDigest",
+        "premises"
+      ],
+      "properties": {
+        "authorityBoundary": {
+          "const": "COMPONENT_STATIC_CAPABILITY_RELATIONSHIP_ONLY"
+        },
+        "productAuthorized": {"const": false},
+        "authorizationBlockers": {
+          "$ref": "#/$defs/capabilityAuthorizationBlockers"
+        },
+        "staticCapabilityContextDigest": {"$ref": "#/$defs/digest"},
+        "premises": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "hardwarePremise",
+            "resourcePlan",
+            "qualification",
+            "hostSnapshotAnchor"
+          ],
+          "properties": {
+            "hardwarePremise": {
+              "allOf": [
+                {"$ref": "#/$defs/componentPremise"},
+                {
+                  "required": ["premiseDigest"],
+                  "properties": {
+                    "authorityBoundary": {
+                      "const": "COMPONENT_VERIFIED_INVENTORY_PREMISE_ONLY"
+                    },
+                    "premiseDigest": {"$ref": "#/$defs/digest"}
+                  }
+                }
+              ],
+              "unevaluatedProperties": false
+            },
+            "resourcePlan": {
+              "allOf": [
+                {"$ref": "#/$defs/componentPremise"},
+                {
+                  "required": ["contextDigest", "planHash"],
+                  "properties": {
+                    "authorityBoundary": {
+                      "const": "COMPONENT_CALLER_SUPPLIED_RESOURCE_PLAN_BYTES_ONLY"
+                    },
+                    "contextDigest": {"$ref": "#/$defs/digest"},
+                    "planHash": {"$ref": "#/$defs/digest"}
+                  }
+                }
+              ],
+              "unevaluatedProperties": false
+            },
+            "qualification": {
+              "allOf": [
+                {"$ref": "#/$defs/componentPremise"},
+                {
+                  "required": ["bindingContextDigest"],
+                  "properties": {
+                    "authorityBoundary": {
+                      "const": "COMPONENT_ONLY"
+                    },
+                    "bindingContextDigest": {"$ref": "#/$defs/digest"}
+                  }
+                }
+              ],
+              "unevaluatedProperties": false
+            },
+            "hostSnapshotAnchor": {
+              "allOf": [
+                {"$ref": "#/$defs/componentPremise"},
+                {
+                  "required": ["bindingDigest"],
+                  "properties": {
+                    "authorityBoundary": {
+                      "const": "COMPONENT_EXTERNAL_BYTES_VERIFICATION_ONLY"
+                    },
+                    "bindingDigest": {"$ref": "#/$defs/digest"}
+                  }
+                }
+              ],
+              "unevaluatedProperties": false
+            }
+          }
+        }
+      }
+    },
+    "memberGeneration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "generation"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "generation": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    },
+    "operationLeaseSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "operationLeaseId",
+        "leaseType",
+        "scopeHash",
+        "runIdOrIntentId",
+        "bundleIds",
+        "memberGenerations",
+        "hostEpoch",
+        "runGenerationOrNull",
+        "holderControllerGeneration",
+        "operationLeaseResourceVersion",
+        "leaseSpecHash"
+      ],
+      "properties": {
+        "subjectType": {"const": "OPERATION_LEASE_SPEC"},
+        "schemaVersion": {"const": 1},
+        "operationLeaseId": {"$ref": "#/$defs/id"},
+        "leaseType": {
+          "enum": [
+            "OWNER_TRANSITION",
+            "ASSIGNMENT_PREPARE",
+            "RELEASE",
+            "RELOCATION_HANDOFF",
+            "QUARANTINE_REMEDIATION"
+          ]
+        },
+        "scopeHash": {"$ref": "#/$defs/digest"},
+        "runIdOrIntentId": {"$ref": "#/$defs/id"},
+        "bundleIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/digest"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+        },
+        "memberGenerations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/memberGeneration"},
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [id,generation]; duplicate id values are rejected"
+        },
+        "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "runGenerationOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/safePositiveInteger"}
+          ]
+        },
+        "holderControllerGeneration": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "operationLeaseResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "leaseSpecHash": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "leaseType": {
+                "enum": [
+                  "ASSIGNMENT_PREPARE",
+                  "RELEASE",
+                  "RELOCATION_HANDOFF"
+                ]
+              }
+            },
+            "required": ["leaseType"]
+          },
+          "then": {
+            "properties": {
+              "runGenerationOrNull": {
+                "$ref": "#/$defs/safePositiveInteger"
+              }
+            }
+          }
+        }
+      ],
+      "x-qmanHashRule": "leaseSpecHash is SHA-256 of CANONICAL-JSON-V1 over this complete object with leaseSpecHash represented as null. scopeHash remains the OperationLease scope identity and is never reused as leaseSpecHash or bindingHash."
+    },
+    "availabilityMemberVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deviceUid", "deviceGeneration", "resourceVersion"],
+      "properties": {
+        "deviceUid": {"$ref": "#/$defs/id"},
+        "deviceGeneration": {"$ref": "#/$defs/safePositiveInteger"},
+        "resourceVersion": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    },
+    "availabilityReadSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "authorityId",
+        "authorityResourceVersion",
+        "bundleDigest",
+        "memberVersions",
+        "blockingClaimDigests",
+        "blockingQuarantineRecordDigests",
+        "readSetDigest"
+      ],
+      "properties": {
+        "subjectType": {"const": "AVAILABILITY_READ_SET"},
+        "schemaVersion": {"const": 1},
+        "authorityId": {"$ref": "#/$defs/id"},
+        "authorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "bundleDigest": {"$ref": "#/$defs/digest"},
+        "memberVersions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/availabilityMemberVersion"}
+        },
+        "blockingClaimDigests": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/digest"}
+        },
+        "blockingQuarantineRecordDigests": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/digest"}
+        },
+        "readSetDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "requestReadSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "authorityId",
+        "vmId",
+        "requestVersion",
+        "requestResourceVersion",
+        "requestHash",
+        "requestEntityDigest",
+        "readSetDigest"
+      ],
+      "properties": {
+        "subjectType": {"const": "REQUEST_READ_SET"},
+        "schemaVersion": {"const": 1},
+        "authorityId": {"$ref": "#/$defs/id"},
+        "vmId": {"$ref": "#/$defs/id"},
+        "requestVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "requestResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "requestHash": {"$ref": "#/$defs/digest"},
+        "requestEntityDigest": {"$ref": "#/$defs/digest"},
+        "readSetDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "currentAuthorityVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "hostAuthorityId",
+        "hostAuthorityResourceVersion",
+        "publisherSnapshotDigest",
+        "hostSnapshotAnchorAuthorityId",
+        "hostSnapshotAnchorVersion",
+        "hostSnapshotAnchorResourceVersion",
+        "hostSnapshotAnchorDigest",
+        "hostSnapshotAnchorFreshnessReceiptDigest",
+        "hostSnapshotAnchorBindingDigest",
+        "policyAuthorityId",
+        "policyId",
+        "policyVersion",
+        "policyDigest",
+        "policyAuthorityResourceVersion",
+        "trustRootDigest",
+        "keyRingSequence",
+        "keyRingDigest",
+        "trustAnchorVersion",
+        "trustAnchorDigest",
+        "catalogId",
+        "catalogSequence",
+        "catalogDigest",
+        "catalogAnchorVersion",
+        "catalogAnchorDigest",
+        "availabilityAuthorityId",
+        "availabilityAuthorityResourceVersion",
+        "availabilityReadSetDigest",
+        "requestAuthorityId",
+        "requestReadSetDigest",
+        "inventoryVerificationReceiptDigest",
+        "inventoryVerifierIdentityDigest",
+        "evidenceValidUntil"
+      ],
+      "properties": {
+        "subjectType": {"const": "CURRENT_AUTHORITY_VECTOR"},
+        "schemaVersion": {"const": 1},
+        "hostAuthorityId": {"$ref": "#/$defs/id"},
+        "hostAuthorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "publisherSnapshotDigest": {"$ref": "#/$defs/digest"},
+        "hostSnapshotAnchorAuthorityId": {"$ref": "#/$defs/id"},
+        "hostSnapshotAnchorVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "hostSnapshotAnchorResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "hostSnapshotAnchorDigest": {"$ref": "#/$defs/digest"},
+        "hostSnapshotAnchorFreshnessReceiptDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "hostSnapshotAnchorBindingDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "policyAuthorityId": {"$ref": "#/$defs/id"},
+        "policyId": {"$ref": "#/$defs/id"},
+        "policyVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "policyDigest": {"$ref": "#/$defs/digest"},
+        "policyAuthorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "trustRootDigest": {"$ref": "#/$defs/digest"},
+        "keyRingSequence": {"$ref": "#/$defs/safePositiveInteger"},
+        "keyRingDigest": {"$ref": "#/$defs/digest"},
+        "trustAnchorVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "trustAnchorDigest": {"$ref": "#/$defs/digest"},
+        "catalogId": {"$ref": "#/$defs/id"},
+        "catalogSequence": {"$ref": "#/$defs/safePositiveInteger"},
+        "catalogDigest": {"$ref": "#/$defs/digest"},
+        "catalogAnchorVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "catalogAnchorDigest": {"$ref": "#/$defs/digest"},
+        "availabilityAuthorityId": {"$ref": "#/$defs/id"},
+        "availabilityAuthorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "availabilityReadSetDigest": {"$ref": "#/$defs/digest"},
+        "requestAuthorityId": {"$ref": "#/$defs/id"},
+        "requestReadSetDigest": {"$ref": "#/$defs/digest"},
+        "inventoryVerificationReceiptDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "inventoryVerifierIdentityDigest": {"$ref": "#/$defs/digest"},
+        "evidenceValidUntil": {"$ref": "#/$defs/timestamp"}
+      }
+    }
+  },
+  "x-qmanEqualityRule": "before and after CurrentAuthorityVector blobs must be byte-equal under CANONICAL-JSON-V1 and their derived vector digests must be equal. Each read-set/vector blob reference binds the exact complete canonical bytes, not merely its semantic or null-hash digest. casExpectation.blobSha256 equals casExpectationHash.",
+  "x-qmanValidityRule": "The binding is created only while the guarded authorization is current, validUntil is no later than the authorization and evidence horizons, and validUntil is exclusive. The evidence horizon is no later than the live verifier-nonce HostSnapshot rollback-anchor freshness expiry; checkedAt must be strictly earlier than that expiry.",
+  "x-qmanHashRule": "bindingHash is SHA-256 of CANONICAL-JSON-V1 over the complete binding with bindingHash represented as null. scopeHash remains an OperationLease scope identity and is never reused as bindingHash.",
+  "x-qmanAuthorityBoundary": "This portable record proves only deterministic relationships among caller-supplied immutable values. The six hostSnapshotAnchor fields must come from one factory-verified committed external anchor plus live verifier-nonce freshness binding; a caller-supplied digest or copied anchor is not current authority. This record still cannot prove that the adapter generated the nonce, fetched directly from the independent authority, performed linearizable reads, used one repository serializable transaction, observed a live lease, attempted or won a CAS, or fenced a side effect. The product repository must enforce a UNIQUE one-to-one relationship on operationLeaseSpec.operationLeaseId and create the OperationLease plus this binding atomically in the same transaction; the portable bindingHash data-entity key does not provide that repository constraint."
+}

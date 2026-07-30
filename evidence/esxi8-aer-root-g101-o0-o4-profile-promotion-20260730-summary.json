@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "id": "ESXI8-AER-ROOT-G101-O0-O4-PROFILE-PROMOTION-20260730",
+  "subject": "VMWARE_ESXI_BLACKBOX_OBSERVED_PROFILE_PROMOTION",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observedAt": "2026-07-29T17:14:14.801450Z",
+  "profileState": "FROZEN_OBSERVED_PROFILE",
+  "claimBoundary": "VMWARE_REFERENCE_ONLY",
+  "closureAuthority": "NONE",
+  "scope": "Promotion receipt for the exact ESXi build/device/QEMU/g101 O0+O4 external Endpoint/Root register-state profile",
+  "sourceCandidate": {
+    "path": "contracts/vmware-aer-root-sequence-public-model-candidate-v1.json",
+    "id": "VMW-AER-ROOT-SEQUENCE-PUBLIC-MODEL-CANDIDATE-V1",
+    "profileState": "CANDIDATE_NOT_OBSERVED",
+    "sha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a",
+    "immutable": true
+  },
+  "derivedObservedProfile": {
+    "path": "contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json",
+    "id": "VMW-AER-ROOT-SEQUENCE-FROZEN-OBSERVED-G101-O0-O4-V1",
+    "profileState": "FROZEN_OBSERVED_PROFILE",
+    "sha256": "cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e",
+    "schemaPath": "contracts/vmware-aer-root-sequence-oracle-profile.schema.json",
+    "schemaSha256": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57",
+    "schemaValid": true
+  },
+  "promotionDelta": {
+    "exactChangedJsonPointers": [
+      "/id",
+      "/profileState",
+      "/environmentBinding/expectedSystemUuid",
+      "/environmentBinding/outerQemuBinarySha256"
+    ],
+    "expectedStatesUnchanged": true,
+    "ownerPhasesUnchanged": true,
+    "policiesUnchanged": true,
+    "claimBoundaryUnchanged": true,
+    "environmentBindingsAdded": {
+      "expectedSystemUuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+      "outerQemuBinarySha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+    }
+  },
+  "evidenceBindings": {
+    "o4": {
+      "runId": "20260729-esxi8-aer-root-o4-v17-full1",
+      "ownerPhase": "O4",
+      "gate": "g101",
+      "summaryPath": "evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json",
+      "summarySha256": "213dfe8908dac6e38a2c4f47699fcf07d6cafa33bc929d87319097d044c03d4f",
+      "canonicalResultPath": "evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json",
+      "canonicalResultSha256": "b50051385d63aa83e9b7fad051916c64b163d310ee9d8ee48e865502dd0b5c35",
+      "campaignResultPath": "evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json",
+      "campaignResultSha256": "847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f",
+      "verified": true,
+      "requireCompleteSatisfied": true,
+      "completionClass": "FULL_PLAN",
+      "caseCount": 12,
+      "matchCount": 12
+    },
+    "o0": {
+      "runId": "20260730-esxi8-aer-root-o0-v19-full1",
+      "ownerPhase": "O0",
+      "gate": "g101",
+      "summaryPath": "evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json",
+      "summarySha256": "5a58f4deeecfe8429bab843ed712d71793a8e42f65a4071c6fc9e23d848bedff",
+      "canonicalResultPath": "evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json",
+      "canonicalResultSha256": "538aaf8c5d44b42c7ceb7c2b985b3c059ef91be28902b805dac4eec117eb310b",
+      "campaignResultPath": "evidence/esxi8-aer-root-o0-v19-full1-20260730-campaign-result.json",
+      "campaignResultSha256": "b2ab49a200822c4b283f6122521f2211742dab8536cd6fda6d1b980e1223c6d6",
+      "verified": true,
+      "requireCompleteSatisfied": true,
+      "completionClass": "FULL_PLAN",
+      "caseCount": 12,
+      "matchCount": 12
+    }
+  },
+  "crossOwnerComparison": {
+    "comparisonMethod": "For each matching sequence and repeat, compare evaluation-input.snapshots, requesterId, and gateStable exactly.",
+    "snapshotCanonicalization": "UTF-8 JSON with keys sorted lexically, separators ',' and ':', and ensure_ascii=false",
+    "comparedCasePairCount": 12,
+    "exactCasePairCount": 12,
+    "sequenceRepeatCount": 3,
+    "sequenceSnapshotSha256": {
+      "first-multiple": "57f5d016add1da431dfe475818e80920cb35fbd766a85f8d422e1db75d26f772",
+      "independent-w1c": "21ee0c21d3a8b6e8a7429fb44599df97b72da3f79d48f843f42fff3a2d229df2",
+      "bit-or": "d121036d96f1c5fab9bdd0bc405058ae35b05065a0f3ca6b7ccc3a87b6e8ca90",
+      "rearm": "80370cc89885af9c70d982e4cec376ded05d4b3ea28f3c60c753f599c48625c4"
+    },
+    "registerSnapshotsExact": true,
+    "requesterIdExact": true,
+    "gateStableExact": true,
+    "ownerSpecificObservationDigestsCompared": false,
+    "reasonObservationDigestsNotCompared": "The normalized observation digest intentionally contains owner-phase and guest-applicability semantics."
+  },
+  "promotedObservableContract": {
+    "statement": "For the exact nested ESXi 8.0.3 build-24280767, system UUID, QEMU 11.0.2 binary, virtio-net-pci 1af4:1041 endpoint, requester 0x0101, g101 gate, and the tested O0/O4 owner envelopes, first/multiple reception, independent Endpoint/Root W1C, B0/B1 OR, and re-arm produced the frozen expected Endpoint/Root register states for three repeats per sequence.",
+    "o0Qualification": "O0 had Current Owner VMkernel and no active passthrough user, but the target Module Name was None.",
+    "o4Qualification": "O4 had one runner-created passthrough VM with bound guest driver and heartbeat evidence.",
+    "hostLogQualification": "Both profiles reported no matching line in strict per-source marker windows; this is not evidence that no interrupt or service path ran."
+  },
+  "closureEffects": {
+    "vmwareExperimentId": "VMW-AER-COR-001",
+    "vmwareExperimentStateAfterPromotion": "PARTIAL",
+    "qmanProductCasesClosed": [],
+    "qmanRisksClosed": [],
+    "qmanGateAdvanced": false,
+    "qmanStatusUpdated": false
+  },
+  "doesNotProve": [
+    "VMware private code, internal control flow, filtering, synthesis, or service implementation",
+    "owner-phase independence outside the exact frozen environment and g101 gate",
+    "bound native VMkernel driver consumption or clear behavior",
+    "interrupt delivery, Root Command notification effects, or ESXi service attribution",
+    "guest configuration-write isolation",
+    "owner transition, lifecycle clear and reuse, physical recovery, health, or quarantine",
+    "physical-link or physical-device qualification",
+    "Qman implementation correctness, compatibility, qualification, acceptance, risk, gate, or release closure"
+  ]
+}

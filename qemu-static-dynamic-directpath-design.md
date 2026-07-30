@@ -34,8 +34,9 @@ Qman/reference-side 的 E2/E3/E4 定义、WSL/QEMU 实测、hash 与关闭权限
 
 私有 Qman 源码不是本设计收敛的前置条件。target-independent 语义以
 [`directpath-portable-control-contract.json`](contracts/directpath-portable-control-contract.json)
-revision `2026-07-23.11` 为机器权威：35 个 operation、17 个可变 authority aggregate、4 个非
-authority projection、FSM/CAS/reason/trust/qualification 都有 closed schema，并确定性导出 293 个
+revision `2026-07-30.1` 为机器权威：35 个 operation、19 个可变 authority aggregate、4 个非
+authority projection、1 个 durable operation-admission companion、FSM/CAS/reason/trust/qualification
+都有 closed schema，并确定性导出 299 个
 mapping item 与逐项 Case/test/八类 oracle requirement digest。35 个 operation 另有 70 个逐
 operation/direction 的 closed request/result payload profile，Scenario fixture 必须绑定唯一 portable fragment、
 profileId 和 canonical payload digest；每个执行 iteration 的 `operationExchanges` 再逐 Step 绑定实际 raw
@@ -802,7 +803,7 @@ inventory 是事实快照，不是调度结果。每次 PCI add/remove、driver 
 ```python
 record DeviceRecord:                         # closed wire projection
     subjectType: const("DEVICE_RECORD")
-    schemaVersion: const(1)
+    schemaVersion: const(2)
     hostId: Id
     deviceUid: IdentityV1DeviceUid
     immutableIdentity: IdentityV1
@@ -813,12 +814,20 @@ record DeviceRecord:                         # closed wire projection
     role: DeviceRole
     iommuProvider: IommuProvider
     physicalIsolationDomain: PhysicalIsolationDomainFact
+    dependencyDomains: ExactCanonicalSeven[DependencyDomain{
+        kind, state, provenanceDigest,
+        edges: CanonicalSet[DependencyDomainEdge{
+            targetDeviceUid, actionState, requiredActionOrNull,
+            provenanceDigest
+        }]
+    }]
     dependencyActions: CanonicalSet[DependencyAction]
     resetContract: ResetContractProjection
     owner: OwnerState
     bars: CanonicalSet[BarFact]
     interrupts: InterruptFacts
     health: DeviceHealth
+    technicalTraits: CanonicalSet[Id]
     generations: DeviceGenerations
     provenance: DeviceProvenance
     deviceRecordHash: SHA256
@@ -830,8 +839,14 @@ identity input。没有 qualified serial/VPD 时必须使用 `SLOT_BOUND` 的稳
 且 Static 是否允许由 profile 显式决定。所有 PCI ID 在 wire/hash 对象中使用固定宽度小写
 十六进制字符串；采集器可在内部用整数，但跨进程前必须先规范化。
 
+`dependencyDomains` 必须按 canonical kind order 精确包含且只包含 `FUNCTIONAL`、`IOMMU`、
+`MULTIFUNCTION`、`PF_VF`、`PHYSICAL_ISOLATION`、`PLATFORM` 和 `REQUESTER_ALIAS`。每条 typed
+edge 自带 target deviceUid、action state、required action 与 provenance；
+domain 或 action 为 `UNKNOWN/CONFLICT` 时不得生成猜测 edge。扁平 `dependencyActions` 只是兼容
+projection，不能作为 dependency kind 或 edge provenance 的来源。
+
 `structure/resources/domains/isolation/activation/policy` 等便于算法阅读的旧分组不是 wire 字段。
-实现可以从 `immutableIdentity`、`role`、`iommuProvider`、`dependencyActions`、`resetContract`、
+实现可以从 `immutableIdentity`、`role`、`iommuProvider`、`dependencyDomains`、`resetContract`、
 `owner`、`bars`、`interrupts` 和 `provenance.providerFacts` 物化只读 `DeviceEvaluationView`，但该 view
 不得持久化、签名或独立计算 hash；它必须能无歧义投影回上面这一个 closed `DeviceRecord`，额外字段
 进入 wire 一律拒绝。
@@ -903,6 +918,58 @@ record Fact[T]:
 `providerFactsDigest/topologyDigest/contentHash/signature` 后才可构造 `SnapshotEvaluationView`。下文伪代码的
 `snapshot.devices`、`snapshot.hostFacts` 是该只读 view 的快捷访问，不是 `HostSnapshotWire` 的额外字段；
 `snapshot.hostId/snapshotEpoch/topologyDigest/policyHash` 都代理到 `snapshot.wire`。
+
+production publication 的 authority 版本是 committed post-CAS 值，不能先按 predecessor 版本签名再
+事后补 pointer：
+
+```python
+function publishCurrentSnapshot(candidateFacts):
+    transaction SERIALIZABLE:
+        predecessor = readHostAuthorityForUpdate(candidateFacts.hostId)
+        r = predecessor.resourceVersion
+        candidate = buildAndSignHostSnapshot(
+            candidateFacts,
+            hostAuthorityResourceVersion=r + 1,
+            previousSnapshotContentHashOrNull=
+                predecessor.currentSnapshotContentHash)
+        insertImmutable(candidate)
+        require updateHostAuthority(
+            set resourceVersion=r + 1,
+                lastSnapshotEpoch=candidate.snapshotEpoch,
+                currentSnapshotContentHash=candidate.contentHash
+            where resourceVersion=r) changed exactly one row
+        commit candidate and authority pointer once
+```
+
+提交后必须始终满足：
+
+```text
+current HostAuthority.resourceVersion
+  == HostSnapshot.hostAuthorityResourceVersion
+  == PINNED_CURRENT_SNAPSHOT.hostAuthorityResourceVersion
+  == InventoryVerificationReceipt.observedHostAuthorityResourceVersion
+  == InventoryVerificationReceipt.snapshotHostAuthorityResourceVersion
+  == r + 1
+```
+
+CAS 失败则整个事务回滚，候选 snapshot 不得成为 current 或 pinned 输入。
+
+portable inventory verifier 另以
+[`directpath-inventory-verifier-algorithm.schema.json`](contracts/directpath-inventory-verifier-algorithm.schema.json)
+把 algorithm identity 固定到 exact schema bytes 和验证阶段，并按
+[`directpath-inventory-verification-receipt.schema.json`](contracts/directpath-inventory-verification-receipt.schema.json)
+生成 trusted-process/component receipt。identity 不是 executable/build attestation；receipt 不是签名、
+独立或线性化 repository read 证明、publication/CAS receipt 或产品 admission authority。
+`RequestReadSet` 固定 exact current Static request row，`AvailabilityReadSet` 固定 closure member 的
+device generation/resourceVersion 与 blocking lease/quarantine predicate。`read_guard` 只在调用方提供的
+before/after `CurrentAuthorityVector` 完全相等、request/availability/inventory/policy binding 一致并从
+verified facts、roots、limits 确定性重放 closure 后返回 trusted-process value；线性化读取、可信时钟、
+durable operation lease 与 side-effect fence 仍由 Qman product adapter 证明。vector 必须显式带
+`policyAuthorityId/policyId/policyVersion/policyDigest/policyAuthorityResourceVersion`，self-hashed
+policy blob 不能自证 current。V3 P0 先用每 cluster 一个
+`GLOBAL_DIRECTPATH_AVAILABILITY` authority row 封住 availability absence/phantom：所有可能改变
+predicate 的 writer 必须在同一 serializable transaction 中锁并递增该 row。它是正确性优先的全局
+serialization baseline；没有闭合 overlap-vector 与原子 multi-fence 证明时不得缩窄。
 
 扫描器先收集全 host，再做 domain closure，最后原子发布新 epoch。只扫描请求 BDF 会漏掉
 IOMMU peer、reset peer 和 bridge child，因此不能产生 production snapshot。任一关键事实为
@@ -1416,8 +1483,8 @@ function evaluateAvailability(snapshot, bundle, owner, out):
         if leaseOwner(member) not in {FREE, owner}:
             add(out, AVAILABILITY, DEPENDENCY_BUSY,
                 {member}, owner=leaseOwner(member))
-        if bundle.action[member] == QUIESCE_HOST and not canQuiesce(d):
-            add(out, AVAILABILITY, DEPENDENCY_CANNOT_QUIESCE, {member})
+        # QUIESCE_HOST is not a closed bundle action. A provider fact that
+        # requires it was rejected as unknown/conflict/deny during closure.
 
     out.available = out.adminEnabled and \
                     out.activationDisposition in {ALREADY_ACTIVE, LIVE_APPLY} and \
@@ -1991,16 +2058,23 @@ function resolveCapabilityClosure(snapshot, initialPayload, profile, policy):
         edges=stableSort(edges),
         snapshotEpoch=snapshot.snapshotEpoch,
         policyHash=policy.hash)
+    resetContractSet = ResetContractSet(
+        contracts=canonicalUniqueByDigest(resetContracts.values))
     return CapabilityClosure(
         success=true,
         bundle=bundle,
-        selectedReset=resetContracts)
+        selectedReset=resetContracts,
+        resetContractSet=resetContractSet,
+        resetContractSetDigest=hashCanonical(resetContractSet))
 ```
 
 `mergeMemberActionOrReject` 使用显式 action lattice，不是随意取 enum 最大值。默认可提升路径是
-`LOCK_ONLY -> VFIO_HOLD_IN_SAME_DMA_DOMAIN -> ASSIGN_TO_GUEST`；`QUIESCE_HOST` 与 guest assignment
-冲突时必须有精确 signed rule，否则拒绝。算法以 set 去重、stable sort 和 member/edge 上限保证
-cycle-safe、确定性终止；超限不能返回截断 bundle。
+`LOCK_ONLY -> VFIO_HOLD_IN_SAME_DMA_DOMAIN -> ASSIGN_TO_GUEST`。DeviceRecord wire 的精确映射是
+`LEASE_ONLY=LOCK_ONLY`、`DETACH=VFIO_HOLD_IN_SAME_DMA_DOMAIN`、`PAYLOAD=ASSIGN_TO_GUEST`；
+`DETACH` 绝不表示 `QUIESCE_HOST`。provider 只能给出闭合集合内、带 provenance 的 action；事实要求
+`QUIESCE_HOST` 或其他未建模 action 时必须标为 unknown/conflict/deny，不能伪装成 `DETACH`。
+`RESET_WITH/RESTORE_OWNER` 是 additive action，`DENY_IF_PRESENT` fail closed。算法以 set 去重、
+stable sort 和 member/edge 上限保证 cycle-safe、确定性终止；超限不能返回截断 bundle。
 
 action resolver 只使用内置保守映射和 snapshot 中带可信 provenance 的 dependency fact；它不读
 owner/admin，也不接受普通 allowlist 缩小 physical/reset closure。qualification gate 随后验证每个
@@ -2009,12 +2083,15 @@ member/action 的精确支持。未来若要缩小闭包，必须创建新 profi
 
 Bundle 的相交关系以 `members` 判断，而不是 payload。任何两 bundle 的 member intersection
 非空，就不能同时租给不同 owner。每条 edge 保存 kind 和 provenance，管理员可解释“为什么
-一张 NIC 把旁边 function/bridge 也锁住”。
+一张 NIC 把旁边 function/bridge 也锁住”。成功闭包还必须输出严格等于
+[`directpath-reset-contract-set.schema.json`](contracts/directpath-reset-contract-set.schema.json) 的 exact
+`RESET_CONTRACT_SET`；它与 DependencyBundle 一起 hash-bound，不能由调用方另选或省略。
 
 `VFIO_HOLD_IN_SAME_DMA_DOMAIN` 表示 function 不出现在 guest PCI tree，但 host agent 必须打开并
-置于同一 DMA owner，满足 IOMMU group 或 cdev hot-reset ownership。它与只关闭 bus master 的
-`QUIESCE_HOST` 不同，manifest 必须记录实际 action。当前 Legacy adapter 对应同一个 TYPE1
-container；未来 cdev adapter 对应同一个 IOMMUFD/IOAS。历史材料中的
+置于同一 DMA owner，满足 IOMMU group 或 cdev hot-reset ownership；它绝不是只关闭 bus master 的
+`QUIESCE_HOST`。closed bundle 不表达 `QUIESCE_HOST`，需要该动作的 provider fact 必须在 closure
+阶段 fail closed。当前 Legacy adapter 对应同一个 TYPE1 container；未来 cdev adapter 对应同一个
+IOMMUFD/IOAS。历史材料中的
 `VFIO_HOLD_IN_SAME_IOAS` 只作为读取别名；持久对象、API、manifest 和新实现一律写 canonical
 enum `VFIO_HOLD_IN_SAME_DMA_DOMAIN`，避免把 future cdev 名词泄漏到 Legacy 合同。
 
@@ -2077,6 +2154,76 @@ record StaticCanonicalRequest:
 `hostId/kernelBootId/hostEpoch/agentGeneration/hostAuthorityResourceVersion/snapshotEpoch/snapshotContentHash`
 binding 与 current pointer byte-equal 且未超龄。不存在“minimum epoch + 可独立组合的 boot/hash/BDF”
 兼容入口；两种模式在任何 side effect 前都会变成同一种 exact current binding。
+
+Static portable admission 先分别按 closed schema 验证 request 与 self-hashed
+[`CapabilityPolicy`](contracts/directpath-capability-policy.schema.json)，并要求 request 的完整
+`policyBinding` byte-equal policy 导出的 binding。随后唯一 typed constructor 从 verified Static selector
+派生 `ClosureRequest.payloadDeviceUids` roots、从 verified policy 派生 `maxDevices/maxEdges` limits，并分别
+绑定 requestHash/policyHash provenance；调用方不得独立传 roots 或放宽 limits。closure request 严格等于
+[`directpath-dependency-closure-request.schema.json`](contracts/directpath-dependency-closure-request.schema.json)，
+成功求值同时产生 exact DependencyBundle 与 `RESET_CONTRACT_SET`。policy currentness、trusted time 和
+approval 以及 persisted request row currentness 仍须由 read guard 与 product authority 证明；该链当前
+只覆盖 verified Static request，不把 Dynamic selector 冒充已实现。
+
+最终 `read_guard` 只消费 factory 生成的 `VerifiedStaticCapabilityContext`。它不可分地组合
+`VerifiedStaticInventoryClosureContext` 与同一 admission 派生的
+`VerifiedStaticQualificationBindingContext`，不接受可自由混搭的 admission、facts、roots/limits、
+result 或 caller profile hash。guard 重放两个 factory 与 resolver，并将 committed HostAuthority
+resourceVersion、current policy pointer、trust root/ring、catalog/anchor、qualification
+record/signer/profile/receipt、inventory receipt/verifier、request/availability read set 与
+before/after current vector 逐项绑定。所有 verifier-produced Python context 均无公开构造器且不能用
+`dataclasses.replace` 重贴标签；该限制是 trusted-process 的误用防护，产品 side effect 仍必须依靠
+linearizable repository read、OperationLease 和 CAS。
+
+read-only 产品查询另由
+[`directpath-query-read-trace.schema.json`](contracts/directpath-query-read-trace.schema.json) 固定：
+数据库强制只读 transaction 必须保留 actual canonical instance bytes、九类 exact predicate 的完整
+matched set/global fence、before/after current state、commit clock、host journal head、side-effect
+counter 与 reset occurrence。两份 state 逐字节相同且 write/affected rows 为零；query output 的
+bundle/lease/reason/evidence 四个集合采用固定 canonical 顺序，并绑定 decision、semantic dependency
+与 query-state hashes。output 不携带 `traceDigest`，所以不存在 output/trace hash 固定点。decoder、
+SQL/API log 或 digest-only reference 都不是 observed instance；reference/component trace 也不能关闭
+PRODUCT C15。
+
+`QualificationProfile` 不得由 request、catalog label 或调用方 DTO 拼装。唯一构造顺序是：
+从一个完整递归 E4 已验证、且被 current `SupportedCatalog` 精确包含的 `QualificationRecord` 按
+`QUALIFICATION-PROFILE-PROJECTION-V1` 形成不含 `verificationReceiptHash/profileHash` 的 closed
+projection；再由 `QUALIFICATION-VERIFICATION-RECEIPT-V1` 绑定 exact schema bytes、projection、
+record/E4 closure、catalog/rollback anchor/live freshness、trust root/key ring 和最短有效期；最后把
+非空 receipt digest 写入 `verificationReceiptHash`，仅将 `profileHash` 置 null 重放最终 hash。
+`catalogFreshness.freshnessReceiptDigest`、qualification context digest、record dependency digest、
+`exactQualificationKey` 或 `platformProfileHash` 均不能替代 profile verification receipt/profile hash。
+Static request 还必须由 factory-only binding 精确匹配 `profileBinding` 的 `profileId`、`profileHash`、
+`verificationReceiptHash`、`requiredSupportStatus` 四字段和 `requiredGuestAbiClass`；PRODUCTION policy
+只接受请求显式要求且 profile 实际达到 `SUPPORTED`。portable core 注入的 recursive-E4
+resolver/replayer 只是 trust port；caller/test fake 成功返回不构成 E4 产品证据、repository currentness
+或 release authority。projection schema 还固定独立的 `profileSemanticDigest` 投影：包含 profileId
+及 runtime/ABI/workload/revocation/support semantics，排除 record/catalog/receipt/profile hash 等
+currentness coordinates。内容等价时可复用纯语义计算，但任何 current vector 变化仍使旧 admission
+authorization 失效。
+
+guarded decision 进入产品副作用路径时，public API 只接受 closed
+[`StaticAdmissionCommand`](contracts/directpath-static-admission-command.schema.json)，不得接受 caller
+自带的 read set、current vector、CAS、lease、binding、decision 或 resourceVersion。Qman repository
+必须在一个 `SERIALIZABLE READ-WRITE` transaction 内完成 current
+request/policy/snapshot/trust/catalog 读取、global availability authority 锁定、absence read、
+before/after vector 重读与真实 CAS，并原子创建 `ACTIVE ASSIGNMENT_PREPARE OperationLease`、
+reservation、`ENTITY-OPERATION-ADMISSION-BINDING`、versioned idempotency、audit/outbox 及
+availability-authority increment。binding 精确保留 decision、
+authorization、Request/Availability read set、两个 current vector、lease spec、CAS expectation 和
+exclusive `validUntil`；`scopeHash` 仍是共享物理冲突域，绝不能复用为 admission hash。最终
+`bindingHash` 必须写入 live lease 的非空 `admissionBindingHashOrNull`，且 commit 后只返回
+[`CommittedStaticAdmission`](contracts/directpath-committed-static-admission.schema.json)。其 lease
+capability 与 operation envelope 逐字段兼容，idempotency natural key 是
+`[operationId,idempotencyScopeHash,idempotencyKey]`。portable binding 自身只证明输入 bytes 的
+确定性关系，不证明 repository linearizability、CAS 成功或 lease 存活。commit 后、第一项
+unbind/reset/open/QEMU 副作用前，Host Agent 还必须线性化重读同一 live lease/binding、要求 capability
+与 binding hash 完全一致、检查 trusted time 与版本，并先 fsync Host Action Journal INTENT。
+
+`qman-directpath-reference` 只提供 `REFERENCE_SQLITE_TRANSACTION_COMPONENT_ONLY` 证据，可验证
+command-only boundary、SQLite 单文件 writer serialization、global phantom fence、idempotency replay
+与进程崩溃原子性；它不证明 Qman 私有 repository、PostgreSQL SSI、分布式 fencing、断电耐久或真实
+VFIO/QEMU side effect，也不能关闭 PRODUCT Case。
 
 ### 9.2 状态机
 
@@ -3872,12 +4019,12 @@ C12、M08、M12、M13、S06、S08 是 6 个
 | C07 | RID alias/legacy bridge | alias domain 集体分配 | 已有 ESXi legacy；物理待验收 |
 | C08 | narrow errata deny | 精确 ID/revision 和 reason | 待实现 |
 | C09 | health/quarantine | 不健康设备不进入 candidate pool | 待实现 |
-| C10 | qualification hash/version 变更 | 相关 capability 立即 invalidated | Case 已定义为 `IMPLEMENTATION_BLOCKED`；snapshot component 已有 signature/current/min-epoch/boot 负门，但 qualification/catalog 版本依赖失效仍未实现 |
+| C10 | qualification hash/version 变更 | 相关 capability 立即 invalidated | Case 已定义为 `IMPLEMENTATION_BLOCKED`；portable core 已精确绑定并拒绝 qualification/catalog/profile drift，snapshot component 已有 signature/current/min-epoch/boot 负门，但 Qman 产品 repository 的 current-pointer/invalidation/CAS wiring 仍未实现 |
 | C11 | sub-4KB BAR 独占/共享 host page | 独占可评估；共享必须拒绝 | 待实现/物理验收 |
 | C12 | RCiEP regular function/VF A/B | regular 按 reset gate；RCiEP VF 拒绝 | regular 负例已有；VF 待验收 |
 | C13 | SR-IOV VF 与 PF reset dependency | PF/VF bundle 完整，VF 隔离可证明 | partial endpoint；支持型硬件待验收 |
 | C14 | PF guest 写 VF Enable/NumVFs | capability 不可写或整个 PF 被拒绝 | 待 QEMU filter |
-| C15 | 重复 capable 查询 | driver、lease、reset counter、generation 全部不变，decision hash 稳定 | Case 已定义为 `IMPLEMENTATION_BLOCKED`；evaluator 纯函数与 snapshot full-scan stability premise 已有，host/controller 零副作用负例仍缺 |
+| C15 | 重复 capable 查询 | driver、lease、reset counter、generation 全部不变，decision hash 稳定 | closed QueryReadTrace 与 output canonical/hash contract 已定义；Case 仍是 `IMPLEMENTATION_BLOCKED`，Qman product repository/Host Agent 的 raw observed instance、零写与重复字节 E3 负例仍缺 |
 | C16 | 一个 topology component 缺 ACS provenance | 仅该 component 为 unknown；无关 component 结论不变 | Case 已定义为 `IMPLEMENTATION_BLOCKED`，当前只有 reference-model premise；kernel authoritative per-component provenance 仍缺 |
 | C17 | VFIO cdev/legacy/mixed hot reset | cdev 要求 `DEV_ID_OWNED`；legacy 要求完整 group fds；mixed 拒绝 | UAPI 设计已定，provider 待实现 |
 | C18 | stale `ResetContract` | epoch/topology/rule 任一变化即不可选择 | Case 已定义为 `IMPLEMENTATION_BLOCKED`；snapshot stale gate 与 reference evaluator 已有，但不能替代 authoritative reset provider/执行前 re-query |
@@ -4100,7 +4247,7 @@ snapshot→lease authorization→fresh cdev/IOMMUFD→stock-QEMU bind/attach→�
 | dependency closure | 已合并 kernel group、physical domain、reset estimate、multifunction 和 platform dependency；尚缺 requester alias、PF/VF、functional rule、member action 与 edge provenance |
 | Linux sysfs inventory | 只读 scanner 能区分普通 group、`noiommu-*` 反例和 ambiguous group；`authoritative_snapshot.py` 已有 full-host double-scan、exact launch facts、CAS/HMAC signed SQLite publisher、current boot/epoch authorization 与 fault gates。它仍是 `COMPONENT_AUTHENTICITY_ONLY`，缺 production trust/rollback/key/catalog、kernel atomic health/generation 和 reset facts |
 | VFIO DMA provider 分流 | `vfio_provider.py` 已有 caller-correlated Legacy TYPE1 probe和 future cdev/IOMMUFD component；`open_authorized_vfio_launch_bundle()` 的 sealed component 链只覆盖 cdev。当前产品仍缺 exact-profile Legacy provider、每 VM device/sysfs namespace/ACL、stock-QEMU `host=` 启动后的 proc-fd/QMP receipt、产品 controller、独立 DMA/IRQ observer 和物理 E4，因此 C21 未关闭 |
-| mandatory ACS override provenance | phase-1 native/effective/source patch 已完整构建但未运行；authoritative native shadow-domain ABI 尚未实现；当前 userspace estimate 还会在单点 provenance 缺失时全局失效，不能进入 production trusted sources |
+| mandatory ACS override provenance | phase-1 native/effective/source patch 已完整构建但未运行；reference scanner 已将缺失 provenance 局部化到受影响 topology component，且 `software_topology_estimate` 明确不进入 production trusted sources；authoritative native shadow-domain ABI 尚未实现 |
 | reset affected set | 当前只按 sysfs parent 生成 `estimated` 集合，不能用于生产通过路径；`VFIO_DEVICE_GET_PCI_HOT_RESET_INFO` discovery/re-query/execute provider 尚未实现 |
 | BAR sizing、root MMIO allocator | `allocator.py` 已实现 BAR 归一化、alignment、low/high root pool 和事务失败测试 |
 | 多级 bridge resource planner | 第 12.2 节完整树/精确 solver/renderer/observed-plan verifier 尚未实现；当前 root result 不能冒充完整 admission proof |
@@ -4355,7 +4502,7 @@ generation/reset provenance，所以不能把该行视为产品后置条件已�
 | --- | --- | --- | --- | --- |
 | 6.1-6.4 inventory | `linux_sysfs.py`、`authoritative_snapshot.py`、snapshot fault runner | sysfs/config/topology/BAR 只读采集；full-host double-scan、exact identity/group/generation、CAS/HMAC SQLite publish、current boot/epoch authorization、hard-exit/concurrent/tamper gates | production trust root、external rollback anchor、key rotation/revocation/catalog、kernel atomic health/generation/reset provenance | C10、C15、C16、C18、F10（均未关闭） |
 | 7.2-7.8 capable / C21 provider | `capability.py`、`vfio_provider.py`、`vfio_launch_handles.py`、`qemu_launch_contract.py` | capability 基线；历史 standalone caller-correlated probe；authoritative component authorization 派生完整 group fresh raw cdev/IOMMUFD，`PRE_OPEN/POST_OPEN/PRE_SPAWN` live gates 与 stock-QEMU component observation | 产品 controller/authority、reset/clean-state provider、独立 DMA/IRQ observer、物理 E4；其余六 gate/operation matrix 保持纯函数 | C00-C15、C20、C21 |
-| 8.4 physical domain | phase-1 kernel patch + `linux_sysfs.py::reconstruct_physical_isolation_domains` | ACS native/effective/source 与 userspace union-find estimate | 实现 kernel native shadow-domain ABI；estimate 改为 per-component 并仅作 differential evidence | C05、C06、C16、C19 |
+| 8.4 physical domain | phase-1 kernel patch + `linux_sysfs.py::reconstruct_physical_isolation_domains` | ACS native/effective/source 与 per-component userspace union-find estimate；不完整关系只使受影响 component 为 unknown，estimate 来源不受信 | 实现 kernel native shadow-domain ABI，并把 verified provider/signed HostSnapshot provenance 接入产品 gate；userspace estimate 仅作 differential evidence | C05、C06、C16、C19 |
 | 8.2 reset domain | 当前只有 sysfs parent `estimated` set；DMA provider component 已独立实现 | estimate 可供 lab 展示，不是 production reset proof | 复用 scoped VFIO ownership，新增 hot-reset 两阶段 query/re-query/execute、UAPI mode 与 rollback 负例 | C03、C04、C17、C18、S11、S12 |
 | 8.5 dependency bundle | `capability.py::_dependency_closure` | 五类集合的基础 closure | edge provenance、requester alias、PF/VF、functional rule、member action | C07、C13、D03、D14 |
 | 3.4 host activation | `activation.py` + `test_activation.py` | desired/effective 分离、完整 bundle 四态 planner 与 fail-closed A/B 单测 | durable activation journal、live owner executor、exact early-boot claim/reconcile | O00-O09、R39 |

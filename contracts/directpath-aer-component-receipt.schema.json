@@ -1,0 +1,933 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-aer-component-receipt.schema.json",
+  "title": "Qman DirectPath Correctable AER component-premise receipt candidate",
+  "description": "A closed structural receipt for M24-M29 declarations. Until a separately normative trusted artifact resolver and typed authority receipts exist, it proves only byte/schema/digest/binding structure and cannot express component eligibility, E4 qualification, or product authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "receiptId",
+    "authorityBoundary",
+    "productAuthorized",
+    "normativeSourceState",
+    "verificationDisposition",
+    "artifactAuthority",
+    "contractBinding",
+    "implementationBinding",
+    "ownerBindings",
+    "layoutBindings",
+    "oracleBindings",
+    "caseResults",
+    "dimensions",
+    "cleanup",
+    "reuse",
+    "classification",
+    "componentEligible",
+    "denyReasons",
+    "unverifiedDimensions",
+    "receiptDigest"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "QMAN_AER_COMPONENT_PREMISE_RECEIPT"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "receiptId": {
+      "$ref": "#/$defs/id"
+    },
+    "authorityBoundary": {
+      "const": "COMPONENT_PREMISE"
+    },
+    "productAuthorized": {
+      "const": false
+    },
+    "normativeSourceState": {
+      "const": "CANDIDATE_NOT_IN_PORTABLE_CLOSURE"
+    },
+    "verificationDisposition": {
+      "const": "STRUCTURALLY_VALID"
+    },
+    "artifactAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resolverState",
+        "resolverIdentityDigestOrNull",
+        "typedAuthorityReceiptDigests"
+      ],
+      "properties": {
+        "resolverState": {
+          "const": "UNAVAILABLE"
+        },
+        "resolverIdentityDigestOrNull": {
+          "type": "null"
+        },
+        "typedAuthorityReceiptDigests": {
+          "type": "array",
+          "items": false,
+          "maxItems": 0
+        }
+      }
+    },
+    "contractBinding": {
+      "$ref": "#/$defs/contractBinding"
+    },
+    "implementationBinding": {
+      "$ref": "#/$defs/implementationBinding"
+    },
+    "ownerBindings": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/o0OwnerBinding"
+        },
+        {
+          "$ref": "#/$defs/o4OwnerBinding"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "layoutBindings": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/endpointLayoutBinding"
+        },
+        {
+          "$ref": "#/$defs/rootLayoutBinding"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "oracleBindings": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/candidateOracleBinding"
+        },
+        {
+          "$ref": "#/$defs/referenceOracleBinding"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "caseResults": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/m24CaseResult"
+        },
+        {
+          "$ref": "#/$defs/m25CaseResult"
+        },
+        {
+          "$ref": "#/$defs/m26CaseResult"
+        },
+        {
+          "$ref": "#/$defs/m27CaseResult"
+        },
+        {
+          "$ref": "#/$defs/m28CaseResult"
+        },
+        {
+          "$ref": "#/$defs/m29CaseResult"
+        }
+      ],
+      "items": false,
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "GUEST_WRITES",
+        "IRQ_DELIVERY",
+        "SERVICE_ATTRIBUTION",
+        "DEVICE_HEALTH",
+        "PHYSICAL_RECOVERY"
+      ],
+      "properties": {
+        "GUEST_WRITES": {
+          "$ref": "#/$defs/dimensionResult"
+        },
+        "IRQ_DELIVERY": {
+          "$ref": "#/$defs/dimensionResult"
+        },
+        "SERVICE_ATTRIBUTION": {
+          "$ref": "#/$defs/dimensionResult"
+        },
+        "DEVICE_HEALTH": {
+          "$ref": "#/$defs/dimensionResult"
+        },
+        "PHYSICAL_RECOVERY": {
+          "$ref": "#/$defs/dimensionResult"
+        }
+      }
+    },
+    "cleanup": {
+      "$ref": "#/$defs/lifecycleResult"
+    },
+    "reuse": {
+      "$ref": "#/$defs/lifecycleResult"
+    },
+    "classification": {
+      "enum": [
+        "MATCH",
+        "CANDIDATE",
+        "INCONCLUSIVE",
+        "MISMATCH"
+      ]
+    },
+    "componentEligible": {
+      "const": false
+    },
+    "denyReasons": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "CASE_SET_INCOMPLETE",
+          "CLEANUP_UNVERIFIED",
+          "CONTRACT_BINDING_MISMATCH",
+          "DIGEST_INVALID",
+          "DIMENSION_UNVERIFIED",
+          "IMPLEMENTATION_BINDING_MISMATCH",
+          "LAYOUT_BINDING_MISMATCH",
+          "ORACLE_BOUNDARY_INVALID",
+          "OWNER_BINDING_MISMATCH",
+          "AUTHORITY_RECEIPT_UNAVAILABLE",
+          "PRODUCT_AUTHORIZATION_ATTEMPTED",
+          "REFERENCE_MISMATCH",
+          "REUSE_UNVERIFIED",
+          "TUPLE_SET_INCOMPLETE"
+        ]
+      }
+    },
+    "unverifiedDimensions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/dimensionName"
+      }
+    },
+    "receiptDigest": {
+      "$ref": "#/$defs/digest"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "digestOrNull": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "contractBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aerPolicyDigest",
+        "aerPolicySchemaSha256",
+        "caseMatrixDigest",
+        "caseMatrixSchemaSha256",
+        "verifierAlgorithmDigest",
+        "verifierAlgorithmSchemaSha256",
+        "componentReceiptSchemaSha256",
+        "goldenVectorSetDigest",
+        "generatorRawSha256",
+        "conformanceTestRawSha256"
+      ],
+      "properties": {
+        "aerPolicyDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "aerPolicySchemaSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "caseMatrixDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "caseMatrixSchemaSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "verifierAlgorithmDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "verifierAlgorithmSchemaSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "componentReceiptSchemaSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "goldenVectorSetDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "generatorRawSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "conformanceTestRawSha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "implementationBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qmanBuildDigest",
+        "implementationDigest",
+        "sourceTreeManifestDigest",
+        "buildAttestationDigest"
+      ],
+      "properties": {
+        "qmanBuildDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "implementationDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "sourceTreeManifestDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "buildAttestationDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "ownerBindingBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "referenceOwnerPhase",
+        "ownerSemanticClass",
+        "assignmentId",
+        "leaseGeneration",
+        "ownerEpoch",
+        "hostBootId",
+        "ownerBindingDigest"
+      ],
+      "properties": {
+        "referenceOwnerPhase": {
+          "enum": [
+            "O0",
+            "O4"
+          ]
+        },
+        "ownerSemanticClass": {
+          "enum": [
+            "HOST_OWNED_IDLE",
+            "ACTIVE_DIRECTPATH"
+          ]
+        },
+        "assignmentId": {
+          "$ref": "#/$defs/id"
+        },
+        "leaseGeneration": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "ownerEpoch": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "hostBootId": {
+          "$ref": "#/$defs/id"
+        },
+        "ownerBindingDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "o0OwnerBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ownerBindingBase"
+        },
+        {
+          "properties": {
+            "referenceOwnerPhase": {
+              "const": "O0"
+            },
+            "ownerSemanticClass": {
+              "const": "HOST_OWNED_IDLE"
+            }
+          }
+        }
+      ]
+    },
+    "o4OwnerBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ownerBindingBase"
+        },
+        {
+          "properties": {
+            "referenceOwnerPhase": {
+              "const": "O4"
+            },
+            "ownerSemanticClass": {
+              "const": "ACTIVE_DIRECTPATH"
+            }
+          }
+        }
+      ]
+    },
+    "layoutBindingBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "functionRole",
+        "bdf",
+        "deviceIdentityDigest",
+        "pcieCapabilityOffset",
+        "aerCapabilityOffset",
+        "layoutDigest",
+        "layoutBindingDigest"
+      ],
+      "properties": {
+        "functionRole": {
+          "enum": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ]
+        },
+        "bdf": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{4}:[0-9a-f]{2}:[0-1][0-9a-f]\\.[0-7]$"
+        },
+        "deviceIdentityDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "pcieCapabilityOffset": {
+          "type": "integer",
+          "minimum": 64,
+          "maximum": 252,
+          "multipleOf": 4
+        },
+        "aerCapabilityOffset": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 4092,
+          "multipleOf": 4
+        },
+        "layoutDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "layoutBindingDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "endpointLayoutBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layoutBindingBase"
+        },
+        {
+          "properties": {
+            "functionRole": {
+              "const": "ENDPOINT"
+            },
+            "pcieCapabilityOffset": {
+              "maximum": 244
+            },
+            "aerCapabilityOffset": {
+              "maximum": 4052
+            }
+          }
+        }
+      ]
+    },
+    "rootLayoutBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layoutBindingBase"
+        },
+        {
+          "properties": {
+            "functionRole": {
+              "const": "ROOT_PORT"
+            },
+            "pcieCapabilityOffset": {
+              "maximum": 244
+            },
+            "aerCapabilityOffset": {
+              "maximum": 4040
+            }
+          }
+        }
+      ]
+    },
+    "oracleBindingBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oracleRole",
+        "environmentKind",
+        "authorityClosure",
+        "artifactManifestDigest",
+        "oracleDigest",
+        "oracleBindingDigest"
+      ],
+      "properties": {
+        "oracleRole": {
+          "enum": [
+            "CANDIDATE_RUNTIME",
+            "REFERENCE_BEHAVIOR"
+          ]
+        },
+        "environmentKind": {
+          "enum": [
+            "PHYSICAL",
+            "NESTED",
+            "SYNTHETIC"
+          ]
+        },
+        "authorityClosure": {
+          "enum": [
+            "NONE",
+            "REFERENCE_BEHAVIOR_ONLY"
+          ]
+        },
+        "artifactManifestDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "oracleDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "oracleBindingDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "candidateOracleBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/oracleBindingBase"
+        },
+        {
+          "properties": {
+            "oracleRole": {
+              "const": "CANDIDATE_RUNTIME"
+            },
+            "environmentKind": {
+              "const": "SYNTHETIC"
+            },
+            "authorityClosure": {
+              "const": "NONE"
+            }
+          }
+        }
+      ]
+    },
+    "referenceOracleBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/oracleBindingBase"
+        },
+        {
+          "properties": {
+            "oracleRole": {
+              "const": "REFERENCE_BEHAVIOR"
+            },
+            "environmentKind": {
+              "const": "PHYSICAL"
+            },
+            "authorityClosure": {
+              "const": "REFERENCE_BEHAVIOR_ONLY"
+            }
+          }
+        }
+      ]
+    },
+    "typedArtifactBindingBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactType",
+        "digest"
+      ],
+      "properties": {
+        "artifactType": {
+          "enum": [
+            "RUN_RESULT",
+            "ARTIFACT_MANIFEST",
+            "EVIDENCE_INDEX"
+          ]
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "runResultBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedArtifactBindingBase"
+        },
+        {
+          "properties": {
+            "artifactType": {
+              "const": "RUN_RESULT"
+            }
+          }
+        }
+      ]
+    },
+    "artifactManifestBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedArtifactBindingBase"
+        },
+        {
+          "properties": {
+            "artifactType": {
+              "const": "ARTIFACT_MANIFEST"
+            }
+          }
+        }
+      ]
+    },
+    "evidenceIndexBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedArtifactBindingBase"
+        },
+        {
+          "properties": {
+            "artifactType": {
+              "const": "EVIDENCE_INDEX"
+            }
+          }
+        }
+      ]
+    },
+    "tupleResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tupleId",
+        "tupleDigest",
+        "ownerBindingDigests",
+        "layoutBindingDigests",
+        "candidateOracleBindingDigest",
+        "referenceOracleBindingDigest",
+        "runResultBinding",
+        "artifactManifestBinding",
+        "evidenceIndexBinding",
+        "result"
+      ],
+      "properties": {
+        "tupleId": {
+          "$ref": "#/$defs/id"
+        },
+        "tupleDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "ownerBindingDigests": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        },
+        "layoutBindingDigests": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        },
+        "candidateOracleBindingDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "referenceOracleBindingDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "runResultBinding": {
+          "$ref": "#/$defs/runResultBinding"
+        },
+        "artifactManifestBinding": {
+          "$ref": "#/$defs/artifactManifestBinding"
+        },
+        "evidenceIndexBinding": {
+          "$ref": "#/$defs/evidenceIndexBinding"
+        },
+        "result": {
+          "enum": [
+            "MATCH",
+            "CANDIDATE",
+            "INCONCLUSIVE",
+            "MISMATCH"
+          ]
+        }
+      }
+    },
+    "caseResultBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "expectedTupleCount",
+        "tupleResults",
+        "result",
+        "caseResultDigest"
+      ],
+      "properties": {
+        "caseId": {
+          "enum": [
+            "M24",
+            "M25",
+            "M26",
+            "M27",
+            "M28",
+            "M29"
+          ]
+        },
+        "expectedTupleCount": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "tupleResults": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/tupleResult"
+          }
+        },
+        "result": {
+          "enum": [
+            "MATCH",
+            "CANDIDATE",
+            "INCONCLUSIVE",
+            "MISMATCH"
+          ]
+        },
+        "caseResultDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "m24CaseResult": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/caseResultBase"
+        },
+        {
+          "properties": {
+            "caseId": {
+              "const": "M24"
+            },
+            "expectedTupleCount": {
+              "const": 8
+            },
+            "tupleResults": {
+              "minItems": 8,
+              "maxItems": 8
+            }
+          }
+        }
+      ]
+    },
+    "m25CaseResult": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/caseResultBase"
+        },
+        {
+          "properties": {
+            "caseId": {
+              "const": "M25"
+            },
+            "expectedTupleCount": {
+              "const": 64
+            },
+            "tupleResults": {
+              "minItems": 64,
+              "maxItems": 64
+            }
+          }
+        }
+      ]
+    },
+    "m26CaseResult": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/caseResultBase"
+        },
+        {
+          "properties": {
+            "caseId": {
+              "const": "M26"
+            },
+            "expectedTupleCount": {
+              "const": 24
+            },
+            "tupleResults": {
+              "minItems": 24,
+              "maxItems": 24
+            }
+          }
+        }
+      ]
+    },
+    "m27CaseResult": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/caseResultBase"
+        },
+        {
+          "properties": {
+            "caseId": {
+              "const": "M27"
+            },
+            "expectedTupleCount": {
+              "const": 9
+            },
+            "tupleResults": {
+              "minItems": 9,
+              "maxItems": 9
+            }
+          }
+        }
+      ]
+    },
+    "m28CaseResult": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/caseResultBase"
+        },
+        {
+          "properties": {
+            "caseId": {
+              "const": "M28"
+            },
+            "expectedTupleCount": {
+              "const": 15
+            },
+            "tupleResults": {
+              "minItems": 15,
+              "maxItems": 15
+            }
+          }
+        }
+      ]
+    },
+    "m29CaseResult": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/caseResultBase"
+        },
+        {
+          "properties": {
+            "caseId": {
+              "const": "M29"
+            },
+            "expectedTupleCount": {
+              "const": 13
+            },
+            "tupleResults": {
+              "minItems": 13,
+              "maxItems": 13
+            }
+          }
+        }
+      ]
+    },
+    "dimensionName": {
+      "enum": [
+        "GUEST_WRITES",
+        "IRQ_DELIVERY",
+        "SERVICE_ATTRIBUTION",
+        "DEVICE_HEALTH",
+        "PHYSICAL_RECOVERY"
+      ]
+    },
+    "dimensionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result",
+        "receiptDigestOrNull"
+      ],
+      "properties": {
+        "result": {
+          "enum": [
+            "STRUCTURALLY_VALID",
+            "UNKNOWN",
+            "INCONCLUSIVE",
+            "FAILED"
+          ]
+        },
+        "receiptDigestOrNull": {
+          "type": "null"
+        }
+      }
+    },
+    "lifecycleResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result",
+        "receiptDigestOrNull"
+      ],
+      "properties": {
+        "result": {
+          "enum": [
+            "STRUCTURALLY_VALID",
+            "UNKNOWN",
+            "INCONCLUSIVE",
+            "FAILED"
+          ]
+        },
+        "receiptDigestOrNull": {
+          "type": "null"
+        }
+      }
+    }
+  },
+  "x-qmanCanonicalization": "CANONICAL-JSON-V1",
+  "x-qmanDigestDomains": {
+    "ownerBinding": "QMAN-DIRECTPATH/AER-OWNER-BINDING/V1\u0000",
+    "layoutBinding": "QMAN-DIRECTPATH/AER-LAYOUT-BINDING/V1\u0000",
+    "oracleBinding": "QMAN-DIRECTPATH/AER-ORACLE-BINDING/V1\u0000",
+    "caseResult": "QMAN-DIRECTPATH/AER-CASE-RESULT/V1\u0000",
+    "componentReceipt": "QMAN-DIRECTPATH/AER-COMPONENT-RECEIPT/V1\u0000"
+  },
+  "x-qmanDigestRule": "Each binding/result digest is the SHA-256 of its exact domain bytes followed by CANONICAL-JSON-V1 of the complete object with only its own digest member set to null. receiptDigest uses the same rule after all child digests are final.",
+  "x-qmanExactBindingRule": "Every tupleResult must bind the same tupleId/tupleDigest row from the fixed declarative matrix. ownerBindingDigests resolve in order to the tuple's exact expectedOwnerPhases; layoutBindingDigests resolve in order to exact expectedLayoutRoles. ENDPOINT and ROOT_PORT have distinct BDFs, device-identity digests, and layout digests; M28 BOTH resolves to both of those underlying identities, never two role labels over one identity. PCIe capability offsets leave the mandatory Device Control/Status extent inside conventional configuration space; ENDPOINT AER leaves 0x2c bytes and ROOT_PORT AER leaves 0x38 bytes inside the 4 KiB extended configuration space. CANDIDATE_RUNTIME is SYNTHETIC/NONE and REFERENCE_BEHAVIOR is PHYSICAL/REFERENCE_BEHAVIOR_ONLY; their artifact-manifest and oracle digests are distinct. Run result, artifact manifest, and evidence index use field-specific typed binding objects with pairwise-distinct digests, and one digest may not be relabeled as another artifact type anywhere in the receipt. Every run-result digest is globally unique to one of the 133 tuples; manifest and evidence-index digests may each identify shared batch containers. Case order, tuple order, and all 133 rows are exact.",
+  "x-qmanAggregationRule": "Each Case result is the deterministic severity aggregation of its tuple results (MISMATCH, then INCONCLUSIVE, then CANDIDATE, otherwise MATCH). The top classification applies the same aggregation to the six Case results. denyReasons are the sorted exact structural set AUTHORITY_RECEIPT_UNAVAILABLE, CLEANUP_UNVERIFIED, DIMENSION_UNVERIFIED, REUSE_UNVERIFIED, plus REFERENCE_MISMATCH only when the top classification is MISMATCH.",
+  "x-qmanEligibilityRule": "This candidate schema has no trusted artifact resolver or typed authority-receipt contract. verificationDisposition is therefore STRUCTURALLY_VALID and componentEligible is always false, including when every declarative result is MATCH. String digests and labels never self-authorize a dimension, lifecycle result, E4, or product admission.",
+  "x-qmanOracleBoundaryRule": "CANDIDATE_RUNTIME is exactly SYNTHETIC with authorityClosure NONE. REFERENCE_BEHAVIOR is exactly PHYSICAL with authorityClosure REFERENCE_BEHAVIOR_ONLY. Their artifactManifestDigest and oracleDigest values are pairwise distinct across roles, so a caller cannot relabel one oracle as both sides of a comparison. Neither role may assert E4, product qualification, or provenance it has not independently resolved.",
+  "x-qmanAuthorityBoundary": "COMPONENT_PREMISE",
+  "x-qmanProductAuthorized": false,
+  "x-qmanCandidateBoundary": "This receipt is a candidate structural contract until adopted by the portable normativeSources closure and independent product Case registry. A future eligibility verifier requires a separately normative trusted artifact resolver and typed authority receipts; this shape alone can mint neither component eligibility, E4, nor product authorization."
+}

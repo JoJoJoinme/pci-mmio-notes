@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-committed-static-admission.schema.json",
+  "title": "Qman DirectPath committed Static admission",
+  "description": "Closed post-commit result for one Static admission transaction. It identifies the committed live OperationLease capability and its one-to-one admission binding; it is never a pre-commit decision or a substitute for live pre-side-effect revalidation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "commandId",
+    "vmId",
+    "runId",
+    "commandHash",
+    "operationLeaseCapability",
+    "admissionBindingHash",
+    "committedResourceVersions",
+    "idempotency",
+    "repositoryTransactionId",
+    "commitSequence",
+    "committedAt",
+    "resultHash"
+  ],
+  "properties": {
+    "subjectType": {"const": "COMMITTED_STATIC_ADMISSION"},
+    "schemaVersion": {"const": 1},
+    "commandId": {"$ref": "#/$defs/id"},
+    "vmId": {"$ref": "#/$defs/id"},
+    "runId": {"$ref": "#/$defs/id"},
+    "commandHash": {"$ref": "#/$defs/digest"},
+    "operationLeaseCapability": {
+      "$ref": "#/$defs/operationLeaseCapability"
+    },
+    "admissionBindingHash": {"$ref": "#/$defs/digest"},
+    "committedResourceVersions": {
+      "$ref": "#/$defs/committedResourceVersions"
+    },
+    "idempotency": {"$ref": "#/$defs/idempotencyCommit"},
+    "repositoryTransactionId": {"$ref": "#/$defs/id"},
+    "commitSequence": {"$ref": "#/$defs/safePositiveInteger"},
+    "committedAt": {"$ref": "#/$defs/timestamp"},
+    "resultHash": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "digestSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/digest"},
+      "x-qmanSetRule": "The guarded Static admission currently commits exactly one dependency bundle. The set is unique and ordered by CANONICAL-JSON-V1 bytes."
+    },
+    "memberGeneration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "generation"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "generation": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    },
+    "memberGenerations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/memberGeneration"},
+      "x-qmanSetRule": "Member IDs are unique and the complete array is ordered by ascending CANONICAL-JSON-V1 bytes of [id,generation], matching directpath-operation-envelope.schema.json#/$defs/operationLeaseCapability."
+    },
+    "operationLeaseCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationLeaseId",
+        "leaseType",
+        "scopeHash",
+        "runIdOrIntentId",
+        "bundleIds",
+        "memberGenerations",
+        "hostEpoch",
+        "runGenerationOrNull",
+        "holderControllerGeneration",
+        "operationLeaseResourceVersion",
+        "admissionBindingHashOrNull"
+      ],
+      "properties": {
+        "operationLeaseId": {"$ref": "#/$defs/id"},
+        "leaseType": {"const": "ASSIGNMENT_PREPARE"},
+        "scopeHash": {"$ref": "#/$defs/digest"},
+        "runIdOrIntentId": {"$ref": "#/$defs/id"},
+        "bundleIds": {"$ref": "#/$defs/digestSet"},
+        "memberGenerations": {"$ref": "#/$defs/memberGenerations"},
+        "hostEpoch": {"$ref": "#/$defs/safePositiveInteger"},
+        "runGenerationOrNull": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "holderControllerGeneration": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "operationLeaseResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "admissionBindingHashOrNull": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "committedResourceVersions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "controllerAuthorityResourceVersion",
+        "hostAuthorityResourceVersion",
+        "requestResourceVersion",
+        "policyAuthorityResourceVersion",
+        "availabilityAuthorityResourceVersion",
+        "assignmentRunResourceVersion",
+        "bundleLeaseResourceVersion",
+        "operationLeaseResourceVersion"
+      ],
+      "properties": {
+        "controllerAuthorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "hostAuthorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "requestResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "policyAuthorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "availabilityAuthorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "assignmentRunResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "bundleLeaseResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "operationLeaseResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        }
+      }
+    },
+    "idempotencyNaturalKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "idempotencyScopeHash",
+        "idempotencyKey"
+      ],
+      "properties": {
+        "operationId": {"const": "STATIC_ADMISSION"},
+        "idempotencyScopeHash": {"$ref": "#/$defs/digest"},
+        "idempotencyKey": {"$ref": "#/$defs/id"}
+      }
+    },
+    "idempotencyCommit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "naturalKey",
+        "resourceVersion"
+      ],
+      "properties": {
+        "naturalKey": {"$ref": "#/$defs/idempotencyNaturalKey"},
+        "resourceVersion": {"$ref": "#/$defs/safePositiveInteger"}
+      }
+    }
+  },
+  "x-qmanHashRule": "resultHash is SHA-256 of CANONICAL-JSON-V1 over this complete committed result with resultHash represented as null.",
+  "x-qmanCommitRule": "The complete object may be emitted only after one repository transaction has durably committed the ACTIVE ASSIGNMENT_PREPARE OperationLease, its UNIQUE one-to-one OperationAdmissionBinding, complete bundle reservation, PREPARING AssignmentRun, completed idempotency record, audit event, outbox event, and all listed resource versions.",
+  "x-qmanIdempotencyRule": "The committed idempotency row is keyed by [operationId=STATIC_ADMISSION,idempotencyScopeHash,idempotencyKey]. idempotencyScopeHash is SHA-256 over UTF-8 domain separator QMAN-DIRECTPATH/IDEMPOTENCY-SCOPE/V1, one zero byte, and CANONICAL-JSON-V1 over {operationId:'STATIC_ADMISSION',vmId}; the row binds the echoed commandHash as its immutable request hash and stores this exact resultHash as its completed response hash. Exact replay returns byte-identical committed result bytes.",
+  "x-qmanReferenceIdempotencyLifecycle": "The executable SQLite reference component inserts IN_PROGRESS at resourceVersion=1 and completes it by compare-and-swap to COMPLETED at resourceVersion=2. The schema retains a positive-integer shape so this receipt contract does not pretend to freeze a product repository's version allocator.",
+  "x-qmanCrossFieldRules": [
+    "commandId, vmId, runId, and commandHash equal the same fields of the accepted StaticAdmissionCommand",
+    "runId equals operationLeaseCapability.runIdOrIntentId",
+    "operationLeaseCapability.operationLeaseResourceVersion equals committedResourceVersions.operationLeaseResourceVersion",
+    "operationLeaseCapability.admissionBindingHashOrNull equals admissionBindingHash",
+    "idempotency.naturalKey.idempotencyScopeHash is derived from top-level vmId by the normative domain-separated projection",
+    "commandHash is the immutable request hash stored by the committed idempotency row"
+  ],
+  "x-qmanForbiddenResultFields": [
+    "uncommitted capability decision",
+    "caller-supplied read set or CurrentAuthorityVector",
+    "caller-supplied CAS expectation",
+    "uncommitted OperationLeaseSpec or reservation",
+    "boolean authorized/eligible/available aliases"
+  ],
+  "x-qmanAuthorityBoundary": "This receipt-shaped value is a reference transaction result, not proof of a Qman product repository or a live side-effect authorization. Before the first covered host side effect, the executor must independently re-read the live ACTIVE lease and one-to-one binding, check trusted time and every sealed version, and fsync the Host Action Journal INTENT."
+}

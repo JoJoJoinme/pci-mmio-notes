@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E3-AER-QEMU-ROOT-SEQUENCE-001",
+  "observedAt": "2026-07-26T05:22:54.698736Z",
+  "subject": "QEMU_CONTROL_REFERENCE",
+  "evidenceGrade": "E3",
+  "claimBoundary": "REFERENCE_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py": "14f0574f7d2d7edd956386194e364de06ccb11686e64fe9177f04f65d265d15c",
+      "vmware-esxi8-lab/test_qemu_aer_root_sequence.py": "ee1d9e91bcd4d399ddef8d40336bda62e9cc961abb6a5c878ad2807460ce233b",
+      "vmware-esxi8-lab/test_qemu_aer_root_sequence_unit.py": "74c1666dd565197c229486fc96bee6dfe8b8ab3fcb12db92ecda4089ca5e7b64"
+    }
+  },
+  "sut": {
+    "environment": "WSL2 with stock QEMU 11.0.2 q35/qtest, pcie-root-port at 00:02.0 and virtio-net-pci,aer=on endpoint at 01:00.0 (Requester ID 0x0100)",
+    "components": [
+      {
+        "name": "QEMU",
+        "version": "11.0.2",
+        "sha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+      },
+      {
+        "name": "QEMU hw/pci/pcie_aer.c",
+        "version": "v11.0.2 source tree used for the build",
+        "sha256": "11c8c33412d3c6331cd981fa0b7ade4949789c7ef7628f18a0e339dff8628d7c"
+      },
+      {
+        "name": "Correctable AER root-sequence runner",
+        "version": "repository working-tree runner",
+        "sha256": "ee1d9e91bcd4d399ddef8d40336bda62e9cc961abb6a5c878ad2807460ce233b"
+      }
+    ]
+  },
+  "hypotheses": [
+    "A first routed Correctable message sets Root COR_RCV and the Correctable Source; another routed Correctable message before Root Status clear sets MULTI_COR_RCV.",
+    "Endpoint CES/CED W1C and Root Correctable Status W1C are independent observable operations.",
+    "Distinct Correctable bits OR into Endpoint CES while uncleared, and the second routed message sets Root MULTI_COR_RCV.",
+    "After Endpoint CES/CED and Root Correctable Status are independently cleared and read back zero, a new Correctable injection re-arms first-message behavior."
+  ],
+  "observations": [
+    {
+      "name": "matrix",
+      "result": {
+        "gate": "g101",
+        "gateTuple": {
+          "endpointCere": 1,
+          "selectedCorrectableMaskBit": 0,
+          "rootCorrectableCommand": 1
+        },
+        "sequences": [
+          "first-multiple",
+          "independent-w1c",
+          "bit-or",
+          "rearm"
+        ],
+        "repeatPerSequence": 3,
+        "freshQemuProcessPerSequenceRepeat": true,
+        "caseCount": 12,
+        "matched": 12,
+        "diverged": 0,
+        "inconclusive": 0,
+        "blocked": 0
+      }
+    },
+    {
+      "name": "first-multiple",
+      "result": "First B0 produced Endpoint CES=0x00000001, Device Status.CED=1, Root Status=0x00000001 and Source=0x0100. Repeating B0 without clear retained CES=0x00000001 and changed Root Status to 0x00000003."
+    },
+    {
+      "name": "independent-w1c",
+      "result": "Clearing only Endpoint CES/CED left Root Status=0x00000001. After rebuilding the state, clearing only Root Correctable Status left Endpoint CES=0x00000001 and CED=1."
+    },
+    {
+      "name": "bit-or",
+      "result": "B0 followed by B1 without clear produced Endpoint CES=0x00000041, Root Status=0x00000003 and Source=0x0100."
+    },
+    {
+      "name": "rearm",
+      "result": "CES-only W1C left CED and Root reception set; CED-only W1C then cleared the Endpoint Device Status independently; Root W1C cleared Root Status; reinjection produced the first-message state again with Root Status=0x00000001 rather than MULTI_COR_RCV."
+    },
+    {
+      "name": "root-source-after-w1c",
+      "result": "QEMU retained Correctable Source=0x0100 after Root Status W1C. The oracle therefore constrains Root Status independence but deliberately does not require Root Source to clear."
+    },
+    {
+      "name": "safety",
+      "result": "Across all 12 fresh-process cases, Endpoint and Root Uncorrectable Status stayed zero, Root Uncorrectable reception/source stayed zero, Root Device Status stayed clean, and Endpoint Device Status contained no error bit other than CED."
+    },
+    {
+      "name": "artifact-verification",
+      "result": {
+        "caseManifests": 12,
+        "manifestEntriesVerified": 276,
+        "manifestFailures": 0
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": [
+      "TS-F4-06"
+    ],
+    "caseIds": [
+      "M06"
+    ],
+    "riskIds": [
+      "R13"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "../_artifacts/vmware-directpath-runs/20260726-qemu11-aer-root-sequence-v1/result.json",
+      "sha256": "59839df23f9711162f4d8548b7e258e355957bda23348f6acd727eb219decb5b",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "../_artifacts/vmware-directpath-runs/20260726-qemu11-aer-root-sequence-v1/result.json.sha256",
+      "sha256": "c29d848ec29290811f8df78fd4f328f21ca83b8e16df77f470c091294274d089",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "vmware-esxi8-lab/test_qemu_aer_root_sequence.py",
+      "sha256": "ee1d9e91bcd4d399ddef8d40336bda62e9cc961abb6a5c878ad2807460ce233b",
+      "retention": "COMMITTED"
+    },
+    {
+      "path": "vmware-esxi8-lab/test_qemu_aer_root_sequence_unit.py",
+      "sha256": "74c1666dd565197c229486fc96bee6dfe8b8ab3fcb12db92ecda4089ca5e7b64",
+      "retention": "COMMITTED"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "This is a QEMU control reference, not VMware behavior and not a Qman product implementation result.",
+    "The runner injects virtual Correctable status through QEMU HMP; it does not reproduce an electrical PCIe link fault or physical device internal recovery.",
+    "Root Error Command was enabled for the canonical sequence matrix. The earlier eight-gate matrix separately tests g100/g101 Root deposition equivalence but neither run attributes an MSI, MSI-X or INTx notification.",
+    "Root Source retention after W1C is an observation of this exact QEMU version and topology, not a universal PCIe or ESXi rule.",
+    "No ESXi owner, VM lifecycle, guest write filter, host log/service path, reset, health, quarantine, or safe tenant reuse behavior is proven by this evidence.",
+    "VMW-AER-COR-001, M26, M06, TS-F4-06 and R13 therefore remain partial or open until their independently scoped ESXi and Qman evidence gates are satisfied."
+  ]
+}

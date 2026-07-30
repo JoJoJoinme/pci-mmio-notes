@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "caseId": "VMW-AER-COR-001",
+  "legacyIds": [
+    "S03",
+    "C00-C03",
+    "COR-8"
+  ],
+  "subject": "VMWARE_ESXI",
+  "runId": "20260729-esxi8-aer-root-o4-v17-full1",
+  "startedAt": "2026-07-29T03:34:55.588108Z",
+  "finishedAt": "2026-07-29T04:46:10.491894Z",
+  "sutProfile": {
+    "environmentClass": "NESTED_INSTRUMENTED_REFERENCE",
+    "esxiVersion": "8.0.3",
+    "esxiBuild": "24280767",
+    "apiVersion": "8.0.3.0",
+    "virtualHardware": "20",
+    "serverModel": "QEMU 11.0.2 q35/KVM nested ESXi lab",
+    "biosVersion": "open-source OVMF EFI lab profile",
+    "deviceIdentity": "QEMU virtio-net-pci 1af4:1041 at outer/ESXi 0000:01:00.1 behind 0000:00:08.0",
+    "deviceFirmware": "QEMU synthetic virtio device",
+    "guestOs": "Linux 5.15 EFI initramfs AER probe",
+    "guestDriver": "virtio-net plus raw PCI config and heartbeat probe",
+    "workload": "Correctable-only O4/g101 Root sequence: first/multiple, independent Endpoint/Root W1C, B0/B1 OR, and re-arm; four sequences by three repeats"
+  },
+  "techStories": [
+    "TS-F4-06"
+  ],
+  "basisKinds": [
+    "OFFICIAL_CONTRACT",
+    "OBSERVED_BEHAVIOR"
+  ],
+  "sourceIds": [
+    "VMW-SRC-001",
+    "VMW-SRC-025"
+  ],
+  "inputs": {
+    "ownerPhase": "O4",
+    "ownerState": "PassthruActive",
+    "gate": "g101",
+    "gateTuple": {
+      "endpointCorrectableReportingEnable": 1,
+      "selectedCorrectableMaskBit": 0,
+      "rootCorrectableErrorReportingEnable": 1
+    },
+    "endpointBdf": "0000:01:00.1",
+    "rootPortBdf": "0000:00:08.0",
+    "requesterId": "0x0101",
+    "qemuDevice": "test_fn1",
+    "injectionClass": "Correctable-only",
+    "injectedBits": [
+      "Receiver Error (B0)",
+      "Bad TLP (B1)"
+    ],
+    "sequences": [
+      "first-multiple",
+      "independent-w1c",
+      "bit-or",
+      "rearm"
+    ],
+    "repeat": 3,
+    "plannedCaseCount": 12,
+    "oraclePath": "contracts/vmware-aer-root-sequence-public-model-candidate-v1.json",
+    "oracleProfileStateAtRun": "CANDIDATE_NOT_OBSERVED",
+    "oracleSha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a",
+    "campaignResultSha256": "847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f",
+    "rootArtifactManifestFileSha256": "e06b1cb224f93ea112fbfe0f10f24bee5d0e65cef3a08f7125d595877fa48836",
+    "runnerSourceSha256": "7d98adb07faa80f54f5c67c38039c8281307dd3d28f63d3d0641299248cb2f65"
+  },
+  "expected": [
+    "All 12 cases are evaluated against the preregistered, hash-bound public oracle without changing the oracle bytes or downgrading injected cases to pre-injection cases.",
+    "Correctable Endpoint and Root state transitions for first/multiple reception, independent W1C, bit OR, and re-arm are compared exactly while Uncorrectable injection is unavailable.",
+    "Every case restores the original E/M/R gate, leaves no active runner-created VM user, and preserves a running outer QEMU.",
+    "Bounded host-log absence remains a negative observation and is never promoted to proof that no ESXi interrupt or service path ran."
+  ],
+  "observed": [
+    "The immutable 12-case O4/g101 plan completed 12 of 12 cases; every case entered Correctable-only injection, matched the frozen oracle, completed cleanup, required no containment, and left the outer QEMU running.",
+    "First/multiple repeated B0 reception kept Endpoint CES at 0x00000001 and CED set, while Root Correctable Status changed from 0x00000001 to 0x00000003 and Source remained 0x0101.",
+    "Endpoint-only W1C cleared Endpoint CES/CED without clearing Root Correctable Status or Source; after re-priming, Root-only W1C cleared Root Correctable Status without clearing Endpoint CES/CED. Source is not interpreted when Root COR_RCV is clear.",
+    "B0 followed by B1 produced Endpoint CES 0x00000041 with CED set and Root Correctable Status 0x00000003 with Source 0x0101.",
+    "After Endpoint CES, CED, and Root Correctable Status were cleared, B0 re-armed the same Endpoint CES 0x00000001, CED, Root Status 0x00000001, and Source 0x0101 state.",
+    "Each sequence produced one stable observation digest across three repeats; the offline verifier reported FULL_PLAN, verified=true, requireCompleteSatisfied=true, 12 exact cases, 822 case-manifest entries, and 840 root-manifest entries.",
+    "All observed Uncorrectable status surfaces remained zero, all gates were restored, and the maximum observed safety-poll gap was 0.04229792801197618 seconds under the 0.05-second limit.",
+    "No matching AER line was observed in the strict per-source host log windows. This does not establish absence of interrupt delivery or ESXi service execution."
+  ],
+  "verdict": "PARTIAL",
+  "artifacts": [
+    {
+      "path": "evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json",
+      "sha256": "213dfe8908dac6e38a2c4f47699fcf07d6cafa33bc929d87319097d044c03d4f",
+      "kind": "SUMMARY"
+    },
+    {
+      "path": "evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json",
+      "sha256": "847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f",
+      "kind": "L0_TRACE"
+    },
+    {
+      "path": "contracts/vmware-aer-root-sequence-public-model-candidate-v1.json",
+      "sha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a",
+      "kind": "INPUT"
+    },
+    {
+      "path": "contracts/vmware-aer-root-sequence-oracle-profile.schema.json",
+      "sha256": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57",
+      "kind": "INPUT"
+    },
+    {
+      "path": "vmware-esxi8-lab/test_esxi_aer_root_sequence.py",
+      "sha256": "7d98adb07faa80f54f5c67c38039c8281307dd3d28f63d3d0641299248cb2f65",
+      "kind": "INPUT"
+    }
+  ],
+  "limitations": [
+    "The verdict remains PARTIAL because only the exact nested ESXi 8.0.3 build-24280767 O4/g101 synthetic-endpoint slice is established.",
+    "O0, other E/M/R gates, Root Command notification effects, guest-write isolation, lifecycle clear and reuse, and physical-device health or recovery remain unverified.",
+    "No interrupt delivery or ESXi service attribution is inferred from bounded log absence.",
+    "No VMware private code, internal control flow, filter, synthesis, or service implementation is reconstructed.",
+    "Synthetic Correctable injection does not qualify a physical link or physical device.",
+    "This VMware reference result grants no Qman implementation, qualification, acceptance-case, risk, gate, or release closure."
+  ]
+}

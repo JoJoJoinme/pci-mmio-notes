@@ -9,12 +9,12 @@
   "properties": {
     "schemaVersion": {"const": 1},
     "envelopeId": {"$ref": "#/$defs/id"},
-    "anchorKind": {"enum": ["TRUST_KEY_RING", "SUPPORTED_CATALOG"]},
+    "anchorKind": {"enum": ["TRUST_KEY_RING", "SUPPORTED_CATALOG", "HOST_SNAPSHOT"]},
     "authorityId": {"$ref": "#/$defs/id"},
     "subjectId": {"$ref": "#/$defs/id"},
     "anchorPath": {"$ref": "#/$defs/id"},
     "anchorBlobSha256": {"$ref": "#/$defs/digest"},
-    "anchorSchemaRef": {"enum": ["contracts/directpath-trust-rollback-anchor.schema.json", "contracts/directpath-catalog-rollback-anchor.schema.json"]},
+    "anchorSchemaRef": {"enum": ["contracts/directpath-trust-rollback-anchor.schema.json", "contracts/directpath-catalog-rollback-anchor.schema.json", "contracts/directpath-host-snapshot-rollback-anchor.schema.json"]},
     "anchorSchemaSha256": {"$ref": "#/$defs/digest"},
     "anchorDigest": {"$ref": "#/$defs/digest"},
     "anchorVersion": {"$ref": "#/$defs/safePositiveInteger"},
@@ -29,8 +29,15 @@
   "allOf": [
     {
       "if": {"properties": {"anchorKind": {"const": "TRUST_KEY_RING"}}, "required": ["anchorKind"]},
-      "then": {"properties": {"anchorSchemaRef": {"const": "contracts/directpath-trust-rollback-anchor.schema.json"}}},
-      "else": {"properties": {"anchorSchemaRef": {"const": "contracts/directpath-catalog-rollback-anchor.schema.json"}}}
+      "then": {"properties": {"anchorSchemaRef": {"const": "contracts/directpath-trust-rollback-anchor.schema.json"}}}
+    },
+    {
+      "if": {"properties": {"anchorKind": {"const": "SUPPORTED_CATALOG"}}, "required": ["anchorKind"]},
+      "then": {"properties": {"anchorSchemaRef": {"const": "contracts/directpath-catalog-rollback-anchor.schema.json"}}}
+    },
+    {
+      "if": {"properties": {"anchorKind": {"const": "HOST_SNAPSHOT"}}, "required": ["anchorKind"]},
+      "then": {"properties": {"anchorSchemaRef": {"const": "contracts/directpath-host-snapshot-rollback-anchor.schema.json"}}}
     }
   ],
   "$defs": {
@@ -50,7 +57,8 @@
       }
     }
   },
-  "x-qmanFreshnessRule": "The verifier generates verifierNonce from at least 128 bits of fresh randomness and supplies it directly to the independent authority and release evaluator; it is never read from the map, target repository or evidence repository. The authority reads its current committed monotonic record after receiving that nonce and returns this envelope. observedAt <= signedAt <= expiresAt, expiresAt-observedAt <= 300 seconds, and evaluator time is inside that interval. subjectId, anchor bytes/hash/schema, digest and versions byte-equal the live record.",
+  "x-qmanFreshnessRule": "The verifier generates verifierNonce from at least 128 bits of fresh randomness and supplies it directly to the independent authority and release evaluator; it is never read from the map, target repository or evidence repository. The authority reads its current committed monotonic record after receiving that nonce and returns this envelope. observedAt <= signedAt <= min(expiresAt,evaluatorTime+30 seconds), expiresAt-observedAt <= 300 seconds, and evaluator time is inside that interval. subjectId, anchor bytes/hash/schema, digest and versions byte-equal the live record.",
+  "x-qmanUsageSeparationRule": "Each security-relevant read uses a distinct verifier nonce. In HostSnapshot publication, the request's predecessor-anchor read, rollback-authority zero-unresolved preflight, post-decision/finalization read, and outbox dispatch read are separate challenges and receipts; one envelope or nonce cannot be replayed across those phases.",
   "x-qmanDigestAndSignatureRule": "Set freshnessReceiptDigest to null and rootSignatures to [], retain every other field, and hash CANONICAL-JSON-V1 bytes into freshnessReceiptDigest. Each root signature covers ASCII(QMAN-DIRECTPATH/ANCHOR-FRESHNESS/V1) || 0x00 || CANONICAL-JSON-V1({rootKeyId,signedAt,freshnessReceiptDigest}). Distinct root principal/key material satisfies the independently supplied root-set quorum.",
   "x-qmanAuthorityRule": "The authority, nonce transport and current-record read are independent of target code, DirectPath control/database, map publisher and evidence repository. Without a matching live nonce response, the verifier may prove a historical signature but must report freshness=NOT_PROVEN and QUALIFIED/release remain false."
 }

@@ -6,14 +6,55 @@
   "scope": "PRODUCT",
   "riskIds": ["R04", "R19"],
   "requiredTechStories": ["TS-F1-01", "TS-F8-02"],
+  "requiredPortIds": [
+    "PORT-AUDIT-EVIDENCE",
+    "PORT-CAPABILITY-ENGINE",
+    "PORT-CONTROL-API",
+    "PORT-INVENTORY-SNAPSHOT"
+  ],
+  "requiredOperationIds": [
+    "OP-CAPTURE-HOST-SNAPSHOT",
+    "OP-EMIT-AUDIT-EVIDENCE",
+    "OP-EVALUATE-CAPABILITY",
+    "OP-QUERY-DIRECTPATH"
+  ],
+  "requiredTransitionIds": [],
+  "requiredEntityIds": [
+    "ENTITY-AUDIT-EVENT",
+    "ENTITY-AVAILABILITY-AUTHORITY",
+    "ENTITY-BUNDLE-LEASE",
+    "ENTITY-DEPENDENCY-BUNDLE",
+    "ENTITY-DEVICE-RECORD",
+    "ENTITY-HOST-ACTION-JOURNAL",
+    "ENTITY-HOST-AUTHORITY",
+    "ENTITY-HOST-SNAPSHOT",
+    "ENTITY-OPERATION-LEASE",
+    "ENTITY-QUARANTINE-RECORD"
+  ],
+  "requiredReasonIds": [
+    "INVENTORY_EPOCH_CHANGED",
+    "SNAPSHOT_INCOMPLETE",
+    "STALE_RESOURCE_VERSION"
+  ],
+  "requiredArtifactSchemaRefs": [
+    "contracts/directpath-authority-entities.schema.json",
+    "contracts/directpath-inventory-verification-receipt.schema.json",
+    "contracts/directpath-inventory-verifier-algorithm.schema.json",
+    "contracts/directpath-operation-envelope.schema.json",
+    "contracts/directpath-operation-payload.schema.json",
+    "contracts/directpath-portable-entities.schema.json",
+    "contracts/directpath-portable-hash-subjects.schema.json",
+    "contracts/directpath-query-read-trace.schema.json"
+  ],
   "dependsOnCaseIds": [],
-  "blocker": "Pure evaluator and snapshot-store component tests cover deterministic reads, but the production API, cache, inventory publisher and host agent are not integrated under live counter, driver, lease and reset observations.",
+  "blocker": "Pure evaluator, verified inventory closure and guarded-read component tests cover deterministic semantics, but the Qman product query path has not yet proven read-only behavior against live repository versions, lease/quarantine rows, host journals, driver counters and reset observations.",
   "targetMilestone": "G1",
   "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
   "assertions": [
     "repeated reads of one immutable publisher snapshot produce the same semantic and decision hashes",
     "capability reads do not bind, unbind, reset, open exclusive VFIO handles, mutate leases or increment device generations",
     "availability changes may change the executable decision while leaving the hardware capability projection unchanged",
-    "a concurrent complete snapshot publication yields either the old complete epoch or the new complete epoch, never a mixed view"
+    "a concurrent complete snapshot publication yields either the old complete epoch or the new complete epoch, never a mixed view",
+    "the product query records before and after versions for leases, quarantine, inventory authority and host journal while performing no admission transaction"
   ]
 }

@@ -1,0 +1,711 @@
+{
+  "subjectType": "QMAN_AER_GOLDEN_VECTOR_SET",
+  "schemaVersion": 1,
+  "vectorSetId": "QMAN-AER-CORRECTABLE-GOLDEN-V1",
+  "authorityBoundary": "COMPONENT_PREMISE",
+  "productAuthorized": false,
+  "normativeSourceState": "CANDIDATE_NOT_IN_PORTABLE_CLOSURE",
+  "implementationBindings": [
+    {
+      "role": "INDEPENDENT_GENERATOR_VERIFIER",
+      "path": "tools/generate_directpath_aer_contract.py",
+      "sha256": "sha256:607ea8ea113c514ff70ce23f915f87201d0300f9fcc8c3aca0e811e5a050830f"
+    },
+    {
+      "role": "CONFORMANCE_TEST",
+      "path": "qman-directpath-core/tests/test_aer_normative_contract.py",
+      "sha256": "sha256:b714bded95731c80a4df9809f78300ed557f7539d4571acff221762971dfb0f2"
+    }
+  ],
+  "digestDomains": {
+    "policy": "QMAN-DIRECTPATH/AER-POLICY/V1\u0000",
+    "caseTuple": "QMAN-DIRECTPATH/AER-CASE-TUPLE/V1\u0000",
+    "caseMatrix": "QMAN-DIRECTPATH/AER-CASE-MATRIX/V1\u0000",
+    "ownerBinding": "QMAN-DIRECTPATH/AER-OWNER-BINDING/V1\u0000",
+    "layoutBinding": "QMAN-DIRECTPATH/AER-LAYOUT-BINDING/V1\u0000",
+    "oracleBinding": "QMAN-DIRECTPATH/AER-ORACLE-BINDING/V1\u0000",
+    "caseResult": "QMAN-DIRECTPATH/AER-CASE-RESULT/V1\u0000",
+    "componentReceipt": "QMAN-DIRECTPATH/AER-COMPONENT-RECEIPT/V1\u0000",
+    "verifierAlgorithm": "QMAN-DIRECTPATH/AER-VERIFIER-ALGORITHM/V1\u0000",
+    "goldenVectors": "QMAN-DIRECTPATH/AER-GOLDEN-VECTORS/V1\u0000"
+  },
+  "positivePolicyVectors": [
+    {
+      "vectorId": "VISIBLE_PHYSICAL_FILTERED_W1C",
+      "document": {
+        "subjectType": "QMAN_AER_POLICY",
+        "schemaVersion": 1,
+        "policyId": "qman-aer-visible-physical-v1",
+        "correctableOnly": true,
+        "extendedCapability": {
+          "headerExposure": "VISIBLE",
+          "bodyExposure": "VISIBLE",
+          "hiddenBodyReadProjection": "ZERO"
+        },
+        "writePipeline": "FILTER_BEFORE_VFIO",
+        "unknownFieldAction": "DENY",
+        "fields": {
+          "PCIE_DEVICE_CONTROL": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "PCIE_DEVICE_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 1,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 61889,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_MASK": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_COMMAND": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 3,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 3,
+            "shadowW1cMask": 0
+          },
+          "ERROR_SOURCE_ID": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 65535,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          }
+        },
+        "aerPolicyDigest": "sha256:2476b889ef4a2a5b60f0526362cbff5f5a073d77c5120dd7ccbd36b2f2f2cbca"
+      },
+      "expectedAerPolicyDigest": "sha256:2476b889ef4a2a5b60f0526362cbff5f5a073d77c5120dd7ccbd36b2f2f2cbca"
+    },
+    {
+      "vectorId": "HIDDEN_ZERO_DENY",
+      "document": {
+        "subjectType": "QMAN_AER_POLICY",
+        "schemaVersion": 1,
+        "policyId": "qman-aer-hidden-zero-deny-v1",
+        "correctableOnly": true,
+        "extendedCapability": {
+          "headerExposure": "VISIBLE",
+          "bodyExposure": "HIDDEN",
+          "hiddenBodyReadProjection": "ZERO"
+        },
+        "writePipeline": "FILTER_BEFORE_VFIO",
+        "unknownFieldAction": "DENY",
+        "fields": {
+          "PCIE_DEVICE_CONTROL": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "PCIE_DEVICE_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_MASK": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_COMMAND": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 3,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ERROR_SOURCE_ID": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 65535,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          }
+        },
+        "aerPolicyDigest": "sha256:77ce9cb19b6ab3f5f8805dbc9345fb0aace1fc881e5c0f43b2bff67e89e19374"
+      },
+      "expectedAerPolicyDigest": "sha256:77ce9cb19b6ab3f5f8805dbc9345fb0aace1fc881e5c0f43b2bff67e89e19374"
+    },
+    {
+      "vectorId": "HIDDEN_SHADOW_FILTERED_W1C",
+      "document": {
+        "subjectType": "QMAN_AER_POLICY",
+        "schemaVersion": 1,
+        "policyId": "qman-aer-hidden-shadow-v1",
+        "correctableOnly": true,
+        "extendedCapability": {
+          "headerExposure": "HIDDEN",
+          "bodyExposure": "HIDDEN",
+          "hiddenBodyReadProjection": "SHADOW"
+        },
+        "writePipeline": "FILTER_BEFORE_VFIO",
+        "unknownFieldAction": "DENY",
+        "fields": {
+          "PCIE_DEVICE_CONTROL": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "PCIE_DEVICE_STATUS": {
+            "readProjection": "SHADOW",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 1
+          },
+          "CORRECTABLE_ERROR_STATUS": {
+            "readProjection": "SHADOW",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 61889
+          },
+          "CORRECTABLE_ERROR_MASK": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_COMMAND": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_STATUS": {
+            "readProjection": "SHADOW",
+            "guestReadAllowMask": 3,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 3
+          },
+          "ERROR_SOURCE_ID": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 65535,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          }
+        },
+        "aerPolicyDigest": "sha256:7c2cbde74870d43d91eae302e90bb2fef75f83087580d618f915e6cdc49ffbde"
+      },
+      "expectedAerPolicyDigest": "sha256:7c2cbde74870d43d91eae302e90bb2fef75f83087580d618f915e6cdc49ffbde"
+    }
+  ],
+  "negativePolicyVectors": [
+    {
+      "vectorId": "UNCORRECTABLE_MODE_FORBIDDEN",
+      "document": {
+        "subjectType": "QMAN_AER_POLICY",
+        "schemaVersion": 1,
+        "policyId": "negative-uncorrectable-mode-forbidden",
+        "correctableOnly": false,
+        "extendedCapability": {
+          "headerExposure": "VISIBLE",
+          "bodyExposure": "VISIBLE",
+          "hiddenBodyReadProjection": "ZERO"
+        },
+        "writePipeline": "FILTER_BEFORE_VFIO",
+        "unknownFieldAction": "DENY",
+        "fields": {
+          "PCIE_DEVICE_CONTROL": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "PCIE_DEVICE_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 1,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 61889,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_MASK": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_COMMAND": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 3,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 3,
+            "shadowW1cMask": 0
+          },
+          "ERROR_SOURCE_ID": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 65535,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          }
+        },
+        "aerPolicyDigest": "sha256:6683754385f2a10d17c0adfed04936f8d4346960afbcf452c9cda3e3a88cba14"
+      },
+      "expectedSchemaValid": false,
+      "expectedErrorCode": "AER_UNCORRECTABLE_FORBIDDEN"
+    },
+    {
+      "vectorId": "VFIO_BEFORE_FILTER_FORBIDDEN",
+      "document": {
+        "subjectType": "QMAN_AER_POLICY",
+        "schemaVersion": 1,
+        "policyId": "negative-vfio-before-filter-forbidden",
+        "correctableOnly": true,
+        "extendedCapability": {
+          "headerExposure": "VISIBLE",
+          "bodyExposure": "VISIBLE",
+          "hiddenBodyReadProjection": "ZERO"
+        },
+        "writePipeline": "VFIO_BEFORE_FILTER",
+        "unknownFieldAction": "DENY",
+        "fields": {
+          "PCIE_DEVICE_CONTROL": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "PCIE_DEVICE_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 1,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 61889,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_MASK": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_COMMAND": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 3,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 3,
+            "shadowW1cMask": 0
+          },
+          "ERROR_SOURCE_ID": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 65535,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          }
+        },
+        "aerPolicyDigest": "sha256:eb6e290796a48f6008d17837fcac9243c1c794eefdbbfe7ecb19ac3da8df4c4d"
+      },
+      "expectedSchemaValid": false,
+      "expectedErrorCode": "AER_WRITE_ORDER_INVALID"
+    },
+    {
+      "vectorId": "UNKNOWN_FIELD_ALLOW_FORBIDDEN",
+      "document": {
+        "subjectType": "QMAN_AER_POLICY",
+        "schemaVersion": 1,
+        "policyId": "negative-unknown-field-allow-forbidden",
+        "correctableOnly": true,
+        "extendedCapability": {
+          "headerExposure": "VISIBLE",
+          "bodyExposure": "VISIBLE",
+          "hiddenBodyReadProjection": "ZERO"
+        },
+        "writePipeline": "FILTER_BEFORE_VFIO",
+        "unknownFieldAction": "ALLOW",
+        "fields": {
+          "PCIE_DEVICE_CONTROL": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "PCIE_DEVICE_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 1,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 61889,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_MASK": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_COMMAND": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 3,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 3,
+            "shadowW1cMask": 0
+          },
+          "ERROR_SOURCE_ID": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 65535,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          }
+        },
+        "aerPolicyDigest": "sha256:8f5a56c67d47037cc4fbc88d33ebbdb416cb4ac932fc9115d19c801c55cd5c81"
+      },
+      "expectedSchemaValid": false,
+      "expectedErrorCode": "AER_UNKNOWN_FIELD_POLICY_INVALID"
+    },
+    {
+      "vectorId": "PHYSICAL_SHADOW_W1C_OVERLAP",
+      "document": {
+        "subjectType": "QMAN_AER_POLICY",
+        "schemaVersion": 1,
+        "policyId": "negative-physical-shadow-w1c-overlap",
+        "correctableOnly": true,
+        "extendedCapability": {
+          "headerExposure": "VISIBLE",
+          "bodyExposure": "VISIBLE",
+          "hiddenBodyReadProjection": "ZERO"
+        },
+        "writePipeline": "FILTER_BEFORE_VFIO",
+        "unknownFieldAction": "DENY",
+        "fields": {
+          "PCIE_DEVICE_CONTROL": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "PCIE_DEVICE_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 1,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 61889,
+            "shadowW1cMask": 61889
+          },
+          "CORRECTABLE_ERROR_MASK": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_COMMAND": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 3,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 3,
+            "shadowW1cMask": 0
+          },
+          "ERROR_SOURCE_ID": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 65535,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          }
+        },
+        "aerPolicyDigest": "sha256:04af81a858b1814d9967b6c4878df1191ed125354fdd447b5bd1517f6f0873a9"
+      },
+      "expectedSchemaValid": true,
+      "expectedErrorCode": "AER_W1C_MASK_OVERLAP"
+    },
+    {
+      "vectorId": "HIDDEN_BODY_PHYSICAL_WRITE_LEAK",
+      "document": {
+        "subjectType": "QMAN_AER_POLICY",
+        "schemaVersion": 1,
+        "policyId": "negative-hidden-body-physical-write-leak",
+        "correctableOnly": true,
+        "extendedCapability": {
+          "headerExposure": "VISIBLE",
+          "bodyExposure": "HIDDEN",
+          "hiddenBodyReadProjection": "ZERO"
+        },
+        "writePipeline": "FILTER_BEFORE_VFIO",
+        "unknownFieldAction": "DENY",
+        "fields": {
+          "PCIE_DEVICE_CONTROL": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "PCIE_DEVICE_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 1,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 61889,
+            "shadowW1cMask": 0
+          },
+          "CORRECTABLE_ERROR_MASK": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 61889,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_COMMAND": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 1,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          },
+          "ROOT_ERROR_STATUS": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 3,
+            "writeDisposition": "FILTERED_W1C",
+            "physicalW1cAllowMask": 3,
+            "shadowW1cMask": 0
+          },
+          "ERROR_SOURCE_ID": {
+            "readProjection": "PHYSICAL",
+            "guestReadAllowMask": 65535,
+            "writeDisposition": "DENY",
+            "physicalW1cAllowMask": 0,
+            "shadowW1cMask": 0
+          }
+        },
+        "aerPolicyDigest": "sha256:9e11cab7b5b6b91c4b16b517f88d8dfa6c5ddd68e284f0b5447472b1652e5990"
+      },
+      "expectedSchemaValid": true,
+      "expectedErrorCode": "AER_HIDDEN_WRITE_LEAK"
+    }
+  ],
+  "matrixVector": {
+    "matrixId": "QMAN-AER-M24-M29-COMPONENT-MATRIX-V1",
+    "matrixDigest": "sha256:77b75cf16f4a21c3e24a0d940c1051ec655990fe17aa94962675dbef63dd1a91",
+    "matrixDocumentSha256": "sha256:098c069c8145f7d44bbb72f53a5321e9526c055665089650a21da89ab967342a",
+    "tupleCount": 133,
+    "caseTupleCounts": {
+      "M24": 8,
+      "M25": 64,
+      "M26": 24,
+      "M27": 9,
+      "M28": 15,
+      "M29": 13
+    }
+  },
+  "verifierAlgorithm": {
+    "document": {
+      "subjectType": "QMAN_AER_VERIFIER_ALGORITHM",
+      "schemaVersion": 1,
+      "algorithmId": "QMAN-AER-COMPONENT-VERIFIER-V1",
+      "authorityBoundary": "COMPONENT_PREMISE",
+      "productAuthorized": false,
+      "normativeSourceState": "CANDIDATE_NOT_IN_PORTABLE_CLOSURE",
+      "canonicalization": "CANONICAL-JSON-V1",
+      "verifierImplementationClass": "INDEPENDENT_FROM_TARGET_IMPLEMENTATION",
+      "targetImplementationImportsAllowed": false,
+      "resourceBudgets": {
+        "policyMaxBytes": 65536,
+        "matrixMaxBytes": 524288,
+        "goldenMaxBytes": 524288,
+        "receiptMaxBytes": 2097152,
+        "schemaMaxBytes": 1048576,
+        "boundFileMaxBytes": 1048576,
+        "maxNodes": 100000,
+        "maxDepth": 32,
+        "maxStringUtf8Bytes": 4096,
+        "maxTotalStringUtf8Bytes": 8388608
+      },
+      "schemaBindings": [
+        {
+          "path": "contracts/directpath-aer-correctable-policy.schema.json",
+          "sha256": "sha256:492714b2edccb1b95a2ace5d6c499966b286406044b20e2bc282c4f987522fa5"
+        },
+        {
+          "path": "contracts/directpath-aer-case-matrix.schema.json",
+          "sha256": "sha256:20c7ebaf2ae34fa5b57d21b2b4e98d5a5002e8d87bea1014e2b21c0f550aea36"
+        },
+        {
+          "path": "contracts/directpath-aer-component-receipt.schema.json",
+          "sha256": "sha256:275907e594dc7efcb331c6255647566aea2c1f536a1a3d3258a609bea11fb9fe"
+        },
+        {
+          "path": "contracts/directpath-aer-verifier-algorithm.schema.json",
+          "sha256": "sha256:87105ee23a982857e1f4098c32cb1e5950d163710c0c12c8d0f7c4957facd52d"
+        }
+      ],
+      "implementationBindings": [
+        {
+          "role": "INDEPENDENT_GENERATOR_VERIFIER",
+          "path": "tools/generate_directpath_aer_contract.py",
+          "sha256": "sha256:607ea8ea113c514ff70ce23f915f87201d0300f9fcc8c3aca0e811e5a050830f"
+        },
+        {
+          "role": "CONFORMANCE_TEST",
+          "path": "qman-directpath-core/tests/test_aer_normative_contract.py",
+          "sha256": "sha256:b714bded95731c80a4df9809f78300ed557f7539d4571acff221762971dfb0f2"
+        }
+      ],
+      "caseMatrixDigest": "sha256:77b75cf16f4a21c3e24a0d940c1051ec655990fe17aa94962675dbef63dd1a91",
+      "goldenVectorSetId": "QMAN-AER-CORRECTABLE-GOLDEN-V1",
+      "requiredCaseIds": [
+        "M24",
+        "M25",
+        "M26",
+        "M27",
+        "M28",
+        "M29"
+      ],
+      "requiredDimensions": [
+        "GUEST_WRITES",
+        "IRQ_DELIVERY",
+        "SERVICE_ATTRIBUTION",
+        "DEVICE_HEALTH",
+        "PHYSICAL_RECOVERY"
+      ],
+      "validationStages": [
+        "RESOURCE_BUDGETS",
+        "DUPLICATE_SAFE_JSON_PARSE",
+        "SCHEMA_CLOSURE",
+        "FIXED_BUNDLE_REPLAY",
+        "POLICY_SEMANTIC_MASKS",
+        "POLICY_DIGEST_REPLAY",
+        "MATRIX_TUPLE_DIGEST_REPLAY",
+        "MATRIX_COVERAGE_EXACT",
+        "OWNER_LAYOUT_BINDING",
+        "ORACLE_STATE_BOUNDARY",
+        "CASE_RESULT_EXACTNESS",
+        "DIMENSION_CLEANUP_REUSE",
+        "ARTIFACT_AUTHORITY_BOUNDARY",
+        "COMPONENT_RECEIPT_DIGEST_REPLAY",
+        "PRODUCT_AUTHORIZATION_HARD_FALSE"
+      ],
+      "digestDomains": {
+        "policy": "QMAN-DIRECTPATH/AER-POLICY/V1\u0000",
+        "caseTuple": "QMAN-DIRECTPATH/AER-CASE-TUPLE/V1\u0000",
+        "caseMatrix": "QMAN-DIRECTPATH/AER-CASE-MATRIX/V1\u0000",
+        "ownerBinding": "QMAN-DIRECTPATH/AER-OWNER-BINDING/V1\u0000",
+        "layoutBinding": "QMAN-DIRECTPATH/AER-LAYOUT-BINDING/V1\u0000",
+        "oracleBinding": "QMAN-DIRECTPATH/AER-ORACLE-BINDING/V1\u0000",
+        "caseResult": "QMAN-DIRECTPATH/AER-CASE-RESULT/V1\u0000",
+        "componentReceipt": "QMAN-DIRECTPATH/AER-COMPONENT-RECEIPT/V1\u0000",
+        "verifierAlgorithm": "QMAN-DIRECTPATH/AER-VERIFIER-ALGORITHM/V1\u0000",
+        "goldenVectors": "QMAN-DIRECTPATH/AER-GOLDEN-VECTORS/V1\u0000"
+      },
+      "algorithmDigest": "sha256:bbf2f79b07e4271005e15c578581ca6f2efbf88ed75deacb6ed379756768a060"
+    },
+    "expectedAlgorithmDigest": "sha256:bbf2f79b07e4271005e15c578581ca6f2efbf88ed75deacb6ed379756768a060"
+  },
+  "goldenVectorSetDigest": "sha256:afb06ab889f29cffd308f43deb41918b7d35b6b9a49778f87b2a8f5713b0b615"
+}

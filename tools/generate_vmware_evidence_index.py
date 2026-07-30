@@ -39,12 +39,12 @@ RUN_IDS = {
         "20260723T003751Z-16496a4c",
         "20260723T001720Z-e19407a0",
         "20260723T004345Z-fae1a783",
-        "20260723-qemu11-aer-emr-control-v1",
-        "20260723-qemu11-aer-emr-allbits-v1",
         "20260723-esxi8-aer-virtio-idle-emr-v2",
         "20260723-esxi8-aer-virtio-active-emr-representative-v2",
         "20260723-esxi8-aer-virtio-active-g101-final-v1",
         "20260723-esxi8-aer-virtio-active-g100-parser-final-v1",
+        "20260729-esxi8-aer-root-o4-v17-full1",
+        "20260730-esxi8-aer-root-o0-v19-full1",
     ],
     "VMW-RESET-001": ["20260712-esxi8-edu-msi-dma-reset-v4"],
     "VMW-TEARDOWN-001": ["20260714-esxi8-edu-dma-teardown-v5"],
@@ -59,7 +59,7 @@ RUN_IDS = {
     "VMW-CLUSTER-FAILURE-001": ["20260711-host-crash"],
     "VMW-OPS-001": ["20260718-esxi8-owner-activation-v1"],
     "VMW-EVIDENCE-001": ["20260714-esxi8-edu-dma-teardown-v5"],
-    "VMW-TRACE-001": ["20260723-vmware-evidence-index-v2"],
+    "VMW-TRACE-001": ["20260730-vmware-evidence-index-v5"],
 }
 
 NO_RUN_REASONS = {
@@ -302,7 +302,7 @@ def build() -> dict[str, Any]:
 
     return {
         "schemaVersion": 1,
-        "asOf": "2026-07-23",
+        "asOf": "2026-07-30",
         "subject": "VMWARE_ESXI",
         "sourceModel": "contracts/vmware-behavior-model.json",
         "hashAlgorithm": "SHA-256",

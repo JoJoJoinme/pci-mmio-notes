@@ -5,6 +5,7 @@
   "description": "Closed, backend-neutral request and result payload profiles for all 35 frozen DirectPath operations. These profiles define the portable wire semantics without assuming private Qman service names, database tables, or source-tree fields.",
   "x-qmanInteroperableIntegerRange": "Every JSON numeric integer is in -9007199254740991..9007199254740991; wider unsigned counters and address quantities use canonicalDecimal strings.",
   "x-envelopeBindingRule": "The enclosing directpath-operation-envelope operationId and envelopeKind MUST equal this payload's operationId and direction; payloadSchemaAuthority MUST be PORTABLE_CONTRACT; payloadSchemaRef MUST equal the indexed canonical fragment; payloadSchemaSha256 binds the Git blob bytes of this complete schema; payloadHash is SHA-256(CANONICAL-JSON-V1(payload)).",
+  "x-operationLeaseBindingRule": "Every operationLeaseBinding or releaseOperationLeaseBinding is an exact projection of the enclosing envelope operationLeaseCapabilityOrNull for operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion, and admissionBindingHashOrNull. ASSIGNMENT_PREPARE requires the exact non-null immutable OperationAdmissionBinding bindingHash stored on the live OperationLease; every other current lease type requires null. capabilityHash binds the complete enclosing sealed capability and does not replace field equality.",
   "x-resultBindingRule": "Envelope status/retryable/reason and committed authority fields MUST be an exact projection of body.outcome, body.errorOrNull, and body.casResult. A CONFLICT has at least one typed CAS conflict and no output; a failed result cannot masquerade as a successful operation-specific output.",
   "x-referenceRule": "entityRef binds an authority aggregate identity/version/generation/content hash. documentRef binds a backend-neutral semantic document kind, schema reference, version, and canonical content hash. A target mapping may choose storage and RPC layout but may not weaken or relabel these semantics.",
   "x-operationProfileIndex": [
@@ -549,6 +550,9 @@
       "enum": [
         "ENTITY-CONTROLLER-AUTHORITY",
         "ENTITY-HOST-AUTHORITY",
+        "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+        "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY",
+        "ENTITY-AVAILABILITY-AUTHORITY",
         "ENTITY-HOST-SNAPSHOT",
         "ENTITY-DEVICE-RECORD",
         "ENTITY-TRUST-KEY-RING",
@@ -571,6 +575,7 @@
         "ENTITY-RELOCATION-RUN",
         "ENTITY-IDEMPOTENCY-RECORD",
         "ENTITY-OPERATION-LEASE",
+        "ENTITY-OPERATION-ADMISSION-BINDING",
         "ENTITY-RELEASE-OWNERSHIP-GUARD",
         "ENTITY-AUDIT-EVENT",
         "ENTITY-OUTBOX-EVENT"
@@ -587,6 +592,10 @@
         "TRUST_ROOT_SET",
         "TRUST_ROLLBACK_ANCHOR",
         "CATALOG_ROLLBACK_ANCHOR",
+        "HOST_SNAPSHOT_ROLLBACK_ANCHOR",
+        "HOST_SNAPSHOT_FRESHNESS_POLICY",
+        "ANCHOR_FRESHNESS_ENVELOPE",
+        "CAPABILITY_POLICY",
         "CAPABILITY_DECISION",
         "DEPENDENCY_BUNDLE",
         "GUEST_RESOURCE_PLAN",
@@ -857,6 +866,7 @@
         "scopeHash",
         "holderControllerGeneration",
         "operationLeaseResourceVersion",
+        "admissionBindingHashOrNull",
         "capabilityHash"
       ],
       "properties": {
@@ -881,10 +891,48 @@
         "operationLeaseResourceVersion": {
           "$ref": "#/$defs/version"
         },
+        "admissionBindingHashOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/digest"
+            }
+          ]
+        },
         "capabilityHash": {
           "$ref": "#/$defs/digest"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "leaseType": {
+                "const": "ASSIGNMENT_PREPARE"
+              }
+            },
+            "required": [
+              "leaseType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "admissionBindingHashOrNull": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "admissionBindingHashOrNull": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
     },
     "processIdentity": {
       "type": "object",
@@ -3609,6 +3657,29 @@
         }
       }
     },
+    "snapshotPublicationAuthorityConflict": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/casConflict"
+        },
+        {
+          "properties": {
+            "entityType": {
+              "enum": [
+                "ENTITY-HOST-AUTHORITY",
+                "ENTITY-AVAILABILITY-AUTHORITY",
+                "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+                "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY"
+              ]
+            }
+          },
+          "required": [
+            "entityType"
+          ]
+        }
+      ],
+      "x-qmanPublicationConflictRule": "Each conflict identifies one failed compare from the exact four-authority publication expectation. No device row, snapshot row, audit row, outbox row or caller-selected entity may be reported as a publication authority conflict."
+    },
     "casResult": {
       "type": "object",
       "additionalProperties": false,
@@ -3751,6 +3822,348 @@
         }
       ]
     },
+    "snapshotPublicationCasResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "expectationHashOrNull",
+        "committedAuthorityHashOrNull",
+        "expectedHostAuthorityResourceVersionOrNull",
+        "expectedAvailabilityAuthorityResourceVersionOrNull",
+        "expectedCapabilityPolicyAuthorityResourceVersionOrNull",
+        "expectedCapabilityPolicyHashOrNull",
+        "expectedFreshnessPolicyAuthorityResourceVersionOrNull",
+        "expectedFreshnessPolicyHashOrNull",
+        "committedHostAuthorityResourceVersionOrNull",
+        "committedAvailabilityAuthorityResourceVersionOrNull",
+        "mutationSetHashOrNull",
+        "commitRecordDigestOrNull",
+        "publicationMutationCount",
+        "conflicts"
+      ],
+      "properties": {
+        "decision": {
+          "enum": ["NOT_APPLICABLE", "COMMITTED", "NO_CHANGE", "CONFLICT"]
+        },
+        "expectationHashOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/digest"}
+          ]
+        },
+        "committedAuthorityHashOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/digest"}
+          ]
+        },
+        "expectedHostAuthorityResourceVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/version"}
+          ]
+        },
+        "expectedAvailabilityAuthorityResourceVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/version"}
+          ]
+        },
+        "expectedCapabilityPolicyAuthorityResourceVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/version"}
+          ]
+        },
+        "expectedCapabilityPolicyHashOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/digest"}
+          ]
+        },
+        "expectedFreshnessPolicyAuthorityResourceVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/version"}
+          ]
+        },
+        "expectedFreshnessPolicyHashOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/digest"}
+          ]
+        },
+        "committedHostAuthorityResourceVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/version"}
+          ]
+        },
+        "committedAvailabilityAuthorityResourceVersionOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/version"}
+          ]
+        },
+        "mutationSetHashOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/digest"}
+          ]
+        },
+        "commitRecordDigestOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/digest"}
+          ]
+        },
+        "publicationMutationCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4102
+        },
+        "conflicts": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/snapshotPublicationAuthorityConflict"}
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"decision": {"const": "COMMITTED"}},
+            "required": ["decision"]
+          },
+          "then": {
+            "properties": {
+              "expectationHashOrNull": {"$ref": "#/$defs/digest"},
+              "committedAuthorityHashOrNull": {"$ref": "#/$defs/digest"},
+              "expectedHostAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedAvailabilityAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedCapabilityPolicyAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedCapabilityPolicyHashOrNull": {"$ref": "#/$defs/digest"},
+              "expectedFreshnessPolicyAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedFreshnessPolicyHashOrNull": {"$ref": "#/$defs/digest"},
+              "committedHostAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "committedAvailabilityAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "mutationSetHashOrNull": {"$ref": "#/$defs/digest"},
+              "commitRecordDigestOrNull": {"$ref": "#/$defs/digest"},
+              "publicationMutationCount": {"minimum": 7},
+              "conflicts": {"maxItems": 0}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"decision": {"const": "NO_CHANGE"}},
+            "required": ["decision"]
+          },
+          "then": {
+            "properties": {
+              "expectationHashOrNull": {"$ref": "#/$defs/digest"},
+              "committedAuthorityHashOrNull": {"$ref": "#/$defs/digest"},
+              "expectedHostAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedAvailabilityAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedCapabilityPolicyAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedCapabilityPolicyHashOrNull": {"$ref": "#/$defs/digest"},
+              "expectedFreshnessPolicyAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedFreshnessPolicyHashOrNull": {"$ref": "#/$defs/digest"},
+              "committedHostAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "committedAvailabilityAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "mutationSetHashOrNull": {"type": "null"},
+              "commitRecordDigestOrNull": {"type": "null"},
+              "publicationMutationCount": {"const": 0},
+              "conflicts": {"maxItems": 0}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"decision": {"const": "CONFLICT"}},
+            "required": ["decision"]
+          },
+          "then": {
+            "properties": {
+              "expectationHashOrNull": {"$ref": "#/$defs/digest"},
+              "committedAuthorityHashOrNull": {"type": "null"},
+              "expectedHostAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedAvailabilityAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedCapabilityPolicyAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedCapabilityPolicyHashOrNull": {"$ref": "#/$defs/digest"},
+              "expectedFreshnessPolicyAuthorityResourceVersionOrNull": {
+                "$ref": "#/$defs/version"
+              },
+              "expectedFreshnessPolicyHashOrNull": {"$ref": "#/$defs/digest"},
+              "committedHostAuthorityResourceVersionOrNull": {"type": "null"},
+              "committedAvailabilityAuthorityResourceVersionOrNull": {
+                "type": "null"
+              },
+              "mutationSetHashOrNull": {"type": "null"},
+              "commitRecordDigestOrNull": {"type": "null"},
+              "publicationMutationCount": {"const": 0},
+              "conflicts": {"minItems": 1}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"decision": {"const": "NOT_APPLICABLE"}},
+            "required": ["decision"]
+          },
+          "then": {
+            "properties": {
+              "expectationHashOrNull": {"type": "null"},
+              "committedAuthorityHashOrNull": {"type": "null"},
+              "expectedHostAuthorityResourceVersionOrNull": {"type": "null"},
+              "expectedAvailabilityAuthorityResourceVersionOrNull": {
+                "type": "null"
+              },
+              "expectedCapabilityPolicyAuthorityResourceVersionOrNull": {
+                "type": "null"
+              },
+              "expectedCapabilityPolicyHashOrNull": {"type": "null"},
+              "expectedFreshnessPolicyAuthorityResourceVersionOrNull": {
+                "type": "null"
+              },
+              "expectedFreshnessPolicyHashOrNull": {"type": "null"},
+              "committedHostAuthorityResourceVersionOrNull": {"type": "null"},
+              "committedAvailabilityAuthorityResourceVersionOrNull": {
+                "type": "null"
+              },
+              "mutationSetHashOrNull": {"type": "null"},
+              "commitRecordDigestOrNull": {"type": "null"},
+              "publicationMutationCount": {"const": 0},
+              "conflicts": {"maxItems": 0}
+            }
+          }
+        }
+      ],
+      "x-qmanTraceBindingRule": "This compact result never attempts to serialize repository INSERTs as generic casMutation objects. For COMMITTED/NO_CHANGE, expectationHashOrNull, committedAuthorityHashOrNull, every expected/committed version, both capability/freshness policy hashes, mutationSetHashOrNull, commitRecordDigestOrNull and publicationMutationCount exact-project the retained host-snapshot publication trace; expectationHashOrNull and committedAuthorityHashOrNull are non-null for both outcomes, including the read-only NO_CHANGE authority snapshot. COMMITTED publicationMutationCount equals the complete DeviceRecord count plus six fixed rows. CONFLICT carries only failed HostAuthority, AvailabilityAuthority, CapabilityPolicyAuthority and/or HostSnapshotFreshnessPolicyAuthority compares, at most four."
+    },
+    "snapshotFreshnessDecisionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyId",
+        "policyVersion",
+        "policyDigest",
+        "policyAuthorityResourceVersion",
+        "evaluatedAt",
+        "evaluationDisposition",
+        "maximumSnapshotAgeMicros",
+        "maximumMandatoryEvidenceAgeMicros",
+        "currentSnapshotCapturedAtOrNull",
+        "oldestMandatoryEvidenceObservedAtOrNull",
+        "refreshRequired",
+        "decisionDigest"
+      ],
+      "properties": {
+        "policyId": {
+          "$ref": "#/$defs/id"
+        },
+        "policyVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "policyDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "policyAuthorityResourceVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "evaluatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+        },
+        "evaluationDisposition": {
+          "enum": [
+            "GENESIS_NO_CURRENT",
+            "CURRENT_POLICY_MATCHED",
+            "ACTIVE_POLICY_CHANGED_FORCES_SUCCESSOR"
+          ]
+        },
+        "maximumSnapshotAgeMicros": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumMandatoryEvidenceAgeMicros": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "currentSnapshotCapturedAtOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+            }
+          ]
+        },
+        "oldestMandatoryEvidenceObservedAtOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+            }
+          ]
+        },
+        "refreshRequired": {
+          "type": "boolean"
+        },
+        "decisionDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "x-qmanDigestProjection": {
+        "digestField": "decisionDigest",
+        "digestFieldValueDuringHash": null,
+        "digestDomain": "QMAN-DIRECTPATH/HOST-SNAPSHOT-FRESHNESS-DECISION/V1",
+        "canonicalProfile": "CANONICAL-JSON-V1"
+      },
+      "x-qmanTraceBindingRule": "The complete object exact-projects directpath-host-snapshot-publication-trace.freshnessDecision byte-for-byte. evaluationDisposition, both age thresholds, both nullable evidence bases, refreshRequired and decisionDigest are retained together; a policy document ref or digest alone is not a freshness-decision result."
+    },
     "bundleSummary": {
       "type": "object",
       "additionalProperties": false,
@@ -3770,7 +4183,8 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/id"
-          }
+          },
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
         },
         "state": {
           "enum": [
@@ -4135,7 +4549,10 @@
         "bundleSummaries",
         "leaseSummaries",
         "reasons",
-        "evidenceRefs"
+        "evidenceRefs",
+        "capabilityDecisionHash",
+        "semanticDependencyHash",
+        "queryStateHash"
       ],
       "properties": {
         "capabilityStatus": {
@@ -4214,7 +4631,8 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/bundleSummary"
-          }
+          },
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [bundleId]; duplicate bundleId values are rejected"
         },
         "leaseSummaries": {
           "type": "array",
@@ -4223,10 +4641,12 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/leaseSummary"
-          }
+          },
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [bundleId,leaseId]; duplicate leaseId values are rejected"
         },
         "reasons": {
-          "$ref": "#/$defs/reasonList"
+          "$ref": "#/$defs/reasonList",
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [code,stage,devices,details,provenance]; duplicate complete reasons are rejected"
         },
         "evidenceRefs": {
           "type": "array",
@@ -4235,9 +4655,20 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/documentRef"
-          }
+          },
+          "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 bytes of [documentKind,documentId,documentVersion,contentHash]; duplicate [documentKind,documentId,documentVersion] keys are rejected"
+        },
+        "capabilityDecisionHash": {
+          "$ref": "#/$defs/digest"
+        },
+        "semanticDependencyHash": {
+          "$ref": "#/$defs/digest"
+        },
+        "queryStateHash": {
+          "$ref": "#/$defs/digest"
         }
-      }
+      },
+      "x-qmanDeterministicOutputRule": "For one stable authenticated request projection and one byte-identical QueryReadTrace read state, every field and all four canonical arrays are byte-identical. capabilityDecisionHash and semanticDependencyHash bind the guarded evaluator result; queryStateHash equals the before/after stateDigest in the correlated raw QueryReadTrace. The output intentionally carries no traceDigest, trace timestamp, or repository transaction ID, avoiding an output/trace hash fixed point."
     },
     "resultBody_OP_QUERY_DIRECTPATH": {
       "type": "object",
@@ -5922,9 +6353,16 @@
         "hostId",
         "hostBootIdentity",
         "currentHostAuthority",
+        "currentAvailabilityAuthority",
+        "capabilityPolicy",
+        "capabilityPolicyAuthority",
         "trustedKeyRing",
         "trustRootSet",
-        "rollbackAnchor"
+        "rollbackAnchor",
+        "hostSnapshotRollbackAnchorOrNull",
+        "hostSnapshotAnchorFreshnessOrNull",
+        "snapshotFreshnessPolicy",
+        "snapshotFreshnessPolicyAuthority"
       ],
       "properties": {
         "hostId": {
@@ -5942,6 +6380,48 @@
               "properties": {
                 "entityType": {
                   "const": "ENTITY-HOST-AUTHORITY"
+                }
+              }
+            }
+          ]
+        },
+        "currentAvailabilityAuthority": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/entityRef"
+            },
+            {
+              "properties": {
+                "entityType": {
+                  "const": "ENTITY-AVAILABILITY-AUTHORITY"
+                }
+              }
+            }
+          ]
+        },
+        "capabilityPolicy": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/documentRef"
+            },
+            {
+              "properties": {
+                "documentKind": {
+                  "const": "CAPABILITY_POLICY"
+                }
+              }
+            }
+          ]
+        },
+        "capabilityPolicyAuthority": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/entityRef"
+            },
+            {
+              "properties": {
+                "entityType": {
+                  "const": "ENTITY-CAPABILITY-POLICY-AUTHORITY"
                 }
               }
             }
@@ -5988,8 +6468,137 @@
               }
             }
           ]
+        },
+        "hostSnapshotRollbackAnchorOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/documentRef"
+                },
+                {
+                  "properties": {
+                    "documentKind": {
+                      "const": "HOST_SNAPSHOT_ROLLBACK_ANCHOR"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "hostSnapshotAnchorFreshnessOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/documentRef"
+                },
+                {
+                  "properties": {
+                    "documentKind": {
+                      "const": "ANCHOR_FRESHNESS_ENVELOPE"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "snapshotFreshnessPolicy": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/documentRef"
+            },
+            {
+              "properties": {
+                "documentKind": {
+                  "const": "HOST_SNAPSHOT_FRESHNESS_POLICY"
+                }
+              }
+            }
+          ]
+        },
+        "snapshotFreshnessPolicyAuthority": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/entityRef"
+            },
+            {
+              "properties": {
+                "entityType": {
+                  "const": "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY"
+                }
+              }
+            }
+          ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "hostSnapshotRollbackAnchorOrNull": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "hostSnapshotRollbackAnchorOrNull"
+            ]
+          },
+          "then": {
+            "properties": {
+              "hostSnapshotAnchorFreshnessOrNull": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "hostSnapshotAnchorFreshnessOrNull": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "hostSnapshotAnchorFreshnessOrNull": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "hostSnapshotAnchorFreshnessOrNull"
+            ]
+          },
+          "then": {
+            "properties": {
+              "hostSnapshotRollbackAnchorOrNull": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "hostSnapshotRollbackAnchorOrNull": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "x-qmanPublicationReadSetBindingRule": "The request exact-projects one coherent retained publication read set. currentHostAuthority={entityType:ENTITY-HOST-AUTHORITY,entityId:hostAuthorityBefore.state.hostId,resourceVersion:hostAuthorityBefore.state.resourceVersion,generationOrNull:hostAuthorityBefore.state.agentGeneration,contentHash:hostAuthorityBefore.instanceBytesSha256}. currentAvailabilityAuthority={entityType:ENTITY-AVAILABILITY-AUTHORITY,entityId:availabilityAuthorityBefore.state.availabilityAuthorityId,resourceVersion:availabilityAuthorityBefore.state.resourceVersion,generationOrNull:null,contentHash:availabilityAuthorityBefore.instanceBytesSha256}. capabilityPolicy={documentKind:CAPABILITY_POLICY,documentId:capabilityPolicy.state.policyId,documentVersion:capabilityPolicy.state.policyVersion,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-capability-policy.schema.json,contentHash:capabilityPolicy.instanceBytesSha256}. capabilityPolicyAuthority={entityType:ENTITY-CAPABILITY-POLICY-AUTHORITY,entityId:capabilityPolicyAuthority.state.policyAuthorityId,resourceVersion:capabilityPolicyAuthority.state.resourceVersion,generationOrNull:null,contentHash:capabilityPolicyAuthority.instanceBytesSha256}. snapshotFreshnessPolicy={documentKind:HOST_SNAPSHOT_FRESHNESS_POLICY,documentId:freshnessPolicy.state.policyId,documentVersion:freshnessPolicy.state.policyVersion,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/freshnessPolicy,contentHash:freshnessPolicy.instanceBytesSha256}. snapshotFreshnessPolicyAuthority={entityType:ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY,entityId:freshnessPolicyAuthority.state.freshnessPolicyAuthorityId,resourceVersion:freshnessPolicyAuthority.state.resourceVersion,generationOrNull:null,contentHash:freshnessPolicyAuthority.instanceBytesSha256}. For GENESIS_COMMITTED, hostSnapshotRollbackAnchorOrNull and hostSnapshotAnchorFreshnessOrNull are both null. Otherwise hostSnapshotRollbackAnchorOrNull={documentKind:HOST_SNAPSHOT_ROLLBACK_ANCHOR,documentId:snapshotRollbackAuthority.beforeOrNull.state.anchorDigest,documentVersion:snapshotRollbackAuthority.beforeOrNull.state.anchorVersion,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-host-snapshot-rollback-anchor.schema.json,contentHash:snapshotRollbackAuthority.beforeOrNull.instanceBytesSha256} and hostSnapshotAnchorFreshnessOrNull={documentKind:ANCHOR_FRESHNESS_ENVELOPE,documentId:snapshotRollbackAuthority.beforeFreshnessOrNull.state.envelopeId,documentVersion:snapshotRollbackAuthority.beforeFreshnessOrNull.state.resourceVersion,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-anchor-freshness-envelope.schema.json,contentHash:snapshotRollbackAuthority.beforeFreshnessOrNull.instanceBytesSha256}; both project the pre-decision artifacts, never the after artifacts. The SERIALIZABLE transaction compares all four authority versions, both policy hashes and the exact retained policy bytes; policy fields, thresholds and mandatory selectors are never accepted as open request values."
     },
     "output_OP_CAPTURE_HOST_SNAPSHOT": {
       "type": "object",
@@ -5999,7 +6608,10 @@
         "snapshotContentHash",
         "inventorySignature",
         "advancedHostAuthority",
-        "factProvenanceSetHash"
+        "factProvenanceSetHash",
+        "freshnessDecision",
+        "snapshotRollbackAnchor",
+        "snapshotAnchorFreshness"
       ],
       "properties": {
         "hostSnapshot": {
@@ -6049,8 +6661,40 @@
         },
         "factProvenanceSetHash": {
           "$ref": "#/$defs/digest"
+        },
+        "freshnessDecision": {
+          "$ref": "#/$defs/snapshotFreshnessDecisionResult"
+        },
+        "snapshotRollbackAnchor": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/documentRef"
+            },
+            {
+              "properties": {
+                "documentKind": {
+                  "const": "HOST_SNAPSHOT_ROLLBACK_ANCHOR"
+                }
+              }
+            }
+          ]
+        },
+        "snapshotAnchorFreshness": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/documentRef"
+            },
+            {
+              "properties": {
+                "documentKind": {
+                  "const": "ANCHOR_FRESHNESS_ENVELOPE"
+                }
+              }
+            }
+          ]
         }
-      }
+      },
+      "x-qmanPublicationTraceProjectionRule": "For OP-CAPTURE success, every field is a deterministic projection of actual canonical artifacts retained in directpath-host-snapshot-publication-trace.schema.json. hostSnapshot={documentKind:HOST_SNAPSHOT,documentId:hostSnapshotAfter.state.contentHash,documentVersion:hostSnapshotAfter.state.snapshotEpoch,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-portable-hash-subjects.schema.json#/$defs/hostSnapshot,contentHash:hostSnapshotAfter.instanceBytesSha256}; snapshotContentHash=hostSnapshotAfter.state.contentHash. inventorySignature identifies those same signed hostSnapshotAfter bytes with documentKind=HOST_INVENTORY_SIGNATURE, documentId=hostSnapshotAfter.state.contentHash, documentVersion=hostSnapshotAfter.state.keyRingVersion, the same schemaRef and contentHash. advancedHostAuthority={entityType:ENTITY-HOST-AUTHORITY,entityId:hostAuthorityAfter.state.hostId,resourceVersion:hostAuthorityAfter.state.resourceVersion,generationOrNull:hostAuthorityAfter.state.agentGeneration,contentHash:hostAuthorityAfter.instanceBytesSha256}. factProvenanceSetHash=captureBatch.instance.providerSemanticProjection.providerFactsDigest. freshnessDecision exact-projects the complete trace.freshnessDecision object byte-for-byte, including evaluationDisposition and decisionDigest. snapshotRollbackAnchor={documentKind:HOST_SNAPSHOT_ROLLBACK_ANCHOR,documentId:snapshotRollbackAuthority.after.state.anchorDigest,documentVersion:snapshotRollbackAuthority.after.state.anchorVersion,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-host-snapshot-rollback-anchor.schema.json,contentHash:snapshotRollbackAuthority.after.instanceBytesSha256}. snapshotAnchorFreshness={documentKind:ANCHOR_FRESHNESS_ENVELOPE,documentId:snapshotRollbackAuthority.afterFreshness.state.envelopeId,documentVersion:snapshotRollbackAuthority.afterFreshness.state.resourceVersion,canonicalProfile:CANONICAL-JSON-V1,schemaRef:contracts/directpath-anchor-freshness-envelope.schema.json,contentHash:snapshotRollbackAuthority.afterFreshness.instanceBytesSha256}. A ref label or digest without the actual retained bytes is invalid."
     },
     "resultBody_OP_CAPTURE_HOST_SNAPSHOT": {
       "type": "object",
@@ -6136,7 +6780,7 @@
           ]
         },
         "casResult": {
-          "$ref": "#/$defs/casResult"
+          "$ref": "#/$defs/snapshotPublicationCasResult"
         }
       },
       "allOf": [
@@ -6161,6 +6805,26 @@
               },
               "progressOrNull": {
                 "type": "null"
+              },
+              "casResult": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/snapshotPublicationCasResult"
+                  },
+                  {
+                    "properties": {
+                      "decision": {
+                        "enum": [
+                          "COMMITTED",
+                          "NO_CHANGE"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "decision"
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -6265,10 +6929,13 @@
           },
           "then": {
             "properties": {
+              "outputOrNull": {
+                "type": "null"
+              },
               "casResult": {
                 "allOf": [
                   {
-                    "$ref": "#/$defs/casResult"
+                    "$ref": "#/$defs/snapshotPublicationCasResult"
                   },
                   {
                     "properties": {
@@ -6278,13 +6945,17 @@
                       "conflicts": {
                         "type": "array",
                         "minItems": 1,
-                        "maxItems": 4096,
+                        "maxItems": 4,
                         "uniqueItems": true,
                         "items": {
-                          "$ref": "#/$defs/casConflict"
+                          "$ref": "#/$defs/snapshotPublicationAuthorityConflict"
                         }
                       }
-                    }
+                    },
+                    "required": [
+                      "decision",
+                      "conflicts"
+                    ]
                   }
                 ]
               }
@@ -10799,18 +11470,19 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "scope",
+        "operationId",
+        "idempotencyScopeHash",
         "idempotencyKey",
         "requestHash",
         "runId",
         "storedRepresentation"
       ],
       "properties": {
-        "scope": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 256,
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$"
+        "operationId": {
+          "$ref": "#/$defs/id"
+        },
+        "idempotencyScopeHash": {
+          "$ref": "#/$defs/digest"
         },
         "idempotencyKey": {
           "type": "string",
@@ -10860,7 +11532,8 @@
             }
           ]
         }
-      }
+      },
+      "x-qmanNaturalKeyRule": "[operationId,idempotencyScopeHash,idempotencyKey] is byte-equal to the original accepted REQUEST envelope tuple whose requestHash and runId are being stored; operationId identifies that original operation and is not the enclosing OP-STORE-IDEMPOTENT-RESULT operationId."
     },
     "output_OP_STORE_IDEMPOTENT_RESULT": {
       "type": "object",

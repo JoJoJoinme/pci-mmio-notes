@@ -75,7 +75,7 @@
         "REQUIRED",
         "DETERMINISTIC_BY_INPUT_HASH",
         "REPLAY_SAFE_BY_RUN_GENERATION",
-        "NEW_EPOCH_WHEN_CONTENT_CHANGES",
+        "NEW_EPOCH_WHEN_SEMANTICS_CHANGE_OR_FRESHNESS_THRESHOLD_IS_REACHED",
         "DETERMINISTIC_BY_PROFILE_HASH",
         "DETERMINISTIC_BY_SNAPSHOT_POLICY_PROFILE_HASH",
         "DETERMINISTIC_BY_SNAPSHOT_REQUEST_HASH",
@@ -84,7 +84,7 @@
         "REPLAY_SAFE_BY_CANONICAL_TRANSITION_SET_HASH",
         "REPLAY_SAFE_BY_LEASE_SET_HASH_AND_RUN_GENERATION",
         "REPLAY_SAFE_BY_LEASE_SET_HASH_AND_VERSIONS",
-        "NATURAL_KEY_SCOPE_AND_IDEMPOTENCY_KEY",
+        "NATURAL_KEY_OPERATION_SCOPE_HASH_AND_IDEMPOTENCY_KEY",
         "REPLAY_SAFE_BY_LEASE_AND_STEP_JOURNAL",
         "REPLAY_SAFE_BY_BOOT_AND_HOST_EPOCH",
         "REPLAY_SAFE_BY_GRANT_ID",
@@ -108,7 +108,7 @@
         {"properties": {"operationId": {"const": "OP-PLAN-STATIC"}, "actorPortId": {"const": "PORT-ASSIGNMENT-ORCHESTRATOR"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_INPUT_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-EXECUTE-ASSIGNMENT"}, "actorPortId": {"const": "PORT-ASSIGNMENT-ORCHESTRATOR"}, "idempotencyMode": {"const": "REQUIRED"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-RECONCILE-ASSIGNMENT"}, "actorPortId": {"const": "PORT-ASSIGNMENT-ORCHESTRATOR"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_RUN_GENERATION"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
-        {"properties": {"operationId": {"const": "OP-CAPTURE-HOST-SNAPSHOT"}, "actorPortId": {"const": "PORT-INVENTORY-SNAPSHOT"}, "idempotencyMode": {"const": "NEW_EPOCH_WHEN_CONTENT_CHANGES"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-CAPTURE-HOST-SNAPSHOT"}, "actorPortId": {"const": "PORT-INVENTORY-SNAPSHOT"}, "idempotencyMode": {"const": "NEW_EPOCH_WHEN_SEMANTICS_CHANGE_OR_FRESHNESS_THRESHOLD_IS_REACHED"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-RESOLVE-QUALIFICATION-PROFILE"}, "actorPortId": {"const": "PORT-QUALIFICATION-CATALOG"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_PROFILE_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-EVALUATE-CAPABILITY"}, "actorPortId": {"const": "PORT-CAPABILITY-ENGINE"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_SNAPSHOT_POLICY_PROFILE_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-PLAN-OWNER-ACTIVATION"}, "actorPortId": {"const": "PORT-OWNER-ACTIVATION"}, "idempotencyMode": {"const": "DETERMINISTIC_BY_SNAPSHOT_REQUEST_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
@@ -121,7 +121,7 @@
         {"properties": {"operationId": {"const": "OP-CAS-TRANSITION-AGGREGATES"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_CANONICAL_TRANSITION_SET_HASH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-CAS-CANCEL-UNSTARTED-RESERVATION"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_LEASE_SET_HASH_AND_RUN_GENERATION"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-CAS-REVOKE-LEASE"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_LEASE_SET_HASH_AND_VERSIONS"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
-        {"properties": {"operationId": {"const": "OP-STORE-IDEMPOTENT-RESULT"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "NATURAL_KEY_SCOPE_AND_IDEMPOTENCY_KEY"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
+        {"properties": {"operationId": {"const": "OP-STORE-IDEMPOTENT-RESULT"}, "actorPortId": {"const": "PORT-GLOBAL-REPOSITORY"}, "idempotencyMode": {"const": "NATURAL_KEY_OPERATION_SCOPE_HASH_AND_IDEMPOTENCY_KEY"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-PREPARE-HOST-BUNDLE"}, "actorPortId": {"const": "PORT-HOST-AGENT"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_LEASE_AND_STEP_JOURNAL"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-TEARDOWN-HOST-BUNDLE"}, "actorPortId": {"const": "PORT-HOST-AGENT"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_LEASE_AND_STEP_JOURNAL"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
         {"properties": {"operationId": {"const": "OP-RECONCILE-HOST"}, "actorPortId": {"const": "PORT-HOST-AGENT"}, "idempotencyMode": {"const": "REPLAY_SAFE_BY_BOOT_AND_HOST_EPOCH"}}, "required": ["operationId", "actorPortId", "idempotencyMode"]},
@@ -181,6 +181,8 @@
       "enum": [
         "ENTITY-CONTROLLER-AUTHORITY",
         "ENTITY-HOST-AUTHORITY",
+        "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+        "ENTITY-AVAILABILITY-AUTHORITY",
         "ENTITY-HOST-SNAPSHOT",
         "ENTITY-DEVICE-RECORD",
         "ENTITY-TRUST-KEY-RING",
@@ -203,6 +205,7 @@
         "ENTITY-RELOCATION-RUN",
         "ENTITY-IDEMPOTENCY-RECORD",
         "ENTITY-OPERATION-LEASE",
+        "ENTITY-OPERATION-ADMISSION-BINDING",
         "ENTITY-RELEASE-OWNERSHIP-GUARD",
         "ENTITY-AUDIT-EVENT",
         "ENTITY-OUTBOX-EVENT"
@@ -248,7 +251,7 @@
     "operationLeaseCapability": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["operationLeaseId", "leaseType", "scopeHash", "runIdOrIntentId", "bundleIds", "memberGenerations", "hostEpoch", "runGenerationOrNull", "holderControllerGeneration", "operationLeaseResourceVersion"],
+      "required": ["operationLeaseId", "leaseType", "scopeHash", "runIdOrIntentId", "bundleIds", "memberGenerations", "hostEpoch", "runGenerationOrNull", "holderControllerGeneration", "operationLeaseResourceVersion", "admissionBindingHashOrNull"],
       "properties": {
         "operationLeaseId": {"$ref": "#/$defs/id"},
         "leaseType": {"enum": ["OWNER_TRANSITION", "ASSIGNMENT_PREPARE", "RELEASE", "RELOCATION_HANDOFF", "QUARANTINE_REMEDIATION"]},
@@ -273,8 +276,21 @@
         "hostEpoch": {"type": "integer", "minimum": 1},
         "runGenerationOrNull": {"type": ["integer", "null"], "minimum": 1},
         "holderControllerGeneration": {"type": "integer", "minimum": 1},
-        "operationLeaseResourceVersion": {"type": "integer", "minimum": 1}
-      }
+        "operationLeaseResourceVersion": {"type": "integer", "minimum": 1},
+        "admissionBindingHashOrNull": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/digest"}
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"leaseType": {"const": "ASSIGNMENT_PREPARE"}}, "required": ["leaseType"]},
+          "then": {"properties": {"admissionBindingHashOrNull": {"$ref": "#/$defs/digest"}}},
+          "else": {"properties": {"admissionBindingHashOrNull": {"type": "null"}}}
+        }
+      ]
     },
     "releaseOwnershipGuardCapability": {
       "type": "object",
@@ -480,7 +496,7 @@
         "releaseOwnershipGuardCapabilityOrNull": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/releaseOwnershipGuardCapability"}]},
         "payloadSchemaAuthority": {"const": "PORTABLE_CONTRACT"},
         "payloadSchemaRef": {"$ref": "#/$defs/schemaRef"},
-        "payloadSchemaSha256": {"const": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b"},
+        "payloadSchemaSha256": {"const": "sha256:d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea"},
         "payloadCanonicalProfile": {"const": "CANONICAL-JSON-V1"},
         "payloadHash": {"$ref": "#/$defs/digest"},
         "correlation": {"$ref": "#/$defs/correlation"},
@@ -663,6 +679,7 @@
         "commandId",
         "idempotencyMode",
         "idempotencyKey",
+        "idempotencyScopeHash",
         "actorPortId",
         "status",
         "retryable",
@@ -694,6 +711,7 @@
         "commandId": {"$ref": "#/$defs/id"},
         "idempotencyMode": {"$ref": "#/$defs/idempotencyMode"},
         "idempotencyKey": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$"}]},
+        "idempotencyScopeHash": {"$ref": "#/$defs/digest"},
         "actorPortId": {"type": "string", "pattern": "^PORT-[A-Z0-9-]+$"},
         "status": {"enum": ["IN_PROGRESS", "SUCCEEDED", "REJECTED", "CONFLICT", "FAILED"]},
         "retryable": {"type": "boolean"},
@@ -729,7 +747,7 @@
         },
         "payloadSchemaAuthority": {"const": "PORTABLE_CONTRACT"},
         "payloadSchemaRef": {"$ref": "#/$defs/schemaRef"},
-        "payloadSchemaSha256": {"const": "sha256:1ca79095ef8acd4f95a1a09a97b0fb4ab92c126984ccfaa281ffef9709bc2b8b"},
+        "payloadSchemaSha256": {"const": "sha256:d23705ee8f3544cce2603199bc0011b167f998cb66516a704ed892bd4008b4ea"},
         "payloadCanonicalProfile": {"const": "CANONICAL-JSON-V1"},
         "payloadHash": {"$ref": "#/$defs/digest"},
         "correlation": {"$ref": "#/$defs/correlation"},
@@ -797,9 +815,10 @@
     "operationId, actorPortId, and idempotencyMode must match one of the 35 frozen operationIdentity tuples; no extension OP-* is accepted without a new version of this schema and portable contract",
     "targetRepositoryObjectFormat determines the exact lowercase targetRepositoryCommit length: SHA1 is 40 hex and SHA256 is 64 hex",
     "deadlineAt is strictly after issuedAt; completedAt is no later than the corresponding request deadline unless the operation returns a separately defined timeout result",
-    "For REQUEST, idempotencyKey is null only for OP-QUERY-DIRECTPATH and is mandatory for every other operation; RESULT echoes the exact request commandId, idempotencyMode, and idempotencyKey",
+    "For REQUEST, idempotencyKey is null only for OP-QUERY-DIRECTPATH and is mandatory for every other operation; RESULT echoes the byte-equal request operationId, commandId, idempotencyMode, idempotencyKey, and idempotencyScopeHash",
     "authority host/run/member/resource arrays reject duplicate logical keys even when the remaining values differ; all supplied generations and expected versions are one coherent CAS read set",
-    "When operationLeaseCapabilityOrNull is non-null, its holderControllerGeneration equals authority.controllerGeneration, its member generations and host epoch are present identically in authority, and the live ENTITY-OPERATION-LEASE row must match every field before the first covered side effect",
+    "When operationLeaseCapabilityOrNull is non-null, its holderControllerGeneration equals authority.controllerGeneration, its member generations and host epoch are present identically in authority, and the live ENTITY-OPERATION-LEASE row must match every field including admissionBindingHashOrNull before the first covered side effect",
+    "Every detached payload operationLeaseBinding or releaseOperationLeaseBinding is an exact projection of the enclosing operationLeaseCapabilityOrNull for operationLeaseId, leaseType, scopeHash, holderControllerGeneration, operationLeaseResourceVersion, and admissionBindingHashOrNull; ASSIGNMENT_PREPARE requires the immutable admission binding hash and every other current lease type requires null",
     "The schema requires a non-null typed operation capability for every frozen workflow/host/backend/process/release side-effect operation; transitionExecutionBinding.requiredLeaseTypeOrNull further selects the exact legal type in context. A wrong, stale, absent, consumed, revoked, or scope-mismatched capability fails before side effects",
     "When releaseOwnershipGuardCapabilityOrNull is required, it names the same RELEASE operation lease, complete live lease/version/bundle/member set, run, epochs/generations, process-or-never-created proof, backend profile and controller generation as the request and repository. Null, inactive, partial or mismatched guard authority fails before stop/teardown/release/clean-release side effects",
     "A RESULT with IN_PROGRESS or SUCCEEDED has reason null and retryable false; REJECTED, CONFLICT, or FAILED has one non-null frozen reason; retryable is true only for INVENTORY_EPOCH_CHANGED, STALE_RESOURCE_VERSION, STALE_CONTROLLER_GENERATION, or DEPENDENCY_BUSY",

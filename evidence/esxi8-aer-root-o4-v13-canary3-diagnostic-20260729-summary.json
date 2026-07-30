@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "id": "ESXI8-AER-ROOT-O4-V13-CANARY3-DIAGNOSTIC-20260729",
+  "subject": "VMWARE_ESXI_BLACKBOX_ATTEMPT_HISTORY",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observedAt": "2026-07-28T20:06:13.835136Z",
+  "observationStatus": "DIAGNOSTIC_ONLY",
+  "executionState": "INTENTIONAL_THREE_CASE_PREFIX",
+  "claimBoundary": "FROZEN_ATTEMPT_HISTORY_ONLY",
+  "usedForBehaviorInference": false,
+  "closureAuthority": "NONE",
+  "scope": "PCIe Correctable AER external behavior only; no VMware private implementation inference",
+  "run": {
+    "runId": "20260729-esxi8-aer-root-o4-v13-canary3",
+    "ownerPhase": "O4",
+    "gate": "g101",
+    "plannedCaseCount": 12,
+    "completedCaseCount": 3,
+    "incompleteCaseCount": 9,
+    "enteredInjectionCount": 3,
+    "matchCount": 3,
+    "cleanupCompleteCount": 3,
+    "safetyStopCount": 0,
+    "boundaryStop": true,
+    "aggregateObservationState": "INCONCLUSIVE",
+    "completionClass": "INTENTIONAL_PREFIX",
+    "finalQemuState": "running"
+  },
+  "publicStartupDiagnostic": {
+    "thirdRepeatGuestSerialBytes": 9021,
+    "thirdRepeatInjectionWindowOpened": true,
+    "v12ThirdBootFailureReproduced": false,
+    "threeRepeatObservationDigest": "9a416d636ab74f9aaaff4265fe6da4cb63e28c3f210463fd983821f60da3d3b1",
+    "permittedUse": "Guest startup and bounded-runner reuse diagnostic only",
+    "interpretation": "All three bounded repeats reached the public guest marker, entered Correctable-only injection, completed cleanup, and produced the same candidate observation digest. This does not establish a full-profile behavior comparison."
+  },
+  "frozenIntegrity": {
+    "state": "PASS",
+    "rootManifestEntryCount": 225,
+    "rootManifestMismatchCount": 0,
+    "caseManifestEntryCounts": {
+      "o4__first-multiple__g101__r01": 86,
+      "o4__first-multiple__g101__r02": 65,
+      "o4__first-multiple__g101__r03": 65
+    },
+    "caseManifestMismatchCount": 0,
+    "artifactsRelativeToSummary": [
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/result.json",
+        "sha256": "68b94327d643be664c075f1193ea1777c7acd9ef718c83db7f10a73fdbf6ebd3",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/result.json.sha256",
+        "sha256": "e1956bf43126ca5a0871b90d8862dc2f71f7bc8343e23c6b8125cd0bac717ef7",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/artifact-manifest.sha256",
+        "sha256": "ff124fed3241d981eb3a1fe12d17cfb31f0e3a8fdc8d7505995bfcca56d88977",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/cases/o4__first-multiple__g101__r01/result.json",
+        "sha256": "bd8f81f45f39df680d856033345e709090c22dfeff9c23981aa90556641ece38",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/cases/o4__first-multiple__g101__r01/artifact-manifest.sha256",
+        "sha256": "61d6c8fb4e1a04a4a50de87e9380b74694496a4b23aa9b0b1a5c85083149262b",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/cases/o4__first-multiple__g101__r02/result.json",
+        "sha256": "cc876a1230d3b611343012b655a2ee34014b3ae59af7ec58e7df355d549a9d8c",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/cases/o4__first-multiple__g101__r02/artifact-manifest.sha256",
+        "sha256": "da2c8051fcdda14252b196322db7bcd3e96b1714695dd7f4c24e4ce5de9933cc",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/cases/o4__first-multiple__g101__r03/result.json",
+        "sha256": "a6b9edeb27116d2132f2d862a9d370e64beb9222694d78b1060d966a9b3d27cc",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v13-canary3/cases/o4__first-multiple__g101__r03/artifact-manifest.sha256",
+        "sha256": "98bed6a785eacba32ce82b5a508a66e9519d100224a85f0a7deedd868621febc",
+        "retention": "LOCAL_RAW"
+      }
+    ]
+  },
+  "verifierDisposition": {
+    "runnerSourceSha256": "79942acc737cec5e8fdffae849b9c82605660d8a153b28452eaa069a863fd964",
+    "archivedDefaultVerifyExitCode": 0,
+    "archivedRequireCompleteExitCode": 2,
+    "archivedVerified": true,
+    "archivedOfflineExactCaseCount": 3,
+    "securityReviewState": "REJECTED_FOR_AUTHORITY",
+    "defect": "The frozen verifier accepted raw-summary consistency OR strict stage absence instead of selecting mutually exclusive branches from a validated injection-boundary record. It also normalized malformed phase/injection containers. A complete injected case could therefore be downgraded to an empty pre-injection stage.",
+    "disposition": "The raw run and original verifier outputs remain immutable attempt history. The verifier result cannot grant behavior or closure authority and must not be replaced or re-signed with a later verifier."
+  },
+  "interpretation": {
+    "canonicalComparisonO4": {
+      "state": "NOT_ESTABLISHED",
+      "reason": "INTENTIONAL_PREFIX_AND_VERIFIER_SOURCE_REJECTED"
+    },
+    "canonicalComparisonO0": {
+      "state": "NOT_RUN"
+    },
+    "behaviorAuthority": "NONE"
+  },
+  "limitations": [
+    "This record freezes a diagnostic canary; it is not a conforming VMware behavior result and carries no behavior authority.",
+    "The three MATCH observations cover only one sequence and do not close the immutable 12-case O4 profile.",
+    "The canary may be used only to show that the prior third-boot marker failure did not reproduce in this attempt and that runner cleanup/reuse reached three repeats.",
+    "The attempt must not be added to representative VMware run IDs, verified behavior slices, or a Qman product-conformance claim.",
+    "The frozen attempt must not be re-signed or reclassified with the later corrected verifier.",
+    "No interrupt delivery, service attribution, physical link fault, physical-device recovery, health handling, VMware private implementation, or Qman release readiness is inferred."
+  ]
+}

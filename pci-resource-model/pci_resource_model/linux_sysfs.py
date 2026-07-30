@@ -33,6 +33,9 @@ PCI_CAPABILITY_LIST = 0x34
 PCI_CAP_ID_EXP = 0x10
 PCI_BASE_ADDRESS_0 = 0x10
 PCI_BASE_ADDRESS_SPACE_IO = 0x01
+# DeviceInventory canonicalizes source tokens to lower case.  This is the
+# normalized model form of the design enum SOFTWARE_TOPOLOGY_ESTIMATE.
+SOFTWARE_TOPOLOGY_ESTIMATE_SOURCE = "software_topology_estimate"
 PCI_BASE_ADDRESS_MEM_TYPE_MASK = 0x06
 PCI_BASE_ADDRESS_MEM_TYPE_1M = 0x02
 PCI_BASE_ADDRESS_MEM_TYPE_64 = 0x04
@@ -506,14 +509,17 @@ def reconstruct_physical_isolation_domains(
     The patched IOMMU group remains the operational VFIO group.  This shadow
     domain joins every function below the highest non-isolating native ACS
     node, then closes over operational groups and multifunction aliases.
-    Missing or internally inconsistent kernel provenance leaves the domain
-    unknown instead of guessing from raw capability bits.
+    Missing, structurally incomplete, or internally inconsistent kernel
+    provenance leaves only its connected topology component unknown instead
+    of guessing from raw capability bits or tainting a disjoint component.
     """
 
     if not acs_override_active:
         return devices
 
     roots = {bdf: bdf for bdf in devices}
+    topology_roots = {bdf: bdf for bdf in devices}
+    topology_issues = {bdf: set() for bdf in devices}
 
     def find(bdf: str) -> str:
         while roots[bdf] != bdf:
@@ -527,7 +533,90 @@ def reconstruct_physical_isolation_domains(
         if left_root != right_root:
             roots[right_root] = left_root
 
+    def topology_find(bdf: str) -> str:
+        while topology_roots[bdf] != bdf:
+            topology_roots[bdf] = topology_roots[topology_roots[bdf]]
+            bdf = topology_roots[bdf]
+        return bdf
+
+    def topology_union(left: str, right: str) -> None:
+        left_root = topology_find(left)
+        right_root = topology_find(right)
+        if left_root != right_root:
+            topology_roots[right_root] = left_root
+
+    # Provenance completeness is scoped to one connected topology component.
+    # Parent/child relationships define the physical tree, while operational
+    # IOMMU groups and multifunction aliases conservatively join components
+    # that the kernel already treats as one requester/ownership unit.
+    for bdf, device in devices.items():
+        if device.parent is not None:
+            if device.parent in devices:
+                topology_union(bdf, device.parent)
+            else:
+                topology_issues[bdf].add(
+                    f"{bdf}:parent:missing:{device.parent}"
+                )
+        for relation, peers in (
+            ("iommu-group", device.iommu_group),
+            ("multifunction-alias", device.multifunction_aliases),
+        ):
+            for peer in peers:
+                if peer in devices:
+                    topology_union(bdf, peer)
+                else:
+                    topology_issues[bdf].add(
+                        f"{bdf}:{relation}:missing:{peer}"
+                    )
+
+    for bdf, device in devices.items():
+        for relation, peers, peer_field in (
+            ("iommu-group", device.iommu_group, "iommu_group"),
+            (
+                "multifunction-alias",
+                device.multifunction_aliases,
+                "multifunction_aliases",
+            ),
+        ):
+            if peers and bdf not in peers:
+                topology_issues[bdf].add(
+                    f"{bdf}:{relation}:self-missing"
+                )
+            for peer in peers:
+                if peer in devices:
+                    peer_members = getattr(devices[peer], peer_field)
+                    if bdf not in peer_members:
+                        topology_issues[bdf].add(
+                            f"{bdf}:{relation}:asymmetric:{peer}"
+                        )
+                    if peers != peer_members:
+                        topology_issues[bdf].add(
+                            f"{bdf}:{relation}:set-mismatch:{peer}"
+                        )
+
     chains = {bdf: _ancestor_chain(devices, bdf) for bdf in devices}
+    topology_anchors: dict[str, list[str]] = {}
+    for bdf, chain in chains.items():
+        if not chain:
+            continue
+        topology_anchors.setdefault(
+            _anchor_key(devices, bdf, chain),
+            [],
+        ).append(bdf)
+        top = devices[chain[-1]]
+        if (
+            top.parent is None
+            and top.function_role != FunctionRole.FABRIC
+            and top.metadata.get("pcieType") is None
+        ):
+            topology_anchors.setdefault(
+                f"legacy-bus:{top.bdf.rsplit(':', 1)[0]}",
+                [],
+            ).append(bdf)
+    for members in topology_anchors.values():
+        for member in members[1:]:
+            topology_union(members[0], member)
+
     complete: dict[str, bool] = {}
     override_paths: dict[str, tuple[str, ...]] = {}
     anchors: dict[str, list[str]] = {}
@@ -536,42 +625,76 @@ def reconstruct_physical_isolation_domains(
     for bdf, chain in chains.items():
         valid = bool(chain)
         path: list[str] = []
+        terminal_parent = devices[chain[-1]].parent if chain else None
+        if terminal_parent is not None:
+            valid = False
+            if terminal_parent in chain:
+                cycle_start = chain.index(terminal_parent)
+                cycle = ",".join(sorted(chain[cycle_start:]))
+                topology_issues[bdf].add(f"parent-cycle:{cycle}")
         for member in chain:
             device = devices[member]
             source = device.acs_override_source
+            if device.acs_native_isolation is None:
+                topology_issues[member].add(
+                    f"{member}:acs-native-isolation:missing"
+                )
+                valid = False
+            if device.acs_effective_isolation is None:
+                topology_issues[member].add(
+                    f"{member}:acs-effective-isolation:missing"
+                )
+                valid = False
+            if source not in accepted_sources:
+                topology_issues[member].add(
+                    f"{member}:acs-override-source:invalid:{source}"
+                )
+                valid = False
             if (
-                device.acs_native_isolation is None
-                or device.acs_effective_isolation is None
-                or source not in accepted_sources
+                device.acs_native_isolation is not None
+                and device.acs_effective_isolation is not None
+                and source in accepted_sources
             ):
-                valid = False
-                continue
-            if source != "none":
-                if device.acs_native_isolation or not device.acs_effective_isolation:
+                if source != "none":
+                    if device.acs_native_isolation or not device.acs_effective_isolation:
+                        topology_issues[member].add(
+                            f"{member}:acs-override-tuple:inconsistent:{source}"
+                        )
+                        valid = False
+                    else:
+                        path.append(member)
+                elif device.acs_effective_isolation != device.acs_native_isolation:
+                    topology_issues[member].add(
+                        f"{member}:acs-native-effective:mismatch"
+                    )
                     valid = False
-                else:
-                    path.append(member)
-            elif device.acs_effective_isolation != device.acs_native_isolation:
-                valid = False
         complete[bdf] = valid
         override_paths[bdf] = tuple(path)
         if valid:
             anchors.setdefault(_anchor_key(devices, bdf, chain), []).append(bdf)
 
-    if not all(complete.values()):
-        return {
-            bdf: replace(
-                device,
-                physical_isolation_domain=(),
-                physical_isolation_domain_source="unknown",
-                isolation_provenance=IsolationProvenance.ACS_OVERRIDE,
-                metadata={
-                    **device.metadata,
-                    "acsOverridePath": list(override_paths.get(bdf, ())),
-                },
+    topology_components: dict[str, set[str]] = {}
+    for bdf in devices:
+        topology_components.setdefault(topology_find(bdf), set()).add(bdf)
+    topology_complete = {
+        root: (
+            all(complete.get(member, False) for member in members)
+            and not any(topology_issues[member] for member in members)
+        )
+        for root, members in topology_components.items()
+    }
+    topology_component_issues = {
+        root: tuple(
+            sorted(
+                {
+                    issue
+                    for member in members
+                    for issue in topology_issues[member]
+                }
             )
-            for bdf, device in devices.items()
-        }
+        )
+        for root, members in topology_components.items()
+    }
 
     for members in anchors.values():
         for member in members[1:]:
@@ -588,7 +711,12 @@ def reconstruct_physical_isolation_domains(
     result: dict[str, DeviceInventory] = {}
     for bdf, device in devices.items():
         component = components[find(bdf)]
-        component_complete = all(complete.get(member, False) for member in component)
+        topology_root = topology_find(bdf)
+        topology_component = topology_components[topology_root]
+        component_complete = (
+            topology_complete[topology_root]
+            and all(complete.get(member, False) for member in component)
+        )
         component_override_path = tuple(
             sorted(
                 {
@@ -600,10 +728,12 @@ def reconstruct_physical_isolation_domains(
         )
         metadata = dict(device.metadata)
         metadata["acsOverridePath"] = list(override_paths.get(bdf, ()))
+        metadata.pop("physicalIsolationUnknownComponent", None)
+        metadata.pop("physicalIsolationUnknownReasons", None)
         if component_complete:
             domain = tuple(sorted(component))
             if component_override_path:
-                source = "kernel-acs-provenance-topology-conservative"
+                source = SOFTWARE_TOPOLOGY_ESTIMATE_SOURCE
                 provenance = IsolationProvenance.ACS_OVERRIDE
             else:
                 source = "kernel-no-override-iommu-group"
@@ -612,6 +742,12 @@ def reconstruct_physical_isolation_domains(
             domain = ()
             source = "unknown"
             provenance = IsolationProvenance.ACS_OVERRIDE
+            metadata["physicalIsolationUnknownComponent"] = sorted(
+                topology_component
+            )
+            metadata["physicalIsolationUnknownReasons"] = list(
+                topology_component_issues[topology_root]
+            )
         result[bdf] = replace(
             device,
             physical_isolation_domain=domain,
@@ -683,7 +819,7 @@ def scan_linux_sysfs(
     )
     if acs_override_active:
         physical_domain_rule = (
-            "kernel-acs-provenance-topology-conservative"
+            SOFTWARE_TOPOLOGY_ESTIMATE_SOURCE
             if acs_provenance_interface_complete
             else "unknown-missing-kernel-acs-provenance"
         )

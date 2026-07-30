@@ -3,9 +3,9 @@
   "registryId": "QMAN-DIRECTPATH-ACCEPTANCE-CASE-CONTRACTS",
   "generationAlgorithm": "DERIVED-CLOSED-CASE-CONTRACT-V1",
   "portableContractId": "QMAN-DIRECTPATH-PORTABLE-CONTROL",
-  "portableContractRevision": "2026-07-23.11",
+  "portableContractRevision": "2026-07-30.1",
   "sourcePolicySha256": "sha256:31e238a95c033c466d80b13686be01c3211b2b4a6df5c64533fad30da85986c0",
-  "sourceDesignSha256": "sha256:177dfe0baad0a3539f1a20744347b7d9e152abd32a0a3aa6da364044604975ee",
+  "sourceDesignSha256": "sha256:bb4e9858309485be9d7d17342b48f4c168d96e3b9777459c6290f81ec311519f",
   "oracleClasses": [
     "authoritativeWrites",
     "cleanup",
@@ -21,8 +21,8 @@
     {
       "caseId": "C00",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
-      "definitionRecordSha256": "sha256:c3ae34bf3b11047e62fdd0f50bc150998559056613650b070fef868d29426979",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
+      "definitionRecordSha256": "sha256:7b736b3508647e4fb80318c840e5829a617409e429b3c9ec497bfad72fae5e25",
       "designMatrix": {
         "section": "19",
         "title": "Type-0 FLR endpoint",
@@ -82,11 +82,29 @@
         "TR-RUN-ROLLBACK-FREE",
         "TR-RUN-ROLLBACK-QUARANTINED"
       ],
-      "requiredFaultClasses": [],
+      "requiredFaultClasses": [
+        "CONCURRENCY_REPLAY"
+      ],
       "requiredArtifactSchemaRefs": [
         "contracts/directpath-acceptance-scenario.schema.json",
+        "contracts/directpath-anchor-freshness-envelope.schema.json",
+        "contracts/directpath-authority-entities.schema.json",
+        "contracts/directpath-authority-entities.schema.json#/$defs/ENTITY-CLEAN-RELEASE-ACCEPTANCE",
+        "contracts/directpath-clean-release-receipt.schema.json",
         "contracts/directpath-execution-evidence-index.schema.json",
-        "contracts/directpath-runner-manifest.schema.json"
+        "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "contracts/directpath-host-snapshot-rollback-anchor.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-operation-envelope.schema.json",
+        "contracts/directpath-operation-payload.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json",
+        "contracts/directpath-runner-manifest.schema.json",
+        "contracts/directpath-trust-key-ring-history.schema.json",
+        "contracts/directpath-trust-key-ring.schema.json",
+        "contracts/directpath-trust-rollback-anchor.schema.json",
+        "contracts/directpath-trust-root-set.schema.json"
       ],
       "requiredOracleClasses": [
         "authoritativeWrites",
@@ -98,8 +116,8 @@
         "mustOccur",
         "physicalOracle"
       ],
-      "minimumRepeat": 1,
-      "minimumDurationSeconds": 1,
+      "minimumRepeat": 3,
+      "minimumDurationSeconds": 10,
       "assertions": [
         {
           "assertionId": "C00-PASS-001",
@@ -119,13 +137,13 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:d5192c410cad002a23236680edb18f1ed3d1b8305771324e04ef8903b21c6ff8"
+      "caseContractDigest": "sha256:1b393133b076147a1f8ec4fb3c1b1ad903e4917787ebc3e2573856b9a31ffd2a"
     },
     {
       "caseId": "C01",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
-      "definitionRecordSha256": "sha256:f77c157123720041f22c012ff35176ffdc6f45ba47bae42186df969361a30ca3",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
+      "definitionRecordSha256": "sha256:ae13913514e658affaf656526b852501e1a932918db49662859ec3fab715b816",
       "designMatrix": {
         "section": "19",
         "title": "Type-1 bridge + FLR",
@@ -163,10 +181,17 @@
         "OP-EVALUATE-CAPABILITY"
       ],
       "requiredTransitionIds": [],
-      "requiredFaultClasses": [],
+      "requiredFaultClasses": [
+        "CONCURRENCY_REPLAY"
+      ],
       "requiredArtifactSchemaRefs": [
         "contracts/directpath-acceptance-scenario.schema.json",
         "contracts/directpath-execution-evidence-index.schema.json",
+        "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json",
         "contracts/directpath-runner-manifest.schema.json"
       ],
       "requiredOracleClasses": [
@@ -179,8 +204,8 @@
         "mustOccur",
         "physicalOracle"
       ],
-      "minimumRepeat": 1,
-      "minimumDurationSeconds": 1,
+      "minimumRepeat": 3,
+      "minimumDurationSeconds": 10,
       "assertions": [
         {
           "assertionId": "C01-PASS-001",
@@ -200,13 +225,13 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:58b3f0d79e32ea92546e89d4e3880c97e63ea31ff9189ebb5e8fcf06b61ea417"
+      "caseContractDigest": "sha256:dc1e7a1859c7be847bf665df77b32f80b51b3d317a44cef0819df49aa7bd6043"
     },
     {
       "caseId": "C02",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
-      "definitionRecordSha256": "sha256:07b8ba7961403dd3db7dd89a9c21dbec7fc05604ff50746fb63c0320869b39ad",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
+      "definitionRecordSha256": "sha256:e6af510bfc105629515e60c0b91627f2fa4c12f4aed785e0b14f7d1a643b2a69",
       "designMatrix": {
         "section": "19",
         "title": "class code A/B",
@@ -249,6 +274,11 @@
       "requiredArtifactSchemaRefs": [
         "contracts/directpath-acceptance-scenario.schema.json",
         "contracts/directpath-execution-evidence-index.schema.json",
+        "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json",
         "contracts/directpath-runner-manifest.schema.json"
       ],
       "requiredOracleClasses": [
@@ -282,13 +312,13 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:4001e1f6a4563678098a3011bc986654e9a506d89bf6646044db81660cf144a4"
+      "caseContractDigest": "sha256:2b23266ac522e1c23884b6c3c3325faf255701665464899cc6e14cf6ca03e326"
     },
     {
       "caseId": "C03",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
-      "definitionRecordSha256": "sha256:93b8f732c85b9b35dd4e291fc4b4b8f90c7f3a061d5a48ff5b3da0b1935d4a46",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
+      "definitionRecordSha256": "sha256:6adda4e2bad0486ad9cff01ba49d1e4316502bf5a49e70f9a8fc96ccf1ff00e3",
       "designMatrix": {
         "section": "19",
         "title": "RC endpoint 无 FLR/D3",
@@ -348,13 +378,20 @@
         "TR-RUN-ROLLBACK-QUARANTINED"
       ],
       "requiredFaultClasses": [
+        "CONCURRENCY_REPLAY",
         "RESET_FAILURE"
       ],
       "requiredArtifactSchemaRefs": [
         "contracts/directpath-acceptance-scenario.schema.json",
         "contracts/directpath-execution-evidence-index.schema.json",
+        "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json",
         "contracts/directpath-qualification-record.schema.json",
         "contracts/directpath-qualification-subject-manifest.schema.json",
+        "contracts/directpath-reset-contract-set.schema.json",
         "contracts/directpath-runner-manifest.schema.json"
       ],
       "requiredOracleClasses": [
@@ -388,12 +425,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:29189d4723d726698b924c2c2e38dde9be75a6adb9c243c7e56074f5cb14afd4"
+      "caseContractDigest": "sha256:331f3407aea62dd8a1e854c6f90e20260021964b2d4ed42f844269ed08154142"
     },
     {
       "caseId": "C04",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:fa32deacfb486dcb61e82ffc171188d64efeac3f2a662685ef71b7f64a8614f5",
       "designMatrix": {
         "section": "19",
@@ -491,12 +528,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:4fe370de35904af32454751b279900f5fa0fc18bd3ef115ec188a04c2358c484"
+      "caseContractDigest": "sha256:4fd786389567880a646a02dfa856b68b353e63f216b0950b0464b266265f0c23"
     },
     {
       "caseId": "C05",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:403e78e259b86032270f4992d00b2a96047c46cd14b01687f3534f3a8aad1e36",
       "designMatrix": {
         "section": "19",
@@ -576,12 +613,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:1282e05458cb7147ecdeb589e746aa2c5966dd9e8973803b126f337dd3018302"
+      "caseContractDigest": "sha256:c745fd561c230501810b9d476f12305b3a873ac918718dd834472f78053ae08e"
     },
     {
       "caseId": "C06",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:8c06fece00b80290e02441e56c0e3ef484193cabd3e75077633b2811f2359c08",
       "designMatrix": {
         "section": "19",
@@ -666,12 +703,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:b0d64418424f39b461d414e217abcd240fc2e7bed3061bd63f9064db6fe68301"
+      "caseContractDigest": "sha256:063c520c87aaa335f9a4b02134c45cf5d8789f602cdc20d81d2d1f54da0f6441"
     },
     {
       "caseId": "C07",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:11cba6ea7d9d7e10e0c59e38ca4133ad45e068bb7553321bfae77d3910e29e31",
       "designMatrix": {
         "section": "19",
@@ -748,12 +785,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:c8f4776e0778d459d93ec7db3c5be14157804aaab43ebc6808f6f5faedf7cb97"
+      "caseContractDigest": "sha256:c3157949953c81da3e3ab910d029972e4d31321baf590516c7843a5ff623bba0"
     },
     {
       "caseId": "C08",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:6ce66bae6b32ebc6fb47633f9f189c3a9275d89a71fb86dc57b42c71a41290ce",
       "designMatrix": {
         "section": "19",
@@ -835,12 +872,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:2e7d3a2c11379c370eab032b423498f19b5d866adad1fc926b653e769945c1cd"
+      "caseContractDigest": "sha256:f5dbb488d6512562249643468fbee5d056f4a8b9fc76e5c666eb04db939d519b"
     },
     {
       "caseId": "C09",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:8b77581183876a769d9ab81012a8cfffe4a29843bc9390a0179376be6818269c",
       "designMatrix": {
         "section": "19",
@@ -938,19 +975,19 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:76de394907de6a0d2ca15d4a2d60473f69935ace23440c0357efc2507bfdefd4"
+      "caseContractDigest": "sha256:8fb9ae77188540e85b96ffed86b4e59d20c313306e9978a42803d74ad6998255"
     },
     {
       "caseId": "C10",
       "definitionPath": "acceptance/cases/C10.json",
-      "definitionFileSha256": "sha256:9d579049362996f45f923384131fc8b99315b004b1e6880ab2e5440c2ce32cd9",
-      "definitionRecordSha256": "sha256:640af49281ac23da524aeb19073a4be24ddc66eb34cf612f61363c21cc6af978",
+      "definitionFileSha256": "sha256:4af7eada25628f56f4e19db81e01850db26f3701b6e290c365352b150b4bf027",
+      "definitionRecordSha256": "sha256:6efa339b56005382732ad0e85b973c76d35d5a68342e7610b557cb7ea8df1de3",
       "designMatrix": {
         "section": "19",
         "title": "qualification hash/version 变更",
         "passCondition": "相关 capability 立即 invalidated",
-        "sourceEvidence": "Case 已定义为 `IMPLEMENTATION_BLOCKED`；snapshot component 已有 signature/current/min-epoch/boot 负门，但 qualification/catalog 版本依赖失效仍未实现",
-        "rowDigest": "sha256:254598ab6f4ac23f0a1105190efb6726dce11acb3ee3a8912b32e85f5df0b16d"
+        "sourceEvidence": "Case 已定义为 `IMPLEMENTATION_BLOCKED`；portable core 已精确绑定并拒绝 qualification/catalog/profile drift，snapshot component 已有 signature/current/min-epoch/boot 负门，但 Qman 产品 repository 的 current-pointer/invalidation/CAS wiring 仍未实现",
+        "rowDigest": "sha256:52d2ce378948786d5b5f240505d319c58c797f466d5cce9f89f654eecbc2b391"
       },
       "classification": {
         "scope": "PRODUCT",
@@ -974,24 +1011,73 @@
         "PARITY-CAPABILITY-DEPENDENCY"
       ],
       "requiredPortIds": [
+        "PORT-ASSIGNMENT-ORCHESTRATOR",
+        "PORT-CAPABILITY-ENGINE",
+        "PORT-CONTROL-API",
+        "PORT-GLOBAL-REPOSITORY",
         "PORT-INVENTORY-SNAPSHOT",
         "PORT-QUALIFICATION-CATALOG"
       ],
       "requiredOperationIds": [
         "OP-CAPTURE-HOST-SNAPSHOT",
+        "OP-CAS-ACQUIRE-OPERATION-LEASE",
+        "OP-CAS-RESERVE-BUNDLES",
+        "OP-EVALUATE-CAPABILITY",
+        "OP-PLAN-STATIC",
+        "OP-QUERY-DIRECTPATH",
         "OP-RESOLVE-QUALIFICATION-PROFILE"
       ],
       "requiredTransitionIds": [],
+      "requiredEntityIds": [
+        "ENTITY-ASSIGNMENT-RUN",
+        "ENTITY-AVAILABILITY-AUTHORITY",
+        "ENTITY-BUNDLE-LEASE",
+        "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+        "ENTITY-DEPENDENCY-BUNDLE",
+        "ENTITY-DEVICE-RECORD",
+        "ENTITY-HOST-AUTHORITY",
+        "ENTITY-HOST-SNAPSHOT",
+        "ENTITY-OPERATION-ADMISSION-BINDING",
+        "ENTITY-OPERATION-LEASE",
+        "ENTITY-QUALIFICATION-PROFILE",
+        "ENTITY-QUALIFICATION-RECORD",
+        "ENTITY-SUPPORTED-CATALOG",
+        "ENTITY-TRUST-KEY-RING",
+        "ENTITY-VM-DIRECTPATH-REQUEST"
+      ],
+      "requiredReasonIds": [
+        "DEPENDENCY_BUSY",
+        "DEVICE_ERRATA_DENY",
+        "INVENTORY_EPOCH_CHANGED",
+        "PROFILE_NO_MATCH",
+        "QUALIFICATION_EVIDENCE_MISSING",
+        "STALE_HOST_EPOCH",
+        "STALE_RESOURCE_VERSION"
+      ],
       "requiredFaultClasses": [
         "STALE_AUTHORITY"
       ],
       "requiredArtifactSchemaRefs": [
         "contracts/directpath-acceptance-scenario.schema.json",
+        "contracts/directpath-anchor-freshness-envelope.schema.json",
+        "contracts/directpath-authority-entities.schema.json",
+        "contracts/directpath-capability-policy.schema.json",
+        "contracts/directpath-committed-static-admission.schema.json",
         "contracts/directpath-execution-evidence-index.schema.json",
         "contracts/directpath-identity-v1.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-operation-admission-binding.schema.json",
+        "contracts/directpath-operation-envelope.schema.json",
+        "contracts/directpath-operation-payload.schema.json#/$defs/casExpectation",
+        "contracts/directpath-qualification-profile-projection.schema.json",
         "contracts/directpath-qualification-record.schema.json",
         "contracts/directpath-qualification-subject-manifest.schema.json",
-        "contracts/directpath-runner-manifest.schema.json"
+        "contracts/directpath-qualification-verification-receipt.schema.json",
+        "contracts/directpath-runner-manifest.schema.json",
+        "contracts/directpath-static-admission-command.schema.json",
+        "contracts/directpath-supported-catalog.schema.json",
+        "contracts/directpath-trust-key-ring.schema.json"
       ],
       "requiredOracleClasses": [
         "authoritativeWrites",
@@ -1050,6 +1136,24 @@
           "requiredOracleClass": "mustNotOccur",
           "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
           "assertionDigest": "sha256:ba7f4bca447f586c8233f4ae89a64758fa5baa9c18845f3c89885f1f39637d34"
+        },
+        {
+          "assertionId": "C10-ASSERT-005",
+          "sourceKind": "CASE_ASSERTION",
+          "statement": "the product repository rereads current policy, trust, catalog, inventory and availability authorities and commits one admission binding plus ASSIGNMENT_PREPARE lease in the same serializable transaction or writes neither",
+          "statementSha256": "sha256:a343f22f04cd80291e4f7b54cda0eb88400f0cda1e4fa1e3e200ec70f3d5515f",
+          "requiredOracleClass": "authoritativeWrites",
+          "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
+          "assertionDigest": "sha256:2c63aaeab7bd7cce1ded13d047a9dd8b5f3ea50686fc5faae6d936cfc9377628"
+        },
+        {
+          "assertionId": "C10-ASSERT-006",
+          "sourceKind": "CASE_ASSERTION",
+          "statement": "a host executor accepts ASSIGNMENT_PREPARE only when the live lease admissionBindingHash matches the persisted unique binding",
+          "statementSha256": "sha256:ea5260636a1e5231c19b8f04e00d5132a5bde6ab3d7f0f4133153460c99a80d6",
+          "requiredOracleClass": "authoritativeWrites",
+          "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
+          "assertionDigest": "sha256:625d93acb846e0c718568d7e52f25c58202b00fa14170298648c67dcec0d3274"
         }
       ],
       "evidenceBoundary": {
@@ -1060,12 +1164,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:18911cf9c49dcecba4a7900345e0e5ddebaf09a5a2f077f5fa7db32543dcd283"
+      "caseContractDigest": "sha256:f635b7013b99ae1b39f0f8944744e4048b9ebe60be52d19e701772bc54d7c30d"
     },
     {
       "caseId": "C11",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:e193520a596c10ff403c1fb322fc6ab1bd09ac796397d2cf4a7c1762f4348c88",
       "designMatrix": {
         "section": "19",
@@ -1147,12 +1251,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:926554cc6db447fa046674aa2125e84d9925752763ab47f13e5607bbc65c9c11"
+      "caseContractDigest": "sha256:bdceb0a429623fa5c4d5ab2a21752c83c10e98b059f15171a3c69d4f55966bd8"
     },
     {
       "caseId": "C12",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:8e51fab7776717f0434de73f394553289729147f3b532a9c98dfa460c252cb16",
       "designMatrix": {
         "section": "19",
@@ -1259,12 +1363,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:6e34e30171353f7f3b14c8b0ecf922e234de271194597e466bcaf5491cc4f3fd"
+      "caseContractDigest": "sha256:a767d20ffca1be4e62f6ba2b9c2b72e07f744365aaa63fef8de57610d595c55a"
     },
     {
       "caseId": "C13",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:146edf23edfc439faf60a9ca62bf5ffaf001ba0e5a0b1e74268afd68310887e8",
       "designMatrix": {
         "section": "19",
@@ -1368,12 +1472,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:a432ee6dbcab4de64f6feaca45eb17030f2818604da584bebf78b7ca2a7ed4f5"
+      "caseContractDigest": "sha256:9ee81c3502f1f598ed11c2fe71bc11f17a4532c4ac42c5a38401e736cdb700e7"
     },
     {
       "caseId": "C14",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:91d0b7a2b852e70ea99523fcdbda9dbb79cfc0f6bd50a4e9e6b0354cac370822",
       "designMatrix": {
         "section": "19",
@@ -1466,19 +1570,19 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:ed72af7a5f62e529da26cdc7969c17556dc88f05fc7cfe0229fac1630290bae1"
+      "caseContractDigest": "sha256:6cae4d6d5cd372390c7c02a60afcfbe632535721c50da7033051647add13b9a7"
     },
     {
       "caseId": "C15",
       "definitionPath": "acceptance/cases/C15.json",
-      "definitionFileSha256": "sha256:635c3d1c9158cdc65454c31236e4d4b00d03c8be2d8ab96dbbee80d0c96505af",
-      "definitionRecordSha256": "sha256:6456a76e92613970ea883af07598627fd9a22abea0b615e12c0e191991270d1a",
+      "definitionFileSha256": "sha256:891c1e2764c9d6cd7bfb8d7723f4758eba2f52f4ba01d43acae4265fba4b6d34",
+      "definitionRecordSha256": "sha256:d724ef1e7db49bf0996f103726100356ffb8e821dd4c3a5b89e588f373aa37d3",
       "designMatrix": {
         "section": "19",
         "title": "重复 capable 查询",
         "passCondition": "driver、lease、reset counter、generation 全部不变，decision hash 稳定",
-        "sourceEvidence": "Case 已定义为 `IMPLEMENTATION_BLOCKED`；evaluator 纯函数与 snapshot full-scan stability premise 已有，host/controller 零副作用负例仍缺",
-        "rowDigest": "sha256:9f78faa468240eefe5412897d3866b769fb3c5e74969daba47f580a77ed8ce40"
+        "sourceEvidence": "closed QueryReadTrace 与 output canonical/hash contract 已定义；Case 仍是 `IMPLEMENTATION_BLOCKED`，Qman product repository/Host Agent 的 raw observed instance、零写与重复字节 E3 负例仍缺",
+        "rowDigest": "sha256:d12dac982f7882f06c1b4b1955e303149f59d8a02f7fa093cda80a0e1589773a"
       },
       "classification": {
         "scope": "PRODUCT",
@@ -1503,17 +1607,33 @@
       ],
       "requiredPortIds": [
         "PORT-AUDIT-EVIDENCE",
-        "PORT-INVENTORY-SNAPSHOT",
-        "PORT-RUNTIME-VERIFIER"
+        "PORT-CAPABILITY-ENGINE",
+        "PORT-CONTROL-API",
+        "PORT-INVENTORY-SNAPSHOT"
       ],
       "requiredOperationIds": [
         "OP-CAPTURE-HOST-SNAPSHOT",
         "OP-EMIT-AUDIT-EVIDENCE",
-        "OP-VERIFY-RUNTIME-PLAN"
+        "OP-EVALUATE-CAPABILITY",
+        "OP-QUERY-DIRECTPATH"
       ],
-      "requiredTransitionIds": [
-        "TR-RELOCATE-TARGET-ATTACHING-ATTACHED",
-        "TR-RUN-PREPARING-ATTACHED"
+      "requiredTransitionIds": [],
+      "requiredEntityIds": [
+        "ENTITY-AUDIT-EVENT",
+        "ENTITY-AVAILABILITY-AUTHORITY",
+        "ENTITY-BUNDLE-LEASE",
+        "ENTITY-DEPENDENCY-BUNDLE",
+        "ENTITY-DEVICE-RECORD",
+        "ENTITY-HOST-ACTION-JOURNAL",
+        "ENTITY-HOST-AUTHORITY",
+        "ENTITY-HOST-SNAPSHOT",
+        "ENTITY-OPERATION-LEASE",
+        "ENTITY-QUARANTINE-RECORD"
+      ],
+      "requiredReasonIds": [
+        "INVENTORY_EPOCH_CHANGED",
+        "SNAPSHOT_INCOMPLETE",
+        "STALE_RESOURCE_VERSION"
       ],
       "requiredFaultClasses": [
         "CONCURRENCY_REPLAY",
@@ -1521,7 +1641,15 @@
       ],
       "requiredArtifactSchemaRefs": [
         "contracts/directpath-acceptance-scenario.schema.json",
+        "contracts/directpath-authority-entities.schema.json",
         "contracts/directpath-execution-evidence-index.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-operation-envelope.schema.json",
+        "contracts/directpath-operation-payload.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json",
+        "contracts/directpath-query-read-trace.schema.json",
         "contracts/directpath-runner-manifest.schema.json"
       ],
       "requiredOracleClasses": [
@@ -1581,6 +1709,15 @@
           "requiredOracleClass": "mustNotOccur",
           "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
           "assertionDigest": "sha256:63c7d2deb6e6ea874ac0d061fbf654485d61a3832b041879505f38738d2f476f"
+        },
+        {
+          "assertionId": "C15-ASSERT-005",
+          "sourceKind": "CASE_ASSERTION",
+          "statement": "the product query records before and after versions for leases, quarantine, inventory authority and host journal while performing no admission transaction",
+          "statementSha256": "sha256:a49d662dd17f12b24dac58a717ac663f5387932c6864b73a1c901cce5a54541f",
+          "requiredOracleClass": "cleanup",
+          "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
+          "assertionDigest": "sha256:79b2267401dc53cd1876d947e088e741b8e36c1d235a32fda38ba1c744d7346e"
         }
       ],
       "evidenceBoundary": {
@@ -1591,13 +1728,13 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:9d9717bdc836a1ce35e945509c8795e750a2f7f763b286c0b9e59ff36144477e"
+      "caseContractDigest": "sha256:cd278ab28174ce7eae93be85d4352c6c72d34a486acdbadf2f86d1322f7c4395"
     },
     {
       "caseId": "C16",
       "definitionPath": "acceptance/cases/C16.json",
-      "definitionFileSha256": "sha256:b5c8a9462d3a7b5a8d8d8b6270308eeb2fbe1ab3440f87ad2ee5b61d8921215f",
-      "definitionRecordSha256": "sha256:3f6f8a4547e6041ffdcb20086100e28a8bd54495420ec4b0d0c328f8810bcf70",
+      "definitionFileSha256": "sha256:aaa5ecd6cb86aba12acaba0e5c9751562d89edfdb28885d9a6c7b80634310afb",
+      "definitionRecordSha256": "sha256:1b623c9c4ef6bf22790d3b49e4990730373097c2cc500cf61912b37ed24ff526",
       "designMatrix": {
         "section": "19",
         "title": "一个 topology component 缺 ACS provenance",
@@ -1711,12 +1848,12 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:db95945d3825c73659444573d27d81df43c4b5fcff37860c57a6a3846b7ef953"
+      "caseContractDigest": "sha256:5b4b90cceca3c8a2870abfc43b3250d96f6e62ba1a40eae2f4d976100d20162b"
     },
     {
       "caseId": "C17",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:7d1027e825c090b21482bcf51ab04837ec32612a7dc86a85314efa32271b72fc",
       "designMatrix": {
         "section": "19",
@@ -1830,7 +1967,7 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:8719484d87bf684ddc5a40bc6965dbce59df940a03d0e07312eb1c2f95179e9a"
+      "caseContractDigest": "sha256:a6cc1df4e84ada993deb2c89f6ce25986c3b0dbd19b0340d40c0db7288f0faa4"
     },
     {
       "caseId": "C18",
@@ -1978,7 +2115,7 @@
     {
       "caseId": "C19",
       "definitionPath": "acceptance/cases/registry-C.json",
-      "definitionFileSha256": "sha256:9d0fb2ac2b563ca320c2ab33dc60a4da1439d420f5bc48bb64b71d20acf5496b",
+      "definitionFileSha256": "sha256:baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
       "definitionRecordSha256": "sha256:495eb96abbfb917ae6067ae8431e56f5cc756badc1ea8b9fb27242c204e813d5",
       "designMatrix": {
         "section": "19",
@@ -2064,13 +2201,13 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:5ae14b2bb5f6fe1e52ac4f8e0da275e70987901ab64ccaa5f4fcaaa1c1db9790"
+      "caseContractDigest": "sha256:a159ca36ab00f9e5b8d03e0d8a94ad97adb49a545dd017e68dd1882d2afe548e"
     },
     {
       "caseId": "C20",
       "definitionPath": "acceptance/cases/C20.json",
-      "definitionFileSha256": "sha256:ce00224fc9fc33327ee7fb869dc0584d14029f05f054f4650988cd371679ccc5",
-      "definitionRecordSha256": "sha256:432b9fc0c6b5f95c98d145fdfafbc9d3e235cddd0f257d2396a7bf724589035c",
+      "definitionFileSha256": "sha256:0872873d16fe5c2751974c87da850ae6f3febe20ed53946f1a5f13a24e572372",
+      "definitionRecordSha256": "sha256:80ff5c35b5364527c7ececb57bc45b1c116c2ca480436fef9223dcef47daf30f",
       "designMatrix": {
         "section": "19",
         "title": "capability closure 前置与 reset/action 固定点",
@@ -2100,47 +2237,82 @@
         "PARITY-CAPABILITY-DEPENDENCY"
       ],
       "requiredPortIds": [
+        "PORT-ASSIGNMENT-ORCHESTRATOR",
         "PORT-CAPABILITY-ENGINE",
+        "PORT-GLOBAL-REPOSITORY",
         "PORT-INVENTORY-SNAPSHOT",
-        "PORT-RELEASE-RECOVERY"
+        "PORT-QUALIFICATION-CATALOG"
       ],
       "requiredOperationIds": [
-        "OP-ACQUIRE-RELEASE-OWNERSHIP-GUARD",
         "OP-CAPTURE-HOST-SNAPSHOT",
+        "OP-CAS-ACQUIRE-OPERATION-LEASE",
+        "OP-CAS-RESERVE-BUNDLES",
         "OP-EVALUATE-CAPABILITY",
-        "OP-PROVE-CLEAN-RELEASE",
-        "OP-QUARANTINE-BUNDLE",
-        "OP-REMEDIATE-QUARANTINE"
+        "OP-PLAN-STATIC",
+        "OP-RESOLVE-QUALIFICATION-PROFILE"
       ],
-      "requiredTransitionIds": [
-        "TR-OWNER-APPLYING-QUARANTINED",
-        "TR-QUARANTINE-REMEDIATING",
-        "TR-QUARANTINE-REMEDIATING-FREE",
-        "TR-QUARANTINE-REMEDIATING-QUARANTINED",
-        "TR-RELOCATE-NONCLEANUP-QUARANTINED",
-        "TR-RELOCATE-SOURCE-CLEANUP-QUARANTINED",
-        "TR-RELOCATE-SOURCE-RELEASING-TARGET-SOLVE",
-        "TR-RELOCATE-SOURCE-STOP-RELEASING",
-        "TR-RELOCATE-TARGET-ATTACHING-ROLLING-BACK",
-        "TR-RELOCATE-TARGET-ROLLBACK-STOPPED-UNSAT",
-        "TR-RUN-ATTACHED-RELEASING",
-        "TR-RUN-PREPARING-ROLLING-BACK",
-        "TR-RUN-RELEASING-FREE",
-        "TR-RUN-RELEASING-QUARANTINED",
-        "TR-RUN-ROLLBACK-FREE",
-        "TR-RUN-ROLLBACK-QUARANTINED"
+      "requiredTransitionIds": [],
+      "requiredEntityIds": [
+        "ENTITY-ASSIGNMENT-RUN",
+        "ENTITY-AVAILABILITY-AUTHORITY",
+        "ENTITY-BUNDLE-LEASE",
+        "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+        "ENTITY-DEPENDENCY-BUNDLE",
+        "ENTITY-DEVICE-RECORD",
+        "ENTITY-HOST-AUTHORITY",
+        "ENTITY-HOST-SNAPSHOT",
+        "ENTITY-OPERATION-ADMISSION-BINDING",
+        "ENTITY-OPERATION-LEASE",
+        "ENTITY-QUALIFICATION-PROFILE",
+        "ENTITY-QUALIFICATION-RECORD",
+        "ENTITY-SUPPORTED-CATALOG",
+        "ENTITY-TRUST-KEY-RING",
+        "ENTITY-VM-DIRECTPATH-REQUEST"
+      ],
+      "requiredReasonIds": [
+        "DEPENDENCY_ACTION_CONFLICT",
+        "DEPENDENCY_ACTION_UNKNOWN",
+        "DEPENDENCY_BUSY",
+        "DEPENDENCY_CLOSURE_LIMIT",
+        "DEPENDENCY_PROVENANCE_UNKNOWN",
+        "DEVICE_QUARANTINED",
+        "INVENTORY_EPOCH_CHANGED",
+        "QUALIFICATION_EVIDENCE_MISSING",
+        "RESET_DOMAIN_CHANGED",
+        "RESET_DOMAIN_UNVERIFIED",
+        "RESET_NOT_SUPPORTED",
+        "SNAPSHOT_INCOMPLETE",
+        "STALE_HOST_EPOCH",
+        "STALE_RESOURCE_VERSION"
       ],
       "requiredFaultClasses": [
+        "CONCURRENCY_REPLAY",
         "RESET_FAILURE",
         "STALE_AUTHORITY"
       ],
       "requiredArtifactSchemaRefs": [
         "contracts/directpath-acceptance-scenario.schema.json",
+        "contracts/directpath-anchor-freshness-envelope.schema.json",
+        "contracts/directpath-authority-entities.schema.json",
+        "contracts/directpath-capability-policy.schema.json",
+        "contracts/directpath-committed-static-admission.schema.json",
+        "contracts/directpath-dependency-closure-request.schema.json",
         "contracts/directpath-execution-evidence-index.schema.json",
         "contracts/directpath-identity-v1.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-operation-admission-binding.schema.json",
+        "contracts/directpath-operation-envelope.schema.json",
+        "contracts/directpath-operation-payload.schema.json#/$defs/casExpectation",
+        "contracts/directpath-qualification-profile-projection.schema.json",
         "contracts/directpath-qualification-record.schema.json",
         "contracts/directpath-qualification-subject-manifest.schema.json",
-        "contracts/directpath-runner-manifest.schema.json"
+        "contracts/directpath-qualification-verification-receipt.schema.json",
+        "contracts/directpath-reset-contract-set.schema.json",
+        "contracts/directpath-runner-manifest.schema.json",
+        "contracts/directpath-static-admission-command.schema.json",
+        "contracts/directpath-supported-catalog.schema.json",
+        "contracts/directpath-trust-key-ring.schema.json"
       ],
       "requiredOracleClasses": [
         "authoritativeWrites",
@@ -2199,6 +2371,24 @@
           "requiredOracleClass": "authoritativeWrites",
           "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
           "assertionDigest": "sha256:cb3d0023288b8306b009544e8a7a1d62125a7e6f23474a3db4e3ff55c1448fa1"
+        },
+        {
+          "assertionId": "C20-ASSERT-005",
+          "sourceKind": "CASE_ASSERTION",
+          "statement": "the admission command contains business intent only; the repository derives current vectors, predicate read sets, CAS expectations, lease specification and binding",
+          "statementSha256": "sha256:9725722f70bd482bfa8537839a79536803d596e02a95c7c7d6b1601c4f2e7208",
+          "requiredOracleClass": "authoritativeWrites",
+          "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
+          "assertionDigest": "sha256:3e4c7f90a6da7963ce95cc9cf87a323152ebe03f161586801b0e04c8b3684dbc"
+        },
+        {
+          "assertionId": "C20-ASSERT-006",
+          "sourceKind": "CASE_ASSERTION",
+          "statement": "one serializable transaction prevents availability phantoms and commits either the complete admission lease/binding/reservation/idempotency/audit set or no row",
+          "statementSha256": "sha256:15bd532494c69061385a88b8689e14194d2b8e7776d65df1d6328d5082dba853",
+          "requiredOracleClass": "idempotencyOracle",
+          "predicateEvaluator": "TARGET-PREDICATE-INTERFACE-V1",
+          "assertionDigest": "sha256:7f4adc4cfdcaefb6d4b9ccd3c73c795ea8738a2d7c185610abc2dcc5400992db"
         }
       ],
       "evidenceBoundary": {
@@ -2209,7 +2399,7 @@
         "blockedCaseMayExecuteAsClosure": false,
         "dependencyClosureRequired": true
       },
-      "caseContractDigest": "sha256:7c5feb561c395df01dc87cd0f9530d988587b65195a915cb1ae2fd98544d33eb"
+      "caseContractDigest": "sha256:632b65e8c22cf567a18fa38dfb8a91d32ac41d239f5c49fdafbb254701e44fac"
     },
     {
       "caseId": "C21",
@@ -10980,5 +11170,5 @@
       "caseContractDigest": "sha256:2e07060fbb50e474496e631f98ce4ea56ceb2b856e0f978f77c937e9cae887ac"
     }
   ],
-  "registryDigest": "sha256:250b2204ab5a14b93b1b96b491d6d7ea53483c38a2d4352e0156f199ca7e369b"
+  "registryDigest": "sha256:150538cbe5c2a8fea523c66dea1196067fd49bcdad985fadede4dd49763d2374"
 }

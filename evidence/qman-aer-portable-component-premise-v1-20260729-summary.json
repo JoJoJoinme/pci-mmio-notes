@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-AER-PORTABLE-COMPONENT-PREMISE-V1-20260729",
+  "subject": "QMAN_DIRECTPATH_CORRECTABLE_AER_PORTABLE_COMPONENT",
+  "observedAt": "2026-07-28T22:02:18.169731Z",
+  "status": "COMPONENT_PREMISE_VERIFIED",
+  "authorityBoundary": "COMPONENT_PREMISE",
+  "componentEligible": false,
+  "productAuthorized": false,
+  "usedForProductAuthorization": false,
+  "milestoneImpact": "NONE_WITHOUT_TARGET_QMAN_E3_E4_EVIDENCE",
+  "scope": "Portable Correctable-only AER policy, config-space projection, reference transitions, structural evidence/receipt replay, and fail-closed admission",
+  "implementation": {
+    "guestWriteBoundary": "Classification has no executable physical writes. A factory-only, current-bound, one-use executable plan filters Correctable W1C masks before VFIO and rejects stale or replayed plans.",
+    "guestReadBoundary": "Root Status and Correctable Source are projected from one atomic snapshot receipt bound to policy, layout, device, lease, owner, snapshot identity, and authority revision. Requester ID requires guest-visible COR_RCV and a complete 16-bit Source field.",
+    "layoutBoundary": "Endpoint and Root Port AER extents, dynamic capability offsets, 4 KiB fit, next-capability ordering, and hidden-chain representability are verified before projection.",
+    "stateMachines": [
+      "guest configuration virtualization and shadow W1C",
+      "physical Endpoint/Root retained Correctable state",
+      "notification and service observations",
+      "cleanup, reuse, reset, health, and quarantine"
+    ],
+    "e4Boundary": "Replay requests and receipts bind canonical policy/evidence bytes, exact M24-M29 case artifacts, layout/device/owner generations, nonce, authority revision, and validity windows. Portable verification never promotes the structural receipt to trusted E4 authority.",
+    "admissionBoundary": "The structural current-authority receipt additionally binds the current vector and revision+1 CAS under hard budgets. Portable admission always retains TRUSTED_E4_ADAPTER_REQUIRED and cannot return component or product eligibility."
+  },
+  "resourceBudgets": {
+    "admissionReceiptMaximumBytes": 262144,
+    "evidenceDocumentMaximumBytes": 1048576,
+    "maximumJsonNodes": 8192,
+    "maximumJsonDepth": 32,
+    "maximumSourceHashes": 64,
+    "exactE4HashCount": 19,
+    "maximumRuntimeOrE4ReceiptTtlSeconds": 60,
+    "maximumObservationOrResolutionHorizonSeconds": 5,
+    "maximumAdmissionCheckHorizonSeconds": 60,
+    "mappingPreflightBeforeCanonicalization": true
+  },
+  "candidateNormativeClosure": {
+    "matrixId": "QMAN-AER-M24-M29-COMPONENT-MATRIX-V1",
+    "tupleCount": 133,
+    "caseCounts": {
+      "M24": 8,
+      "M25": 64,
+      "M26": 24,
+      "M27": 9,
+      "M28": 15,
+      "M29": 13
+    },
+    "exactReplay": true,
+    "endpointRootIdentityDistinct": true,
+    "candidateReferenceSelfComparisonRejected": true,
+    "crossTupleRunResultReplayRejected": true,
+    "trustedResolverPresent": false,
+    "portableNormativeSourcesMember": false,
+    "productCaseRegistryMember": false,
+    "e4Closed": false
+  },
+  "verification": {
+    "focusedAerCore": {
+      "framework": "pytest",
+      "testsPassed": 39,
+      "subtestsPassed": 73
+    },
+    "candidateNormativeContract": {
+      "framework": "pytest",
+      "testsPassed": 18,
+      "generatorCheck": "PASS",
+      "draft202012SchemasValid": 4,
+      "generatedInstancesValid": 3
+    },
+    "fullPortableCore": {
+      "command": "python -m unittest discover -s tests",
+      "workingDirectory": "github-export/qman-directpath-core",
+      "testsRun": 208,
+      "durationSeconds": 205.526,
+      "result": "PASS",
+      "stderrLog": {
+        "path": "../../_tmp/qman-full-regression-20260729-0550-packagecwd/stderr.log",
+        "sha256": "d041c5b6d46ade7fa3a3767f9f8bddc4cb9d73cec68a2ccb89f777883225e43f",
+        "retention": "LOCAL_TEST_LOG"
+      }
+    },
+    "staticChecks": {
+      "ruff": "PASS",
+      "pyCompile": "PASS"
+    },
+    "invocationNote": "Discovery must run with qman-directpath-core as the working directory. The prior parent-directory command collided with an unrelated top-level tests namespace; README now carries the verified invocation."
+  },
+  "sourceClosure": [
+    {
+      "path": "../qman-directpath-core/qman_directpath_core/aer_policy.py",
+      "sha256": "82fed0d2993fb5c8902ef7d668df7bf5b3a784284c4f83b501d9fa3a7fcf609b"
+    },
+    {
+      "path": "../qman-directpath-core/qman_directpath_core/aer_reference_model.py",
+      "sha256": "4dbd017dd5f3ba98483ab52a2ab42db99471099b984b4725d8506b4528104d43"
+    },
+    {
+      "path": "../qman-directpath-core/qman_directpath_core/aer_evidence.py",
+      "sha256": "6ec63fa8abc946098a1927147ec8be992c94cae655ee6934d3d59688bc585d20"
+    },
+    {
+      "path": "../qman-directpath-core/qman_directpath_core/aer_admission.py",
+      "sha256": "59113b65fc2a50e2cb4bd4f436b9c83d4a9924833a5b0432f364a2ed1c1375be"
+    },
+    {
+      "path": "../qman-directpath-core/qman_directpath_core/__init__.py",
+      "sha256": "4028f737d3877578045a0d7e3391c1f4bf69405f4fcd52e9e4aaca3bc78a344c"
+    },
+    {
+      "path": "../qman-directpath-core/tests/test_aer_core.py",
+      "sha256": "b688ece45fffd802c87e25eb127192a98af9a7291c039a9e0593db3d0452b81d"
+    },
+    {
+      "path": "../qman-directpath-core/tests/test_aer_normative_contract.py",
+      "sha256": "b714bded95731c80a4df9809f78300ed557f7539d4571acff221762971dfb0f2"
+    },
+    {
+      "path": "../qman-directpath-core/tests/test_inventory.py",
+      "sha256": "487d7910b66f20f0a4ae689283f1eb1c1f9d3dac13193b4872c097f8a6a10c1c"
+    },
+    {
+      "path": "../qman-directpath-core/README.md",
+      "sha256": "9805376bfb8683dacaece538ad34b788a7d7b9c6fbf8d02a7cc34a7050d78038"
+    }
+  ],
+  "normativeCandidateHashes": {
+    "policySchema": "492714b2edccb1b95a2ace5d6c499966b286406044b20e2bc282c4f987522fa5",
+    "matrixSchema": "20c7ebaf2ae34fa5b57d21b2b4e98d5a5002e8d87bea1014e2b21c0f550aea36",
+    "matrix": "098c069c8145f7d44bbb72f53a5321e9526c055665089650a21da89ab967342a",
+    "receiptSchema": "275907e594dc7efcb331c6255647566aea2c1f536a1a3d3258a609bea11fb9fe",
+    "algorithmSchema": "87105ee23a982857e1f4098c32cb1e5950d163710c0c12c8d0f7c4957facd52d",
+    "goldenVectors": "08ff16d227b9f5d909377aae63d3accf6fe1560d50c7f93d4fdb997ba7894ade",
+    "generator": "607ea8ea113c514ff70ce23f915f87201d0300f9fcc8c3aca0e811e5a050830f",
+    "conformanceTest": "b714bded95731c80a4df9809f78300ed557f7539d4571acff221762971dfb0f2"
+  },
+  "limitations": [
+    "No private Qman repository, real target adapter, or target commit is present.",
+    "No real VFIO filter enforcement, IRQ observer, service attribution, device-health observer, physical recovery executor, or physical M29 evidence is present.",
+    "No trusted resolver/repository signature root, monotonic authority, durable nonce consumer, authoritative clock, or linearizable CAS implementation is present.",
+    "The candidate AER schemas and matrix are not yet in portable normativeSources or the product Case registry.",
+    "This receipt cannot close G1-G6, M24-M29, R13, E3, E4, or a release decision."
+  ]
+}

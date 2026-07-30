@@ -7,6 +7,9 @@
   "oneOf": [
     {"$ref": "#/$defs/ENTITY-CONTROLLER-AUTHORITY"},
     {"$ref": "#/$defs/ENTITY-HOST-AUTHORITY"},
+    {"$ref": "#/$defs/ENTITY-CAPABILITY-POLICY-AUTHORITY"},
+    {"$ref": "#/$defs/ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY"},
+    {"$ref": "#/$defs/ENTITY-AVAILABILITY-AUTHORITY"},
     {"$ref": "#/$defs/ENTITY-OWNER-ACTIVATION-RUN"},
     {"$ref": "#/$defs/ENTITY-ASSIGNMENT-RUN"},
     {"$ref": "#/$defs/ENTITY-ASSIGNMENT-BINDING"},
@@ -200,6 +203,9 @@
       "enum": [
         "ENTITY-CONTROLLER-AUTHORITY",
         "ENTITY-HOST-AUTHORITY",
+        "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+        "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY",
+        "ENTITY-AVAILABILITY-AUTHORITY",
         "ENTITY-HOST-SNAPSHOT",
         "ENTITY-DEVICE-RECORD",
         "ENTITY-TRUST-KEY-RING",
@@ -222,6 +228,7 @@
         "ENTITY-RELOCATION-RUN",
         "ENTITY-IDEMPOTENCY-RECORD",
         "ENTITY-OPERATION-LEASE",
+        "ENTITY-OPERATION-ADMISSION-BINDING",
         "ENTITY-RELEASE-OWNERSHIP-GUARD",
         "ENTITY-AUDIT-EVENT",
         "ENTITY-OUTBOX-EVENT"
@@ -264,6 +271,12 @@
         "OP-EXECUTE-COLD-RELOCATION",
         "OP-EMIT-AUDIT-EVIDENCE",
         "OP-GATE-LIFECYCLE"
+      ]
+    },
+    "idempotencyOperationId": {
+      "oneOf": [
+        {"$ref": "#/$defs/operationId"},
+        {"const": "STATIC_ADMISSION"}
       ]
     },
     "leaseBinding": {
@@ -356,17 +369,104 @@
         "agentIdentity": {"$ref": "#/$defs/id"},
         "agentGeneration": {"$ref": "#/$defs/positiveVersion"},
         "cooperationState": {"enum": ["RECONCILING", "ONLINE_COOPERATIVE", "UNREACHABLE"]},
-        "lastSnapshotEpoch": {"$ref": "#/$defs/positiveVersion"},
-        "currentSnapshotContentHash": {"$ref": "#/$defs/digest"},
+        "lastSnapshotEpoch": {"$ref": "#/$defs/nonNegativeInteger"},
+        "currentSnapshotContentHash": {"$ref": "#/$defs/nullableDigest"},
         "lastObservedAt": {"$ref": "#/$defs/timestamp"},
         "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"lastSnapshotEpoch": {"const": 0}},
+            "required": ["lastSnapshotEpoch"]
+          },
+          "then": {
+            "properties": {
+              "cooperationState": {"const": "RECONCILING"},
+              "currentSnapshotContentHash": {"type": "null"}
+            }
+          },
+          "else": {
+            "properties": {
+              "currentSnapshotContentHash": {"$ref": "#/$defs/digest"}
+            }
+          }
+        }
+      ],
       "x-qmanCrossFieldRules": [
-        "[hostId,kernelBootId,hostEpoch,agentIdentity,agentGeneration,lastSnapshotEpoch,currentSnapshotContentHash] identifies exactly one signed current HostSnapshot",
+        "The sole unpublished-incarnation genesis form is lastSnapshotEpoch=0, currentSnapshotContentHash=null, cooperationState=RECONCILING. It is a durable CAS predecessor, not a current snapshot and never authorizes planning or a host side effect.",
+        "When lastSnapshotEpoch>=1, [hostId,kernelBootId,hostEpoch,agentIdentity,agentGeneration,lastSnapshotEpoch,currentSnapshotContentHash,resourceVersion] identifies exactly one signed current HostSnapshot whose hostAuthorityResourceVersion equals this committed resourceVersion",
         "Within one [hostId,kernelBootId,hostEpoch,agentGeneration], lastSnapshotEpoch is monotonic and currentSnapshotContentHash changes only by the atomic current-pointer CAS to that exact signed snapshot",
+        "Snapshot publication reads predecessor resourceVersion r, signs the immutable snapshot with hostAuthorityResourceVersion=r+1, compares WHERE resourceVersion=r, and atomically commits both the snapshot and HostAuthority pointer/resourceVersion=r+1; predecessor r is not a final snapshot field",
+        "OP-CAPTURE-HOST-SNAPSHOT exact-preserves hostId, hostEpoch, kernelBootId, agentIdentity, agentGeneration, and cooperationState. That publisher may change only lastSnapshotEpoch, currentSnapshotContentHash, lastObservedAt, and resourceVersion under the closed publication trace; it cannot claim owner/backend/lease/journal reconciliation or transition RECONCILING to ONLINE_COOPERATIVE",
+        "For a committed capture, lastObservedAt exact-equals the retained capture batch captureCompletedAt and is no later than repository committedAt. For NO_CHANGE it remains byte-identical to the predecessor; a heartbeat, cache touch, metric, or newly observed raw provider timestamp is not a HostAuthority mutation",
+        "A content-semantic NO_CHANGE result performs no repository write: resourceVersion, lastSnapshotEpoch, currentSnapshotContentHash, lastObservedAt, and the global AvailabilityAuthority remain byte-equal to their predecessor values",
         "A kernelBootId or agent authority replacement increments hostEpoch and/or agentGeneration and requires a new signed current snapshot before ONLINE_COOPERATIVE",
         "Only ONLINE_COOPERATIVE after completed boot, owner, backend, lease, quarantine, and journal reconciliation is schedulable; heartbeat or reachability alone never proves clean release",
         "RECONCILING and UNREACHABLE retain every existing physical claim and reject new assignment, owner, release handoff, and relocation-target side effects not explicitly authorized by reconcile"
+      ]
+    },
+    "ENTITY-CAPABILITY-POLICY-AUTHORITY": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyAuthorityId", "policyId", "policyVersion", "policyDigest", "resourceVersion"],
+      "properties": {
+        "policyAuthorityId": {"$ref": "#/$defs/id"},
+        "policyId": {"$ref": "#/$defs/id"},
+        "policyVersion": {"$ref": "#/$defs/positiveVersion"},
+        "policyDigest": {"$ref": "#/$defs/digest"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "x-qmanCrossFieldRules": [
+        "policyAuthorityId names the repository current-policy pointer; policyId, policyVersion, and policyDigest identify exactly one immutable approved capability policy document",
+        "A policyDigest supplied by a caller or copied from an evidence document is not current policy authority without this exact live pointer and resourceVersion",
+        "Activation, replacement, or rollback of the current capability policy compares the exact predecessor resourceVersion and atomically increments resourceVersion; withdrawal removes the current pointer under that same exact CAS and no guarded decision proceeds without a live pointer; policyVersion is never reused for different policy bytes",
+        "Every guarded capability decision and operation admission binds policyAuthorityId, policyId, policyVersion, policyDigest, and policy authority resourceVersion from one coherent current-authority read",
+        "OP-CAPTURE-HOST-SNAPSHOT compares this exact capability-policy authority together with HostAuthority, AvailabilityAuthority and HostSnapshotFreshnessPolicyAuthority in one SERIALIZABLE publication read set; a capture-time policy label cannot replace that transaction-scoped compare"
+      ]
+    },
+    "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "freshnessPolicyAuthorityId",
+        "policyId",
+        "policyVersion",
+        "policyDigest",
+        "resourceVersion"
+      ],
+      "properties": {
+        "freshnessPolicyAuthorityId": {"$ref": "#/$defs/id"},
+        "policyId": {"$ref": "#/$defs/id"},
+        "policyVersion": {"$ref": "#/$defs/positiveVersion"},
+        "policyDigest": {"$ref": "#/$defs/digest"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "x-qmanCrossFieldRules": [
+        "freshnessPolicyAuthorityId names the sole current HostSnapshot freshness-policy pointer; policyId, policyVersion and policyDigest identify exactly one immutable directpath-host-snapshot-publication-trace#/$defs/freshnessPolicy document",
+        "OP-CAPTURE-HOST-SNAPSHOT reads and compares this exact resourceVersion and policyDigest inside the same SERIALIZABLE repository transaction that compares HostAuthority, AvailabilityAuthority and CapabilityPolicyAuthority; a request-selected, stale, target-local or trace-only policy cannot decide NO_CHANGE",
+        "Activation, replacement or rollback compares the exact predecessor resourceVersion and increments it once; a policyVersion is never reused for different bytes. The changed policy hash enters the HostSnapshot no-change projection and therefore forces SUCCESSOR_COMMITTED",
+        "The expected current policy digest is independently injected into product verification/build configuration; this authority row and actual policy bytes must both match it"
+      ]
+    },
+    "ENTITY-AVAILABILITY-AUTHORITY": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["availabilityAuthorityId", "clusterId", "authorityScope", "lastMutationDigest", "lastMutatedAt", "resourceVersion"],
+      "properties": {
+        "availabilityAuthorityId": {"$ref": "#/$defs/id"},
+        "clusterId": {"$ref": "#/$defs/id"},
+        "authorityScope": {"const": "GLOBAL_DIRECTPATH_AVAILABILITY"},
+        "lastMutationDigest": {"$ref": "#/$defs/digest"},
+        "lastMutatedAt": {"$ref": "#/$defs/timestamp"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
+      },
+      "x-qmanCrossFieldRules": [
+        "Exactly one GLOBAL_DIRECTPATH_AVAILABILITY row exists per clusterId; every host and every DirectPath availability predicate in that cluster is covered by this row",
+        "Every insert, update, or delete that can change any AvailabilityReadSet result, selected member version, blocking claim, blocking lease, quarantine, remediation, clean-release fact, current host snapshot, device generation, health, owner, or dependency membership increments this global resourceVersion in the same serializable transaction",
+        "An availability read and its authorizing OperationLease creation read or lock this exact global row and compare its resourceVersion in the same serializable transaction, so a newly inserted overlapping claim or quarantine cannot appear as an unobserved phantom",
+        "A host-local, bundle-local, device-local, overlap-key, or caller-selected scope row is not sufficient availability authority in this version; global contention is accepted until a later closed schema proves complete overlap membership and atomic multi-scope fencing",
+        "lastMutationDigest commits the canonical mutation set that advanced resourceVersion and is audit correlation only; it never substitutes for reading the affected authority rows or for the OperationLease CAS"
       ]
     },
     "ENTITY-OWNER-ACTIVATION-RUN": {
@@ -796,15 +896,17 @@
     "ENTITY-IDEMPOTENCY-RECORD": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["scope", "idempotencyKey", "requestHash", "state", "runId", "responseHash", "expiresAt"],
+      "required": ["operationId", "idempotencyScopeHash", "idempotencyKey", "requestHash", "state", "runId", "responseHash", "expiresAt", "resourceVersion"],
       "properties": {
-        "scope": {"$ref": "#/$defs/id"},
+        "operationId": {"$ref": "#/$defs/idempotencyOperationId"},
+        "idempotencyScopeHash": {"$ref": "#/$defs/digest"},
         "idempotencyKey": {"$ref": "#/$defs/id"},
         "requestHash": {"$ref": "#/$defs/digest"},
         "state": {"enum": ["IN_PROGRESS", "COMPLETED"]},
         "runId": {"$ref": "#/$defs/id"},
         "responseHash": {"$ref": "#/$defs/nullableDigest"},
-        "expiresAt": {"$ref": "#/$defs/timestamp"}
+        "expiresAt": {"$ref": "#/$defs/timestamp"},
+        "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
       },
       "allOf": [
         {
@@ -817,16 +919,17 @@
         }
       ],
       "x-qmanLifecycleRules": [
-        "[scope,idempotencyKey] is a permanent natural key for the retention window",
-        "The first accepted canonical requestHash fixes exactly one runId; the same key and hash replays that run/result and a different hash is rejected with IDEMPOTENCY_KEY_REUSED",
-        "COMPLETED is monotonic and its responseHash is immutable; retry or client timeout never creates a second run, lease, or physical side effect",
-        "Expiry only permits retention cleanup after every referenced operation, audit, lease, and recovery obligation is independently durable; expiry is never cancellation or release authority"
+        "[operationId,idempotencyScopeHash,idempotencyKey] is a permanent natural key for the retention window and is byte-equal to the accepted REQUEST envelope tuple",
+        "The first accepted canonical requestHash inserts exactly one runId with resourceVersion 1; the same key and hash replays that run/result and a different hash is rejected with IDEMPOTENCY_KEY_REUSED",
+        "IN_PROGRESS to COMPLETED compares the exact current resourceVersion and atomically commits the non-null responseHash plus resourceVersion+1; a lost compare-and-swap cannot overwrite the winning result",
+        "COMPLETED is monotonic and its responseHash is immutable; retry, replay, or client timeout is read-only and never increments resourceVersion or creates a second run, lease, or physical side effect",
+        "Expiry cleanup compares the exact resourceVersion and only removes the record after every referenced operation, audit, lease, and recovery obligation is independently durable; expiry is never cancellation or release authority"
       ]
     },
     "ENTITY-OPERATION-LEASE": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["operationLeaseId", "leaseType", "scopeHash", "runIdOrIntentId", "bundleIds", "memberGenerations", "hostEpoch", "runGenerationOrNull", "holderControllerGeneration", "state", "resourceVersion"],
+      "required": ["operationLeaseId", "leaseType", "scopeHash", "runIdOrIntentId", "bundleIds", "memberGenerations", "hostEpoch", "runGenerationOrNull", "holderControllerGeneration", "admissionBindingHashOrNull", "state", "resourceVersion"],
       "properties": {
         "operationLeaseId": {"$ref": "#/$defs/id"},
         "leaseType": {"enum": ["OWNER_TRANSITION", "ASSIGNMENT_PREPARE", "RELEASE", "RELOCATION_HANDOFF", "QUARANTINE_REMEDIATION"]},
@@ -837,6 +940,7 @@
         "hostEpoch": {"$ref": "#/$defs/positiveVersion"},
         "runGenerationOrNull": {"$ref": "#/$defs/nullablePositiveVersion"},
         "holderControllerGeneration": {"$ref": "#/$defs/positiveVersion"},
+        "admissionBindingHashOrNull": {"$ref": "#/$defs/nullableDigest"},
         "state": {"enum": ["ACTIVE", "CONSUMED", "REVOKED", "QUARANTINED"]},
         "resourceVersion": {"$ref": "#/$defs/positiveVersion"}
       },
@@ -844,12 +948,18 @@
         {
           "if": {"properties": {"leaseType": {"enum": ["ASSIGNMENT_PREPARE", "RELEASE", "RELOCATION_HANDOFF"]}}, "required": ["leaseType"]},
           "then": {"properties": {"runGenerationOrNull": {"$ref": "#/$defs/positiveVersion"}}}
+        },
+        {
+          "if": {"properties": {"leaseType": {"const": "ASSIGNMENT_PREPARE"}}, "required": ["leaseType"]},
+          "then": {"properties": {"admissionBindingHashOrNull": {"$ref": "#/$defs/digest"}}},
+          "else": {"properties": {"admissionBindingHashOrNull": {"type": "null"}}}
         }
       ],
       "x-qmanLifecycleRules": [
-        "Only ACTIVE authorizes the one exact leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, run generation or intent version, controller generation, and resourceVersion",
+        "Only ACTIVE authorizes the one exact leaseType, scopeHash, runIdOrIntentId, bundleIds, memberGenerations, hostEpoch, run generation or intent version, controller generation, admission binding hash, and resourceVersion",
+        "ASSIGNMENT_PREPARE has one non-null admissionBindingHashOrNull naming the exact immutable ENTITY-OPERATION-ADMISSION-BINDING created atomically with this lease under a repository UNIQUE operationLeaseId constraint; every other current lease type has null",
         "The five leaseType values are non-interchangeable and every physical/reset/exclusive-domain overlap uses one shared conflict key",
-        "The executor revalidates the live ACTIVE row and sealed capability before the first covered side effect and binds it to an fsynced Host Action Journal INTENT",
+        "The executor revalidates the live ACTIVE row and sealed capability, including exact admissionBindingHashOrNull equality, before the first covered side effect and binds it to an fsynced Host Action Journal INTENT",
         "CONSUMED and REVOKED never authorize or resume a side effect; replay returns the durable prior result or requires a new lease",
         "QUARANTINED never authorizes normal side effects and retains the complete scope's deny/claim effect until full-scope remediation",
         "Lease loss, ambiguity, controller expiry, or host loss after a side effect enters reconcile and retains/quarantines claims; it never implies clean release"

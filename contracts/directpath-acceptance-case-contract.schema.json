@@ -96,6 +96,16 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["caseId", "definitionPath", "definitionFileSha256", "definitionRecordSha256", "designMatrix", "classification", "testObligationIds", "parityObligationIds", "requiredPortIds", "requiredOperationIds", "requiredTransitionIds", "requiredFaultClasses", "requiredArtifactSchemaRefs", "requiredOracleClasses", "minimumRepeat", "minimumDurationSeconds", "assertions", "evidenceBoundary", "caseContractDigest"],
+      "allOf": [
+        {
+          "if": {"required": ["requiredEntityIds"]},
+          "then": {"required": ["requiredReasonIds"]}
+        },
+        {
+          "if": {"required": ["requiredReasonIds"]},
+          "then": {"required": ["requiredEntityIds"]}
+        }
+      ],
       "properties": {
         "caseId": {"type": "string", "pattern": "^(C|O|S|D|M|F)[0-9]{2}[a-z]?$"},
         "definitionPath": {"type": "string", "pattern": "^acceptance/cases/[A-Za-z0-9._-]+\\.json$"},
@@ -108,6 +118,8 @@
         "requiredPortIds": {"$ref": "#/$defs/nonEmptyIdSet"},
         "requiredOperationIds": {"$ref": "#/$defs/nonEmptyIdSet"},
         "requiredTransitionIds": {"$ref": "#/$defs/idSet", "description": "Empty is valid for a read-only capability Case whose required operations do not transition an authority aggregate."},
+        "requiredEntityIds": {"$ref": "#/$defs/nonEmptyIdSet", "description": "Exact portable entity surface fixed by an explicit Case trace. This property is absent on a legacy Tech Story-derived Case until it atomically opts into all five explicit trace fields."},
+        "requiredReasonIds": {"$ref": "#/$defs/nonEmptyIdSet", "description": "Exact portable reason-code surface fixed by an explicit Case trace. This property is absent on a legacy Tech Story-derived Case until it atomically opts into all five explicit trace fields."},
         "requiredFaultClasses": {"$ref": "#/$defs/idSet"},
         "requiredArtifactSchemaRefs": {"$ref": "#/$defs/nonEmptyIdSet"},
         "requiredOracleClasses": {
@@ -127,6 +139,6 @@
     }
   },
   "x-qmanDigestRule": "For each record, set caseContractDigest to null in an in-memory projection and hash CANONICAL-JSON-V1 bytes. For the registry, set registryDigest to null after every record digest is populated and hash CANONICAL-JSON-V1 bytes. The null projections are calculation forms and are not valid stored records.",
-  "x-qmanExecutionRule": "A scenario binds the exact caseContractDigest and all assertion IDs/digests. Each assertion resolves to a target predicate symbol and immutable interface hash; every iteration returns PASS plus same-iteration artifact hashes for every assertion. Case closure aggregates only EXECUTED_PASS scenarios at the exact target commit/mapping core and must cover the registry-required operations, transitions, fault classes, schema-validated artifacts, repeat, duration, dependencies, and all eight oracle classes.",
+  "x-qmanExecutionRule": "A scenario binds the exact caseContractDigest and all assertion IDs/digests. Each assertion resolves to a target predicate symbol and immutable interface hash; every iteration returns PASS plus same-iteration artifact hashes for every assertion. Case closure aggregates only EXECUTED_PASS scenarios at the exact target commit/mapping core and must cover the registry-required operations, transitions, fault classes, schema-validated artifacts, repeat, duration, dependencies, and all eight oracle classes. An explicitly present requiredEntityIds or requiredReasonIds set is also contract-bound and overlays that Case onto each matching portable mapping verification row; these properties are absent on a legacy Case until it atomically opts into all five explicit trace fields.",
   "x-qmanStatusRule": "Only a Case whose current source classification is EXECUTABLE and PRODUCT may be used for product closure. IMPLEMENTATION_BLOCKED and HARDWARE_BLOCKED scenarios may be authored and run for diagnosis but cannot be represented as closure evidence. REFERENCE_MODEL and VMware evidence can inform predicates but never close product or qualification status."
 }

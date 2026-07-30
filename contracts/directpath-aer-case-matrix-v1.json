@@ -1,0 +1,2744 @@
+{
+  "subjectType": "QMAN_AER_CASE_MATRIX",
+  "schemaVersion": 1,
+  "matrixId": "QMAN-AER-M24-M29-COMPONENT-MATRIX-V1",
+  "authorityBoundary": "COMPONENT_PREMISE",
+  "productAuthorized": false,
+  "correctableBits": [
+    1,
+    64,
+    128,
+    256,
+    4096,
+    8192,
+    16384,
+    32768
+  ],
+  "requiredCaseIds": [
+    "M24",
+    "M25",
+    "M26",
+    "M27",
+    "M28",
+    "M29"
+  ],
+  "cases": [
+    {
+      "caseId": "M24",
+      "title": "Correctable deposition and independent Endpoint status clear",
+      "tupleCount": 8,
+      "tuples": [
+        {
+          "tupleId": "M24-B0",
+          "caseId": "M24",
+          "ordinal": 1,
+          "scenario": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C",
+          "correctableBit": 1,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedEndpointDeposition": true,
+          "expectedRootDeposition": false,
+          "expectedIndependentCesCedW1c": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:9706ffebf6b22c4cfda8d2f41bd63a97644184337dfbdf3d7b00805158b45778"
+        },
+        {
+          "tupleId": "M24-B1",
+          "caseId": "M24",
+          "ordinal": 2,
+          "scenario": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C",
+          "correctableBit": 64,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedEndpointDeposition": true,
+          "expectedRootDeposition": false,
+          "expectedIndependentCesCedW1c": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:47d5876805e3789d5d3926213bfd52e20f57432c566ef9a8245799a0b64bb578"
+        },
+        {
+          "tupleId": "M24-B2",
+          "caseId": "M24",
+          "ordinal": 3,
+          "scenario": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C",
+          "correctableBit": 128,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedEndpointDeposition": true,
+          "expectedRootDeposition": false,
+          "expectedIndependentCesCedW1c": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:9aad39479d1d3b92715abf9de465baa6e3254c84f160b944429d8af0422f933b"
+        },
+        {
+          "tupleId": "M24-B3",
+          "caseId": "M24",
+          "ordinal": 4,
+          "scenario": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C",
+          "correctableBit": 256,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedEndpointDeposition": true,
+          "expectedRootDeposition": false,
+          "expectedIndependentCesCedW1c": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:80d009e4119f2a08960fbd3a52f33eb7a7366026a6ffd2f7749d09d415c6acb6"
+        },
+        {
+          "tupleId": "M24-B4",
+          "caseId": "M24",
+          "ordinal": 5,
+          "scenario": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C",
+          "correctableBit": 4096,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedEndpointDeposition": true,
+          "expectedRootDeposition": false,
+          "expectedIndependentCesCedW1c": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:22810d426e3332da1bf671f42a8ac30e5240e6fe72200564ed9b54a78c39915d"
+        },
+        {
+          "tupleId": "M24-B5",
+          "caseId": "M24",
+          "ordinal": 6,
+          "scenario": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C",
+          "correctableBit": 8192,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedEndpointDeposition": true,
+          "expectedRootDeposition": false,
+          "expectedIndependentCesCedW1c": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:ec300399667ed9c5b302f4aa3555a567fcdb9f448c1f5ec170e2ad4a205acfc4"
+        },
+        {
+          "tupleId": "M24-B6",
+          "caseId": "M24",
+          "ordinal": 7,
+          "scenario": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C",
+          "correctableBit": 16384,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedEndpointDeposition": true,
+          "expectedRootDeposition": false,
+          "expectedIndependentCesCedW1c": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:74b7726cf3ac5f2465546a8d2e70a09bb529c4758657b10dab85bcf86cd0d4a0"
+        },
+        {
+          "tupleId": "M24-B7",
+          "caseId": "M24",
+          "ordinal": 8,
+          "scenario": "CORRECTABLE_DEPOSITION_AND_INDEPENDENT_ENDPOINT_W1C",
+          "correctableBit": 32768,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedEndpointDeposition": true,
+          "expectedRootDeposition": false,
+          "expectedIndependentCesCedW1c": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:9721848261fd21942026251176d77c038fe5cad421afcb50afca9c91a325c86f"
+        }
+      ]
+    },
+    {
+      "caseId": "M25",
+      "title": "Eight Correctable bits by eight E/M/R route tuples",
+      "tupleCount": 64,
+      "tuples": [
+        {
+          "tupleId": "M25-B0-G000",
+          "caseId": "M25",
+          "ordinal": 1,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 1,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:bac5cfbf602162425ef3fc3a61e22e346e925330cfd3cd55a27d7c7fa7372df1"
+        },
+        {
+          "tupleId": "M25-B0-G001",
+          "caseId": "M25",
+          "ordinal": 2,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 1,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:0f0973348ddbe4fcb1b8b2d3b1041062f54e2d5be4da55ceeb08f2d91c2556ac"
+        },
+        {
+          "tupleId": "M25-B0-G010",
+          "caseId": "M25",
+          "ordinal": 3,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 1,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:435c106ce65c2555a17a6d9504f83b66a535c77281190622fe5d1d52b8017814"
+        },
+        {
+          "tupleId": "M25-B0-G011",
+          "caseId": "M25",
+          "ordinal": 4,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 1,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:8b52823125ff85f42f8685aab974ceeea634dc50b840674bbe71d13d3d3dae95"
+        },
+        {
+          "tupleId": "M25-B0-G100",
+          "caseId": "M25",
+          "ordinal": 5,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 1,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:ea7c0ddc81e731b1e7640667136a077022526df5cc330596fc2660835c387716"
+        },
+        {
+          "tupleId": "M25-B0-G101",
+          "caseId": "M25",
+          "ordinal": 6,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 1,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:43c7e3e6f35bdfa6670cc55648f0faf938de9c5e3c172fc37a25056f53da4b60"
+        },
+        {
+          "tupleId": "M25-B0-G110",
+          "caseId": "M25",
+          "ordinal": 7,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 1,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:716b7699fd8d6117cca3cd4989df0594adbbb74032ae799dc725351f0f2afd69"
+        },
+        {
+          "tupleId": "M25-B0-G111",
+          "caseId": "M25",
+          "ordinal": 8,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 1,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:c3aad9fb638421bc2cccba2f34bd2e331dc79f7130ad86452afc89274e801865"
+        },
+        {
+          "tupleId": "M25-B1-G000",
+          "caseId": "M25",
+          "ordinal": 9,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 64,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:ede14cc3a9d8944e283149edc3c4e37262c850d08482ad66e74b496a8fb60dbe"
+        },
+        {
+          "tupleId": "M25-B1-G001",
+          "caseId": "M25",
+          "ordinal": 10,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 64,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:06a747fed8177c5b0c5cad50fa2e23606bbb2c8ec178d57db495cc9696c40024"
+        },
+        {
+          "tupleId": "M25-B1-G010",
+          "caseId": "M25",
+          "ordinal": 11,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 64,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:35b4c583739d867b694f925abbb95f4dbedd557071f8d2dcdb3f7d5a3b89996e"
+        },
+        {
+          "tupleId": "M25-B1-G011",
+          "caseId": "M25",
+          "ordinal": 12,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 64,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:b4967cbb310e14c803d3a56f8c6cd9b059cff74266fed554a6a97e34619661a0"
+        },
+        {
+          "tupleId": "M25-B1-G100",
+          "caseId": "M25",
+          "ordinal": 13,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 64,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:a5129a6633edab4353dc4e39812e6ca1c1c7dc2ee93e09c9cb16cd6c3876b8b3"
+        },
+        {
+          "tupleId": "M25-B1-G101",
+          "caseId": "M25",
+          "ordinal": 14,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 64,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:6ea9fe10e5bd8cee9c25c1c9fd096101b184239f7a6184b627e8a18633b436d4"
+        },
+        {
+          "tupleId": "M25-B1-G110",
+          "caseId": "M25",
+          "ordinal": 15,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 64,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:99c1a229f16cd4a5f8c10008d785b28a58d3e3578dde40a0cdb35c7d2fe123a9"
+        },
+        {
+          "tupleId": "M25-B1-G111",
+          "caseId": "M25",
+          "ordinal": 16,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 64,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:370d829582f0304c0319943c7886a59980eb19909c407064f675cb2ef4606c51"
+        },
+        {
+          "tupleId": "M25-B2-G000",
+          "caseId": "M25",
+          "ordinal": 17,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 128,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:c3348548b67b892ac836c6b86ef44a7d11965fac426ccb1d775ab8173898baf8"
+        },
+        {
+          "tupleId": "M25-B2-G001",
+          "caseId": "M25",
+          "ordinal": 18,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 128,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:ace86293b23fadcfb65e79c5462e5e52017756aca4ea5a3ee935bd0afdf9bbe0"
+        },
+        {
+          "tupleId": "M25-B2-G010",
+          "caseId": "M25",
+          "ordinal": 19,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 128,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:1cc5e22a907b04e8c831c5c38dee723195f5e9247e05f0a246bc4759187fd6ce"
+        },
+        {
+          "tupleId": "M25-B2-G011",
+          "caseId": "M25",
+          "ordinal": 20,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 128,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:d12b84e2a91b3dd1288602965e483e4b0f700c9785c3090119139da45f9c6222"
+        },
+        {
+          "tupleId": "M25-B2-G100",
+          "caseId": "M25",
+          "ordinal": 21,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 128,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:c0adb6ac85ea0b6b6c9f04dfeffc88cb3094b994f5e55e82ac12aad629f93d4d"
+        },
+        {
+          "tupleId": "M25-B2-G101",
+          "caseId": "M25",
+          "ordinal": 22,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 128,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:407a07500d306537a8c84f5e5a681b8f2b65aaaecc949df3c08b7bdc7c150e45"
+        },
+        {
+          "tupleId": "M25-B2-G110",
+          "caseId": "M25",
+          "ordinal": 23,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 128,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:39041c36062a426c60d74222c8fc31c4627f77f98ee5c1adf4aedb5e8e1da3a2"
+        },
+        {
+          "tupleId": "M25-B2-G111",
+          "caseId": "M25",
+          "ordinal": 24,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 128,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:46207016c36a0c4c53b45c0772324a7df963c8d3f8cf2202d8170ce5167832e7"
+        },
+        {
+          "tupleId": "M25-B3-G000",
+          "caseId": "M25",
+          "ordinal": 25,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 256,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:95b5d4389b993b4948e283dbcb0247b2e4e22d686f637c06ad427cad5879d1c5"
+        },
+        {
+          "tupleId": "M25-B3-G001",
+          "caseId": "M25",
+          "ordinal": 26,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 256,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:199f9ac9424dac6ce6c44396be1446d8cc13fca46fb9de3918eb21c091fdf227"
+        },
+        {
+          "tupleId": "M25-B3-G010",
+          "caseId": "M25",
+          "ordinal": 27,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 256,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:5d824ca83e5d61024e188a1e17fbbce5dd38406b72e83ecf25b55a6073c4ee4b"
+        },
+        {
+          "tupleId": "M25-B3-G011",
+          "caseId": "M25",
+          "ordinal": 28,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 256,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:7f4082f01834038924db3303ccdc48d3fb0c4162e5bc24d1323d4388d438dc2b"
+        },
+        {
+          "tupleId": "M25-B3-G100",
+          "caseId": "M25",
+          "ordinal": 29,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 256,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:77b1cf3b17d8051b3850354ca2d08aaa0ebbd4a394d82725dfdda1d9c9f71faf"
+        },
+        {
+          "tupleId": "M25-B3-G101",
+          "caseId": "M25",
+          "ordinal": 30,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 256,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:2a39c2277e35eff30f9e21aae4b6daa205eb0c6aaf2167d66c7bc22aa84f518e"
+        },
+        {
+          "tupleId": "M25-B3-G110",
+          "caseId": "M25",
+          "ordinal": 31,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 256,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:e1d8608a39b36df05a4577e1db950c1c2cde372bd02b3a42ded18f5b919cd2c2"
+        },
+        {
+          "tupleId": "M25-B3-G111",
+          "caseId": "M25",
+          "ordinal": 32,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 256,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:6a4137dfbda4d25d1908c6ab5fdf70c25b42595b34a00294b2a13195145dadec"
+        },
+        {
+          "tupleId": "M25-B4-G000",
+          "caseId": "M25",
+          "ordinal": 33,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 4096,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:38f7be96a72d5957df5788bda0a812ddb935d8f35078db81919db64299b2c721"
+        },
+        {
+          "tupleId": "M25-B4-G001",
+          "caseId": "M25",
+          "ordinal": 34,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 4096,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:1be3befb052873e6dd39d878730e60d38f2842f6c61d5c27e4c3c2b73da7d279"
+        },
+        {
+          "tupleId": "M25-B4-G010",
+          "caseId": "M25",
+          "ordinal": 35,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 4096,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:3c047f159c288fa009158e65042afa8147ca4d438dd5ca446ec9b17fc7c35190"
+        },
+        {
+          "tupleId": "M25-B4-G011",
+          "caseId": "M25",
+          "ordinal": 36,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 4096,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:4385fc6eefe3aa0924bc1fd2a09cb09dfbb3e593e6c9d47ba3db0022c9e1063a"
+        },
+        {
+          "tupleId": "M25-B4-G100",
+          "caseId": "M25",
+          "ordinal": 37,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 4096,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:0185bb7ae7e6cf8202ac5f1abc185b3d3f2f7d6f4a1b9d80fba9730bca3d5214"
+        },
+        {
+          "tupleId": "M25-B4-G101",
+          "caseId": "M25",
+          "ordinal": 38,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 4096,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:48d22ba0ca2480c961864997e61783b4c181bf44f8d7c4e3e585ff892d80ae5f"
+        },
+        {
+          "tupleId": "M25-B4-G110",
+          "caseId": "M25",
+          "ordinal": 39,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 4096,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:a2a2e6409cb7c70a0491ad5a38ae26aa2784d0438222b9c76c788b4b486d04b5"
+        },
+        {
+          "tupleId": "M25-B4-G111",
+          "caseId": "M25",
+          "ordinal": 40,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 4096,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:1ffe9b5ad4e344d8c70e850788c7a0847290ad7010d29971955975b496340d4b"
+        },
+        {
+          "tupleId": "M25-B5-G000",
+          "caseId": "M25",
+          "ordinal": 41,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 8192,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:23191c9932b45775ac946e67c9e1bda439dedc3503753e2046f9c4e970cf6201"
+        },
+        {
+          "tupleId": "M25-B5-G001",
+          "caseId": "M25",
+          "ordinal": 42,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 8192,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:3fdf92205809b6031325f34ac40742061408156781729d6023903ddc1fe2d881"
+        },
+        {
+          "tupleId": "M25-B5-G010",
+          "caseId": "M25",
+          "ordinal": 43,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 8192,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:88052d2bece24f01a0e14d42070830dc14a45f86d5ee09519b32b792243053e1"
+        },
+        {
+          "tupleId": "M25-B5-G011",
+          "caseId": "M25",
+          "ordinal": 44,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 8192,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:4f5a72c3f871c99c6699c84dc92e8de53be72d5f2e4e5e946707c2cc0f64e117"
+        },
+        {
+          "tupleId": "M25-B5-G100",
+          "caseId": "M25",
+          "ordinal": 45,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 8192,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:37ae4c829d7953d3deaccfc7257c417bb5dfca8d2ee48fe75a2721d3b3289eb9"
+        },
+        {
+          "tupleId": "M25-B5-G101",
+          "caseId": "M25",
+          "ordinal": 46,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 8192,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:9a8b42d14c022d175e1b7f344990fe742700e53e7d1b10bdb3a1e1b925bd5f9c"
+        },
+        {
+          "tupleId": "M25-B5-G110",
+          "caseId": "M25",
+          "ordinal": 47,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 8192,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:ef75b3e35920dbe4992fe0404dd913788022192564d152235dad3e36320e69e5"
+        },
+        {
+          "tupleId": "M25-B5-G111",
+          "caseId": "M25",
+          "ordinal": 48,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 8192,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:b4dc49ea1e00b72208d286ee42c387d8d5ff4a02fad74e11158f09afb8ac1e84"
+        },
+        {
+          "tupleId": "M25-B6-G000",
+          "caseId": "M25",
+          "ordinal": 49,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 16384,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:cd11611e1163a61bed2eedcbcee54e97487a86acbb313f48def5d7e72ad3ae85"
+        },
+        {
+          "tupleId": "M25-B6-G001",
+          "caseId": "M25",
+          "ordinal": 50,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 16384,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:4e404e035533435f345ace6b2a9682afaa439e8b342e64ec7ee42ce9957b5a3c"
+        },
+        {
+          "tupleId": "M25-B6-G010",
+          "caseId": "M25",
+          "ordinal": 51,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 16384,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:6d9ee7f462fdf04f063ce9b6d6a2977042f9864bcdcc70acf7bc5da504879e48"
+        },
+        {
+          "tupleId": "M25-B6-G011",
+          "caseId": "M25",
+          "ordinal": 52,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 16384,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:b0423124ed4101d27354ff6a209bbe658f8d3e7925a483a3af153ecec0614a77"
+        },
+        {
+          "tupleId": "M25-B6-G100",
+          "caseId": "M25",
+          "ordinal": 53,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 16384,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:2e764675acd5ea9f123cdb6473fa24142e984a578aefa973e50851680c15208e"
+        },
+        {
+          "tupleId": "M25-B6-G101",
+          "caseId": "M25",
+          "ordinal": 54,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 16384,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:478c15b8d558eb2455b7546845714ef53c334260b254d1a6e52a5c132ea331b6"
+        },
+        {
+          "tupleId": "M25-B6-G110",
+          "caseId": "M25",
+          "ordinal": 55,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 16384,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:6767f7fffe842cc1117b1bd9c33c349b9c621d4c7db99368e4a42f8ca4966cde"
+        },
+        {
+          "tupleId": "M25-B6-G111",
+          "caseId": "M25",
+          "ordinal": 56,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 16384,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:c750598fe78c07d68da6cc911de7bf36923255065f57a84c7633b52b44614996"
+        },
+        {
+          "tupleId": "M25-B7-G000",
+          "caseId": "M25",
+          "ordinal": 57,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 32768,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:a20925155646157300bb4cee2cf29336f408985afe05fe13b2d18471749b3cc3"
+        },
+        {
+          "tupleId": "M25-B7-G001",
+          "caseId": "M25",
+          "ordinal": 58,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 32768,
+          "endpointCere": false,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:02bae23466c9389f4f332f5b9564cb4afc38181e4c6de73bc3e1eeedc20cde4a"
+        },
+        {
+          "tupleId": "M25-B7-G010",
+          "caseId": "M25",
+          "ordinal": 59,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 32768,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:309951dd462ecf5bd03fb147a00807bf65cba65eedf0fee4c3bbc5dcaa30c71b"
+        },
+        {
+          "tupleId": "M25-B7-G011",
+          "caseId": "M25",
+          "ordinal": 60,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 32768,
+          "endpointCere": false,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:e0756490b52fa4d1cfe19979f6f08a415a6a80142efb81c391d90040f0fd9340"
+        },
+        {
+          "tupleId": "M25-B7-G100",
+          "caseId": "M25",
+          "ordinal": 61,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 32768,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:264c414c34ebe6aba463965d8fbf8f4d26e1bebb4151841e4d83cda62bde576c"
+        },
+        {
+          "tupleId": "M25-B7-G101",
+          "caseId": "M25",
+          "ordinal": 62,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 32768,
+          "endpointCere": true,
+          "controlledBitMasked": false,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": true,
+          "expectedNotificationEligible": true,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:7bb103e40fb6deb0013b294d7484ff88b2c5b73d4c9ae60af08a400479a78844"
+        },
+        {
+          "tupleId": "M25-B7-G110",
+          "caseId": "M25",
+          "ordinal": 63,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 32768,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": false,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:5acf463a6581f25aee8560028bbe04da33bc298ea5d75ad830cf5425977397fa"
+        },
+        {
+          "tupleId": "M25-B7-G111",
+          "caseId": "M25",
+          "ordinal": 64,
+          "scenario": "E_M_R_ROUTE_TRUTH_TABLE",
+          "correctableBit": 32768,
+          "endpointCere": true,
+          "controlledBitMasked": true,
+          "rootCorEnabled": true,
+          "expectedRootDeposition": false,
+          "expectedNotificationEligible": false,
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:cf60da93c7b8aa07ea0b6391f77ca8707430513109162a07e8c5e2ed0a9de9b7"
+        }
+      ]
+    },
+    {
+      "caseId": "M26",
+      "title": "Owner-bound retained Root first/multiple, W1C, OR and rearm sequence",
+      "tupleCount": 24,
+      "tuples": [
+        {
+          "tupleId": "M26-O0-FIRST_MULTIPLE-R01",
+          "caseId": "M26",
+          "ordinal": 1,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "FIRST_MULTIPLE",
+          "repeatIndex": 1,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:032223bbbd35baf3236a74295de366e6db68b418ed3bf89bbffab75d68dd5e00"
+        },
+        {
+          "tupleId": "M26-O0-FIRST_MULTIPLE-R02",
+          "caseId": "M26",
+          "ordinal": 2,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "FIRST_MULTIPLE",
+          "repeatIndex": 2,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:fcdda8a47b1335dd6e8a9afe034f5c2374ccbc6ef5e87e385cc883a0f30ee460"
+        },
+        {
+          "tupleId": "M26-O0-FIRST_MULTIPLE-R03",
+          "caseId": "M26",
+          "ordinal": 3,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "FIRST_MULTIPLE",
+          "repeatIndex": 3,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:0f02fbab31c457a9caa75873bd39e5a8ccf1f347a56dbe8830b5f5a9791dc173"
+        },
+        {
+          "tupleId": "M26-O0-INDEPENDENT_W1C-R01",
+          "caseId": "M26",
+          "ordinal": 4,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "INDEPENDENT_W1C",
+          "repeatIndex": 1,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:4ea468ede6946eb4feba193fab8b16711c350edf8d79abd519c779a619517c00"
+        },
+        {
+          "tupleId": "M26-O0-INDEPENDENT_W1C-R02",
+          "caseId": "M26",
+          "ordinal": 5,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "INDEPENDENT_W1C",
+          "repeatIndex": 2,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:ca52ba96f1ebccf46af2f445d870b9ad9a3eaf5bd1752a37f6ff80b6fc03c298"
+        },
+        {
+          "tupleId": "M26-O0-INDEPENDENT_W1C-R03",
+          "caseId": "M26",
+          "ordinal": 6,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "INDEPENDENT_W1C",
+          "repeatIndex": 3,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:49f4e5198074cf0aaa8c1186abb9505d90e18d44084553743e81d423bb212340"
+        },
+        {
+          "tupleId": "M26-O0-BIT_OR-R01",
+          "caseId": "M26",
+          "ordinal": 7,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "BIT_OR",
+          "repeatIndex": 1,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:b88f258316e831a5e04c870ee0b1b45c245fdcc0764c83dbc7357f163233e71e"
+        },
+        {
+          "tupleId": "M26-O0-BIT_OR-R02",
+          "caseId": "M26",
+          "ordinal": 8,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "BIT_OR",
+          "repeatIndex": 2,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:1558908172a7955550c5fb8e85dcd7c7ca63b2f69dbd3ee13de76dcdc9879ae6"
+        },
+        {
+          "tupleId": "M26-O0-BIT_OR-R03",
+          "caseId": "M26",
+          "ordinal": 9,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "BIT_OR",
+          "repeatIndex": 3,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:100d4ea2335ac781f1061b735bfff2f4a4f4efd93e0a00a5eed4bf8976aee43f"
+        },
+        {
+          "tupleId": "M26-O0-REARM-R01",
+          "caseId": "M26",
+          "ordinal": 10,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "REARM",
+          "repeatIndex": 1,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:880662d9c981e2714407bfaecc0df547acb4beb7e6f59d9269d0428d3d9f64fb"
+        },
+        {
+          "tupleId": "M26-O0-REARM-R02",
+          "caseId": "M26",
+          "ordinal": 11,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "REARM",
+          "repeatIndex": 2,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:1d7a17ff736cca1e989e4383c696985a0fd1976d2f290f4d00389908365ceefb"
+        },
+        {
+          "tupleId": "M26-O0-REARM-R03",
+          "caseId": "M26",
+          "ordinal": 12,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O0",
+          "ownerSemanticClass": "HOST_OWNED_IDLE",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "REARM",
+          "repeatIndex": 3,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O0"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:1a86482589df8651b9d5bcc4a8f8b295da8b68c9284babc3203aa9ad2bfaecd5"
+        },
+        {
+          "tupleId": "M26-O4-FIRST_MULTIPLE-R01",
+          "caseId": "M26",
+          "ordinal": 13,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "FIRST_MULTIPLE",
+          "repeatIndex": 1,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:194421f15e472f4c9becf52132f4ed2c7e64ca6548c54e1c793baa97adaca76f"
+        },
+        {
+          "tupleId": "M26-O4-FIRST_MULTIPLE-R02",
+          "caseId": "M26",
+          "ordinal": 14,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "FIRST_MULTIPLE",
+          "repeatIndex": 2,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:50b662de17657520c8d7cb01e7c9e24c62ec17bcf1cf847bfe7552a1952780db"
+        },
+        {
+          "tupleId": "M26-O4-FIRST_MULTIPLE-R03",
+          "caseId": "M26",
+          "ordinal": 15,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "FIRST_MULTIPLE",
+          "repeatIndex": 3,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:b515bd9defe5d5ac7b13c7ad68b35e71bac41cba451d3c3e2e833edc36a8ca97"
+        },
+        {
+          "tupleId": "M26-O4-INDEPENDENT_W1C-R01",
+          "caseId": "M26",
+          "ordinal": 16,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "INDEPENDENT_W1C",
+          "repeatIndex": 1,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:2770ff09702e663bbad32c174ce78f9e48726791b983ed1d55c13da4f96490d3"
+        },
+        {
+          "tupleId": "M26-O4-INDEPENDENT_W1C-R02",
+          "caseId": "M26",
+          "ordinal": 17,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "INDEPENDENT_W1C",
+          "repeatIndex": 2,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:7c6d1996273ebbc9bbcf475c511c8a25a95a1313f0aea4848abc2faa0c198f26"
+        },
+        {
+          "tupleId": "M26-O4-INDEPENDENT_W1C-R03",
+          "caseId": "M26",
+          "ordinal": 18,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "INDEPENDENT_W1C",
+          "repeatIndex": 3,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:4992d48f80c33d7d39d35239c33055f8a4c9aec777305fe2fa8daf59180e42a1"
+        },
+        {
+          "tupleId": "M26-O4-BIT_OR-R01",
+          "caseId": "M26",
+          "ordinal": 19,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "BIT_OR",
+          "repeatIndex": 1,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:421a730fec21089efe0aa0e06ef5fa58ff6801ec5dc4b4fc2c98ca7354c11c71"
+        },
+        {
+          "tupleId": "M26-O4-BIT_OR-R02",
+          "caseId": "M26",
+          "ordinal": 20,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "BIT_OR",
+          "repeatIndex": 2,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:845545577838936de0ca9594830ba4dd709c58bdb2bc1be7ec4f46b9e16ae792"
+        },
+        {
+          "tupleId": "M26-O4-BIT_OR-R03",
+          "caseId": "M26",
+          "ordinal": 21,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "BIT_OR",
+          "repeatIndex": 3,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:e5814b2227f6012041eba31d8ab1923cc1d40130cf8cb771f4ef6ac85acdac1d"
+        },
+        {
+          "tupleId": "M26-O4-REARM-R01",
+          "caseId": "M26",
+          "ordinal": 22,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "REARM",
+          "repeatIndex": 1,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:2a9c5e8058777ec85d6cc5bedcfa16caa25c2cb1250f675fd822dbca553303cb"
+        },
+        {
+          "tupleId": "M26-O4-REARM-R02",
+          "caseId": "M26",
+          "ordinal": 23,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "REARM",
+          "repeatIndex": 2,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:3c992f9ecbeec6e55c78c9f75b4364dfeb457aa83439463569710abeb27b562a"
+        },
+        {
+          "tupleId": "M26-O4-REARM-R03",
+          "caseId": "M26",
+          "ordinal": 24,
+          "scenario": "RETAINED_ROOT_SEQUENCE",
+          "referenceOwnerPhase": "O4",
+          "ownerSemanticClass": "ACTIVE_DIRECTPATH",
+          "gateId": "g101",
+          "gate": {
+            "endpointCere": true,
+            "controlledBitMasked": false,
+            "rootCorEnabled": true
+          },
+          "sequence": "REARM",
+          "repeatIndex": 3,
+          "minimumRepeatCount": 3,
+          "sourceSemanticPolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:d7913873e499e55069bb5716d3ee5cb1b0194c3beeb7dea3bd9f44993d021742"
+        }
+      ]
+    },
+    {
+      "caseId": "M27",
+      "title": "Cleanup, quarantine, reuse and stale-owner fences",
+      "tupleCount": 9,
+      "tuples": [
+        {
+          "tupleId": "M27-T0",
+          "caseId": "M27",
+          "ordinal": 1,
+          "scenario": "DIRTY_CLEANUP_QUARANTINES",
+          "expectedOutcome": "QUARANTINED",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:41770d27a3952edab087cf6ec664cdb5b97ee602a134c118d08d157efcc2d7b3"
+        },
+        {
+          "tupleId": "M27-T1",
+          "caseId": "M27",
+          "ordinal": 2,
+          "scenario": "PHYSICAL_CLEAR_CLEANUP_VERIFIED",
+          "expectedOutcome": "CLEANUP_VERIFIED",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:288db79b98abdd9b474ae539c40e1d90e4d9114cfcd0fccdbf4675363f90c54f"
+        },
+        {
+          "tupleId": "M27-T2",
+          "caseId": "M27",
+          "ordinal": 3,
+          "scenario": "SHADOW_REQUIRES_HOST_CLEANUP",
+          "expectedOutcome": "CLEANUP_VERIFIED",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:389c59c484a46e8ff3ad3ab13d519dc80b968fb88adc32a37b37863540350c31"
+        },
+        {
+          "tupleId": "M27-T3",
+          "caseId": "M27",
+          "ordinal": 4,
+          "scenario": "CLEANUP_THEN_REUSE_PASS",
+          "expectedOutcome": "REUSABLE",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:f53366487ab5b0a6df9989ea0faa627b7cc0f0cee67d860d0d0c42deccea9413"
+        },
+        {
+          "tupleId": "M27-T4",
+          "caseId": "M27",
+          "ordinal": 5,
+          "scenario": "CLEANUP_THEN_REUSE_FAIL",
+          "expectedOutcome": "QUARANTINED",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:8e57f6bd2f58bb51d69680495ae28d11aad7defd00553b82a3d6866e38071537"
+        },
+        {
+          "tupleId": "M27-T5",
+          "caseId": "M27",
+          "ordinal": 6,
+          "scenario": "STALE_ASSIGNMENT_DENIED",
+          "expectedOutcome": "DENIED",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:bc0285125beb00a60b8baf459d8f1cabd9fd87f933c5e3cbf2d290e41757c2eb"
+        },
+        {
+          "tupleId": "M27-T6",
+          "caseId": "M27",
+          "ordinal": 7,
+          "scenario": "STALE_LEASE_DENIED",
+          "expectedOutcome": "DENIED",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:b26c51b3a37c5739a98c6ea7ea834f201dbea31787dc422b2ab6ac670d3283fe"
+        },
+        {
+          "tupleId": "M27-T7",
+          "caseId": "M27",
+          "ordinal": 8,
+          "scenario": "STALE_OWNER_EPOCH_DENIED",
+          "expectedOutcome": "DENIED",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:df5ee329083c47d8fb80d4eee71d992acc93e22eeed0c4211a4ad3a6403897f4"
+        },
+        {
+          "tupleId": "M27-T8",
+          "caseId": "M27",
+          "ordinal": 9,
+          "scenario": "STALE_BOOT_DENIED",
+          "expectedOutcome": "DENIED",
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:fcc196802f325ff414b9fb39d3100df4a271cc3303a8d57cbb7abf36dd8a9817"
+        }
+      ]
+    },
+    {
+      "caseId": "M28",
+      "title": "Pre-VFIO guest configuration isolation and dynamic layout replay",
+      "tupleCount": 15,
+      "tuples": [
+        {
+          "tupleId": "M28-T00",
+          "caseId": "M28",
+          "ordinal": 1,
+          "scenario": "ENDPOINT_BYTE_LANE_W1C",
+          "functionRole": "ENDPOINT",
+          "expectedOutcome": "FILTERED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:722bcc47431546e019df08b0c2bbb7cbd5d2cadc5f223e2c5f216831dd763c4f"
+        },
+        {
+          "tupleId": "M28-T01",
+          "caseId": "M28",
+          "ordinal": 2,
+          "scenario": "UNALIGNED_MULTI_BYTE_W1C",
+          "functionRole": "ENDPOINT",
+          "expectedOutcome": "FILTERED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:937b189f5a9900b664416ef7508fa1935c6d3f8c8e09a8ec83d87c7c7cefaff2"
+        },
+        {
+          "tupleId": "M28-T02",
+          "caseId": "M28",
+          "ordinal": 3,
+          "scenario": "ENDPOINT_ROOT_FIELD_DENIED",
+          "functionRole": "ENDPOINT",
+          "expectedOutcome": "DENIED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:be74f9086b52b68fced016e462126fdb217871b01ce7c47c8984d58e871fe0b4"
+        },
+        {
+          "tupleId": "M28-T03",
+          "caseId": "M28",
+          "ordinal": 4,
+          "scenario": "ROOT_STATUS_W1C_FILTERED",
+          "functionRole": "ROOT_PORT",
+          "expectedOutcome": "FILTERED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:5612eb8e2acbda19c82b817c6393588ca04d83b5a0439f1e5a44c589bc31aaa2"
+        },
+        {
+          "tupleId": "M28-T04",
+          "caseId": "M28",
+          "ordinal": 5,
+          "scenario": "ENDPOINT_READ_MASKED",
+          "functionRole": "ENDPOINT",
+          "expectedOutcome": "PROJECTED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT"
+          ],
+          "tupleDigest": "sha256:2f42d9eb0fa6c37d0cc3d8e29c6434e0452963b2cdd6d498d64419b155f0cf16"
+        },
+        {
+          "tupleId": "M28-T05",
+          "caseId": "M28",
+          "ordinal": 6,
+          "scenario": "ROOT_READ_MASKED",
+          "functionRole": "ROOT_PORT",
+          "expectedOutcome": "PROJECTED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:0a51abf98fb3abd2344fb4274de23578d689cedb977cf5b659647a9d523df373"
+        },
+        {
+          "tupleId": "M28-T06",
+          "caseId": "M28",
+          "ordinal": 7,
+          "scenario": "UNCORRECTABLE_READ_ZEROED",
+          "functionRole": "BOTH",
+          "expectedOutcome": "ZEROED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:a6c9828af5c1ce67b61b723b65183e0a3b977c079259654018041796d922f131"
+        },
+        {
+          "tupleId": "M28-T07",
+          "caseId": "M28",
+          "ordinal": 8,
+          "scenario": "UNKNOWN_READ_ZEROED",
+          "functionRole": "BOTH",
+          "expectedOutcome": "ZEROED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:58384094c7a196b09cab79f4b56ab69cf6fddb08abe4e636b3be1f68dfddd280"
+        },
+        {
+          "tupleId": "M28-T08",
+          "caseId": "M28",
+          "ordinal": 9,
+          "scenario": "MISSING_READ_ZEROED",
+          "functionRole": "BOTH",
+          "expectedOutcome": "ZEROED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:5d5d7d2eebf57a45633a9f97d37ab1f50c9bc9fcd461e7764e6e7800591fa5a9"
+        },
+        {
+          "tupleId": "M28-T09",
+          "caseId": "M28",
+          "ordinal": 10,
+          "scenario": "UNCORRECTABLE_WRITE_DENIED",
+          "functionRole": "BOTH",
+          "expectedOutcome": "DENIED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:720872084b28873a513347c19b9c9e410e2da2f080ddf9db980bd5bc3f413822"
+        },
+        {
+          "tupleId": "M28-T10",
+          "caseId": "M28",
+          "ordinal": 11,
+          "scenario": "HIDDEN_HEADER_VISIBLE_BODY_REWIRED",
+          "functionRole": "NOT_APPLICABLE",
+          "expectedOutcome": "REWIRED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:53da943b36ba485609b8e150681921704e7369bf8f34e2b40112683f38dec024"
+        },
+        {
+          "tupleId": "M28-T11",
+          "caseId": "M28",
+          "ordinal": 12,
+          "scenario": "HIDDEN_BODY_ZERO",
+          "functionRole": "BOTH",
+          "expectedOutcome": "ZEROED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:3c4a7a6d43588b5617461c5eb40b638046ed8f14101a259a1ff9ad70b1d5d89c"
+        },
+        {
+          "tupleId": "M28-T12",
+          "caseId": "M28",
+          "ordinal": 13,
+          "scenario": "HIDDEN_BODY_SHADOW",
+          "functionRole": "BOTH",
+          "expectedOutcome": "SHADOWED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:facef9cdcb7669d0f4470a7760679bdb5a614a89f5a8040417b772817c919c43"
+        },
+        {
+          "tupleId": "M28-T13",
+          "caseId": "M28",
+          "ordinal": 14,
+          "scenario": "FORGED_PLAN_REJECTED",
+          "functionRole": "NOT_APPLICABLE",
+          "expectedOutcome": "REJECTED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:190fb78722e91304c54a1eed8214b26f5ff45bfb648e6f7f07ad149ffd975e95"
+        },
+        {
+          "tupleId": "M28-T14",
+          "caseId": "M28",
+          "ordinal": 15,
+          "scenario": "STALE_LAYOUT_REJECTED",
+          "functionRole": "BOTH",
+          "expectedOutcome": "REJECTED",
+          "expectedOwnerPhases": [
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:9cc46b0da0c784e94679b66b319d286851c8d24312246c3a2014c8bfdca8f524"
+        }
+      ]
+    },
+    {
+      "caseId": "M29",
+      "title": "Evidence, qualification and admission remain non-self-authorizing",
+      "tupleCount": 13,
+      "tuples": [
+        {
+          "tupleId": "M29-T00",
+          "caseId": "M29",
+          "ordinal": 1,
+          "scenario": "MISSING_INPUT_DENIED",
+          "evidenceClassification": "NOT_APPLICABLE",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "MISSING_INPUT",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:10b8916be144c19af3596de65b2280751d7f65deb85302e016f43961436e43b0"
+        },
+        {
+          "tupleId": "M29-T01",
+          "caseId": "M29",
+          "ordinal": 2,
+          "scenario": "EXACT_COMPONENT_PREMISE",
+          "evidenceClassification": "MATCH",
+          "expectedComponentEligible": true,
+          "expectedDenyReasonOrNull": null,
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:7e694f2b9e2053a2698696b0ab6bf4b454223c3ab4ed65ad383be94d97b76d90"
+        },
+        {
+          "tupleId": "M29-T02",
+          "caseId": "M29",
+          "ordinal": 3,
+          "scenario": "FAKE_REPLAYER_CANNOT_AUTHORIZE_PRODUCT",
+          "evidenceClassification": "MATCH",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "PRODUCT_AUTHORIZATION_ATTEMPTED",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:863a4085d753bb8ecb12c087b093136f74c986d17e888225ff88790170ed7994"
+        },
+        {
+          "tupleId": "M29-T03",
+          "caseId": "M29",
+          "ordinal": 4,
+          "scenario": "CANDIDATE_DENIED",
+          "evidenceClassification": "CANDIDATE",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "EVIDENCE_NOT_AUTHORITATIVE",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:972280f3b9ab5273710f435e966d6a864324e48851aeb0bb7c183d33bdc71fb9"
+        },
+        {
+          "tupleId": "M29-T04",
+          "caseId": "M29",
+          "ordinal": 5,
+          "scenario": "INCONCLUSIVE_DENIED",
+          "evidenceClassification": "INCONCLUSIVE",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "DIMENSION_UNVERIFIED",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:5f1a5bba12b266f057172fdc4b20c2c8b73bd8d4609e9b48f0f98f23392364c7"
+        },
+        {
+          "tupleId": "M29-T05",
+          "caseId": "M29",
+          "ordinal": 6,
+          "scenario": "NESTED_CANNOT_CLAIM_PHYSICAL",
+          "evidenceClassification": "CANDIDATE",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "PHYSICAL_E4_REQUIRED",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:b0a153e9fae5fc82f94b1ea2cafa95dc606db6a34bc9898698a8e0ba0ab0765c"
+        },
+        {
+          "tupleId": "M29-T06",
+          "caseId": "M29",
+          "ordinal": 7,
+          "scenario": "CONTAINMENT_LANES_INDEPENDENT",
+          "evidenceClassification": "MATCH",
+          "expectedComponentEligible": true,
+          "expectedDenyReasonOrNull": null,
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:ad8e14ec76eacdef63d54c4451a9b0d080e7c1fd9c6ae6c79fee8d38e61e52e5"
+        },
+        {
+          "tupleId": "M29-T07",
+          "caseId": "M29",
+          "ordinal": 8,
+          "scenario": "CASE_SET_INCOMPLETE",
+          "evidenceClassification": "INCONCLUSIVE",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "REQUIRED_CASES_INCOMPLETE",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:c6b0fde4ae6e33363f3a21af37e5c54afdccd15d9bd770c1c2c588c63f528010"
+        },
+        {
+          "tupleId": "M29-T08",
+          "caseId": "M29",
+          "ordinal": 9,
+          "scenario": "DIGEST_TAMPER_DENIED",
+          "evidenceClassification": "MISMATCH",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "DIGEST_INVALID",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:bb54a5e6c12c9b347cd9aa125f021711ab0a418991f70aefe1117f5f7c37ba99"
+        },
+        {
+          "tupleId": "M29-T09",
+          "caseId": "M29",
+          "ordinal": 10,
+          "scenario": "EXPIRED_AUTHORITY_DENIED",
+          "evidenceClassification": "INCONCLUSIVE",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "STALE_AUTHORITY_REJECTED",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:ec83c76550cadf229f4e99d2c9f27557a6a8528b2c564f4d7ce4cc7ee52b2f22"
+        },
+        {
+          "tupleId": "M29-T10",
+          "caseId": "M29",
+          "ordinal": 11,
+          "scenario": "LAYOUT_CHANGE_DENIED",
+          "evidenceClassification": "MISMATCH",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "CONFIG_LAYOUT_MISMATCH",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:a3b29c880a76764d4683ae195eb2ade47f866dd9ef071ec704ed056518ff7ca3"
+        },
+        {
+          "tupleId": "M29-T11",
+          "caseId": "M29",
+          "ordinal": 12,
+          "scenario": "DIMENSION_UNKNOWN_DENIED",
+          "evidenceClassification": "INCONCLUSIVE",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "DIMENSION_UNVERIFIED",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:d86e3b405f00324c238a971d957f727c7e09b0e63387a9e136231bb377098307"
+        },
+        {
+          "tupleId": "M29-T12",
+          "caseId": "M29",
+          "ordinal": 13,
+          "scenario": "CLEANUP_REUSE_RESET_QUARANTINE_DENIED",
+          "evidenceClassification": "INCONCLUSIVE",
+          "expectedComponentEligible": false,
+          "expectedDenyReasonOrNull": "LIFECYCLE_GATE_FAILED",
+          "productAuthorized": false,
+          "expectedOwnerPhases": [
+            "O0",
+            "O4"
+          ],
+          "expectedLayoutRoles": [
+            "ENDPOINT",
+            "ROOT_PORT"
+          ],
+          "tupleDigest": "sha256:2d5f2acd82450cc39fd6cf3b983c90f1019ac67c98359088154bad4ba6b7a550"
+        }
+      ]
+    }
+  ],
+  "caseTupleCounts": {
+    "M24": 8,
+    "M25": 64,
+    "M26": 24,
+    "M27": 9,
+    "M28": 15,
+    "M29": 13
+  },
+  "tupleCount": 133,
+  "matrixDigest": "sha256:77b75cf16f4a21c3e24a0d940c1051ec655990fe17aa94962675dbef63dd1a91"
+}

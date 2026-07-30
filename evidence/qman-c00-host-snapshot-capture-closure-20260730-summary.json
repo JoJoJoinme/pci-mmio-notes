@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E2-C00-HOST-SNAPSHOT-CAPTURE-CLOSURE-001",
+  "observedAt": "2026-07-30T01:38:06.695916Z",
+  "subject": "QMAN_COMPONENT",
+  "evidenceGrade": "E2",
+  "claimBoundary": "COMPONENT_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-directpath-core/tests/test_publication_capture.py": "18a5defdff1fef7e510dbf93eceae948870d4e8e9ba9f57a90da0512f2bdeee5",
+      "qman-directpath-core/tests/test_inventory.py": "87e0a358e9efbeeb3666a813896cc5d3d4a9d42439b9b7d6c22cb575f1f811bc",
+      "qman-directpath-core/tests/test_snapshot_semantics.py": "396becfd86c3f58f06a7268ef38faae2a8be7b83cad4341f176bdc38bd84cf0c",
+      "qman-directpath-core/tests/test_canonical.py": "af87966c7f743f2fd95b6b545d0259fea7857e0114789d5b4d34689f70c2829a",
+      "tests/test_snapshot_publication_contract.py": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f"
+    },
+    "inputHashes": {
+      "qman-directpath-core/qman_directpath_core/publication_capture.py": "8741617a4f84e54bc38365e02c5e0659118202368a15304dfadb5df7fe692b97",
+      "qman-directpath-core/qman_directpath_core/inventory.py": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
+      "qman-directpath-core/qman_directpath_core/pci_config.py": "cfe37e1205b5f20e5d6982907f17999c74fae78ec4e167a071cc6273d135808d",
+      "qman-directpath-core/qman_directpath_core/snapshot_semantics.py": "93695d900b5702682fb6434d82a88a5fe31f48951bad79ba36c70a50a1fb7969",
+      "qman-directpath-core/qman_directpath_core/policy.py": "e68848f6131d2c0537c9f37f75059bf87c1cbbf2166691b0c5fd81f3ee2a3b8c",
+      "qman-directpath-core/qman_directpath_core/canonical.py": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "705ce15801be25825797890fa1c8d4f4130ac68169bd995b1a624ce67803b123",
+      "qman-directpath-core/qman_directpath_core/_verified.py": "6d686f87d62554bda59f5c860adaec006a3cf4947ef81388733574bc5f49df2d",
+      "qman-directpath-core/qman_directpath_core/errors.py": "84c852d0c740a960e733a9d37f56e31a808fdfdfcfc67c29bb898f10cbad10b7",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
+      "contracts/directpath-host-snapshot-publication-trace.schema.json": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
+      "contracts/directpath-portable-entities.schema.json": "fe4123596d622b5c06974f6f3a34effa1494c4dfd985ef1afe4d2d1b42767b01",
+      "contracts/directpath-capability-policy.schema.json": "fc22b5535db3627719e31f4aa8eb4db4467fa04e4218c31a6c20820e2da0d46d",
+      "contracts/directpath-identity-v1.schema.json": "179e985446b7f7e1fefa1c9f49a2785eb0d1484c7d63b6f40ab5880bce371eb1",
+      "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
+      "contracts/directpath-portable-control-contract.json": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe"
+    }
+  },
+  "sut": {
+    "environment": "Windows Python deterministic component and contract tests in the local authorized workspace; no ESXi, QEMU, HMP, QTest, VFIO, sysfs collector, target Qman repository, external authority service, or physical-hardware action",
+    "components": [
+      {
+        "name": "qman-directpath-core HostSnapshot capture-closure verifier",
+        "version": "0.1.0 working tree / HOST_SNAPSHOT_CAPTURE_CLOSURE_VERIFIER_V2",
+        "sha256": "8741617a4f84e54bc38365e02c5e0659118202368a15304dfadb5df7fe692b97"
+      },
+      {
+        "name": "qman-directpath-core candidate DeviceRecord V3 set verifier",
+        "version": "0.1.0 working tree",
+        "sha256": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2"
+      },
+      {
+        "name": "portable HostSnapshot publication trace contract",
+        "version": "working tree",
+        "sha256": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63"
+      },
+      {
+        "name": "Python",
+        "version": "3.12.10"
+      }
+    ]
+  },
+  "hypotheses": [
+    "A fixed portable provider-output envelope can retain an exact conventional 256-byte PCI configuration capture or a closed failure, while a separate semantic envelope independently retains normalized provider, PCI structure, and FLR facts.",
+    "Provider identities and coveredDeviceUids can be reconstructed from the complete candidate DeviceRecord provenance set, and the union of PCI-specific bindings can be required to form an exact UID/BDF bijection with that record set.",
+    "Raw provider bytes, semantic bytes, DeviceRecord V3 facts, topology/provider projections, and the no-change projection can all be independently replayed after every outer hash is recomputed, so digest-only labels and caller-selected projections fail closed.",
+    "The current capability-policy hash and freshness-policy hash can be bound independently into the candidate no-change projection, while mandatory provider-fact presence and integer-microsecond evidence age are checked against the capture interval.",
+    "A component algorithm identity must bind the exact ordered transitive schema set and validation stages; a root publication-schema digest alone cannot prevent schema-set or independently verified policy substitution.",
+    "Shape/count and encoded/decoded byte, node, depth, provider-fact, and dependency-edge limits can run before expensive schema validation, while indexed uniqueness, freshness, and dependency reciprocity avoid adversarial quadratic or cubic scans.",
+    "Candidate DeviceRecord rows can be made internally composable by requiring deviceGeneration to equal one shared candidateSnapshotEpoch and one shared candidateResourceVersion, while explicitly retaining that both coordinates are caller-stamped and still require repository CAS.",
+    "A schema-valid factory receipt can prove component relationships without becoming trusted publication-time, target decoder, collector, repository, rollback-authority, visibility, or product authorization evidence."
+  ],
+  "observations": [
+    {
+      "name": "capture-closure-positive-and-adversarial-matrix",
+      "result": {
+        "command": "python -m pytest tests/test_publication_capture.py -q -p no:cacheprovider",
+        "workingDirectory": "qman-directpath-core",
+        "testsPassed": 34,
+        "skips": 0,
+        "failures": 0,
+        "errors": 0,
+        "elapsedSeconds": 235.59,
+        "positiveProfiles": [
+          "single-device PCI COMPLETE",
+          "two-device exact provider coverage and PCI bijection",
+          "PCI plus generic provider",
+          "PCI UNAVAILABLE closed UNKNOWN shape",
+          "freshness threshold exact equality"
+        ],
+        "adversarialClasses": [
+          "raw PCI tamper after outer-hash reseal",
+          "semantic PCI tamper after outer-hash reseal",
+          "generic raw/semantic divergence",
+          "unknown provider coverage",
+          "missing PCI binding",
+          "provider identity substitution",
+          "provider and DeviceRecord interval mismatch",
+          "caller-selected topology projection",
+          "capability-policy substitution",
+          "missing and stale mandatory evidence",
+          "unsupported provider schema",
+          "all-zero raw config",
+          "decoded-byte budget overflow",
+          "hard-limit relaxation",
+          "provider-row and DeviceRecord-artifact order",
+          "transitive schema-set substitution",
+          "capability-policy schema identity mismatch",
+          "oversized Mapping before canonical materialization",
+          "provider count before capture-schema walk",
+          "decoded-byte reservation before base64 decode",
+          "deviceGeneration and candidateSnapshotEpoch mismatch",
+          "mixed candidate resourceVersion",
+          "raw observedAt substitution after outer-hash reseal",
+          "closed-failure reason substitution after outer-hash reseal"
+        ]
+      }
+    },
+    {
+      "name": "capture-closure-invariants",
+      "result": {
+        "providerCoverageDerivedFromDeviceRecordProvenance": true,
+        "zeroCoverageProviderRejected": true,
+        "completeHostPciBindingBijectionRequired": true,
+        "rawAndSemanticBytesIndependentlyDecodedAndSchemaValidated": true,
+        "rawPciStructureAndFlrReplayed": true,
+        "genericProviderFactsComparedButDecoderAttested": false,
+        "deviceRecordV3HashIdentityFabricAndPciReplayRequired": true,
+        "topologyProviderAndNoChangeProjectionsReconstructed": true,
+        "nonsemanticRawChangeLeavesNoChangeHashStable": true,
+        "multifunctionSemanticChangeAdvancesNoChangeHash": true,
+        "capabilityPolicyFactoryRequired": true,
+        "completeAlgorithmSchemaSetBound": true,
+        "validationStageSetBound": true,
+        "policySchemaIdentityMatched": true,
+        "boundedPreflightRunsBeforeSchemaWalk": true,
+        "freshnessAndDependencyChecksIndexed": true,
+        "candidateGenerationComposable": true,
+        "candidateCoordinatesCallerStamped": true,
+        "freshnessUsesCallerCaptureCompletion": true,
+        "trustedPublicationEvaluationTimeProven": false,
+        "mandatoryEvidenceAgeUsesIntegerMicroseconds": true,
+        "factoryReplayFromExactCanonicalBytes": true
+      }
+    },
+    {
+      "name": "root-publication-contract-regression",
+      "result": {
+        "command": "python -m pytest tests/test_snapshot_publication_contract.py -q -p no:cacheprovider",
+        "workingDirectory": ".",
+        "testsPassed": 14,
+        "failures": 0,
+        "errors": 0
+      }
+    },
+    {
+      "name": "static-and-portable-closure",
+      "result": {
+        "ruff": "PASS",
+        "compileall": "PASS",
+        "schemaDraft": "DRAFT_2020_12_VALID",
+        "portableGeneratorCheck": "PASS",
+        "caseContractGeneratorCheck": "PASS",
+        "portableHandoffBaseline": "PASS"
+      }
+    },
+    {
+      "name": "authority-boundary",
+      "result": {
+        "authorityBoundary": "COMPONENT_CALLER_SUPPLIED_CAPTURE_BYTES_ONLY",
+        "authorityDisposition": "COMPONENT_PREMISE_ONLY",
+        "coordinateAuthorityDisposition": "CALLER_STAMPED_CANDIDATE_REQUIRES_REPOSITORY_CAS",
+        "freshnessTimeBasis": "CALLER_SUPPLIED_CAPTURE_COMPLETION",
+        "productAuthorized": false,
+        "productEvidenceBlockers": [
+          "TARGET_COMMIT_PROVIDER_DECODER_BUILD_ATTESTATION_REQUIRED",
+          "TARGET_QMAN_COLLECTOR_PUBLISHER_EXECUTION_REQUIRED",
+          "TRUSTED_PUBLICATION_EVALUATION_TIME_REQUIRED",
+          "LINEARIZABLE_SERIALIZABLE_REPOSITORY_RECEIPT_REQUIRED",
+          "CAPABILITY_POLICY_AUTHORITY_CAS_RECEIPT_REQUIRED",
+          "EXTERNAL_ROLLBACK_AUTHORITY_RECEIPT_REQUIRED",
+          "INDEPENDENT_PUBLICATION_VISIBILITY_RECEIPT_REQUIRED",
+          "TARGET_QMAN_MAPPING_BUILD_RUNNER_EVIDENCE_REQUIRED"
+        ],
+        "productCasesClosed": 0,
+        "risksClosed": 0,
+        "milestoneStatusChanged": false
+      }
+    }
+  ],
+  "mapping": {
+    "techStories": [
+      "TS-F1-01",
+      "TS-F1-04",
+      "TS-F5-01"
+    ],
+    "caseIds": [
+      "C00",
+      "C01",
+      "C02",
+      "C03"
+    ],
+    "riskIds": [
+      "R03",
+      "R29",
+      "R38"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "qman-directpath-core/qman_directpath_core/publication_capture.py",
+      "sha256": "8741617a4f84e54bc38365e02c5e0659118202368a15304dfadb5df7fe692b97",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/inventory.py",
+      "sha256": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/pci_config.py",
+      "sha256": "cfe37e1205b5f20e5d6982907f17999c74fae78ec4e167a071cc6273d135808d",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/snapshot_semantics.py",
+      "sha256": "93695d900b5702682fb6434d82a88a5fe31f48951bad79ba36c70a50a1fb7969",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/policy.py",
+      "sha256": "e68848f6131d2c0537c9f37f75059bf87c1cbbf2166691b0c5fd81f3ee2a3b8c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/canonical.py",
+      "sha256": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/contracts.py",
+      "sha256": "705ce15801be25825797890fa1c8d4f4130ac68169bd995b1a624ce67803b123",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/__init__.py",
+      "sha256": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_publication_capture.py",
+      "sha256": "18a5defdff1fef7e510dbf93eceae948870d4e8e9ba9f57a90da0512f2bdeee5",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_inventory.py",
+      "sha256": "87e0a358e9efbeeb3666a813896cc5d3d4a9d42439b9b7d6c22cb575f1f811bc",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_canonical.py",
+      "sha256": "af87966c7f743f2fd95b6b545d0259fea7857e0114789d5b4d34689f70c2829a",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_snapshot_semantics.py",
+      "sha256": "396becfd86c3f58f06a7268ef38faae2a8be7b83cad4341f176bdc38bd84cf0c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-host-snapshot-publication-trace.schema.json",
+      "sha256": "2affed8fd394d5a0c6d0c33815f0e4ee3d29c83030fc851f45a879c196723e63",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-portable-entities.schema.json",
+      "sha256": "fe4123596d622b5c06974f6f3a34effa1494c4dfd985ef1afe4d2d1b42767b01",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-capability-policy.schema.json",
+      "sha256": "fc22b5535db3627719e31f4aa8eb4db4467fa04e4218c31a6c20820e2da0d46d",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-identity-v1.schema.json",
+      "sha256": "179e985446b7f7e1fefa1c9f49a2785eb0d1484c7d63b6f40ab5880bce371eb1",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-portable-hash-subjects.schema.json",
+      "sha256": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-portable-control-contract.json",
+      "sha256": "f506d565ae3a951e0eb5417ddf6b33900b7aa5e7d8053e4c90ee7f396c503cbe",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "tests/test_snapshot_publication_contract.py",
+      "sha256": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "The portable provider output envelope is supplied by the caller. PCI rows are independently replayed from exact retained configuration bytes, but generic provider rows remain normalized decoder premises until a target-commit decoder/build receipt proves their origin.",
+    "The verified capability policy is self-hash/time valid. The full publication trace and later decision verifier now retain CapabilityPolicyAuthority and the structural four-authority CAS expectation, but this capture component cannot prove repository-current policy authority or an authentic SERIALIZABLE CAS execution.",
+    "candidateSnapshotEpoch and candidateResourceVersion are caller-stamped. The verifier proves internal DeviceRecord composability only; it does not derive the next coordinates from repository-current HostAuthority or prove their SERIALIZABLE CAS commit.",
+    "Freshness is evaluated against caller-supplied captureCompletedAt. The component does not provide the trusted repository transaction evaluatedAt required by the full publication decision.",
+    "This verifier covers capture closure only. Later component stages now derive the five publication decisions, verify dual-trust PREPARED/COMMITTED rollback relationships, and reconstruct the N+6 mutation/hash closure. Neither this record nor those later component stages prove an authenticated request/result exchange, a real repository transaction, independent visibility, delivery, or a final target-product trace.",
+    "The full-publication and inventory-verification-receipt hard limits are now consistently capped at 4,096 DeviceRecords; this capture record does not authorize a caller or product adapter to relax that shared ceiling.",
+    "No target Qman repository was available. Of 299 ordered integration-map items, 298 current-release items remain UNMAPPED/NOT_STARTED and the future IOMMUFD-cdev migration item remains DEFERRED/NOT_APPLICABLE_CURRENT_RELEASE; there are zero target code or target test bindings.",
+    "There is no target collector/publisher execution, provider binary attestation, real SERIALIZABLE repository receipt, external rollback-authority receipt, independent publication-visibility receipt, E3 target-Qman execution, E4 physical qualification, or signed CaseCompletionRecord.",
+    "This record cannot close C00-C03, R03, R29, R38, G1-G6, any product capability, qualification profile, support statement, HCL entry, or release gate."
+  ]
+}

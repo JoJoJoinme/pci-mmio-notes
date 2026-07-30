@@ -8,8 +8,24 @@
       "scope": "PRODUCT",
       "riskIds": ["R38"],
       "requiredTechStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+      "requiredArtifactSchemaRefs": [
+        "contracts/directpath-anchor-freshness-envelope.schema.json",
+        "contracts/directpath-authority-entities.schema.json",
+        "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "contracts/directpath-host-snapshot-rollback-anchor.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-operation-envelope.schema.json",
+        "contracts/directpath-operation-payload.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json",
+        "contracts/directpath-trust-key-ring-history.schema.json",
+        "contracts/directpath-trust-key-ring.schema.json",
+        "contracts/directpath-trust-rollback-anchor.schema.json",
+        "contracts/directpath-trust-root-set.schema.json"
+      ],
       "dependsOnCaseIds": [],
-      "blocker": "The product inventory, reset provider and capability publisher do not yet emit one authoritative complete-domain decision for a Type-0 FLR endpoint.",
+      "blocker": "Portable components now replay caller-supplied 256-byte PCI config, bind Type-0/FLR facts into DeviceRecord V3, HostSnapshot semantics, closure and the guarded hardware gate, and separately verify a COMMITTED rollback anchor. They remain productAuthorized=false: the target Qman collector, retained provider capture, reset provider, direct authority fetch/CAS, external anchor adapter and capability publisher still do not emit one authoritative complete-domain decision.",
       "targetMilestone": "G1"
     },
     {
@@ -19,8 +35,15 @@
       "scope": "PRODUCT",
       "riskIds": ["R29", "R38"],
       "requiredTechStories": ["TS-F1-01", "TS-F1-04"],
+      "requiredArtifactSchemaRefs": [
+        "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json"
+      ],
       "dependsOnCaseIds": [],
-      "blocker": "The production role gate and publisher do not yet prove that bridge functions are excluded from payload selection while their dependencies remain in the closure.",
+      "blocker": "The component V3 verifier rejects a replayed Type-1/PCIe fabric function as payload even when its raw FLR bit is present, but the production Qman role gate, collector and publisher are not mapped and do not yet prove the same exclusion while retaining bridge dependencies in closure.",
       "targetMilestone": "G1"
     },
     {
@@ -30,8 +53,15 @@
       "scope": "PRODUCT",
       "riskIds": ["R38"],
       "requiredTechStories": ["TS-F1-01", "TS-F1-04"],
+      "requiredArtifactSchemaRefs": [
+        "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json"
+      ],
       "dependsOnCaseIds": ["C00"],
-      "blocker": "The product capability path lacks an end-to-end A/B gate proving header type and topology, rather than class code alone, determine payload eligibility.",
+      "blocker": "Component A/B tests keep class code and Header Type orthogonal and derive layout only from offset 0x0e, but the target Qman collector/publication/capability path lacks an end-to-end product-mapped A/B receipt.",
       "targetMilestone": "G1"
     },
     {
@@ -41,8 +71,16 @@
       "scope": "PRODUCT",
       "riskIds": ["R03"],
       "requiredTechStories": ["TS-F1-04", "TS-F5-01"],
+      "requiredArtifactSchemaRefs": [
+        "contracts/directpath-host-snapshot-publication-trace.schema.json",
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "contracts/directpath-inventory-verifier-algorithm.schema.json",
+        "contracts/directpath-portable-entities.schema.json",
+        "contracts/directpath-portable-hash-subjects.schema.json",
+        "contracts/directpath-reset-contract-set.schema.json"
+      ],
       "dependsOnCaseIds": ["C00"],
-      "blocker": "The authoritative product reset provider and pre-attach denial path for endpoints without FLR or a qualified D3 reset are not implemented.",
+      "blocker": "The component replays PCIe Device Capabilities bit 28 and rejects selected PCI_FLR when absent, but the authoritative product reset provider, alternate-reset qualification and pre-attach denial path are not implemented or mapped.",
       "targetMilestone": "G1"
     },
     {

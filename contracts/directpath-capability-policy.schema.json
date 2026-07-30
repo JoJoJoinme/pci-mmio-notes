@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-capability-policy.schema.json",
+  "title": "Qman DirectPath capability policy",
+  "description": "Closed, self-hashed policy input for capability and dependency-closure evaluation. Repository currentness, trusted time and policy approval remain product authority responsibilities.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "policyId",
+    "policyVersion",
+    "admissionMode",
+    "supportedCatalogDigest",
+    "catalogSequence",
+    "trustKeyRingSequence",
+    "qualificationCaseMatrixHash",
+    "dependencyClosure",
+    "sourceCompatibilityProfilePolicyDigest",
+    "effectiveAt",
+    "expiresAt",
+    "policyHash"
+  ],
+  "properties": {
+    "subjectType": {"const": "DIRECTPATH_CAPABILITY_POLICY"},
+    "schemaVersion": {"const": 1},
+    "policyId": {"$ref": "#/$defs/id"},
+    "policyVersion": {"$ref": "#/$defs/safePositiveInteger"},
+    "admissionMode": {
+      "enum": ["PRODUCTION", "ISOLATED_UNQUALIFIED_LAB"]
+    },
+    "supportedCatalogDigest": {"$ref": "#/$defs/digest"},
+    "catalogSequence": {"$ref": "#/$defs/safePositiveInteger"},
+    "trustKeyRingSequence": {"$ref": "#/$defs/safePositiveInteger"},
+    "qualificationCaseMatrixHash": {"$ref": "#/$defs/digest"},
+    "dependencyClosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolverAlgorithmId", "maxDevices", "maxEdges"],
+      "properties": {
+        "resolverAlgorithmId": {
+          "const": "SEVEN_DOMAIN_RESET_FIXED_POINT_V1"
+        },
+        "maxDevices": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "maxEdges": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      }
+    },
+    "sourceCompatibilityProfilePolicyDigest": {"$ref": "#/$defs/digest"},
+    "effectiveAt": {"$ref": "#/$defs/timestamp"},
+    "expiresAt": {"$ref": "#/$defs/timestamp"},
+    "policyHash": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    }
+  },
+  "x-qmanTimeRule": "effectiveAt is strictly before expiresAt. A verifier accepts the document only when effectiveAt <= verifiedAt < expiresAt; the caller must source verifiedAt from a trusted clock and bind expiresAt into the admission evidence horizon.",
+  "x-qmanHashRule": "Set policyHash to null in a construction-only projection, encode the complete object with CANONICAL-JSON-V1, and compute SHA-256 over those bytes. The persisted final document carries the non-null digest.",
+  "x-qmanRequestBindingRule": "A VM request policyBinding must exactly equal this document's policyId, policyVersion, policyHash, admissionMode, supportedCatalogDigest, catalogSequence, trustKeyRingSequence and qualificationCaseMatrixHash. Closure roots come from the verified request; closure limits come only from this policy's dependencyClosure object.",
+  "x-qmanBoundaryRule": "Schema, hash and time verification do not prove that this is the repository-current approved policy. Product code must obtain it through an independently authenticated, linearizable authority read and bind policyHash to every decision and side-effect authorization."
+}

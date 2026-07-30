@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "id": "ESXI8-AER-ROOT-O4-V14-CANARY1-DIAGNOSTIC-20260729",
+  "subject": "VMWARE_ESXI_BLACKBOX_ATTEMPT_HISTORY",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observedAt": "2026-07-28T22:57:53.276426Z",
+  "observationStatus": "DIAGNOSTIC_ONLY",
+  "executionState": "PRE_HMP_GATE_APPLY_ABORT",
+  "claimBoundary": "FROZEN_ATTEMPT_HISTORY_ONLY",
+  "usedForBehaviorInference": false,
+  "closureAuthority": "NONE",
+  "scope": "PCIe Correctable AER external behavior only; no VMware private implementation inference",
+  "run": {
+    "runId": "20260729-esxi8-aer-root-o4-v14-canary1",
+    "ownerPhase": "O4",
+    "gate": "g101",
+    "plannedCaseCount": 12,
+    "completedCaseCount": 1,
+    "incompleteCaseCount": 11,
+    "storedEnteredInjectionClaimCount": 1,
+    "rawHmpDispatchAttemptCount": 0,
+    "matchCount": 0,
+    "inconclusiveCount": 1,
+    "cleanupCompleteCount": 1,
+    "safetyStopCount": 0,
+    "boundaryStop": true,
+    "aggregateObservationState": "INCONCLUSIVE",
+    "completionClass": "FAILED_PRE_HMP_PREFIX",
+    "finalQemuState": "running"
+  },
+  "preHmpDiagnostic": {
+    "faultType": "InconclusiveObservation",
+    "faultMessage": "requested gate was not stable after resume: SAFETY_POLL_INCOMPLETE_AFTER_APPLY",
+    "gateLeaseOutcome": "SAFETY_POLL_INCOMPLETE_AFTER_APPLY",
+    "qemuHeldPausedAtGateClosure": true,
+    "continuousPollSampleCount": 41,
+    "completedTargetCount": 4,
+    "safetyEventCount": 0,
+    "maximumObservedPollGapSeconds": 0.025236264016712084,
+    "maximumObservedReadDurationSeconds": 0.005168166011571884,
+    "lastSampleFinishedElapsedSeconds": 1.0026102139963768,
+    "pausedAckElapsedSeconds": 1.07192715400015,
+    "tailGapSeconds": 0.0693169400037732,
+    "maximumAllowedGapSeconds": 0.05,
+    "hmpTranscriptBytes": 0,
+    "injectionRecordCount": 0,
+    "preInjectionStepCount": 0,
+    "interpretation": "The gate sampler met its loop and read budgets, but stopped before the synchronous HMP stop/status acknowledgement. The resulting unobserved 69.317 ms tail correctly failed the 50 ms closure gate. No Correctable AER HMP dispatch was attempted."
+  },
+  "frozenIntegrity": {
+    "state": "PASS",
+    "rootManifestEntryCount": 39,
+    "rootManifestMismatchCount": 0,
+    "caseManifestEntryCounts": {
+      "o4__first-multiple__g101__r01": 32
+    },
+    "caseManifestMismatchCount": 0,
+    "artifactsRelativeToSummary": [
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/result.json",
+        "sha256": "13757f8f7a40816d56f7b30f8e4b962bac86b40af197e794df56a1c035e0426e",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/result.json.sha256",
+        "sha256": "f56b068856b328226d568e1dc5f7506caf0ba4be444b17f4c023851b413c2414",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/artifact-manifest.sha256",
+        "sha256": "6ae3058a383a1bce7123177a6355ef46f9dfb90a24fe18e077c45e9f3268ed2f",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/campaign-plan.json",
+        "sha256": "bd3f7bae9bddd88ac118298a917828bdc4b4f210097744253c3a87f27d6c2adc",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/cases/o4__first-multiple__g101__r01/result.json",
+        "sha256": "d1a34ff51e52512a5a8cd55faca3a410528d4ec46ac135c355dd6c8b78e63a3c",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/cases/o4__first-multiple__g101__r01/artifact-manifest.sha256",
+        "sha256": "cfd4e2fd6e31660d12935dabf1fe294125447abd7ff5498125aa54d1aca48344",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/cases/o4__first-multiple__g101__r01/evaluation-input.json",
+        "sha256": "68599336989dde0c2fc0b20a4cfb8084127034b90467a38bd756fbff16642f39",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/cases/o4__first-multiple__g101__r01/t1-effective-controls.json",
+        "sha256": "4139c8f35727ac121f8bab9e0f832da06228f4111296d53070d30e0d1ace8b5e",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v14-canary1/cases/o4__first-multiple__g101__r01/hmp.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "retention": "LOCAL_RAW"
+      }
+    ]
+  },
+  "verifierDisposition": {
+    "runnerSourceSha256": "caaa46eb327062e2b2256f61125dcf9f5a7f855754503bf9e067097e6e4a4446",
+    "gateSamplerSourceSha256": "40103e67ecf27ed55fb29bd33a74d2616f87d4a24a6ff2fb1f2a8eaec6aea537",
+    "offlineVerifyExitCode": 1,
+    "artifactManifestVerifiedEntryCount": 32,
+    "oracleExactMatch": true,
+    "resultExactMatch": true,
+    "identityExactMatch": true,
+    "rawSourceExactMatch": false,
+    "securityReviewState": "REJECTED_FOR_AUTHORITY",
+    "defects": [
+      "A pre-recorder abort passed a non-list sentinel to the conservative raw helper, so the runtime wrote enteredInjection=true despite an empty injection list and an empty HMP transcript.",
+      "The runtime requester sentinel was -1 while offline reconstruction produced no requester for the non-entered case.",
+      "The verifier did not model the exact BEFORE_VALID log and O4 guest prefixes that legitimately exist after preflight but before HMP injection.",
+      "The optional monitored-window validator forced the requested gate onto enforceGate=false producer records and rejected the producer's closed not-enforced gate shape.",
+      "The transition timestamp producer emitted a +00:00 UTC value while the verifier accepted only the equivalent Z spelling.",
+      "The gate sampler stopped at its final target before the stop/status acknowledgement, allowing control-plane latency to create an unobserved tail."
+    ],
+    "disposition": "The raw run remains immutable attempt history. It must not be repaired, re-signed, reclassified, or evaluated with a later verifier to obtain behavior or closure authority."
+  },
+  "interpretation": {
+    "canonicalComparisonO4": {
+      "state": "NOT_ESTABLISHED",
+      "reason": "PRE_HMP_ABORT_AND_RAW_REPLAY_DIVERGENCE"
+    },
+    "canonicalComparisonO0": {
+      "state": "NOT_RUN"
+    },
+    "behaviorAuthority": "NONE"
+  },
+  "limitations": [
+    "This record freezes a diagnostic canary; it is not a conforming VMware behavior result and carries no behavior authority.",
+    "No HMP Correctable injection was attempted, so this run contains no AER behavior observation.",
+    "The stored enteredInjection claim is known to be false relative to the raw injection boundary and is retained only as defect evidence.",
+    "The gate tail failure must not be hidden by increasing the 50 ms safety limit; sampling must remain active until paused acknowledgement.",
+    "The attempt must not be added to representative VMware run IDs, verified behavior slices, or a Qman product-conformance claim.",
+    "No interrupt delivery, service attribution, physical link fault, physical-device recovery, health handling, VMware private implementation, or Qman release readiness is inferred."
+  ]
+}

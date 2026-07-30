@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qman-directpath-reference"
+version = "0.3.0"
+description = "SQLite reference transactions for Static admission and read-only DirectPath queries"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["jsonschema>=4.23,<5", "ruff>=0.8,<1"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["qman_directpath_reference*"]

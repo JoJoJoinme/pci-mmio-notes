@@ -1,18 +1,19 @@
 # ESXi DirectPath PCIe AER 黑盒验证与 QEMU 对标
 
 首次记录：2026-07-11
-校正与增量验证：2026-07-23
+校正与增量验证：2026-07-26
 
 ## 1. 范围与结论
 
 本报告只描述自有隔离实验环境中的公开接口、PCI config space、guest 输出和公开日志，
 不推导 VMware 私有代码。
 
-结论先行：ESXi 8.0 U3 的 guest AER surface 是 **profile-specific**。历史 `e1000e`
-DirectPath profile 没有把 PCIe AER capability discovery 原样交给 guest：endpoint 的 AER
-Extended Capability header 在 guest raw view 中为 0，guest ACPI 也不授予 AER ownership；
-但是 capability body 的 status 寄存器仍可通过 raw config read 观察。这个结论只属于该
-profile 的 **surface/status projection**，不是所有 DirectPath 设备的通用规则。
+结论先行：在冻结的 nested profile（ESXi 8.0.3 build 24280767、vHW20、QEMU synthetic
+endpoint）中，guest AER surface 是 **profile-specific**。历史 `e1000e` DirectPath profile
+没有把 PCIe AER capability discovery 原样交给 guest：endpoint 的 AER Extended Capability
+header 在 guest raw view 中为 0，guest ACPI 也不授予 AER ownership；但是 capability body
+的 status 寄存器仍可通过 raw config read 观察。这个结论只属于该 profile 的
+**surface/status projection**，不是所有 ESXi 8.0 U3 build 或 DirectPath 设备的通用规则。
 
 2026-07-23 的历史门控读回把 `e1000e` profile 的结论进一步收窄：被测外层 `e1000e` 的 endpoint
 `DeviceCtl.CERE=0`，upstream Root Port 的 `DeviceCtl.CERE=0`，Root Error Command 的
@@ -23,12 +24,12 @@ Port、ESXi 已执行 Root service 或产生中断。公开日志只能写成“
 
 同日新增的 `virtio-net-pci` profile 使用可读回的受控 gate lease：独立打开 upstream
 `BridgeCtl.SERR` 与 Root `DeviceCtl.CERE`，再完整遍历 `G=(E,M,R)` 的八种组合。QEMU
-公开模型完成 8 bit × 8 gate 的 64/64 正控；ESXi PassthruIdle Receiver Error 完成
-8/8。outer QEMU 冻结期间，只有 `E=1,M=0` 的 `g100/g101` 记录 Root Correctable reception
-与 endpoint Source ID，其余六种 gate 均阻断 Root reception。该冻结快照证明的是
-**QEMU fabric transport 在 ESXi 暂停时的状态沉积**，不是 ESXi Root service、IRQ 或私有
-实现证明。恢复 ESXi 后的寄存器、owner 与日志只作为独立黑盒观察；未见匹配日志仍只是
-bounded negative。
+公开模型完成 8 bit × 8 gate 的 64/64 正控；在 ESXi PassthruIdle owner 下，八种
+ESXi-programmed effective gate tuple 完成 8/8 外部观察。outer QEMU 冻结期间，只有
+`E=1,M=0` 的 `g100/g101` 使 outer-QEMU Root Port 沉积 `COR_RCV` 与 endpoint Source ID，
+其余六种 gate 未沉积 Root reception。该冻结快照证明的是 **outer-QEMU fabric transport
+在 ESXi 暂停时的状态沉积**，不是 ESXi Root service、IRQ 或私有实现证明。恢复 ESXi 后
+的寄存器、owner 与日志只作为独立黑盒观察；未见匹配日志仍只是 bounded negative。
 
 PassthruActive 的 `virtio-net-pci 1af4:1041` 则呈现另一种 guest surface：AER capability
 可发现，header 为 `0x00020001`，Receiver Error 后 raw CES 从 `0x00000000` 变为
@@ -46,11 +47,13 @@ guest AER service/event delivery**。这一 active 观察同样没有识别 ESXi
 | host log 或 service | 指定日志尾窗未观察到匹配项；不等价于未 service | 排除 SCP 路径和采集命令噪声后，指定窗口未观察到语义 AER/PCI error event；仍只是 bounded negative |
 | recovery/health/quarantine | 未测试；synthetic status 注入不能代替真实设备与链路 qualification | gate/status 已恢复且 host 保持响应；设备 reset、health、quarantine 与安全复用仍未测试 |
 
-在 QEMU surface A/B 中，这不是 OVMF/SeaBIOS 的差异：Stock QEMU 6.2 的 Q35、Root
-Port、`e1000e` 和 `vfio-pci` 默认会暴露 AER；`x-pcie-extcap-init=off` 也不会删除设备
-随后创建的 AER capability。VMware DirectPath 本轮只验证 EFI guest，不能由这组 QEMU
-A/B 外推 VMware SeaBIOS。完整对标需要 opt-in config-space filter，并版本化虚拟 Root
-Port 的 AER capability/service。
+在 QEMU surface A/B 中，这不是 OVMF/SeaBIOS 的差异：本次 Stock QEMU 6.2 的 Q35
+Root Port 与 `e1000e` 会创建 AER；当 assigned function 的 extended-capability chain
+本身含 AER 时，`vfio-pci` rebuild 默认也不会丢弃该 capability。
+`x-pcie-extcap-init=off` 不会删除设备随后创建或从 backing function 保留的 AER capability。
+VMware DirectPath 本轮只验证 EFI guest，不能由这组 QEMU A/B 外推 VMware SeaBIOS。
+完整对标需要 opt-in config-space filter，并版本化虚拟 Root Port 的 AER
+capability/service。
 
 ## 2. 环境与前置条件
 
@@ -90,11 +93,18 @@ pcipDisablePciErrReporting:     Configured=TRUE  Runtime=FALSE
 | Q11-COR-24 | QEMU 11 fresh process | 8 bit × CERE blocked / endpoint masked / routed with Root COR_EN disabled | 24/24 PASS；证明 QEMU 公开模型的 status/gate/root-source 判别力，不是 VMware 证据 |
 | Q11-COR-EMR-8 | QEMU 11 fresh process | Receiver Error × `g000`—`g111` | 8/8 PASS；验证完整 EMR gate oracle |
 | Q11-COR-EMR-64 | QEMU 11 fresh process | 8 Correctable bit × `g000`—`g111` | 64/64 PASS；只有 `E=1,M=0` 路由到 Root，R 不抑制 Root Status 沉积 |
+| Q11-COR-ROOT-12 | QEMU 11 fresh process | First/Multiple、独立 W1C、B0/B1 OR、re-arm × 3 | 12/12 `MATCH_TO_QEMU_PUBLIC_MODEL`；Root Source 在 Status W1C 后保留；仅为 QEMU root-state 正控，不关闭 ESXi M26 |
+| ESX-COR-ROOT-O4-V17 | canonical ESXi O4/`g101` | 与 QEMU 相同的四个 sequence × 3 | 12/12 `MATCH`、`FULL_PLAN`；offline exact/`--require-complete` 通过；只授权 exact O4/`g101` 外部寄存器状态切片 |
+| ESX-COR-ROOT-O0-V19 | canonical ESXi O0/`g101` | 与 QEMU 相同的四个 sequence × 3 | 12/12 `MATCH`、`FULL_PLAN`；与 V17 的 12 对 snapshot 逐字段 exact；`Module Name=None`，不证明 bound native driver |
 | ESX-COR-I8 | VM Passthru、未分配 | 8 个 Correctable bit，逐例 W1C/readback | 8/8 status-projection oracle PASS；UES 与 root Uncorrectable surface 保持 0 |
 | ESX-COR-A0 | VM Passthru、L3 活跃 | Receiver Error | host/guest CES 0→1，owner 稳定；routing 不可测 |
 | ESX-COR-A5 | VM Passthru、L3 活跃 | Advisory Non-Fatal Correctable bit | host/guest CES 0→0x2000，owner 稳定；该位 CEM=1 且 CERE=0，routing 不可测 |
 | ESX-VIRTIO-I-EMR8 | VM Passthru、未分配 | Receiver Error × `g000`—`g111`，Root path lease 打开 | 8/8 PASS；frozen transport 仅 `g100/g101` Root reception，八行均恢复 gate |
 | ESX-VIRTIO-A-EMR2 | VM Passthru、L3 活跃 | Receiver Error × `g100/g101` | 两个 gate 均有独立 PASS：capability 可发现、raw CES `0→1`、AER totals `0→0`、无 kernel event；v2 聚合中的未注入 g101 只保留为 harness history |
+
+`MATCH_TO_QEMU_PUBLIC_MODEL` 是本文展开后的 claim label；hash-bound raw
+`oracle.json/result.json` 仍使用四态枚举 `MATCH`。这个展开只说明 comparator 是 QEMU
+public model，不创建新的 runner verdict，也不表示与 ESXi 匹配。
 
 C02d、C03 均由 `vmware.log` 中目标 `pciPassthru1` 的首次真实访问加 12 秒触发，
 而不是猜测固定开机时间。QEMU HMP 均返回目标 function 的明确 `OK id`。
@@ -108,7 +118,7 @@ owner 与有界日志、L3 guest raw config/ACPI/日志。四层不是四份独�
 
 ### 4.1 Correctable Receiver Error
 
-物理 endpoint / ESXi view：
+outer-QEMU backing endpoint / ESXi view：
 
 ```text
 before: AER header=0x14020001, CES=0x00000000, Device Status=0x0000
@@ -124,7 +134,7 @@ after:  AER header=0x00000000, CES=0x00000001, Device Status=0x0000
 
 ### 4.2 Non-Fatal Unsupported Request
 
-物理 endpoint / ESXi view：
+outer-QEMU backing endpoint / ESXi view：
 
 ```text
 before: UES=0x00000000, CES=0x00000001, Device Status=0x0001
@@ -150,18 +160,26 @@ guest 不生成 `aer_dev_correctable`/`aer_dev_nonfatal` sysfs 统计，采集�
 `DevSta.CED` 在 live `e1000e` 上不能经 QTest W1C 清除，故作为显式 sticky limitation
 保存，且只允许 CED，任何 NFED/FED/URD 都会触发安全失败。
 
-外部可观察模型因此是：
+历史 `e1000e` profile 的**直接观察**是：
 
-1. AER Extended Capability header 与 PCIe Device Status 可被 VMware 过滤或合成。
-2. capability body 的 error status 可保留物理设备状态并由 raw config read 看见。
-3. 在历史 `e1000e` profile 中，guest 没有 AER capability discovery 和 Root Port AER
-   service，driver 也没有打开 endpoint Device Control 的 error-reporting bits；这不是
-   `virtio-net-pci` profile 的通用结论。
-4. 在本次 effective gate 下未观察到 Root reception；因为 CERE=0，这不是“ESXi 收到后
-   静默”的证据。公开 QEMU 模型中只有 CERE=1 且目标 bit 未屏蔽时才形成可路由消息，
-   该规则是实验判别正控，不是 VMware 私有实现推断。
+1. outer-QEMU backing endpoint/ESXi view 与 guest view 不同：guest AER header 和
+   PCIe Device Status 为 0，而同一 raw body offset 的 CES 跟随 backing endpoint 从 0 变为 1。
+2. guest `_OSC` 没有获得 AER ownership；未生成相应 `aer_dev_*` 统计，采集窗口内也未见
+   Linux AER event。它们不能单独证明 guest 内部不存在任何 AER service。
+3. guest driver 没有打开 endpoint Device Control 的 error-reporting bits；effective
+   endpoint CERE、upstream CERE 与 Root COR_EN 均为 0。
+4. 在该 effective gate 下，outer-QEMU Root Status/Source 相对基线没有新增 reception；
+   这不是“ESXi 收到后静默”的证据。
 
-以上四点是历史 `e1000e` profile 的观察，不能被后续 virtio fixture 原地覆盖。
+基于公开参考模型的**可证伪解释**是：host/guest view 差异与 VMM 对 config-space surface
+做 mediation、filter 或 synthesis 相容，但现有观察不能识别具体机制。QEMU 11.0.2
+[`pcie_aer.c`](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
+把 Correctable message 的上行资格置于 endpoint CERE 与当前 bit mask 之后；因此该
+synthetic e1000e gate 不能正向检验 ESXi receipt/service。这个 source-derived oracle
+不是 VMware 私有实现事实。
+
+这些直接观察与 source-derived 解释都只属于历史 `e1000e` profile，不能被后续 virtio
+fixture 原地覆盖。
 
 ### 4.3 `virtio-net-pci` route-enabled EMR
 
@@ -170,24 +188,75 @@ guest 不生成 `aer_dev_correctable`/`aer_dev_nonfatal` sysfs 统计，采集�
 root-path lease。每个 case 都在 outer QEMU 暂停后完成注入前快照、Correctable-only
 HMP 注入和立即 QTest 快照，再恢复 ESXi、采集 post-resume timeline，最后恢复原 gate。
 
-| Gate | endpoint CES/CED | frozen Root reception/source | 解释 |
+| Gate | endpoint CES/CED | frozen outer-QEMU Root deposition/source | QEMU public-model 解释 |
 | --- | --- | --- | --- |
 | `000`、`001` | 记录 Receiver | 无 | endpoint CERE 关闭 |
 | `010`、`011` | 记录 Receiver | 无 | endpoint CERE 关闭且 bit masked |
 | `100`、`101` | 记录 Receiver | 有；Source 匹配 `01:00.1` | `E=1,M=0` 允许 QEMU fabric reception |
 | `110`、`111` | 记录 Receiver | 无 | 当前 bit 被 mask |
 
-`g100` 与 `g101` 的 frozen Root Status/Source 相同，说明在 QEMU 11 公开模型中，R 控制
-notification eligibility，而不是决定已经到达的 Correctable message 是否沉积到 Root
-Status。这个结论属于 QEMU 模型和本次虚拟 fabric；不能据此命名 VMware 内部处理路径。
+`g100` 与 `g101` 的 frozen Root Status/Source 相同，直接观察只支持“改变 R 没有改变
+本次 outer-QEMU Root deposition”。QEMU 11.0.2
+[`pcie_aer.c`](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
+另行定义先沉积 Root Status、再由 Root Command 判断 notification eligibility；
+[Linux PCIe AER Driver Guide](https://docs.kernel.org/PCI/pcieaer-howto.html)也把 Root
+记录与 Root Error Command interrupt 分成不同步骤。因此“R 是 notification gate”是
+公开参考机制解释，不是本次 IRQ 观察，也不能据此命名 VMware 内部处理路径。
 八行均保持 Uncorrectable surface 为零并恢复受控 gate。ESXi 恢复后的日志未见匹配项只记为
 `NOT_OBSERVED_IN_CAPTURED_TAIL_WINDOW`，不能升级成“未 service”或“无 IRQ”。
 
-Active `g100/g101` 进一步表明：两种 R 值下都能在冻结 fabric 中观察到同一类 Root
-reception；恢复后 guest 可发现 AER header 并看到 raw CES `0→1`，owner 保持同一 VM，
-Uncorrectable surface 为零。guest Linux AER totals 没有增加且没有实际 AER event。
+Active `g100/g101` 进一步表明：两种 R 值下都能在冻结 outer-QEMU fabric 中观察到同一类
+Root deposition；恢复后 guest 可发现 AER header 并看到 raw CES `0→1`，owner 保持同一
+VM，Uncorrectable surface 为零。guest Linux AER totals 没有增加且没有实际 AER event。
 `R=0` 与 `R=1` 在当前公开观测面上没有形成可归因的 ESXi/guest service 差异；这只能写成
 “notification/service effect 尚未识别”，不能写成 R 对 VMware 无效。
+
+### 4.4 QEMU root-state 正控与 ESXi 现有证据的差异账本
+
+这里的“差异”先区分“已观察到不同结果”和“某一侧尚未运行”。后者必须是
+`INCONCLUSIVE`/open gap，不能写成 VMware 与 QEMU `DIVERGED`：
+
+runner readiness 本身不是 observation；但 2026-07-29 的 canonical V17
+`20260729-esxi8-aer-root-o4-v17-full1` 已形成独立 live observation：O4/`g101` 四个
+sequence × 3 为 12/12 `MATCH`、`FULL_PLAN`，offline exact 与 `--require-complete` 通过。
+冻结 [`campaign result`](evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json)
+SHA-256 为
+`847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f`；canonical
+[`result record`](evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json) 与
+[`summary`](evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json) 固定边界。
+2026-07-30 的 canonical V19 `20260730-esxi8-aer-root-o0-v19-full1` 在 O0/`g101`
+完成相同 12 案，12/12 `MATCH`、`FULL_PLAN`；canonical
+[`result record`](evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json)、
+[`summary`](evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json) 与
+[`campaign result`](evidence/esxi8-aer-root-o0-v19-full1-20260730-campaign-result.json)
+SHA-256 分别为 `538aaf8c…310b`、`5a58f4de…dff`、`b2ab49a2…c6d6`。下表把 exact
+O0+O4/`g101` profile 与 QEMU 正控逐面比较；其他 gate 保持 open gap。
+
+| 可观察面 | QEMU 11.0.2 正控 | 当前 nested ESXi fixture 证据 | 判定 |
+| --- | --- | --- | --- |
+| first Root reception/source | B0 后 Root Status=`0x1`、Source=`0x0100` | V17/O4 与 V19/O0 均为 Root Status=`0x1`、Source=`0x0101`，各 3/3 | Source 分别绑定 requester BDF；ESXi 两 owner snapshot exact，不推成跨环境身份等同 |
+| repeated same-bit / multiple | 未 clear 重复 B0 后 Root Status=`0x3`，3/3 | V17/O4 与 V19/O0 均为 Root Status=`0x3`，各 3/3 | exact O0+O4/`g101` 外部状态 `MATCH` |
+| Endpoint/Root 独立 W1C | 两种方向均独立，3/3 | 两 owner 均为 Endpoint-only clear 保留 Root、Root-only clear 保留 Endpoint CES/CED，各 3/3 | exact O0+O4/`g101` 外部状态 `MATCH` |
+| distinct-bit OR | B0→B1 得到 Endpoint CES=`0x41`、Root Status=`0x3`，3/3 | 两 owner 均得到 CES=`0x41`、Root Status=`0x3`、Source=`0x0101`，各 3/3 | exact O0+O4/`g101` 外部状态 `MATCH` |
+| re-arm | clear 后重新得到 Root Status=`0x1`，3/3 | 两 owner 均重新得到 CES=`0x1`、Root Status=`0x1`、Source=`0x0101`，各 3/3 | exact O0+O4/`g101` 外部状态 `MATCH` |
+| Root Source after Status W1C | QEMU raw view 保留 `0x0100` | V17/V19 在 Root Status=`0` 时把 Source 标为不具语义/`null`，未授权 raw clear/preserve 断言 | 观测合同不同，不能据此判定 `MATCH` 或 `DIVERGED` |
+| owner/driver/service | 本 runner 无 ESXi owner/service | V17 为 O4 bound guest driver；V19 为 O0 VMkernel owner，但目标 `Module Name=None`；两者 bounded host log 均 `NOT_OBSERVED` | snapshot equality 不证明 bound native driver、owner-independent 私有机制或无 service/IRQ |
+
+V19 与 V17 的 12 对 `evaluation-input.snapshots` 逐字段 exact；按 sequence 聚合的 SHA-256
+为 `first-multiple=57f5d016add1da431dfe475818e80920cb35fbd766a85f8d422e1db75d26f772`、
+`independent-w1c=21ee0c21d3a8b6e8a7429fb44599df97b72da3f79d48f843f42fff3a2d229df2`、
+`bit-or=d121036d96f1c5fab9bdd0bc405058ae35b05065a0f3ca6b7ccc3a87b6e8ca90`、
+`rearm=80370cc89885af9c70d982e4cec376ded05d4b3ea28f3c60c753f599c48625c4`。
+它们形成
+[`frozen observed profile`](contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json)
+（SHA-256 `cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e`）与
+[`promotion receipt`](evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json)
+（SHA-256 `fab09980f8f266e94640914df59833f640b66e063a1625333d9685031109812a`）。
+该 promotion 的 closure authority 为 `NONE`：不关闭 Qman M26、M06、R13 或 G1-G6。
+
+因此本轮推导出的最小实现原理是：Qman 应把 Endpoint status、Root first/multiple、
+Endpoint/Root W1C、Source、notification/service、guest projection 和 recovery 建成可独立
+版本化、可单独验收的状态面。它不是对 VMware 私有类、函数或控制流的还原。
 
 ## 5. QEMU 对标
 
@@ -203,8 +272,9 @@ Uncorrectable surface 为零。guest Linux AER totals 没有增加且没有实�
 
 本地 guest 实测 AER 仍存在。QEMU 6.2 源码显示，该属性只影响 PCIe capability
 初始化时 `0x100` NULL Extended Capability Header 的 writable mask；`e1000e` 随后仍
-无条件调用 `pcie_aer_init()`。`vfio-pci` 的 extended-capability rebuild 也默认保留
-AER，只显式丢弃 capability ID 0、SR-IOV、ARI 和 ReBAR。
+无条件调用 `pcie_aer_init()`。若 assigned backing function 的 extended-capability chain
+含 AER，`vfio-pci` rebuild 默认会保留该 capability；其显式丢弃项是 capability ID 0、
+SR-IOV、ARI 和 ReBAR。这个源码行为不表示每个 `vfio-pci` backing function 都实现 AER。
 
 ### 5.2 推荐实现
 
@@ -263,17 +333,26 @@ effective gate 或结论。virtio profile 由
 | --- | --- | --- | --- |
 | QEMU Receiver × 8 EMR | `../_artifacts/vmware-directpath-runs/20260723-qemu11-aer-emr-control-v1/result.json` | `5e018ff1617c2d3bd85d935b7548d4e0248d6c8b3dffa46fc8d122ef011aab99` | 8/8 PASS；QEMU oracle |
 | QEMU 8 bit × 8 EMR | `../_artifacts/vmware-directpath-runs/20260723-qemu11-aer-emr-allbits-v1/result.json` | `40880169d5a4deaf01019af7d0e4618886464256cd5513f1e6d06be14cff52a4` | 64/64 PASS；QEMU oracle |
+| QEMU root sequence × 3 | `../_artifacts/vmware-directpath-runs/20260726-qemu11-aer-root-sequence-v1/result.json` | `59839df23f9711162f4d8548b7e258e355957bda23348f6acd727eb219decb5b` | 12/12 `MATCH_TO_QEMU_PUBLIC_MODEL`；276 个逐案 artifact hash 已校验；QEMU 正控，非 VMware 结果 |
+| `20260729-esxi8-aer-root-o4-v17-full1` | [`campaign result`](evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json) | `847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f` | O4/`g101` 四 sequence × 3，12/12 `MATCH`、`FULL_PLAN`，offline exact/`--require-complete` 通过；canonical [result record](evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json)；只闭合 exact 外部寄存器状态切片 |
+| `20260730-esxi8-aer-root-o0-v19-full1` | [`canonical result`](evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json) | `538aaf8c5d44b42c7ceb7c2b985b3c059ef91be28902b805dac4eec117eb310b` | O0/`g101` 四 sequence × 3，12/12 `MATCH`、`FULL_PLAN`；summary `5a58f4de…dff`，campaign `b2ab49a2…c6d6`；`Module Name=None` |
+| O0+O4 profile promotion | [`observed profile`](contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json) | `cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e` | 12 对 snapshot exact；[receipt](evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json) SHA-256 `fab09980…12a`；closure authority `NONE` |
 | `20260723-esxi8-aer-virtio-idle-emr-v2` | `../_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-idle-emr-v2/result.json` | `655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1` | Idle Receiver EMR 8/8 PASS；frozen QEMU fabric + ESXi post-resume black box |
 | `20260723-esxi8-aer-virtio-active-emr-representative-v2` | `../_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-active-emr-representative-v2/result.json` | `4fe5e83789f8c509476e32630cc3b20960ca995e0637ccb53bcdde479089aaae` | aggregate INCONCLUSIVE：g100 PASS；g101 因观察窗不足未注入 |
 | `20260723-esxi8-aer-virtio-active-g101-final-v1` | `../_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-active-g101-final-v1/result.json` | `c4511cb3514fd27b992a44af44c7dbdcf339c1a364730adcd06fb884ba700d72` | g101 PASS；guest parser 已修正，host SCP-path 假阳性由 raw log 重分类 |
 | `20260723-esxi8-aer-virtio-active-g100-parser-final-v1` | `../_artifacts/vmware-directpath-runs/20260723-esxi8-aer-virtio-active-g100-parser-final-v1/result.json` | `bd455a4d9278e53687cf16dd2cfefe161bad78ec946249725a614dce2dd975c0` | g100 PASS；最终 guest/host semantic parser live smoke，实际 event 均为 0 |
 
-当前两个 Python 入口：
+当前四个 Python 入口：
 
 ```bash
 python3 vmware-esxi8-lab/test_qemu_aer_correctable_matrix.py \
   --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 \
   --output <EMPTY_QEMU_OUTPUT_DIRECTORY>
+
+python3 vmware-esxi8-lab/test_qemu_aer_root_sequence.py \
+  --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 \
+  --output <EMPTY_QEMU_ROOT_SEQUENCE_OUTPUT_DIRECTORY> \
+  --gate g101 --repeat 3
 
 python3 vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py \
   --host <ESXI_ADDRESS> --owner-state PassthruIdle \
@@ -284,7 +363,43 @@ python3 vmware-esxi8-lab/test_esxi_aer_correctable_matrix.py \
   --outer-endpoint-bdf <OUTER_ENDPOINT_BDF> --outer-root-bdf <OUTER_ROOT_BDF> \
   --esxi-bdf <ESXI_ENDPOINT_BDF> --esxi-root-bdf <ESXI_ROOT_BDF> \
   --output <EMPTY_ESXI_OUTPUT_DIRECTORY>
+
+python3 vmware-esxi8-lab/test_esxi_aer_root_sequence.py selftest
+python3 vmware-esxi8-lab/test_esxi_aer_root_sequence_unit.py
+
+python3 vmware-esxi8-lab/test_esxi_aer_root_sequence.py plan \
+  --owner-phase O0 --gate g101 --repeat 3 \
+  --output <EMPTY_ESXI_ROOT_PLAN_DIRECTORY>
 ```
+
+QEMU root sequence 的 hash-bound 摘要见
+[`qman-qemu-aer-root-sequence-20260726-summary.json`](evidence/qman-qemu-aer-root-sequence-20260726-summary.json)。
+它得到 `MATCH_TO_QEMU_PUBLIC_MODEL`，验证 public-model first/multiple、独立 W1C、OR 与
+re-arm oracle。ESXi 的 exact O4/`g101` 同序列三次重复已由
+[`V17 result`](evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json) 和
+[`summary`](evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json) 固定；exact
+O0/`g101` 则由 [`V19 result`](evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json)
+与 [`summary`](evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json) 固定。两 owner
+的 12 对 snapshot exact；O0 `Module Name=None`，bound native driver、其他 gate、host
+notification/service、guest write 与 lifecycle clear/reuse 仍未验证。
+
+当前本地 AER guest fixture ISO SHA-256 为
+`3DE27D166EE6881BFB60D8DA233A0B3E6871532108D01D5741C8A43BA91777DE`，
+build attestation SHA-256 为
+`103941485D8B1679D6DA18312025F5155F4A027F86EFA99E5BAD2FAA66FD67C1`。
+离线冻结账本
+[`20260726-esxi-aer-root-runner-offline-v3/result.json`](../_artifacts/vmware-directpath-runs/20260726-esxi-aer-root-runner-offline-v3/result.json)
+的 SHA-256 为
+`bae6e1e0d552a2d2859250a3ac61448c010df37f27903c774e79713f8f90cf23`。
+ISO/attestation 与该账本分别只绑定 build 输入和离线 harness/source 回归，不构成 ESXi
+行为证据。只有 V17/V19 live artifact 对 exact O0+O4/`g101` 外部寄存器状态授权
+`MATCH`；不得把离线 78/78、ISO hash、plan 输出、跨 owner snapshot equality 或该单一
+gate 外推为 bound native driver、owner-independent 私有机制、其他 gate、service/IRQ、
+guest write、lifecycle、物理 qualification 或 VMware 私有实现结论。
+
+M26 的目录级结果只有在 raw snapshot 先于解析保存、任何 sampler/parser/worker/cleanup
+异常均 typed partial 并 fail-stop、T0/T1/T4/T5 coverage 与 raw host/guest evidence 可从
+manifest 重算，且 `verify-run` 对 case/campaign/aggregate exact-match 后才具备权威性。
 
 完整参数、T0—T5 协议和待补矩阵见
 [`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)。

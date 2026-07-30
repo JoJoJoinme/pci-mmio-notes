@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 1,
+  "id": "QMAN-E2-C00-HOST-SNAPSHOT-ANCHOR-BINDING-001",
+  "observedAt": "2026-07-29T22:48:08.486324Z",
+  "subject": "QMAN_COMPONENT",
+  "evidenceGrade": "E2",
+  "claimBoundary": "COMPONENT_ONLY",
+  "verdict": "PASS",
+  "sourceState": {
+    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "dirtyWorkingTree": true,
+    "runnerHashes": {
+      "qman-directpath-core/tests/test_host_snapshot_anchor.py": "4dcb24a92f29c431a110ac9dcae77b88513ca1650de7b98d3ae0184be86f382c",
+      "qman-directpath-core/tests/test_authority.py": "161f122bb3370fa20be255f7624dc83b64998e9a97da15b313b3f44ad391e11e",
+      "qman-directpath-core/tests/test_read_guard.py": "e7e8d1fdfeffd1d69eecd5d720bef117affd21feacab601fc05847db43e2cdb5",
+      "qman-directpath-core/tests/test_operation_admission.py": "4d378e7cb7e4fa5f4bbdc6f7afad872f969697b8d05a42136becc03d49decf7b",
+      "qman-directpath-core/tests/test_query_read_trace.py": "85160721695682eaf659c9d776f14102882f22e91b8aa634d6e0ff547d8822d8"
+    },
+    "inputHashes": {
+      "qman-directpath-core/qman_directpath_core/host_snapshot_anchor.py": "b1b0afb32cbe17476ca641be3f1a9c4741c3b0b2189d658185aac4bf242de287",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "705ce15801be25825797890fa1c8d4f4130ac68169bd995b1a624ce67803b123",
+      "qman-directpath-core/qman_directpath_core/authority.py": "1b0f45620ebf6d4c1adf9d36e59bc815131d4771de47b3b27c05ee6cdc35696c",
+      "qman-directpath-core/qman_directpath_core/read_guard.py": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360",
+      "qman-directpath-core/qman_directpath_core/operation_admission.py": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f",
+      "qman-directpath-core/qman_directpath_core/query_read_trace.py": "93809a1d2dc16ed083fbd38c721424e8a06ebde7ee6b466b591fb1ee7c8592fa",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
+      "qman-directpath-core/qman_directpath_core/trust.py": "c164bbb616f22e908be703f20d02d8b4d9eb22cf660a73074ca25bfc40c6a9d4",
+      "qman-directpath-core/qman_directpath_core/inventory.py": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
+      "qman-directpath-core/qman_directpath_core/canonical.py": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
+      "qman-directpath-core/qman_directpath_core/_verified.py": "6d686f87d62554bda59f5c860adaec006a3cf4947ef81388733574bc5f49df2d",
+      "qman-directpath-core/qman_directpath_core/errors.py": "84c852d0c740a960e733a9d37f56e31a808fdfdfcfc67c29bb898f10cbad10b7",
+      "contracts/directpath-host-snapshot-rollback-anchor.schema.json": "93bf9de4a26c8bb7c7537287351d64183c008cf946c3b2e2d5c9f45e3adad18c",
+      "contracts/directpath-anchor-freshness-envelope.schema.json": "c69c1015cf8d9212a1f563460fd3bea0e981697f9991206f89c215f4f3cb0951",
+      "contracts/directpath-operation-admission-binding.schema.json": "75b2d1bcf0a8223e024fdbcc2093356fbf07b010a7f067a13d905941fd9abb5a",
+      "contracts/directpath-query-read-trace.schema.json": "58430f674f2da0e54fe9366ee3a7ddd4ea0fcf605327150471d638019075f943",
+      "acceptance/cases/registry-C.json": "baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a"
+    }
+  },
+  "sut": {
+    "environment": "Windows Python deterministic component tests in the local authorized workspace; no ESXi, QEMU, HMP, QTest, VFIO, external authority service, product repository, or physical-hardware action",
+    "components": [
+      {
+        "name": "qman-directpath-core HostSnapshot anchor consumption gate",
+        "version": "0.1.0 working tree",
+        "sha256": "b1b0afb32cbe17476ca641be3f1a9c4741c3b0b2189d658185aac4bf242de287"
+      },
+      {
+        "name": "CurrentAuthorityVector and guarded read",
+        "version": "0.1.0 working tree",
+        "sha256": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360"
+      },
+      {
+        "name": "Non-product authority disposition and operation-admission binding",
+        "version": "0.1.0 working tree",
+        "sha256": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f"
+      },
+      {
+        "name": "Python",
+        "version": "3.12.10"
+      }
+    ]
+  },
+  "hypotheses": [
+    "A component can fail closed on malformed, PREPARED, expired, wrong-nonce, structurally rolled-back, cross-inventory, or incorrectly signed HostSnapshot rollback-anchor bytes without treating them as product authority.",
+    "A COMMITTED anchor must bind the exact verified inventory coordinates, one-hop signed predecessor-digest linkage, structural monotonic CAS state, configured path, verifier nonce, schema bytes, root quorum, and freshness interval.",
+    "The complete verified binding must enter CurrentAuthorityVector and the guarded-read evidence horizon so an older capability authorization is rejected when the caller presents an after-vector with an advanced anchor, freshness receipt, or binding.",
+    "The query-trace verifier must observe the same six anchor-vector fields and reject a component/reference observation unless it is explicitly non-product-authorized.",
+    "The guarded authorization and operation-admission serialization must retain the exact HostSnapshot anchor binding digest/boundary together with all other component premises, a closed blocker set, and productAuthorized=false."
+  ],
+  "observations": [
+    {
+      "name": "external-anchor-binding-conformance",
+      "result": {
+        "recordStateAccepted": "COMMITTED",
+        "preparedReservationAccepted": false,
+        "digestAndSignatureLayersVerified": [
+          "candidate projection",
+          "prepare receipt",
+          "committed anchor",
+          "final receipt",
+          "freshness receipt",
+          "binding"
+        ],
+        "inventoryCoordinatesBound": 8,
+        "sameIncarnationPredecessorExact": true,
+        "incarnationGenesisCovered": true,
+        "hostAndAgentGenerationRollbackRejected": true,
+        "capturePrepareReceiptFreshnessTimeChainVerified": true,
+        "factoryReplayFromExactCanonicalBytes": true,
+        "authorityBoundary": "COMPONENT_EXTERNAL_BYTES_VERIFICATION_ONLY",
+        "productAuthorized": false
+      }
+    },
+    {
+      "name": "authority-vector-and-read-guard-currentness",
+      "result": {
+        "anchorVectorFields": 6,
+        "allVectorFieldsValidated": true,
+        "oldAuthorizationRejectedWhenPresentedAfterVectorAdvancesAnchorFields": true,
+        "anchorFreshnessIncludedInExactEvidenceHorizon": true,
+        "checkedAtExpiryRejected": true,
+        "validUntilAfterExpiryRejected": true,
+        "crossInventoryBindingRejectedBeforeCapabilityEvaluation": true
+      }
+    },
+    {
+      "name": "query-trace-source-closure",
+      "result": {
+        "sixAnchorFieldsRequireOneObservedBinding": true,
+        "unobservedVectorMutationRejected": true,
+        "observedBindingBoundary": "COMPONENT_EXTERNAL_BYTES_VERIFICATION_ONLY",
+        "observedBindingProductAuthorized": false
+      }
+    },
+    {
+      "name": "authority-disposition-serialization",
+      "result": {
+        "hostSnapshotAnchorBindingDigestRetained": true,
+        "hostSnapshotAnchorBoundaryRetained": "COMPONENT_EXTERNAL_BYTES_VERIFICATION_ONLY",
+        "outerAuthorityBoundary": "COMPONENT_STATIC_CAPABILITY_RELATIONSHIP_ONLY",
+        "productAuthorized": false,
+        "closedAuthorizationBlockersRequired": true,
+        "nestedBoundaryOrBlockerLaunderingRejected": true,
+        "repositoryTransactionProven": false
+      }
+    },
+    {
+      "name": "operation-authority-serialization-tests",
+      "result": {
+        "command": "python -m pytest tests/test_authority.py tests/test_operation_admission.py -q",
+        "workingDirectory": "qman-directpath-core",
+        "testsPassed": 32,
+        "subtestsPassed": 49,
+        "failures": 0,
+        "errors": 0,
+        "elapsedSeconds": 27.42
+      }
+    },
+    {
+      "name": "static-verification",
+      "result": {
+        "ruff": "PASS",
+        "compileall": "PASS",
+        "schemaDraft": "DRAFT_2020_12_VALID"
+      }
+    },
+    {
+      "name": "authority-boundary",
+      "result": "COMPONENT_ONLY; productCasesClosed=0; risksClosed=0; C00 remains IMPLEMENTATION_BLOCKED; G1 and release status unchanged"
+    }
+  ],
+  "mapping": {
+    "techStories": [
+      "TS-F1-01",
+      "TS-F1-04",
+      "TS-F5-01"
+    ],
+    "caseIds": [
+      "C00"
+    ],
+    "riskIds": [
+      "R38"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "qman-directpath-core/qman_directpath_core/host_snapshot_anchor.py",
+      "sha256": "b1b0afb32cbe17476ca641be3f1a9c4741c3b0b2189d658185aac4bf242de287",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/authority.py",
+      "sha256": "1b0f45620ebf6d4c1adf9d36e59bc815131d4771de47b3b27c05ee6cdc35696c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/read_guard.py",
+      "sha256": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/operation_admission.py",
+      "sha256": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/query_read_trace.py",
+      "sha256": "93809a1d2dc16ed083fbd38c721424e8a06ebde7ee6b466b591fb1ee7c8592fa",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/qman_directpath_core/__init__.py",
+      "sha256": "77f9d4db3f638c1b13f79cd3023f82c7da62013a8cce12f04ffe13ad47f11d30",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_host_snapshot_anchor.py",
+      "sha256": "4dcb24a92f29c431a110ac9dcae77b88513ca1650de7b98d3ae0184be86f382c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_authority.py",
+      "sha256": "161f122bb3370fa20be255f7624dc83b64998e9a97da15b313b3f44ad391e11e",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_read_guard.py",
+      "sha256": "e7e8d1fdfeffd1d69eecd5d720bef117affd21feacab601fc05847db43e2cdb5",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_operation_admission.py",
+      "sha256": "4d378e7cb7e4fa5f4bbdc6f7afad872f969697b8d05a42136becc03d49decf7b",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-core/tests/test_query_read_trace.py",
+      "sha256": "85160721695682eaf659c9d776f14102882f22e91b8aa634d6e0ff547d8822d8",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-host-snapshot-rollback-anchor.schema.json",
+      "sha256": "93bf9de4a26c8bb7c7537287351d64183c008cf946c3b2e2d5c9f45e3adad18c",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-anchor-freshness-envelope.schema.json",
+      "sha256": "c69c1015cf8d9212a1f563460fd3bea0e981697f9991206f89c215f4f3cb0951",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-operation-admission-binding.schema.json",
+      "sha256": "75b2d1bcf0a8223e024fdbcc2093356fbf07b010a7f067a13d905941fd9abb5a",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-query-read-trace.schema.json",
+      "sha256": "58430f674f2da0e54fe9366ee3a7ddd4ea0fcf605327150471d638019075f943",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "acceptance/cases/registry-C.json",
+      "sha256": "baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a",
+      "retention": "LOCAL_RAW"
+    }
+  ],
+  "closureEffect": {
+    "productCasesClosed": [],
+    "risksClosed": [],
+    "statusUpdated": false
+  },
+  "limitations": [
+    "The anchor, freshness bytes, expected path, verifier nonce, trusted time, and trust context are supplied by the caller. The component does not independently generate the nonce or fetch directly from an external authority.",
+    "Structural CAS verification cannot prove authority-side linearization, external monotonic persistence, power-loss durability, reservation recovery, or a real HostSnapshot publisher transaction.",
+    "The executable tests use a test root and test keys; they do not prove a production pinned root, HSM/KMS, rotation, revocation, custody, or nonce transport.",
+    "CurrentAuthorityVector, the guarded read, and query trace are portable/local components, not mapped target-Qman repository, adapter, controller, or side-effect code.",
+    "The carried authority disposition and operation-admission binding are permanently productAuthorized=false. They prevent component-premise laundering but do not prove a SERIALIZABLE product read, committed lease, successful CAS, or pre-side-effect journal fence.",
+    "The SQLite reference placeholder is explicitly non-authoritative and is not evidence of an external HostSnapshot rollback authority.",
+    "Raw PCI structure and FLR replay now have a separate component-only E2 record; this anchor slice still does not provide a product raw-config collector/provider, target-Qman wiring, complete reset/domain semantics, or a product capability publisher.",
+    "There is no target-code mapping, E3 end-to-end product execution, E4 physical qualification, or signed CaseCompletionRecord.",
+    "This record cannot close C00, R38, G1-G6, any product capability, qualification profile, milestone, support statement, HCL entry, or release gate."
+  ]
+}

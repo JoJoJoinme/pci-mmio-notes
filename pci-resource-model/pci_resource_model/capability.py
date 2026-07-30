@@ -37,12 +37,13 @@ TRUSTED_ISOLATION = {
 TRUSTED_PHYSICAL_DOMAIN_SOURCES = {
     "stock-kernel-iommu-group",
     "kernel-no-override-iommu-group",
-    "kernel-acs-provenance-topology-conservative",
+    "kernel-native-shadow-domain-v1",
     "qualification-snapshot",
     "manual-audited",
 }
 OVERRIDE_INDEPENDENT_SOURCES = {
     "kernel-no-override-iommu-group",
+    "kernel-native-shadow-domain-v1",
     "qualification-snapshot",
     "manual-audited",
 }

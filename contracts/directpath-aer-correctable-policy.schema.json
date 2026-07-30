@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-aer-correctable-policy.schema.json",
+  "title": "Qman DirectPath Correctable-only AER policy candidate",
+  "description": "Closed, target-code-independent policy bytes for the Correctable-only AER component premise. This schema does not prove repository currentness, VFIO enforcement, physical recovery, E4 qualification, or product authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "policyId",
+    "correctableOnly",
+    "extendedCapability",
+    "writePipeline",
+    "unknownFieldAction",
+    "fields",
+    "aerPolicyDigest"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "QMAN_AER_POLICY"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "policyId": {
+      "$ref": "#/$defs/id"
+    },
+    "correctableOnly": {
+      "const": true
+    },
+    "extendedCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "headerExposure",
+        "bodyExposure",
+        "hiddenBodyReadProjection"
+      ],
+      "properties": {
+        "headerExposure": {
+          "enum": [
+            "VISIBLE",
+            "HIDDEN"
+          ]
+        },
+        "bodyExposure": {
+          "enum": [
+            "VISIBLE",
+            "HIDDEN"
+          ]
+        },
+        "hiddenBodyReadProjection": {
+          "enum": [
+            "ZERO",
+            "SHADOW"
+          ]
+        }
+      },
+      "x-qmanIndependenceRule": "headerExposure and bodyExposure are independent policy choices. Hiding the Extended Capability header never silently selects the body projection, and hiding the body never silently rewires the capability chain."
+    },
+    "writePipeline": {
+      "const": "FILTER_BEFORE_VFIO"
+    },
+    "unknownFieldAction": {
+      "const": "DENY"
+    },
+    "fields": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "PCIE_DEVICE_CONTROL",
+        "PCIE_DEVICE_STATUS",
+        "CORRECTABLE_ERROR_STATUS",
+        "CORRECTABLE_ERROR_MASK",
+        "ROOT_ERROR_COMMAND",
+        "ROOT_ERROR_STATUS",
+        "ERROR_SOURCE_ID"
+      ],
+      "properties": {
+        "PCIE_DEVICE_CONTROL": {
+          "$ref": "#/$defs/fieldPolicy"
+        },
+        "PCIE_DEVICE_STATUS": {
+          "$ref": "#/$defs/fieldPolicy"
+        },
+        "CORRECTABLE_ERROR_STATUS": {
+          "$ref": "#/$defs/fieldPolicy"
+        },
+        "CORRECTABLE_ERROR_MASK": {
+          "$ref": "#/$defs/fieldPolicy"
+        },
+        "ROOT_ERROR_COMMAND": {
+          "$ref": "#/$defs/fieldPolicy"
+        },
+        "ROOT_ERROR_STATUS": {
+          "$ref": "#/$defs/fieldPolicy"
+        },
+        "ERROR_SOURCE_ID": {
+          "$ref": "#/$defs/fieldPolicy"
+        }
+      }
+    },
+    "aerPolicyDigest": {
+      "$ref": "#/$defs/digest"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "uint32": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "fieldPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readProjection",
+        "guestReadAllowMask",
+        "writeDisposition",
+        "physicalW1cAllowMask",
+        "shadowW1cMask"
+      ],
+      "properties": {
+        "readProjection": {
+          "enum": [
+            "PHYSICAL",
+            "ZERO",
+            "SHADOW"
+          ]
+        },
+        "guestReadAllowMask": {
+          "$ref": "#/$defs/uint32"
+        },
+        "writeDisposition": {
+          "enum": [
+            "DENY",
+            "FILTERED_W1C"
+          ]
+        },
+        "physicalW1cAllowMask": {
+          "$ref": "#/$defs/uint32"
+        },
+        "shadowW1cMask": {
+          "$ref": "#/$defs/uint32"
+        }
+      }
+    }
+  },
+  "x-qmanCanonicalization": "CANONICAL-JSON-V1",
+  "x-qmanDigestDomain": "QMAN-DIRECTPATH/AER-POLICY/V1\u0000",
+  "x-qmanDigestRule": "Deep-copy the complete schema-valid policy, set aerPolicyDigest to null only in the construction projection, encode that projection with CANONICAL-JSON-V1, prepend the exact x-qmanDigestDomain bytes, and SHA-256 the result. The final document carries sha256:<64 lowercase hex>.",
+  "x-qmanCorrectableMaskRule": {
+    "correctableErrorAllowMask": 61889,
+    "fieldReadAllowMasks": {
+      "PCIE_DEVICE_CONTROL": 1,
+      "PCIE_DEVICE_STATUS": 1,
+      "CORRECTABLE_ERROR_STATUS": 61889,
+      "CORRECTABLE_ERROR_MASK": 61889,
+      "ROOT_ERROR_COMMAND": 1,
+      "ROOT_ERROR_STATUS": 3,
+      "ERROR_SOURCE_ID": 65535
+    },
+    "fieldW1cAllowMasks": {
+      "PCIE_DEVICE_STATUS": 1,
+      "CORRECTABLE_ERROR_STATUS": 61889,
+      "ROOT_ERROR_STATUS": 3
+    }
+  },
+  "x-qmanSemanticVerifierRule": "A conforming verifier checks every read mask is a subset of its field allow-mask; physical and shadow W1C masks are disjoint and V1 assigns a field wholly to at most one W1C owner; W1C masks are subsets of both the field W1C allow-mask and guestReadAllowMask; DENY owns no W1C bits; FILTERED_W1C is restricted to the three W1C fields; a hidden AER body forwards no physical write; physical W1C requires an effective PHYSICAL projection; shadow W1C requires an effective SHADOW projection; Root Status and Correctable Source use the same effective projection.",
+  "x-qmanUncorrectableRule": "A write overlapping AER relative bytes 0x04 through 0x0f (Uncorrectable Status, Mask, or Severity) is denied as one complete access. No unknown byte lane gains physical read or write authority.",
+  "x-qmanSourceRule": "The low 16-bit Correctable Source storage may be projected as raw storage, but requester attribution is semantically valid only while Root Error Status.COR_RCV is set.",
+  "x-qmanAuthorityBoundary": "COMPONENT_PREMISE",
+  "x-qmanProductAuthorized": false
+}

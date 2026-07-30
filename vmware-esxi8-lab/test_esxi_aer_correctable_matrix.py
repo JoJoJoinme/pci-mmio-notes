@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import argparse
 import collections
+import concurrent.futures
+import copy
 import hashlib
 import json
 import multiprocessing
@@ -26,6 +28,7 @@ import re
 import shlex
 import ssl
 import subprocess
+import threading
 import time
 import uuid
 from dataclasses import dataclass
@@ -118,7 +121,46 @@ class GateLeaseApplyFailure(RuntimeError):
     ) -> None:
         super().__init__(message)
         self.lease = lease
-        self.safety = safety
+        numeric_safety_faults = _partial_numeric_safety_faults(lease)
+        if numeric_safety_faults:
+            lease["numericSafetyFaults"] = numeric_safety_faults
+        self.safety = bool(safety or numeric_safety_faults)
+
+
+class GateLeaseRestoreFailure(RuntimeError):
+    """Restore began or resumed, so partial evidence must reach the caller."""
+
+    def __init__(
+        self,
+        message: str,
+        result: dict[str, Any],
+        *,
+        safety: bool,
+    ) -> None:
+        super().__init__(message)
+        self.result = result
+        numeric_safety_faults = _partial_numeric_safety_faults(result)
+        if numeric_safety_faults:
+            result["numericSafetyFaults"] = numeric_safety_faults
+        self.safety = bool(safety or numeric_safety_faults)
+
+
+class BaselineClearFailure(RuntimeError):
+    """Baseline clear failed; retain every numeric snapshot already read."""
+
+    def __init__(
+        self,
+        message: str,
+        result: dict[str, Any],
+        *,
+        safety: bool,
+    ) -> None:
+        super().__init__(message)
+        self.result = result
+        numeric_safety_faults = _partial_numeric_safety_faults(result)
+        if numeric_safety_faults:
+            result["numericSafetyFaults"] = numeric_safety_faults
+        self.safety = bool(safety or numeric_safety_faults)
 
 
 @dataclass(frozen=True)
@@ -418,11 +460,281 @@ def outer_qemu_aer_snapshot(
     socket_path: Path,
     endpoint_bdf: str,
     root_bdf: str,
+    *,
+    topology: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    """Read the outer-QEMU AER surface.
+
+    A paused full read discovers and binds the immutable topology.  Runnable
+    safety polls pass that read back as ``topology`` so every poll reads only
+    the dynamic gate/status surface.  Repeating PCIEXBAR and capability-list
+    discovery on every 25 ms poll made the 50 ms fail-stop envelope depend on
+    scheduler jitter instead of the safety registers themselves.
+    """
+
     if not socket_path.is_socket():
         raise BlockedEnvironment(f"QTest socket is not ready: {socket_path}")
+    cached_endpoint: dict[str, Any] | None = None
+    cached_root: dict[str, Any] | None = None
+    cached_endpoint_state: dict[str, Any] | None = None
+    cached_root_state: dict[str, Any] | None = None
+    if topology is not None:
+        try:
+            cached_endpoint = copy.deepcopy(topology["endpoint"])
+            cached_root = copy.deepcopy(topology["root"])
+            cached_endpoint_state = copy.deepcopy(topology["endpointState"])
+            cached_root_state = copy.deepcopy(topology["rootState"])
+            pciexbar = int(topology["q35Pciexbar"])
+            endpoint_identity = (
+                int(cached_endpoint["bus"]),
+                int(cached_endpoint["device"]),
+                int(cached_endpoint["function"]),
+            )
+            root_identity = (
+                int(cached_root["bus"]),
+                int(cached_root["device"]),
+                int(cached_root["function"]),
+            )
+            if endpoint_identity != bdf_tuple(endpoint_bdf):
+                raise ValueError(
+                    "cached endpoint identity does not match the requested BDF"
+                )
+            if root_identity != bdf_tuple(root_bdf):
+                raise ValueError(
+                    "cached root identity does not match the requested BDF"
+                )
+            if int(cached_endpoint["pcieType"]) != qemu_aer.PCI_EXP_TYPE_ENDPOINT:
+                raise ValueError("cached endpoint PCIe type is not Endpoint")
+            if int(cached_root["pcieType"]) != qemu_aer.PCI_EXP_TYPE_ROOT_PORT:
+                raise ValueError("cached root PCIe type is not Root Port")
+            for label, device in (
+                ("endpoint", cached_endpoint),
+                ("root", cached_root),
+            ):
+                pcie_offset = int(device["pcieCapabilityOffset"])
+                aer_offset = int(device["aerCapabilityOffset"])
+                aer_header = int(device["aerHeader"])
+                if (
+                    pcie_offset < 0x40
+                    or pcie_offset >= 0x100
+                    or pcie_offset % 4
+                ):
+                    raise ValueError(
+                        f"cached {label} PCIe capability offset is invalid"
+                    )
+                if (
+                    aer_offset < 0x100
+                    or aer_offset > 0xFFC
+                    or aer_offset % 4
+                ):
+                    raise ValueError(
+                        f"cached {label} AER capability offset is invalid"
+                    )
+                if aer_header & 0xFFFF != qemu_aer.PCI_EXT_CAP_ID_ERR:
+                    raise ValueError(
+                        f"cached {label} AER header is not AER"
+                    )
+            # Validate every immutable field used to reconstruct the full
+            # evidence shape before QEMU can become runnable.
+            int(cached_endpoint_state["uncorrectableErrorMask"])
+            int(cached_root_state["correctableErrorMask"])
+            int(cached_root_state["primaryBus"])
+            int(cached_root_state["secondaryBus"])
+            int(cached_root_state["subordinateBus"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise BlockedEnvironment(
+                f"cached outer-QEMU topology is not reusable: {error}"
+            ) from error
+        expected_pciexbar = qemu_aer.MCFG_BASE | qemu_aer.Q35_PCIEXBAR_ENABLE
+        if pciexbar != expected_pciexbar:
+            raise BlockedEnvironment(
+                "cached Q35 ECAM base does not match the read-only lab "
+                f"accessor: observed=0x{pciexbar:08x}, "
+                f"expected=0x{expected_pciexbar:08x}"
+            )
+
     client = qemu_aer.QTestClient(socket_path)
     try:
+        if topology is not None:
+            assert cached_endpoint is not None
+            assert cached_root is not None
+            assert cached_endpoint_state is not None
+            assert cached_root_state is not None
+            eb = int(cached_endpoint["bus"])
+            ed = int(cached_endpoint["device"])
+            ef = int(cached_endpoint["function"])
+            epcie = int(cached_endpoint["pcieCapabilityOffset"])
+            eaer = int(cached_endpoint["aerCapabilityOffset"])
+            rb = int(cached_root["bus"])
+            rd = int(cached_root["device"])
+            rf = int(cached_root["function"])
+            rpcie = int(cached_root["pcieCapabilityOffset"])
+            raer = int(cached_root["aerCapabilityOffset"])
+            endpoint_start = min(
+                epcie + qemu_aer.PCI_EXP_DEVCTL,
+                eaer + qemu_aer.PCI_ERR_UNCOR_STATUS,
+            )
+            endpoint_end = max(
+                epcie + qemu_aer.PCI_EXP_DEVSTA + 2,
+                eaer + qemu_aer.PCI_ERR_UNCOR_STATUS + 4,
+                eaer + qemu_aer.PCI_ERR_COR_STATUS + 4,
+                eaer + qemu_aer.PCI_ERR_COR_MASK + 4,
+            )
+            root_start = min(
+                qemu_aer.PCI_BRIDGE_CONTROL,
+                rpcie + qemu_aer.PCI_EXP_DEVCTL,
+                raer + qemu_aer.PCI_ERR_UNCOR_STATUS,
+            )
+            root_end = max(
+                qemu_aer.PCI_BRIDGE_CONTROL + 2,
+                rpcie + qemu_aer.PCI_EXP_DEVSTA + 2,
+                raer + qemu_aer.PCI_ERR_UNCOR_STATUS + 4,
+                raer + qemu_aer.PCI_ERR_COR_STATUS + 4,
+                raer + qemu_aer.PCI_ERR_ROOT_COMMAND + 4,
+                raer + qemu_aer.PCI_ERR_ROOT_STATUS + 4,
+                raer + qemu_aer.PCI_ERR_ROOT_ERR_SRC + 4,
+            )
+            endpoint_block, root_block = qemu_aer.qtest_read_blocks(
+                client,
+                (
+                    (
+                        qemu_aer.ecam_address(
+                            eb,
+                            ed,
+                            ef,
+                            endpoint_start,
+                        ),
+                        endpoint_end - endpoint_start,
+                    ),
+                    (
+                        qemu_aer.ecam_address(
+                            rb,
+                            rd,
+                            rf,
+                            root_start,
+                        ),
+                        root_end - root_start,
+                    ),
+                ),
+            )
+
+            def block_value(
+                block: bytes,
+                start: int,
+                offset: int,
+                width: int,
+            ) -> int:
+                relative = offset - start
+                raw = block[relative : relative + width]
+                if len(raw) != width:
+                    raise RuntimeError(
+                        "cached-topology block read omitted a dynamic field"
+                    )
+                return int.from_bytes(raw, byteorder="little")
+
+            endpoint_state = {
+                "deviceControl": block_value(
+                    endpoint_block,
+                    endpoint_start,
+                    epcie + qemu_aer.PCI_EXP_DEVCTL,
+                    2,
+                ),
+                "deviceStatus": block_value(
+                    endpoint_block,
+                    endpoint_start,
+                    epcie + qemu_aer.PCI_EXP_DEVSTA,
+                    2,
+                ),
+                "uncorrectableErrorStatus": block_value(
+                    endpoint_block,
+                    endpoint_start,
+                    eaer + qemu_aer.PCI_ERR_UNCOR_STATUS,
+                    4,
+                ),
+                "correctableErrorStatus": block_value(
+                    endpoint_block,
+                    endpoint_start,
+                    eaer + qemu_aer.PCI_ERR_COR_STATUS,
+                    4,
+                ),
+                "correctableErrorMask": block_value(
+                    endpoint_block,
+                    endpoint_start,
+                    eaer + qemu_aer.PCI_ERR_COR_MASK,
+                    4,
+                ),
+                "aerHeader": int(cached_endpoint["aerHeader"]),
+                "uncorrectableErrorMask": int(
+                    cached_endpoint_state["uncorrectableErrorMask"]
+                ),
+            }
+            root_state = {
+                "bridgeControl": block_value(
+                    root_block,
+                    root_start,
+                    qemu_aer.PCI_BRIDGE_CONTROL,
+                    2,
+                ),
+                "deviceControl": block_value(
+                    root_block,
+                    root_start,
+                    rpcie + qemu_aer.PCI_EXP_DEVCTL,
+                    2,
+                ),
+                "deviceStatus": block_value(
+                    root_block,
+                    root_start,
+                    rpcie + qemu_aer.PCI_EXP_DEVSTA,
+                    2,
+                ),
+                "uncorrectableErrorStatus": block_value(
+                    root_block,
+                    root_start,
+                    raer + qemu_aer.PCI_ERR_UNCOR_STATUS,
+                    4,
+                ),
+                "correctableErrorStatus": block_value(
+                    root_block,
+                    root_start,
+                    raer + qemu_aer.PCI_ERR_COR_STATUS,
+                    4,
+                ),
+                "rootErrorCommand": block_value(
+                    root_block,
+                    root_start,
+                    raer + qemu_aer.PCI_ERR_ROOT_COMMAND,
+                    4,
+                ),
+                "rootErrorStatus": block_value(
+                    root_block,
+                    root_start,
+                    raer + qemu_aer.PCI_ERR_ROOT_STATUS,
+                    4,
+                ),
+                "errorSourceIdentification": block_value(
+                    root_block,
+                    root_start,
+                    raer + qemu_aer.PCI_ERR_ROOT_ERR_SRC,
+                    4,
+                ),
+                "aerHeader": int(cached_root["aerHeader"]),
+                "correctableErrorMask": int(
+                    cached_root_state["correctableErrorMask"]
+                ),
+                "primaryBus": int(cached_root_state["primaryBus"]),
+                "secondaryBus": int(cached_root_state["secondaryBus"]),
+                "subordinateBus": int(
+                    cached_root_state["subordinateBus"]
+                ),
+            }
+            return {
+                "q35Pciexbar": pciexbar,
+                "endpoint": cached_endpoint,
+                "endpointState": endpoint_state,
+                "root": cached_root,
+                "rootState": root_state,
+            }
+
         pciexbar = qemu_aer.legacy_config_read32(
             client, 0, 0, 0, qemu_aer.Q35_PCIEXBAR_OFFSET
         )
@@ -538,35 +850,68 @@ def gate_readback(snapshot: dict[str, Any], mask: int) -> dict[str, Any]:
 
 
 def outer_snapshot_safety_faults(snapshot: dict[str, Any]) -> list[str]:
-    endpoint = snapshot["endpointState"]
-    root = snapshot["rootState"]
+    """Return every independently readable non-Correctable safety fault.
+
+    A QTest read can succeed while a later field is absent or malformed.
+    Safety authority is monotonic: one known non-zero UES/Device Status/Root
+    Error Status value must survive that partial shape instead of being hidden
+    by a ``KeyError`` from an unrelated field.
+    """
+
+    endpoint_raw = snapshot.get("endpointState")
+    root_raw = snapshot.get("rootState")
+    endpoint = endpoint_raw if isinstance(endpoint_raw, dict) else {}
+    root = root_raw if isinstance(root_raw, dict) else {}
+
+    def parsed(container: dict[str, Any], key: str) -> int | None:
+        try:
+            value = container[key]
+            if isinstance(value, bool):
+                return None
+            return int(value)
+        except (KeyError, TypeError, ValueError):
+            return None
+
     faults: list[str] = []
-    if int(endpoint["uncorrectableErrorStatus"]):
+    endpoint_ues = parsed(endpoint, "uncorrectableErrorStatus")
+    if endpoint_ues:
         faults.append(
             "endpoint UES="
-            f"0x{int(endpoint['uncorrectableErrorStatus']):08x}"
+            f"0x{endpoint_ues:08x}"
         )
-    endpoint_non_ced = int(endpoint["deviceStatus"]) & (
-        qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK ^ qemu_aer.PCI_EXP_DEVSTA_CED
-    )
-    if endpoint_non_ced:
-        faults.append(f"endpoint DeviceStatus non-CED=0x{endpoint_non_ced:04x}")
-    if int(root["uncorrectableErrorStatus"]):
+    endpoint_device_status = parsed(endpoint, "deviceStatus")
+    if endpoint_device_status is not None:
+        endpoint_non_ced = endpoint_device_status & (
+            qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK ^ qemu_aer.PCI_EXP_DEVSTA_CED
+        )
+        if endpoint_non_ced:
+            faults.append(
+                "endpoint DeviceStatus non-CED="
+                f"0x{endpoint_non_ced:04x}"
+            )
+    root_ues = parsed(root, "uncorrectableErrorStatus")
+    if root_ues:
         faults.append(
-            f"root UES=0x{int(root['uncorrectableErrorStatus']):08x}"
+            f"root UES=0x{root_ues:08x}"
         )
-    root_device_errors = int(root["deviceStatus"]) & (
-        qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK ^ qemu_aer.PCI_EXP_DEVSTA_CED
-    )
-    if root_device_errors:
-        faults.append(f"root DeviceStatus error=0x{root_device_errors:04x}")
-    root_uncorrectable = int(root["rootErrorStatus"]) & (
-        qemu_aer.PCI_ERR_ROOT_UNCOR_MASK
-    )
-    if root_uncorrectable:
-        faults.append(
-            f"root uncorrectable reception=0x{root_uncorrectable:08x}"
+    root_device_status = parsed(root, "deviceStatus")
+    if root_device_status is not None:
+        root_device_errors = root_device_status & (
+            qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK ^ qemu_aer.PCI_EXP_DEVSTA_CED
         )
+        if root_device_errors:
+            faults.append(
+                f"root DeviceStatus error=0x{root_device_errors:04x}"
+            )
+    root_error_status = parsed(root, "rootErrorStatus")
+    if root_error_status is not None:
+        root_uncorrectable = (
+            root_error_status & qemu_aer.PCI_ERR_ROOT_UNCOR_MASK
+        )
+        if root_uncorrectable:
+            faults.append(
+                f"root uncorrectable reception=0x{root_uncorrectable:08x}"
+            )
     return faults
 
 
@@ -875,7 +1220,1079 @@ def sample_gate_timeline(
     return samples
 
 
-def apply_gate_lease(
+def sample_gate_timeline_continuous(
+    socket_path: Path,
+    endpoint_bdf: str,
+    root_bdf: str,
+    mask: int,
+    delays: Iterable[float],
+    *,
+    started_at: float,
+    maximum_poll_interval: float,
+    target_poll_interval: float,
+    stop_on_safety_fault: bool = True,
+    safety_boundary: str = "ATTRIBUTION_WINDOW",
+    topology: dict[str, Any] | None = None,
+    _partial_record: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Continuously sample a runnable QEMU until every target delay is covered.
+
+    ``started_at`` must be captured immediately before the corresponding
+    ``cont`` attempt.  This makes monitor transition latency part of the first
+    measured safety-poll gap instead of silently starting the clock after QEMU
+    is already runnable.
+
+    The helper returns fault evidence rather than raising so callers can always
+    issue an idempotent fail-stop and retain the complete sampler record.
+    """
+
+    target_delays = tuple(float(value) for value in delays)
+    if (
+        not target_delays
+        or target_delays[0] < 0
+        or any(
+            later <= earlier
+            for earlier, later in zip(target_delays, target_delays[1:])
+        )
+    ):
+        raise ValueError(
+            "continuous gate timeline delays must be non-negative and "
+            "strictly increasing"
+        )
+    if (
+        maximum_poll_interval <= 0
+        or target_poll_interval <= 0
+        or target_poll_interval > maximum_poll_interval
+    ):
+        raise ValueError(
+            "continuous gate safety poll intervals are outside the valid "
+            "envelope"
+        )
+    if safety_boundary not in {
+        "PRE_INJECTION",
+        "ATTRIBUTION_WINDOW",
+        "POST_CLEANUP",
+    }:
+        raise ValueError(
+            f"invalid continuous safety boundary: {safety_boundary}"
+        )
+
+    samples: list[dict[str, Any]] = []
+    timeline: list[dict[str, Any]] = []
+    poll_faults: list[dict[str, Any]] = []
+    safety_events: list[dict[str, Any]] = []
+    record = _partial_record if isinstance(_partial_record, dict) else {}
+    record.update(
+        {
+            "safetyWindowKind": "CONTINUOUS_TIMELINE",
+            "safetyBoundary": safety_boundary,
+            "targetDelaysSeconds": list(target_delays),
+            "targetCount": len(target_delays),
+            "maximumPollIntervalSeconds": maximum_poll_interval,
+            "targetPollIntervalSeconds": target_poll_interval,
+            "snapshotMode": (
+                "PINNED_TOPOLOGY_BLOCK_BATCH"
+                if topology is not None
+                else "FULL_DISCOVERY"
+            ),
+            "maximumObservedPollGapSeconds": 0.0,
+            "maximumObservedReadDurationSeconds": 0.0,
+            "sampleCount": 0,
+            "samples": samples,
+            "timeline": timeline,
+            "completedTargetCount": 0,
+            "complete": False,
+            "pollFaults": poll_faults,
+            "safetyEvents": safety_events,
+            "finishedAt": None,
+        }
+    )
+    maximum_observed_gap = 0.0
+    maximum_observed_read_duration = 0.0
+    prior_sample_started: float | None = None
+    next_poll_at = started_at
+    target_index = 0
+
+    while target_index < len(target_delays):
+        try:
+            remaining = next_poll_at - time.monotonic()
+            if remaining > 0:
+                time.sleep(remaining)
+            sample_started = time.monotonic()
+        except BaseException as error:
+            poll_faults.append(
+                {
+                    "type": type(error).__name__,
+                    "message": str(error),
+                    "phase": "safety-poll-scheduler",
+                }
+            )
+            break
+        gap = (
+            sample_started - prior_sample_started
+            if prior_sample_started is not None
+            else sample_started - started_at
+        )
+        maximum_observed_gap = max(maximum_observed_gap, gap)
+        record["maximumObservedPollGapSeconds"] = maximum_observed_gap
+        gap_fault: dict[str, Any] | None = None
+        if gap > maximum_poll_interval:
+            gap_fault = {
+                "type": "SafetyPollGapExceeded",
+                "message": (
+                    "Correctable-only safety polling exceeded "
+                    f"{maximum_poll_interval:.6f}s: observed {gap:.6f}s"
+                ),
+                "observedSeconds": gap,
+                "maximumSeconds": maximum_poll_interval,
+            }
+
+        try:
+            snapshot = outer_qemu_aer_snapshot(
+                socket_path,
+                endpoint_bdf,
+                root_bdf,
+                **(
+                    {"topology": topology}
+                    if topology is not None
+                    else {}
+                ),
+            )
+        except BaseException as error:
+            if gap_fault is not None:
+                poll_faults.append(gap_fault)
+            poll_faults.append(
+                {
+                    "type": type(error).__name__,
+                    "message": str(error),
+                    "phase": "qtest-safety-read",
+                    "sampleStartGapSeconds": gap,
+                }
+            )
+            break
+
+        # The caller can attach ``record`` to its lease before QEMU becomes
+        # runnable.  Commit the raw read to that shared object as the very
+        # first post-read action, before timing, timestamps, copies or parsers.
+        # A later BaseException therefore cannot erase an observed unsafe
+        # five-register surface.
+        sample: dict[str, Any] = {
+            "sampleIndex": len(samples),
+            "actualElapsedSeconds": None,
+            "sampleStartGapSeconds": gap,
+            "sampleDurationSeconds": None,
+            "capturedAt": None,
+            "readback": None,
+            "safetyFaults": [],
+            "snapshot": snapshot,
+            "partial": True,
+        }
+        samples.append(sample)
+        record["sampleCount"] = len(samples)
+        try:
+            sample_finished = time.monotonic()
+            sample_duration = sample_finished - sample_started
+            maximum_observed_read_duration = max(
+                maximum_observed_read_duration,
+                sample_duration,
+            )
+            record["maximumObservedReadDurationSeconds"] = (
+                maximum_observed_read_duration
+            )
+            actual_elapsed = sample_finished - started_at
+            sample["sampleDurationSeconds"] = sample_duration
+            sample["actualElapsedSeconds"] = actual_elapsed
+        except BaseException as error:
+            safety_faults = _partial_numeric_safety_faults(snapshot)
+            sample["safetyFaults"] = safety_faults
+            if gap_fault is not None:
+                poll_faults.append(gap_fault)
+            poll_faults.append(
+                {
+                    "type": type(error).__name__,
+                    "message": str(error),
+                    "phase": "qtest-safety-timing",
+                    "sampleStartGapSeconds": gap,
+                    "snapshot": snapshot,
+                    "safetyFaults": safety_faults,
+                }
+            )
+            break
+        try:
+            safety_faults = _partial_numeric_safety_faults(snapshot)
+            sample["safetyFaults"] = safety_faults
+            sample["capturedAt"] = utc_now()
+            readback = gate_readback(snapshot, mask)
+        except BaseException as error:
+            safety_faults = _partial_numeric_safety_faults(snapshot)
+            sample["safetyFaults"] = safety_faults
+            if gap_fault is not None:
+                poll_faults.append(gap_fault)
+            poll_faults.append(
+                {
+                    "type": type(error).__name__,
+                    "message": str(error),
+                    "phase": "qtest-safety-parse",
+                    "sampleStartGapSeconds": gap,
+                    "sampleDurationSeconds": sample_duration,
+                    "actualElapsedSeconds": actual_elapsed,
+                    "snapshot": snapshot,
+                    "safetyFaults": safety_faults,
+                }
+            )
+            break
+        sample["readback"] = readback
+        sample["partial"] = False
+
+        # Safety evidence is derived before a timing miss is classified.  If
+        # both happen in one read, the caller can therefore preserve the
+        # safety verdict instead of downgrading it to fixture-invalid.
+        if gap_fault is not None:
+            poll_faults.append(gap_fault)
+        if sample_duration > maximum_poll_interval:
+            poll_faults.append(
+                {
+                    "type": "SafetyPollReadDurationExceeded",
+                    "message": (
+                        "one Correctable-only safety read exceeded "
+                        f"{maximum_poll_interval:.6f}s: observed "
+                        f"{sample_duration:.6f}s"
+                    ),
+                    "observedSeconds": sample_duration,
+                    "maximumSeconds": maximum_poll_interval,
+                }
+            )
+
+        while (
+            target_index < len(target_delays)
+            and actual_elapsed >= target_delays[target_index]
+        ):
+            target_delay = target_delays[target_index]
+            timeline.append(
+                {
+                    "delaySeconds": target_delay,
+                    "targetDelaySeconds": target_delay,
+                    "actualElapsedSeconds": actual_elapsed,
+                    "sampleIndex": sample["sampleIndex"],
+                    "capturedAt": sample["capturedAt"],
+                    "readback": sample["readback"],
+                    "safetyFaults": safety_faults,
+                    "snapshot": snapshot,
+                }
+            )
+            target_index += 1
+            record["completedTargetCount"] = target_index
+
+        if (
+            (safety_faults and stop_on_safety_fault)
+            or poll_faults
+        ):
+            break
+        prior_sample_started = sample_started
+        next_poll_at += target_poll_interval
+
+    safety_events.clear()
+    for item in samples:
+        item_faults = list(
+            item.get("safetyFaults")
+            or _partial_numeric_safety_faults(item.get("snapshot"))
+        )
+        if item_faults:
+            item["safetyFaults"] = item_faults
+            safety_events.append(
+                {
+                    "sampleIndex": item.get("sampleIndex"),
+                    "actualElapsedSeconds": item.get(
+                        "actualElapsedSeconds"
+                    ),
+                    "faults": item_faults,
+                    "snapshot": item.get("snapshot"),
+                }
+            )
+    safety_events.extend(
+        {
+            "sampleIndex": None,
+            "actualElapsedSeconds": item.get("actualElapsedSeconds"),
+            "faults": list(item["safetyFaults"]),
+            "snapshot": item.get("snapshot"),
+            "phase": item.get("phase"),
+        }
+        for item in poll_faults
+        if (
+            isinstance(item, dict)
+            and isinstance(item.get("safetyFaults"), list)
+            and item["safetyFaults"]
+        )
+    )
+    record.update(
+        {
+            "maximumObservedPollGapSeconds": maximum_observed_gap,
+            "maximumObservedReadDurationSeconds": (
+                maximum_observed_read_duration
+            ),
+            "sampleCount": len(samples),
+            "completedTargetCount": target_index,
+            "complete": (
+                target_index == len(target_delays)
+                and not poll_faults
+                and not safety_events
+            ),
+        }
+    )
+    try:
+        record["finishedAt"] = utc_now()
+    except BaseException as error:
+        poll_faults.append(
+            {
+                "type": type(error).__name__,
+                "message": str(error),
+                "phase": "safety-poll-finalization",
+            }
+        )
+        record["complete"] = False
+    return record
+
+
+def close_continuous_safety_poll(
+    poll: dict[str, Any],
+    *,
+    started_at: float,
+    mode: str,
+    stop_confirmed_at: float | None,
+) -> None:
+    """Bind the last sample to the runnable-window closure decision."""
+
+    maximum = poll.get("maximumPollIntervalSeconds")
+    maximum = (
+        float(maximum)
+        if isinstance(maximum, (int, float))
+        and not isinstance(maximum, bool)
+        else None
+    )
+    samples = poll.get("samples")
+    samples = samples if isinstance(samples, list) else []
+    last_elapsed = None
+    if samples and isinstance(samples[-1], dict):
+        raw_elapsed = samples[-1].get("actualElapsedSeconds")
+        if isinstance(raw_elapsed, (int, float)) and not isinstance(
+            raw_elapsed,
+            bool,
+        ):
+            last_elapsed = float(raw_elapsed)
+    stop_elapsed = (
+        stop_confirmed_at - started_at
+        if stop_confirmed_at is not None
+        else None
+    )
+    tail_gap = (
+        stop_elapsed - last_elapsed
+        if stop_elapsed is not None and last_elapsed is not None
+        else None
+    )
+    closure = {
+        "mode": mode,
+        "stopConfirmed": stop_confirmed_at is not None,
+        "stopConfirmedElapsedSeconds": stop_elapsed,
+        "lastSampleFinishedElapsedSeconds": last_elapsed,
+        "tailGapSeconds": tail_gap,
+    }
+    poll["closure"] = closure
+    if mode == "STOP_UNCONFIRMED":
+        poll["complete"] = False
+    if (
+        tail_gap is not None
+        and maximum is not None
+        and tail_gap > maximum
+    ):
+        poll.setdefault("pollFaults", []).append(
+            {
+                "type": "SafetyPollTailGapExceeded",
+                "message": (
+                    "last safety sample to paused ACK exceeded "
+                    f"{maximum:.6f}s: observed {tail_gap:.6f}s"
+                ),
+                "observedSeconds": tail_gap,
+                "maximumSeconds": maximum,
+            }
+        )
+        poll["complete"] = False
+
+
+def _record_gate_tail_control_fault(
+    poll: dict[str, Any],
+    error: BaseException,
+    *,
+    phase: str,
+) -> None:
+    """Persist a control fault without trusting the existing poll shape."""
+
+    raw_faults = poll.get("pollFaults")
+    if isinstance(raw_faults, list):
+        poll_faults = raw_faults
+    else:
+        poll_faults = []
+        poll["pollFaults"] = poll_faults
+    poll_faults.append(
+        {
+            "type": type(error).__name__,
+            "message": str(error),
+            "phase": phase,
+        }
+    )
+    poll["complete"] = False
+
+
+def _shutdown_gate_tail_executor(
+    executor: concurrent.futures.ThreadPoolExecutor,
+    poll: dict[str, Any],
+) -> None:
+    """Boundedly retry executor shutdown after an interrupt during join."""
+
+    for attempt in (1, 2):
+        try:
+            executor.shutdown(wait=True, cancel_futures=True)
+            return
+        except BaseException as shutdown_error:
+            _record_gate_tail_control_fault(
+                poll,
+                shutdown_error,
+                phase=(
+                    "safety-poll-tail-executor-shutdown"
+                    f"-attempt-{attempt}"
+                ),
+            )
+
+
+def _sync_stop_after_gate_tail_bootstrap_fault(
+    monitor: Path,
+    poll: dict[str, Any],
+    error: BaseException,
+    *,
+    phase: str,
+    executor: concurrent.futures.ThreadPoolExecutor | None = None,
+) -> tuple[dict[str, Any], float]:
+    """Fail-stop when tail sampling cannot be bootstrapped.
+
+    The continuous sampler can legitimately return no sample when its first
+    QTest read fails.  Likewise, thread creation can fail before the asynchronous
+    HMP stop is submitted.  Neither condition may leave the already-resumed
+    QEMU running merely because there is no tail sample to extend.
+    """
+
+    _record_gate_tail_control_fault(poll, error, phase=phase)
+    if executor is not None:
+        _shutdown_gate_tail_executor(executor, poll)
+    try:
+        transition = transition_qemu(monitor, "stop", "paused")
+        stop_confirmed_at = time.monotonic()
+    except BaseException as stop_error:
+        _record_gate_tail_control_fault(
+            poll,
+            stop_error,
+            phase="safety-poll-tail-fallback-stop",
+        )
+        raise
+    try:
+        poll["finishedAt"] = utc_now()
+    except BaseException as finalization_error:
+        _record_gate_tail_control_fault(
+            poll,
+            finalization_error,
+            phase="safety-poll-tail-fallback-finalization",
+        )
+    return transition, stop_confirmed_at
+
+
+def _transition_qemu_stop_while_sampling_gate_tail(
+    monitor: Path,
+    socket_path: Path,
+    endpoint_bdf: str,
+    root_bdf: str,
+    mask: int,
+    poll: dict[str, Any],
+    *,
+    started_at: float,
+    topology: dict[str, Any],
+) -> tuple[dict[str, Any], float]:
+    """Keep the numeric poll live until the stop/status transaction returns.
+
+    Reaching the final target delay does not close the runnable interval.  HMP
+    ``stop`` and its subsequent ``info status`` readback can take longer than
+    one safety-poll deadline, so execute that transaction on one worker while
+    the calling thread continues the pinned-topology QTest reads.  The returned
+    timestamp is captured only after the worker has produced the paused ACK.
+    """
+
+    maximum_raw = poll.get("maximumPollIntervalSeconds")
+    target_raw = poll.get("targetPollIntervalSeconds")
+    if (
+        not isinstance(maximum_raw, (int, float))
+        or isinstance(maximum_raw, bool)
+        or float(maximum_raw) <= 0
+        or not isinstance(target_raw, (int, float))
+        or isinstance(target_raw, bool)
+        or float(target_raw) <= 0
+        or float(target_raw) > float(maximum_raw)
+    ):
+        return _sync_stop_after_gate_tail_bootstrap_fault(
+            monitor,
+            poll,
+            TypeError("continuous gate poll timing envelope is malformed"),
+            phase="safety-poll-tail-precondition",
+        )
+    maximum = float(maximum_raw)
+    target = float(target_raw)
+    samples = poll.get("samples")
+    poll_faults = poll.get("pollFaults")
+    safety_events = poll.get("safetyEvents")
+    if (
+        not isinstance(samples, list)
+        or not samples
+        or not isinstance(poll_faults, list)
+        or not isinstance(safety_events, list)
+    ):
+        return _sync_stop_after_gate_tail_bootstrap_fault(
+            monitor,
+            poll,
+            TypeError("continuous gate poll has no appendable raw surface"),
+            phase="safety-poll-tail-precondition",
+        )
+
+    terminal = samples[-1]
+    if not isinstance(terminal, dict):
+        return _sync_stop_after_gate_tail_bootstrap_fault(
+            monitor,
+            poll,
+            TypeError("continuous gate poll terminal sample is malformed"),
+            phase="safety-poll-tail-precondition",
+        )
+    terminal_elapsed = terminal.get("actualElapsedSeconds")
+    terminal_duration = terminal.get("sampleDurationSeconds")
+    if (
+        not isinstance(terminal_elapsed, (int, float))
+        or isinstance(terminal_elapsed, bool)
+        or not isinstance(terminal_duration, (int, float))
+        or isinstance(terminal_duration, bool)
+    ):
+        return _sync_stop_after_gate_tail_bootstrap_fault(
+            monitor,
+            poll,
+            TypeError("continuous gate poll terminal timing is malformed"),
+            phase="safety-poll-tail-precondition",
+        )
+    prior_sample_started = (
+        started_at + float(terminal_elapsed) - float(terminal_duration)
+    )
+    next_poll_at = prior_sample_started + target
+    try:
+        maximum_observed_gap = float(
+            poll.get("maximumObservedPollGapSeconds", 0.0)
+        )
+        maximum_observed_read_duration = float(
+            poll.get("maximumObservedReadDurationSeconds", 0.0)
+        )
+    except (TypeError, ValueError) as error:
+        return _sync_stop_after_gate_tail_bootstrap_fault(
+            monitor,
+            poll,
+            error,
+            phase="safety-poll-tail-precondition",
+        )
+
+    executor: concurrent.futures.ThreadPoolExecutor | None = None
+    try:
+        executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=1,
+            thread_name_prefix="esxi-aer-gate-stop",
+        )
+        stop_future = executor.submit(
+            transition_qemu,
+            monitor,
+            "stop",
+            "paused",
+        )
+    except BaseException as error:
+        return _sync_stop_after_gate_tail_bootstrap_fault(
+            monitor,
+            poll,
+            error,
+            phase="safety-poll-tail-executor-bootstrap",
+            executor=executor,
+        )
+    assert executor is not None
+    tail_faulted = False
+    transition: dict[str, Any] | None = None
+    stop_confirmed_at: float | None = None
+    stop_error: BaseException | None = None
+    try:
+        while not stop_future.done() and not tail_faulted:
+            try:
+                remaining = next_poll_at - time.monotonic()
+                if remaining > 0:
+                    done, _pending = concurrent.futures.wait(
+                        (stop_future,),
+                        timeout=remaining,
+                    )
+                    if done:
+                        break
+                if stop_future.done():
+                    break
+                sample_started = time.monotonic()
+            except BaseException as error:
+                poll_faults.append(
+                    {
+                        "type": type(error).__name__,
+                        "message": str(error),
+                        "phase": "safety-poll-tail-scheduler",
+                    }
+                )
+                tail_faulted = True
+                break
+
+            gap = sample_started - prior_sample_started
+            maximum_observed_gap = max(maximum_observed_gap, gap)
+            poll["maximumObservedPollGapSeconds"] = maximum_observed_gap
+            gap_fault: dict[str, Any] | None = None
+            if gap > maximum:
+                gap_fault = {
+                    "type": "SafetyPollGapExceeded",
+                    "message": (
+                        "Correctable-only safety polling exceeded "
+                        f"{maximum:.6f}s during paused-ACK wait: "
+                        f"observed {gap:.6f}s"
+                    ),
+                    "observedSeconds": gap,
+                    "maximumSeconds": maximum,
+                }
+
+            try:
+                snapshot = outer_qemu_aer_snapshot(
+                    socket_path,
+                    endpoint_bdf,
+                    root_bdf,
+                    topology=topology,
+                )
+            except BaseException as error:
+                if gap_fault is not None:
+                    poll_faults.append(gap_fault)
+                poll_faults.append(
+                    {
+                        "type": type(error).__name__,
+                        "message": str(error),
+                        "phase": "qtest-safety-tail-read",
+                        "sampleStartGapSeconds": gap,
+                    }
+                )
+                tail_faulted = True
+                break
+
+            sample: dict[str, Any] = {
+                "sampleIndex": len(samples),
+                "actualElapsedSeconds": None,
+                "sampleStartGapSeconds": gap,
+                "sampleDurationSeconds": None,
+                "capturedAt": None,
+                "readback": None,
+                "safetyFaults": [],
+                "snapshot": snapshot,
+                "partial": True,
+            }
+            samples.append(sample)
+            poll["sampleCount"] = len(samples)
+            try:
+                sample_finished = time.monotonic()
+                sample_duration = sample_finished - sample_started
+                maximum_observed_read_duration = max(
+                    maximum_observed_read_duration,
+                    sample_duration,
+                )
+                poll["maximumObservedReadDurationSeconds"] = (
+                    maximum_observed_read_duration
+                )
+                actual_elapsed = sample_finished - started_at
+                sample["sampleDurationSeconds"] = sample_duration
+                sample["actualElapsedSeconds"] = actual_elapsed
+            except BaseException as error:
+                safety_faults = _partial_numeric_safety_faults(snapshot)
+                sample["safetyFaults"] = safety_faults
+                if gap_fault is not None:
+                    poll_faults.append(gap_fault)
+                poll_faults.append(
+                    {
+                        "type": type(error).__name__,
+                        "message": str(error),
+                        "phase": "qtest-safety-tail-timing",
+                        "sampleStartGapSeconds": gap,
+                        "snapshot": snapshot,
+                        "safetyFaults": safety_faults,
+                    }
+                )
+                tail_faulted = True
+                break
+
+            try:
+                safety_faults = _partial_numeric_safety_faults(snapshot)
+                sample["safetyFaults"] = safety_faults
+                sample["capturedAt"] = utc_now()
+                sample["readback"] = gate_readback(snapshot, mask)
+                sample["partial"] = False
+            except BaseException as error:
+                safety_faults = _partial_numeric_safety_faults(snapshot)
+                sample["safetyFaults"] = safety_faults
+                if gap_fault is not None:
+                    poll_faults.append(gap_fault)
+                poll_faults.append(
+                    {
+                        "type": type(error).__name__,
+                        "message": str(error),
+                        "phase": "qtest-safety-tail-parse",
+                        "sampleStartGapSeconds": gap,
+                        "sampleDurationSeconds": sample_duration,
+                        "actualElapsedSeconds": actual_elapsed,
+                        "snapshot": snapshot,
+                        "safetyFaults": safety_faults,
+                    }
+                )
+                tail_faulted = True
+                break
+
+            if gap_fault is not None:
+                poll_faults.append(gap_fault)
+                tail_faulted = True
+            if sample_duration > maximum:
+                poll_faults.append(
+                    {
+                        "type": "SafetyPollReadDurationExceeded",
+                        "message": (
+                            "one Correctable-only safety read exceeded "
+                            f"{maximum:.6f}s during paused-ACK wait: "
+                            f"observed {sample_duration:.6f}s"
+                        ),
+                        "observedSeconds": sample_duration,
+                        "maximumSeconds": maximum,
+                    }
+                )
+                tail_faulted = True
+            if safety_faults:
+                tail_faulted = True
+            prior_sample_started = sample_started
+            next_poll_at = sample_started + target
+
+        try:
+            transition = stop_future.result()
+            stop_confirmed_at = time.monotonic()
+        except BaseException as error:
+            stop_error = error
+    finally:
+        _shutdown_gate_tail_executor(executor, poll)
+
+    safety_events.clear()
+    for item in samples:
+        if not isinstance(item, dict):
+            continue
+        item_faults = list(
+            item.get("safetyFaults")
+            or _partial_numeric_safety_faults(item.get("snapshot"))
+        )
+        if item_faults:
+            item["safetyFaults"] = item_faults
+            safety_events.append(
+                {
+                    "sampleIndex": item.get("sampleIndex"),
+                    "actualElapsedSeconds": item.get(
+                        "actualElapsedSeconds"
+                    ),
+                    "faults": item_faults,
+                    "snapshot": item.get("snapshot"),
+                }
+            )
+    safety_events.extend(
+        {
+            "sampleIndex": None,
+            "actualElapsedSeconds": item.get("actualElapsedSeconds"),
+            "faults": list(item["safetyFaults"]),
+            "snapshot": item.get("snapshot"),
+            "phase": item.get("phase"),
+        }
+        for item in poll_faults
+        if (
+            isinstance(item, dict)
+            and isinstance(item.get("safetyFaults"), list)
+            and item["safetyFaults"]
+        )
+    )
+    target_count = poll.get("targetCount")
+    completed_target_count = poll.get("completedTargetCount")
+    poll.update(
+        {
+            "maximumObservedPollGapSeconds": maximum_observed_gap,
+            "maximumObservedReadDurationSeconds": (
+                maximum_observed_read_duration
+            ),
+            "sampleCount": len(samples),
+            "complete": bool(
+                isinstance(target_count, int)
+                and not isinstance(target_count, bool)
+                and isinstance(completed_target_count, int)
+                and not isinstance(completed_target_count, bool)
+                and completed_target_count == target_count
+                and not poll_faults
+                and not safety_events
+            ),
+        }
+    )
+    try:
+        poll["finishedAt"] = utc_now()
+    except BaseException as error:
+        poll_faults.append(
+            {
+                "type": type(error).__name__,
+                "message": str(error),
+                "phase": "safety-poll-tail-finalization",
+            }
+        )
+        poll["complete"] = False
+    if stop_error is not None:
+        raise stop_error
+    if transition is None or stop_confirmed_at is None:
+        raise RuntimeError("paused ACK transition result was not retained")
+    return transition, stop_confirmed_at
+
+
+def _partial_numeric_safety_faults(value: Any) -> list[str]:
+    """Recover known numeric safety faults from an arbitrary partial record."""
+
+    faults: list[str] = []
+    seen: set[int] = set()
+
+    def parsed(container: dict[str, Any], key: str) -> int | None:
+        value = container.get(key)
+        if isinstance(value, bool):
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    def snapshot_faults(snapshot: dict[str, Any]) -> list[str]:
+        """Read the five fail-stop registers without using a summary parser.
+
+        This intentionally duplicates the tiny closed safety surface.  A
+        control interruption or bug in ``outer_snapshot_safety_faults`` must
+        not erase a raw UES/Device Status/Root Error Status value that was
+        already captured.
+        """
+
+        endpoint_raw = snapshot.get("endpointState")
+        root_raw = snapshot.get("rootState")
+        endpoint = endpoint_raw if isinstance(endpoint_raw, dict) else {}
+        root = root_raw if isinstance(root_raw, dict) else {}
+        local: list[str] = []
+        endpoint_ues = parsed(endpoint, "uncorrectableErrorStatus")
+        if endpoint_ues:
+            local.append(f"endpoint UES=0x{endpoint_ues:08x}")
+        endpoint_status = parsed(endpoint, "deviceStatus")
+        if endpoint_status is not None:
+            non_ced = endpoint_status & (
+                qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK
+                ^ qemu_aer.PCI_EXP_DEVSTA_CED
+            )
+            if non_ced:
+                local.append(
+                    f"endpoint DeviceStatus non-CED=0x{non_ced:04x}"
+                )
+        root_ues = parsed(root, "uncorrectableErrorStatus")
+        if root_ues:
+            local.append(f"root UES=0x{root_ues:08x}")
+        root_status = parsed(root, "deviceStatus")
+        if root_status is not None:
+            root_errors = root_status & (
+                qemu_aer.PCI_EXP_DEVSTA_ERROR_MASK
+                ^ qemu_aer.PCI_EXP_DEVSTA_CED
+            )
+            if root_errors:
+                local.append(
+                    f"root DeviceStatus error=0x{root_errors:04x}"
+                )
+        root_error_status = parsed(root, "rootErrorStatus")
+        if root_error_status is not None:
+            root_uncorrectable = (
+                root_error_status & qemu_aer.PCI_ERR_ROOT_UNCOR_MASK
+            )
+            if root_uncorrectable:
+                local.append(
+                    "root uncorrectable reception="
+                    f"0x{root_uncorrectable:08x}"
+                )
+        return local
+
+    def visit(item: Any) -> None:
+        if isinstance(item, dict):
+            identity = id(item)
+            if identity in seen:
+                return
+            seen.add(identity)
+            if "endpointState" in item or "rootState" in item:
+                faults.extend(snapshot_faults(item))
+            for child in item.values():
+                visit(child)
+        elif isinstance(item, list):
+            identity = id(item)
+            if identity in seen:
+                return
+            seen.add(identity)
+            for child in item:
+                visit(child)
+
+    visit(value)
+    return list(dict.fromkeys(faults))
+
+
+def _close_partial_gate_poll(
+    record: dict[str, Any],
+    evidence_sink: dict[str, Any],
+    *,
+    stop_confirmed_at: float | None,
+) -> None:
+    timeline = record.get("timeline")
+    if not isinstance(timeline, dict):
+        return
+    poll = timeline.get("resumedSafetyPoll")
+    started_at = evidence_sink.get("resumeStartedAt")
+    if (
+        not isinstance(poll, dict)
+        or not isinstance(started_at, (int, float))
+        or isinstance(started_at, bool)
+    ):
+        return
+    try:
+        close_continuous_safety_poll(
+            poll,
+            started_at=float(started_at),
+            mode=(
+                "PAUSED_ACK"
+                if stop_confirmed_at is not None
+                else "STOP_UNCONFIRMED"
+            ),
+            stop_confirmed_at=stop_confirmed_at,
+        )
+    except BaseException as error:
+        record["safetyPollClosureFault"] = {
+            "type": type(error).__name__,
+            "message": str(error),
+        }
+
+
+def _record_resumed_gate_effective(
+    record: dict[str, Any],
+    samples: list[dict[str, Any]],
+    poll_faults: list[dict[str, Any]],
+) -> None:
+    """Record current versus last-confirmed readback without hiding partials.
+
+    The continuous sampler deliberately commits a raw snapshot before its
+    semantic ``gate_readback``.  A parser/control interruption therefore leaves
+    a legitimate terminal sample with ``partial=True`` and ``readback=None``.
+    That is not proof of the current effective tuple, but neither is it a
+    malformed sampler result.  Keep current effectiveness unconfirmed, retain
+    the latest older confirmed readback separately, and require an exact
+    producer fault binding so arbitrary malformed samples still fail closed.
+    """
+
+    def usable_readback(value: Any) -> bool:
+        return (
+            isinstance(value, dict)
+            and isinstance(value.get("tuple"), dict)
+            and isinstance(value.get("raw"), dict)
+            and isinstance(value.get("rootPath"), dict)
+        )
+
+    paused = record.get("timeline", {}).get("pausedApplied", {})
+    paused_readback = (
+        paused.get("readback") if isinstance(paused, dict) else None
+    )
+    if not usable_readback(paused_readback):
+        raise TypeError("paused gate readback is missing or malformed")
+
+    terminal_readback: dict[str, Any] | None = None
+    effective_source = "NO_RESUMED_SAMPLE"
+    if samples:
+        terminal = samples[-1]
+        if not isinstance(terminal, dict):
+            raise TypeError("terminal resumed sample is not an object")
+        if "readback" not in terminal:
+            raise KeyError("readback")
+        candidate = terminal.get("readback")
+        if usable_readback(candidate):
+            if terminal.get("partial") is not False:
+                raise TypeError(
+                    "terminal resumed sample readback is not explicitly "
+                    "complete"
+                )
+            terminal_readback = candidate
+            effective_source = "RESUMED_TERMINAL_SAMPLE"
+        else:
+            snapshot = terminal.get("snapshot")
+            bound_partial_fault = any(
+                isinstance(fault, dict)
+                and fault.get("phase")
+                in {"qtest-safety-parse", "qtest-safety-timing"}
+                and fault.get("snapshot") is snapshot
+                for fault in poll_faults
+            )
+            if (
+                candidate is not None
+                or terminal.get("partial") is not True
+                or not isinstance(snapshot, dict)
+                or not bound_partial_fault
+            ):
+                raise TypeError(
+                    "terminal resumed readback is missing without a bound "
+                    "partial-sampler fault"
+                )
+            effective_source = "UNCONFIRMED_PARTIAL_SAMPLE"
+
+    last_confirmed: dict[str, Any] | None = None
+    last_confirmed_source = "PAUSED_APPLIED_FALLBACK"
+    for index in range(len(samples) - 1, -1, -1):
+        sample = samples[index]
+        if not isinstance(sample, dict):
+            raise TypeError("resumed sample is not an object")
+        candidate = sample.get("readback")
+        if candidate is None:
+            continue
+        if not usable_readback(candidate):
+            raise TypeError("resumed gate readback is malformed")
+        if sample.get("partial") is not False:
+            raise TypeError(
+                "last-confirmed resumed readback is not explicitly complete"
+            )
+        last_confirmed = candidate
+        last_confirmed_source = f"RESUMED_SAMPLE_{index}"
+        break
+    if last_confirmed is None:
+        last_confirmed = paused_readback
+
+    record["effective"] = copy.deepcopy(terminal_readback)
+    record["effectiveSource"] = effective_source
+    record["lastConfirmedEffective"] = copy.deepcopy(last_confirmed)
+    record["lastConfirmedEffectiveSource"] = last_confirmed_source
+    root_path = record.setdefault("rootPathLease", {})
+    if not isinstance(root_path, dict):
+        raise TypeError("rootPathLease is not an object")
+    root_path["effective"] = (
+        copy.deepcopy(terminal_readback["rootPath"])
+        if terminal_readback is not None
+        else None
+    )
+    root_path["effectiveSource"] = effective_source
+    root_path["lastConfirmedEffective"] = copy.deepcopy(
+        last_confirmed["rootPath"]
+    )
+    root_path["lastConfirmedEffectiveSource"] = last_confirmed_source
+
+
+def _apply_gate_lease_impl(
     monitor: Path,
     socket_path: Path,
     endpoint_bdf: str,
@@ -884,8 +2301,15 @@ def apply_gate_lease(
     requested: GateTuple,
     *,
     enable_root_path: bool,
+    timeline_delays: Iterable[float] = GATE_STABILITY_DELAYS,
+    maximum_safety_poll_interval: float | None = None,
+    safety_poll_target_interval: float | None = None,
+    hold_paused_after_sampling: bool = False,
+    _partial_evidence_sink: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     lease: dict[str, Any] = {
+        "safetyBoundary": "PRE_INJECTION",
+        "safetyWindowKind": "GATE_LEASE_APPLY",
         "requested": requested.as_dict(),
         "rootPathLease": {
             "managed": enable_root_path,
@@ -899,36 +2323,41 @@ def apply_gate_lease(
         "timeline": {},
         "outcome": "APPLYING",
     }
+    if _partial_evidence_sink is not None:
+        _partial_evidence_sink["record"] = lease
     paused = False
     writes_started = False
     resume_allowed = False
     original: dict[str, Any] | None = None
+    resume_started_at: float | None = None
     try:
         lease["timeline"]["pause"] = transition_qemu(monitor, "stop", "paused")
         paused = True
         original = outer_qemu_aer_snapshot(
             socket_path, endpoint_bdf, root_bdf
         )
-        faults = outer_snapshot_safety_faults(original)
+        # Persist the complete numeric read before parsing any safety or gate
+        # predicate.  A failed RHS assignment in the caller must never erase
+        # an observed UES/DeviceStatus/RootErrorStatus value.
+        lease["original"] = {
+            "capturedAt": None,
+            "readback": None,
+            "snapshot": original,
+        }
+        lease["original"]["capturedAt"] = utc_now()
+        faults = _partial_numeric_safety_faults(original)
+        lease["original"]["safetyFaults"] = faults
         if faults:
             raise SafetyViolation(
                 "unsafe state before gate application: " + "; ".join(faults)
             )
-        # A clean pre-write snapshot is safe to resume if a later observation
-        # makes the case inconclusive.  Until this point, fail closed and leave
-        # QEMU paused when the baseline itself contains an unsafe condition.
-        resume_allowed = True
         correctable_noise = outer_snapshot_correctable_noise(original)
         if correctable_noise:
             raise InconclusiveObservation(
                 "Correctable background state appeared between baseline clear "
                 "and gate application: " + "; ".join(correctable_noise)
             )
-        lease["original"] = {
-            "capturedAt": utc_now(),
-            "readback": gate_readback(original, mask),
-            "snapshot": original,
-        }
+        lease["original"]["readback"] = gate_readback(original, mask)
         original_root_path = root_path_from_snapshot(original)
         lease["rootPathLease"]["original"] = original_root_path.as_dict()
         requested_root_path = (
@@ -953,6 +2382,18 @@ def apply_gate_lease(
         paused_applied = outer_qemu_aer_snapshot(
             socket_path, endpoint_bdf, root_bdf
         )
+        paused_record: dict[str, Any] = {
+            "capturedAt": None,
+            "readback": None,
+            "checks": None,
+            "safetyFaults": [],
+            "snapshot": paused_applied,
+            "partial": True,
+        }
+        lease["timeline"]["pausedApplied"] = paused_record
+        paused_record["safetyFaults"] = _partial_numeric_safety_faults(
+            paused_applied
+        )
         paused_checks = gate_non_target_checks(original, paused_applied, mask)
         paused_checks["requestedTupleReadBack"] = (
             gate_tuple_from_snapshot(paused_applied, mask) == requested
@@ -960,17 +2401,19 @@ def apply_gate_lease(
         paused_checks["requestedRootPathReadBack"] = (
             root_path_from_snapshot(paused_applied) == requested_root_path
         )
-        paused_faults = outer_snapshot_safety_faults(paused_applied)
+        paused_faults = _partial_numeric_safety_faults(paused_applied)
         paused_checks["noUncorrectableSideEffect"] = not paused_faults
-        lease["timeline"]["pausedApplied"] = {
-            "capturedAt": utc_now(),
-            "readback": gate_readback(paused_applied, mask),
-            "checks": paused_checks,
-            "safetyFaults": paused_faults,
-            "snapshot": paused_applied,
-        }
+        paused_record.update(
+            {
+                "capturedAt": utc_now(),
+                "readback": gate_readback(paused_applied, mask),
+                "checks": paused_checks,
+                "safetyFaults": paused_faults,
+                "partial": False,
+            }
+        )
         resume_allowed = all(paused_checks.values())
-    except Exception as error:
+    except BaseException as error:
         if writes_started and original is not None:
             try:
                 client = qemu_aer.QTestClient(socket_path)
@@ -992,6 +2435,18 @@ def apply_gate_lease(
                 rolled_back = outer_qemu_aer_snapshot(
                     socket_path, endpoint_bdf, root_bdf
                 )
+                rollback_record: dict[str, Any] = {
+                    "capturedAt": None,
+                    "readback": None,
+                    "checks": None,
+                    "safetyFaults": [],
+                    "snapshot": rolled_back,
+                    "partial": True,
+                }
+                lease["partialApplyRollback"] = rollback_record
+                rollback_record["safetyFaults"] = (
+                    _partial_numeric_safety_faults(rolled_back)
+                )
                 rollback_checks = gate_non_target_checks(
                     original, rolled_back, mask
                 )
@@ -1003,17 +2458,29 @@ def apply_gate_lease(
                     root_path_from_snapshot(rolled_back)
                     == root_path_from_snapshot(original)
                 )
-                lease["partialApplyRollback"] = {
-                    "readback": gate_readback(rolled_back, mask),
-                    "checks": rollback_checks,
-                    "snapshot": rolled_back,
-                }
-                if not all(rollback_checks.values()):
+                rollback_record.update(
+                    {
+                        "capturedAt": utc_now(),
+                        "readback": gate_readback(rolled_back, mask),
+                        "checks": rollback_checks,
+                        "safetyFaults": (
+                            _partial_numeric_safety_faults(rolled_back)
+                        ),
+                        "partial": False,
+                    }
+                )
+                if lease["partialApplyRollback"]["safetyFaults"]:
                     raise SafetyViolation(
+                        "gate apply rollback exposed Uncorrectable evidence: "
+                        + "; ".join(
+                            lease["partialApplyRollback"]["safetyFaults"]
+                        )
+                    )
+                if not all(rollback_checks.values()):
+                    raise InconclusiveObservation(
                         "gate apply failed and paused rollback did not read back"
                     )
-                resume_allowed = True
-            except Exception as restore_error:
+            except BaseException as restore_error:
                 lease["outcome"] = "ROLLBACK_FAILED"
                 lease["applyFault"] = {
                     "type": type(error).__name__,
@@ -1029,7 +2496,10 @@ def apply_gate_lease(
                     f"{type(error).__name__}: {error}; "
                     f"{type(restore_error).__name__}: {restore_error}",
                     lease,
-                    safety=True,
+                    safety=(
+                        isinstance(error, SafetyViolation)
+                        or isinstance(restore_error, SafetyViolation)
+                    ),
                 ) from restore_error
             lease["outcome"] = "ROLLED_BACK_AFTER_APPLY_FAILURE"
             lease["applyFault"] = {
@@ -1042,26 +2512,61 @@ def apply_gate_lease(
                 lease,
                 safety=isinstance(error, SafetyViolation),
             ) from error
-        raise
+        lease["outcome"] = (
+            "PRE_WRITE_SAFETY_FAULT_HELD_PAUSED"
+            if isinstance(error, SafetyViolation)
+            else "PRE_WRITE_APPLY_FAILED_HELD_PAUSED"
+        )
+        lease["applyFault"] = {
+            "type": type(error).__name__,
+            "message": str(error),
+        }
+        lease["qemuHeldPaused"] = paused
+        lease["finishedAt"] = utc_now()
+        raise GateLeaseApplyFailure(
+            "gate apply failed before writes; partial numeric evidence was "
+            "retained and QEMU was left paused",
+            lease,
+            safety=isinstance(error, SafetyViolation),
+        ) from error
     finally:
         if paused:
             if resume_allowed:
                 try:
+                    resume_started_at = time.monotonic()
+                    if _partial_evidence_sink is not None:
+                        _partial_evidence_sink[
+                            "resumeStartedAt"
+                        ] = resume_started_at
                     lease["timeline"]["resume"] = transition_qemu(
                         monitor, "cont", "running"
                     )
-                except Exception as resume_error:
+                except BaseException as resume_error:
                     lease["outcome"] = "RESUME_FAILED_AFTER_APPLY"
                     lease["resumeFault"] = {
                         "type": type(resume_error).__name__,
                         "message": str(resume_error),
                     }
+                    try:
+                        lease["timeline"]["resumeFailureHold"] = (
+                            transition_qemu(
+                                monitor,
+                                "stop",
+                                "paused",
+                            )
+                        )
+                        lease["qemuHeldPaused"] = True
+                    except BaseException as hold_error:
+                        lease["resumeFailureHoldFault"] = {
+                            "type": type(hold_error).__name__,
+                            "message": str(hold_error),
+                        }
                     lease["finishedAt"] = utc_now()
                     if writes_started and original is not None:
                         raise GateLeaseApplyFailure(
                             "QEMU could not resume after gate application",
                             lease,
-                            safety=True,
+                            safety=False,
                         ) from resume_error
                     raise
             else:
@@ -1087,72 +2592,340 @@ def apply_gate_lease(
         lease["finishedAt"] = utc_now()
         return lease
 
-    samples = sample_gate_timeline(
-        socket_path, endpoint_bdf, root_bdf, mask
-    )
+    if maximum_safety_poll_interval is None:
+        samples = sample_gate_timeline(
+            socket_path,
+            endpoint_bdf,
+            root_bdf,
+            mask,
+            delays=timeline_delays,
+        )
+        safety_poll = None
+    else:
+        if safety_poll_target_interval is None:
+            raise ValueError(
+                "continuous gate sampling requires a target poll interval"
+            )
+        if resume_started_at is None:
+            raise AssertionError("gate resume start timestamp was not captured")
+        try:
+            safety_poll = {}
+            lease["timeline"]["resumedSafetyPoll"] = safety_poll
+            safety_poll = sample_gate_timeline_continuous(
+                socket_path,
+                endpoint_bdf,
+                root_bdf,
+                mask,
+                timeline_delays,
+                started_at=resume_started_at,
+                maximum_poll_interval=maximum_safety_poll_interval,
+                target_poll_interval=safety_poll_target_interval,
+                safety_boundary="PRE_INJECTION",
+                topology=paused_applied,
+                _partial_record=safety_poll,
+            )
+        except BaseException as sampler_error:
+            lease["postResumeSamplerFault"] = {
+                "type": type(sampler_error).__name__,
+                "message": str(sampler_error),
+            }
+            try:
+                lease["timeline"]["samplerFailureHold"] = transition_qemu(
+                    monitor,
+                    "stop",
+                    "paused",
+                )
+                lease["qemuHeldPaused"] = True
+                lease["outcome"] = "POST_RESUME_SAMPLER_FAILED_HELD_PAUSED"
+            except BaseException as hold_error:
+                lease["samplerFailureHoldFault"] = {
+                    "type": type(hold_error).__name__,
+                    "message": str(hold_error),
+                }
+                lease["outcome"] = (
+                    "POST_RESUME_SAMPLER_AND_HOLD_UNCONFIRMED"
+                )
+            lease["finishedAt"] = utc_now()
+            raise GateLeaseApplyFailure(
+                "gate apply post-resume sampler failed; fail-stop was "
+                "attempted",
+                lease,
+                safety=False,
+            ) from sampler_error
+        lease["timeline"]["resumedSafetyPoll"] = safety_poll
+        lease["timeline"]["resumedTargetSamples"] = safety_poll["timeline"]
+        samples = safety_poll["samples"]
     lease["timeline"]["resumedSamples"] = samples
     paused_checks = lease["timeline"]["pausedApplied"]["checks"]
-    resumed_match = all(
-        gate_tuple_from_snapshot(item["snapshot"], mask) == requested
-        for item in samples
-    )
-    root_path_match = all(
-        root_path_from_snapshot(item["snapshot"])
-        == (
-            RootPathState(True, True)
-            if enable_root_path
-            else root_path_from_snapshot(original)
-        )
-        for item in samples
-    )
-    resumed_faults = [
-        {
-            "delaySeconds": item["delaySeconds"],
-            "faults": faults,
-        }
-        for item in samples
-        if (faults := outer_snapshot_safety_faults(item["snapshot"]))
-    ]
-    lease["resumedSafetyFaults"] = resumed_faults
-    if resumed_faults:
-        try:
-            lease["timeline"]["safetyHold"] = transition_qemu(
-                monitor, "stop", "paused"
+    if safety_poll is not None:
+        resumed_faults = [
+            {
+                "delaySeconds": item.get("actualElapsedSeconds"),
+                "faults": list(item.get("faults") or []),
+                "snapshot": copy.deepcopy(item.get("snapshot")),
+                "phase": item.get("phase"),
+            }
+            for item in safety_poll.get("safetyEvents", [])
+            if isinstance(item, dict) and item.get("faults")
+        ]
+    else:
+        resumed_faults = [
+            {
+                "delaySeconds": item.get(
+                    "delaySeconds",
+                    item.get("actualElapsedSeconds"),
+                ),
+                "faults": list(
+                    item.get("safetyFaults")
+                    or _partial_numeric_safety_faults(item["snapshot"])
+                ),
+                "snapshot": copy.deepcopy(item.get("snapshot")),
+            }
+            for item in samples
+            if (
+                item.get("safetyFaults")
+                or _partial_numeric_safety_faults(item["snapshot"])
             )
+        ]
+    lease["resumedSafetyFaults"] = resumed_faults
+    poll_faults = (
+        list(safety_poll.get("pollFaults") or [])
+        if safety_poll is not None
+        else []
+    )
+    if not samples:
+        missing_sample = {
+            "type": "MissingSafetySample",
+            "message": "no resumed QTest safety sample was retained",
+        }
+        if not poll_faults:
+            poll_faults.append(missing_sample)
+            if safety_poll is not None:
+                safety_poll.setdefault("pollFaults", []).append(
+                    missing_sample
+                )
+                safety_poll["complete"] = False
+    _record_resumed_gate_effective(lease, samples, poll_faults)
+    if resumed_faults or poll_faults or hold_paused_after_sampling:
+        try:
+            hold_label = (
+                "safetyHold"
+                if resumed_faults
+                else (
+                    "pollDeadlineHold"
+                    if poll_faults
+                    else "postSamplingHold"
+                )
+            )
+            if safety_poll is not None and resume_started_at is not None:
+                (
+                    lease["timeline"][hold_label],
+                    stop_confirmed_at,
+                ) = _transition_qemu_stop_while_sampling_gate_tail(
+                    monitor,
+                    socket_path,
+                    endpoint_bdf,
+                    root_bdf,
+                    mask,
+                    safety_poll,
+                    started_at=resume_started_at,
+                    topology=paused_applied,
+                )
+            else:
+                lease["timeline"][hold_label] = transition_qemu(
+                    monitor, "stop", "paused"
+                )
+                stop_confirmed_at = time.monotonic()
             lease["qemuHeldPaused"] = True
-        except Exception as hold_error:
-            lease["outcome"] = "SAFETY_FAULT_AND_HOLD_FAILED"
+            if safety_poll is not None and resume_started_at is not None:
+                close_continuous_safety_poll(
+                    safety_poll,
+                    started_at=resume_started_at,
+                    mode="PAUSED_ACK",
+                    stop_confirmed_at=stop_confirmed_at,
+                )
+        except BaseException as hold_error:
+            if safety_poll is not None and resume_started_at is not None:
+                close_continuous_safety_poll(
+                    safety_poll,
+                    started_at=resume_started_at,
+                    mode="STOP_UNCONFIRMED",
+                    stop_confirmed_at=None,
+                )
+            if resumed_faults:
+                lease["outcome"] = (
+                    "SAFETY_FAULT_AND_HOLD_UNCONFIRMED"
+                )
+            elif poll_faults:
+                lease["outcome"] = (
+                    "SAFETY_POLL_INCOMPLETE_AND_HOLD_UNCONFIRMED"
+                )
+            else:
+                lease["outcome"] = "POST_SAMPLING_HOLD_UNCONFIRMED"
             lease["safetyHoldFault"] = {
                 "type": type(hold_error).__name__,
                 "message": str(hold_error),
             }
             lease["finishedAt"] = utc_now()
             raise GateLeaseApplyFailure(
-                "Uncorrectable evidence appeared after gate apply and QEMU "
-                "could not be confirmed paused",
+                "gate apply sampling could not close with QEMU confirmed "
+                "paused",
                 lease,
-                safety=True,
+                safety=bool(resumed_faults),
             ) from hold_error
+    elif safety_poll is not None and resume_started_at is not None:
+        close_continuous_safety_poll(
+            safety_poll,
+            started_at=resume_started_at,
+            mode="RUNNING_AFTER_TARGET_COVERAGE",
+            stop_confirmed_at=None,
+        )
+    poll_faults = (
+        list(safety_poll.get("pollFaults") or [])
+        if safety_poll is not None
+        else []
+    )
+    if safety_poll is not None:
+        resumed_faults = [
+            {
+                "delaySeconds": item.get("actualElapsedSeconds"),
+                "faults": list(item.get("faults") or []),
+                "snapshot": copy.deepcopy(item.get("snapshot")),
+                "phase": item.get("phase"),
+            }
+            for item in safety_poll.get("safetyEvents", [])
+            if isinstance(item, dict) and item.get("faults")
+        ]
+        lease["resumedSafetyFaults"] = resumed_faults
+        _record_resumed_gate_effective(lease, samples, poll_faults)
     if resumed_faults or not paused_checks["noUncorrectableSideEffect"]:
         lease["outcome"] = "SAFETY_FAULT_AFTER_APPLY"
-    elif not paused_checks["requestedRootPathReadBack"] or not root_path_match:
-        lease["outcome"] = "ROOT_PATH_BLOCKED"
-    elif not all(paused_checks.values()):
-        lease["outcome"] = "HARDWIRED_OR_PAUSED_READBACK_MISMATCH"
-    elif not resumed_match:
-        lease["outcome"] = "OVERRIDDEN_OR_UNSTABLE_AFTER_RESUME"
+        lease["rootPathLease"]["stable"] = False
+    elif poll_faults or not samples:
+        lease["outcome"] = "SAFETY_POLL_INCOMPLETE_AFTER_APPLY"
+        lease["safetyPollFaults"] = poll_faults or [
+            {
+                "type": "MissingSafetySample",
+                "message": "no resumed QTest safety sample was retained",
+            }
+        ]
+        lease["rootPathLease"]["stable"] = False
     else:
-        lease["outcome"] = "EFFECTIVE"
-    lease["effective"] = samples[-1]["readback"]
-    lease["rootPathLease"]["effective"] = (
-        samples[-1]["readback"]["rootPath"]
-    )
-    lease["rootPathLease"]["stable"] = root_path_match
+        resumed_match = all(
+            gate_tuple_from_snapshot(item["snapshot"], mask) == requested
+            for item in samples
+        )
+        root_path_match = all(
+            root_path_from_snapshot(item["snapshot"])
+            == (
+                RootPathState(True, True)
+                if enable_root_path
+                else root_path_from_snapshot(original)
+            )
+            for item in samples
+        )
+        if (
+            not paused_checks["requestedRootPathReadBack"]
+            or not root_path_match
+        ):
+            lease["outcome"] = "ROOT_PATH_BLOCKED"
+        elif not all(paused_checks.values()):
+            lease["outcome"] = "HARDWIRED_OR_PAUSED_READBACK_MISMATCH"
+        elif not resumed_match:
+            lease["outcome"] = "OVERRIDDEN_OR_UNSTABLE_AFTER_RESUME"
+        else:
+            lease["outcome"] = "EFFECTIVE"
+        lease["rootPathLease"]["stable"] = root_path_match
     lease["finishedAt"] = utc_now()
     return lease
 
 
-def restore_gate_lease(
+def apply_gate_lease(
+    monitor: Path,
+    socket_path: Path,
+    endpoint_bdf: str,
+    root_bdf: str,
+    mask: int,
+    requested: GateTuple,
+    *,
+    enable_root_path: bool,
+    timeline_delays: Iterable[float] = GATE_STABILITY_DELAYS,
+    maximum_safety_poll_interval: float | None = None,
+    safety_poll_target_interval: float | None = None,
+    hold_paused_after_sampling: bool = False,
+) -> dict[str, Any]:
+    """Apply a lease with a final fail-stop boundary around all postprocessing."""
+
+    evidence_sink: dict[str, Any] = {}
+    try:
+        return _apply_gate_lease_impl(
+            monitor,
+            socket_path,
+            endpoint_bdf,
+            root_bdf,
+            mask,
+            requested,
+            enable_root_path=enable_root_path,
+            timeline_delays=timeline_delays,
+            maximum_safety_poll_interval=maximum_safety_poll_interval,
+            safety_poll_target_interval=safety_poll_target_interval,
+            hold_paused_after_sampling=hold_paused_after_sampling,
+            _partial_evidence_sink=evidence_sink,
+        )
+    except GateLeaseApplyFailure:
+        raise
+    except BaseException as error:
+        lease = evidence_sink.get("record")
+        if not isinstance(lease, dict):
+            lease = {
+                "safetyBoundary": "PRE_INJECTION",
+                "safetyWindowKind": "GATE_LEASE_APPLY",
+                "startedAt": utc_now(),
+                "timeline": {},
+                "outcome": "APPLY_UNHANDLED_FAILURE",
+            }
+        lease["postProcessingFault"] = {
+            "type": type(error).__name__,
+            "message": str(error),
+        }
+        stop_confirmed_at: float | None = None
+        try:
+            timeline = lease.setdefault("timeline", {})
+            if not isinstance(timeline, dict):
+                timeline = {}
+                lease["timeline"] = timeline
+            timeline["unhandledFailureHold"] = transition_qemu(
+                monitor,
+                "stop",
+                "paused",
+            )
+            stop_confirmed_at = time.monotonic()
+            lease["qemuHeldPaused"] = True
+            lease["outcome"] = "APPLY_FAILURE_HELD_PAUSED"
+        except BaseException as hold_error:
+            lease["unhandledFailureHoldFault"] = {
+                "type": type(hold_error).__name__,
+                "message": str(hold_error),
+            }
+            lease["outcome"] = "APPLY_FAILURE_AND_HOLD_UNCONFIRMED"
+        _close_partial_gate_poll(
+            lease,
+            evidence_sink,
+            stop_confirmed_at=stop_confirmed_at,
+        )
+        numeric_safety_faults = _partial_numeric_safety_faults(lease)
+        lease["numericSafetyFaults"] = numeric_safety_faults
+        lease["finishedAt"] = utc_now()
+        raise GateLeaseApplyFailure(
+            "gate apply failed outside its normal transaction boundary; "
+            "partial evidence was retained and an idempotent fail-stop was "
+            "attempted",
+            lease,
+            safety=bool(numeric_safety_faults),
+        ) from error
+
+
+def _restore_gate_lease_impl(
     monitor: Path,
     socket_path: Path,
     endpoint_bdf: str,
@@ -1161,6 +2934,11 @@ def restore_gate_lease(
     lease: dict[str, Any],
     *,
     safe_stop: bool,
+    timeline_delays: Iterable[float] = (0.0, 0.1),
+    maximum_safety_poll_interval: float | None = None,
+    safety_poll_target_interval: float | None = None,
+    hold_paused_after_sampling: bool = False,
+    _partial_evidence_sink: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     original_snapshot = lease["original"]["snapshot"]
     root_path_managed = bool(lease["rootPathLease"]["managed"])
@@ -1171,6 +2949,8 @@ def restore_gate_lease(
         else gate_tuple_from_snapshot(original_snapshot, mask)
     )
     result: dict[str, Any] = {
+        "safetyBoundary": "POST_CLEANUP",
+        "safetyWindowKind": "GATE_LEASE_RESTORE",
         "mode": "SAFE_STOP" if safe_stop else "RESTORE_ORIGINAL",
         "requested": requested.as_dict(),
         "rootPathLease": {
@@ -1184,8 +2964,11 @@ def restore_gate_lease(
         "timeline": {},
         "outcome": "RESTORING",
     }
+    if _partial_evidence_sink is not None:
+        _partial_evidence_sink["record"] = result
     paused = False
     resume_allowed = False
+    resume_started_at: float | None = None
     try:
         result["timeline"]["pause"] = transition_qemu(
             monitor, "stop", "paused"
@@ -1194,11 +2977,23 @@ def restore_gate_lease(
         before = outer_qemu_aer_snapshot(
             socket_path, endpoint_bdf, root_bdf
         )
-        result["timeline"]["before"] = {
-            "capturedAt": utc_now(),
-            "readback": gate_readback(before, mask),
+        before_record: dict[str, Any] = {
+            "capturedAt": None,
+            "readback": None,
+            "safetyFaults": [],
             "snapshot": before,
+            "partial": True,
         }
+        result["timeline"]["before"] = before_record
+        before_record["safetyFaults"] = _partial_numeric_safety_faults(before)
+        if before_record["safetyFaults"]:
+            raise SafetyViolation(
+                "unsafe state before gate restore: "
+                + "; ".join(before_record["safetyFaults"])
+            )
+        before_record["capturedAt"] = utc_now()
+        before_record["readback"] = gate_readback(before, mask)
+        before_record["partial"] = False
         client = qemu_aer.QTestClient(socket_path)
         try:
             write_gate_tuple(
@@ -1214,6 +3009,19 @@ def restore_gate_lease(
         paused_restored = outer_qemu_aer_snapshot(
             socket_path, endpoint_bdf, root_bdf
         )
+        paused_record: dict[str, Any] = {
+            "capturedAt": None,
+            "readback": None,
+            "checks": None,
+            "safetyFaults": [],
+            "snapshot": paused_restored,
+            "partial": True,
+        }
+        result["timeline"]["pausedApplied"] = paused_record
+        paused_record["safetyFaults"] = _partial_numeric_safety_faults(
+            paused_restored
+        )
+        paused_record["capturedAt"] = utc_now()
         checks = gate_non_target_checks(before, paused_restored, mask)
         checks["requestedTupleReadBack"] = (
             gate_tuple_from_snapshot(paused_restored, mask) == requested
@@ -1221,7 +3029,7 @@ def restore_gate_lease(
         checks["requestedRootPathReadBack"] = (
             root_path_from_snapshot(paused_restored) == original_root_path
         )
-        restore_safety_faults = outer_snapshot_safety_faults(paused_restored)
+        restore_safety_faults = _partial_numeric_safety_faults(paused_restored)
         if not safe_stop:
             checks["noUncorrectableEvidenceAtRestore"] = not restore_safety_faults
         if not safe_stop:
@@ -1252,14 +3060,31 @@ def restore_gate_lease(
                     ),
                 }
             )
-        result["timeline"]["pausedApplied"] = {
-            "capturedAt": utc_now(),
-            "readback": gate_readback(paused_restored, mask),
-            "checks": checks,
-            "safetyFaults": restore_safety_faults,
-            "snapshot": paused_restored,
-        }
+        paused_record.update(
+            {
+                "readback": gate_readback(paused_restored, mask),
+                "checks": checks,
+                "safetyFaults": restore_safety_faults,
+                "partial": False,
+            }
+        )
         resume_allowed = not safe_stop and all(checks.values())
+    except BaseException as error:
+        numeric_safety_faults = _partial_numeric_safety_faults(result)
+        result["restoreFault"] = {
+            "type": type(error).__name__,
+            "message": str(error),
+        }
+        result["numericSafetyFaults"] = numeric_safety_faults
+        result["outcome"] = "RESTORE_TRANSACTION_FAILED_HELD_PAUSED"
+        result["qemuHeldPaused"] = paused
+        result["finishedAt"] = utc_now()
+        raise GateLeaseRestoreFailure(
+            "gate restore paused transaction failed; partial numeric "
+            "evidence was retained and QEMU was left paused",
+            result,
+            safety=bool(numeric_safety_faults),
+        ) from error
     finally:
         if paused:
             if safe_stop or not resume_allowed:
@@ -1271,9 +3096,42 @@ def restore_gate_lease(
                     "observedAt": utc_now(),
                 }
             else:
-                result["timeline"]["resume"] = transition_qemu(
-                    monitor, "cont", "running"
-                )
+                resume_started_at = time.monotonic()
+                if _partial_evidence_sink is not None:
+                    _partial_evidence_sink[
+                        "resumeStartedAt"
+                    ] = resume_started_at
+                try:
+                    result["timeline"]["resume"] = transition_qemu(
+                        monitor, "cont", "running"
+                    )
+                except BaseException as resume_error:
+                    result["resumeFault"] = {
+                        "type": type(resume_error).__name__,
+                        "message": str(resume_error),
+                    }
+                    try:
+                        result["timeline"]["resumeFailureHold"] = (
+                            transition_qemu(
+                                monitor,
+                                "stop",
+                                "paused",
+                            )
+                        )
+                        result["qemuHeldPaused"] = True
+                    except BaseException as hold_error:
+                        result["resumeFailureHoldFault"] = {
+                            "type": type(hold_error).__name__,
+                            "message": str(hold_error),
+                        }
+                    result["outcome"] = "RESUME_FAILED_DURING_RESTORE"
+                    result["finishedAt"] = utc_now()
+                    raise GateLeaseRestoreFailure(
+                        "QEMU restore resume could not be confirmed; an "
+                        "idempotent fail-stop was attempted",
+                        result,
+                        safety=False,
+                    ) from resume_error
 
     paused_checks = result["timeline"]["pausedApplied"]["checks"]
     if safe_stop:
@@ -1307,32 +3165,211 @@ def restore_gate_lease(
         result["finishedAt"] = utc_now()
         return result
 
-    samples = sample_gate_timeline(
-        socket_path,
-        endpoint_bdf,
-        root_bdf,
-        mask,
-        delays=(0.0, 0.1),
-    )
+    if maximum_safety_poll_interval is None:
+        samples = sample_gate_timeline(
+            socket_path,
+            endpoint_bdf,
+            root_bdf,
+            mask,
+            delays=timeline_delays,
+        )
+        safety_poll = None
+    else:
+        if safety_poll_target_interval is None:
+            raise ValueError(
+                "continuous gate restore sampling requires a target interval"
+            )
+        if resume_started_at is None:
+            raise AssertionError("gate restore resume timestamp was not captured")
+        try:
+            safety_poll = {}
+            result["timeline"]["resumedSafetyPoll"] = safety_poll
+            safety_poll = sample_gate_timeline_continuous(
+                socket_path,
+                endpoint_bdf,
+                root_bdf,
+                mask,
+                timeline_delays,
+                started_at=resume_started_at,
+                maximum_poll_interval=maximum_safety_poll_interval,
+                target_poll_interval=safety_poll_target_interval,
+                safety_boundary="POST_CLEANUP",
+                topology=paused_restored,
+                _partial_record=safety_poll,
+            )
+        except BaseException as sampler_error:
+            result["postResumeSamplerFault"] = {
+                "type": type(sampler_error).__name__,
+                "message": str(sampler_error),
+            }
+            try:
+                result["timeline"]["samplerFailureHold"] = transition_qemu(
+                    monitor,
+                    "stop",
+                    "paused",
+                )
+                result["qemuHeldPaused"] = True
+                result["outcome"] = (
+                    "RESTORE_POST_RESUME_SAMPLER_FAILED_HELD_PAUSED"
+                )
+            except BaseException as hold_error:
+                result["samplerFailureHoldFault"] = {
+                    "type": type(hold_error).__name__,
+                    "message": str(hold_error),
+                }
+                result["outcome"] = (
+                    "RESTORE_POST_RESUME_SAMPLER_AND_HOLD_UNCONFIRMED"
+                )
+            result["finishedAt"] = utc_now()
+            raise GateLeaseRestoreFailure(
+                "gate restore post-resume sampler failed; fail-stop was "
+                "attempted",
+                result,
+                safety=False,
+            ) from sampler_error
+        result["timeline"]["resumedSafetyPoll"] = safety_poll
+        result["timeline"]["resumedTargetSamples"] = safety_poll["timeline"]
+        samples = safety_poll["samples"]
     result["timeline"]["resumedSamples"] = samples
-    resumed_safety_faults = [
-        {
-            "delaySeconds": item["delaySeconds"],
-            "faults": item["safetyFaults"],
-        }
-        for item in samples
-        if item["safetyFaults"]
-    ]
+    if safety_poll is not None:
+        resumed_safety_faults = [
+            {
+                "delaySeconds": item.get("actualElapsedSeconds"),
+                "faults": list(item.get("faults") or []),
+                "snapshot": copy.deepcopy(item.get("snapshot")),
+                "phase": item.get("phase"),
+            }
+            for item in safety_poll.get("safetyEvents", [])
+            if isinstance(item, dict) and item.get("faults")
+        ]
+    else:
+        resumed_safety_faults = [
+            {
+                "delaySeconds": item.get(
+                    "delaySeconds",
+                    item.get("actualElapsedSeconds"),
+                ),
+                "faults": list(item.get("safetyFaults") or []),
+                "snapshot": copy.deepcopy(item.get("snapshot")),
+            }
+            for item in samples
+            if item.get("safetyFaults")
+        ]
     result["resumedSafetyFaults"] = resumed_safety_faults
+    poll_faults = (
+        list(safety_poll.get("pollFaults") or [])
+        if safety_poll is not None
+        else []
+    )
+    if not samples:
+        missing_sample = {
+            "type": "MissingSafetySample",
+            "message": "no resumed restore QTest safety sample was retained",
+        }
+        if not poll_faults:
+            poll_faults.append(missing_sample)
+            if safety_poll is not None:
+                safety_poll.setdefault("pollFaults", []).append(
+                    missing_sample
+                )
+                safety_poll["complete"] = False
+    _record_resumed_gate_effective(result, samples, poll_faults)
+    if resumed_safety_faults or poll_faults or hold_paused_after_sampling:
+        hold_label = (
+            "safetyHold"
+            if resumed_safety_faults
+            else (
+                "pollDeadlineHold"
+                if poll_faults
+                else "postSamplingHold"
+            )
+        )
+        try:
+            if safety_poll is not None and resume_started_at is not None:
+                (
+                    result["timeline"][hold_label],
+                    stop_confirmed_at,
+                ) = _transition_qemu_stop_while_sampling_gate_tail(
+                    monitor,
+                    socket_path,
+                    endpoint_bdf,
+                    root_bdf,
+                    mask,
+                    safety_poll,
+                    started_at=resume_started_at,
+                    topology=paused_restored,
+                )
+            else:
+                result["timeline"][hold_label] = transition_qemu(
+                    monitor, "stop", "paused"
+                )
+                stop_confirmed_at = time.monotonic()
+            result["qemuHeldPaused"] = True
+            if safety_poll is not None and resume_started_at is not None:
+                close_continuous_safety_poll(
+                    safety_poll,
+                    started_at=resume_started_at,
+                    mode="PAUSED_ACK",
+                    stop_confirmed_at=stop_confirmed_at,
+                )
+        except BaseException as hold_error:
+            if safety_poll is not None and resume_started_at is not None:
+                close_continuous_safety_poll(
+                    safety_poll,
+                    started_at=resume_started_at,
+                    mode="STOP_UNCONFIRMED",
+                    stop_confirmed_at=None,
+                )
+            result["safetyHoldFault"] = {
+                "type": type(hold_error).__name__,
+                "message": str(hold_error),
+            }
+            result["outcome"] = "RESTORE_FAIL_STOP_UNCONFIRMED"
+            result["finishedAt"] = utc_now()
+            raise GateLeaseRestoreFailure(
+                "gate restore evidence required fail-stop, but paused "
+                "readback could not be confirmed",
+                result,
+                safety=bool(resumed_safety_faults),
+            ) from hold_error
+    elif safety_poll is not None and resume_started_at is not None:
+        close_continuous_safety_poll(
+            safety_poll,
+            started_at=resume_started_at,
+            mode="RUNNING_AFTER_TARGET_COVERAGE",
+            stop_confirmed_at=None,
+        )
+    poll_faults = (
+        list(safety_poll.get("pollFaults") or [])
+        if safety_poll is not None
+        else []
+    )
+    if safety_poll is not None:
+        resumed_safety_faults = [
+            {
+                "delaySeconds": item.get("actualElapsedSeconds"),
+                "faults": list(item.get("faults") or []),
+                "snapshot": copy.deepcopy(item.get("snapshot")),
+                "phase": item.get("phase"),
+            }
+            for item in safety_poll.get("safetyEvents", [])
+            if isinstance(item, dict) and item.get("faults")
+        ]
+        result["resumedSafetyFaults"] = resumed_safety_faults
+        _record_resumed_gate_effective(result, samples, poll_faults)
     if resumed_safety_faults:
-        result["timeline"]["safetyHold"] = transition_qemu(
-            monitor, "stop", "paused"
-        )
         result["outcome"] = "RESTORE_SAFETY_FAULT_HELD_PAUSED"
-        result["effective"] = samples[-1]["readback"]
-        result["rootPathLease"]["effective"] = (
-            samples[-1]["readback"]["rootPath"]
-        )
+        result["rootPathLease"]["stable"] = False
+        result["finishedAt"] = utc_now()
+        return result
+    if poll_faults or not samples:
+        result["outcome"] = "RESTORE_SAFETY_POLL_INCOMPLETE_HELD_PAUSED"
+        result["safetyPollFaults"] = poll_faults or [
+            {
+                "type": "MissingSafetySample",
+                "message": "no resumed restore QTest safety sample was retained",
+            }
+        ]
         result["rootPathLease"]["stable"] = False
         result["finishedAt"] = utc_now()
         return result
@@ -1344,17 +3381,98 @@ def restore_gate_lease(
         root_path_from_snapshot(item["snapshot"]) == original_root_path
         for item in samples
     )
-    result["rootPathLease"]["effective"] = (
-        samples[-1]["readback"]["rootPath"]
-    )
     result["rootPathLease"]["stable"] = root_path_stable
     if all(paused_checks.values()) and stable and root_path_stable:
         result["outcome"] = "RESTORED"
     else:
         result["outcome"] = "RESTORE_INCOMPLETE"
-    result["effective"] = samples[-1]["readback"]
     result["finishedAt"] = utc_now()
     return result
+
+
+def restore_gate_lease(
+    monitor: Path,
+    socket_path: Path,
+    endpoint_bdf: str,
+    root_bdf: str,
+    mask: int,
+    lease: dict[str, Any],
+    *,
+    safe_stop: bool,
+    timeline_delays: Iterable[float] = (0.0, 0.1),
+    maximum_safety_poll_interval: float | None = None,
+    safety_poll_target_interval: float | None = None,
+    hold_paused_after_sampling: bool = False,
+) -> dict[str, Any]:
+    """Restore a lease with fail-stop and typed partial evidence on any fault."""
+
+    evidence_sink: dict[str, Any] = {}
+    try:
+        return _restore_gate_lease_impl(
+            monitor,
+            socket_path,
+            endpoint_bdf,
+            root_bdf,
+            mask,
+            lease,
+            safe_stop=safe_stop,
+            timeline_delays=timeline_delays,
+            maximum_safety_poll_interval=maximum_safety_poll_interval,
+            safety_poll_target_interval=safety_poll_target_interval,
+            hold_paused_after_sampling=hold_paused_after_sampling,
+            _partial_evidence_sink=evidence_sink,
+        )
+    except GateLeaseRestoreFailure:
+        raise
+    except BaseException as error:
+        result = evidence_sink.get("record")
+        if not isinstance(result, dict):
+            result = {
+                "safetyBoundary": "POST_CLEANUP",
+                "safetyWindowKind": "GATE_LEASE_RESTORE",
+                "startedAt": utc_now(),
+                "timeline": {},
+                "outcome": "RESTORE_UNHANDLED_FAILURE",
+            }
+        result["postProcessingFault"] = {
+            "type": type(error).__name__,
+            "message": str(error),
+        }
+        stop_confirmed_at: float | None = None
+        try:
+            timeline = result.setdefault("timeline", {})
+            if not isinstance(timeline, dict):
+                timeline = {}
+                result["timeline"] = timeline
+            timeline["unhandledFailureHold"] = transition_qemu(
+                monitor,
+                "stop",
+                "paused",
+            )
+            stop_confirmed_at = time.monotonic()
+            result["qemuHeldPaused"] = True
+            result["outcome"] = "RESTORE_FAILURE_HELD_PAUSED"
+        except BaseException as hold_error:
+            result["unhandledFailureHoldFault"] = {
+                "type": type(hold_error).__name__,
+                "message": str(hold_error),
+            }
+            result["outcome"] = "RESTORE_FAILURE_AND_HOLD_UNCONFIRMED"
+        _close_partial_gate_poll(
+            result,
+            evidence_sink,
+            stop_confirmed_at=stop_confirmed_at,
+        )
+        numeric_safety_faults = _partial_numeric_safety_faults(result)
+        result["numericSafetyFaults"] = numeric_safety_faults
+        result["finishedAt"] = utc_now()
+        raise GateLeaseRestoreFailure(
+            "gate restore failed outside its normal transaction boundary; "
+            "partial evidence was retained and an idempotent fail-stop was "
+            "attempted",
+            result,
+            safety=bool(numeric_safety_faults),
+        ) from error
 
 
 def evaluate_frozen_transport(
@@ -1449,19 +3567,36 @@ def clear_outer_qemu_aer_baseline(
     endpoint_bdf: str,
     root_bdf: str,
     policy: str,
+    *,
+    leave_paused: bool = False,
 ) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "safetyBoundary": "PRE_INJECTION",
+        "policy": policy,
+        "startedAt": utc_now(),
+        "clean": False,
+        "qemuHeldPaused": False,
+    }
     paused = False
-    resume_allowed = True
+    # Resume is a clean-commit action, never the default.  Any parse failure,
+    # partial W1C write, control interruption, or inconclusive readback keeps
+    # the outer QEMU paused.
+    resume_allowed = False
+    pending_error: BaseException | None = None
     try:
         stop_output = hmp_command(monitor, "stop")
         paused = True
+        result["hmpStop"] = stop_output
         status_output = hmp_command(monitor, "info status")
+        result["hmpStatusAfterStop"] = status_output
         if "paused" not in status_output.lower():
             raise InconclusiveObservation(
                 f"QEMU did not confirm paused state before QTest writes: {status_output!r}"
             )
         before = outer_qemu_aer_snapshot(socket_path, endpoint_bdf, root_bdf)
+        result["before"] = before
         safety_faults = outer_snapshot_safety_faults(before)
+        result["beforeSafetyFaults"] = safety_faults
         if safety_faults:
             resume_allowed = False
             raise SafetyViolation(
@@ -1510,7 +3645,9 @@ def clear_outer_qemu_aer_baseline(
         finally:
             client.close()
         after = outer_qemu_aer_snapshot(socket_path, endpoint_bdf, root_bdf)
+        result["after"] = after
         after_safety_faults = outer_snapshot_safety_faults(after)
+        result["afterSafetyFaults"] = after_safety_faults
         if after_safety_faults:
             resume_allowed = False
             raise SafetyViolation(
@@ -1581,23 +3718,69 @@ def clear_outer_qemu_aer_baseline(
                 "QTest W1C baseline clear did not satisfy "
                 f"policy={policy}: checks={checks}; after={after}"
             )
-        return {
-            "hmpStop": stop_output,
-            "hmpStatusAfterStop": status_output,
-            "before": before,
-            "after": after,
-            "policy": policy,
-            "checks": checks,
-            "stickyDeviceStatusAccepted": (
-                policy == "status-routing"
-                and not checks["endpointDeviceStatusClean"]
-            ),
-            "clean": clean,
+        result.update(
+            {
+                "checks": checks,
+                "stickyDeviceStatusAccepted": (
+                    policy == "status-routing"
+                    and not checks["endpointDeviceStatusClean"]
+                ),
+                "clean": clean,
+            }
+        )
+        resume_allowed = True
+    except BaseException as error:
+        pending_error = error
+        result["fault"] = {
+            "type": type(error).__name__,
+            "message": str(error),
         }
     finally:
         if paused:
-            if resume_allowed:
-                hmp_command(monitor, "cont")
+            if resume_allowed and not leave_paused:
+                try:
+                    result["hmpContinue"] = hmp_command(monitor, "cont")
+                    result["qemuHeldPaused"] = False
+                except BaseException as resume_error:
+                    result["resumeFault"] = {
+                        "type": type(resume_error).__name__,
+                        "message": str(resume_error),
+                    }
+                    try:
+                        result["resumeFailureHold"] = transition_qemu(
+                            monitor,
+                            "stop",
+                            "paused",
+                        )
+                        result["qemuHeldPaused"] = True
+                    except BaseException as hold_error:
+                        result["resumeFailureHoldFault"] = {
+                            "type": type(hold_error).__name__,
+                            "message": str(hold_error),
+                        }
+                    if pending_error is None:
+                        pending_error = resume_error
+            else:
+                result["qemuHeldPaused"] = True
+        try:
+            result["finishedAt"] = utc_now()
+        except BaseException as finalization_error:
+            result["finishedAt"] = None
+            result["finalizationFault"] = {
+                "type": type(finalization_error).__name__,
+                "message": str(finalization_error),
+            }
+            if pending_error is None:
+                pending_error = finalization_error
+    if pending_error is not None:
+        numeric_safety_faults = _partial_numeric_safety_faults(result)
+        result["numericSafetyFaults"] = numeric_safety_faults
+        raise BaselineClearFailure(
+            "baseline clear failed; partial numeric evidence was retained",
+            result,
+            safety=bool(numeric_safety_faults),
+        ) from pending_error
+    return result
 
 
 def guest_phase_block(text: str, phase: str) -> str | None:
@@ -2010,6 +4193,25 @@ def start_active_user_probe(
     )
 
 
+def isolated_active_passthrough_users(
+    api: ApiSession,
+    bdf: str,
+) -> dict[str, Any]:
+    """Collect pyVmomi owner evidence outside the sampler's Python GIL."""
+
+    probe = start_active_user_probe(
+        api.host_address,
+        api.user,
+        api.password,
+        bdf,
+    )
+    try:
+        return probe.result(OWNER_PROBE_HARD_TIMEOUT_SECONDS)
+    finally:
+        if not probe.closed:
+            probe.cancel()
+
+
 class EsxiScp:
     def __init__(self, host: str, user: str, password: str) -> None:
         self.host = host
@@ -2247,7 +4449,18 @@ class ActiveVm:
     window_seconds: int | None = None
     window_open_observed_monotonic: float | None = None
 
-    def start(self) -> dict[str, Any]:
+    def start(
+        self,
+        cancel: threading.Event | None = None,
+    ) -> dict[str, Any]:
+        def require_not_cancelled() -> None:
+            if cancel is not None and cancel.is_set():
+                raise InconclusiveObservation(
+                    "active DirectPath VM startup was cancelled by the "
+                    "outer Correctable-only safety monitor"
+                )
+
+        require_not_cancelled()
         self.vm_name = validate_safe_id(f"aer-{self.run_id}-{self.case_id}", "VM name")
         self.serial_name = f"guest-serial-{self.case_id}.log"
         self.remote_dir = (
@@ -2285,6 +4498,7 @@ class ActiveVm:
                 f"remote evidence VM path already exists or cannot be created: {self.remote_dir}"
             )
         self.transfer.to_esxi(local_vmx, remote_vmx)
+        require_not_cancelled()
         registration = self.ssh.run(f"vim-cmd solo/registervm {quoted_vmx}")
         candidates = [line.strip() for line in registration.stdout.splitlines()]
         candidates = [line for line in candidates if re.fullmatch(r"\d+", line)]
@@ -2293,6 +4507,7 @@ class ActiveVm:
                 f"could not parse VMID from register output: {registration.stdout!r}"
             )
         self.vmid = candidates[-1]
+        require_not_cancelled()
         power = self.ssh.run(f"vim-cmd vmsvc/power.on {self.vmid}", check=False, timeout=180)
         save_text(self.case_dir / "active-vm-power-on.txt", power.stdout + power.stderr)
         if power.returncode != 0:
@@ -2306,6 +4521,7 @@ class ActiveVm:
         power_deadline = time.monotonic() + min(self.marker_timeout, 180)
         last_power_state = ""
         while time.monotonic() < power_deadline:
+            require_not_cancelled()
             state = self.ssh.run(
                 f"vim-cmd vmsvc/power.getstate {self.vmid}",
                 check=False,
@@ -2314,7 +4530,10 @@ class ActiveVm:
             last_power_state = state.stdout + state.stderr
             if state.returncode == 0 and "Powered on" in state.stdout:
                 break
-            time.sleep(2)
+            if cancel is not None:
+                cancel.wait(2)
+            else:
+                time.sleep(2)
         else:
             raise BlockedEnvironment(
                 "active DirectPath VM did not reach powered-on state: "
@@ -2324,6 +4543,7 @@ class ActiveVm:
         serial_path = f"{self.remote_dir}/{self.serial_name}"
         deadline = time.monotonic() + self.marker_timeout
         while time.monotonic() < deadline:
+            require_not_cancelled()
             probe = self.ssh.run(
                 f"grep -F '=== AER injection window open ===' "
                 f"{shlex.quote(serial_path)} 2>/dev/null",
@@ -2333,7 +4553,10 @@ class ActiveVm:
             if probe.returncode == 0 and "injection window open" in probe.stdout:
                 self.window_open_observed_monotonic = time.monotonic()
                 break
-            time.sleep(2)
+            if cancel is not None:
+                cancel.wait(2)
+            else:
+                time.sleep(2)
         else:
             raise BlockedEnvironment(
                 "active DirectPath guest did not open the AER injection window"
@@ -2341,6 +4564,7 @@ class ActiveVm:
 
         window_deadline = time.monotonic() + 5
         while time.monotonic() < window_deadline:
+            require_not_cancelled()
             window_probe = self.ssh.run(
                 f"grep -E 'AER-WINDOW seconds=[0-9]+' "
                 f"{shlex.quote(serial_path)} 2>/dev/null | tail -1",
@@ -2353,13 +4577,22 @@ class ActiveVm:
             if match:
                 self.window_seconds = int(match.group(1))
                 break
-            time.sleep(0.2)
+            if cancel is not None:
+                cancel.wait(0.2)
+            else:
+                time.sleep(0.2)
         if self.window_seconds is None:
             raise BlockedEnvironment(
                 "guest did not publish a parseable AER window duration"
             )
 
-        users = self.api.active_passthrough_users(self.bdf)
+        require_not_cancelled()
+        active_user_probe = isolated_active_passthrough_users(
+            self.api,
+            self.bdf,
+        )
+        require_not_cancelled()
+        users = active_user_probe["users"]
         if not any(item.get("vm") == self.vm_name for item in users):
             raise BlockedEnvironment(
                 "API did not correlate the runner-created powered-on VM with the target BDF"
@@ -2371,6 +4604,10 @@ class ActiveVm:
             "remoteVmx": remote_vmx,
             "serial": serial_path,
             "activeUsers": users,
+            "activeUserProbe": {
+                "mode": "ISOLATED_PROCESS",
+                "capturedAt": active_user_probe.get("capturedAt"),
+            },
             "windowSeconds": self.window_seconds,
         }
 
@@ -2423,14 +4660,25 @@ class ActiveVm:
             "active DirectPath guest did not produce its post-injection marker"
         )
 
-    def cleanup(self) -> dict[str, Any]:
+    def cleanup(
+        self,
+        cancel: threading.Event | None = None,
+    ) -> dict[str, Any]:
         result: dict[str, Any] = {"startedAt": utc_now(), "actions": []}
+        def cancelled() -> bool:
+            value = cancel is not None and cancel.is_set()
+            if value:
+                result["cancelledBySafetyMonitor"] = True
+            return value
+
         if self.remote_dir:
             for remote_name, local_name in (
                 (self.serial_name, "guest-serial-final.log"),
                 ("vmware.log", "vmware.log"),
                 (f"{self.case_id}.vmx", "effective.vmx"),
             ):
+                if cancelled():
+                    break
                 if remote_name:
                     copied = self.transfer.from_esxi(
                         f"{self.remote_dir}/{remote_name}",
@@ -2440,7 +4688,7 @@ class ActiveVm:
                     result["actions"].append(
                         {"copy": remote_name, "destination": local_name, "success": copied}
                     )
-        if self.vmid:
+        if self.vmid and not cancelled():
             state = self.ssh.run(
                 f"vim-cmd vmsvc/power.getstate {self.vmid}", check=False
             )
@@ -2451,21 +4699,37 @@ class ActiveVm:
                 result["actions"].append(
                     {"powerOffReturnCode": power.returncode, "output": power.stdout.strip()}
                 )
-            unregister = self.ssh.run(
-                f"vim-cmd vmsvc/unregister {self.vmid}", check=False
-            )
-            result["actions"].append(
-                {"unregisterReturnCode": unregister.returncode}
-            )
+            if not cancelled():
+                unregister = self.ssh.run(
+                    f"vim-cmd vmsvc/unregister {self.vmid}", check=False
+                )
+                result["actions"].append(
+                    {"unregisterReturnCode": unregister.returncode}
+                )
         try:
             deadline = time.monotonic() + 30
             remaining: list[dict[str, Any]] = []
-            while time.monotonic() < deadline:
-                remaining = self.api.active_passthrough_users(self.bdf)
+            probes: list[dict[str, Any]] = []
+            while time.monotonic() < deadline and not cancelled():
+                payload = isolated_active_passthrough_users(
+                    self.api,
+                    self.bdf,
+                )
+                remaining = payload["users"]
+                probes.append(
+                    {
+                        "mode": "ISOLATED_PROCESS",
+                        "capturedAt": payload.get("capturedAt"),
+                    }
+                )
                 if not remaining:
                     break
-                time.sleep(1)
+                if cancel is not None:
+                    cancel.wait(1)
+                else:
+                    time.sleep(1)
             result["remainingActiveUsers"] = remaining
+            result["activeUserProbes"] = probes
         except Exception as error:
             result["remainingActiveUsersError"] = f"{type(error).__name__}: {error}"
         result["finishedAt"] = utc_now()
@@ -3998,8 +6262,18 @@ def selftest() -> None:
                 GateTuple(True, False, False),
                 enable_root_path=True,
             )
-        except SafetyViolation:
-            pass
+        except GateLeaseApplyFailure as error:
+            assert error.safety
+            assert (
+                error.lease["outcome"]
+                == "PRE_WRITE_SAFETY_FAULT_HELD_PAUSED"
+            )
+            assert (
+                error.lease["original"]["snapshot"]["endpointState"][
+                    "uncorrectableErrorStatus"
+                ]
+                == 0x1
+            )
         else:
             raise AssertionError(
                 "unsafe pre-write baseline did not fail gate application"

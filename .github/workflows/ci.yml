@@ -1,0 +1,53 @@
+name: Core CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: Portable contracts, product-shaped core, and reference model
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install portable core and reference packages
+        run: >-
+          python -m pip install
+          './qman-directpath-core[test]'
+          './qman-directpath-reference[test]'
+          ./pci-resource-model
+
+      - name: Check portable package closure
+        run: python tools/generate_directpath_portable_package.py --check
+
+      - name: Check acceptance case contracts
+        run: python tools/generate_directpath_case_contracts.py --check
+
+      - name: Validate portable baseline
+        run: python tools/validate_portable_handoff.py baseline --root .
+
+      - name: Run governance and contract tests
+        run: python -m pytest -q tests -p no:cacheprovider
+
+      - name: Run product-shaped portable core tests
+        run: python -m pytest -q qman-directpath-core/tests -p no:cacheprovider
+
+      - name: Run SQLite reference transaction tests
+        run: python -m pytest -q qman-directpath-reference/tests -p no:cacheprovider
+
+      - name: Run PCI resource model tests
+        run: python -m pytest -q pci-resource-model/tests -p no:cacheprovider

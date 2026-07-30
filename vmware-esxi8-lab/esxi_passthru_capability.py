@@ -177,23 +177,32 @@ def wait_for_esxi(ssh: EsxiSsh, timeout: int = 600) -> str:
     raise TimeoutError(f"ESXi did not become SSH-ready: {last_error}")
 
 
+def _recv_hmp_prompt(sock: socket.socket) -> bytes:
+    response = bytearray()
+    marker = b"(qemu)"
+    while marker not in response:
+        chunk = sock.recv(65536)
+        if not chunk:
+            raise ConnectionError(
+                "HMP socket closed before the QEMU prompt was observed"
+            )
+        response.extend(chunk)
+    return bytes(response)
+
+
 def hmp_command(monitor: str | Path, *commands: str) -> str:
+    """Execute HMP commands without inserting an artificial runnable gap."""
+
     output = bytearray()
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
         sock.settimeout(2)
         sock.connect(str(monitor))
-        time.sleep(0.1)
-        try:
-            output.extend(sock.recv(65536))
-        except TimeoutError:
-            pass
+        output.extend(_recv_hmp_prompt(sock))
         for command in commands:
+            if "\r" in command or "\n" in command:
+                raise ValueError("HMP commands must be exactly one line")
             sock.sendall(command.encode("ascii") + b"\n")
-            time.sleep(0.25)
-            try:
-                output.extend(sock.recv(1024 * 1024))
-            except TimeoutError:
-                pass
+            output.extend(_recv_hmp_prompt(sock))
     text = output.decode("utf-8", errors="replace")
     return re.sub(r"\x1b\[[0-9;?]*[A-Za-z]", "", text)
 

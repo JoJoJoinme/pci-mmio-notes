@@ -1,0 +1,891 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-query-read-trace.schema.json",
+  "title": "Qman DirectPath query read trace",
+  "description": "Closed evidence artifact for one actual OP-QUERY-DIRECTPATH repository read. It retains the observed canonical instance bytes, predicate results, before/after read state, deterministic query output, and a zero-write witness. A schema reference, decoder declaration, SQL/API log, fake provider, or digest without the actual canonical bytes is never an observed instance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "evidenceBoundary",
+    "operationId",
+    "traceId",
+    "queryCommandId",
+    "targetRepositoryCommit",
+    "portableContractSha256",
+    "requestEnvelopeSha256",
+    "resultEnvelopeSha256",
+    "selector",
+    "repositoryTransaction",
+    "before",
+    "after",
+    "outputInstance",
+    "zeroWriteWitness",
+    "traceDigest"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "DIRECTPATH_QUERY_READ_TRACE"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "evidenceBoundary": {
+      "enum": [
+        "REFERENCE_SQLITE_QUERY_TRANSACTION_COMPONENT_ONLY",
+        "COMPONENT_QUERY_TRACE_NOT_PRODUCT_CLOSURE",
+        "QMAN_PRODUCT_E3_QUERY_READ_TRACE"
+      ]
+    },
+    "operationId": {
+      "const": "OP-QUERY-DIRECTPATH"
+    },
+    "traceId": {
+      "$ref": "#/$defs/id"
+    },
+    "queryCommandId": {
+      "$ref": "#/$defs/id"
+    },
+    "targetRepositoryCommit": {
+      "$ref": "#/$defs/digest"
+    },
+    "portableContractSha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "requestEnvelopeSha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "resultEnvelopeSha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "selector": {
+      "$ref": "#/$defs/selector"
+    },
+    "repositoryTransaction": {
+      "$ref": "#/$defs/repositoryTransaction"
+    },
+    "before": {
+      "$ref": "#/$defs/capturedReadState"
+    },
+    "after": {
+      "$ref": "#/$defs/capturedReadState"
+    },
+    "outputInstance": {
+      "$ref": "#/$defs/outputInstance"
+    },
+    "zeroWriteWitness": {
+      "$ref": "#/$defs/zeroWriteWitness"
+    },
+    "traceDigest": {
+      "$ref": "#/$defs/digest"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safeNonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "nullablePositiveInteger": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/safePositiveInteger"
+        }
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "canonicalBytesBase64": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 22369624,
+      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+      "contentEncoding": "base64",
+      "x-qmanCanonicalBytesRule": "Decode with strict RFC 4648 base64. The decoded value must be non-empty exact CANONICAL-JSON-V1 UTF-8 bytes with no duplicate keys, non-canonical spelling, floating-point value, or trailing byte."
+    },
+    "scalar": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "maxLength": 4096
+        }
+      ]
+    },
+    "nameValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"
+        },
+        "value": {
+          "$ref": "#/$defs/scalar"
+        }
+      }
+    },
+    "nameValueSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nameValue"
+      },
+      "x-qmanSetRule": "Names are unique and entries are ordered by ascending CANONICAL-JSON-V1 bytes of each complete name/value object."
+    },
+    "digestSet": {
+      "type": "array",
+      "maxItems": 65536,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "x-qmanSetRule": "The complete digest set is ordered by ascending CANONICAL-JSON-V1 element bytes. An empty set is meaningful only when accompanied by the required predicate fence."
+    },
+    "selector": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "selectorKind",
+            "hostId"
+          ],
+          "properties": {
+            "selectorKind": {
+              "const": "HOST"
+            },
+            "hostId": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "selectorKind",
+            "assignmentId"
+          ],
+          "properties": {
+            "selectorKind": {
+              "const": "ASSIGNMENT"
+            },
+            "assignmentId": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        }
+      ]
+    },
+    "repositoryTransaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryInstanceId",
+        "transactionId",
+        "isolationMode",
+        "databaseEnforcedReadOnly",
+        "snapshotToken"
+      ],
+      "properties": {
+        "repositoryInstanceId": {
+          "$ref": "#/$defs/id"
+        },
+        "transactionId": {
+          "$ref": "#/$defs/id"
+        },
+        "isolationMode": {
+          "enum": [
+            "SERIALIZABLE_READ_ONLY",
+            "REPEATABLE_READ_SNAPSHOT_READ_ONLY",
+            "SQLITE_WAL_READ_TRANSACTION"
+          ]
+        },
+        "databaseEnforcedReadOnly": {
+          "const": true
+        },
+        "snapshotToken": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "selectedScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scopeHashOrNull",
+        "bundleIds",
+        "memberDeviceUids",
+        "hostIds"
+      ],
+      "properties": {
+        "scopeHashOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/digest"
+            }
+          ]
+        },
+        "bundleIds": {
+          "$ref": "#/$defs/digestSet"
+        },
+        "memberDeviceUids": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "x-qmanSetRule": "The complete deviceUid set is ordered by ascending CANONICAL-JSON-V1 element bytes."
+        },
+        "hostIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "x-qmanSetRule": "The complete hostId set is ordered by ascending CANONICAL-JSON-V1 element bytes."
+        }
+      }
+    },
+    "referenceObservedRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "evidenceBoundary",
+        "instanceKind",
+        "primaryKey",
+        "resourceVersionOrNull",
+        "generationOrNull",
+        "rowFields",
+        "rowDigest"
+      ],
+      "properties": {
+        "subjectType": {
+          "const": "REFERENCE_QUERY_OBSERVED_ROW"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "evidenceBoundary": {
+          "const": "REFERENCE_SQLITE_QUERY_TRANSACTION_COMPONENT_ONLY"
+        },
+        "instanceKind": {
+          "$ref": "#/$defs/instanceKind"
+        },
+        "primaryKey": {
+          "$ref": "#/$defs/nameValueSet"
+        },
+        "resourceVersionOrNull": {
+          "$ref": "#/$defs/nullablePositiveInteger"
+        },
+        "generationOrNull": {
+          "$ref": "#/$defs/nullablePositiveInteger"
+        },
+        "rowFields": {
+          "$ref": "#/$defs/nameValueSet"
+        },
+        "rowDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "x-qmanHashRule": "rowDigest is SHA-256 over ASCII(QMAN-DIRECTPATH/REFERENCE-QUERY-OBSERVED-ROW/V1), one zero byte, and CANONICAL-JSON-V1 of this complete reference row with rowDigest represented as null. This projection is permitted only for the REFERENCE_SQLITE_QUERY_TRANSACTION_COMPONENT_ONLY boundary and is not a Qman product row schema."
+    },
+    "hostJournalHead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "hostId",
+        "kernelBootId",
+        "hostEpoch",
+        "journalEpoch",
+        "sequence",
+        "entryHash"
+      ],
+      "properties": {
+        "subjectType": {
+          "const": "HOST_JOURNAL_HEAD"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "hostId": {
+          "$ref": "#/$defs/id"
+        },
+        "kernelBootId": {
+          "$ref": "#/$defs/id"
+        },
+        "hostEpoch": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "journalEpoch": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "sequence": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "entryHash": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "x-qmanGenesisRule": "An empty journal uses sequence 0 and the deployment-fixed genesis entryHash. A hostEpoch, kernelBootId, or journalEpoch change is a different observation lineage, never evidence that a prior nonzero sequence returned to zero."
+    },
+    "hostSideEffectCounter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "hostId",
+        "kernelBootId",
+        "agentGeneration",
+        "counterEpoch",
+        "counterKind",
+        "value"
+      ],
+      "properties": {
+        "subjectType": {
+          "const": "HOST_SIDE_EFFECT_COUNTER"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "hostId": {
+          "$ref": "#/$defs/id"
+        },
+        "kernelBootId": {
+          "$ref": "#/$defs/id"
+        },
+        "agentGeneration": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "counterEpoch": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "counterKind": {
+          "enum": [
+            "DRIVER_BIND",
+            "DRIVER_UNBIND",
+            "DEVICE_RESET",
+            "VFIO_EXCLUSIVE_OPEN",
+            "QEMU_SPAWN",
+            "HOST_JOURNAL_APPEND"
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        }
+      },
+      "x-qmanEpochRule": "The complete six-kind vector for one hostId/kernelBootId/agentGeneration/counterEpoch is retained. A boot, agent, or counter epoch change invalidates the comparison and cannot turn a prior nonzero counter into a zero-write witness."
+    },
+    "resetObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "hostId",
+        "kernelBootId",
+        "agentGeneration",
+        "observerId",
+        "observerEpoch",
+        "memberDeviceUid",
+        "resetOccurrenceCount",
+        "lastResetAtOrNull",
+        "lastResetResultOrNull"
+      ],
+      "properties": {
+        "subjectType": {
+          "const": "RESET_OBSERVATION"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "hostId": {
+          "$ref": "#/$defs/id"
+        },
+        "kernelBootId": {
+          "$ref": "#/$defs/id"
+        },
+        "agentGeneration": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "observerId": {
+          "$ref": "#/$defs/id"
+        },
+        "observerEpoch": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "memberDeviceUid": {
+          "$ref": "#/$defs/id"
+        },
+        "resetOccurrenceCount": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "lastResetAtOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/timestamp"
+            }
+          ]
+        },
+        "lastResetResultOrNull": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "SUCCESS",
+                "FAILED",
+                "UNKNOWN"
+              ]
+            }
+          ]
+        }
+      },
+      "x-qmanObservationRule": "resetOccurrenceCount and observer lineage are actual runtime observations. A resetContract or capability statement alone is not evidence that no reset occurred during the query."
+    },
+    "instanceKind": {
+      "enum": [
+        "HOST_AUTHORITY",
+        "CAPABILITY_POLICY_AUTHORITY",
+        "AVAILABILITY_AUTHORITY",
+        "CURRENT_TRUST_POINTER",
+        "CURRENT_TRUST_ANCHOR",
+        "CURRENT_CATALOG_POINTER",
+        "CURRENT_CATALOG_ANCHOR",
+        "CURRENT_INVENTORY_POINTER",
+        "HOST_SNAPSHOT_ANCHOR_BINDING",
+        "VM_REQUEST_OR_ASSIGNMENT",
+        "HOST_SNAPSHOT",
+        "DEVICE_RECORD",
+        "DEPENDENCY_BUNDLE",
+        "BUNDLE_LEASE",
+        "OPERATION_LEASE",
+        "QUARANTINE_RECORD",
+        "HOST_JOURNAL_HEAD",
+        "HOST_SIDE_EFFECT_COUNTER",
+        "RESET_OBSERVATION"
+      ]
+    },
+    "observedInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instanceKind",
+        "observationPurpose",
+        "sourceStore",
+        "sourcePrimaryKey",
+        "schemaRef",
+        "resourceVersionOrNull",
+        "generationOrNull",
+        "canonicalInstanceBase64",
+        "instanceBytesSha256",
+        "observationDigest"
+      ],
+      "properties": {
+        "instanceKind": {
+          "$ref": "#/$defs/instanceKind"
+        },
+        "observationPurpose": {
+          "enum": [
+            "DECISION_INPUT",
+            "NON_MUTATION_ORACLE"
+          ]
+        },
+        "sourceStore": {
+          "enum": [
+            "GLOBAL_REPOSITORY",
+            "HOST_OBSERVER",
+            "IMMUTABLE_BLOB_STORE",
+            "VERIFIER_OUTPUT"
+          ]
+        },
+        "sourcePrimaryKey": {
+          "$ref": "#/$defs/nameValueSet"
+        },
+        "schemaRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^contracts/[A-Za-z0-9._/-]+\\.schema\\.json(?:#/.+)?$"
+        },
+        "resourceVersionOrNull": {
+          "$ref": "#/$defs/nullablePositiveInteger"
+        },
+        "generationOrNull": {
+          "$ref": "#/$defs/nullablePositiveInteger"
+        },
+        "canonicalInstanceBase64": {
+          "$ref": "#/$defs/canonicalBytesBase64"
+        },
+        "instanceBytesSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "observationDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "x-qmanObservedInstanceRule": "canonicalInstanceBase64 is the actual observed canonical object, not a decoder, schema declaration, SQL/API log, or digest-only proxy. Decode and parse it, validate the resulting exact bytes against schemaRef, derive the exact primary key and resourceVersion/generation projections, require instanceBytesSha256 to equal SHA-256 of the decoded bytes, and reject any wrapper mismatch."
+    },
+    "availabilityFence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fenceKind",
+        "availabilityAuthorityId",
+        "availabilityAuthorityResourceVersion",
+        "authorityObservationDigest"
+      ],
+      "properties": {
+        "fenceKind": {
+          "const": "GLOBAL_AVAILABILITY_AUTHORITY"
+        },
+        "availabilityAuthorityId": {
+          "$ref": "#/$defs/id"
+        },
+        "availabilityAuthorityResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "authorityObservationDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "noFence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fenceKind"
+      ],
+      "properties": {
+        "fenceKind": {
+          "const": "NOT_APPLICABLE"
+        }
+      }
+    },
+    "predicateObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "predicateId",
+        "closedParameters",
+        "matchedInstanceDigests",
+        "fence",
+        "predicateDigest"
+      ],
+      "properties": {
+        "predicateId": {
+          "enum": [
+            "CURRENT_AUTHORITY_BY_FIXED_KEYS",
+            "CURRENT_HOST_SNAPSHOT_BY_POINTER",
+            "DEVICE_RECORDS_BY_COMPLETE_BUNDLE",
+            "ACTIVE_BUNDLE_LEASES_OVERLAPPING_BUNDLE_OR_MEMBER",
+            "ACTIVE_OPERATION_LEASES_OVERLAPPING_SCOPE_BUNDLE_OR_MEMBER",
+            "UNCLEARED_QUARANTINES_OVERLAPPING_BUNDLE_OR_MEMBER",
+            "HOST_JOURNAL_HEAD_BY_HOST_EPOCH",
+            "HOST_SIDE_EFFECT_COUNTERS_BY_AGENT_EPOCH",
+            "RESET_OBSERVATIONS_BY_MEMBER_SET"
+          ]
+        },
+        "closedParameters": {
+          "$ref": "#/$defs/nameValueSet"
+        },
+        "matchedInstanceDigests": {
+          "$ref": "#/$defs/digestSet"
+        },
+        "fence": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/availabilityFence"
+            },
+            {
+              "$ref": "#/$defs/noFence"
+            }
+          ]
+        },
+        "predicateDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "predicateId": {
+                "enum": [
+                  "DEVICE_RECORDS_BY_COMPLETE_BUNDLE",
+                  "ACTIVE_BUNDLE_LEASES_OVERLAPPING_BUNDLE_OR_MEMBER",
+                  "ACTIVE_OPERATION_LEASES_OVERLAPPING_SCOPE_BUNDLE_OR_MEMBER",
+                  "UNCLEARED_QUARANTINES_OVERLAPPING_BUNDLE_OR_MEMBER"
+                ]
+              }
+            },
+            "required": [
+              "predicateId"
+            ]
+          },
+          "then": {
+            "properties": {
+              "fence": {
+                "$ref": "#/$defs/availabilityFence"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "fence": {
+                "$ref": "#/$defs/noFence"
+              }
+            }
+          }
+        }
+      ],
+      "x-qmanPredicateRule": "closedParameters is the complete query predicate, matchedInstanceDigests is exactly the canonical set of observationDigest values for actual observed instances matched by that predicate, and the global availability fence comes from the same read transaction. authorityObservationDigest resolves exactly one AVAILABILITY_AUTHORITY observed instance whose primary key and resourceVersion equal the fence fields. A log saying zero rows, a decoder declaration, or a caller-selected local fence is not an absence proof."
+    },
+    "readState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryCommitClock",
+        "currentAuthorityVector",
+        "currentAuthorityVectorBytesSha256",
+        "selectedScope",
+        "observedInstances",
+        "predicateObservations",
+        "stateDigest"
+      ],
+      "properties": {
+        "repositoryCommitClock": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "currentAuthorityVector": {
+          "$ref": "directpath-operation-admission-binding.schema.json#/$defs/currentAuthorityVector"
+        },
+        "currentAuthorityVectorBytesSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "selectedScope": {
+          "$ref": "#/$defs/selectedScope"
+        },
+        "observedInstances": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 131072,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/observedInstance"
+          },
+          "x-qmanSetRule": "The complete observed-instance set is ordered by ascending CANONICAL-JSON-V1 bytes of each complete wrapper. observationDigest values are unique."
+        },
+        "predicateObservations": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/predicateObservation"
+          },
+          "x-qmanSetRule": "Exactly one observation exists for each of the nine predicateId values and the array is ordered by ascending CANONICAL-JSON-V1 bytes of each complete predicate observation."
+        },
+        "stateDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "capturedReadState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capturedAt",
+        "state"
+      ],
+      "properties": {
+        "capturedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "state": {
+          "$ref": "#/$defs/readState"
+        }
+      }
+    },
+    "outputInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaRef",
+        "canonicalOutputBase64",
+        "canonicalBytesSha256",
+        "capabilityDecisionHash",
+        "semanticDependencyHash",
+        "queryStateHash"
+      ],
+      "properties": {
+        "schemaRef": {
+          "const": "contracts/directpath-operation-payload.schema.json#/$defs/output_OP_QUERY_DIRECTPATH"
+        },
+        "canonicalOutputBase64": {
+          "$ref": "#/$defs/canonicalBytesBase64"
+        },
+        "canonicalBytesSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "capabilityDecisionHash": {
+          "$ref": "#/$defs/digest"
+        },
+        "semanticDependencyHash": {
+          "$ref": "#/$defs/digest"
+        },
+        "queryStateHash": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "x-qmanOutputRule": "canonicalOutputBase64 is the actual exact output_OP_QUERY_DIRECTPATH object and canonicalBytesSha256 is SHA-256 of those decoded canonical bytes. bundleSummaries, leaseSummaries, reasons, and evidenceRefs use their normative canonical set orders. The output intentionally contains no traceDigest reference, so trace hashing has no fixed point."
+    },
+    "zeroWriteWitness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "queryTransactionId",
+        "databaseEnforcedReadOnly",
+        "writeStatementCount",
+        "affectedRowCount",
+        "repositoryMutationInstances",
+        "hostSideEffectInvocations",
+        "commitClockBefore",
+        "commitClockAfter",
+        "journalHeadBeforeDigest",
+        "journalHeadAfterDigest",
+        "sideEffectCounterVectorBeforeDigest",
+        "sideEffectCounterVectorAfterDigest"
+      ],
+      "properties": {
+        "queryTransactionId": {
+          "$ref": "#/$defs/id"
+        },
+        "databaseEnforcedReadOnly": {
+          "const": true
+        },
+        "writeStatementCount": {
+          "const": 0
+        },
+        "affectedRowCount": {
+          "const": 0
+        },
+        "repositoryMutationInstances": {
+          "type": "array",
+          "maxItems": 0,
+          "items": false
+        },
+        "hostSideEffectInvocations": {
+          "type": "array",
+          "maxItems": 0,
+          "items": false
+        },
+        "commitClockBefore": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "commitClockAfter": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "journalHeadBeforeDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "journalHeadAfterDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "sideEffectCounterVectorBeforeDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "sideEffectCounterVectorAfterDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    }
+  },
+  "x-qmanHashRules": [
+    "instanceBytesSha256 is SHA-256 of the strict-base64-decoded exact CANONICAL-JSON-V1 instance bytes.",
+    "observationDigest is SHA-256 over ASCII(QMAN-DIRECTPATH/QUERY-OBSERVED-INSTANCE/V1), one zero byte, and CANONICAL-JSON-V1 of the complete observedInstance with observationDigest represented as null.",
+    "predicateDigest is SHA-256 over ASCII(QMAN-DIRECTPATH/QUERY-PREDICATE-OBSERVATION/V1), one zero byte, and CANONICAL-JSON-V1 of the complete predicateObservation with predicateDigest represented as null.",
+    "currentAuthorityVectorBytesSha256 is SHA-256 of CANONICAL-JSON-V1 over the complete currentAuthorityVector.",
+    "stateDigest is SHA-256 over ASCII(QMAN-DIRECTPATH/QUERY-READ-STATE/V1), one zero byte, and CANONICAL-JSON-V1 of the complete readState with stateDigest represented as null.",
+    "canonicalBytesSha256 is SHA-256 of the strict-base64-decoded exact CANONICAL-JSON-V1 output bytes.",
+    "capabilityDecisionHash is SHA-256 over ASCII(QMAN-DIRECTPATH/QUERY-CAPABILITY-DECISION/V1), one zero byte, and CANONICAL-JSON-V1 of the decoded output projection {capabilityStatus,reasons}.",
+    "semanticDependencyHash is SHA-256 over ASCII(QMAN-DIRECTPATH/QUERY-SEMANTIC-DEPENDENCIES/V1), one zero byte, and CANONICAL-JSON-V1 of the decoded output projection {bundleSummaries,leaseSummaries,evidenceRefs}.",
+    "traceDigest is SHA-256 over ASCII(QMAN-DIRECTPATH/QUERY-READ-TRACE/V1), one zero byte, and CANONICAL-JSON-V1 of the complete trace with traceDigest represented as null."
+  ],
+  "x-qmanEqualityRules": [
+    "before.state and after.state must be byte-equal complete CANONICAL-JSON-V1 objects. capturedAt is deliberately outside that equality projection.",
+    "repositoryTransaction.transactionId, zeroWriteWitness.queryTransactionId, and the transaction identity recorded by the evidence recorder must be byte-equal.",
+    "zeroWriteWitness.commitClockBefore equals zeroWriteWitness.commitClockAfter and both equal before.state.repositoryCommitClock and after.state.repositoryCommitClock.",
+    "zeroWriteWitness.journalHeadBeforeDigest equals zeroWriteWitness.journalHeadAfterDigest and is derived from the complete HOST_JOURNAL_HEAD observed-instance set in each state.",
+    "zeroWriteWitness.sideEffectCounterVectorBeforeDigest equals zeroWriteWitness.sideEffectCounterVectorAfterDigest and is derived from the complete HOST_SIDE_EFFECT_COUNTER and RESET_OBSERVATION observed-instance sets, including host boot/agent/counter epochs.",
+    "outputInstance.queryStateHash equals before.state.stateDigest and after.state.stateDigest."
+  ],
+  "x-qmanCompletionRules": [
+    "queryCommandId, requestEnvelopeSha256, resultEnvelopeSha256, and outputInstance.canonicalBytesSha256 must exact-match the raw request envelope, raw result envelope, and decoded query output retained by the same execution-evidence iteration.",
+    "Every observed instance is retained as actual canonical bytes and independently schema-validated. A schemaRef, decoder manifest, SQL/API log, trace text, or digest without those bytes provides zero instance coverage.",
+    "When evidenceBoundary is QMAN_PRODUCT_E3_QUERY_READ_TRACE, no observed instance may use contracts/directpath-query-read-trace.schema.json#/$defs/referenceObservedRow; each instance must validate against its exact product wire schema. referenceObservedRow exists only to make the SQLite reference premise executable.",
+    "For every predicate observation, matchedInstanceDigests is exact-equal to the observationDigest set of actual observed instances matched by the independently reconstructed closed predicate. Missing, extra, duplicate, or cross-scope instances fail.",
+    "DEVICE_RECORD bytes retain owner.driverOrNull, generations, health.lastResetResult, and resetContract. HOST_JOURNAL_HEAD retains hostId, hostEpoch, journalEpoch, sequence, and entryHash. HOST_SIDE_EFFECT_COUNTER retains hostId, kernelBootId, agentGeneration, counterEpoch, counterKind, and value. RESET_OBSERVATION retains the actual occurrence counter and observer identity; a resetContract alone is not a no-reset witness.",
+    "databaseEnforcedReadOnly is true, writeStatementCount and affectedRowCount are zero, repositoryMutationInstances and hostSideEffectInvocations are empty, and all before/after equality rules hold. The query may not write audit, outbox, idempotency, last-access, metrics, or cache rows in the tested repository.",
+    "Repeated-query determinism compares the decoded canonical outputInstance bytes for the same stable request projection and read state. It does not compare complete result envelopes whose commandId, correlation, or completion metadata may legitimately differ.",
+    "A concurrent-publisher scenario accepts one complete old state or one complete new state per read transaction and rejects mixed vectors. External writer advancement is not attributed to the query, but the query transaction's own write witness must remain zero.",
+    "Evidence recording occurs in an independent evidence store after the tested read transaction and cannot be used to manufacture a write-free claim inside the queried product repository."
+  ],
+  "x-qmanAuthorityBoundary": "Schema validity, a component verifier, or a SQLite reference trace is only a REFERENCE/COMPONENT executable premise. PRODUCT C15 remains blocked until the private Qman query handler, product repository read-only adapter, current-authority readers, and Host Agent journal/counter/reset observer emit raw signed E3 end-to-end evidence from the mapped target commit and a current CaseCompletionRecord closes every required iteration and oracle."
+}

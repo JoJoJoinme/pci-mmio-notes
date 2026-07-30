@@ -1,6 +1,6 @@
 # PCI MMIO validation notes: VMware ESXi EFI defaults vs QEMU/OVMF
 
-Record date: 2026-07-22
+Record date: 2026-07-30
 
 Project convergence status, current milestone, frozen decisions, and the fail-closed
 release command are maintained in [`PROJECT-STATUS.md`](PROJECT-STATUS.md). The
@@ -18,9 +18,99 @@ private commit under
 target-code mapping, product implementation, and physical qualification are separate status axes; the first never
 implies the other three.
 
+The new [`qman-directpath-core/`](qman-directpath-core/README.md) is a directly
+portable, product-shaped implementation premise rather than another reference
+DTO adapter.  It verifies strict canonical JSON, real Ed25519 signatures,
+complete key-ring history, nonce-fresh external trust/catalog rollback anchors,
+exact qualification records, DeviceRecord V3 inventory with replayed raw PCI
+structure/FLR facts, verified Static
+request/policy admission, and bounded seven-domain/reset closure.  The final
+read guard accepts only a factory-created composite of the verified inventory
+closure, the qualification binding derived from the same Static admission, and
+the exact canonical bytes/hash of one schema-bound guest resource plan.  It
+replays all three chains, derives hardware/technical/admin/owner gates from the
+verified V3 inventory instead of caller labels, and binds the committed HostAuthority and current-policy
+pointer versions, trust/catalog anchors, qualification record/signers/profile,
+inventory receipt/verifier, request and availability read sets, and before/after
+current vector.  The profile semantic digest is derived by a machine-readable
+runtime/ABI/workload/revocation/support projection rather than supplied by a
+caller.  The real recursive-E4 resolver/replayer and its product authority still
+belong to Qman.  The retained plan verifier proves canonical/schema/hash,
+upstream-context and basic window-arithmetic closure only; it deliberately does
+not claim MMIO/BAR/RMRR/IRQ solver correctness and remains
+`productAuthorized=false`.  A closed operation-admission schema plus factory-only
+`VerifiedOperationAdmissionBinding` retain the exact guarded decision, read
+observations, single-bundle ASSIGNMENT_PREPARE lease specification, CAS
+expectation, immutable blob references, and exclusive validity window.  These
+component bindings do not prove a Qman SERIALIZABLE transaction or live lease;
+the product adapter must accept only the closed business
+`StaticAdmissionCommand`, derive all authority/read-set/CAS values itself, lock
+the global availability authority against phantoms, create the
+lease/reservation/binding/idempotency/audit/outbox set atomically, store the
+binding hash on the live lease, and return only a committed result.  The new
+`qman-directpath-reference` SQLite lane makes that transaction shape,
+idempotency and crash behavior executable under the explicit
+`REFERENCE_SQLITE_TRANSACTION_COMPONENT_ONLY` boundary; it is not Qman product
+repository evidence.
+The same core now has an executable C00 HostSnapshot capture-closure lane:
+fixed portable provider output/semantic envelopes retain exact bytes, raw
+256-byte PCI config or a closed failure, and normalized provider facts.  The
+factory verifier enforces provider-to-DeviceRecord coverage, complete-host PCI
+binding bijection, raw PCI/FLR replay, capture intervals, topology/provider/
+no-change reconstruction, independent capability-policy binding, and mandatory
+evidence freshness under closed byte/node/depth/count budgets.  The V2 receipt
+binds an ordered five-schema transitive set and ten validation stages, performs
+bounded preflight before schema traversal, and uses indexed freshness and
+dependency checks.  Candidate rows prove only that `deviceGeneration` equals a
+shared caller-stamped `candidateSnapshotEpoch` and that one caller-stamped
+`candidateResourceVersion` is shared; the product repository must derive and
+commit both coordinates with SERIALIZABLE CAS.  Freshness uses caller-supplied
+capture completion, not trusted transaction time.  Its
+schema-valid receipt is permanently `COMPONENT_PREMISE_ONLY` with
+`productAuthorized=false` and eight explicit blockers, including trusted
+publication evaluation time; it does not attest a target provider decoder/build,
+collector/publisher, capability-policy authority CAS, SERIALIZABLE repository,
+external rollback authority, independent visibility observer, or Qman target
+mapping/runner.
+The next C00 slices are now executable as component-only verifiers.  A
+structural publication read set binds exact current Host/Availability and both
+policy-authority rows, derives a four-authority CAS expectation, rechecks policy
+expiry at its retained `beganAt`, and deterministically selects the five
+genesis/incarnation/successor/refresh/no-change outcomes.  A separate rollback
+closure cryptographically verifies the zero-unresolved preflight, exact
+PREPARED reservation, signed after inventory, finalized external anchor,
+fresh-nonce reads, full predecessor CAS, and phase nonce separation.  Separate
+publication-time and recovery-time trust contexts require the same root and
+named namespaces, exact key-ring history prefix, and monotonic trust anchor, so
+forward rotation can validate immutable committed bytes while rejecting root,
+key-ring, and trust-anchor-authority namespace substitution.  An independently
+configured trust-anchor path is checked for both phases, and the serialized
+rollback context binds each phase's signed freshness-receipt digest, validation
+window, and path.  Direct authority path/nonce transport is still product
+adapter evidence.  The verifier never accepts a caller-reported repository
+commit time; instead it exports the exact reservation keys and commit-validity
+window for a later authentic commit-record verifier.  A third mutation-closure
+stage consumes that chain and exact
+caller-supplied repository rows, derives the complete `N+6` write set, all five
+digest projections, the acyclic mutation fixed point, audit/outbox/commit
+self-digests, and the resolved four-authority vector; `NO_CHANGE` is an exact
+zero-write branch.  These stages still do not prove an authenticated operation
+exchange/result-schema binding, aggregate/event-ID/createdAt/commit-clock
+semantics, trusted product transaction clock, product SERIALIZABLE/CAS execution,
+atomic visibility, post-anchor outbox delivery, or mapped Qman code and therefore
+remain `productAuthorized=false`.
+Verifier-produced contexts have no
+public constructor and cannot be relabeled with `dataclasses.replace`.  Exact
+publisher/profile currentness remains separate from owner-independent
+snapshot/profile semantics, so availability-only or disjoint profile changes
+do not corrupt the technical cache while every old admission token still fails
+closed.  These component tests do not constitute target mapping, Qman E3
+product evidence, E4 physical qualification, or release.
+
 The portable handoff now closes 35 common operation envelopes and 70 operation-specific request/result payload
-profiles, plus 17 persisted authority aggregates, four non-authority entity projections, deterministic identity golden
-vectors, signed qualification/catalog trust, and 293 ordered mapping requirements. Every Scenario Step selects one exact
+profiles, plus 19 persisted authority aggregates, four non-authority entity projections, one durable
+operation-admission companion, deterministic identity golden vectors, signed qualification/catalog trust, and 299 ordered mapping requirements.
+Every Scenario Step selects one exact
 portable payload fragment and pins immutable request/result fixture bytes; every executed iteration retains a one-to-one
 `operationExchanges` set of raw typed request/result envelopes, hashes, and projected result semantics. An ad-hoc target
 DTO, narrative intent or opaque log cannot change or satisfy the wire contract. Each mapping item has an independently
@@ -74,9 +164,14 @@ The accepted platform/backend/control-plane/HCL/cluster choices are machine-read
 Qman/reference-side technical evidence is tracked separately in
 [`ipd/QMAN-TECHNICAL-EVIDENCE.md`](ipd/QMAN-TECHNICAL-EVIDENCE.md) and the
 [`contracts/qman-evidence-index.json`](contracts/qman-evidence-index.json).
-The current eleven E2/E3 records—six `REFERENCE_ONLY` and five `COMPONENT_ONLY`—
-reproduce design premises, including the bounded C20 capability closure, and verify
-bounded default-deny QMP, the QEMU Correctable-AER EMR oracle, per-device
+The current eighteen E2/E3 records—eight `REFERENCE_ONLY` and ten `COMPONENT_ONLY`—
+reproduce design premises, including the bounded C20 capability closure, C16
+component-local topology-provenance isolation, and the C00 external HostSnapshot
+rollback-anchor consumption gate plus raw PCI structure/FLR, capture-closure,
+publication decision/rollback/mutation closure, and static-gate premise, and
+verify bounded default-deny QMP, the QEMU
+Correctable-AER EMR and root-sequence oracles, the Qman core
+field-exact frozen ESXi O0/O4 `g101` retained-state trace, per-device
 VFIO/IOMMUFD provider, and host-local Static
 lease/FSM fault components. None
 closes a Qman product Case, physical Risk, or production support claim.
@@ -189,10 +284,49 @@ PCIe AER 必须把 capability/header visibility、raw status deposition、messag
 guest/host service event、bounded log observation 与 recovery/health 分开解释，不能互相
 代证。历史 e1000e 为 hidden-header/raw-status profile；virtio Active 为
 visible-header/raw-CES/no-event profile。Correctable 8-bit 黑盒矩阵、effective gate、
-ESXi/guest projection、安全停止条件和 QEMU 公开模型正控见
+ESXi/guest projection、安全停止条件和 QEMU first/multiple、独立 W1C、OR、re-arm
+公开模型正控见
 [`vmware-aer-blackbox-results.md`](vmware-aer-blackbox-results.md) 与
 [`vmware-aer-correctable-validation-plan.md`](vmware-aer-correctable-validation-plan.md)；
 QEMU OVMF/SeaBIOS surface A/B 入口为 `qemu-aer-surface-validate.sh`。
+
+截至 2026-07-30，AER root-state 证据严格分层：
+
+- QEMU 11.0.2 public-model 正控已有 12/12 hash-bound formal evidence。
+- canonical V17 `20260729-esxi8-aer-root-o4-v17-full1` 已在 O4/`g101` 完成
+  First/Multiple、独立 W1C、B0/B1 OR 与 re-arm 各 3 次，12/12 `MATCH`、`FULL_PLAN`；
+  离线 exact 与 `--require-complete` 校验均通过。冻结
+  [`campaign result`](evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json)
+  SHA-256 为
+  `847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f`，并由 canonical
+  [`result record`](evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json) 与
+  [`summary`](evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json) 登记。
+- canonical V19 `20260730-esxi8-aer-root-o0-v19-full1` 已在 O0/`g101` 完成相同四个
+  sequence × 3，12/12 `MATCH`、`FULL_PLAN`。canonical
+  [`result record`](evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json)、
+  [`summary`](evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json) 与
+  [`campaign result`](evidence/esxi8-aer-root-o0-v19-full1-20260730-campaign-result.json)
+  的 SHA-256 分别为 `538aaf8c…310b`、`5a58f4de…dff`、`b2ab49a2…c6d6`。
+- V19 与 V17 的 12 对 `evaluation-input.snapshots` 逐字段 exact，形成
+  [`frozen observed O0+O4 profile`](contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json)
+  （SHA-256 `cafa0835…1a6e`）及
+  [`promotion receipt`](evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json)
+  （SHA-256 `fab09980…12a`）。
+- 该闭环只授权 exact ESXi build/device/QEMU/`g101` 的 O0+O4 外部寄存器状态。O0 目标
+  `Module Name=None`，未证明 bound native driver；也不证明 owner-independent 私有机制、
+  service/IRQ、其他 gate、guest write、lifecycle 或物理 qualification。因此不关闭
+  M26、M06、R13、G1-G6 或任何 Qman 产品 Case，也不推导 VMware 私有实现。
+
+当前本地 AER guest fixture ISO SHA-256 为
+`3DE27D166EE6881BFB60D8DA233A0B3E6871532108D01D5741C8A43BA91777DE`，
+build attestation SHA-256 为
+`103941485D8B1679D6DA18312025F5155F4A027F86EFA99E5BAD2FAA66FD67C1`。
+这两个 digest 只绑定 guest fixture/build 输入，不构成 ESXi 行为证据。
+离线冻结账本为
+[`20260726-esxi-aer-root-runner-offline-v3/result.json`](../_artifacts/vmware-directpath-runs/20260726-esxi-aer-root-runner-offline-v3/result.json)，
+SHA-256 为
+`bae6e1e0d552a2d2859250a3ac61448c010df37f27903c774e79713f8f90cf23`；
+它绑定 runner/helper/unit 源码哈希与 78 × 3 回归结果，但仍不是 ESXi observation。
 
 ## Short conclusion
 

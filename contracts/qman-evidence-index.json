@@ -40,7 +40,7 @@
     {
       "id": "QMAN-E2-CLOSURE-001",
       "resultPath": "evidence/qman-capability-closure-20260721-summary.json",
-      "resultSha256": "87e6c93aa1bbbc194352a866b39fb40dc40fd8a5648af0b16d114b5a248cb445",
+      "resultSha256": "84d2479a3451d3c92de48a0809f9a23098a74aaf9716a0966cc72581eded4cc4",
       "subject": "QMAN_REFERENCE_MODEL",
       "evidenceGrade": "E2",
       "verdict": "PASS",
@@ -95,7 +95,18 @@
     {
       "id": "QMAN-E3-AER-QEMU-REFERENCE-001",
       "resultPath": "evidence/qman-qemu-aer-emr-20260723-summary.json",
-      "resultSha256": "9d28dd2d3c1f7a4f054000cdce675f6a841453b29ad750d72238df6aed3db9c1",
+      "resultSha256": "206e13a66b5a0863b95cf5e8d0cbd7c0a427be52ce68fb9d808aecbcbf99c519",
+      "subject": "QEMU_CONTROL_REFERENCE",
+      "evidenceGrade": "E3",
+      "verdict": "PASS",
+      "techStories": ["TS-F4-06"],
+      "caseIds": ["M06"],
+      "riskIds": ["R13"]
+    },
+    {
+      "id": "QMAN-E3-AER-QEMU-ROOT-SEQUENCE-001",
+      "resultPath": "evidence/qman-qemu-aer-root-sequence-20260726-summary.json",
+      "resultSha256": "a8ad0af0d2913d315b3f79abdad88cb0b763a1deceebce52e127978d3670cdb5",
       "subject": "QEMU_CONTROL_REFERENCE",
       "evidenceGrade": "E3",
       "verdict": "PASS",
@@ -128,7 +139,7 @@
     {
       "id": "QMAN-E3-STATIC-LAUNCH-ENVELOPE-001",
       "resultPath": "evidence/qman-static-launch-envelope-20260721-summary.json",
-      "resultSha256": "d84be0258f6935b1ca328f9be89268800b9f14a641b76132ffa3e68681c082b4",
+      "resultSha256": "a20322d7ea1196baef0b9c024ce2485b0a7accc73d873551c0f6d20a960ce799",
       "subject": "QMAN_COMPONENT",
       "evidenceGrade": "E3",
       "verdict": "PASS",
@@ -146,6 +157,72 @@
       "techStories": ["TS-F1-01", "TS-F8-02"],
       "caseIds": [],
       "riskIds": ["R04"]
+    },
+    {
+      "id": "QMAN-E2-AER-VMWARE-G101-PARITY-001",
+      "resultPath": "evidence/qman-aer-vmware-g101-parity-20260730-summary.json",
+      "resultSha256": "1ff0038ca77c4b7ef02f5ee222ba85a48087a5d758b6bd5cf2c00fb996db1501",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E2",
+      "verdict": "PASS",
+      "techStories": ["TS-F4-06"],
+      "caseIds": ["M06"],
+      "riskIds": ["R13"]
+    },
+    {
+      "id": "QMAN-E2-C16-TOPOLOGY-LOCALIZATION-001",
+      "resultPath": "evidence/qman-c16-topology-localization-20260730-summary.json",
+      "resultSha256": "1137c28612ec23c912cb55c651b2d87caa6326ffac945838d915eb4f931310a7",
+      "subject": "QMAN_REFERENCE_MODEL",
+      "evidenceGrade": "E2",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-01", "TS-F1-03", "TS-F1-04"],
+      "caseIds": ["C16"],
+      "riskIds": ["R01", "R35"]
+    },
+    {
+      "id": "QMAN-E2-C00-HOST-SNAPSHOT-ANCHOR-BINDING-001",
+      "resultPath": "evidence/qman-c00-host-snapshot-anchor-binding-20260730-summary.json",
+      "resultSha256": "b66cff10be1bead05417938302041f79c6d35761a5169e8cd8f886c2ea6e79c3",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E2",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+      "caseIds": ["C00"],
+      "riskIds": ["R38"]
+    },
+    {
+      "id": "QMAN-E2-C00-PCI-STRUCTURE-FLR-PREMISE-001",
+      "resultPath": "evidence/qman-c00-pci-structure-flr-premise-20260730-summary.json",
+      "resultSha256": "8d2528177951455d8e93af1bee22c436bfc657584d3686a33866cfd5e92eac96",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E2",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+      "caseIds": ["C00", "C01", "C02", "C03"],
+      "riskIds": ["R03", "R29", "R38"]
+    },
+    {
+      "id": "QMAN-E2-C00-HOST-SNAPSHOT-CAPTURE-CLOSURE-001",
+      "resultPath": "evidence/qman-c00-host-snapshot-capture-closure-20260730-summary.json",
+      "resultSha256": "c2d8c7a3220fbac22c3c781639d4210184e86ce6f5b61cbd3c9fab0fb537572f",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E2",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+      "caseIds": ["C00", "C01", "C02", "C03"],
+      "riskIds": ["R03", "R29", "R38"]
+    },
+    {
+      "id": "QMAN-E2-C00-HOST-SNAPSHOT-PUBLICATION-CLOSURE-001",
+      "resultPath": "evidence/qman-c00-host-snapshot-publication-closure-20260730-summary.json",
+      "resultSha256": "acce693407aaf75725b413ad7a7ec93c0678d36d24e33cbedbcccf850301ba1c",
+      "subject": "QMAN_COMPONENT",
+      "evidenceGrade": "E2",
+      "verdict": "PASS",
+      "techStories": ["TS-F1-01", "TS-F1-04", "TS-F5-01"],
+      "caseIds": ["C00"],
+      "riskIds": ["R38"]
     }
   ]
 }

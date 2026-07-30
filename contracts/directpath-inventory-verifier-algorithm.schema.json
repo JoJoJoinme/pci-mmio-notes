@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-inventory-verifier-algorithm.schema.json",
+  "title": "Qman DirectPath portable inventory verifier algorithm identity",
+  "description": "Closed portable identity of the component verification algorithm and exact schema bytes it consumes. This is intentionally not an executable hash, build attestation, product release identity or deployment measurement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "algorithmId",
+    "identityKind",
+    "canonicalProfileId",
+    "digestAlgorithm",
+    "hostSnapshotSignatureAlgorithm",
+    "requiredHostSnapshotSignerRole",
+    "requireCurrentTrustRing",
+    "hostSnapshotSignatureDomain",
+    "verifierIdentityHashDomain",
+    "inventoryReceiptHashDomain",
+    "schemaBindings",
+    "validationStages",
+    "algorithmIdentityDigest"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "PORTABLE_INVENTORY_VERIFIER_ALGORITHM"
+    },
+    "schemaVersion": {"const": 2},
+    "algorithmId": {
+      "const": "PORTABLE_INVENTORY_VERIFIER_ALGORITHM_V2"
+    },
+    "identityKind": {
+      "const": "COMPONENT_ALGORITHM_IDENTITY_NOT_BINARY_ATTESTATION"
+    },
+    "canonicalProfileId": {"const": "CANONICAL-JSON-V1"},
+    "digestAlgorithm": {"const": "SHA-256"},
+    "hostSnapshotSignatureAlgorithm": {"const": "Ed25519"},
+    "requiredHostSnapshotSignerRole": {
+      "const": "HOST_INVENTORY_EVIDENCE"
+    },
+    "requireCurrentTrustRing": {"const": true},
+    "hostSnapshotSignatureDomain": {
+      "const": "QMAN-DIRECTPATH/HOST-SNAPSHOT/V1"
+    },
+    "verifierIdentityHashDomain": {
+      "const": "QMAN-DIRECTPATH/INVENTORY-VERIFIER-ALGORITHM/V2"
+    },
+    "inventoryReceiptHashDomain": {
+      "const": "QMAN-DIRECTPATH/INVENTORY-VERIFICATION-RECEIPT/V1"
+    },
+    "schemaBindings": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "prefixItems": [
+        {
+          "allOf": [
+            {"$ref": "#/$defs/schemaBinding"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-authority-entities.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/schemaBinding"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-host-snapshot-publication-trace.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/schemaBinding"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-identity-v1.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/schemaBinding"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-inventory-verification-receipt.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/schemaBinding"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-inventory-verifier-algorithm.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/schemaBinding"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-portable-entities.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/schemaBinding"},
+            {
+              "properties": {
+                "schemaRef": {
+                  "const": "contracts/directpath-portable-hash-subjects.schema.json"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "items": false
+    },
+    "validationStages": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "prefixItems": [
+        {"const": "CANONICAL_INPUT_BYTES_V1"},
+        {"const": "HOST_AUTHORITY_BEFORE_AFTER_EXACT_V1"},
+        {"const": "HOST_SNAPSHOT_CONTENT_HASH_ED25519_CURRENT_RING_V1"},
+        {"const": "HOST_AUTHORITY_EXACT_CURRENT_POINTER_V1"},
+        {"const": "DEVICE_RECORD_V3_HASH_IDENTITY_MEMBERSHIP_V1"},
+        {"const": "PCI_STRUCTURE_RESET_FACT_REPLAY_V1"},
+        {"const": "DEVICE_PROVIDER_FACT_SET_DIGEST_REPLAY_V2"},
+        {"const": "HOST_SNAPSHOT_SEMANTIC_PROJECTION_REPLAY_V1"},
+        {"const": "DEPENDENCY_DOMAINS_EXACT_SEVEN_V1"},
+        {"const": "DEPENDENCY_DOMAIN_IOMMU_BDF_UID_EQUIVALENCE_V1"},
+        {"const": "DEPENDENCY_DOMAIN_PHYSICAL_LEGACY_EQUIVALENCE_V1"},
+        {"const": "INVENTORY_VERIFICATION_RECEIPT_V1"}
+      ],
+      "items": false
+    },
+    "algorithmIdentityDigest": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "schemaBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaRef", "schemaDigest"],
+      "properties": {
+        "schemaRef": {"type": "string", "minLength": 1},
+        "schemaDigest": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "x-qmanHashRule": "Set algorithmIdentityDigest to null only in the construction projection, encode exact CANONICAL-JSON-V1 bytes, and compute SHA-256 over ASCII(QMAN-DIRECTPATH/INVENTORY-VERIFIER-ALGORITHM/V2) || 0x00 || projection bytes. The final object carries the non-null digest. Its exactly seven schemaBindings are the runtime-loaded raw schema byte digests, including the HostSnapshot publication semantic projection contract, and MUST NOT be caller supplied.",
+  "x-qmanBoundaryRule": "This identity proves only a fixed portable algorithm definition plus schema closure. Product authorization additionally requires an independently authenticated binary/build/runtime attestation and Qman integration evidence."
+}

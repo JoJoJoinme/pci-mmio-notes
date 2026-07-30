@@ -87,7 +87,7 @@
           "const": "QMAN-DIRECTPATH-PORTABLE-CONTROL"
         },
         "revision": {
-          "const": "2026-07-23.11"
+          "const": "2026-07-30.1"
         },
         "sha256": {
           "oneOf": [
@@ -291,8 +291,8 @@
     },
     "mappings": {
       "type": "array",
-      "minItems": 295,
-      "maxItems": 295,
+      "minItems": 299,
+      "maxItems": 299,
       "uniqueItems": true,
       "prefixItems": [
         {
@@ -523,7 +523,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:9699164ce5e13d5d2c1b65a505854855b40142b1703d9e844c881084a4fe58ec"
+                  "const": "sha256:478bf498a9d37731ba93261b79dc8b0ba87d56c384011b8cedaaecddfd121a25"
                 }
               },
               "required": [
@@ -553,7 +553,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:1b4d2c72486f3d1250b7c0d6e9be82a55986851af26b13ec4ea358d016ad719e"
+                  "const": "sha256:6edf2512bd9dc03c204386cb66693cb97d4ca1507490b4daa87df5cfb8ede8b9"
                 }
               },
               "required": [
@@ -763,7 +763,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:e3238a6dc49d6f4c29cf3ee40d8a4375d713fb11403d01cf403bd8e6b5ad0ff4"
+                  "const": "sha256:3f113603dbf3f9cc14bcb7365b9caa8a71bfc92f901c73a86fcf550910951341"
                 }
               },
               "required": [
@@ -973,7 +973,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:eca7ff493ea92759706d05736161e247748da7be193a67ef79daf2747450e61d"
+                  "const": "sha256:1754afeeeac30aaad68a3ebd7dd8470137cb6439cb55e5ad37c8a82a993ee6e7"
                 }
               },
               "required": [
@@ -1064,6 +1064,96 @@
                 },
                 "verificationRequirementDigest": {
                   "const": "sha256:e5394a2eefc2dd06450f2773a0bcfcf79018565376ba72ab7a504ebd6e89ddd3"
+                }
+              },
+              "required": [
+                "contractItemId",
+                "kind",
+                "releaseTrack",
+                "verificationRequirementDigest"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/mapping"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "contractItemId": {
+                  "const": "ENTITY-CAPABILITY-POLICY-AUTHORITY"
+                },
+                "kind": {
+                  "const": "ENTITY"
+                },
+                "releaseTrack": {
+                  "const": "CURRENT_RELEASE_REQUIRED"
+                },
+                "verificationRequirementDigest": {
+                  "const": "sha256:ead324a0f1fc6421cc4bed63130e229b91296fcc6593e2e5397dc4e690f152c9"
+                }
+              },
+              "required": [
+                "contractItemId",
+                "kind",
+                "releaseTrack",
+                "verificationRequirementDigest"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/mapping"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "contractItemId": {
+                  "const": "ENTITY-HOST-SNAPSHOT-FRESHNESS-POLICY-AUTHORITY"
+                },
+                "kind": {
+                  "const": "ENTITY"
+                },
+                "releaseTrack": {
+                  "const": "CURRENT_RELEASE_REQUIRED"
+                },
+                "verificationRequirementDigest": {
+                  "const": "sha256:973fb37a24ed2e548c0d6948a6f90e9389fecc08cda30fb4241baf05a7a07d34"
+                }
+              },
+              "required": [
+                "contractItemId",
+                "kind",
+                "releaseTrack",
+                "verificationRequirementDigest"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/mapping"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "contractItemId": {
+                  "const": "ENTITY-AVAILABILITY-AUTHORITY"
+                },
+                "kind": {
+                  "const": "ENTITY"
+                },
+                "releaseTrack": {
+                  "const": "CURRENT_RELEASE_REQUIRED"
+                },
+                "verificationRequirementDigest": {
+                  "const": "sha256:36b04de1b0ee230771f8822c048a3a8185350a380951511253818b25516ae289"
                 }
               },
               "required": [
@@ -1744,6 +1834,36 @@
               "type": "object",
               "properties": {
                 "contractItemId": {
+                  "const": "ENTITY-OPERATION-ADMISSION-BINDING"
+                },
+                "kind": {
+                  "const": "ENTITY"
+                },
+                "releaseTrack": {
+                  "const": "CURRENT_RELEASE_REQUIRED"
+                },
+                "verificationRequirementDigest": {
+                  "const": "sha256:238026bbe28394e2cb5dab07597c279cf4cb49a4fed53d1bc24bb332d5b3e5c0"
+                }
+              },
+              "required": [
+                "contractItemId",
+                "kind",
+                "releaseTrack",
+                "verificationRequirementDigest"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/mapping"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "contractItemId": {
                   "const": "ENTITY-RELEASE-OWNERSHIP-GUARD"
                 },
                 "kind": {
@@ -1843,7 +1963,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:771ec258b21ca05cad3fe186fcb1199b8a719c0d5d4e263a859312079404466d"
+                  "const": "sha256:10715bc03d829efebe8ff0e31ab708f523c82cd78759eb8412beac9f40f97adb"
                 }
               },
               "required": [
@@ -1903,7 +2023,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:47f98b17e0a471985f3a02de224591097f780e91e1dcecd88d22677b2db1baec"
+                  "const": "sha256:560e0b4c65fa57d5e0ea734b0d711df7539e9a22cb6ada3fc40d8aac0ae95a38"
                 }
               },
               "required": [
@@ -2233,7 +2353,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:fcd57258bf3c256e4ae68c9b92e360b01ef60cdc9d6ba31880ed41010adf2760"
+                  "const": "sha256:6fbd53e71cf8e5f5fbe26043aee9f71c6349ea4e4161ebd2eaa9a4f8bb61677f"
                 }
               },
               "required": [
@@ -2263,7 +2383,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:71cff56a67e91e46be607d6f68f30ecc8afbc90b90641b0053212fe06209c025"
+                  "const": "sha256:ccfe66f4b84d6a0149979678c9b294f0aa9968ae1ef276ec72acc4a9a951f4df"
                 }
               },
               "required": [
@@ -2833,7 +2953,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:7c5f1195ede89529cf4a39cb4a2947d088bb501040c2ffbd3ab3ffcbfb39c480"
+                  "const": "sha256:44b5419a6386444e43c6dc0c88c1b3d2f9fe8130874e6f7d2c98f8602aa90a0d"
                 }
               },
               "required": [
@@ -4723,7 +4843,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:f98faefad9080b8a5e6f57741e328a4e39e7772cc6c0a5d67de475da2c23c845"
+                  "const": "sha256:4ec5bca5ca41343ebb14357d47b6f43d25a5e744896d2de9a3106be673a0e92e"
                 }
               },
               "required": [
@@ -4753,7 +4873,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:0a2fc4bad5d9b98abb209bceb781f902eeef63dbadb7519f582b7f31fc7f6ec4"
+                  "const": "sha256:721ba86d43851c7a9da9b12d576d91cc54dde8b72abb889f5f0e6a2acd934f40"
                 }
               },
               "required": [
@@ -4843,7 +4963,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:2f8e5f5b0b8fcdfd67e43de237c745b312f180b04b11c892560029eca42cd7d5"
+                  "const": "sha256:565137b18a41a83cb7d04efdfb1486a0e4228376e69bd80ca5ce9a0d834ab986"
                 }
               },
               "required": [
@@ -5293,7 +5413,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:b64602fb2965a41ca6806516d94c07e13b6f8233d23263b25e35910b005c8db1"
+                  "const": "sha256:0584d05fb1544124eb1868897485eba0b517d970a15f1f383013a994282864d1"
                 }
               },
               "required": [
@@ -5383,7 +5503,7 @@
                   "const": "CURRENT_RELEASE_REQUIRED"
                 },
                 "verificationRequirementDigest": {
-                  "const": "sha256:fad1542308ae22a6289e63ecf4dac84c6d45a912c8bfc4dfd2a40946769d9009"
+                  "const": "sha256:34833351a29962dcdbddf96d0b7a9b370c3ad049c1700673438454f3ce98c2f8"
                 }
               },
               "required": [

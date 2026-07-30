@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "ESXI8-AER-ROOT-O4-V8-INCONCLUSIVE-20260728",
+  "subject": "VMWARE_ESXI_BLACKBOX_ATTEMPT_HISTORY",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observedAt": "2026-07-28T16:54:57.899717Z",
+  "observationStatus": "INCONCLUSIVE",
+  "executionState": "COMPLETED",
+  "claimBoundary": "FROZEN_ATTEMPT_HISTORY_ONLY",
+  "usedForBehaviorInference": false,
+  "closureAuthority": "NONE",
+  "scope": "PCIe Correctable AER external behavior only; no VMware private implementation inference",
+  "run": {
+    "runId": "20260728-esxi8-aer-root-o4-v8",
+    "ownerPhase": "O4",
+    "gate": "g101",
+    "plannedCaseCount": 12,
+    "completedCaseCount": 12,
+    "incompletePlan": [],
+    "enteredInjectionCount": 12,
+    "cleanupCompleteCount": 12,
+    "safetyStopCount": 0,
+    "observationDigestCount": 0,
+    "aggregateObservationState": "INCONCLUSIVE",
+    "finalQemuState": "running"
+  },
+  "frozenIntegrity": {
+    "state": "PASS",
+    "rootManifestEntryCount": 582,
+    "rootManifestMismatchCount": 0,
+    "campaignCaseReferenceCount": 24,
+    "campaignCaseReferenceMismatchCount": 0,
+    "artifacts": [
+      {
+        "path": "../_artifacts/vmware-directpath-runs/20260728-esxi8-aer-root-o4-v8/result.json",
+        "sha256": "edaec2459b75eecfdb0961aecba6f49093ccab42cd3f8870662c0cf17971a655",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../_artifacts/vmware-directpath-runs/20260728-esxi8-aer-root-o4-v8/result.json.sha256",
+        "sha256": "f7a0376921405e4438a45f1a909a6309c61700a26b70d2b6c210a6ec0901b52e",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../_artifacts/vmware-directpath-runs/20260728-esxi8-aer-root-o4-v8/artifact-manifest.sha256",
+        "sha256": "376035088d53f9adb2e16a04649859885c02c7c27ec89ade35e3923bb4f3bb9f",
+        "retention": "LOCAL_RAW"
+      }
+    ]
+  },
+  "exactClosure": {
+    "verifyRunExact": "FAIL",
+    "caseCount": 12,
+    "storedOracleInconclusiveCount": 12,
+    "recomputedOracleInconclusiveCount": 12,
+    "oracleExactMatchCount": 12,
+    "identityExactMatchCount": 12,
+    "rawSourceExactMatchCount": 0,
+    "resultExactMatchCount": 0,
+    "exactMatchCount": 0,
+    "failureCounts": {
+      "snapshots": 12,
+      "o4GuestEvidence": 9,
+      "containmentRequired": 12,
+      "containmentReasons": 12
+    }
+  },
+  "interpretation": {
+    "latestFrozenAttemptO4": {
+      "executionState": "COMPLETED",
+      "observationState": "INCONCLUSIVE",
+      "frozenIntegrity": "PASS",
+      "verifyRunExact": "FAIL",
+      "behaviorAuthority": "NONE"
+    },
+    "canonicalComparisonO4": {
+      "state": "NOT_ESTABLISHED",
+      "reason": "NO_EXACT_VERIFIED_RUN"
+    },
+    "canonicalComparisonO0": {
+      "state": "NOT_RUN"
+    }
+  },
+  "limitations": [
+    "This record freezes a completed experimental attempt; it is not a conforming VMware behavior result and carries no behavior authority.",
+    "The 12 stored case conclusions are INCONCLUSIVE and the offline raw/result exact closure failed, so no case may be promoted to MATCH or DIVERGED.",
+    "Four cases also reported an incomplete marker and byte-cursor host-log window after same-inode ESXi log rotation.",
+    "The attempt must not be added to representative VMware run IDs, core parity verified slices, or a Qman product-conformance claim.",
+    "No VMware private code, internal control flow, interrupt delivery, physical link fault, device recovery, or Qman release readiness is inferred."
+  ]
+}

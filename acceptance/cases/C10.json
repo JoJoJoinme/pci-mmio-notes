@@ -6,14 +6,78 @@
   "scope": "PRODUCT",
   "riskIds": ["R19"],
   "requiredTechStories": ["TS-F1-01", "TS-F1-05", "TS-F8-04"],
+  "requiredPortIds": [
+    "PORT-ASSIGNMENT-ORCHESTRATOR",
+    "PORT-CAPABILITY-ENGINE",
+    "PORT-CONTROL-API",
+    "PORT-GLOBAL-REPOSITORY",
+    "PORT-INVENTORY-SNAPSHOT",
+    "PORT-QUALIFICATION-CATALOG"
+  ],
+  "requiredOperationIds": [
+    "OP-CAPTURE-HOST-SNAPSHOT",
+    "OP-CAS-ACQUIRE-OPERATION-LEASE",
+    "OP-CAS-RESERVE-BUNDLES",
+    "OP-EVALUATE-CAPABILITY",
+    "OP-PLAN-STATIC",
+    "OP-QUERY-DIRECTPATH",
+    "OP-RESOLVE-QUALIFICATION-PROFILE"
+  ],
+  "requiredTransitionIds": [],
+  "requiredEntityIds": [
+    "ENTITY-ASSIGNMENT-RUN",
+    "ENTITY-AVAILABILITY-AUTHORITY",
+    "ENTITY-BUNDLE-LEASE",
+    "ENTITY-CAPABILITY-POLICY-AUTHORITY",
+    "ENTITY-DEPENDENCY-BUNDLE",
+    "ENTITY-DEVICE-RECORD",
+    "ENTITY-HOST-AUTHORITY",
+    "ENTITY-HOST-SNAPSHOT",
+    "ENTITY-OPERATION-ADMISSION-BINDING",
+    "ENTITY-OPERATION-LEASE",
+    "ENTITY-QUALIFICATION-PROFILE",
+    "ENTITY-QUALIFICATION-RECORD",
+    "ENTITY-SUPPORTED-CATALOG",
+    "ENTITY-TRUST-KEY-RING",
+    "ENTITY-VM-DIRECTPATH-REQUEST"
+  ],
+  "requiredReasonIds": [
+    "DEPENDENCY_BUSY",
+    "DEVICE_ERRATA_DENY",
+    "INVENTORY_EPOCH_CHANGED",
+    "PROFILE_NO_MATCH",
+    "QUALIFICATION_EVIDENCE_MISSING",
+    "STALE_HOST_EPOCH",
+    "STALE_RESOURCE_VERSION"
+  ],
+  "requiredArtifactSchemaRefs": [
+    "contracts/directpath-anchor-freshness-envelope.schema.json",
+    "contracts/directpath-authority-entities.schema.json",
+    "contracts/directpath-capability-policy.schema.json",
+    "contracts/directpath-committed-static-admission.schema.json",
+    "contracts/directpath-inventory-verification-receipt.schema.json",
+    "contracts/directpath-inventory-verifier-algorithm.schema.json",
+    "contracts/directpath-operation-admission-binding.schema.json",
+    "contracts/directpath-operation-envelope.schema.json",
+    "contracts/directpath-operation-payload.schema.json#/$defs/casExpectation",
+    "contracts/directpath-qualification-profile-projection.schema.json",
+    "contracts/directpath-qualification-record.schema.json",
+    "contracts/directpath-qualification-subject-manifest.schema.json",
+    "contracts/directpath-qualification-verification-receipt.schema.json",
+    "contracts/directpath-static-admission-command.schema.json",
+    "contracts/directpath-supported-catalog.schema.json",
+    "contracts/directpath-trust-key-ring.schema.json"
+  ],
   "dependsOnCaseIds": [],
-  "blocker": "The repository has deterministic capability hashes and a component snapshot authority, but no production qualification signer, trust-root rotation/revocation workflow, compatibility catalog, or product consumer that invalidates cached decisions across all entry points.",
+  "blocker": "The portable component chain now verifies signed qualification/current-catalog evidence and binds it to guarded reads, but no Qman product repository atomically rereads every current pointer, commits the unique admission binding plus lease, and enforces that binding at every query/schedule/attach consumer.",
   "targetMilestone": "G1",
   "proofBoundary": "COMPONENT_ONLY_PREMISE_NOT_PRODUCT_CLOSURE",
   "assertions": [
     "a capability records the exact publisher snapshot, qualification profile, policy version and verifier identity it consumed",
     "changing any referenced qualification content or signer version invalidates the old capability before scheduling or attach",
     "an unrelated profile change does not invalidate capabilities whose dependency set is disjoint",
-    "revoked, unknown or stale signer identities fail closed without a runtime override"
+    "revoked, unknown or stale signer identities fail closed without a runtime override",
+    "the product repository rereads current policy, trust, catalog, inventory and availability authorities and commits one admission binding plus ASSIGNMENT_PREPARE lease in the same serializable transaction or writes neither",
+    "a host executor accepts ASSIGNMENT_PREPARE only when the live lease admissionBindingHash matches the persisted unique binding"
   ]
 }

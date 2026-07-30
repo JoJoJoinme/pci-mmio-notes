@@ -1,7 +1,7 @@
 # VMware ESXi DirectPath Correctable AER 黑盒验证计划
 
 状态：`PARTIAL / EXECUTABLE`
-日期：2026-07-23
+日期：2026-07-26
 关联风险：`R13`
 关联 Case：`M06`、`M24`—`M29`
 
@@ -105,10 +105,22 @@ Qman 不是 VMware 黑盒实验的第五个测量层。Qman 的 admission、leas
 
 这三条是预注册假设，不是 VMware 实现事实。若有效黑盒结果与其不同，结果记为 `DIVERGED`，保留原始证据并更新 VMware behavior profile，不能修改实验输出迎合假设。
 
+公开依据按 subject 分层：
+
+- [Linux PCIe AER Driver Guide](https://docs.kernel.org/PCI/pcieaer-howto.html)描述通用
+  AER ownership、Root Status/Requester ID 与 Root Error Command interrupt 模型。
+- [QEMU 11.0.2 `pcie_aer.c`](https://gitlab.com/qemu-project/qemu/-/raw/v11.0.2/hw/pci/pcie_aer.c)
+  是本计划 QEMU oracle 的版本固定实现依据：endpoint status 先沉积，再经过 mask/CERE
+  route gate；Root Status/Source 先沉积，再检查 Root Command notification gate。
+
+两者都不是 VMware 私有实现证据。Linux 文档提供通用判别模型，QEMU 源码只定义 exact
+QEMU control；ESXi 结论仍必须来自有效黑盒运行。
+
 2026-07-23 已完成两层正控。QEMU 11 公开模型对全部 B0—B7 与 `000`—`111`
 执行 64/64 PASS；ESXi 8.0.3 的受控 `virtio-net-pci` PassthruIdle profile 对 B0
 执行八种 gate 并得到 8/8 PASS。后者只有 `g100/g101` 在 **outer QEMU 暂停期间**
-记录 Root reception 与匹配 Source。该 frozen snapshot 是 QEMU fabric transport 证据，
+使 outer-QEMU Root Port 沉积 reception 与匹配 Source。该 frozen snapshot 是 outer-QEMU
+fabric transport 证据，
 不是 ESXi service、IRQ 或私有实现证明。
 
 ### 3.4 Lifecycle transition
@@ -150,8 +162,12 @@ Firmware 不进入 2688 个主组合。`M27` 增加 EFI/Legacy BIOS 的补充 A/
 当前执行覆盖只命中 B2 route 主轴的一部分：QEMU 已覆盖 B0—B7 × 全部八种 gate；
 ESXi virtio 已覆盖 B0 × O2 × 全部八种 gate，并在 O4 对 `g100/g101` 各完成一次
 Correctable-only active 观察。O4 样本证明 capability/raw CES 可见、owner 稳定和无
-Uncorrectable side effect，但没有识别 ESXi service/IRQ，也不满足三次重复。O0、host
-policy、repeat/multiple/W1C sequence、lifecycle、guest write 和物理复核仍未完成。
+Uncorrectable side effect。canonical V17 又在 O4/`g101` 完成 root
+First/Multiple、独立 W1C、B0/B1 OR 与 re-arm 各 3 次，12/12 `MATCH`、`FULL_PLAN`；
+离线 exact/`--require-complete` 均通过。canonical V19 又在 O0/`g101` 完成相同 12 案，
+同为 12/12 `MATCH`、`FULL_PLAN`；O0/O4 的 12 对 `evaluation-input.snapshots` 逐字段
+exact。该结果仍未识别 ESXi service/IRQ；O0 目标 `Module Name=None`，没有证明 bound
+native driver。其他 gate、host policy、lifecycle、guest write 和物理复核仍未完成。
 
 收敛规则：
 
@@ -211,6 +227,15 @@ Qman conformance 使用同一输入 profile，但产品判定映射为 `PASS/FAI
 | M28 | guest 对 profile-specific AER capability/body/route 字段的读写边界被验证并进入过滤策略 | `IMPLEMENTATION_BLOCKED` | M24、M27 | R13 |
 | M29 | exact 物理 tuple 的真实 AER、reset/clear、health/quarantine 和安全复用通过 qualification | `HARDWARE_BLOCKED` | M24—M28、C09 | R13 |
 
+2026-07-26 已把 M26 所需的四个 sequence 做成 QEMU 11.0.2 可执行正控并完成
+4 sequence × 3 fresh-process repeat。2026-07-29 的 canonical V17 又在 ESXi
+O4/`g101` 完成相同四个 sequence × 3，12/12 `MATCH`、`FULL_PLAN`，并通过离线 exact 与
+`--require-complete`。2026-07-30 的 canonical V19 又在 O0/`g101` 完成同样的 12 案，
+且与 V17 的 12 对 `evaluation-input.snapshots` 逐字段 exact。这把 exact O0+O4/`g101`
+外部寄存器状态切片提升为 frozen observed profile，但 O0 目标 `Module Name=None`，没有
+证明 bound native driver；M26 的整体验收对象还包含其他 gate、service/IRQ、lifecycle 和
+产品 Case contract，故表中 `IMPLEMENTATION_BLOCKED` 不变，不能标记 M26 `PASS`。
+
 ### 6.1 M24：全部 Correctable status bit
 
 目的：在消息路由关闭的隔离条件下，确认 8 个 status bit 在 O0/O4 的 endpoint、host raw view 和 guest raw view 中如何沉积和清除。
@@ -246,7 +271,8 @@ Host policy 的 2×2 行与 gate 行分开执行；不能在改变 `P` 的同一
 当前已观察切片：`virtio-net-pci`、O2、B0、八种 gate 均能获得稳定 readback；仅
 `E=1,M=0` 的 `g100/g101` 在 frozen QEMU fabric 中形成 Root reception。八行 gate restore
 均成功，Uncorrectable surface 保持为零。该结果满足 M25 的一条 profile/owner/bit 判别切片，
-但没有 O0/O4、host policy、三次重复或正向 ESXi service 证据，不能关闭 M25。
+但没有 O0/O4 全 gate、host policy 或正向 ESXi service 证据；V17/V19 的 `g101`
+三次重复不能替代该矩阵，故不能关闭 M25。
 
 ### 6.3 M26：Root Status、Source、multiple 与 W1C
 
@@ -270,8 +296,64 @@ Host policy 的 2×2 行与 gate 行分开执行；不能在改变 `P` 的同一
 
 Oracle：sequence 的每一步必须可独立归因。一个早期步骤失败后，后续依赖步骤不得继续并汇总成 PASS；应终止该 sequence 并判为 `INCONCLUSIVE` 或 `DIVERGED`。
 
-当前 `g100/g101` 的单次 frozen Root Status/Source 只证明 first reception 的 transport
-判别力，不包含 repeat/multiple、独立 W1C、OR 累积或 re-arm，因此不能关闭 M26。
+先前 `g100/g101` 的单次 frozen Root Status/Source 只证明 first reception 的 transport
+判别力。2026-07-26 新增的 QEMU 11.0.2 正控已完成上述四个 sequence，每个 sequence
+使用三个 fresh QEMU 进程，12/12 `MATCH_TO_QEMU_PUBLIC_MODEL`：
+
+- 首次 B0 为 Endpoint CES=`0x1`、Root Status=`0x1`；未清除时重复 B0 后 Root Status=`0x3`；
+- 只清 Endpoint CES/CED 不改变 Root Status；重建后只清 Root Status 不改变 Endpoint CES/CED；
+- B0 后接 B1 得到 Endpoint CES=`0x41`、Root Status=`0x3`；
+- 分别清 CES、CED、Root Status 并读回后，再注入 B0 恢复 first-message 的 Root Status=`0x1`；
+- QEMU 的 Correctable Source 在 Root Status W1C 后仍为 `0x0100`，因此 oracle 只约束
+  Root Status 的独立性，不把 Source 清零写成通用假设。
+
+这里的 `MATCH_TO_QEMU_PUBLIC_MODEL` 是文档 claim label；raw artifact 的四态 verdict
+仍为 `MATCH`。它只把 comparator 明确为 exact QEMU public model，不改变 runner 输出枚举。
+
+该批结果是公开 QEMU 模型的正控，不包含 ESXi owner、service/IRQ、guest write 或
+lifecycle 观察，因而单独不能关闭 M26。
+
+canonical V17 `20260729-esxi8-aer-root-o4-v17-full1` 已在 ESXi O4/`g101` 对同四个
+sequence 各执行 3 次，12/12 `MATCH`、`FULL_PLAN`，并通过离线 exact 与
+`--require-complete`：
+
+- First/Multiple 依次得到 Root Status=`0x1`/`0x3`，Source=`0x0101`；
+- Endpoint-only clear 后 Root Status/Source 保留，Root-only clear 不清 Endpoint CES/CED；
+- B0→B1 得到 Endpoint CES=`0x41`、Root Status=`0x3`、Source=`0x0101`；
+- clear/re-arm 后重新得到 Endpoint CES=`0x1`、Root Status=`0x1`、Source=`0x0101`。
+
+冻结 [`campaign result`](evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json)
+SHA-256 为
+`847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f`；canonical
+[`result record`](evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json) 与
+[`summary`](evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json) 固定机器可读边界。
+
+canonical V19 `20260730-esxi8-aer-root-o0-v19-full1` 在 O0/`g101` 完成相同 12 案，
+12/12 `MATCH`、`FULL_PLAN`。canonical
+[`result record`](evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json)、
+[`summary`](evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json) 与
+[`campaign result`](evidence/esxi8-aer-root-o0-v19-full1-20260730-campaign-result.json)
+SHA-256 分别为
+`538aaf8c5d44b42c7ceb7c2b985b3c059ef91be28902b805dac4eec117eb310b`、
+`5a58f4deeecfe8429bab843ed712d71793a8e42f65a4071c6fc9e23d848bedff` 和
+`b2ab49a200822c4b283f6122521f2211742dab8536cd6fda6d1b980e1223c6d6`。
+V19 与 V17 的 12 对 `evaluation-input.snapshots` 逐字段 exact；按 sequence 聚合的 snapshot
+SHA-256 为：
+
+- `first-multiple`：`57f5d016add1da431dfe475818e80920cb35fbd766a85f8d422e1db75d26f772`
+- `independent-w1c`：`21ee0c21d3a8b6e8a7429fb44599df97b72da3f79d48f843f42fff3a2d229df2`
+- `bit-or`：`d121036d96f1c5fab9bdd0bc405058ae35b05065a0f3ca6b7ccc3a87b6e8ca90`
+- `rearm`：`80370cc89885af9c70d982e4cec376ded05d4b3ea28f3c60c753f599c48625c4`
+
+由此冻结
+[`O0+O4 observed profile`](contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json)
+（SHA-256 `cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e`）与
+[`promotion receipt`](evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json)
+（SHA-256 `fab09980f8f266e94640914df59833f640b66e063a1625333d9685031109812a`）。
+该 profile 只授权 exact build/device/QEMU/`g101` 的 O0+O4 外部寄存器状态；O0 目标
+`Module Name=None`，未证明 bound native driver，也不证明 owner-independent 私有机制、
+service/IRQ、其他 gate、guest write、lifecycle 或物理 qualification。不能关闭 M26、M06、
+R13 或 G1-G6，也不能由此还原 VMware 私有实现。
 
 ### 6.4 M27：owner phase 与 VM lifecycle
 
@@ -337,8 +419,9 @@ Oracle：没有安全的物理错误注入或等价设备自测能力时为 `BLO
 - 2026-07-23 的 PassthruIdle Correctable-only 矩阵中，8 个请求 bit 均从对应 bit clean 的
   baseline 独立沉积；PassthruActive 的 Receiver 与 Advisory Non-Fatal 代表位也投影到 guest
   raw body，且 owner 保持稳定。
-- 历史 e1000e EFI DirectPath guest 中，AER Extended Capability header 被隐藏，guest
-  `_OSC` 不获得 AER；raw capability body 可观察到物理 status 变化。
+- 历史 e1000e EFI DirectPath guest 中，AER Extended Capability header 读回为 0，guest
+  `_OSC` 不获得 AER；raw capability body 可观察到 outer-QEMU backing endpoint status
+  的相关变化。该相关性不识别 VMware 的 filter/synthesis 内部机制。
 - 在既有观察窗口和日志源内，未发现对应 guest/ESXi AER log；这只是负观测，不证明内部未处理。
 - QEMU VMware-profile 的 OVMF/SeaBIOS surface 结果可证明该自定义 QEMU profile 的 firmware 表面，不证明 VMware DirectPath SeaBIOS 行为。
 
@@ -374,7 +457,7 @@ Oracle：没有安全的物理错误注入或等价设备自测能力时为 `BLO
    e1000e 文件。M06 只能消费明确登记且带 profile 边界的 AER 证据，不能用
    firmware/MMIO/EDU 证据代替。
 
-### 7.3 2026-07-23 实际运行账本
+### 7.3 截至 2026-07-26 的实际运行账本
 
 规范化结果见
 [`evidence/esxi8-aer-correctable-20260723-result.json`](evidence/esxi8-aer-correctable-20260723-result.json)，
@@ -390,6 +473,10 @@ Oracle：没有安全的物理错误注入或等价设备自测能力时为 `BLO
 | QEMU positive control | 8 bit × 3 gate，24/24 | `a0583d56…19c7` | result hash | QEMU route oracle PASS；非 VMware 证据 |
 | QEMU EMR control | B0 × 8 gate，8/8 | `5e018ff1…99` | result hash | QEMU route oracle PASS；非 VMware 证据 |
 | QEMU EMR all bits | 8 bit × 8 gate，64/64 | `40880169…a4` | result hash | QEMU route oracle PASS；非 VMware 证据 |
+| QEMU root sequence | 4 sequence × 3 fresh process，12/12 `MATCH_TO_QEMU_PUBLIC_MODEL` | `59839df2…cb5b` | 12 case manifest / 276 hash | first/multiple、独立 W1C、OR、re-arm 正控；非 VMware 证据 |
+| `20260729-esxi8-aer-root-o4-v17-full1` | O4/`g101`，4 sequence × 3，12/12 `MATCH` | `847a2500…40b7f` | `FULL_PLAN`；offline exact/`--require-complete` 通过 | 只闭合 exact O4/`g101` 外部寄存器状态；非 service/IRQ 或产品关闭证据 |
+| `20260730-esxi8-aer-root-o0-v19-full1` | O0/`g101`，4 sequence × 3，12/12 `MATCH` | `538aaf8c…310b` | `FULL_PLAN`；summary `5a58f4de…dff`；campaign `b2ab49a2…c6d6` | 与 V17 的 12 对 snapshot exact；`Module Name=None`，不证明 bound native driver |
+| O0+O4 observed profile promotion | exact build/device/QEMU/`g101` | `cafa0835…1a6e` | receipt `fab09980…12a` | 只授权外部寄存器状态；closure authority `NONE` |
 | `20260723T002305Z-76d79e36` | PassthruIdle 8 bit | `4681aaa5…33a8` | `SHA256SUMS=be517173…bcc6` | `NOT_TESTABLE_ENDPOINT_CERE_DISABLED` |
 | `20260723T003751Z-16496a4c` | Active Receiver | `42368f80…ea8` | `SHA256SUMS=af691a6a…3d97` | `NOT_TESTABLE_ENDPOINT_CERE_DISABLED` |
 | `20260723T001720Z-e19407a0` | Active Advisory Non-Fatal | `705b8118…e6a2` | `SHA256SUMS=e868e968…dd1` | `NOT_TESTABLE_ENDPOINT_CERE_DISABLED` |
@@ -403,6 +490,21 @@ Oracle：没有安全的物理错误注入或等价设备自测能力时为 `BLO
 `5e018ff1617c2d3bd85d935b7548d4e0248d6c8b3dffa46fc8d122ef011aab99`、
 `40880169d5a4deaf01019af7d0e4618886464256cd5513f1e6d06be14cff52a4` 和
 `655337743c4189fa0d08482159109ce3ee85bb7267c52b4714998b0ad0051bf1`。
+QEMU root sequence 的完整 digest 为
+`59839df23f9711162f4d8548b7e258e355957bda23348f6acd727eb219decb5b`。
+ESXi V17 O4/`g101` root sequence 的完整 digest 为
+`847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f`，冻结
+[`campaign result`](evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json)；
+canonical [`result record`](evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json) 与
+[`summary`](evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json) 只授权该 exact
+外部寄存器状态切片。
+ESXi V19 O0/`g101` canonical result、summary 与 campaign result 的完整 digest 分别为
+`538aaf8c5d44b42c7ceb7c2b985b3c059ef91be28902b805dac4eec117eb310b`、
+`5a58f4deeecfe8429bab843ed712d71793a8e42f65a4071c6fc9e23d848bedff`、
+`b2ab49a200822c4b283f6122521f2211742dab8536cd6fda6d1b980e1223c6d6`。
+observed profile 与 promotion receipt digest 分别为
+`cafa083512697f5361d6e8385d2685b676ac896672439c36bd6e21574f531a6e` 和
+`fab09980f8f266e94640914df59833f640b66e063a1625333d9685031109812a`。
 Active 完整 digest 见表所指的并列 virtio canonical summary；表中缩写只用于阅读，不能作为
 验证输入。
 
@@ -551,20 +653,82 @@ snapshot 只判定 frozen fabric transport，恢复后的 timeline/日志另行�
 已覆盖历史 e1000e PassthruIdle 8-bit deposition、PassthruActive 代表 bit，以及 virtio
 PassthruIdle Receiver 的完整 2×2×2 gate tuple和 Active `g100/g101` 单次观察。Active
 guest 的 capability 可发现与 raw CES 可见并未伴随 Linux AER totals 增量或 kernel event。
-host boot-policy 2×2、Native 全量、T5 lifecycle、guest write、三次重复和物理 E4 仍未完成，
+V17/V19 已满足 exact O4/O0 `g101` root sequence 的三次重复和跨 owner snapshot exact，
+但 O0 目标 `Module Name=None`，未证明 bound native driver；host boot-policy 2×2、Native
+全量、其他 gate、T5 lifecycle、guest write、其余 tuple 的重复下限和物理 E4 仍未完成，
 因此不能宣告 M25—M29 完成。
 
-### 10.3 待补 runner：root repeat/W1C sequence
+### 10.3 QEMU 正控与 ESXi O0+O4/`g101` observed profile 已完成；其余切片待执行
 
-```powershell
-# PLACEHOLDER: vmware-esxi8-lab/Invoke-EsxiAerRootSequence.ps1
-& .\vmware-esxi8-lab\Invoke-EsxiAerRootSequence.ps1 `
-  -Case M26 `
-  -Sequences FirstMultiple,IndependentW1c,BitOr,Rearm `
-  -Owners Native,GuestActive `
-  -Repeat 3 `
-  -RunId <RUN_ID>
+```bash
+python3 vmware-esxi8-lab/test_qemu_aer_root_sequence.py \
+  --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 \
+  --output <EMPTY_OUTPUT_DIRECTORY> \
+  --gate g101 \
+  --repeat 3
 ```
+
+runner 对 `FirstMultiple`、`IndependentW1c`、`BitOr` 和 `Rearm` 各启动三个 fresh QEMU，
+保存 `case.json`、`run-manifest.json`、T0—T5、HMP ACK、`oracle.json`、逐案
+`artifact-manifest.sha256` 和聚合 `result.json`。2026-07-26 的 12/12
+`MATCH_TO_QEMU_PUBLIC_MODEL` 运行位于
+`../_artifacts/vmware-directpath-runs/20260726-qemu11-aer-root-sequence-v1`，聚合
+SHA-256 为 `59839df23f9711162f4d8548b7e258e355957bda23348f6acd727eb219decb5b`；
+冻结摘要见
+[`evidence/qman-qemu-aer-root-sequence-20260726-summary.json`](evidence/qman-qemu-aer-root-sequence-20260726-summary.json)。
+
+ESXi root-sequence runner 已实现封闭的 Correctable-only 命令面。离线门与无副作用计划入口为：
+
+```bash
+python3 vmware-esxi8-lab/test_esxi_aer_root_sequence.py selftest
+python3 vmware-esxi8-lab/test_esxi_aer_root_sequence_unit.py
+
+python3 vmware-esxi8-lab/test_esxi_aer_root_sequence.py plan \
+  --owner-phase O0 \
+  --gate g101 \
+  --repeat 3 \
+  --output <EMPTY_O0_PLAN_DIRECTORY>
+
+python3 vmware-esxi8-lab/test_esxi_aer_root_sequence.py plan \
+  --owner-phase O4 \
+  --gate g101 \
+  --repeat 3 \
+  --output <EMPTY_O4_PLAN_DIRECTORY>
+```
+
+历史离线 selftest/unit suite 为 78/78，连续三次共 234/234，且三次运行前后源码哈希稳定；
+它只证明 profile、closed command surface、raw-first recorder、fail-stop 和离线 evaluator
+的 harness readiness。live `run` 必须绑定 exact ESXi
+build/system UUID、endpoint/root BDF、QEMU/QTest socket、base VMX、ISO/attestation 和
+oracle profile，并同时显式提供 `--authorized-lab-target` 与 `--execute-correctable`；缺任一
+绑定都必须 fail closed。
+
+当前本地 AER guest fixture ISO SHA-256 为
+`3DE27D166EE6881BFB60D8DA233A0B3E6871532108D01D5741C8A43BA91777DE`，
+build attestation SHA-256 为
+`103941485D8B1679D6DA18312025F5155F4A027F86EFA99E5BAD2FAA66FD67C1`。
+离线冻结账本
+[`20260726-esxi-aer-root-runner-offline-v3/result.json`](../_artifacts/vmware-directpath-runs/20260726-esxi-aer-root-runner-offline-v3/result.json)
+的 SHA-256 为
+`bae6e1e0d552a2d2859250a3ac61448c010df37f27903c774e79713f8f90cf23`。
+ISO/attestation 与该账本分别只绑定 build 输入和离线 harness/source 回归，不构成 ESXi
+行为证据。canonical V17
+`20260729-esxi8-aer-root-o4-v17-full1` 则独立提供 O4/`g101` live observation：四个
+sequence × 3 为 12/12 `MATCH`、`FULL_PLAN`，离线 exact/`--require-complete` 通过；
+[`campaign result`](evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json)
+SHA-256 为
+`847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f`，并由 canonical
+[`result record`](evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json) 与
+[`summary`](evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json) 登记。canonical V19
+`20260730-esxi8-aer-root-o0-v19-full1` 同样为 O0/`g101` 12/12 `MATCH`、`FULL_PLAN`；
+[`result record`](evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json) SHA-256 为
+`538aaf8c5d44b42c7ceb7c2b985b3c059ef91be28902b805dac4eec117eb310b`，并由
+[`summary`](evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json) 固定。两者的
+12 对 snapshot 逐字段 exact，并进入
+[`observed profile`](contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json)
+与 [`promotion receipt`](evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json)。
+该结论只适用 exact O0+O4/`g101` 外部寄存器状态；O0 `Module Name=None`，bound native
+driver、其他 gate、service/IRQ、guest write、lifecycle 和物理 qualification 仍为 open gap。
 
 ### 10.4 新 runner 占位：owner/lifecycle 与 guest write
 
@@ -613,6 +777,22 @@ artifact-manifest.sha256
 ```
 
 `oracle.json` 必须保存预注册假设、实际 observation、四态结果、limitations、重复 run 关联和判定器版本。任何 summary 都必须由 raw artifact manifest 可追溯重建。
+
+M26 root-sequence 进一步要求：
+
+1. raw endpoint/root/ESXi/guest snapshot 在解析和判定前落盘；解析失败仍保留可重算的
+   partial numeric safety observation。
+2. sampler、parser、monitored worker、apply/restore 或 cleanup 的任何异常都生成 typed
+   partial/safety result，触发幂等 safe-stop，并停止后续注入；不完整尾窗不得被包装成 clean PASS。
+3. T0/T1/T4/T5 的 artifact path、采样时间、最大间隔、numeric safety surface、cleanup boundary
+   和 stop-tail 都由 manifest-bound 原始产物重算。host raw logs 与 guest serial 必须重新解析，
+   不信任 summary 自报字段。
+4. campaign/case manifest、artifact closure、oracle/result 和 aggregate sidecar 必须通过
+   `verify-run` exact-match。只有该目录级验证成功，聚合 summary 才有权威性。
+5. 离线 78/78、fixture ISO hash 和 build attestation 分别属于 harness/build readiness，
+   不能自行提升 VMware `observationStatus`。V17/V19 的 authority 只覆盖 exact
+   O0+O4/`g101` 外部寄存器状态；它不能替代 bound native driver、其他 gate 或未执行 profile
+   的 live artifacts。
 
 ## 11. 完成条件
 

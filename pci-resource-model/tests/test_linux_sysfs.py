@@ -1,14 +1,19 @@
+import hashlib
+import json
+import random
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+from pci_resource_model.capability import TRUSTED_PHYSICAL_DOMAIN_SOURCES
 from pci_resource_model.linux_sysfs import (
     _dma_isolation,
     parse_acs_state,
     parse_resource_lines,
 )
 from pci_resource_model.linux_sysfs import (
+    SOFTWARE_TOPOLOGY_ESTIMATE_SOURCE,
     add_conservative_assignment_groups,
     parse_pcie_type,
     reconstruct_physical_isolation_domains,
@@ -30,7 +35,12 @@ def inventory_device(
     effective=True,
     override_source="none",
     group=None,
+    aliases=None,
+    pcie_type="default",
 ):
+    resolved_pcie_type = (
+        4 if role == FunctionRole.FABRIC else 0
+    ) if pcie_type == "default" else pcie_type
     return DeviceInventory(
         bdf=bdf,
         vendor_id=0x1AF4,
@@ -39,12 +49,26 @@ def inventory_device(
         header_type=1 if role == FunctionRole.FABRIC else 0,
         function_role=role,
         iommu_group=tuple(group or (bdf,)),
+        multifunction_aliases=tuple(aliases or ()),
         parent=parent,
         acs_native_isolation=native,
         acs_effective_isolation=effective,
         acs_override_source=override_source,
-        metadata={"pcieType": 4 if role == FunctionRole.FABRIC else 0},
+        metadata={"pcieType": resolved_pcie_type},
     )
+
+
+def device_projection_hash(devices, members):
+    projection = {
+        bdf: devices[bdf].to_dict()
+        for bdf in sorted(members)
+    }
+    encoded = json.dumps(
+        projection,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 class LinuxSysfsParserTests(unittest.TestCase):
@@ -176,7 +200,11 @@ class LinuxSysfsParserTests(unittest.TestCase):
         self.assertEqual(result[left].physical_isolation_domain, expected)
         self.assertEqual(
             result[left].physical_isolation_domain_source,
-            "kernel-acs-provenance-topology-conservative",
+            SOFTWARE_TOPOLOGY_ESTIMATE_SOURCE,
+        )
+        self.assertNotIn(
+            result[left].physical_isolation_domain_source,
+            TRUSTED_PHYSICAL_DOMAIN_SOURCES,
         )
         self.assertEqual(
             result[left].isolation_provenance,
@@ -193,7 +221,7 @@ class LinuxSysfsParserTests(unittest.TestCase):
             grouped[root_port].owner_activation_group,
         )
 
-    def test_missing_kernel_provenance_invalidates_every_shadow_domain(self):
+    def test_missing_kernel_provenance_invalidates_affected_topology_component(self):
         root_port = "0000:00:01.0"
         endpoint = "0000:01:00.0"
         devices = {
@@ -215,7 +243,7 @@ class LinuxSysfsParserTests(unittest.TestCase):
         self.assertEqual(result[endpoint].physical_isolation_domain, ())
         self.assertEqual(result[root_port].physical_isolation_domain, ())
 
-    def test_inconsistent_kernel_provenance_invalidates_every_shadow_domain(self):
+    def test_inconsistent_kernel_provenance_invalidates_affected_topology_component(self):
         root_port = "0000:00:01.0"
         endpoint = "0000:01:00.0"
         devices = {
@@ -235,6 +263,387 @@ class LinuxSysfsParserTests(unittest.TestCase):
 
         self.assertEqual(result[endpoint].physical_isolation_domain, ())
         self.assertEqual(result[root_port].physical_isolation_domain, ())
+
+    def test_missing_provenance_does_not_taint_disjoint_complete_component(self):
+        bad_root = "0000:00:01.0"
+        bad_endpoint = "0000:01:00.0"
+        good_root = "0000:00:02.0"
+        good_endpoint = "0000:02:00.0"
+        good_devices = {
+            good_root: inventory_device(
+                good_root,
+                role=FunctionRole.FABRIC,
+                native=False,
+                effective=True,
+                override_source="downstream",
+            ),
+            good_endpoint: inventory_device(good_endpoint, parent=good_root),
+        }
+        combined_devices = {
+            bad_root: inventory_device(
+                bad_root,
+                role=FunctionRole.FABRIC,
+                native=False,
+                effective=True,
+                override_source="downstream",
+            ),
+            bad_endpoint: inventory_device(
+                bad_endpoint,
+                parent=bad_root,
+                native=None,
+            ),
+            **good_devices,
+        }
+
+        baseline = reconstruct_physical_isolation_domains(
+            good_devices,
+            acs_override_active=True,
+        )
+        combined = reconstruct_physical_isolation_domains(
+            combined_devices,
+            acs_override_active=True,
+        )
+
+        self.assertEqual(combined[bad_root].physical_isolation_domain, ())
+        self.assertEqual(combined[bad_endpoint].physical_isolation_domain, ())
+        expected_bad_component = [bad_root, bad_endpoint]
+        expected_reason = (
+            f"{bad_endpoint}:acs-native-isolation:missing"
+        )
+        for bdf in expected_bad_component:
+            self.assertEqual(
+                combined[bdf].metadata["physicalIsolationUnknownComponent"],
+                expected_bad_component,
+            )
+            self.assertIn(
+                expected_reason,
+                combined[bdf].metadata["physicalIsolationUnknownReasons"],
+            )
+        expected_good_domain = (good_root, good_endpoint)
+        self.assertEqual(
+            combined[good_root].physical_isolation_domain,
+            expected_good_domain,
+        )
+        self.assertEqual(
+            combined[good_endpoint].physical_isolation_domain,
+            expected_good_domain,
+        )
+        for bdf in expected_good_domain:
+            self.assertEqual(combined[bdf].to_dict(), baseline[bdf].to_dict())
+        self.assertEqual(
+            device_projection_hash(combined, expected_good_domain),
+            device_projection_hash(baseline, expected_good_domain),
+        )
+
+        expected_full_hash = device_projection_hash(combined, combined)
+        items = list(combined_devices.items())
+        randomizer = random.Random(0xC16)
+        for iteration in range(16):
+            randomizer.shuffle(items)
+            reordered = reconstruct_physical_isolation_domains(
+                dict(items),
+                acs_override_active=True,
+            )
+            with self.subTest(insertion_order=iteration):
+                for bdf in combined:
+                    self.assertEqual(
+                        reordered[bdf].to_dict(),
+                        combined[bdf].to_dict(),
+                    )
+                self.assertEqual(
+                    device_projection_hash(reordered, expected_good_domain),
+                    device_projection_hash(combined, expected_good_domain),
+                )
+                self.assertEqual(
+                    device_projection_hash(reordered, reordered),
+                    expected_full_hash,
+                )
+
+    def test_incomplete_topology_relationships_fail_closed_per_component(self):
+        dangling = "0000:03:00.0"
+        missing_parent = "0000:00:03.0"
+        cycle_left = "0000:04:00.0"
+        cycle_right = "0000:04:00.1"
+        missing_group_member = "0000:05:00.1"
+        group_endpoint = "0000:05:00.0"
+        missing_alias_member = "0000:06:00.1"
+        alias_endpoint = "0000:06:00.0"
+        asymmetric_group_left = "0000:09:00.0"
+        asymmetric_group_right = "0000:09:00.1"
+        asymmetric_alias_left = "0000:0a:00.0"
+        asymmetric_alias_right = "0000:0a:00.1"
+        overlap_group_left = "0000:0b:00.0"
+        overlap_group_middle = "0000:0b:00.1"
+        overlap_group_right = "0000:0b:00.2"
+        missing_self_alias_left = "0000:0c:00.0"
+        missing_self_alias_right = "0000:0c:00.1"
+        cases = {
+            "dangling-parent": (
+                {
+                    dangling: inventory_device(
+                        dangling,
+                        parent=missing_parent,
+                    )
+                },
+                (dangling,),
+                f"{dangling}:parent:missing:{missing_parent}",
+            ),
+            "parent-cycle": (
+                {
+                    cycle_left: inventory_device(
+                        cycle_left,
+                        parent=cycle_right,
+                    ),
+                    cycle_right: inventory_device(
+                        cycle_right,
+                        parent=cycle_left,
+                    ),
+                },
+                (cycle_left, cycle_right),
+                f"parent-cycle:{cycle_left},{cycle_right}",
+            ),
+            "missing-group-member": (
+                {
+                    group_endpoint: inventory_device(
+                        group_endpoint,
+                        group=(group_endpoint, missing_group_member),
+                    )
+                },
+                (group_endpoint,),
+                (
+                    f"{group_endpoint}:iommu-group:missing:"
+                    f"{missing_group_member}"
+                ),
+            ),
+            "missing-alias-member": (
+                {
+                    alias_endpoint: inventory_device(
+                        alias_endpoint,
+                        aliases=(alias_endpoint, missing_alias_member),
+                    )
+                },
+                (alias_endpoint,),
+                (
+                    f"{alias_endpoint}:multifunction-alias:missing:"
+                    f"{missing_alias_member}"
+                ),
+            ),
+            "asymmetric-group": (
+                {
+                    asymmetric_group_left: inventory_device(
+                        asymmetric_group_left,
+                        group=(
+                            asymmetric_group_left,
+                            asymmetric_group_right,
+                        ),
+                    ),
+                    asymmetric_group_right: inventory_device(
+                        asymmetric_group_right,
+                    ),
+                },
+                (asymmetric_group_left, asymmetric_group_right),
+                (
+                    f"{asymmetric_group_left}:iommu-group:asymmetric:"
+                    f"{asymmetric_group_right}"
+                ),
+            ),
+            "asymmetric-alias": (
+                {
+                    asymmetric_alias_left: inventory_device(
+                        asymmetric_alias_left,
+                        aliases=(
+                            asymmetric_alias_left,
+                            asymmetric_alias_right,
+                        ),
+                    ),
+                    asymmetric_alias_right: inventory_device(
+                        asymmetric_alias_right,
+                    ),
+                },
+                (asymmetric_alias_left, asymmetric_alias_right),
+                (
+                    f"{asymmetric_alias_left}:multifunction-alias:"
+                    f"asymmetric:{asymmetric_alias_right}"
+                ),
+            ),
+            "reciprocal-overlapping-groups": (
+                {
+                    overlap_group_left: inventory_device(
+                        overlap_group_left,
+                        group=(
+                            overlap_group_left,
+                            overlap_group_middle,
+                            overlap_group_right,
+                        ),
+                    ),
+                    overlap_group_middle: inventory_device(
+                        overlap_group_middle,
+                        group=(
+                            overlap_group_left,
+                            overlap_group_middle,
+                        ),
+                    ),
+                    overlap_group_right: inventory_device(
+                        overlap_group_right,
+                        group=(
+                            overlap_group_left,
+                            overlap_group_right,
+                        ),
+                    ),
+                },
+                (
+                    overlap_group_left,
+                    overlap_group_middle,
+                    overlap_group_right,
+                ),
+                (
+                    f"{overlap_group_left}:iommu-group:set-mismatch:"
+                    f"{overlap_group_middle}"
+                ),
+            ),
+            "alias-set-missing-self": (
+                {
+                    missing_self_alias_left: inventory_device(
+                        missing_self_alias_left,
+                        aliases=(missing_self_alias_right,),
+                    ),
+                    missing_self_alias_right: inventory_device(
+                        missing_self_alias_right,
+                        aliases=(missing_self_alias_left,),
+                    ),
+                },
+                (missing_self_alias_left, missing_self_alias_right),
+                (
+                    f"{missing_self_alias_left}:multifunction-alias:"
+                    f"self-missing"
+                ),
+            ),
+        }
+
+        for name, (devices, affected, expected_reason) in cases.items():
+            with self.subTest(name=name):
+                result = reconstruct_physical_isolation_domains(
+                    devices,
+                    acs_override_active=True,
+                )
+                for bdf in affected:
+                    self.assertEqual(result[bdf].physical_isolation_domain, ())
+                    self.assertEqual(
+                        result[bdf].metadata[
+                            "physicalIsolationUnknownComponent"
+                        ],
+                        list(affected),
+                    )
+                    self.assertIn(
+                        expected_reason,
+                        result[bdf].metadata[
+                            "physicalIsolationUnknownReasons"
+                        ],
+                    )
+
+    def test_incomplete_shared_legacy_anchor_taints_the_whole_bus_component(self):
+        left = "0000:00:10.0"
+        right = "0000:00:11.0"
+
+        def legacy_device(bdf, **changes):
+            return inventory_device(
+                bdf,
+                native=False,
+                effective=True,
+                override_source="downstream",
+                pcie_type=None,
+                **changes,
+            )
+
+        complete_devices = {
+            left: legacy_device(left),
+            right: legacy_device(right),
+        }
+        complete = reconstruct_physical_isolation_domains(
+            complete_devices,
+            acs_override_active=True,
+        )
+        expected_domain = (left, right)
+        for bdf in expected_domain:
+            self.assertEqual(
+                complete[bdf].physical_isolation_domain,
+                expected_domain,
+            )
+
+        incomplete_variants = {
+            "missing-native": inventory_device(
+                right,
+                native=None,
+                effective=True,
+                override_source="downstream",
+                pcie_type=None,
+            ),
+            "invalid-source": inventory_device(
+                right,
+                native=False,
+                effective=True,
+                override_source="unknown",
+                pcie_type=None,
+            ),
+        }
+        for name, incomplete_right in incomplete_variants.items():
+            with self.subTest(name=name):
+                devices = {
+                    left: legacy_device(left),
+                    right: incomplete_right,
+                }
+                result = reconstruct_physical_isolation_domains(
+                    devices,
+                    acs_override_active=True,
+                )
+                reverse = reconstruct_physical_isolation_domains(
+                    dict(reversed(tuple(devices.items()))),
+                    acs_override_active=True,
+                )
+                for bdf in expected_domain:
+                    self.assertEqual(result[bdf].physical_isolation_domain, ())
+                    self.assertEqual(
+                        result[bdf].metadata[
+                            "physicalIsolationUnknownComponent"
+                        ],
+                        list(expected_domain),
+                    )
+                    self.assertEqual(
+                        reverse[bdf].to_dict(),
+                        result[bdf].to_dict(),
+                    )
+                self.assertEqual(
+                    device_projection_hash(result, result),
+                    device_projection_hash(reverse, reverse),
+                )
+
+    def test_shared_kernel_group_propagates_unknown_across_topology_roots(self):
+        bad_endpoint = "0000:07:00.0"
+        peer_endpoint = "0000:08:00.0"
+        shared_group = (bad_endpoint, peer_endpoint)
+        devices = {
+            bad_endpoint: inventory_device(
+                bad_endpoint,
+                native=None,
+                group=shared_group,
+            ),
+            peer_endpoint: inventory_device(
+                peer_endpoint,
+                group=shared_group,
+            ),
+        }
+
+        result = reconstruct_physical_isolation_domains(
+            devices,
+            acs_override_active=True,
+        )
+
+        for bdf in shared_group:
+            self.assertEqual(result[bdf].physical_isolation_domain, ())
+            self.assertEqual(
+                result[bdf].metadata["physicalIsolationUnknownComponent"],
+                list(shared_group),
+            )
 
     def test_global_override_does_not_taint_an_independent_native_path(self):
         endpoint = "0000:01:00.0"

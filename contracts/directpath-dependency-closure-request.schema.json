@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-dependency-closure-request.schema.json",
+  "title": "Qman DirectPath dependency closure request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "requestProvenanceDigest",
+    "policyProvenanceDigest",
+    "payloadDeviceUids",
+    "limits"
+  ],
+  "properties": {
+    "subjectType": {"const": "DEPENDENCY_CLOSURE_REQUEST"},
+    "schemaVersion": {"const": 1},
+    "requestProvenanceDigest": {"$ref": "#/$defs/digest"},
+    "policyProvenanceDigest": {"$ref": "#/$defs/digest"},
+    "payloadDeviceUids": {"$ref": "#/$defs/nonEmptyIdSet"},
+    "limits": {"$ref": "#/$defs/limits"}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "nonEmptyIdSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/id"},
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxDevices", "maxEdges"],
+      "properties": {
+        "maxDevices": {
+          "allOf": [
+            {"$ref": "#/$defs/safePositiveInteger"},
+            {"maximum": 4096}
+          ]
+        },
+        "maxEdges": {
+          "allOf": [
+            {"$ref": "#/$defs/safePositiveInteger"},
+            {"maximum": 65536}
+          ]
+        }
+      }
+    }
+  },
+  "x-qmanBindingRule": "requestProvenanceDigest identifies the exact verified operation request; policyProvenanceDigest identifies the exact policy that approves these limits. A product adapter derives this object from those documents. Copying their digests into a caller-constructed object is not request or policy verification.",
+  "x-qmanHashRule": "ClosureRequest.requestDigest = SHA-256(CANONICAL-JSON-V1 of this complete object). DependencyClosureResult and capability authorization bind that digest, and read_guard deterministically replays the resolver with these exact roots and limits."
+}

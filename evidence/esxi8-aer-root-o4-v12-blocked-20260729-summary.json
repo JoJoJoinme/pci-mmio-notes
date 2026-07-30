@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "id": "ESXI8-AER-ROOT-O4-V12-BLOCKED-20260729",
+  "subject": "VMWARE_ESXI_BLACKBOX_ATTEMPT_HISTORY",
+  "basisKind": "AUTHORIZED_BLACK_BOX_OBSERVATION",
+  "observedAt": "2026-07-28T19:21:08.118165Z",
+  "observationStatus": "BLOCKED",
+  "executionState": "FAIL_CLOSED_BEFORE_THIRD_CASE_INJECTION",
+  "claimBoundary": "FROZEN_ATTEMPT_HISTORY_ONLY",
+  "usedForBehaviorInference": false,
+  "closureAuthority": "NONE",
+  "scope": "PCIe Correctable AER external behavior only; no VMware private implementation inference",
+  "run": {
+    "runId": "20260729-esxi8-aer-root-o4-v12",
+    "ownerPhase": "O4",
+    "gate": "g101",
+    "plannedCaseCount": 12,
+    "completedCaseCount": 3,
+    "incompleteCaseCount": 9,
+    "enteredInjectionCount": 2,
+    "matchCount": 2,
+    "blockedCount": 1,
+    "cleanupCompleteCount": 3,
+    "safetyStopCount": 0,
+    "blockedStop": true,
+    "aggregateObservationState": "BLOCKED",
+    "finalQemuState": "running"
+  },
+  "failClosedTrigger": {
+    "caseId": "o4__first-multiple__g101__r03",
+    "type": "BlockedEnvironment",
+    "message": "active DirectPath guest did not open the AER injection window",
+    "enteredInjection": false,
+    "guestSerialFinalBytes": 0,
+    "maximumSafetyPollIntervalSeconds": 0.05,
+    "maximumObservedPollGapSeconds": 0.045598607015563175,
+    "preInjectionSafetySampleCount": 14924,
+    "remainingCasesSuppressed": 9
+  },
+  "publicStartupObservations": {
+    "powerOnCommandReturnCode": 0,
+    "passthroughDeviceRegistered": true,
+    "iommuMappingsCreated": true,
+    "cdromConnected": true,
+    "efiCdromBootObservedAt": "2026-07-28T19:15:24.821Z",
+    "firmwareRuntimeTransitionObservedAt": "2026-07-28T19:15:56.450Z",
+    "guestSerialEvidenceObserved": false,
+    "interpretation": "The public VM log shows a successful VM power-on path through EFI CD-ROM boot and firmware runtime transition, but the bounded guest serial marker never appeared. This is an injection-precondition failure, not an AER behavior observation."
+  },
+  "frozenIntegrity": {
+    "state": "PASS",
+    "rootManifestEntryCount": 159,
+    "rootManifestMismatchCount": 0,
+    "caseManifestEntryCounts": {
+      "o4__first-multiple__g101__r01": 65,
+      "o4__first-multiple__g101__r02": 65,
+      "o4__first-multiple__g101__r03": 20
+    },
+    "caseManifestMismatchCount": 0,
+    "artifactsRelativeToSummary": [
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/result.json",
+        "sha256": "1308b80b72aa9a8b6ac878a5041c869685e7fc2db090651489815f3cdac0acea",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/result.json.sha256",
+        "sha256": "398e7b20ef52b0978c3fce36a12e3d885893006031248a47b786c8db00b2f326",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/artifact-manifest.sha256",
+        "sha256": "ee1b2c5ab3dd41e085d84e319a58049a54046969f1a6b26de59ccbe68349605b",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/cases/o4__first-multiple__g101__r01/result.json",
+        "sha256": "54bd7eb2712f3dd696e35525f700123c5d611f71d49e98b7dcdd390dd3599fea",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/cases/o4__first-multiple__g101__r01/artifact-manifest.sha256",
+        "sha256": "601de25149f7a60076f6546eb841b240063350f94e37b5bcfad95636dc36c1be",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/cases/o4__first-multiple__g101__r02/result.json",
+        "sha256": "3c38902d7d600e27c81f196708882b90fb98b65c9953c185afb6fe6e6d058439",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/cases/o4__first-multiple__g101__r02/artifact-manifest.sha256",
+        "sha256": "0325c8f82e4753413c0fca634d965820cd932cc4d4b8a9a2fdaca2274ff93247",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/cases/o4__first-multiple__g101__r03/result.json",
+        "sha256": "115aaa285f6d87d862a55dd24c37e9107126811cfdb4d6024122d94fc735256b",
+        "retention": "LOCAL_RAW"
+      },
+      {
+        "path": "../../_artifacts/vmware-directpath-runs/20260729-esxi8-aer-root-o4-v12/cases/o4__first-multiple__g101__r03/artifact-manifest.sha256",
+        "sha256": "b74373f9d26390b49a7dadfae0ad2322ba95f5892355b8b2d96989bd25117280",
+        "retention": "LOCAL_RAW"
+      }
+    ]
+  },
+  "exactClosure": {
+    "verifyRunExact": "FAIL",
+    "requireCompleteSatisfied": false,
+    "manifestExact": true,
+    "exactCasesBeforeBlockedCase": 2,
+    "blockedCase": {
+      "storedObservationState": "BLOCKED",
+      "recomputedObservationState": "BLOCKED",
+      "oracleExactMatch": true,
+      "resultExactMatch": true,
+      "identityExactMatch": true,
+      "rawSourceExactMatch": false,
+      "failedRawConsistencyChecks": [
+        "host-log-raw-summary",
+        "o4-guest-raw-summary"
+      ]
+    },
+    "rootCause": "The frozen verifier requires post-entry raw host-log and O4 guest summary consistency even when a case fails before injection and those stages are strictly absent. The verifier therefore rejects this attempt rather than granting exact closure. This is a fail-closed verifier modeling gap; it must not be repaired retroactively with a later verifier."
+  },
+  "interpretation": {
+    "canonicalComparisonO4": {
+      "state": "NOT_ESTABLISHED",
+      "reason": "FULL_PROFILE_NOT_COMPLETE_AND_EXACT_CLOSURE_FAILED"
+    },
+    "canonicalComparisonO0": {
+      "state": "NOT_RUN"
+    },
+    "behaviorAuthority": "NONE"
+  },
+  "limitations": [
+    "This record freezes a fail-closed experimental attempt; it is not a conforming VMware behavior result and carries no behavior authority.",
+    "Two MATCH cases cover only the first two repeats of one sequence; the third repeat was BLOCKED before injection and nine planned cases were suppressed.",
+    "The public startup log and empty guest serial artifact do not establish why the guest failed to publish its marker and do not support an inference about VMware private code or internal control flow.",
+    "The attempt must not be added to representative VMware run IDs, verified behavior slices, or a Qman product-conformance claim.",
+    "The frozen attempt must not be re-signed or reclassified with the later corrected verifier.",
+    "No interrupt delivery, service attribution, physical link fault, physical-device recovery, health handling, or Qman release readiness is inferred."
+  ]
+}

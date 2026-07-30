@@ -303,6 +303,7 @@
   "x-qmanSerialHashRule": "serialValueHash = SHA-256(ASCII('QMAN-DIRECTPATH/SERIAL-VALUE/V1') || 0x00 || ASCII(serialProvider.providerId) || 0x00 || HEX-DECODE(serialMaterial.canonicalSerialBytesHex)). This domain-separated preimage is exact; the provider descriptor and source material remain in the identity fingerprint.",
   "x-qmanPhysicalPathRule": "physicalPath MUST validate against the grammar selected by physicalPathProvider. Values beginning with or derived from /sys, pci:, a domain:bus:device.function BDF, IOMMU group number, VFIO minor, udev alias or kernel enumeration order are invalid even if firmware metadata happens to contain that text.",
   "x-qmanCanonicalRule": "Reject duplicate keys, floats, integers outside [-9007199254740991,9007199254740991], non-NFC strings, unknown fields and non-fixed-width PCI IDs; encode the selected closed variant with CANONICAL-JSON-V1. identityFingerprint is SHA-256 of those canonical bytes. deviceUid is urn:qman:directpath:device:v1:<hostStableId>:<identityFingerprint including sha256 prefix>.",
+  "x-qmanHashRule": "identityFingerprint is SHA-256(CANONICAL-JSON-V1 of the complete selected closed IDENTITY-V1 variant). deviceUid is urn:qman:directpath:device:v1:<hostStableId>:<identityFingerprint including sha256 prefix>.",
   "x-qmanGoldenVectorSet": {
     "path": "contracts/directpath-identity-v1.golden-vectors.json",
     "vectorSetDigest": "sha256:0d24bf773afc921caa8965b69588cbfb5876e6c636c283b3ff3362507b9ee693",

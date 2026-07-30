@@ -1331,6 +1331,13 @@ TYPED_COVERAGE_RULES = {
     "EQUIVALENCE": "EQUIVALENCE_TEST_DYNAMIC_OR_ALL",
     "ENTITY": "ENTITY_STATE_MACHINE_UNION_OR_ALL",
 }
+VERIFICATION_EXPLICIT_CASE_TRACE_KINDS = {
+    "requiredPortIds": "PORT",
+    "requiredOperationIds": "OPERATION",
+    "requiredTransitionIds": "TRANSITION",
+    "requiredEntityIds": "ENTITY",
+    "requiredReasonIds": "REASON",
+}
 
 
 def _ordered_unique(values: Iterable[str]) -> list[str]:
@@ -1343,8 +1350,80 @@ def _ordered_unique(values: Iterable[str]) -> list[str]:
     return result
 
 
+def _explicit_case_matrix_requirements(
+    root: Path,
+) -> dict[tuple[str, str], list[str]]:
+    """Independently load source Case trace overlays for the mapping matrix."""
+
+    records: dict[str, Mapping[str, Any]] = {}
+    for path in sorted((root / "acceptance" / "cases").glob("*.json")):
+        local_errors: list[str] = []
+        try:
+            blob = path.read_bytes()
+        except OSError as exc:
+            raise ValueError(f"cannot read Case source {path}: {exc}") from exc
+        document = _load_json_bytes(
+            blob, f"verification Case source {path.relative_to(root)}", local_errors
+        )
+        if local_errors:
+            raise ValueError("; ".join(local_errors))
+        if not isinstance(document, Mapping):
+            raise ValueError(f"{path.relative_to(root)} is not an object")
+        candidates = document.get("records", [document])
+        if not isinstance(candidates, list):
+            raise ValueError(f"{path.relative_to(root)} records is not an array")
+        for record in candidates:
+            if not isinstance(record, Mapping):
+                raise ValueError(
+                    f"{path.relative_to(root)} contains a non-object Case"
+                )
+            case_id = record.get("id")
+            if not isinstance(case_id, str) or not case_id:
+                raise ValueError(
+                    f"{path.relative_to(root)} contains an invalid Case ID"
+                )
+            if case_id in records:
+                raise ValueError(f"duplicate Case ID {case_id}")
+            records[case_id] = record
+    if len(records) != 101:
+        raise ValueError(
+            f"acceptance/cases must contain 101 unique Cases, got {len(records)}"
+        )
+
+    result: dict[tuple[str, str], list[str]] = {}
+    fields = set(VERIFICATION_EXPLICIT_CASE_TRACE_KINDS)
+    for case_id, record in records.items():
+        present = {field for field in fields if field in record}
+        if present and present != fields:
+            raise ValueError(
+                f"Case {case_id} explicit trace is partial; missing "
+                f"{sorted(fields - present)}"
+            )
+        if not present:
+            continue
+        for field, kind in VERIFICATION_EXPLICIT_CASE_TRACE_KINDS.items():
+            values = record.get(field)
+            if not isinstance(values, list) or any(
+                not isinstance(value, str) or not value for value in values
+            ):
+                raise ValueError(f"Case {case_id} {field} must be a string list")
+            if len(values) != len(set(values)) or values != sorted(values):
+                raise ValueError(
+                    f"Case {case_id} {field} must be unique and ascending"
+                )
+            if field != "requiredTransitionIds" and not values:
+                raise ValueError(f"Case {case_id} {field} must not be empty")
+            for item_id in values:
+                result.setdefault((kind, item_id), []).append(case_id)
+    for identity, case_ids in result.items():
+        result[identity] = sorted(set(case_ids), key=canonical_json_bytes)
+    return result
+
+
 def _derive_verification_matrix(
-    contract: Mapping[str, Any], mapping_items: Sequence[Mapping[str, str]]
+    contract: Mapping[str, Any],
+    mapping_items: Sequence[Mapping[str, str]],
+    root: Path,
 ) -> list[dict[str, Any]]:
     """Independently derive the contract-owned verification requirements."""
 
@@ -1377,6 +1456,16 @@ def _derive_verification_matrix(
         for transition in machine["transitions"]
     }
     parity = {item["id"]: item for item in contract["vmwareParityObligations"]}
+    explicit_requirements = _explicit_case_matrix_requirements(root)
+    item_identities = {
+        (item["kind"], item["contractItemId"]) for item in mapping_items
+    }
+    unknown_explicit_items = set(explicit_requirements) - item_identities
+    if unknown_explicit_items:
+        raise ValueError(
+            "explicit Case trace references unknown mapping items "
+            f"{sorted(unknown_explicit_items)}"
+        )
 
     port_obligations: dict[str, list[str]] = {}
     for port_id, port in ports.items():
@@ -1471,9 +1560,12 @@ def _derive_verification_matrix(
         item_id = item["contractItemId"]
         required_obligations = obligations_for(kind, item_id)
         required_cases = _ordered_unique(
-            case_id
-            for obligation_id in required_obligations
-            for case_id in obligation_by_id[obligation_id]["caseIds"]
+            [
+                case_id
+                for obligation_id in required_obligations
+                for case_id in obligation_by_id[obligation_id]["caseIds"]
+            ]
+            + explicit_requirements.get((kind, item_id), [])
         )
         row: dict[str, Any] = {
             "kind": kind,
@@ -5258,7 +5350,9 @@ def _mapping_core(
         errors.append("portable contract.mappingSurface.verificationMatrix: expected array")
         declared_matrix = []
     try:
-        expected_matrix = _derive_verification_matrix(contract, expected_items)
+        expected_matrix = _derive_verification_matrix(
+            contract, expected_items, root
+        )
     except (KeyError, TypeError, ValueError, CanonicalizationError) as exc:
         errors.append(f"portable contract verificationMatrix: cannot derive: {exc}")
         expected_matrix = []
@@ -6094,6 +6188,195 @@ def _case_artifact_schemas(text: str) -> list[str]:
     return sorted(values)
 
 
+def _case_required_artifact_schemas(
+    definition: Mapping[str, Any],
+    semantic_text: str,
+    root: Path,
+) -> list[str]:
+    """Join heuristic defaults with an optional closed, explicit Case list."""
+
+    derived = set(_case_artifact_schemas(semantic_text))
+    explicit = definition.get("requiredArtifactSchemaRefs", [])
+    if not isinstance(explicit, list) or any(
+        not isinstance(item, str) or not item for item in explicit
+    ):
+        raise ValueError(
+            f"Case {definition.get('id')} requiredArtifactSchemaRefs "
+            "must be a string list"
+        )
+    if len(explicit) != len(set(explicit)):
+        raise ValueError(
+            f"Case {definition.get('id')} requiredArtifactSchemaRefs "
+            "must be unique"
+        )
+    if explicit != sorted(explicit):
+        raise ValueError(
+            f"Case {definition.get('id')} requiredArtifactSchemaRefs "
+            "must use ascending schema-ref order"
+        )
+    for schema_ref in explicit:
+        schema_path = schema_ref.split("#", 1)[0]
+        if not schema_path.startswith("contracts/"):
+            raise ValueError(
+                f"Case {definition.get('id')} schema ref must stay under "
+                f"contracts/: {schema_ref}"
+            )
+        if not (root / schema_path).is_file():
+            raise ValueError(
+                f"Case {definition.get('id')} references missing schema "
+                f"{schema_path}"
+            )
+    return sorted(derived.union(explicit))
+
+
+CASE_EXPLICIT_TRACE_FIELDS = (
+    "requiredPortIds",
+    "requiredOperationIds",
+    "requiredTransitionIds",
+    "requiredEntityIds",
+    "requiredReasonIds",
+)
+
+
+def _case_indexed_records(
+    records: Sequence[Any], id_field: str, label: str
+) -> dict[str, Mapping[str, Any]]:
+    result: dict[str, Mapping[str, Any]] = {}
+    for index, record in enumerate(records):
+        if not isinstance(record, Mapping):
+            raise ValueError(f"{label}[{index}] is not an object")
+        item_id = record.get(id_field)
+        if not isinstance(item_id, str) or not item_id:
+            raise ValueError(f"{label}[{index}].{id_field} is not a non-empty string")
+        if item_id in result:
+            raise ValueError(f"{label} contains duplicate {id_field} {item_id}")
+        result[item_id] = record
+    return result
+
+
+def _case_explicit_id_set(
+    definition: Mapping[str, Any],
+    field: str,
+    known_ids: set[str],
+    *,
+    allow_empty: bool,
+) -> list[str]:
+    value = definition.get(field)
+    if not isinstance(value, list) or any(
+        not isinstance(item, str) or not item for item in value
+    ):
+        raise ValueError(f"Case {definition.get('id')} {field} must be a string list")
+    if len(value) != len(set(value)):
+        raise ValueError(f"Case {definition.get('id')} {field} must be unique")
+    if value != sorted(value):
+        raise ValueError(
+            f"Case {definition.get('id')} {field} must use ascending ID order"
+        )
+    if not allow_empty and not value:
+        raise ValueError(f"Case {definition.get('id')} {field} must not be empty")
+    unknown = set(value) - known_ids
+    if unknown:
+        raise ValueError(
+            f"Case {definition.get('id')} {field} references unknown IDs "
+            f"{sorted(unknown)}"
+        )
+    return list(value)
+
+
+def _case_required_trace(
+    definition: Mapping[str, Any],
+    *,
+    derived_ports: list[str],
+    port_by_id: Mapping[str, Mapping[str, Any]],
+    operation_by_id: Mapping[str, Mapping[str, Any]],
+    transition_by_id: Mapping[str, Mapping[str, Any]],
+    entity_by_id: Mapping[str, Mapping[str, Any]],
+    reason_by_id: Mapping[str, Mapping[str, Any]],
+) -> tuple[list[str], list[str], list[str], list[str], list[str]]:
+    """Independently resolve and close the optional Case trace override."""
+
+    present = [
+        field for field in CASE_EXPLICIT_TRACE_FIELDS if field in definition
+    ]
+    if present and len(present) != len(CASE_EXPLICIT_TRACE_FIELDS):
+        missing = sorted(set(CASE_EXPLICIT_TRACE_FIELDS) - set(present))
+        raise ValueError(
+            f"Case {definition.get('id')} explicit trace is partial; missing {missing}"
+        )
+
+    if not present:
+        required_ports = sorted(derived_ports)
+        required_port_set = set(required_ports)
+        required_operations = sorted(
+            operation_id
+            for operation_id, operation in operation_by_id.items()
+            if operation.get("ownerPortId") in required_port_set
+        )
+        required_operation_set = set(required_operations)
+        required_transitions = sorted(
+            transition_id
+            for transition_id, transition in transition_by_id.items()
+            if set(transition.get("operationIds", [])) & required_operation_set
+        )
+        return (
+            required_ports,
+            required_operations,
+            required_transitions,
+            [],
+            [],
+        )
+
+    required_ports = _case_explicit_id_set(
+        definition, "requiredPortIds", set(port_by_id), allow_empty=False
+    )
+    required_operations = _case_explicit_id_set(
+        definition,
+        "requiredOperationIds",
+        set(operation_by_id),
+        allow_empty=False,
+    )
+    required_transitions = _case_explicit_id_set(
+        definition,
+        "requiredTransitionIds",
+        set(transition_by_id),
+        allow_empty=True,
+    )
+    required_entities = _case_explicit_id_set(
+        definition, "requiredEntityIds", set(entity_by_id), allow_empty=False
+    )
+    required_reasons = _case_explicit_id_set(
+        definition, "requiredReasonIds", set(reason_by_id), allow_empty=False
+    )
+
+    operation_set = set(required_operations)
+    owner_ports = {
+        operation_by_id[operation_id].get("ownerPortId")
+        for operation_id in required_operations
+    }
+    if set(required_ports) != owner_ports:
+        raise ValueError(
+            f"Case {definition.get('id')} requiredPortIds must exactly equal "
+            f"required operation owners {sorted(owner_ports)}"
+        )
+    for transition_id in required_transitions:
+        referenced_operations = set(
+            transition_by_id[transition_id].get("operationIds", [])
+        )
+        if not referenced_operations.issubset(operation_set):
+            raise ValueError(
+                f"Case {definition.get('id')} transition {transition_id} references "
+                "operations outside requiredOperationIds "
+                f"{sorted(referenced_operations - operation_set)}"
+            )
+    return (
+        required_ports,
+        required_operations,
+        required_transitions,
+        required_entities,
+        required_reasons,
+    )
+
+
 def _derive_case_contract_registry(
     contract: Mapping[str, Any], root: Path, errors: list[str]
 ) -> Mapping[str, Any] | None:
@@ -6123,6 +6406,25 @@ def _derive_case_contract_registry(
         for transition in machine.get("transitions", [])
         if isinstance(transition, Mapping)
     ]
+    try:
+        port_by_id = _case_indexed_records(ports, "id", "requiredPorts")
+        operation_by_id = _case_indexed_records(
+            operations, "id", "backendNeutralOperations"
+        )
+        transition_by_id = _case_indexed_records(
+            transitions, "id", "stateMachine transitions"
+        )
+        entity_by_id = _case_indexed_records(
+            contract.get("dataEntities", []), "id", "dataEntities"
+        )
+        reason_by_id = _case_indexed_records(
+            contract.get("errorContract", {}).get("reasonCodes", []),
+            "code",
+            "errorContract.reasonCodes",
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        errors.append(f"Case contract portable indexes: {exc}")
+        return None
     records: list[dict[str, Any]] = []
     for row in rows:
         case_id = row["caseId"]
@@ -6145,22 +6447,26 @@ def _derive_case_contract_registry(
                 if isinstance(item, Mapping)
                 and set(item.get("testObligationIds", [])) & set(test_ids)
             )
-            required_ports = sorted(
+            derived_ports = sorted(
                 item["id"]
                 for item in ports
                 if isinstance(item, Mapping)
                 and set(item.get("techStoryIds", [])) & story_set
             )
-            required_operations = sorted(
-                item["id"]
-                for item in operations
-                if isinstance(item, Mapping)
-                and item.get("ownerPortId") in set(required_ports)
-            )
-            required_transitions = sorted(
-                item["id"]
-                for item in transitions
-                if set(item.get("operationIds", [])) & set(required_operations)
+            (
+                required_ports,
+                required_operations,
+                required_transitions,
+                required_entities,
+                required_reasons,
+            ) = _case_required_trace(
+                definition,
+                derived_ports=derived_ports,
+                port_by_id=port_by_id,
+                operation_by_id=operation_by_id,
+                transition_by_id=transition_by_id,
+                entity_by_id=entity_by_id,
+                reason_by_id=reason_by_id,
             )
             semantic_parts = [
                 row["title"],
@@ -6221,6 +6527,14 @@ def _derive_case_contract_registry(
                 "dependsOnCaseIds": sorted(definition["dependsOnCaseIds"]),
             }
             faults = _case_fault_classes(semantic_text)
+            explicit_entity_reason_trace = (
+                {
+                    "requiredEntityIds": required_entities,
+                    "requiredReasonIds": required_reasons,
+                }
+                if "requiredEntityIds" in definition
+                else {}
+            )
             record_projection = {
                 "caseId": case_id,
                 "definitionPath": definition_path,
@@ -6235,8 +6549,13 @@ def _derive_case_contract_registry(
                 "requiredPortIds": required_ports,
                 "requiredOperationIds": required_operations,
                 "requiredTransitionIds": required_transitions,
+                **explicit_entity_reason_trace,
                 "requiredFaultClasses": faults,
-                "requiredArtifactSchemaRefs": _case_artifact_schemas(semantic_text),
+                "requiredArtifactSchemaRefs": _case_required_artifact_schemas(
+                    definition,
+                    semantic_text,
+                    root,
+                ),
                 "requiredOracleClasses": CASE_CONTRACT_ORACLE_CLASSES,
                 "minimumRepeat": 3 if faults else 1,
                 "minimumDurationSeconds": (
@@ -10383,6 +10702,27 @@ def _scenario_execution_core_digest(
     )
 
 
+def _case_completion_observed_artifact_schema_refs(
+    evidence_index: Mapping[str, Any],
+) -> list[str]:
+    """Derive observed schema coverage only from artifacts whose bytes were indexed."""
+
+    artifact_refs = {
+        item.get("schemaRefOrNull")
+        for item in evidence_index.get("artifacts", [])
+        if isinstance(item, Mapping)
+        and isinstance(item.get("schemaRefOrNull"), str)
+    }
+    artifact_refs.update(
+        {
+            "contracts/directpath-acceptance-scenario.schema.json",
+            "contracts/directpath-execution-evidence-index.schema.json",
+            "contracts/directpath-runner-manifest.schema.json",
+        }
+    )
+    return _canonical_string_union(artifact_refs)
+
+
 def _validate_execution_evidence_index(
     scenario: Mapping[str, Any],
     result: Mapping[str, Any],
@@ -12979,25 +13319,6 @@ def _validate_case_completion_artifact(
             for fault in set(iteration.get("faultClasses", [])):
                 if isinstance(fault, str):
                     fault_repeats[fault] = fault_repeats.get(fault, 0) + 1
-        decoder_refs = {
-            item.get("schemaRef")
-            for item in runner.get("artifactDecoders", [])
-            if isinstance(item, Mapping) and isinstance(item.get("schemaRef"), str)
-        }
-        artifact_refs = {
-            item.get("schemaRefOrNull")
-            for item in index.get("artifacts", [])
-            if isinstance(item, Mapping)
-            and isinstance(item.get("schemaRefOrNull"), str)
-        }
-        artifact_refs.update(decoder_refs)
-        artifact_refs.update(
-            {
-                "contracts/directpath-acceptance-scenario.schema.json",
-                "contracts/directpath-execution-evidence-index.schema.json",
-                "contracts/directpath-runner-manifest.schema.json",
-            }
-        )
         binding_digests = _canonical_string_union(
             item.get("assertionDigest")
             for item in scenario.get("casePredicateBindings", [])
@@ -13028,7 +13349,9 @@ def _validate_case_completion_artifact(
             "transitionIds": _canonical_string_union(
                 trace.get("transitionIds", []) if isinstance(trace, Mapping) else []
             ),
-            "artifactSchemaRefs": _canonical_string_union(artifact_refs),
+            "artifactSchemaRefs": _case_completion_observed_artifact_schema_refs(
+                index
+            ),
             "oracleClasses": _canonical_string_union(ORACLE_CATEGORY_FIELDS),
             "assertionDigests": binding_digests,
         }
@@ -22634,10 +22957,20 @@ def _wire_schema_shape(
 
 
 def _validate_wire_schema_closure(contract: Mapping[str, Any], root: Path, errors: list[str]) -> None:
+    normative_sources = {
+        item
+        for item in contract.get("normativeSources", [])
+        if isinstance(item, str)
+    }
     for entity in contract.get("dataEntities", []):
         if not isinstance(entity, Mapping) or not isinstance(entity.get("wireSchema"), str):
             continue
         label = f"{entity.get('id')} wire schema"
+        schema_path = entity["wireSchema"].partition("#")[0]
+        if schema_path not in normative_sources:
+            errors.append(
+                f"{label}: base schema path is absent from normativeSources"
+            )
         shape = _wire_schema_shape(root, entity["wireSchema"], label, errors)
         if shape is None:
             continue
@@ -22660,6 +22993,10 @@ def _validate_wire_schema_closure(contract: Mapping[str, Any], root: Path, error
             errors.append(f"{label}: schemaRef is required")
             continue
         path_text, separator, fragment = reference.partition("#")
+        if path_text not in normative_sources:
+            errors.append(
+                f"{label}: base schema path is absent from normativeSources"
+            )
         if path_text not in schema_cache:
             blob = _worktree_bytes(root, path_text, f"{label}.schemaRef", errors)
             schema_cache[path_text] = (
@@ -22701,9 +23038,187 @@ def _validate_wire_schema_closure(contract: Mapping[str, Any], root: Path, error
         if not closed:
             errors.append(f"{label}: hash-subject schema must be closed (including every union branch)")
         digest_field = subject.get("digestField")
-        if isinstance(digest_field, str) and "derived output" not in digest_field:
+        if isinstance(digest_field, str) and "derived output" in digest_field:
+            if not isinstance(node.get("x-qmanHashRule"), str):
+                errors.append(
+                    f"{label}: derived output requires an explicit x-qmanHashRule"
+                )
+        elif isinstance(digest_field, str):
             if digest_field not in node.get("properties", {}) or digest_field not in node.get("required", []):
                 errors.append(f"{label}: digestField {digest_field!r} is not a required schema field")
+
+    portable_entities_blob = _worktree_bytes(
+        root,
+        "contracts/directpath-portable-entities.schema.json",
+        "DeviceRecord V3 schema",
+        errors,
+    )
+    portable_entities = (
+        _load_json_bytes(
+            portable_entities_blob,
+            "DeviceRecord V3 schema",
+            errors,
+        )
+        if portable_entities_blob is not None
+        else None
+    )
+    if isinstance(portable_entities, Mapping):
+        definitions = portable_entities.get("$defs", {})
+        device_record = (
+            definitions.get("ENTITY-DEVICE-RECORD")
+            if isinstance(definitions, Mapping)
+            else None
+        )
+        dependency_domains = (
+            definitions.get("dependencyDomains")
+            if isinstance(definitions, Mapping)
+            else None
+        )
+        if not isinstance(device_record, Mapping):
+            errors.append("DeviceRecord V3 schema: ENTITY-DEVICE-RECORD is missing")
+        else:
+            if (
+                device_record.get("properties", {})
+                .get("schemaVersion", {})
+                .get("const")
+                != 3
+                or "dependencyDomains"
+                not in device_record.get("required", [])
+            ):
+                errors.append(
+                    "DeviceRecord V3 schema: schemaVersion=3 and required dependencyDomains are mandatory"
+                )
+        for definition_name, field_name, expected_reference in (
+            ("deviceRole", "pciStructureFact", "#/$defs/pciStructureFact"),
+            (
+                "resetContract",
+                "pciFlrCapabilityFact",
+                "#/$defs/pciFlrCapabilityFact",
+            ),
+        ):
+            definition = (
+                definitions.get(definition_name)
+                if isinstance(definitions, Mapping)
+                else None
+            )
+            fact_definition = (
+                definitions.get(expected_reference.rsplit("/", 1)[-1])
+                if isinstance(definitions, Mapping)
+                else None
+            )
+            if (
+                not isinstance(definition, Mapping)
+                or definition.get("additionalProperties") is not False
+                or field_name not in definition.get("required", [])
+                or definition.get("properties", {})
+                .get(field_name, {})
+                .get("$ref")
+                != expected_reference
+            ):
+                errors.append(
+                    f"DeviceRecord V3 schema: {definition_name}.{field_name} "
+                    f"must be a required closed reference to {expected_reference}"
+                )
+            if (
+                not isinstance(fact_definition, Mapping)
+                or fact_definition.get("additionalProperties") is not False
+            ):
+                errors.append(
+                    f"DeviceRecord V3 schema: {expected_reference} must resolve "
+                    "to a closed fact definition"
+                )
+        reset_contract = (
+            definitions.get("resetContract")
+            if isinstance(definitions, Mapping)
+            else None
+        )
+        if (
+            not isinstance(reset_contract, Mapping)
+            or "resetProviderFactId" not in reset_contract.get("required", [])
+        ):
+            errors.append(
+                "DeviceRecord V3 schema: resetContract.resetProviderFactId is mandatory"
+            )
+        if (
+            not isinstance(reset_contract, Mapping)
+            or "state" not in reset_contract.get("required", [])
+            or reset_contract.get("properties", {})
+            .get("state", {})
+            .get("enum")
+            != ["KNOWN", "UNKNOWN", "CONFLICT"]
+        ):
+            errors.append(
+                "DeviceRecord V3 schema: resetContract.state must be mandatory "
+                "KNOWN/UNKNOWN/CONFLICT"
+            )
+        expected_domain_order = [
+            "FUNCTIONAL",
+            "IOMMU",
+            "MULTIFUNCTION",
+            "PF_VF",
+            "PHYSICAL_ISOLATION",
+            "PLATFORM",
+            "REQUESTER_ALIAS",
+        ]
+        actual_domain_order: list[Any] = []
+        if isinstance(dependency_domains, Mapping):
+            for item in dependency_domains.get("prefixItems", []):
+                value = None
+                if isinstance(item, Mapping):
+                    for branch in item.get("allOf", []):
+                        if isinstance(branch, Mapping):
+                            value = (
+                                branch.get("properties", {})
+                                .get("kind", {})
+                                .get("const", value)
+                            )
+                actual_domain_order.append(value)
+        if (
+            not isinstance(dependency_domains, Mapping)
+            or dependency_domains.get("minItems") != 7
+            or dependency_domains.get("maxItems") != 7
+            or dependency_domains.get("items") is not False
+            or actual_domain_order != expected_domain_order
+        ):
+            errors.append(
+                "DeviceRecord V3 schema: dependencyDomains must contain the exact seven canonical kinds"
+            )
+
+    hash_subjects_blob = _worktree_bytes(
+        root,
+        "contracts/directpath-portable-hash-subjects.schema.json",
+        "HostSnapshot committed-version schema",
+        errors,
+    )
+    authority_blob = _worktree_bytes(
+        root,
+        "contracts/directpath-authority-entities.schema.json",
+        "HostAuthority committed-version schema",
+        errors,
+    )
+    receipt_blob = _worktree_bytes(
+        root,
+        "contracts/directpath-inventory-verification-receipt.schema.json",
+        "Inventory receipt committed-version schema",
+        errors,
+    )
+    committed_version_text = b"committed" in (hash_subjects_blob or b"").lower()
+    committed_version_text = committed_version_text and b"r+1" in (
+        hash_subjects_blob or b""
+    )
+    committed_version_text = committed_version_text and b"resourceversion" in (
+        authority_blob or b""
+    ).lower()
+    committed_version_text = committed_version_text and b"committed" in (
+        receipt_blob or b""
+    ).lower()
+    committed_version_text = committed_version_text and b"x-qmancommittedversionrule" in (
+        portable_entities_blob or b""
+    ).lower()
+    if not committed_version_text:
+        errors.append(
+            "HostSnapshot committed-version rule must agree across snapshot, authority, binding, and receipt schemas"
+        )
 
 
 def validate_repository(

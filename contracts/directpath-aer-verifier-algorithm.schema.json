@@ -1,0 +1,725 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-aer-verifier-algorithm.schema.json",
+  "title": "Qman DirectPath Correctable AER independent verifier algorithm candidate",
+  "description": "Closed algorithm identity for independent replay of the Correctable-only AER component premise. The algorithm is target-code-independent and permanently non-product-authorizing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "algorithmId",
+    "authorityBoundary",
+    "productAuthorized",
+    "normativeSourceState",
+    "canonicalization",
+    "verifierImplementationClass",
+    "targetImplementationImportsAllowed",
+    "resourceBudgets",
+    "schemaBindings",
+    "implementationBindings",
+    "caseMatrixDigest",
+    "goldenVectorSetId",
+    "requiredCaseIds",
+    "requiredDimensions",
+    "validationStages",
+    "digestDomains",
+    "algorithmDigest"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "QMAN_AER_VERIFIER_ALGORITHM"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "algorithmId": {
+      "const": "QMAN-AER-COMPONENT-VERIFIER-V1"
+    },
+    "authorityBoundary": {
+      "const": "COMPONENT_PREMISE"
+    },
+    "productAuthorized": {
+      "const": false
+    },
+    "normativeSourceState": {
+      "const": "CANDIDATE_NOT_IN_PORTABLE_CLOSURE"
+    },
+    "canonicalization": {
+      "const": "CANONICAL-JSON-V1"
+    },
+    "verifierImplementationClass": {
+      "const": "INDEPENDENT_FROM_TARGET_IMPLEMENTATION"
+    },
+    "targetImplementationImportsAllowed": {
+      "const": false
+    },
+    "resourceBudgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyMaxBytes",
+        "matrixMaxBytes",
+        "goldenMaxBytes",
+        "receiptMaxBytes",
+        "schemaMaxBytes",
+        "boundFileMaxBytes",
+        "maxNodes",
+        "maxDepth",
+        "maxStringUtf8Bytes",
+        "maxTotalStringUtf8Bytes"
+      ],
+      "properties": {
+        "policyMaxBytes": {
+          "const": 65536
+        },
+        "matrixMaxBytes": {
+          "const": 524288
+        },
+        "goldenMaxBytes": {
+          "const": 524288
+        },
+        "receiptMaxBytes": {
+          "const": 2097152
+        },
+        "schemaMaxBytes": {
+          "const": 1048576
+        },
+        "boundFileMaxBytes": {
+          "const": 1048576
+        },
+        "maxNodes": {
+          "const": 100000
+        },
+        "maxDepth": {
+          "const": 32
+        },
+        "maxStringUtf8Bytes": {
+          "const": 4096
+        },
+        "maxTotalStringUtf8Bytes": {
+          "const": 8388608
+        }
+      }
+    },
+    "schemaBindings": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "contracts/directpath-aer-correctable-policy.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "contracts/directpath-aer-case-matrix.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "contracts/directpath-aer-component-receipt.schema.json"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaBinding"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "contracts/directpath-aer-verifier-algorithm.schema.json"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "implementationBindings": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/fileBinding"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "INDEPENDENT_GENERATOR_VERIFIER"
+                },
+                "path": {
+                  "const": "tools/generate_directpath_aer_contract.py"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/fileBinding"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "CONFORMANCE_TEST"
+                },
+                "path": {
+                  "const": "qman-directpath-core/tests/test_aer_normative_contract.py"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "caseMatrixDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "goldenVectorSetId": {
+      "const": "QMAN-AER-CORRECTABLE-GOLDEN-V1"
+    },
+    "requiredCaseIds": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "M24"
+        },
+        {
+          "const": "M25"
+        },
+        {
+          "const": "M26"
+        },
+        {
+          "const": "M27"
+        },
+        {
+          "const": "M28"
+        },
+        {
+          "const": "M29"
+        }
+      ],
+      "items": false,
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "requiredDimensions": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "GUEST_WRITES"
+        },
+        {
+          "const": "IRQ_DELIVERY"
+        },
+        {
+          "const": "SERVICE_ATTRIBUTION"
+        },
+        {
+          "const": "DEVICE_HEALTH"
+        },
+        {
+          "const": "PHYSICAL_RECOVERY"
+        }
+      ],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "validationStages": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "RESOURCE_BUDGETS"
+        },
+        {
+          "const": "DUPLICATE_SAFE_JSON_PARSE"
+        },
+        {
+          "const": "SCHEMA_CLOSURE"
+        },
+        {
+          "const": "FIXED_BUNDLE_REPLAY"
+        },
+        {
+          "const": "POLICY_SEMANTIC_MASKS"
+        },
+        {
+          "const": "POLICY_DIGEST_REPLAY"
+        },
+        {
+          "const": "MATRIX_TUPLE_DIGEST_REPLAY"
+        },
+        {
+          "const": "MATRIX_COVERAGE_EXACT"
+        },
+        {
+          "const": "OWNER_LAYOUT_BINDING"
+        },
+        {
+          "const": "ORACLE_STATE_BOUNDARY"
+        },
+        {
+          "const": "CASE_RESULT_EXACTNESS"
+        },
+        {
+          "const": "DIMENSION_CLEANUP_REUSE"
+        },
+        {
+          "const": "ARTIFACT_AUTHORITY_BOUNDARY"
+        },
+        {
+          "const": "COMPONENT_RECEIPT_DIGEST_REPLAY"
+        },
+        {
+          "const": "PRODUCT_AUTHORIZATION_HARD_FALSE"
+        }
+      ],
+      "items": false,
+      "minItems": 15,
+      "maxItems": 15
+    },
+    "digestDomains": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy",
+        "caseTuple",
+        "caseMatrix",
+        "ownerBinding",
+        "layoutBinding",
+        "oracleBinding",
+        "caseResult",
+        "componentReceipt",
+        "verifierAlgorithm",
+        "goldenVectors"
+      ],
+      "properties": {
+        "policy": {
+          "const": "QMAN-DIRECTPATH/AER-POLICY/V1\u0000"
+        },
+        "caseTuple": {
+          "const": "QMAN-DIRECTPATH/AER-CASE-TUPLE/V1\u0000"
+        },
+        "caseMatrix": {
+          "const": "QMAN-DIRECTPATH/AER-CASE-MATRIX/V1\u0000"
+        },
+        "ownerBinding": {
+          "const": "QMAN-DIRECTPATH/AER-OWNER-BINDING/V1\u0000"
+        },
+        "layoutBinding": {
+          "const": "QMAN-DIRECTPATH/AER-LAYOUT-BINDING/V1\u0000"
+        },
+        "oracleBinding": {
+          "const": "QMAN-DIRECTPATH/AER-ORACLE-BINDING/V1\u0000"
+        },
+        "caseResult": {
+          "const": "QMAN-DIRECTPATH/AER-CASE-RESULT/V1\u0000"
+        },
+        "componentReceipt": {
+          "const": "QMAN-DIRECTPATH/AER-COMPONENT-RECEIPT/V1\u0000"
+        },
+        "verifierAlgorithm": {
+          "const": "QMAN-DIRECTPATH/AER-VERIFIER-ALGORITHM/V1\u0000"
+        },
+        "goldenVectors": {
+          "const": "QMAN-DIRECTPATH/AER-GOLDEN-VECTORS/V1\u0000"
+        }
+      }
+    },
+    "algorithmDigest": {
+      "$ref": "#/$defs/digest"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "schemaBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^contracts/[A-Za-z0-9._/-]+\\.json$"
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "fileBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "INDEPENDENT_GENERATOR_VERIFIER",
+            "CONFORMANCE_TEST"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._/-]+$",
+          "maxLength": 256
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "goldenVectorSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectType",
+        "schemaVersion",
+        "vectorSetId",
+        "authorityBoundary",
+        "productAuthorized",
+        "normativeSourceState",
+        "implementationBindings",
+        "digestDomains",
+        "positivePolicyVectors",
+        "negativePolicyVectors",
+        "matrixVector",
+        "verifierAlgorithm",
+        "goldenVectorSetDigest"
+      ],
+      "properties": {
+        "subjectType": {
+          "const": "QMAN_AER_GOLDEN_VECTOR_SET"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "vectorSetId": {
+          "const": "QMAN-AER-CORRECTABLE-GOLDEN-V1"
+        },
+        "authorityBoundary": {
+          "const": "COMPONENT_PREMISE"
+        },
+        "productAuthorized": {
+          "const": false
+        },
+        "normativeSourceState": {
+          "const": "CANDIDATE_NOT_IN_PORTABLE_CLOSURE"
+        },
+        "implementationBindings": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/fileBinding"
+                },
+                {
+                  "properties": {
+                    "role": {
+                      "const": "INDEPENDENT_GENERATOR_VERIFIER"
+                    },
+                    "path": {
+                      "const": "tools/generate_directpath_aer_contract.py"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/fileBinding"
+                },
+                {
+                  "properties": {
+                    "role": {
+                      "const": "CONFORMANCE_TEST"
+                    },
+                    "path": {
+                      "const": "qman-directpath-core/tests/test_aer_normative_contract.py"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "digestDomains": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "policy",
+            "caseTuple",
+            "caseMatrix",
+            "ownerBinding",
+            "layoutBinding",
+            "oracleBinding",
+            "caseResult",
+            "componentReceipt",
+            "verifierAlgorithm",
+            "goldenVectors"
+          ],
+          "properties": {
+            "policy": {
+              "const": "QMAN-DIRECTPATH/AER-POLICY/V1\u0000"
+            },
+            "caseTuple": {
+              "const": "QMAN-DIRECTPATH/AER-CASE-TUPLE/V1\u0000"
+            },
+            "caseMatrix": {
+              "const": "QMAN-DIRECTPATH/AER-CASE-MATRIX/V1\u0000"
+            },
+            "ownerBinding": {
+              "const": "QMAN-DIRECTPATH/AER-OWNER-BINDING/V1\u0000"
+            },
+            "layoutBinding": {
+              "const": "QMAN-DIRECTPATH/AER-LAYOUT-BINDING/V1\u0000"
+            },
+            "oracleBinding": {
+              "const": "QMAN-DIRECTPATH/AER-ORACLE-BINDING/V1\u0000"
+            },
+            "caseResult": {
+              "const": "QMAN-DIRECTPATH/AER-CASE-RESULT/V1\u0000"
+            },
+            "componentReceipt": {
+              "const": "QMAN-DIRECTPATH/AER-COMPONENT-RECEIPT/V1\u0000"
+            },
+            "verifierAlgorithm": {
+              "const": "QMAN-DIRECTPATH/AER-VERIFIER-ALGORITHM/V1\u0000"
+            },
+            "goldenVectors": {
+              "const": "QMAN-DIRECTPATH/AER-GOLDEN-VECTORS/V1\u0000"
+            }
+          }
+        },
+        "positivePolicyVectors": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/positivePolicyVector"
+            },
+            {
+              "$ref": "#/$defs/positivePolicyVector"
+            },
+            {
+              "$ref": "#/$defs/positivePolicyVector"
+            }
+          ],
+          "items": false
+        },
+        "negativePolicyVectors": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/negativePolicyVector"
+            },
+            {
+              "$ref": "#/$defs/negativePolicyVector"
+            },
+            {
+              "$ref": "#/$defs/negativePolicyVector"
+            },
+            {
+              "$ref": "#/$defs/negativePolicyVector"
+            },
+            {
+              "$ref": "#/$defs/negativePolicyVector"
+            }
+          ],
+          "items": false
+        },
+        "matrixVector": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "matrixId",
+            "matrixDigest",
+            "matrixDocumentSha256",
+            "tupleCount",
+            "caseTupleCounts"
+          ],
+          "properties": {
+            "matrixId": {
+              "const": "QMAN-AER-M24-M29-COMPONENT-MATRIX-V1"
+            },
+            "matrixDigest": {
+              "$ref": "#/$defs/digest"
+            },
+            "matrixDocumentSha256": {
+              "$ref": "#/$defs/digest"
+            },
+            "tupleCount": {
+              "const": 133
+            },
+            "caseTupleCounts": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "M24",
+                "M25",
+                "M26",
+                "M27",
+                "M28",
+                "M29"
+              ],
+              "properties": {
+                "M24": {
+                  "const": 8
+                },
+                "M25": {
+                  "const": 64
+                },
+                "M26": {
+                  "const": 24
+                },
+                "M27": {
+                  "const": 9
+                },
+                "M28": {
+                  "const": 15
+                },
+                "M29": {
+                  "const": 13
+                }
+              }
+            }
+          }
+        },
+        "verifierAlgorithm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "document",
+            "expectedAlgorithmDigest"
+          ],
+          "properties": {
+            "document": {
+              "type": "object"
+            },
+            "expectedAlgorithmDigest": {
+              "$ref": "#/$defs/digest"
+            }
+          }
+        },
+        "goldenVectorSetDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "positivePolicyVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vectorId",
+        "document",
+        "expectedAerPolicyDigest"
+      ],
+      "properties": {
+        "vectorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Z][A-Z0-9_]*$"
+        },
+        "document": {
+          "type": "object"
+        },
+        "expectedAerPolicyDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "negativePolicyVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vectorId",
+        "document",
+        "expectedSchemaValid",
+        "expectedErrorCode"
+      ],
+      "properties": {
+        "vectorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Z][A-Z0-9_]*$"
+        },
+        "document": {
+          "type": "object"
+        },
+        "expectedSchemaValid": {
+          "type": "boolean"
+        },
+        "expectedErrorCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Z][A-Z0-9_]*$"
+        }
+      }
+    }
+  },
+  "x-qmanDigestDomain": "QMAN-DIRECTPATH/AER-VERIFIER-ALGORITHM/V1\u0000",
+  "x-qmanDigestRule": "Deep-copy the complete schema-valid algorithm, set algorithmDigest to null only in the construction projection, encode it with CANONICAL-JSON-V1, prepend the exact x-qmanDigestDomain bytes, and SHA-256 the result.",
+  "x-qmanStageRule": "Stages are ordered and fail closed. Exact built-in bytes are required for every caller document; raw byte, lexical node, depth, per-string, and aggregate-string limits are applied before constructing a JSON tree; duplicate-key-safe parsing is followed by a second exact tree-budget pass. Every fixed schema, generator, and conformance-test file is read exactly once into one immutable, exact-path source snapshot; all later schema parsing, hashing, algorithm construction, golden replay, and receipt contract checks consume only that snapshot and may not reopen a fixed path. The verifier then validates the complete fixed matrix/algorithm/golden bundle, every schema/raw-file/digest binding and receipt child itself. It must neither call nor import the target implementation as expected truth.",
+  "x-qmanExactCoverageRule": "M24-M29 means the exact 133 ordered tuple rows in the bound matrix, never a generated Cartesian claim, subset, representative sample, or count-only assertion.",
+  "x-qmanAuthorityBoundary": "COMPONENT_PREMISE",
+  "x-qmanProductAuthorized": false,
+  "x-qmanArtifactAuthorityBoundary": "The V1 candidate has no normative trusted artifact-resolver or typed authority-receipt interface. A successful run returns only STRUCTURALLY_VALID and componentEligible false; arbitrary digest strings or caller labels cannot promote it.",
+  "x-qmanE4Boundary": "Successful execution proves only structural consistency. Component eligibility, E4, physical provenance, product Case closure, and product admission require separate independently governed artifacts."
+}

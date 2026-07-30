@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 1,
+  "id": "VMW-AER-ROOT-SEQUENCE-FROZEN-OBSERVED-G101-O0-O4-V1",
+  "subject": "VMWARE_ESXI_BLACKBOX_CANDIDATE",
+  "profileState": "FROZEN_OBSERVED_PROFILE",
+  "comparisonTarget": "QEMU_PUBLIC_MODEL_RETAINED_REGISTER_STATE",
+  "gate": "g101",
+  "ownerPhases": {
+    "O0": {
+      "currentOwner": "VMkernel",
+      "activePassthroughUsers": "NONE"
+    },
+    "O4": {
+      "currentOwner": "VM Passthru",
+      "activePassthroughUsers": "EXACTLY_ONE_RUNNER_CREATED_VM"
+    }
+  },
+  "sequencePolicy": "QEMU_PUBLIC_MODEL_EXACT_TRANSITIONS_RETAINED_THROUGH_WINDOW",
+  "sourcePolicy": "MEANINGFUL_ONLY_WHEN_ROOT_COR_RCV_SET",
+  "hostProjectionPolicy": "ESXI_RAW_VIEW_EQUALS_ONE_TIME_BRACKETED_OUTER_SNAPSHOT",
+  "hostLogPolicy": "OBSERVE_ONLY_OFFICIAL_PER_SOURCE_MARKER_ROTATION_CHAIN_V2",
+  "guestPolicy": "OBSERVE_ONLY_BUT_O4_REQUIRES_BOUND_DRIVER_AND_HEARTBEAT",
+  "expectedStates": {
+    "O0": {
+      "first-multiple": {
+        "first-window-observation": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ],
+        "stable-after-repeat": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 3,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ]
+      },
+      "independent-w1c": {
+        "initial-window": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ],
+        "after-endpoint-clear-only": [
+          {
+            "endpointCorrectableStatus": 0,
+            "endpointCed": false,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ],
+        "after-root-clear-only": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 0,
+            "rootSource": "IGNORED_WITHOUT_COR_RCV",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ]
+      },
+      "bit-or": {
+        "stable-after-or": [
+          {
+            "endpointCorrectableStatus": 65,
+            "endpointCed": true,
+            "rootErrorStatus": 3,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ]
+      },
+      "rearm": {
+        "initial-window": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ],
+        "rearmed-window": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ]
+      }
+    },
+    "O4": {
+      "first-multiple": {
+        "first-window-observation": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ],
+        "stable-after-repeat": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 3,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ]
+      },
+      "independent-w1c": {
+        "initial-window": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ],
+        "after-endpoint-clear-only": [
+          {
+            "endpointCorrectableStatus": 0,
+            "endpointCed": false,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ],
+        "after-root-clear-only": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 0,
+            "rootSource": "IGNORED_WITHOUT_COR_RCV",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ]
+      },
+      "bit-or": {
+        "stable-after-or": [
+          {
+            "endpointCorrectableStatus": 65,
+            "endpointCed": true,
+            "rootErrorStatus": 3,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ]
+      },
+      "rearm": {
+        "initial-window": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ],
+        "rearmed-window": [
+          {
+            "endpointCorrectableStatus": 1,
+            "endpointCed": true,
+            "rootErrorStatus": 1,
+            "rootSource": "REQUESTER_ID",
+            "endpointCere": true,
+            "controlledBitsMasked": false,
+            "rootCorEnabled": true,
+            "rootPathOpen": true
+          }
+        ]
+      }
+    }
+  },
+  "requiredSequences": [
+    "first-multiple",
+    "independent-w1c",
+    "bit-or",
+    "rearm"
+  ],
+  "timingEnvelope": {
+    "timelineDelaysSeconds": [
+      0,
+      0.05,
+      0.25,
+      1
+    ],
+    "minimumFinalObservationSecondsO0": 1,
+    "minimumGuestWindowRemainingSecondsO4": 45,
+    "maximumSafetyPollIntervalSeconds": 0.05,
+    "guestWindowSeconds": 90,
+    "runnerWatchdogGraceSeconds": 300
+  },
+  "environmentBinding": {
+    "expectedEsxiBuild": "24280767",
+    "expectedPciId": "1af4:1041",
+    "qemuAerSourceSha256": "11c8c33412d3c6331cd981fa0b7ade4949789c7ef7628f18a0e339dff8628d7c",
+    "expectedSystemUuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "outerQemuBinarySha256": "021bda3344eadf7fd12cb66665351ef6d1e6734ab2c69ab8ab36441afc09b393"
+  },
+  "minimumRepeats": 3,
+  "claimBoundary": {
+    "provesOnMatch": "For the exact ESXi build, nested device profile, owner phase, gate and observation windows, the externally visible Correctable AER register sequence matched the preregistered public-model candidate.",
+    "doesNotProve": [
+      "VMware private implementation or internal control flow",
+      "an ESXi interrupt or service path from bounded log absence",
+      "physical PCIe link error generation or physical-device recovery",
+      "behavior of another ESXi build, device profile, firmware or owner phase",
+      "Qman implementation, qualification or release readiness"
+    ]
+  }
+}

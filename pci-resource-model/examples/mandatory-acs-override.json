@@ -30,7 +30,7 @@
         "0000:01:00.0",
         "0000:01:00.1"
       ],
-      "physicalIsolationDomainSource": "kernel-acs-provenance-topology-conservative",
+      "physicalIsolationDomainSource": "kernel-native-shadow-domain-v1",
       "resetMethods": [],
       "resetDomain": [],
       "resetDomainSource": "unknown",
@@ -104,7 +104,7 @@
         "0000:01:00.0",
         "0000:01:00.1"
       ],
-      "physicalIsolationDomainSource": "kernel-acs-provenance-topology-conservative",
+      "physicalIsolationDomainSource": "kernel-native-shadow-domain-v1",
       "resetMethods": ["flr"],
       "resetDomain": ["0000:01:00.0"],
       "resetDomainSource": "pci-config-flr",
@@ -173,7 +173,7 @@
         "0000:01:00.0",
         "0000:01:00.1"
       ],
-      "physicalIsolationDomainSource": "kernel-acs-provenance-topology-conservative",
+      "physicalIsolationDomainSource": "kernel-native-shadow-domain-v1",
       "resetMethods": ["flr"],
       "resetDomain": ["0000:01:00.1"],
       "resetDomainSource": "pci-config-flr",

@@ -14,7 +14,7 @@
     "minimumReaderSchemaVersion": {"const": 1},
     "qualificationRecordDigests": {"$ref": "#/$defs/digestSet"},
     "denyAndRevocationEntries": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/denyEntry"}, "x-qmanCanonicalOrder": "ascending canonical bytes of entryId"},
-    "revocationBehavior": {"const": "DENY_NEW_AND_NEXT_POWER_ON", "description": "Catalog-wide default. A deny/revocation entry may escalate only through its explicit revocationBehavior field."},
+    "revocationBehavior": {"enum": ["DENY_NEW_AND_NEXT_POWER_ON", "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP"], "description": "Catalog-wide profile-withdrawal behavior projected into every supported QualificationProfile. Each deny/revocation entry independently carries its selector-specific behavior."},
     "issuedAt": {"$ref": "#/$defs/timestamp"},
     "notBefore": {"$ref": "#/$defs/timestamp"},
     "expiresAt": {"$ref": "#/$defs/timestamp"},
@@ -49,6 +49,6 @@
       ]
     }
   },
-  "x-qmanRevocationRule": "A revoked/absent record denies every new power-on, reservation, and relocation. NORMAL uses DENY_NEW_AND_NEXT_POWER_ON: an already attached VM may run until its next explicit power transition. CRITICAL uses DENY_NEW_AND_REQUIRE_CONTROLLED_STOP: the controller creates an explicit, auditable stop-maintenance intent and performs normal stop/release; it never silently kills a VM or force-frees a lease. Failure to prove clean release quarantines the complete scope.",
+  "x-qmanRevocationRule": "revocationBehavior is the catalog-wide profile-withdrawal behavior projected into every supported QualificationProfile. Each denyAndRevocationEntries[].revocationBehavior is selector-specific and applies only when that entry's selector matches; it does not override the catalog-wide profile field. A revoked/absent record denies every new power-on, reservation, and relocation. DENY_NEW_AND_NEXT_POWER_ON maps to NORMAL: an already attached VM may run until its next explicit power transition. DENY_NEW_AND_REQUIRE_CONTROLLED_STOP maps to CRITICAL: the controller creates an explicit, auditable stop-maintenance intent and performs normal stop/release; it never silently kills a VM or force-frees a lease. Failure to prove clean release quarantines the complete scope.",
   "x-qmanSignatureRule": "Set catalogDigest and signature to null, canonicalize the complete object, hash into catalogDigest, and sign ASCII(QMAN-DIRECTPATH/SUPPORTED-CATALOG/V1) || 0x00 || the canonical bytes with a PRODUCT_RELEASE key. The candidate catalog contains no receipt/hash of the external anchor that accepts it. After signature/chain validation, independently supplied monotonic catalog-anchor state must accept catalogSequence/catalogDigest and is advanced in a separate CAS, preventing catalogDigest↔anchorDigest fixed points."
 }

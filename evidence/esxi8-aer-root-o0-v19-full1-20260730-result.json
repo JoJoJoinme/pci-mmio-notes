@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "caseId": "VMW-AER-COR-001",
+  "legacyIds": [
+    "S03",
+    "C00-C03",
+    "COR-8"
+  ],
+  "subject": "VMWARE_ESXI",
+  "runId": "20260730-esxi8-aer-root-o0-v19-full1",
+  "startedAt": "2026-07-29T16:56:01.900070Z",
+  "finishedAt": "2026-07-29T17:14:14.801450Z",
+  "sutProfile": {
+    "environmentClass": "NESTED_INSTRUMENTED_REFERENCE",
+    "esxiVersion": "8.0.3",
+    "esxiBuild": "24280767",
+    "apiVersion": "8.0.3.0",
+    "virtualHardware": "20",
+    "serverModel": "QEMU 11.0.2 q35/KVM nested ESXi lab",
+    "biosVersion": "open-source OVMF EFI lab profile",
+    "deviceIdentity": "QEMU virtio-net-pci 1af4:1041 at outer/ESXi 0000:01:00.1 behind 0000:00:08.0",
+    "deviceFirmware": "QEMU synthetic virtio device",
+    "guestOs": "NOT_APPLICABLE_O0",
+    "guestDriver": "NOT_APPLICABLE_O0; target Module Name None",
+    "workload": "Correctable-only O0/g101 Root sequence under VMkernel ownership: first/multiple, independent Endpoint/Root W1C, B0/B1 OR, and re-arm; four sequences by three repeats"
+  },
+  "techStories": [
+    "TS-F4-06"
+  ],
+  "basisKinds": [
+    "OFFICIAL_CONTRACT",
+    "OBSERVED_BEHAVIOR"
+  ],
+  "sourceIds": [
+    "VMW-SRC-001",
+    "VMW-SRC-025"
+  ],
+  "inputs": {
+    "ownerPhase": "O0",
+    "configuredOwner": "VMkernel",
+    "currentOwner": "VMkernel",
+    "activePassthroughUsers": [],
+    "targetModuleName": "None",
+    "gate": "g101",
+    "gateTuple": {
+      "endpointCorrectableReportingEnable": 1,
+      "selectedCorrectableMaskBit": 0,
+      "rootCorrectableErrorReportingEnable": 1
+    },
+    "endpointBdf": "0000:01:00.1",
+    "rootPortBdf": "0000:00:08.0",
+    "requesterId": "0x0101",
+    "qemuDevice": "test_fn1",
+    "injectionClass": "Correctable-only",
+    "injectedBits": [
+      "Receiver Error (B0)",
+      "Bad TLP (B1)"
+    ],
+    "sequences": [
+      "first-multiple",
+      "independent-w1c",
+      "bit-or",
+      "rearm"
+    ],
+    "repeat": 3,
+    "plannedCaseCount": 12,
+    "oraclePath": "contracts/vmware-aer-root-sequence-public-model-candidate-v1.json",
+    "oracleProfileStateAtRun": "CANDIDATE_NOT_OBSERVED",
+    "oracleSha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a",
+    "campaignResultSha256": "b2ab49a200822c4b283f6122521f2211742dab8536cd6fda6d1b980e1223c6d6",
+    "rootArtifactManifestFileSha256": "a5488cbaa2a85457e55c896291f80b54722bb170e3d2df66375958488db5f5b7",
+    "runnerSourceSha256": "7d98adb07faa80f54f5c67c38039c8281307dd3d28f63d3d0641299248cb2f65",
+    "crossOwnerBaselineRunId": "20260729-esxi8-aer-root-o4-v17-full1",
+    "crossOwnerSnapshotCanonicalization": "UTF-8 JSON with keys sorted lexically, separators ',' and ':', and ensure_ascii=false",
+    "crossOwnerSequenceSnapshotSha256": {
+      "first-multiple": "57f5d016add1da431dfe475818e80920cb35fbd766a85f8d422e1db75d26f772",
+      "independent-w1c": "21ee0c21d3a8b6e8a7429fb44599df97b72da3f79d48f843f42fff3a2d229df2",
+      "bit-or": "d121036d96f1c5fab9bdd0bc405058ae35b05065a0f3ca6b7ccc3a87b6e8ca90",
+      "rearm": "80370cc89885af9c70d982e4cec376ded05d4b3ea28f3c60c753f599c48625c4"
+    }
+  },
+  "expected": [
+    "All 12 cases are evaluated against the preregistered, hash-bound public oracle without changing the oracle bytes or downgrading injected cases to pre-injection cases.",
+    "O0 requires Current Owner VMkernel, no active passthrough user, no active VM, and strict absence of guest serial artifacts.",
+    "Correctable Endpoint and Root state transitions for first/multiple reception, independent W1C, bit OR, and re-arm are compared exactly while Uncorrectable injection is unavailable.",
+    "Every case restores the original E/M/R gate and preserves a running outer QEMU.",
+    "Bounded host-log absence remains a negative observation and is never promoted to proof that no ESXi interrupt or service path ran."
+  ],
+  "observed": [
+    "The immutable 12-case O0/g101 plan completed 12 of 12 cases; every case entered Correctable-only injection, matched the preregistered candidate bytes, completed cleanup, required no containment, and left the outer QEMU running.",
+    "All 24 owner observations reported Current Owner VMkernel, no active passthrough user, and a responsive host; the target Module Name was None, every guest classification was NOT_APPLICABLE_O0, and no guest-serial artifact existed.",
+    "First/multiple repeated B0 reception kept Endpoint CES at 0x00000001 and CED set, while Root Correctable Status changed from 0x00000001 to 0x00000003 and Source remained 0x0101.",
+    "Endpoint-only W1C cleared Endpoint CES/CED without clearing Root Correctable Status or Source; after re-priming, Root-only W1C cleared Root Correctable Status without clearing Endpoint CES/CED. Source is not interpreted when Root COR_RCV is clear.",
+    "B0 followed by B1 produced Endpoint CES 0x00000041 with CED set and Root Correctable Status 0x00000003 with Source 0x0101.",
+    "After Endpoint CES, CED, and Root Correctable Status were cleared, B0 re-armed the same Endpoint CES 0x00000001, CED, Root Status 0x00000001, and Source 0x0101 state.",
+    "Each sequence produced one stable observation digest across three repeats; the offline verifier reported FULL_PLAN, verified=true, requireCompleteSatisfied=true, 12 exact cases, 738 case-manifest entries, and 756 root-manifest entries.",
+    "All observed Uncorrectable status surfaces remained zero, all gates were restored, and the maximum observed safety-poll gap was 0.038855193997733295 seconds under the 0.05-second limit.",
+    "For all 12 matching sequence/repeat pairs, O0 and O4 had byte-equivalent normalized Endpoint/Root snapshots with identical requesterId and gateStable values. Owner-specific observation digests were intentionally not compared.",
+    "No matching AER line was observed in the strict per-source host log windows. This does not establish absence of interrupt delivery or ESXi service execution."
+  ],
+  "verdict": "PARTIAL",
+  "artifacts": [
+    {
+      "path": "evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json",
+      "sha256": "5a58f4deeecfe8429bab843ed712d71793a8e42f65a4071c6fc9e23d848bedff",
+      "kind": "SUMMARY"
+    },
+    {
+      "path": "evidence/esxi8-aer-root-o0-v19-full1-20260730-campaign-result.json",
+      "sha256": "b2ab49a200822c4b283f6122521f2211742dab8536cd6fda6d1b980e1223c6d6",
+      "kind": "L0_TRACE"
+    },
+    {
+      "path": "evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json",
+      "sha256": "213dfe8908dac6e38a2c4f47699fcf07d6cafa33bc929d87319097d044c03d4f",
+      "kind": "SUMMARY"
+    },
+    {
+      "path": "contracts/vmware-aer-root-sequence-public-model-candidate-v1.json",
+      "sha256": "663221aed0100e95652ce7277fdfe48bd0877d338545801346b6fe45583a4d3a",
+      "kind": "INPUT"
+    },
+    {
+      "path": "contracts/vmware-aer-root-sequence-oracle-profile.schema.json",
+      "sha256": "a033a1c13cd63ee5f94ce42aaabcac0b6f35133a15734ccfe258971eebcf4f57",
+      "kind": "INPUT"
+    },
+    {
+      "path": "vmware-esxi8-lab/test_esxi_aer_root_sequence.py",
+      "sha256": "7d98adb07faa80f54f5c67c38039c8281307dd3d28f63d3d0641299248cb2f65",
+      "kind": "INPUT"
+    }
+  ],
+  "limitations": [
+    "The verdict remains PARTIAL because only the exact nested ESXi 8.0.3 build-24280767 O0/g101 synthetic-endpoint slice is established.",
+    "The target had Current Owner VMkernel but Module Name None; no bound native VMkernel driver behavior is established.",
+    "Other E/M/R gates, Root Command notification effects, guest-write isolation, lifecycle clear and reuse, and physical-device health or recovery remain unverified.",
+    "Cross-owner snapshot equality does not prove owner phase is irrelevant outside this exact profile.",
+    "No interrupt delivery or ESXi service attribution is inferred from bounded log absence.",
+    "No VMware private code, internal control flow, filter, synthesis, or service implementation is reconstructed.",
+    "Synthetic Correctable injection does not qualify a physical link or physical device.",
+    "This VMware reference result grants no Qman implementation, qualification, acceptance-case, risk, gate, or release closure."
+  ]
+}

@@ -145,7 +145,7 @@ D01 的正式结果改用 `pci-mmio-local`。早期 NFS 尝试在 Linux server �
 | A06 | 物理链路与虚拟链路呈现 | link speed/width 变量 | L1/L2 两侧 `LnkSta` |
 | D00/I00 | DMA 翻译、requester 与中断重映射 | trace 模式和流量脚本 | QEMU trace、guest workload |
 | D01 | power-off 前后 DMA domain 切换 | `test_esxi_edu.py --verify-dma-teardown` | 同 SID/IOVA 的 live/post-off VT-d translation 与 invalidation |
-| C00-C03 / COR-8 | AER surface/status projection 与公开 gate 对照 | `test_esxi_aer_correctable_matrix.py`、`test_qemu_aer_correctable_matrix.py`；旧 `Invoke-EsxiAerCase.ps1` 仅保留历史基线 | Correctable-only allow-list、endpoint/root/ESXi/guest 快照、effective gates、owner、bounded logs、safety stop |
+| C00-C03 / COR-8 / M26 正控 | AER surface/status projection、公开 gate 与 Root sequence 对照 | `test_esxi_aer_correctable_matrix.py`、`test_qemu_aer_correctable_matrix.py`、`test_qemu_aer_root_sequence.py`、`test_esxi_aer_root_sequence.py`；旧 `Invoke-EsxiAerCase.ps1` 仅保留历史基线 | Correctable-only allow-list、endpoint/root/ESXi/guest 快照、effective gates、first/multiple、独立 W1C、OR、re-arm、owner、bounded logs、safety stop |
 | R00/R01 | reset 与 guest reboot | trace + `test_esxi_guest_reboot.py` | reset trace、efivar phase、两次 I/O |
 | L00-L03 | 电源与生命周期 | `Test-EsxiDirectPathLifecycle.ps1` | API 错误、重启后 BAR、串口 |
 | T00 | 重复启动稳定性 | `Test-EsxiDirectPathStress.ps1` | 每轮结果与失败日志 |
@@ -174,6 +174,83 @@ wsl -d Ubuntu-22.04 -- python3 `
 
 对应 64-row `result.json` SHA-256 为
 `40880169d5a4deaf01019af7d0e4618886464256cd5513f1e6d06be14cff52a4`。
+
+Root Status/Source 的 first/multiple、独立 W1C、B0/B1 OR 与 re-arm 使用独立 runner；
+每个 sequence/repeat 都启动 fresh QEMU：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_qemu_aer_root_sequence.py `
+  --qemu /root/src/qemu-11.0.2/build-lab/qemu-system-x86_64 `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID `
+  --gate g101 --repeat 3
+```
+
+2026-07-26 的正式运行是 12/12 `MATCH`，聚合 `result.json` SHA-256 为
+`59839df23f9711162f4d8548b7e258e355957bda23348f6acd727eb219decb5b`，12 个逐案 manifest
+共 276 个 hash 均已校验。摘要见
+[`../evidence/qman-qemu-aer-root-sequence-20260726-summary.json`](../evidence/qman-qemu-aer-root-sequence-20260726-summary.json)。
+这只建立 QEMU public-model 正控；ESXi live observation 由独立 canonical artifact 授权，
+不能由该正控代证。
+
+这里必须把 runner readiness 与 live observation 分开：
+
+- QEMU root-state 正控是 12/12 formal evidence。
+- canonical V17 `20260729-esxi8-aer-root-o4-v17-full1` 已在 O4/`g101` 完成
+  First/Multiple、独立 W1C、B0/B1 OR、re-arm 各 3 次，12/12 `MATCH`、`FULL_PLAN`，
+  offline exact 与 `--require-complete` 校验均通过。冻结
+  [`campaign result`](../evidence/esxi8-aer-root-o4-v17-full1-20260729-campaign-result.json)
+  SHA-256 为
+  `847a2500ae868a47d1abe8ae9765848085f8c31605afaa74b78cbc1923d40b7f`；canonical
+  [`result record`](../evidence/esxi8-aer-root-o4-v17-full1-20260729-result.json) 与
+  [`summary`](../evidence/esxi8-aer-root-o4-v17-full1-20260729-summary.json) 固定边界。
+- canonical V19 `20260730-esxi8-aer-root-o0-v19-full1` 已在 O0/`g101` 完成相同
+  12 案，12/12 `MATCH`、`FULL_PLAN`。canonical
+  [`result record`](../evidence/esxi8-aer-root-o0-v19-full1-20260730-result.json)、
+  [`summary`](../evidence/esxi8-aer-root-o0-v19-full1-20260730-summary.json) 与
+  [`campaign result`](../evidence/esxi8-aer-root-o0-v19-full1-20260730-campaign-result.json)
+  SHA-256 分别为 `538aaf8c…310b`、`5a58f4de…dff`、`b2ab49a2…c6d6`。
+- V19 与 V17 的 12 对 `evaluation-input.snapshots` 逐字段 exact，形成
+  [`O0+O4 observed profile`](../contracts/vmware-aer-root-sequence-frozen-observed-g101-o0-o4-v1.json)
+  （SHA-256 `cafa0835…1a6e`）与
+  [`promotion receipt`](../evidence/esxi8-aer-root-g101-o0-o4-profile-promotion-20260730-summary.json)
+  （SHA-256 `fab09980…12a`）。
+- 该闭环只授权 exact build/device/QEMU/`g101` 外部寄存器状态。O0 目标
+  `Module Name=None`，未证明 bound native driver，也不证明 owner-independent 私有机制、
+  service/IRQ、其他 gate、guest write、lifecycle 或物理 qualification；M26、M06、R13、
+  G1-G6 不关闭，也不从外部现象还原 VMware 私有实现。
+
+离线门和无副作用计划入口为：
+
+```powershell
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_aer_root_sequence.py selftest
+
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_aer_root_sequence_unit.py
+
+wsl -d Ubuntu-22.04 -- python3 `
+  /mnt/e/Code/PCI/github-export/vmware-esxi8-lab/test_esxi_aer_root_sequence.py `
+  plan --owner-phase O0 --gate g101 --repeat 3 `
+  --output /mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/RUN-ID/esxi-root-o0-plan
+```
+
+live `run` 还必须绑定 exact ESXi build/system UUID、endpoint/root BDF、QEMU/QTest socket、
+base VMX 与本地 ISO/attestation，并显式提供 `--authorized-lab-target` 和
+`--execute-correctable`。缺任一绑定都应 fail closed；任何 `plan`、selftest 或 unit 结果
+都不得登记为 VMware observation。V17/V19 的 live authority 也只能用于它们共同绑定的
+exact O0+O4/`g101` profile，不能替代 bound native driver 或其他 gate。
+
+当前本地 AER guest fixture ISO SHA-256 为
+`3DE27D166EE6881BFB60D8DA233A0B3E6871532108D01D5741C8A43BA91777DE`，
+build attestation SHA-256 为
+`103941485D8B1679D6DA18312025F5155F4A027F86EFA99E5BAD2FAA66FD67C1`。
+它们只绑定 guest fixture/build 输入，不构成 ESXi 行为证据。
+离线冻结账本为
+[`20260726-esxi-aer-root-runner-offline-v3/result.json`](../../_artifacts/vmware-directpath-runs/20260726-esxi-aer-root-runner-offline-v3/result.json)，
+SHA-256 为
+`bae6e1e0d552a2d2859250a3ac61448c010df37f27903c774e79713f8f90cf23`；
+它绑定 helper/runner/unit 源码哈希与 78 × 3 回归账本，仍不构成 ESXi observation。
 
 ESXi runner 只暴露 `pcie_aer_inject_error -c` 和封闭的八位 allow-list；没有 Uncorrectable
 注入参数。当前保留两个并列 profile，不能用后一个覆盖前一个：
@@ -746,6 +823,26 @@ case-id/
 ```
 
 `result.json` 至少包含 `case_id`、环境版本、输入参数、实际 BAR/root window、设备 owner、预期、实际、`pass|partial|blocked|fail` 和证据相对路径。只有满足此合同，Case 才适合跨版本回归和机器比较。
+
+M26 AER root-sequence 在上述通用合同上增加以下权威边界：
+
+- raw endpoint/root/ESXi/guest snapshot 必须先于解析和判定落盘；解析失败不能抹去已采集的
+  原始安全观察。
+- sampler、parser、monitored worker 或 cleanup 任一异常都必须产生 typed
+  partial/safety result、触发幂等 safe-stop，并停止后续注入；不得把不完整尾窗包装成 clean PASS。
+- continuous sampler 已落盘 raw numeric snapshot、但 gate readback 随后中断时，当前
+  `effective` 必须保持未确认，最近一次完整值单独记录为 `lastConfirmedEffective`；只有与该
+  raw snapshot 精确绑定的 producer fault 才可进入此分支，并且窗口必须以 paused fail-stop
+  收口。用于 current/last-confirmed effective 的样本还必须显式满足 `partial=false`；
+  缺失、`null`、`true` 或非布尔标记以及任意伪造/malformed partial 都是 typed failure。
+- T0/T1/T4/T5 的路径、采样时间、最大间隔、numeric safety surface 和 stop-tail 必须可从
+  manifest-bound artifact 重算；host raw logs 与 guest serial 必须从原始文件重新解析，不能信任
+  summary 自报字段。
+- 只有 `verify-run` 对 campaign、case、artifact manifest 和 aggregate sidecar 全部
+  exact-match 时，聚合 summary 才有权威性。离线 78/78 只验证这个 harness contract，
+  不能自行形成 ESXi observation；V17/V19 已满足 exact O0+O4/`g101` 的该门，但不能
+  替代 bound native driver、其他 gate、service/IRQ、guest write、lifecycle 或物理
+  qualification。
 
 ## 11. 推荐执行顺序
 

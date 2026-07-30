@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-qualification-profile-projection.schema.json",
+  "title": "Qman DirectPath qualification-profile pre-receipt projection",
+  "description": "Closed construction-only projection of one current, E4-verified QualificationRecord under one current SupportedCatalog. It deliberately contains neither verificationReceiptHash nor profileHash. It is not a persisted authority object and cannot be supplied by a request.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "profileId",
+    "platformProfileId",
+    "platformDigest",
+    "kernelDigest",
+    "qemuDigest",
+    "machineDigest",
+    "firmwareDigest",
+    "backendDigest",
+    "deviceTraitsDigest",
+    "guestAbiClass",
+    "workloadDigest",
+    "qualificationRecordDigests",
+    "supportedCatalogDigest",
+    "catalogSequence",
+    "revocationSeverity",
+    "revocationBehavior",
+    "supportStatus"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "QUALIFICATION_PROFILE"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "profileId": {
+      "$ref": "#/$defs/id"
+    },
+    "platformProfileId": {
+      "$ref": "#/$defs/id"
+    },
+    "platformDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "kernelDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "qemuDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "machineDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "firmwareDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "backendDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "deviceTraitsDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "guestAbiClass": {
+      "$ref": "#/$defs/id"
+    },
+    "workloadDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "qualificationRecordDigests": {
+      "$ref": "#/$defs/singletonDigestSet"
+    },
+    "supportedCatalogDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "catalogSequence": {
+      "$ref": "#/$defs/safePositiveInteger"
+    },
+    "revocationSeverity": {
+      "enum": [
+        "NORMAL",
+        "CRITICAL"
+      ]
+    },
+    "revocationBehavior": {
+      "enum": [
+        "DENY_NEW_AND_NEXT_POWER_ON",
+        "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP"
+      ]
+    },
+    "supportStatus": {
+      "const": "SUPPORTED"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "revocationSeverity": {
+            "const": "NORMAL"
+          }
+        },
+        "required": [
+          "revocationSeverity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "revocationBehavior": {
+            "const": "DENY_NEW_AND_NEXT_POWER_ON"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "revocationSeverity": {
+            "const": "CRITICAL"
+          }
+        },
+        "required": [
+          "revocationSeverity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "revocationBehavior": {
+            "const": "DENY_NEW_AND_REQUIRE_CONTROLLED_STOP"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "singletonDigestSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "x-qmanSetOrder": "ascending CANONICAL-JSON-V1 element bytes"
+    }
+  },
+  "x-qmanFieldProjection": {
+    "subjectType": "CONST(QUALIFICATION_PROFILE)",
+    "schemaVersion": "CONST(1)",
+    "profileId": "QualificationRecord.exactQualificationKey",
+    "platformProfileId": "QualificationRecord.kernelQemuFirmwareBackend.platformProfileId",
+    "platformDigest": "QualificationRecord.platformProfileHash",
+    "kernelDigest": "QualificationRecord.kernelQemuFirmwareBackend.kernelBuildDigest",
+    "qemuDigest": "QualificationRecord.kernelQemuFirmwareBackend.qemuBinaryDigest",
+    "machineDigest": "DERIVE(machineDigest)",
+    "firmwareDigest": "DERIVE(firmwareDigest)",
+    "backendDigest": "DERIVE(backendDigest)",
+    "deviceTraitsDigest": "DERIVE(deviceTraitsDigest)",
+    "guestAbiClass": "QualificationRecord.guestDriverAndWorkload.guestAbiClass",
+    "workloadDigest": "QualificationRecord.guestDriverAndWorkload.workloadDefinitionDigest",
+    "qualificationRecordDigests": "SINGLETON_SET(QualificationRecord.recordDigest)",
+    "supportedCatalogDigest": "SupportedCatalog.catalogDigest",
+    "catalogSequence": "SupportedCatalog.catalogSequence",
+    "revocationSeverity": "DERIVE_FROM(SupportedCatalog.revocationBehavior)",
+    "revocationBehavior": "SupportedCatalog.revocationBehavior",
+    "supportStatus": "CONST(SUPPORTED_AFTER_ALL_GATES)"
+  },
+  "x-qmanDerivedDigestRules": {
+    "machineDigest": {
+      "domain": "QMAN-DIRECTPATH/QUALIFICATION-PROFILE-MACHINE/V1",
+      "projectionFields": [
+        "QualificationRecord.kernelQemuFirmwareBackend.machineType",
+        "QualificationRecord.kernelQemuFirmwareBackend.machineVersion"
+      ]
+    },
+    "firmwareDigest": {
+      "domain": "QMAN-DIRECTPATH/QUALIFICATION-PROFILE-FIRMWARE/V1",
+      "projectionFields": [
+        "QualificationRecord.deviceFirmwareAndRom",
+        "QualificationRecord.kernelQemuFirmwareBackend.firmwareKind",
+        "QualificationRecord.kernelQemuFirmwareBackend.firmwareCodeDigest",
+        "QualificationRecord.kernelQemuFirmwareBackend.firmwareVarsBaseDigestOrNull"
+      ]
+    },
+    "backendDigest": {
+      "domain": "QMAN-DIRECTPATH/QUALIFICATION-PROFILE-BACKEND/V1",
+      "projectionFields": [
+        "QualificationRecord.kernelQemuFirmwareBackend.backendFamily",
+        "QualificationRecord.kernelQemuFirmwareBackend.configuredIommuType",
+        "QualificationRecord.kernelQemuFirmwareBackend.runtimeCapabilities",
+        "QualificationRecord.iommuInterruptResetProviders"
+      ]
+    },
+    "deviceTraitsDigest": {
+      "domain": "QMAN-DIRECTPATH/QUALIFICATION-PROFILE-DEVICE-TRAITS/V1",
+      "projectionFields": [
+        "QualificationRecord.deviceTraits"
+      ]
+    }
+  },
+  "x-qmanSourceRule": "Validate one exact QualificationRecord against directpath-qualification-record.schema.json, verify its QUALIFICATION_ENGINEERING signature and complete recursive E4 closure, and independently rederive its exactQualificationKey. Validate and authenticate one current SupportedCatalog against directpath-supported-catalog.schema.json, require the recordDigest to occur exactly once in its complete qualificationRecordDigests set, verify Product Release authority, external rollback acceptance and live freshness, and reject an expired record/catalog or any deny/revocation entry for this record whose effectiveAt is not later than evaluator time. Absence of an effective deny permits supportStatus=SUPPORTED but does not choose revocationSeverity. Current resolution admits exactly one record for an exactQualificationKey; zero or multiple records are ambiguous and produce no projection. profileId is that exactQualificationKey because neither the QualificationRecord nor SupportedCatalog defines another profile identifier. Every field is then copied or derived only by x-qmanFieldProjection; display names, request values, target-local DTO fields and caller-selected aliases never participate.",
+  "x-qmanRevocationProjectionRule": "Copy revocationBehavior exactly from SupportedCatalog.revocationBehavior and derive revocationSeverity by a total bijection: DENY_NEW_AND_NEXT_POWER_ON maps to NORMAL, and DENY_NEW_AND_REQUIRE_CONTROLLED_STOP maps to CRITICAL. The reverse implication is also mandatory. No effective per-record deny/revocation entry is admitted into a SUPPORTED projection; its absence affects supportStatus only and never overrides this catalog behavior-to-severity mapping.",
+  "x-qmanDerivedDigestRule": "For each entry in x-qmanDerivedDigestRules, construct an object whose keys are the final path segment of projectionFields in the listed order, except that a whole-object path retains that complete closed object under its final path-segment key. Reject duplicate resulting keys, copy values without normalization or omission, encode CANONICAL-JSON-V1 bytes, and compute SHA-256 over ASCII(the entry's domain) || 0x00 || those bytes. runtimeCapabilities and deviceTraits retain their schema-mandated canonical set order. No other record field may be silently added to or removed from a derived digest.",
+  "x-qmanProjectionDigestRule": "Encode the complete schema-valid projection as CANONICAL-JSON-V1 bytes and compute projectionDigest as SHA-256 over ASCII(QMAN-DIRECTPATH/QUALIFICATION-PROFILE-PROJECTION/V1) || 0x00 || those bytes. projectionDigest is carried only by the later directpath-qualification-verification-receipt.schema.json object. This projection has no nullable digest slot, verificationReceiptHash or profileHash, so its digest is acyclic.",
+  "x-qmanHashRule": "To derive profileSemanticDigest, construct exactly one object with subjectType=QUALIFICATION_PROFILE_SEMANTICS, schemaVersion=1, and each x-qmanProfileSemanticProjection.includedProfileFields value copied byte-semantically from the schema-valid profile projection. Include no x-qmanProfileSemanticProjection.excludedCurrentnessFields and no other field. Encode that closed object as CANONICAL-JSON-V1 bytes and compute SHA-256 over ASCII(QMAN-DIRECTPATH/QUALIFICATION-PROFILE-SEMANTICS/V1) || 0x00 || those bytes. The resulting profileSemanticDigest is derived output and is not a property of this construction-only projection.",
+  "x-qmanProfileSemanticProjection": {
+    "subjectType": "QUALIFICATION_PROFILE_SEMANTICS",
+    "schemaVersion": 1,
+    "canonicalProfileId": "CANONICAL-JSON-V1",
+    "hashAlgorithm": "SHA-256",
+    "hashDomain": "QMAN-DIRECTPATH/QUALIFICATION-PROFILE-SEMANTICS/V1",
+    "domainSeparator": "UTF8(hashDomain) || 0x00 || CANONICAL-JSON-V1(projection)",
+    "includedProfileFields": [
+      "profileId",
+      "platformProfileId",
+      "platformDigest",
+      "kernelDigest",
+      "qemuDigest",
+      "machineDigest",
+      "firmwareDigest",
+      "backendDigest",
+      "deviceTraitsDigest",
+      "guestAbiClass",
+      "workloadDigest",
+      "revocationSeverity",
+      "revocationBehavior",
+      "supportStatus"
+    ],
+    "excludedCurrentnessFields": [
+      "qualificationRecordDigests",
+      "supportedCatalogDigest",
+      "catalogSequence",
+      "verificationReceiptHash",
+      "profileHash"
+    ]
+  }
+}

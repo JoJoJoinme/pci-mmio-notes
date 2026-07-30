@@ -7,7 +7,7 @@
   "riskIds": ["R01", "R35"],
   "requiredTechStories": ["TS-F1-01", "TS-F1-03", "TS-F1-04"],
   "dependsOnCaseIds": [],
-  "blocker": "The current scanner can conservatively invalidate all physical domains when any ACS provenance is incomplete; component-local invalidation and the kernel native shadow-domain ABI are not implemented or physically qualified.",
+  "blocker": "The reference scanner now localizes incomplete topology provenance to the affected software-estimated component, but the Qman product kernel-native shadow-domain ABI, signed HostSnapshot publisher, target-code integration, and physical qualification are not implemented.",
   "targetMilestone": "G1",
   "proofBoundary": "REFERENCE_MODEL_PREMISE_NOT_PRODUCT_CLOSURE",
   "assertions": [

@@ -85,6 +85,11 @@ dump_target_state() {
   root_source=$(read_le32 "$config" $((aer_offset + 52)))
   command=$(read_le16 "$config" 4)
   status=$(read_le16 "$config" 6)
+  driver=unbound
+  if [ -L "$directory/driver" ]; then
+    driver_link=$(readlink "$directory/driver" 2>/dev/null || true)
+    [ -n "$driver_link" ] && driver=${driver_link##*/}
+  fi
 
   aer_discoverable=no
   case "$aer_header" in
@@ -95,6 +100,8 @@ dump_target_state() {
     "$pcie_cap" "$devctl" "$devsta" "$aer_header" "$aer_discoverable" \
     "$ues" "$uem" "$severity" "$ces" "$cem" "$aer_capctl" \
     "$root_cmd" "$root_status" "$root_source"
+  printf 'AER-OWNER phase=%s bdf=%s vendor=%s device=%s driver=%s\n' \
+    "$phase" "$bdf" "$vendor" "$device" "$driver"
 }
 
 dump_aer_state() {
@@ -135,22 +142,64 @@ if insmod /lib/modules/e1000e.ko; then
 else
   printf '\n=== e1000e load failed ===\n'
 fi
+insmod /lib/modules/failover.ko 2>/dev/null || true
+insmod /lib/modules/net_failover.ko 2>/dev/null || true
+if insmod /lib/modules/virtio_net.ko; then
+  sleep 2
+  printf '\n=== virtio_net loaded ===\n'
+else
+  printf '\n=== virtio_net load failed or already present ===\n'
+fi
 
 dump_aer_state before-injection
 printf '\n=== AER injection window open ===\n'
 window_seconds=45
+runner_managed=0
+runner_grace_seconds=300
 for option in $(cat /proc/cmdline); do
   case "$option" in
     aer_window_seconds=*) window_seconds=${option#*=} ;;
+    aer_runner_managed=1) runner_managed=1 ;;
+    aer_runner_grace_seconds=*) runner_grace_seconds=${option#*=} ;;
   esac
 done
 case "$window_seconds" in
   ''|*[!0-9]*) window_seconds=45 ;;
 esac
+case "$runner_grace_seconds" in
+  ''|*[!0-9]*) runner_grace_seconds=300 ;;
+esac
 printf 'AER-WINDOW seconds=%s\n' "$window_seconds"
-sleep "$window_seconds"
+remaining=$window_seconds
+heartbeat_index=0
+while [ "$remaining" -gt 0 ]; do
+  uptime_value=$(cut -d ' ' -f 1 /proc/uptime 2>/dev/null || printf unavailable)
+  printf 'AER-HEARTBEAT index=%s uptime=%s remaining=%s\n' \
+    "$heartbeat_index" "$uptime_value" "$remaining"
+  interval=5
+  [ "$remaining" -lt "$interval" ] && interval=$remaining
+  sleep "$interval"
+  remaining=$((remaining - interval))
+  heartbeat_index=$((heartbeat_index + 1))
+done
 printf '\n=== AER injection window closed ===\n'
 dump_aer_state after-injection
 printf '\n=== AER guest probe done ===\n'
 sync
-poweroff -f
+if [ "$runner_managed" = 1 ]; then
+  printf 'AER-RUNNER-MANAGED grace_seconds=%s awaiting-hypervisor-cleanup\n' \
+    "$runner_grace_seconds"
+  grace_remaining=$runner_grace_seconds
+  while [ "$grace_remaining" -gt 0 ]; do
+    interval=30
+    [ "$grace_remaining" -lt "$interval" ] && interval=$grace_remaining
+    printf 'AER-RUNNER-WATCHDOG remaining=%s\n' "$grace_remaining"
+    sleep "$interval"
+    grace_remaining=$((grace_remaining - interval))
+  done
+  printf 'AER-RUNNER-WATCHDOG expired; powering off\n'
+  sync
+  poweroff -f
+else
+  poweroff -f
+fi

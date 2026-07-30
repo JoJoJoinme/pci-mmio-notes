@@ -413,7 +413,7 @@ class CapabilityTests(unittest.TestCase):
             isolation_provenance=IsolationProvenance.ACS_OVERRIDE,
             physical_isolation_domain=(TARGET, "0000:02:00.0"),
             physical_isolation_domain_source=(
-                "kernel-acs-provenance-topology-conservative"
+                "kernel-native-shadow-domain-v1"
             ),
         )
 
@@ -449,7 +449,7 @@ class CapabilityTests(unittest.TestCase):
             isolation_provenance=IsolationProvenance.ACS_OVERRIDE,
             physical_isolation_domain=(TARGET, peer),
             physical_isolation_domain_source=(
-                "kernel-acs-provenance-topology-conservative"
+                "kernel-native-shadow-domain-v1"
             ),
         )
 
@@ -483,6 +483,26 @@ class CapabilityTests(unittest.TestCase):
             "PHYSICAL_ISOLATION_DOMAIN_UNTRUSTED",
             [item.code for item in result.reasons],
         )
+
+    def test_userspace_and_retired_override_sources_are_untrusted(self):
+        for source in (
+            "software_topology_estimate",
+            "kernel-acs-provenance-topology-conservative",
+        ):
+            with self.subTest(source=source):
+                device = endpoint(
+                    isolation_provenance=IsolationProvenance.ACS_OVERRIDE,
+                    physical_isolation_domain=(TARGET,),
+                    physical_isolation_domain_source=source,
+                )
+
+                result = evaluate(host(device, acs_override_active=True))
+
+                self.assertFalse(result.eligible)
+                self.assertIn(
+                    "PHYSICAL_ISOLATION_DOMAIN_UNTRUSTED",
+                    [item.code for item in result.reasons],
+                )
 
     def test_estimated_bus_reset_domain_fails_closed(self):
         peer = "0000:01:00.1"
