@@ -25,6 +25,7 @@
     "contracts/directpath-operation-payload.schema.json",
     "contracts/directpath-query-read-trace.schema.json",
     "contracts/directpath-host-snapshot-publication-trace.schema.json",
+    "contracts/directpath-host-snapshot-publication-repository-receipt.schema.json",
     "contracts/directpath-host-snapshot-rollback-anchor.schema.json",
     "contracts/directpath-operation-admission-binding.schema.json",
     "contracts/directpath-static-admission-command.schema.json",
@@ -170,6 +171,11 @@
       "path": "contracts/directpath-host-snapshot-publication-trace.schema.json",
       "hashScope": "GIT_BLOB_BYTES",
       "sha256": "sha256:1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4"
+    },
+    {
+      "path": "contracts/directpath-host-snapshot-publication-repository-receipt.schema.json",
+      "hashScope": "GIT_BLOB_BYTES",
+      "sha256": "sha256:8f2ede2a264562cc02801f3a9647836691be76f5bc8c228a0c4fb4ed32fae6a6"
     },
     {
       "path": "contracts/directpath-host-snapshot-rollback-anchor.schema.json",
@@ -653,6 +659,14 @@
             "requiredRole": "CONTROL_REPOSITORY_EVIDENCE"
           },
           {
+            "subject": "HostSnapshotPublicationRepositoryReceipt",
+            "domainSeparator": "QMAN-DIRECTPATH/HOST-SNAPSHOT-PUBLICATION-REPOSITORY-RECEIPT/V1",
+            "digestField": "receiptDigest",
+            "signatureField": "signature",
+            "signerKeyField": "signerKeyId",
+            "requiredRole": "CONTROL_REPOSITORY_EVIDENCE"
+          },
+          {
             "subject": "AcceptanceExecutionResult",
             "domainSeparator": "QMAN-DIRECTPATH/ACCEPTANCE-EXECUTION/V1",
             "digestField": "resultDigest",
@@ -905,6 +919,11 @@
         "subject": "HostSnapshotRepositoryCommitRecord",
         "schemaRef": "contracts/directpath-host-snapshot-publication-trace.schema.json#/$defs/repositoryCommitRecord",
         "digestField": "commitRecordDigest"
+      },
+      {
+        "subject": "HostSnapshotPublicationRepositoryReceipt",
+        "schemaRef": "contracts/directpath-host-snapshot-publication-repository-receipt.schema.json",
+        "digestField": "receiptDigest"
       },
       {
         "subject": "HostSnapshotVisibilityProbe",

@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "id": "QMAN-E2-C00-PCI-STRUCTURE-FLR-PREMISE-001",
-  "observedAt": "2026-07-29T22:48:08.486324Z",
+  "observedAt": "2026-07-30T08:45:46.6166543Z",
   "subject": "QMAN_COMPONENT",
   "evidenceGrade": "E2",
   "claimBoundary": "COMPONENT_ONLY",
   "verdict": "PASS",
   "sourceState": {
-    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "baseCommit": "837ef08912d89005ee84856f176a5ed72e8c20b4",
     "dirtyWorkingTree": true,
     "runnerHashes": {
       "qman-directpath-core/tests/test_inventory.py": "6a220661343d3fa7ec0cb9446d75c1cbf13cbe4e5775da67cd08835e112c5a92",
@@ -18,13 +18,13 @@
       "qman-directpath-core/tests/test_authority.py": "161f122bb3370fa20be255f7624dc83b64998e9a97da15b313b3f44ad391e11e",
       "qman-directpath-core/tests/test_operation_admission.py": "4d378e7cb7e4fa5f4bbdc6f7afad872f969697b8d05a42136becc03d49decf7b",
       "tests/test_snapshot_publication_contract.py": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
-      "tests/test_portable_handoff_contracts.py": "72047d3dca3f637ef9200b29c9e362d55d710ade9ec8f9a06f5dbdb47b46bc47"
+      "tests/test_portable_handoff_contracts.py": "a37144025af48e7a46456d84edf484bb4ae1768ce7e5c38f8ce0d86bcfdcdd95"
     },
     "inputHashes": {
       "qman-directpath-core/qman_directpath_core/pci_config.py": "cfe37e1205b5f20e5d6982907f17999c74fae78ec4e167a071cc6273d135808d",
       "qman-directpath-core/qman_directpath_core/snapshot_semantics.py": "93695d900b5702682fb6434d82a88a5fe31f48951bad79ba36c70a50a1fb7969",
       "qman-directpath-core/qman_directpath_core/inventory.py": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
-      "qman-directpath-core/qman_directpath_core/contracts.py": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "8311096d922c9fc0eace386821b4049f16927abcc8687ec9f6f7d6203ba2de0a",
       "qman-directpath-core/qman_directpath_core/closure.py": "4e278bca30521bf2b4e579ea8a6ca7086572301002193f31f453de032c34acb4",
       "qman-directpath-core/qman_directpath_core/inventory_closure_factory.py": "12997ba94e89ac8e7260476f4d5e654d11c0baf6b9fff57a9ca5cba8aa4b060b",
       "qman-directpath-core/qman_directpath_core/resource_plan.py": "78562bda4f975686508444399736fdb9b9388bc1d12f4555c43b082829f2b5aa",
@@ -32,12 +32,12 @@
       "qman-directpath-core/qman_directpath_core/authority.py": "1b0f45620ebf6d4c1adf9d36e59bc815131d4771de47b3b27c05ee6cdc35696c",
       "qman-directpath-core/qman_directpath_core/read_guard.py": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360",
       "qman-directpath-core/qman_directpath_core/operation_admission.py": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f",
-      "qman-directpath-core/qman_directpath_core/__init__.py": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "e4d8e0af866f23ce4b3e08eecdd755ef42525532566c3f18a398ddf421687f3c",
       "contracts/directpath-portable-entities.schema.json": "fe4123596d622b5c06974f6f3a34effa1494c4dfd985ef1afe4d2d1b42767b01",
       "contracts/directpath-host-snapshot-publication-trace.schema.json": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4",
       "contracts/directpath-inventory-verifier-algorithm.schema.json": "903a8b2bd750e7c3078f7edd7f56077a8832d7eb1852520fef74661137579221",
       "contracts/directpath-inventory-verification-receipt.schema.json": "245fb70b77bebc2c8e9b4229966a03306a17f4ab06597aee34e9390186537adb",
-      "contracts/directpath-portable-control-contract.json": "2f055abcd0e82375cf0d17cd3496f98507fb6153c8736e562001489171011a3b",
+      "contracts/directpath-portable-control-contract.json": "6a2e90a058d1ee22f8c9fad9361250e0c587196dd636d9fce993579d851c1d2d",
       "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
       "contracts/directpath-operation-admission-binding.schema.json": "75b2d1bcf0a8223e024fdbcc2093356fbf07b010a7f067a13d905941fd9abb5a",
       "acceptance/cases/registry-C.json": "baf6d64159670e8ca1ccb8a923cd46459d39541f7205fec86893eac68e807b2a"
@@ -301,7 +301,7 @@
     },
     {
       "path": "contracts/directpath-portable-control-contract.json",
-      "sha256": "2f055abcd0e82375cf0d17cd3496f98507fb6153c8736e562001489171011a3b",
+      "sha256": "6a2e90a058d1ee22f8c9fad9361250e0c587196dd636d9fce993579d851c1d2d",
       "retention": "LOCAL_RAW"
     },
     {

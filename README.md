@@ -101,7 +101,15 @@ and the resolved four-authority vector; `NO_CHANGE` is exact zero-write.  A
 successful result verifier then derives the post-state authority, exact output
 and CAS result, committed-version set and closed five/three receipt set from the
 mutation root, with result hashes forbidden from commit preimages.  These
-stages still do not prove authenticated request/result transport, idempotency
+contracts now also define a nonce/time-bound `PORT-GLOBAL-REPOSITORY` query and
+signed repository-transaction receipt.  That receipt exact-binds the same
+request/decision/mutation contexts, four-authority CAS, commit clock,
+`N+6`/zero-write result and raw artifact hashes, and requires a
+`CONTROL_REPOSITORY_EVIDENCE` key from the request-bound trust context.  It is
+still a component verifier boundary: a fake or SQLite adapter cannot establish
+target mapping, Qman `SERIALIZABLE`/SSI, durable nonce ownership or crash
+durability.  These stages still do not prove authenticated request/result
+transport, idempotency
 ownership/storage, trusted product transaction clock, product
 SERIALIZABLE/CAS execution, independent atomic visibility, post-anchor outbox
 delivery or mapped Qman code and therefore remain `productAuthorized=false`.

@@ -84,6 +84,16 @@
   禁止回写 commit preimage。以上仍只消费 caller-supplied exchange/receipts/rows，不证明
   trust-authority direct path/nonce transport、真实 repository CAS、atomic visibility、delivery
   或 authenticated/idempotent operation exchange，固定 `productAuthorized=false`。
+- [`directpath-host-snapshot-publication-repository-receipt.schema.json`](directpath-host-snapshot-publication-repository-receipt.schema.json)
+  固定 `PORT-GLOBAL-REPOSITORY` 的查询后事务回执：exact target revision、fresh nonce/
+  requestedAt、verified trust context、完整 `SERIALIZABLE` transaction、四权威 CAS、
+  commit clock、`N+6`/zero-write closure、六项 raw artifact SHA 与七类 write count 均须
+  精确投影 mutation root。回执按 `CONTROL_REPOSITORY_EVIDENCE` 角色和
+  `SIGNED-ENVELOPE-V1` 验证 Ed25519，并保持单向
+  `mutation -> query -> receipt` DAG；receipt/query/result digest 禁止回填 commit row。
+  该合同只定义 target adapter 必须返回的 canonical bytes，不证明 transport authentic、
+  nonce durable uniqueness、Qman 数据库 SERIALIZABLE/SSI、断电 durability 或 target
+  mapping，因而仍是 component-only。
 - [`directpath-capability-policy.schema.json`](directpath-capability-policy.schema.json)、
   [`directpath-dependency-closure-request.schema.json`](directpath-dependency-closure-request.schema.json) 与
   [`directpath-reset-contract-set.schema.json`](directpath-reset-contract-set.schema.json)：分别固定 self-hashed

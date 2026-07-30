@@ -1,0 +1,440 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qman.example/contracts/directpath-host-snapshot-publication-repository-receipt.schema.json",
+  "title": "Qman DirectPath host-snapshot publication repository transaction receipt",
+  "description": "Closed V1 component receipt for one independently queried host-snapshot publication repository transaction. It binds the exact SERIALIZABLE transaction, four-authority CAS result, commit clock, mutation closure, persisted-after artifact hashes, write counts, target revision label, verifier nonce and verified trust context. It is deliberately component-only and does not authenticate a Qman target endpoint, prove a product database implementation, or close C00/G1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subjectType",
+    "schemaVersion",
+    "receiptKind",
+    "receiptId",
+    "canonicalProfileId",
+    "schemaRef",
+    "schemaSha256",
+    "queryDigest",
+    "repositoryId",
+    "transactionId",
+    "operationId",
+    "commandId",
+    "requestHash",
+    "operationRequestContextDigest",
+    "decisionContextDigest",
+    "mutationContextDigest",
+    "verificationNonce",
+    "targetRepositoryObjectFormat",
+    "targetRepositoryCommit",
+    "trustContextDigest",
+    "trustBinding",
+    "repositoryTransactionCanonicalSha256",
+    "repositoryTransaction",
+    "outcome",
+    "commitIdOrNull",
+    "committedAtOrNull",
+    "commitClockBefore",
+    "commitClockAfter",
+    "mutationSetHashOrNull",
+    "mutationsCanonicalSha256",
+    "publicationMutationCount",
+    "deviceRecordSetDigest",
+    "resolvedAuthorityVectorHash",
+    "commitRecordDigestOrNull",
+    "snapshotPublicationCasResult",
+    "artifactCanonicalSha256",
+    "writeCounts",
+    "requestedAt",
+    "observedAt",
+    "signedAt",
+    "signerKeyId",
+    "keyRingSequence",
+    "algorithm",
+    "receiptDigest",
+    "signature"
+  ],
+  "properties": {
+    "subjectType": {
+      "const": "HOST_SNAPSHOT_PUBLICATION_REPOSITORY_RECEIPT"
+    },
+    "schemaVersion": {"const": 1},
+    "receiptKind": {
+      "const": "HOST_SNAPSHOT_PUBLICATION_REPOSITORY_TRANSACTION"
+    },
+    "receiptId": {"$ref": "#/$defs/id"},
+    "canonicalProfileId": {"const": "CANONICAL-JSON-V1"},
+    "schemaRef": {
+      "const": "contracts/directpath-host-snapshot-publication-repository-receipt.schema.json"
+    },
+    "schemaSha256": {"$ref": "#/$defs/digest"},
+    "queryDigest": {"$ref": "#/$defs/digest"},
+    "repositoryId": {"$ref": "#/$defs/id"},
+    "transactionId": {"$ref": "#/$defs/id"},
+    "operationId": {"const": "OP-CAPTURE-HOST-SNAPSHOT"},
+    "commandId": {"$ref": "#/$defs/id"},
+    "requestHash": {"$ref": "#/$defs/digest"},
+    "operationRequestContextDigest": {"$ref": "#/$defs/digest"},
+    "decisionContextDigest": {"$ref": "#/$defs/digest"},
+    "mutationContextDigest": {"$ref": "#/$defs/digest"},
+    "verificationNonce": {
+      "type": "string",
+      "minLength": 22,
+      "maxLength": 86,
+      "pattern": "^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}|[A-Za-z0-9_-]{3}|[A-Za-z0-9_-]{4})$"
+    },
+    "targetRepositoryObjectFormat": {"enum": ["SHA1", "SHA256"]},
+    "targetRepositoryCommit": {"type": "string"},
+    "trustContextDigest": {"$ref": "#/$defs/digest"},
+    "trustBinding": {"$ref": "#/$defs/trustBinding"},
+    "repositoryTransactionCanonicalSha256": {"$ref": "#/$defs/digest"},
+    "repositoryTransaction": {
+      "$ref": "directpath-host-snapshot-publication-trace.schema.json#/$defs/repositoryTransaction"
+    },
+    "outcome": {"enum": ["COMMITTED", "NO_CHANGE"]},
+    "commitIdOrNull": {"$ref": "#/$defs/nullableId"},
+    "committedAtOrNull": {"$ref": "#/$defs/nullableTimestamp"},
+    "commitClockBefore": {"$ref": "#/$defs/safeNonNegativeInteger"},
+    "commitClockAfter": {"$ref": "#/$defs/safeNonNegativeInteger"},
+    "mutationSetHashOrNull": {"$ref": "#/$defs/nullableDigest"},
+    "mutationsCanonicalSha256": {"$ref": "#/$defs/digest"},
+    "publicationMutationCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4102
+    },
+    "deviceRecordSetDigest": {"$ref": "#/$defs/digest"},
+    "resolvedAuthorityVectorHash": {"$ref": "#/$defs/digest"},
+    "commitRecordDigestOrNull": {"$ref": "#/$defs/nullableDigest"},
+    "snapshotPublicationCasResult": {
+      "$ref": "directpath-operation-payload.schema.json#/$defs/snapshotPublicationCasResult"
+    },
+    "artifactCanonicalSha256": {
+      "$ref": "#/$defs/artifactCanonicalSha256"
+    },
+    "writeCounts": {"$ref": "#/$defs/writeCounts"},
+    "requestedAt": {"$ref": "#/$defs/timestamp"},
+    "observedAt": {"$ref": "#/$defs/timestamp"},
+    "signedAt": {"$ref": "#/$defs/timestamp"},
+    "signerKeyId": {"$ref": "#/$defs/id"},
+    "keyRingSequence": {"$ref": "#/$defs/safePositiveInteger"},
+    "algorithm": {"const": "Ed25519"},
+    "receiptDigest": {"$ref": "#/$defs/digest"},
+    "signature": {"$ref": "#/$defs/signature"}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "targetRepositoryObjectFormat": {"const": "SHA1"}
+        },
+        "required": ["targetRepositoryObjectFormat"]
+      },
+      "then": {
+        "properties": {
+          "targetRepositoryCommit": {"pattern": "^[0-9a-f]{40}$"}
+        }
+      },
+      "else": {
+        "properties": {
+          "targetRepositoryCommit": {"pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"outcome": {"const": "COMMITTED"}},
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "commitIdOrNull": {"$ref": "#/$defs/id"},
+          "committedAtOrNull": {"$ref": "#/$defs/timestamp"},
+          "mutationSetHashOrNull": {"$ref": "#/$defs/digest"},
+          "commitRecordDigestOrNull": {"$ref": "#/$defs/digest"},
+          "publicationMutationCount": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 4102
+          },
+          "repositoryTransaction": {
+            "allOf": [
+              {
+                "$ref": "directpath-host-snapshot-publication-trace.schema.json#/$defs/repositoryTransaction"
+              },
+              {
+                "properties": {
+                  "outcome": {"const": "COMMITTED"},
+                  "commitIdOrNull": {"$ref": "#/$defs/id"},
+                  "committedAtOrNull": {"$ref": "#/$defs/timestamp"}
+                }
+              }
+            ]
+          },
+          "snapshotPublicationCasResult": {
+            "allOf": [
+              {
+                "$ref": "directpath-operation-payload.schema.json#/$defs/snapshotPublicationCasResult"
+              },
+              {
+                "properties": {
+                  "decision": {"const": "COMMITTED"}
+                }
+              }
+            ]
+          },
+          "artifactCanonicalSha256": {
+            "allOf": [
+              {"$ref": "#/$defs/artifactCanonicalSha256"},
+              {
+                "properties": {
+                  "availabilityAuthorityAfterOrNull": {
+                    "$ref": "#/$defs/digest"
+                  },
+                  "auditRecordOrNull": {"$ref": "#/$defs/digest"},
+                  "outboxRecordOrNull": {"$ref": "#/$defs/digest"},
+                  "commitRecordOrNull": {"$ref": "#/$defs/digest"}
+                }
+              }
+            ]
+          },
+          "writeCounts": {
+            "allOf": [
+              {"$ref": "#/$defs/writeCounts"},
+              {
+                "properties": {
+                  "hostSnapshot": {"const": 1},
+                  "deviceRecord": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4096
+                  },
+                  "hostAuthority": {"const": 1},
+                  "availabilityAuthority": {"const": 1},
+                  "publicationAuditRecord": {"const": 1},
+                  "publicationOutboxRecord": {"const": 1},
+                  "repositoryCommitRecord": {"const": 1}
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"outcome": {"const": "NO_CHANGE"}},
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "commitIdOrNull": {"type": "null"},
+          "committedAtOrNull": {"type": "null"},
+          "mutationSetHashOrNull": {"type": "null"},
+          "commitRecordDigestOrNull": {"type": "null"},
+          "publicationMutationCount": {"const": 0},
+          "repositoryTransaction": {
+            "allOf": [
+              {
+                "$ref": "directpath-host-snapshot-publication-trace.schema.json#/$defs/repositoryTransaction"
+              },
+              {
+                "properties": {
+                  "outcome": {"const": "NO_CHANGE"},
+                  "commitIdOrNull": {"type": "null"},
+                  "committedAtOrNull": {"type": "null"}
+                }
+              }
+            ]
+          },
+          "snapshotPublicationCasResult": {
+            "allOf": [
+              {
+                "$ref": "directpath-operation-payload.schema.json#/$defs/snapshotPublicationCasResult"
+              },
+              {
+                "properties": {
+                  "decision": {"const": "NO_CHANGE"}
+                }
+              }
+            ]
+          },
+          "artifactCanonicalSha256": {
+            "allOf": [
+              {"$ref": "#/$defs/artifactCanonicalSha256"},
+              {
+                "properties": {
+                  "availabilityAuthorityAfterOrNull": {"type": "null"},
+                  "auditRecordOrNull": {"type": "null"},
+                  "outboxRecordOrNull": {"type": "null"},
+                  "commitRecordOrNull": {"type": "null"}
+                }
+              }
+            ]
+          },
+          "writeCounts": {
+            "allOf": [
+              {"$ref": "#/$defs/writeCounts"},
+              {
+                "properties": {
+                  "hostSnapshot": {"const": 0},
+                  "deviceRecord": {"const": 0},
+                  "hostAuthority": {"const": 0},
+                  "availabilityAuthority": {"const": 0},
+                  "publicationAuditRecord": {"const": 0},
+                  "publicationOutboxRecord": {"const": 0},
+                  "repositoryCommitRecord": {"const": 0}
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/digest"}
+      ]
+    },
+    "nullableId": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/id"}
+      ]
+    },
+    "safeNonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "safePositiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
+    },
+    "nullableTimestamp": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/timestamp"}
+      ]
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^ed25519:[A-Za-z0-9_-]{86}$"
+    },
+    "trustBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rootSetId",
+        "rootSetDigest",
+        "rootSetCanonicalSha256",
+        "keyRingId",
+        "keyRingSequence",
+        "keyRingDigest",
+        "currentKeyRingCanonicalSha256",
+        "trustAnchorAuthorityId",
+        "trustAnchorVersion",
+        "trustAnchorResourceVersion",
+        "trustAnchorDigest",
+        "trustAnchorCanonicalSha256",
+        "trustFreshnessReceiptDigest",
+        "trustFreshnessExpiresAt"
+      ],
+      "properties": {
+        "rootSetId": {"$ref": "#/$defs/id"},
+        "rootSetDigest": {"$ref": "#/$defs/digest"},
+        "rootSetCanonicalSha256": {"$ref": "#/$defs/digest"},
+        "keyRingId": {"$ref": "#/$defs/id"},
+        "keyRingSequence": {"$ref": "#/$defs/safePositiveInteger"},
+        "keyRingDigest": {"$ref": "#/$defs/digest"},
+        "currentKeyRingCanonicalSha256": {"$ref": "#/$defs/digest"},
+        "trustAnchorAuthorityId": {"$ref": "#/$defs/id"},
+        "trustAnchorVersion": {"$ref": "#/$defs/safePositiveInteger"},
+        "trustAnchorResourceVersion": {
+          "$ref": "#/$defs/safePositiveInteger"
+        },
+        "trustAnchorDigest": {"$ref": "#/$defs/digest"},
+        "trustAnchorCanonicalSha256": {"$ref": "#/$defs/digest"},
+        "trustFreshnessReceiptDigest": {"$ref": "#/$defs/digest"},
+        "trustFreshnessExpiresAt": {"$ref": "#/$defs/timestamp"}
+      }
+    },
+    "artifactCanonicalSha256": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hostSnapshotAfter",
+        "hostAuthorityAfter",
+        "availabilityAuthorityAfterOrNull",
+        "auditRecordOrNull",
+        "outboxRecordOrNull",
+        "commitRecordOrNull"
+      ],
+      "properties": {
+        "hostSnapshotAfter": {"$ref": "#/$defs/digest"},
+        "hostAuthorityAfter": {"$ref": "#/$defs/digest"},
+        "availabilityAuthorityAfterOrNull": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "auditRecordOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "outboxRecordOrNull": {"$ref": "#/$defs/nullableDigest"},
+        "commitRecordOrNull": {"$ref": "#/$defs/nullableDigest"}
+      }
+    },
+    "writeCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hostSnapshot",
+        "deviceRecord",
+        "hostAuthority",
+        "availabilityAuthority",
+        "publicationAuditRecord",
+        "publicationOutboxRecord",
+        "repositoryCommitRecord"
+      ],
+      "properties": {
+        "hostSnapshot": {"$ref": "#/$defs/safeNonNegativeInteger"},
+        "deviceRecord": {"$ref": "#/$defs/safeNonNegativeInteger"},
+        "hostAuthority": {"$ref": "#/$defs/safeNonNegativeInteger"},
+        "availabilityAuthority": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "publicationAuditRecord": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "publicationOutboxRecord": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        },
+        "repositoryCommitRecord": {
+          "$ref": "#/$defs/safeNonNegativeInteger"
+        }
+      }
+    }
+  },
+  "x-qmanQueryDigestRule": "queryDigest is SHA-256 over ASCII(QMAN-DIRECTPATH/HOST-SNAPSHOT-PUBLICATION-REPOSITORY-QUERY/V1), one zero byte, and CANONICAL-JSON-V1 of the closed query subject {repositoryId,transactionId,operationId,commandId,requestHash,operationRequestContextDigest,decisionContextDigest,mutationContextDigest,verificationNonce,targetRepositoryObjectFormat,targetRepositoryCommit,outcome,commitIdOrNull,repositoryTransactionCanonicalSha256,requestedAt,queryDigest:null}. verificationNonce is the unique unpadded base64url re-encoding of 16..64 decoded bytes; the schema excludes impossible length modulo four and the verifier rejects non-zero unused tail bits. The verifier supplies that fresh nonce, requestedAt and independently expected target revision; none may be learned only from the returned receipt.",
+  "x-qmanTrustBindingRule": "canonicalProfileId, schemaRef and schemaSha256 exact-bind CANONICAL-JSON-V1, this fixed schema reference and the raw SHA-256 of the independently loaded schema document. trustContextDigest and every trustBinding field exact-project the same factory-verified trust context used to verify this receipt. Top-level keyRingSequence equals trustBinding.keyRingSequence. rootSetId/rootSetDigest/rootSetCanonicalSha256, keyRingId/keyRingSequence/keyRingDigest/currentKeyRingCanonicalSha256, trust-anchor identity/version/resourceVersion/digest/raw canonical SHA and live freshness receipt digest/expiry must also exact-match the operation request mutation read-set trust references. An alternate self-consistent root set, key ring, rollback anchor or copied expired freshness response is rejected.",
+  "x-qmanRepositoryTransactionBindingRule": "repositoryTransactionCanonicalSha256 is SHA-256 of exact CANONICAL-JSON-V1 bytes of repositoryTransaction, which validates through directpath-host-snapshot-publication-trace.schema.json#/$defs/repositoryTransaction. Every duplicated repository/transaction/operation/command/request/context/outcome/commit/time/clock field is byte-equal. The transaction expectation and snapshotPublicationCasResult compare HostAuthority, global AvailabilityAuthority, capability-policy authority and freshness-policy authority in one SERIALIZABLE decision; expected versions, policy hashes, expectationHash, resolvedAuthorityVectorHash, mutationSetHashOrNull, commitRecordDigestOrNull and publicationMutationCount all exact-match their retained sources. Matching fields in this component receipt do not prove that a Qman product database performed that CAS.",
+  "x-qmanOutcomeClosureRule": "COMMITTED has non-null commit ID/time, mutation-set and commit-record digests; snapshotPublicationCasResult.decision is COMMITTED; the four conditional raw wrapper hashes availabilityAuthorityAfterOrNull, auditRecordOrNull, outboxRecordOrNull and commitRecordOrNull are non-null; writeCounts are exactly 1 HostSnapshot, N DeviceRecords, 1 HostAuthority, 1 AvailabilityAuthority, 1 audit, 1 outbox and 1 commit record, where 1<=N<=4096 and publicationMutationCount=N+6. NO_CHANGE has null commit ID/time, mutation-set and commit-record digests, those same four conditional wrapper hashes null, snapshotPublicationCasResult.decision NO_CHANGE, publicationMutationCount zero and every write count zero. hostSnapshotAfter and hostAuthorityAfter always hash the exact selected persisted-after wrappers; mutationsCanonicalSha256 always hashes the exact canonical mutation array, including the canonical empty array for NO_CHANGE; deviceRecordSetDigest and resolvedAuthorityVectorHash remain non-null for both outcomes.",
+  "x-qmanCommitClockRule": "All top-level clocks byte-equal repositoryTransaction. COMMITTED requires commitClockAfter=commitClockBefore+1 and observedAt is not before committedAtOrNull. NO_CHANGE requires commitClockAfter=commitClockBefore, committedAtOrNull is null, observedAt is not before repositoryTransaction.beganAt, and no repository write of any category occurred. Integer comparison is over the declared safe-integer range.",
+  "x-qmanDigestAndSignatureRule": "After query, transaction, mutation, trust and time bindings pass, construct the complete closed receipt with receiptDigest and signature set to null. Let B be CANONICAL-JSON-V1 of that projection. Under the portable SIGNED-ENVELOPE-V1 profile, receiptDigest is SHA-256 of B with no domain prefix, and signature is Ed25519 over ASCII(QMAN-DIRECTPATH/HOST-SNAPSHOT-PUBLICATION-REPOSITORY-RECEIPT/V1), one zero byte, and that same B. Resolve signerKeyId through the exact trustBinding key ring and require the key to carry CONTROL_REPOSITORY_EVIDENCE, be active and be non-revoked at signedAt. requestedAt <= observedAt <= signedAt <= verifier time and signedAt <= trustBinding.trustFreshnessExpiresAt. The null/null construction projection need not validate as a stored signed receipt.",
+  "x-qmanAcyclicConstructionRule": "The dependency direction is verified operation request and trust context -> publication decision/rollback preparation -> repository transaction and commit rows -> mutation context -> fresh repository query -> this receipt. queryDigest points to the prior mutation/transaction context; this receipt points one-way to queryDigest and prior digests. receiptDigest, signature, queryDigest and any result/context/trace/Case/evidence-index digest are forbidden from the repository commit record or mutation-set preimage, preventing a fixed point or post-commit digest back-reference.",
+  "x-qmanAuthorityBoundary": "This schema and a valid component signature prove only deterministic closure over supplied canonical bytes and the signer identity resolved through the supplied factory-verified trust context. They do not authenticate a target transport, prove endpoint/session/controller identity, demonstrate a mapped Qman SERIALIZABLE/SSI implementation, establish crash durability or independent visibility, authorize product use, close C00/G1, or upgrade evidence beyond component-only without separately mapped target code and product execution evidence."
+}

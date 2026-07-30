@@ -171,6 +171,14 @@ qualification profile。参考实验仍不得冒充 Qman 产品实现或支持�
   SERIALIZABLE repository/CAS、atomic visibility、commit-clock/context 语义和 post-anchor delivery
   receipt，以及 trust authority direct path/nonce transport 均缺失，不关闭
   C00/C10/C15/C20、R04/R19/R38，也不提升四条产品状态轴。
+  本轮新增的 `PORT-GLOBAL-REPOSITORY` component receipt contract 会从 replayed mutation
+  派生 fresh nonce/requestedAt query，并验证 exact target revision、完整 transaction、四权威
+  CAS、commit clock、`N+6`/zero-write、六类 artifact SHA、七类 write count 和
+  `CONTROL_REPOSITORY_EVIDENCE` Ed25519 signer；57 个聚焦测试覆盖 COMMITTED/NO_CHANGE、
+  trust/role/time、全字段 substitution、资源门和 digest back-reference。它只把三项裸
+  caller-supplied repository blocker 转换为更具体的 target mapping、真实
+  SERIALIZABLE/SSI、durability、endpoint/nonce、build/runner blocker；`PORT-GLOBAL-REPOSITORY`
+  仍为 `UNMAPPED/NOT_STARTED`，不会形成 E3、Case/Risk closure 或产品授权。
 - `qman-directpath-reference` 已形成 34 个 SQLite 参考事务测试（另有 35 个 subtest）：public API 只接收 closed
   `StaticAdmissionCommand`；`BEGIN IMMEDIATE`、global availability fence、lease/binding/claim/run/
   idempotency/audit/outbox 原子提交、幂等资源版本 CAS、并发 overlap/absence phantom、逐写点回滚和

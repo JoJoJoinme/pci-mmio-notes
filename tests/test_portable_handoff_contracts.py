@@ -297,6 +297,7 @@ class PortableHandoffContractTests(unittest.TestCase):
                 "QualificationReleaseIndex",
                 "TargetSymbolIndex",
                 "HostSnapshot",
+                "HostSnapshotPublicationRepositoryReceipt",
                 "WorkloadEvaluatorManifest",
                 "WorkloadEvaluationContext",
                 "WorkloadEvaluationReport",

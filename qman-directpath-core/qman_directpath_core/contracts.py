@@ -66,6 +66,9 @@ QUERY_TRACE_SCHEMA_FILES = {
 OPERATION_EXCHANGE_SCHEMA_FILES = {
     "operation_envelope": "directpath-operation-envelope.schema.json",
     "operation_payload": "directpath-operation-payload.schema.json",
+    "host_snapshot_publication_repository_receipt": (
+        "directpath-host-snapshot-publication-repository-receipt.schema.json"
+    ),
 }
 
 

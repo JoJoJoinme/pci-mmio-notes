@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "id": "QMAN-E2-C00-HOST-SNAPSHOT-ANCHOR-BINDING-001",
-  "observedAt": "2026-07-29T22:48:08.486324Z",
+  "observedAt": "2026-07-30T08:45:46.6166543Z",
   "subject": "QMAN_COMPONENT",
   "evidenceGrade": "E2",
   "claimBoundary": "COMPONENT_ONLY",
   "verdict": "PASS",
   "sourceState": {
-    "baseCommit": "fd7130e5d827e71d4e5e333aa8a2c543a458b73c",
+    "baseCommit": "837ef08912d89005ee84856f176a5ed72e8c20b4",
     "dirtyWorkingTree": true,
     "runnerHashes": {
       "qman-directpath-core/tests/test_host_snapshot_anchor.py": "4dcb24a92f29c431a110ac9dcae77b88513ca1650de7b98d3ae0184be86f382c",
@@ -18,12 +18,12 @@
     },
     "inputHashes": {
       "qman-directpath-core/qman_directpath_core/host_snapshot_anchor.py": "b1b0afb32cbe17476ca641be3f1a9c4741c3b0b2189d658185aac4bf242de287",
-      "qman-directpath-core/qman_directpath_core/contracts.py": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "8311096d922c9fc0eace386821b4049f16927abcc8687ec9f6f7d6203ba2de0a",
       "qman-directpath-core/qman_directpath_core/authority.py": "1b0f45620ebf6d4c1adf9d36e59bc815131d4771de47b3b27c05ee6cdc35696c",
       "qman-directpath-core/qman_directpath_core/read_guard.py": "d78f9160eec6c05a8f7a71a051f08c92d044af5972e4cd0a1dfcf33f2328a360",
       "qman-directpath-core/qman_directpath_core/operation_admission.py": "a63a85a3c51177badea4d018473316e2e0097e8f41520f556d936efe5548f58f",
       "qman-directpath-core/qman_directpath_core/query_read_trace.py": "93809a1d2dc16ed083fbd38c721424e8a06ebde7ee6b466b591fb1ee7c8592fa",
-      "qman-directpath-core/qman_directpath_core/__init__.py": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "e4d8e0af866f23ce4b3e08eecdd755ef42525532566c3f18a398ddf421687f3c",
       "qman-directpath-core/qman_directpath_core/trust.py": "a02d4763f34ddccc87bc74cde4e6b6dfc76863a016849cdd49b74f82b4a5d8d8",
       "qman-directpath-core/qman_directpath_core/inventory.py": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
       "qman-directpath-core/qman_directpath_core/canonical.py": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
@@ -190,7 +190,7 @@
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/__init__.py",
-      "sha256": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
+      "sha256": "e4d8e0af866f23ce4b3e08eecdd755ef42525532566c3f18a398ddf421687f3c",
       "retention": "LOCAL_RAW"
     },
     {

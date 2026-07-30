@@ -152,6 +152,18 @@ The package owns deterministic computation and verification:
   closure and never enter repository commit preimages.  Authentic result
   transport and idempotent result storage/replay remain target receipts, so
   this context is component-only and `productAuthorized=false`;
+- a factory-only `PORT-GLOBAL-REPOSITORY` receipt stage.  It prepares a
+  nonce- and time-bound query from one replayed publication mutation, accepts
+  canonical receipt bytes only, and exact-projects the target revision,
+  repository transaction, request/decision/mutation contexts, four-authority
+  CAS result, commit clock, mutation/artifact hashes and seven closed write
+  counts.  The receipt signer must resolve through the same request-bound,
+  rollback-protected trust context with
+  `CONTROL_REPOSITORY_EVIDENCE`, and the detached Ed25519 receipt preserves the
+  one-way `mutation -> query -> receipt` hash DAG.  This verifies a component
+  receipt shape and signer; it does not authenticate the adapter transport,
+  prove durable nonce ownership, map Qman repository symbols, demonstrate
+  product `SERIALIZABLE`/SSI or crash durability, or authorize product use;
 - a factory-only `VerifiedHostSnapshotAnchorBinding` that accepts only one
   schema-valid `COMMITTED` external HostSnapshot rollback anchor and its exact
   live verifier-nonce freshness envelope.  It verifies root quorums,
@@ -494,7 +506,7 @@ Run:
 cd qman-directpath-core
 python -m pip install -e ".[test]"
 python -m pytest -q tests/test_host_snapshot_anchor.py tests/test_read_guard.py
-python -m pytest -q tests/test_publication_capture.py tests/test_publication_decision.py tests/test_publication_rollback.py tests/test_publication_operation.py tests/test_publication_mutation.py tests/test_publication_operation_result.py
+python -m pytest -q tests/test_publication_capture.py tests/test_publication_decision.py tests/test_publication_rollback.py tests/test_publication_operation.py tests/test_publication_mutation.py tests/test_publication_operation_result.py tests/test_publication_repository.py
 python -m pytest -q tests/test_aer_core.py tests/test_aer_retained_sequence.py tests/test_aer_normative_contract.py
 python -m pytest -q -p no:cacheprovider
 python -m unittest discover -s tests

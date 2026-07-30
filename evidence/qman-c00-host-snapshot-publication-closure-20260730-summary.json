@@ -1,20 +1,23 @@
 {
   "schemaVersion": 1,
   "id": "QMAN-E2-C00-HOST-SNAPSHOT-PUBLICATION-CLOSURE-001",
-  "observedAt": "2026-07-30T07:52:35.5504501Z",
+  "observedAt": "2026-07-30T08:45:46.6166543Z",
   "subject": "QMAN_COMPONENT",
   "evidenceGrade": "E2",
   "claimBoundary": "COMPONENT_ONLY",
   "verdict": "PASS",
   "sourceState": {
-    "baseCommit": "bda6787a6614628cdb8220a281a3342693a82fe3",
+    "baseCommit": "837ef08912d89005ee84856f176a5ed72e8c20b4",
     "dirtyWorkingTree": true,
     "runnerHashes": {
       ".github/workflows/ci.yml": "6d7455b4d06ae4bc5c82e81d417018c1f8b6c7113c0169911dfff61438190c5c",
       "qman-directpath-core/tests/test_publication_operation.py": "d19e8da7df1b7f5e0bc9d3845b68b85c5e1ea3abba2762785176b033b86d1f19",
       "qman-directpath-core/tests/test_publication_mutation.py": "c5fb0bda833795794dbe48ba9b3844da6a3c92964e52901aab9d37a425afea30",
       "qman-directpath-core/tests/test_publication_operation_result.py": "36486a1e8dbbb81b4d0ae3622d0e33de07d84a4dc0a3ede8a0a5cd648af50956",
-      "tests/test_snapshot_publication_contract.py": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f"
+      "qman-directpath-core/tests/test_publication_repository.py": "9d262218398fd575f0b0a82f19f31116db9bdd4a9eacd9817eda42d3c77dbff5",
+      "tests/test_snapshot_publication_contract.py": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
+      "tests/test_publication_repository_receipt_contract.py": "cd0b2918192e73a282f92308094d27043106d00df86de688c5af58ef57c8a6f4",
+      "tests/test_portable_handoff_contracts.py": "a37144025af48e7a46456d84edf484bb4ae1768ce7e5c38f8ce0d86bcfdcdd95"
     },
     "inputHashes": {
       "qman-directpath-core/qman_directpath_core/publication_operation.py": "0092e3334e9ed244fec75d90b7f7b937055be91a16d1befd82da6cb73292f7b5",
@@ -22,14 +25,16 @@
       "qman-directpath-core/qman_directpath_core/publication_decision.py": "e8ee101581b1ca03baa222315506285c4a7bbbea74b7f174d836a3a7ae8226b2",
       "qman-directpath-core/qman_directpath_core/publication_rollback.py": "3e2c09a24381597aacf37efae671c8b702c1dd9ec7d016ca789fe68d1ae25450",
       "qman-directpath-core/qman_directpath_core/publication_mutation.py": "32338ed4d08214110cd419c34704eedfeac5f7322c383caab73964b3e6d9931e",
+      "qman-directpath-core/qman_directpath_core/publication_repository.py": "82fbc81a415aed07a3ba570ba5ca6b97b9feaeb5bf183b4e019baac1633a5860",
       "qman-directpath-core/qman_directpath_core/trust.py": "a02d4763f34ddccc87bc74cde4e6b6dfc76863a016849cdd49b74f82b4a5d8d8",
       "qman-directpath-core/qman_directpath_core/inventory.py": "575c84d01a91e3a6fb52b489cae33cc7f49662b6e400982db73989941be506c2",
       "qman-directpath-core/qman_directpath_core/canonical.py": "9411c21d283510bd2ef60dde0dcfd25881a3397019dd92d2f131355b61b20251",
-      "qman-directpath-core/qman_directpath_core/contracts.py": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
+      "qman-directpath-core/qman_directpath_core/contracts.py": "8311096d922c9fc0eace386821b4049f16927abcc8687ec9f6f7d6203ba2de0a",
       "qman-directpath-core/qman_directpath_core/_verified.py": "6d686f87d62554bda59f5c860adaec006a3cf4947ef81388733574bc5f49df2d",
       "qman-directpath-core/qman_directpath_core/errors.py": "84c852d0c740a960e733a9d37f56e31a808fdfdfcfc67c29bb898f10cbad10b7",
-      "qman-directpath-core/qman_directpath_core/__init__.py": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
+      "qman-directpath-core/qman_directpath_core/__init__.py": "e4d8e0af866f23ce4b3e08eecdd755ef42525532566c3f18a398ddf421687f3c",
       "contracts/directpath-host-snapshot-publication-trace.schema.json": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4",
+      "contracts/directpath-host-snapshot-publication-repository-receipt.schema.json": "8f2ede2a264562cc02801f3a9647836691be76f5bc8c228a0c4fb4ed32fae6a6",
       "contracts/directpath-host-snapshot-rollback-anchor.schema.json": "93bf9de4a26c8bb7c7537287351d64183c008cf946c3b2e2d5c9f45e3adad18c",
       "contracts/directpath-anchor-freshness-envelope.schema.json": "c69c1015cf8d9212a1f563460fd3bea0e981697f9991206f89c215f4f3cb0951",
       "contracts/directpath-authority-entities.schema.json": "a95ea1412ca5fad5f2f5e90c0da912cf1be4cd29ce4d8f37ca852d42ce5d5a6a",
@@ -41,11 +46,11 @@
       "contracts/directpath-inventory-verification-receipt.schema.json": "245fb70b77bebc2c8e9b4229966a03306a17f4ab06597aee34e9390186537adb",
       "contracts/directpath-inventory-verifier-algorithm.schema.json": "903a8b2bd750e7c3078f7edd7f56077a8832d7eb1852520fef74661137579221",
       "contracts/directpath-portable-hash-subjects.schema.json": "844083f3d0576210ca00c1fe10405f22acfc467f2da5b20ddd7e5142a8c7b0f7",
-      "contracts/directpath-portable-control-contract.json": "2f055abcd0e82375cf0d17cd3496f98507fb6153c8736e562001489171011a3b"
+      "contracts/directpath-portable-control-contract.json": "6a2e90a058d1ee22f8c9fad9361250e0c587196dd636d9fce993579d851c1d2d"
     }
   },
   "sut": {
-    "environment": "Windows Python deterministic component and contract tests in the local authorized workspace; self-consistent canonical fixtures only; no target Qman process, accepted transport exchange, product repository port, ESXi, QEMU, HMP, QTest, VFIO, external authority transport, or physical-hardware action",
+    "environment": "Windows Python deterministic component and contract tests in the local authorized workspace; self-consistent canonical fixtures and locally generated role-signed repository receipts only; no target Qman process, accepted transport exchange, product repository port, ESXi, QEMU, HMP, QTest, VFIO, external authority transport, or physical-hardware action",
     "components": [
       {
         "name": "qman-directpath-core HostSnapshot operation request and result verifier",
@@ -56,6 +61,16 @@
         "name": "qman-directpath-core HostSnapshot publication mutation closure verifier",
         "version": "0.1.0 working tree",
         "sha256": "32338ed4d08214110cd419c34704eedfeac5f7322c383caab73964b3e6d9931e"
+      },
+      {
+        "name": "qman-directpath-core role-signed HostSnapshot publication repository receipt verifier",
+        "version": "0.1.0 working tree",
+        "sha256": "82fbc81a415aed07a3ba570ba5ca6b97b9feaeb5bf183b4e019baac1633a5860"
+      },
+      {
+        "name": "portable HostSnapshot publication repository receipt contract",
+        "version": "working tree",
+        "sha256": "8f2ede2a264562cc02801f3a9647836691be76f5bc8c228a0c4fb4ed32fae6a6"
       },
       {
         "name": "portable HostSnapshot publication trace and operation contracts",
@@ -71,8 +86,9 @@
   "hypotheses": [
     "A factory-only request verifier can close the canonical request envelope and detached payload, deployment binding, controller generation, operation identity, correlation, authority-vector shape, request window, payload hash, and null-projection request hash before mutation verification consumes the exact retained request.",
     "A factory-only mutation verifier can bind that request to the retained publication read set and durable commit context, reconstruct COMMITTED N+6 mutations or exact NO_CHANGE zero writes, and retain the operation-result schema/envelope blocker until a final result context is verified.",
+    "A factory-only repository receipt verifier can replay the exact mutation and nonce query, bind exact canonical transaction and row-artifact hashes, seven write-count categories, four-authority CAS, branch-specific commit clocks and current CONTROL_REPOSITORY_EVIDENCE Ed25519 authority while keeping every unresolved target blocker explicit and forbidding post-commit digest back-references.",
     "A factory-only successful-result verifier can replay the mutation closure and exact-project the detached result payload, post-state authority, committed version set, closed pre-existing receipt set, policy hash, correlation, completion window, payload hash, and null-projection result hash without feeding result bytes back into the commit DAG.",
-    "Consistent fixtures and deterministic replay prove component algorithms only. They cannot prove target transport acceptance, idempotency ownership, repository CAS execution or clocks, atomic visibility, post-anchor outbox delivery, authentic result exchange, durable result replay, target mapping, or product authorization."
+    "Consistent fixtures, locally generated role signatures, and deterministic replay prove component algorithms only. They cannot prove target transport acceptance, endpoint/session identity, durable nonce ownership, idempotency ownership, a real SERIALIZABLE repository implementation or clocks, atomic visibility, post-anchor outbox delivery, authentic result exchange, target mapping/build/runner execution, or product authorization."
   ],
   "observations": [
     {
@@ -114,6 +130,63 @@
       }
     },
     {
+      "name": "publication-repository-receipt-focused-matrix",
+      "result": {
+        "command": "python -m pytest -q tests/test_publication_repository.py -p no:cacheprovider",
+        "workingDirectory": "qman-directpath-core",
+        "testsPassed": 57,
+        "skips": 0,
+        "failures": 0,
+        "errors": 0,
+        "elapsedSeconds": 153.32,
+        "coveredBranches": [
+          "COMMITTED with exact N+6 writes, commit clock increment, six retained artifact hashes and current role signature",
+          "NO_CHANGE with zero writes, unchanged commit clock, null committed artifacts and current role signature"
+        ],
+        "coveredInvariants": {
+          "exactCanonicalReceiptBytesAndPreparseDepthGate": true,
+          "canonicalBase64urlNonceOf16To64DecodedBytes": true,
+          "queryBindsRepositoryTransactionOperationRequestOutcomeCommitAndTarget": true,
+          "embeddedRepositoryTransactionCanonicalBytesAndHashExact": true,
+          "serializableFourAuthorityCasProjectionExact": true,
+          "commitClockCommittedPlusOneAndNoChangeStable": true,
+          "signedEnvelopeV1DigestProjectionExact": true,
+          "currentControlRepositoryEvidenceEd25519RoleRequired": true,
+          "retainedArtifactCanonicalHashCount": 6,
+          "closedWriteCountCategoryCount": 7,
+          "postCommitQueryReceiptAndSignatureBackReferencesRejected": true,
+          "factoryMutationQueryAndRepositoryContextReplayRequired": true
+        },
+        "adversarialClasses": [
+          "non-canonical or oversized receipt and raw nesting rejected before upstream replay",
+          "invalid, short, non-canonical-tail or impossible-length base64url nonce",
+          "repository, transaction, operation, command, request, target, outcome and commit substitution",
+          "embedded transaction, mutation array, CAS, artifact hash and seven-category write-count substitution",
+          "COMMITTED and NO_CHANGE commit-clock or branch-field substitution",
+          "alternate trust root, key ring, rollback anchor, freshness or operation-request trust reference",
+          "wrong-role, revoked, inactive, stale-ring, bad-digest or bad-signature repository signer",
+          "query, receipt digest or signature back-reference into pre-existing repository rows"
+        ],
+        "authorityBoundary": "COMPONENT_ROLE_SIGNED_REPOSITORY_RECEIPT_VERIFICATION_ONLY",
+        "authorityDisposition": "COMPONENT_REPOSITORY_RECEIPT_VALID_TARGET_PRODUCT_PORT_NOT_PROVEN",
+        "targetProductEvidenceBlockers": [
+          "TARGET_ACCEPTED_OPERATION_REQUEST_IDEMPOTENCY_AND_DEADLINE_RECEIPT_REQUIRED",
+          "TARGET_CONTROLLER_GENERATION_AUTHORITY_RECEIPT_REQUIRED",
+          "TARGET_ATOMIC_PUBLICATION_VISIBILITY_RECEIPT_REQUIRED",
+          "TARGET_OUTBOX_POST_ANCHOR_DELIVERY_RECEIPT_REQUIRED",
+          "TARGET_OPERATION_RESULT_SCHEMA_AND_ENVELOPE_BINDING_REQUIRED",
+          "TARGET_PORT_GLOBAL_REPOSITORY_CODE_MAPPING_REQUIRED",
+          "TARGET_SERIALIZABLE_FOUR_AUTHORITY_CAS_IMPLEMENTATION_REQUIRED",
+          "TARGET_DURABLE_COMMIT_CLOCK_AND_CRASH_RECOVERY_EVIDENCE_REQUIRED",
+          "TARGET_REPOSITORY_RECEIPT_NONCE_OWNERSHIP_AND_REPLAY_STORE_REQUIRED",
+          "TARGET_REPOSITORY_RECEIPT_ENDPOINT_SESSION_BINDING_REQUIRED",
+          "TARGET_QMAN_PRODUCT_BUILD_IDENTITY_EVIDENCE_REQUIRED",
+          "TARGET_QMAN_PRODUCT_RUNNER_EXECUTION_EVIDENCE_REQUIRED"
+        ],
+        "productAuthorized": false
+      }
+    },
+    {
       "name": "root-publication-contract-regression",
       "result": {
         "command": "python -m pytest tests/test_snapshot_publication_contract.py -q -p no:cacheprovider",
@@ -132,6 +205,11 @@
         "requestReadSetAndFourAuthorityVectorBoundBeforeMutation": true,
         "sameCommandDifferentResealedRequestRejected": true,
         "durableCommitContextAndClockReconstructed": true,
+        "repositoryReceiptCanonicalBytesAndNonceQueryReplayed": true,
+        "repositoryReceiptFourAuthorityCasAndCommitClockExact": true,
+        "repositoryReceiptCurrentRoleSignatureVerified": true,
+        "repositoryReceiptPostCommitDigestDagBackReferencesRejected": true,
+        "repositoryReceiptProductEvidenceBlockerCount": 12,
         "committedMutationCountFormula": "N+6",
         "maximumCommittedMutations": 4102,
         "noChangeWriteCount": 0,
@@ -163,9 +241,25 @@
       "result": {
         "requestBoundary": "COMPONENT_CALLER_SUPPLIED_OPERATION_EXCHANGE_ONLY",
         "mutationBoundary": "COMPONENT_CALLER_SUPPLIED_REPOSITORY_ROWS_AND_TRANSACTION_ONLY",
+        "repositoryReceiptBoundary": "COMPONENT_ROLE_SIGNED_REPOSITORY_RECEIPT_VERIFICATION_ONLY",
+        "repositoryReceiptAuthorityDisposition": "COMPONENT_REPOSITORY_RECEIPT_VALID_TARGET_PRODUCT_PORT_NOT_PROVEN",
         "resultBoundary": "COMPONENT_CALLER_SUPPLIED_OPERATION_RESULT_AND_MUTATION_ONLY",
         "resultAuthorityDisposition": "COMPONENT_RESULT_BYTES_AND_TRACE_PROJECTION_VERIFIED_PRODUCT_EXCHANGE_NOT_PROVEN",
         "productAuthorized": false,
+        "repositoryReceiptProductEvidenceBlockers": [
+          "TARGET_ACCEPTED_OPERATION_REQUEST_IDEMPOTENCY_AND_DEADLINE_RECEIPT_REQUIRED",
+          "TARGET_CONTROLLER_GENERATION_AUTHORITY_RECEIPT_REQUIRED",
+          "TARGET_ATOMIC_PUBLICATION_VISIBILITY_RECEIPT_REQUIRED",
+          "TARGET_OUTBOX_POST_ANCHOR_DELIVERY_RECEIPT_REQUIRED",
+          "TARGET_OPERATION_RESULT_SCHEMA_AND_ENVELOPE_BINDING_REQUIRED",
+          "TARGET_PORT_GLOBAL_REPOSITORY_CODE_MAPPING_REQUIRED",
+          "TARGET_SERIALIZABLE_FOUR_AUTHORITY_CAS_IMPLEMENTATION_REQUIRED",
+          "TARGET_DURABLE_COMMIT_CLOCK_AND_CRASH_RECOVERY_EVIDENCE_REQUIRED",
+          "TARGET_REPOSITORY_RECEIPT_NONCE_OWNERSHIP_AND_REPLAY_STORE_REQUIRED",
+          "TARGET_REPOSITORY_RECEIPT_ENDPOINT_SESSION_BINDING_REQUIRED",
+          "TARGET_QMAN_PRODUCT_BUILD_IDENTITY_EVIDENCE_REQUIRED",
+          "TARGET_QMAN_PRODUCT_RUNNER_EXECUTION_EVIDENCE_REQUIRED"
+        ],
         "productEvidenceBlockers": [
           "TARGET_ACCEPTED_OPERATION_REQUEST_IDEMPOTENCY_AND_DEADLINE_RECEIPT_REQUIRED",
           "TARGET_CONTROLLER_GENERATION_AUTHORITY_RECEIPT_REQUIRED",
@@ -228,6 +322,11 @@
       "retention": "LOCAL_RAW"
     },
     {
+      "path": "qman-directpath-core/qman_directpath_core/publication_repository.py",
+      "sha256": "82fbc81a415aed07a3ba570ba5ca6b97b9feaeb5bf183b4e019baac1633a5860",
+      "retention": "LOCAL_RAW"
+    },
+    {
       "path": "qman-directpath-core/qman_directpath_core/trust.py",
       "sha256": "a02d4763f34ddccc87bc74cde4e6b6dfc76863a016849cdd49b74f82b4a5d8d8",
       "retention": "LOCAL_RAW"
@@ -239,12 +338,12 @@
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/contracts.py",
-      "sha256": "671130ac18a62c051bb976ba7129b7981470352abac74f8cee68d244182cc769",
+      "sha256": "8311096d922c9fc0eace386821b4049f16927abcc8687ec9f6f7d6203ba2de0a",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "qman-directpath-core/qman_directpath_core/__init__.py",
-      "sha256": "e9b7f08e83e84fe49909a775c5f9d7a386579bc5d896baa74772f4556610ddbb",
+      "sha256": "e4d8e0af866f23ce4b3e08eecdd755ef42525532566c3f18a398ddf421687f3c",
       "retention": "LOCAL_RAW"
     },
     {
@@ -263,8 +362,18 @@
       "retention": "LOCAL_RAW"
     },
     {
+      "path": "qman-directpath-core/tests/test_publication_repository.py",
+      "sha256": "9d262218398fd575f0b0a82f19f31116db9bdd4a9eacd9817eda42d3c77dbff5",
+      "retention": "LOCAL_RAW"
+    },
+    {
       "path": "contracts/directpath-host-snapshot-publication-trace.schema.json",
       "sha256": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "contracts/directpath-host-snapshot-publication-repository-receipt.schema.json",
+      "sha256": "8f2ede2a264562cc02801f3a9647836691be76f5bc8c228a0c4fb4ed32fae6a6",
       "retention": "LOCAL_RAW"
     },
     {
@@ -304,12 +413,22 @@
     },
     {
       "path": "contracts/directpath-portable-control-contract.json",
-      "sha256": "2f055abcd0e82375cf0d17cd3496f98507fb6153c8736e562001489171011a3b",
+      "sha256": "6a2e90a058d1ee22f8c9fad9361250e0c587196dd636d9fce993579d851c1d2d",
       "retention": "LOCAL_RAW"
     },
     {
       "path": "tests/test_snapshot_publication_contract.py",
       "sha256": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "tests/test_publication_repository_receipt_contract.py",
+      "sha256": "cd0b2918192e73a282f92308094d27043106d00df86de688c5af58ef57c8a6f4",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "tests/test_portable_handoff_contracts.py",
+      "sha256": "a37144025af48e7a46456d84edf484bb4ae1768ce7e5c38f8ce0d86bcfdcdd95",
       "retention": "LOCAL_RAW"
     }
   ],
@@ -320,11 +439,12 @@
   },
   "limitations": [
     "The request and result envelope/payload bytes are local canonical fixtures supplied to the component. Exact hashes, correlation, authority projections, timestamps, replay, and closed schemas do not prove transport authentication, target acceptance, idempotency ownership, deadline enforcement, or authentic result delivery.",
-    "The verified request is now consumed by mutation verification, but publication read receipts, authority bytes, trusted times, configured authority paths, verifier nonces, repository transactions, and committed row artifacts remain caller or adapter inputs. The component does not fetch them from an independent current product authority.",
+    "The verified request is now consumed by mutation verification, but publication read receipts, authority bytes, trusted times, configured authority paths, repository transactions, committed row artifacts, and repository-receipt endpoint/session identity remain caller or adapter inputs. The component generates and checks nonce-bound queries but does not prove durable product-side nonce ownership or fetch bytes from an independently authenticated current product endpoint.",
     "The locally closed CAS result, N+6 mutation set, durable commit context, commit clocks, post-state authority, committed versions, and receipt set do not prove a real SERIALIZABLE target transaction, four-authority CAS execution, durability, atomic visibility, or post-anchor outbox delivery.",
+    "The repository receipt verifier checks exact canonical bytes, canonical 16..64-byte base64url nonces, current CONTROL_REPOSITORY_EVIDENCE Ed25519 signatures, transaction/CAS/clock/artifact/write-count projections and one-way digest construction. The test key, receipt, endpoint and session are local component fixtures; this is not a mapped PORT-GLOBAL-REPOSITORY implementation, Qman build identity, crash-recovery result, or product-runner observation.",
     "The mutation context deliberately retains TARGET_OPERATION_RESULT_SCHEMA_AND_ENVELOPE_BINDING_REQUIRED. Only construction and replay of the final factory-verified result context consumes that component blocker; it does not consume the remaining controller-authority, target repository, product visibility, authentic exchange, or durable idempotent-result blockers.",
     "The CI workflow file now runs product-shaped core tests from qman-directpath-core, and its exact local bytes are retained here. No GitHub Actions workflow execution receipt was observed by this record.",
-    "The tests use self-consistent component fixtures and adversarial resealing. They are not observations from a target Qman collector/publisher, repository port, external rollback authority transport, target build, ESXi, QEMU, VFIO, or physical hardware.",
+    "The tests use self-consistent component fixtures, locally generated role keys and adversarial resealing. They are not observations from a target Qman collector/publisher, repository port, external rollback authority transport, target build, ESXi, QEMU, VFIO, or physical hardware.",
     "There is no target-code mapping, produced-binary build/runner attestation, E3 end-to-end Qman product execution, E4 physical qualification, or signed CaseCompletionRecord.",
     "This record cannot close C00, R38, G1-G6, any product capability, qualification profile, support statement, HCL entry, or release gate."
   ]
