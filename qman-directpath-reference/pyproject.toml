@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qman-directpath-reference"
-version = "0.3.0"
-description = "SQLite reference transactions for Static admission and read-only DirectPath queries"
+version = "0.4.0"
+description = "SQLite reference transactions for Static admission, DirectPath queries, and HostSnapshot publication"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["qman-directpath-core==0.1.0"]
 
 [project.optional-dependencies]
 test = ["jsonschema>=4.23,<5", "ruff>=0.8,<1"]

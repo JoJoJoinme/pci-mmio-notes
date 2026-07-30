@@ -216,7 +216,7 @@
     {
       "id": "QMAN-E2-C00-HOST-SNAPSHOT-PUBLICATION-CLOSURE-001",
       "resultPath": "evidence/qman-c00-host-snapshot-publication-closure-20260730-summary.json",
-      "resultSha256": "128b22277517001836971fdf1c96fe05989979cac0de317665e5223d64e52427",
+      "resultSha256": "6e2191cca65d1ec0bfdc94f5f9dcd1c7336144ebdd8c0b9dc5ad71d19f6d41fd",
       "subject": "QMAN_COMPONENT",
       "evidenceGrade": "E2",
       "verdict": "PASS",

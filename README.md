@@ -113,6 +113,22 @@ transport, idempotency
 ownership/storage, trusted product transaction clock, product
 SERIALIZABLE/CAS execution, independent atomic visibility, post-anchor outbox
 delivery or mapped Qman code and therefore remain `productAuthorized=false`.
+The independent `qman-directpath-reference` publication lane now executes that
+shape against a frozen SQLite store: it uses `BEGIN IMMEDIATE`, verifies the
+four-authority read set and a bootstrap-anchored single-commit clock, applies
+Host and Availability CAS, materializes the logical `N+6` committed set, and proves
+`NO_CHANGE` performs no DML.  Pre-commit fault and process-exit injection,
+post-commit uncertain-return recovery, and two-process identical-attempt tests
+demonstrate rollback, one physical commit, and exact zero-write replay for this
+component.  The commit database deliberately contains no post-commit
+repository-query nonce, mutation-context digest, signed receipt, or signature.
+This is executable SQLite writer-serialization evidence only; it is not target
+Qman code, PostgreSQL `SERIALIZABLE`/SSI, a mapped
+`PORT-GLOBAL-REPOSITORY`, power-loss durability, or product authorization.
+SQLite schema v1 intentionally makes its first durable commit terminal: it
+accepts only exact replay afterward, so it also rejects a distinct later
+`NO_CHANGE`. Continuous publication history remains a later target/reference
+slice that must persist enough verified preimage for full core replay.
 Verifier-produced contexts have no
 public constructor and cannot be relabeled with `dataclasses.replace`.  Exact
 publisher/profile currentness remains separate from owner-independent

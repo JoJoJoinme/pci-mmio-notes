@@ -1,7 +1,11 @@
 # Qman DirectPath SQLite reference transaction
 
-This package contains the closed Static-admission command/result contracts and
-one executable SQLite reference transaction. Its fixed evidence boundary is:
+This package contains the closed Static-admission command/result contracts,
+an executable Static-admission transaction, a read-only DirectPath query lane,
+and an independent HostSnapshot-publication transaction. These are reference
+components, not product repository implementations.
+
+The Static-admission transaction's fixed evidence boundary is:
 
 ```text
 REFERENCE_SQLITE_TRANSACTION_COMPONENT_ONLY
@@ -73,6 +77,75 @@ side-effect counter, and reset-observation instances come only from the
 explicitly bootstrapped reference observer row. Therefore these traces are
 schema-valid component evidence, not `QMAN_PRODUCT_E3_QUERY_READ_TRACE`.
 
+## HostSnapshot publication lane
+
+`SqliteReferenceHostSnapshotPublicationRepository` consumes only a
+factory-created `VerifiedHostSnapshotPublicationMutationContext` from
+`qman-directpath-core`. It replays that complete mutation closure in memory
+before touching SQLite; the first database statement of each execution is
+`BEGIN IMMEDIATE`.
+
+The publication store is deliberately separate from the Static-admission v1
+schema. Its eight-table schema retains the commit clock, exact current Host,
+Availability, CapabilityPolicy, and FreshnessPolicy authorities, HostSnapshots,
+DeviceRecords, publication audit/outbox rows, and repository commits. An
+explicit `REFERENCE_ONLY_HOST_SNAPSHOT_PUBLICATION_BOOTSTRAP` API seeds the
+verified before-state for executable fixtures. A predecessor
+`VerifiedInventoryContext` retains exact HostSnapshot instance bytes but not
+the later artifact wrapper, so that bootstrap row stores a null artifact pair;
+newly committed snapshots always store the real exact wrapper and instance.
+
+Within one SQLite writer transaction, a `COMMITTED` execution:
+
+1. checks the frozen schema, store identity, bootstrap-anchored single-commit
+   invariant, clock, exact four-authority read set, and complete predecessor
+   inventory;
+2. inserts one HostSnapshot and all `N` DeviceRecords;
+3. compare-and-swaps HostAuthority and AvailabilityAuthority while retaining
+   the exact policy-authority rows;
+4. inserts audit, pending outbox, and commit rows and advances the clock once;
+5. revalidates the complete materialized state before `COMMIT`.
+
+The portable logical mutation count is exactly `N+6`. That is not a claim that
+SQLite executes only `N+6` physical DML statements: the commit-clock update is
+an additional storage operation. Retrying the same committed mutation verifies
+the durable rows and returns byte-identical execution-context bytes without
+changing `total_changes`.
+
+Schema v1 intentionally permits zero-write `NO_CHANGE` evaluations only before
+its first durable publication, then at most one terminal `COMMITTED`
+publication. That committed transaction can be replayed indefinitely; a
+different transaction, including a later `NO_CHANGE`, is rejected because the
+store does not retain enough verified preimage to independently replay the
+durable tip before authorizing another operation. Supporting a continuous
+publication history requires persisting that context for the core verifier to
+replay every historical mutation; this slice rejects post-commit progression
+instead of accepting a partially checked chain.
+Opening a terminal store performs frozen-schema, row-set, hash, and
+materialization checks; historical semantic authorization occurs only when the
+caller supplies the exact factory-verified mutation and the core replay plus
+durable byte comparison both succeed.
+
+A `NO_CHANGE` execution checks the same frozen store, clock, four authorities,
+and predecessor set in one writer snapshot but performs no DML. It creates no
+commit, audit, outbox, idempotency, cache, metric, or receipt row; both the full
+table snapshot and `total_changes` remain unchanged.
+
+Fault tests cover every pre-commit write stage, a real process exit before
+commit, a process exit after commit but before return, and two processes racing
+the same predecessor. The observed component behavior is full rollback before
+commit, exact zero-write replay after an uncertain commit, and one physical
+commit under concurrent identical attempts.
+
+The commit database stores only transaction, mutation, and row-artifact
+material that exists at commit time. It never stores a mutation-context digest,
+receipt query/digest, nonce, repository-receipt `requestedAt`, signature, or
+signed receipt bytes. Signed repository receipts are a separate post-commit
+verifier layer.
+The execution boundary is fixed as
+`REFERENCE_SQLITE_HOST_SNAPSHOT_PUBLICATION_COMPONENT_ONLY`, keeps
+`productAuthorized=false`, and retains all 12 target-product blockers.
+
 ## Transaction and replay behavior
 
 After in-memory command round-trip/hash checks, the first database statement of
@@ -135,5 +208,5 @@ cd qman-directpath-reference
 python -m ruff check qman_directpath_reference tests
 python -m ruff format --check qman_directpath_reference tests
 python -m compileall -q qman_directpath_reference tests
-python -m unittest discover -s tests -v
+python -m pytest -q tests -p no:cacheprovider
 ```

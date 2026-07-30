@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "id": "QMAN-E2-C00-HOST-SNAPSHOT-PUBLICATION-CLOSURE-001",
-  "observedAt": "2026-07-30T08:45:46.6166543Z",
+  "observedAt": "2026-07-30T10:44:39.5377119Z",
   "subject": "QMAN_COMPONENT",
   "evidenceGrade": "E2",
   "claimBoundary": "COMPONENT_ONLY",
   "verdict": "PASS",
   "sourceState": {
-    "baseCommit": "837ef08912d89005ee84856f176a5ed72e8c20b4",
+    "baseCommit": "1e15f997880fc282c465b5fbfd3ed1fd01859ad5",
     "dirtyWorkingTree": true,
     "runnerHashes": {
       ".github/workflows/ci.yml": "6d7455b4d06ae4bc5c82e81d417018c1f8b6c7113c0169911dfff61438190c5c",
@@ -15,6 +15,8 @@
       "qman-directpath-core/tests/test_publication_mutation.py": "c5fb0bda833795794dbe48ba9b3844da6a3c92964e52901aab9d37a425afea30",
       "qman-directpath-core/tests/test_publication_operation_result.py": "36486a1e8dbbb81b4d0ae3622d0e33de07d84a4dc0a3ede8a0a5cd648af50956",
       "qman-directpath-core/tests/test_publication_repository.py": "9d262218398fd575f0b0a82f19f31116db9bdd4a9eacd9817eda42d3c77dbff5",
+      "qman-directpath-reference/tests/test_publication_sqlite_repository.py": "546e69cba9f0f4e1e3e0173d54be47beda417f3d19473edaa369d7deec04446f",
+      "qman-directpath-reference/tests/publication_sqlite_worker.py": "3490b3f9aa4b62469d4fd3b27b42b14ec5d15c7bb910e80da3925d2575030ceb",
       "tests/test_snapshot_publication_contract.py": "fd75dce07cda8fca6696426252b1c56bfc21981994e1f65fc82a409b0d24e13f",
       "tests/test_publication_repository_receipt_contract.py": "cd0b2918192e73a282f92308094d27043106d00df86de688c5af58ef57c8a6f4",
       "tests/test_portable_handoff_contracts.py": "a37144025af48e7a46456d84edf484bb4ae1768ce7e5c38f8ce0d86bcfdcdd95"
@@ -33,6 +35,10 @@
       "qman-directpath-core/qman_directpath_core/_verified.py": "6d686f87d62554bda59f5c860adaec006a3cf4947ef81388733574bc5f49df2d",
       "qman-directpath-core/qman_directpath_core/errors.py": "84c852d0c740a960e733a9d37f56e31a808fdfdfcfc67c29bb898f10cbad10b7",
       "qman-directpath-core/qman_directpath_core/__init__.py": "e4d8e0af866f23ce4b3e08eecdd755ef42525532566c3f18a398ddf421687f3c",
+      "qman-directpath-reference/qman_directpath_reference/publication_repository.py": "146e3d66613c15ecec4f17b44b734a4267c33a63bbd8b2aef10462ad34fdac24",
+      "qman-directpath-reference/qman_directpath_reference/publication_sqlite_schema.py": "610b17009e91cb163d05ddffe3f05159604ffa4f40a507494c4f1105c6dfc67f",
+      "qman-directpath-reference/qman_directpath_reference/__init__.py": "db3531e2725e7913ca98885a67848a8dff4534195ddda06f2669a2a0a0376d0e",
+      "qman-directpath-reference/pyproject.toml": "f003a8742192bf76e415c2bd0cd43568e3bc433a5c237707da3f6bc6bb3d2828",
       "contracts/directpath-host-snapshot-publication-trace.schema.json": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4",
       "contracts/directpath-host-snapshot-publication-repository-receipt.schema.json": "8f2ede2a264562cc02801f3a9647836691be76f5bc8c228a0c4fb4ed32fae6a6",
       "contracts/directpath-host-snapshot-rollback-anchor.schema.json": "93bf9de4a26c8bb7c7537287351d64183c008cf946c3b2e2d5c9f45e3adad18c",
@@ -50,7 +56,7 @@
     }
   },
   "sut": {
-    "environment": "Windows Python deterministic component and contract tests in the local authorized workspace; self-consistent canonical fixtures and locally generated role-signed repository receipts only; no target Qman process, accepted transport exchange, product repository port, ESXi, QEMU, HMP, QTest, VFIO, external authority transport, or physical-hardware action",
+    "environment": "Windows Python 3.12.10 and SQLite 3.49.1 deterministic component and contract tests in the local authorized workspace; the reference lane uses a local frozen SQLite store, real subprocess exits and two-process writer serialization plus self-consistent canonical fixtures and locally generated role-signed repository receipts; no target Qman process, PostgreSQL SSI, accepted transport exchange, product repository port, ESXi, QEMU, HMP, QTest, VFIO, external authority transport, power-loss action, or physical-hardware action",
     "components": [
       {
         "name": "qman-directpath-core HostSnapshot operation request and result verifier",
@@ -78,6 +84,20 @@
         "sha256": "1dd673d7d05393ee14d8c6cc0273fbf891cf6d5ce225ddc6bf49afa1b62bc9e4"
       },
       {
+        "name": "qman-directpath-reference terminal HostSnapshot publication SQLite executor",
+        "version": "0.4.0 working tree",
+        "sha256": "146e3d66613c15ecec4f17b44b734a4267c33a63bbd8b2aef10462ad34fdac24"
+      },
+      {
+        "name": "qman-directpath-reference frozen eight-table publication schema",
+        "version": "SQLite schema v1 working tree",
+        "sha256": "610b17009e91cb163d05ddffe3f05159604ffa4f40a507494c4f1105c6dfc67f"
+      },
+      {
+        "name": "SQLite",
+        "version": "3.49.1"
+      },
+      {
         "name": "Python",
         "version": "3.12.10"
       }
@@ -88,6 +108,7 @@
     "A factory-only mutation verifier can bind that request to the retained publication read set and durable commit context, reconstruct COMMITTED N+6 mutations or exact NO_CHANGE zero writes, and retain the operation-result schema/envelope blocker until a final result context is verified.",
     "A factory-only repository receipt verifier can replay the exact mutation and nonce query, bind exact canonical transaction and row-artifact hashes, seven write-count categories, four-authority CAS, branch-specific commit clocks and current CONTROL_REPOSITORY_EVIDENCE Ed25519 authority while keeping every unresolved target blocker explicit and forbidding post-commit digest back-references.",
     "A factory-only successful-result verifier can replay the mutation closure and exact-project the detached result payload, post-state authority, committed version set, closed pre-existing receipt set, policy hash, correlation, completion window, payload hash, and null-projection result hash without feeding result bytes back into the commit DAG.",
+    "A separate terminal SQLite reference can consume only the factory-verified mutation, acquire the writer snapshot with BEGIN IMMEDIATE, compare the exact four-authority and predecessor state, atomically materialize COMMITTED N+6 or NO_CHANGE zero writes, and recover exact replay after an uncertain return without persisting post-commit query or signed-receipt material.",
     "Consistent fixtures, locally generated role signatures, and deterministic replay prove component algorithms only. They cannot prove target transport acceptance, endpoint/session identity, durable nonce ownership, idempotency ownership, a real SERIALIZABLE repository implementation or clocks, atomic visibility, post-anchor outbox delivery, authentic result exchange, target mapping/build/runner execution, or product authorization."
   ],
   "observations": [
@@ -187,6 +208,55 @@
       }
     },
     {
+      "name": "publication-sqlite-reference-focused-matrix",
+      "result": {
+        "command": "python -m pytest -q qman-directpath-reference/tests/test_publication_sqlite_repository.py -p no:cacheprovider",
+        "workingDirectory": ".",
+        "testsPassed": 53,
+        "skips": 0,
+        "failures": 0,
+        "errors": 0,
+        "elapsedSeconds": 469.34,
+        "coveredBranches": [
+          "COMMITTED writes one HostSnapshot, N DeviceRecords, Host and Availability authority CAS rows, audit, pending outbox and commit record with logical N+6 count",
+          "NO_CHANGE before the terminal commit performs exact zero DML and leaves every table and total_changes unchanged",
+          "same committed transaction replays byte-identically with zero writes while any conflicting outcome or later transaction fails closed",
+          "pre-commit injected faults and process exit fully roll back while post-commit uncertain return reopens as exact replay",
+          "two independent processes serialize one identical predecessor attempt into one physical commit and one zero-write replay"
+        ],
+        "coveredInvariants": {
+          "factoryVerifiedMutationCoreReplayBeforeSql": true,
+          "firstOperationStatementBeginImmediate": true,
+          "frozenEightTableDdlAndExactColumnSet": true,
+          "bootstrapPredecessorNullArtifactPairExact": true,
+          "bootstrapHostPointerIdentityEpochAndVersionExact": true,
+          "exactFourAuthorityCurrentSetAndCas": true,
+          "commitClockCanonicalSingleton": true,
+          "singleCommittedTerminalLifecycle": true,
+          "logicalCommittedMutationCountFormula": "N+6",
+          "noChangeDmlCount": 0,
+          "exactReplayDmlCount": 0,
+          "postCommitQueryNonceContextAndSignatureMaterialPersisted": false,
+          "repositoryReceiptProductEvidenceBlockerCount": 12,
+          "productAuthorized": false
+        },
+        "adversarialClasses": [
+          "frozen DDL, metadata, fifth-authority and constraint drift",
+          "four-authority version, policy-hash and exact-byte drift",
+          "orphan snapshot, DeviceRecord, audit and outbox materialization",
+          "bootstrap predecessor wrapper smuggling",
+          "factory-verified genesis authority replacement against a successor bootstrap marker",
+          "second commit-clock singleton inserted with SQLite CHECK enforcement bypassed",
+          "mutations canonical bytes not recomputing the retained domain-separated mutation-set hash",
+          "store-instance identity drift and second durable commit collision",
+          "every pre-commit write-stage fault plus pre/post-commit hard process exit"
+        ],
+        "authorityBoundary": "REFERENCE_SQLITE_HOST_SNAPSHOT_PUBLICATION_COMPONENT_ONLY",
+        "authorityDisposition": "TERMINAL_SQLITE_COMPONENT_EXECUTION_VALID_TARGET_PRODUCT_REPOSITORY_NOT_PROVEN",
+        "productAuthorized": false
+      }
+    },
+    {
       "name": "root-publication-contract-regression",
       "result": {
         "command": "python -m pytest tests/test_snapshot_publication_contract.py -q -p no:cacheprovider",
@@ -222,6 +292,10 @@
         "resultBytesExcludedFromRepositoryCommitPreimage": true,
         "mutationResultSchemaBlockerRetainedUntilFinalResultContext": true,
         "resultSchemaBlockerConsumedOnlyByFactoryVerifiedResultContext": true,
+        "referenceSqlitePublicationSchemaTableCount": 8,
+        "referenceSqlitePublicationTerminalCommitCountMaximum": 1,
+        "referenceSqliteNoChangeAndReplayWriteCount": 0,
+        "referenceSqlitePostCommitReceiptMaterialPersisted": false,
         "productAuthorized": false
       }
     },
@@ -243,6 +317,8 @@
         "mutationBoundary": "COMPONENT_CALLER_SUPPLIED_REPOSITORY_ROWS_AND_TRANSACTION_ONLY",
         "repositoryReceiptBoundary": "COMPONENT_ROLE_SIGNED_REPOSITORY_RECEIPT_VERIFICATION_ONLY",
         "repositoryReceiptAuthorityDisposition": "COMPONENT_REPOSITORY_RECEIPT_VALID_TARGET_PRODUCT_PORT_NOT_PROVEN",
+        "referenceSqlitePublicationBoundary": "REFERENCE_SQLITE_HOST_SNAPSHOT_PUBLICATION_COMPONENT_ONLY",
+        "referenceSqlitePublicationAuthorityDisposition": "TERMINAL_SQLITE_COMPONENT_EXECUTION_VALID_TARGET_PRODUCT_REPOSITORY_NOT_PROVEN",
         "resultBoundary": "COMPONENT_CALLER_SUPPLIED_OPERATION_RESULT_AND_MUTATION_ONLY",
         "resultAuthorityDisposition": "COMPONENT_RESULT_BYTES_AND_TRACE_PROJECTION_VERIFIED_PRODUCT_EXCHANGE_NOT_PROVEN",
         "productAuthorized": false,
@@ -430,6 +506,36 @@
       "path": "tests/test_portable_handoff_contracts.py",
       "sha256": "a37144025af48e7a46456d84edf484bb4ae1768ce7e5c38f8ce0d86bcfdcdd95",
       "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-reference/qman_directpath_reference/publication_repository.py",
+      "sha256": "146e3d66613c15ecec4f17b44b734a4267c33a63bbd8b2aef10462ad34fdac24",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-reference/qman_directpath_reference/publication_sqlite_schema.py",
+      "sha256": "610b17009e91cb163d05ddffe3f05159604ffa4f40a507494c4f1105c6dfc67f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-reference/qman_directpath_reference/__init__.py",
+      "sha256": "db3531e2725e7913ca98885a67848a8dff4534195ddda06f2669a2a0a0376d0e",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-reference/pyproject.toml",
+      "sha256": "f003a8742192bf76e415c2bd0cd43568e3bc433a5c237707da3f6bc6bb3d2828",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-reference/tests/test_publication_sqlite_repository.py",
+      "sha256": "546e69cba9f0f4e1e3e0173d54be47beda417f3d19473edaa369d7deec04446f",
+      "retention": "LOCAL_RAW"
+    },
+    {
+      "path": "qman-directpath-reference/tests/publication_sqlite_worker.py",
+      "sha256": "3490b3f9aa4b62469d4fd3b27b42b14ec5d15c7bb910e80da3925d2575030ceb",
+      "retention": "LOCAL_RAW"
     }
   ],
   "closureEffect": {
@@ -441,6 +547,10 @@
     "The request and result envelope/payload bytes are local canonical fixtures supplied to the component. Exact hashes, correlation, authority projections, timestamps, replay, and closed schemas do not prove transport authentication, target acceptance, idempotency ownership, deadline enforcement, or authentic result delivery.",
     "The verified request is now consumed by mutation verification, but publication read receipts, authority bytes, trusted times, configured authority paths, repository transactions, committed row artifacts, and repository-receipt endpoint/session identity remain caller or adapter inputs. The component generates and checks nonce-bound queries but does not prove durable product-side nonce ownership or fetch bytes from an independently authenticated current product endpoint.",
     "The locally closed CAS result, N+6 mutation set, durable commit context, commit clocks, post-state authority, committed versions, and receipt set do not prove a real SERIALIZABLE target transaction, four-authority CAS execution, durability, atomic visibility, or post-anchor outbox delivery.",
+    "The SQLite reference demonstrates BEGIN IMMEDIATE writer serialization and exact four-authority compare/materialization behavior only. SQLite 3.49.1 is not the target Qman repository or PostgreSQL SERIALIZABLE/SSI implementation, and no PORT-GLOBAL-REPOSITORY code mapping is proven.",
+    "The subprocess os._exit tests demonstrate component process-crash rollback and uncertain-return replay. They do not simulate host power loss, storage-controller volatile caches, filesystem corruption, WAL loss, or product crash recovery.",
+    "SQLite schema v1 treats its first durable COMMITTED publication as terminal and permits only exact replay afterward. It does not implement continuous publication history or authorize a later distinct NO_CHANGE; a later slice must persist enough verified preimage to replay every historical mutation through qman-directpath-core.",
+    "A complete externally resealed or rolled-back database cannot be detected from this local file alone. Product acceptance still requires an independent current rollback anchor and freshness authority outside the repository failure domain.",
     "The repository receipt verifier checks exact canonical bytes, canonical 16..64-byte base64url nonces, current CONTROL_REPOSITORY_EVIDENCE Ed25519 signatures, transaction/CAS/clock/artifact/write-count projections and one-way digest construction. The test key, receipt, endpoint and session are local component fixtures; this is not a mapped PORT-GLOBAL-REPOSITORY implementation, Qman build identity, crash-recovery result, or product-runner observation.",
     "The mutation context deliberately retains TARGET_OPERATION_RESULT_SCHEMA_AND_ENVELOPE_BINDING_REQUIRED. Only construction and replay of the final factory-verified result context consumes that component blocker; it does not consume the remaining controller-authority, target repository, product visibility, authentic exchange, or durable idempotent-result blockers.",
     "The CI workflow file now runs product-shaped core tests from qman-directpath-core, and its exact local bytes are retained here. No GitHub Actions workflow execution receipt was observed by this record.",

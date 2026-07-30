@@ -167,8 +167,8 @@ qualification profile。参考实验仍不得冒充 Qman 产品实现或支持�
   且固定 `productAuthorized=false`。后续 decision 已结构绑定 capability/freshness policy authority
   和四 authority CAS expectation；rollback/mutation 已闭合 external-anchor crypto、commit window 与
   deterministic write-set/hash 关系。它们仍是 `COMPONENT_ONLY` 前提；目标 Qman decoder/build、
-  collector/publisher、trusted evaluation time、认证 operation result schema/envelope、真实
-  SERIALIZABLE repository/CAS、atomic visibility、commit-clock/context 语义和 post-anchor delivery
+  collector/publisher、trusted evaluation time、认证 operation result schema/envelope、目标 Qman
+  真实 SERIALIZABLE repository/CAS、atomic visibility、commit-clock/context 语义和 post-anchor delivery
   receipt，以及 trust authority direct path/nonce transport 均缺失，不关闭
   C00/C10/C15/C20、R04/R19/R38，也不提升四条产品状态轴。
   本轮新增的 `PORT-GLOBAL-REPOSITORY` component receipt contract 会从 replayed mutation
@@ -179,13 +179,22 @@ qualification profile。参考实验仍不得冒充 Qman 产品实现或支持�
   caller-supplied repository blocker 转换为更具体的 target mapping、真实
   SERIALIZABLE/SSI、durability、endpoint/nonce、build/runner blocker；`PORT-GLOBAL-REPOSITORY`
   仍为 `UNMAPPED/NOT_STARTED`，不会形成 E3、Case/Risk closure 或产品授权。
-- `qman-directpath-reference` 已形成 34 个 SQLite 参考事务测试（另有 35 个 subtest）：public API 只接收 closed
+- `qman-directpath-reference` 已形成 87 个参考事务/查询测试（其中 53 个聚焦 HostSnapshot publication，
+  另有 35 个 subtest）：Static public API 只接收 closed
   `StaticAdmissionCommand`；`BEGIN IMMEDIATE`、global availability fence、lease/binding/claim/run/
   idempotency/audit/outbox 原子提交、幂等资源版本 CAS、并发 overlap/absence phantom、逐写点回滚和
-  pre/post-commit 进程 hard-exit 恢复均可执行。其固定边界是
-  `REFERENCE_SQLITE_TRANSACTION_COMPONENT_ONLY`；reference binding 不是 portable/product
+  pre/post-commit 进程 hard-exit 恢复均可执行。独立 publication store 只接收 factory-verified
+  mutation context，在 frozen 八表 schema 内核对 bootstrap-anchored single-commit clock、完整
+  predecessor 和四 authority，
+  以 Host/Availability CAS 提交逻辑 `N+6`，并证明 `NO_CHANGE` 零 DML、相同事务双进程只产生一次
+  物理提交、uncertain return 后 exact replay 零写；commit DB 不保存后置 query/nonce/context/签名
+  receipt 材料。两条事务边界分别是 `REFERENCE_SQLITE_TRANSACTION_COMPONENT_ONLY` 和
+  `REFERENCE_SQLITE_HOST_SNAPSHOT_PUBLICATION_COMPONENT_ONLY`；reference binding 不是 portable/product
   `OperationAdmissionBinding`，也不构成 Qman repository、PostgreSQL SSI、断电耐久、host journal、
-  E3/E4 或产品 Case 证据。
+  E3/E4 或产品 Case 证据。schema v1 把第一个 durable commit 作为终态，此后只接受该事务 exact replay，
+  连后续不同 `NO_CHANGE` 也 fail closed；continuous publication history 必须在后续切片保留足够
+  verified preimage 以逐条调用 core replay。repository receipt 的 12 项
+  target blocker 全部保留。
 - portable revision `2026-07-30.1` 已冻结 299 个有序映射项，并把完整 Git tree、独立 BuildAttestation、
   六类互斥 runner control artifact、typed Measurement、双签 QualificationRunManifest、Case completion、
   trust history/live freshness 纳入 target-independent baseline；这只证明设计可交接，不证明私有实现。
