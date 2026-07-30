@@ -44,7 +44,8 @@ jobs:
         run: python -m pytest -q tests -p no:cacheprovider
 
       - name: Run product-shaped portable core tests
-        run: python -m pytest -q qman-directpath-core/tests -p no:cacheprovider
+        working-directory: qman-directpath-core
+        run: python -m pytest -q tests -p no:cacheprovider
 
       - name: Run SQLite reference transaction tests
         run: python -m pytest -q qman-directpath-reference/tests -p no:cacheprovider
