@@ -1,0 +1,350 @@
+0000:00:00.0
+   Address: 0000:00:00.0
+   Segment: 0x0000
+   Bus: 0x00
+   Slot: 0x00
+   Function: 0x0
+   Vendor Name: Intel Corporation
+   Device Name: QEMU Virtual Machine
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x8086
+   Device ID: 0x29c0
+   SubVendor ID: 0x1af4
+   SubDevice ID: 0x1100
+   Device Class: 0x0600
+   Device Class Name: Host bridge
+   Programming Interface: 0x00
+   Revision ID: 0x00
+   Interrupt Line: 0xff
+   IRQ: 255
+   Interrupt Vector: 0x00
+   PCI Pin: 0xff
+   Spawned Bus: 0x00
+   Flags: 0x3000
+   Module ID: -1
+   Module Name: None
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:00:00.0
+   Passthru Capable: false
+   Parent Device Address: 
+   Dependent Device Address: 
+   Reset Method: None
+   FPT Sharable: false
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 
+
+0000:00:01.0
+   Address: 0000:00:01.0
+   Segment: 0x0000
+   Bus: 0x00
+   Slot: 0x01
+   Function: 0x0
+   Vendor Name: Unknown
+   Device Name: <class> VGA compatible controller
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x1234
+   Device ID: 0x1111
+   SubVendor ID: 0x1af4
+   SubDevice ID: 0x1100
+   Device Class: 0x0300
+   Device Class Name: VGA compatible controller
+   Programming Interface: 0x00
+   Revision ID: 0x02
+   Interrupt Line: 0xff
+   IRQ: 255
+   Interrupt Vector: 0x00
+   PCI Pin: 0xff
+   Spawned Bus: 0x00
+   Flags: 0x3000
+   Module ID: 0
+   Module Name: vmkernel
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:00:01.0
+   Passthru Capable: false
+   Parent Device Address: 
+   Dependent Device Address: 
+   Reset Method: None
+   FPT Sharable: false
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 
+
+0000:00:05.0
+   Address: 0000:00:05.0
+   Segment: 0x0000
+   Bus: 0x00
+   Slot: 0x05
+   Function: 0x0
+   Vendor Name: Intel Corporation
+   Device Name: 82574L Gigabit Network Connection
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x8086
+   Device ID: 0x10d3
+   SubVendor ID: 0x8086
+   SubDevice ID: 0x0000
+   Device Class: 0x0200
+   Device Class Name: Ethernet controller
+   Programming Interface: 0x00
+   Revision ID: 0x00
+   Interrupt Line: 0x0a
+   IRQ: 255
+   Interrupt Vector: 0x00
+   PCI Pin: 0x00
+   Spawned Bus: 0x00
+   Flags: 0x3001
+   Module ID: 52
+   Module Name: ne1000
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:00:05.0
+   Passthru Capable: false
+   Parent Device Address: 
+   Dependent Device Address: 
+   Reset Method: None
+   FPT Sharable: false
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 
+
+0000:00:08.0
+   Address: 0000:00:08.0
+   Segment: 0x0000
+   Bus: 0x00
+   Slot: 0x08
+   Function: 0x0
+   Vendor Name: Red Hat, Inc.
+   Device Name: QEMU PCIe Root port
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x1b36
+   Device ID: 0x000c
+   SubVendor ID: 0x0000
+   SubDevice ID: 0x0000
+   Device Class: 0x0604
+   Device Class Name: PCI bridge
+   Programming Interface: 0x00
+   Revision ID: 0x00
+   Interrupt Line: 0x0a
+   IRQ: 255
+   Interrupt Vector: 0x00
+   PCI Pin: 0x00
+   Spawned Bus: 0x01
+   Flags: 0x3003
+   Module ID: 0
+   Module Name: vmkernel
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:00:08.0
+   Passthru Capable: false
+   Parent Device Address: 
+   Dependent Device Address: 
+   Reset Method: None
+   FPT Sharable: false
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 
+
+0000:00:1f.0
+   Address: 0000:00:1f.0
+   Segment: 0x0000
+   Bus: 0x00
+   Slot: 0x1f
+   Function: 0x0
+   Vendor Name: Intel Corporation
+   Device Name: QEMU Virtual Machine
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x8086
+   Device ID: 0x2918
+   SubVendor ID: 0x1af4
+   SubDevice ID: 0x1100
+   Device Class: 0x0601
+   Device Class Name: ISA bridge
+   Programming Interface: 0x00
+   Revision ID: 0x02
+   Interrupt Line: 0xff
+   IRQ: 255
+   Interrupt Vector: 0x00
+   PCI Pin: 0xff
+   Spawned Bus: 0x00
+   Flags: 0x3000
+   Module ID: 0
+   Module Name: vmkernel
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:00:1f.0
+   Passthru Capable: false
+   Parent Device Address: 
+   Dependent Device Address: 
+   Reset Method: None
+   FPT Sharable: false
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 
+
+0000:00:1f.2
+   Address: 0000:00:1f.2
+   Segment: 0x0000
+   Bus: 0x00
+   Slot: 0x1f
+   Function: 0x2
+   Vendor Name: Intel Corporation
+   Device Name: 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA AHCI Controller
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x8086
+   Device ID: 0x2922
+   SubVendor ID: 0x1af4
+   SubDevice ID: 0x1100
+   Device Class: 0x0106
+   Device Class Name: SATA controller
+   Programming Interface: 0x01
+   Revision ID: 0x02
+   Interrupt Line: 0x0a
+   IRQ: 255
+   Interrupt Vector: 0x2f
+   PCI Pin: 0x00
+   Spawned Bus: 0x00
+   Flags: 0x3001
+   Module ID: 51
+   Module Name: vmw_ahci
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:00:1f.2
+   Passthru Capable: false
+   Parent Device Address: 
+   Dependent Device Address: 
+   Reset Method: None
+   FPT Sharable: false
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 
+
+0000:00:1f.3
+   Address: 0000:00:1f.3
+   Segment: 0x0000
+   Bus: 0x00
+   Slot: 0x1f
+   Function: 0x3
+   Vendor Name: Intel Corporation
+   Device Name: QEMU Virtual Machine
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x8086
+   Device ID: 0x2930
+   SubVendor ID: 0x1af4
+   SubDevice ID: 0x1100
+   Device Class: 0x0c05
+   Device Class Name: SMBus
+   Programming Interface: 0x00
+   Revision ID: 0x02
+   Interrupt Line: 0x0a
+   IRQ: 255
+   Interrupt Vector: 0x00
+   PCI Pin: 0x00
+   Spawned Bus: 0x00
+   Flags: 0x3001
+   Module ID: -1
+   Module Name: None
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:00:1f.3
+   Passthru Capable: false
+   Parent Device Address: 
+   Dependent Device Address: 
+   Reset Method: None
+   FPT Sharable: false
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 
+
+0000:01:00.0
+   Address: 0000:01:00.0
+   Segment: 0x0000
+   Bus: 0x01
+   Slot: 0x00
+   Function: 0x0
+   Vendor Name: Intel Corporation
+   Device Name: 82574L Gigabit Network Connection
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x8086
+   Device ID: 0x10d3
+   SubVendor ID: 0x8086
+   SubDevice ID: 0x0000
+   Device Class: 0x0200
+   Device Class Name: Ethernet controller
+   Programming Interface: 0x00
+   Revision ID: 0x00
+   Interrupt Line: 0x0a
+   IRQ: 255
+   Interrupt Vector: 0x00
+   PCI Pin: 0x00
+   Spawned Bus: 0x00
+   Flags: 0x3001
+   Module ID: 52
+   Module Name: ne1000
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:01:00.0
+   Passthru Capable: true
+   Parent Device Address: 0000:00:08.0
+   Dependent Device Address: 0000:00:08.0
+   Reset Method: Bridge reset
+   FPT Sharable: true
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 
+
+0000:01:00.1
+   Address: 0000:01:00.1
+   Segment: 0x0000
+   Bus: 0x01
+   Slot: 0x00
+   Function: 0x1
+   Vendor Name: Intel Corporation
+   Device Name: 82574L Gigabit Network Connection
+   Configured Owner: VMkernel
+   Current Owner: VMkernel
+   Vendor ID: 0x8086
+   Device ID: 0x10d3
+   SubVendor ID: 0x8086
+   SubDevice ID: 0x0000
+   Device Class: 0x0200
+   Device Class Name: Ethernet controller
+   Programming Interface: 0x00
+   Revision ID: 0x00
+   Interrupt Line: 0x0a
+   IRQ: 255
+   Interrupt Vector: 0x00
+   PCI Pin: 0x00
+   Spawned Bus: 0x00
+   Flags: 0x3001
+   Module ID: 52
+   Module Name: ne1000
+   Chassis: 0
+   Physical Slot: -1
+   Slot Description: 
+   Device Layer Bus Address: p0000:01:00.1
+   Passthru Capable: true
+   Parent Device Address: 0000:00:08.0
+   Dependent Device Address: 0000:01:00.1
+   Reset Method: Bridge reset
+   FPT Sharable: true
+   NUMA Node: -1
+   Hardware Label: 
+   Virtual Function: 

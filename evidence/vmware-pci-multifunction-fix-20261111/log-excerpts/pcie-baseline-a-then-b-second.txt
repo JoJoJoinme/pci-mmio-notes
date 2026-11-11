@@ -1,0 +1,6 @@
+Source run: 20261111-esxi8-pcie-functional-fix-v1
+Source file: pcie-baseline-a-then-b-second-fix1111-pcie-functional-fix-v1-b-vmware.log
+Source SHA-256: ea425ed8eef85ce72734dbfb4d441a6d0c1ca6ba33e8f6c43423f4d06346a5b6
+Original line numbers follow. Only selected lines are included.
+
+584: 2026-11-11T11:03:31.646Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:01:00.1 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1

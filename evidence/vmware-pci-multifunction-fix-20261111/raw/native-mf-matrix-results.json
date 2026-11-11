@@ -1,0 +1,41 @@
+{
+  "at": "2026-11-11T11:32:31.963048+00:00",
+  "results": [
+    {
+      "case": "both",
+      "task": "success",
+      "powerState": "poweredOn"
+    },
+    {
+      "case": "reverse",
+      "task": "success",
+      "powerState": "poweredOn"
+    },
+    {
+      "case": "a-then-b",
+      "first": "success",
+      "second": "error"
+    },
+    {
+      "case": "b-then-a",
+      "first": "success",
+      "second": "error"
+    }
+  ],
+  "pci": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    }
+  ]
+}

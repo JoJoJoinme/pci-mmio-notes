@@ -1,0 +1,4 @@
+{"at":"2026-11-11T11:38:24.548Z","label":"host-01-select-a","note":"Clicked only A checkbox; examine paired DOM for automatic selection of B before Toggle.","url":"https://127.0.0.1:18443/ui/#/host/manage/hardware/pci-devices"}
+{"at":"2026-11-11T11:39:46.181Z","label":"host-02-enabled","note":"After the Host Client Toggle; paired snapshot records both functions Active.","url":"https://127.0.0.1:18443/ui/#/host/manage/hardware/pci-devices"}
+{"at":"2026-11-11T11:40:22.913Z","label":"host-03-both-before-power","note":"Correct VM name and two PCI device entries confirmed before UI Power on.","url":"https://127.0.0.1:18443/ui/#/host/vms/2889"}
+{"at":"2026-11-11T11:40:57.771Z","label":"host-04-both-after-power","note":"Post-click UI capture; task timestamp and API collection determine the outcome, not earlier task rows.","url":"https://127.0.0.1:18443/ui/#/host/vms/2889"}

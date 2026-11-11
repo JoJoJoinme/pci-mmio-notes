@@ -1,0 +1,2123 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-11-11T12:53:43.094871+00:00",
+  "hashAlgorithm": "SHA-256",
+  "selfExcluded": true,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 162,
+      "sha256": "61f84e07d2c27868eda4658c0fce074e0283d03a6a34ebaab51f5ac6c07b6c0c",
+      "provenance": {
+        "transformation": "authored report, metadata or offline evidence verifier"
+      }
+    },
+    {
+      "path": "log-excerpts/functional-effective-probe-a-then-b-second.txt",
+      "bytes": 459,
+      "sha256": "83b956c557ea5acd3f2f6cb9114e92b5af09727e9e59622b428bece4c5909a9c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-a-then-b-second-fix1111-pcie-functional-fix-v1-b-vmware.log",
+        "sourceSha256": "832496ad03aff6b175b677e70ba1fe47ba77fbb47181fe19efd96a3fe8474492",
+        "sourceLines": [
+          558
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/functional-effective-probe-b-then-a-second.txt",
+      "bytes": 459,
+      "sha256": "d74698c01af211eb23b3db4e179e8fb4ba36cbbcb91f5a558b908044c8273b0e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-b-then-a-second-fix1111-pcie-functional-fix-v1-a-vmware.log",
+        "sourceSha256": "858f750b5de116ec5b7af7b1458490644350acc1b7938ea8d11877462fb71144",
+        "sourceLines": [
+          558
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/functional-effective-probe-on-both.txt",
+      "bytes": 617,
+      "sha256": "b80a7a994ac917b4f384c27f684b4fbcc8df9c8ca32e3918f132169ba2d7c244",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-on-both-fix1111-pcie-functional-fix-v1-both-vmware.log",
+        "sourceSha256": "b311a20a2797fc32a901e74faa4f37ede2887da908154684357b0f7d64c56770",
+        "sourceLines": [
+          564,
+          572
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/mf-header-matrix-a-then-b-second.txt",
+      "bytes": 576,
+      "sha256": "c3274d79fd84b52b26a186b333550649b15cf6ba8409efd85c8ac6d98a8551f4",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-a-then-b-second-fix1111-pcie-functional-fix-v1-b-vmware.log",
+        "sourceSha256": "fbe9a7e83f6f870195343f1aef987498fe5b5d955c132fe79fb3c0c1a9ead555",
+        "sourceLines": [
+          570,
+          571,
+          592
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/mf-header-matrix-b-then-a-second.txt",
+      "bytes": 576,
+      "sha256": "b26c873c1368d8cdc41677f249b6f2fdfed379815f2d28f705aeb525230281e5",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-b-then-a-second-fix1111-pcie-functional-fix-v1-a-vmware.log",
+        "sourceSha256": "f83f8d2ebcaccff454f125315a2180de7b64dd322a4c192ad7b2b5292afe546a",
+        "sourceLines": [
+          570,
+          571,
+          592
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/mf-header-matrix-on-both.txt",
+      "bytes": 607,
+      "sha256": "10bbb74379c69c0a602096ec222e7d4635cad1e2a1236a2d8381e6c4ff3692d4",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-on-both-fix1111-pcie-functional-fix-v1-both-vmware.log",
+        "sourceSha256": "bbb2604510c85ed83b15f190ec03121096cac37a998508f9c2d0f0ade2e03339",
+        "sourceLines": [
+          563,
+          571
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-matrix-a-then-b-second.txt",
+      "bytes": 576,
+      "sha256": "c3c0c46c3265d6f66e18d6a4360018dfe38c5b3c70710ed6ed709761de5ff0cf",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-a-then-b-second-fix1111-pcie-functional-fix-v1-b-vmware.log",
+        "sourceSha256": "242a74abdd7b9c53157024159744a013ceb869b30a0c846748137a180724d568",
+        "sourceLines": [
+          571,
+          572,
+          594
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-matrix-b-then-a-second.txt",
+      "bytes": 576,
+      "sha256": "c4ea9459f243a9de2e09c3598f96a822e4cd7d21c97d91dc11e3374e3186ad82",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-b-then-a-second-fix1111-pcie-functional-fix-v1-a-vmware.log",
+        "sourceSha256": "a84e0230ef407d914f893461bf2a318cb2f36ad14c657fe3d6e84a1c1e0e85f7",
+        "sourceLines": [
+          570,
+          571,
+          592
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-matrix-on-both.txt",
+      "bytes": 607,
+      "sha256": "e24e18a6db7991dfef3de377be4b635c89588626bc3014091d7e9dafc302517c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-on-both-fix1111-pcie-functional-fix-v1-both-vmware.log",
+        "sourceSha256": "1daba040f3270039b947f60d968c90ac9cf77eb03eac3470b6474e6cd0f2dcd5",
+        "sourceLines": [
+          564,
+          572
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/pcie-baseline-a-then-b-second.txt",
+      "bytes": 446,
+      "sha256": "0dcf40558213adb19be52dfe6a594635cbad90dc2f7e80d695654a9a1f59ca40",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-a-then-b-second-fix1111-pcie-functional-fix-v1-b-vmware.log",
+        "sourceSha256": "ea425ed8eef85ce72734dbfb4d441a6d0c1ca6ba33e8f6c43423f4d06346a5b6",
+        "sourceLines": [
+          584
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/pcie-baseline-b-then-a-second.txt",
+      "bytes": 446,
+      "sha256": "06049d9c5788fe7e803776ec9a8b88054934752eb782c22e1730da51765c5398",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-b-then-a-second-fix1111-pcie-functional-fix-v1-a-vmware.log",
+        "sourceSha256": "5e6ae21df96ea7a2d20ce6bcab50f824f874fa42b65c7d393ae2be6a6c7ae207",
+        "sourceLines": [
+          558
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/pcie-baseline-on-both.txt",
+      "bytes": 604,
+      "sha256": "36ba9f3639db37571030ff1c610330dbc47f9a605cdb981c552fb29e5c4e2844",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-on-both-fix1111-pcie-functional-fix-v1-both-vmware.log",
+        "sourceSha256": "0712eb5bca8fb5c269a6676f9615435b8cfcca2b3608be3bdbc4afe560614d9f",
+        "sourceLines": [
+          590,
+          598
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/ui6-matrix-a-then-b-second.txt",
+      "bytes": 570,
+      "sha256": "2fdf6b7d5584cc1cb9513fa78a0ea16f4d1f5efa02729e3c0f5788cc25ed4b38",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-a-then-b-second-fix1111-pcie-functional-fix-v1-b-vmware.log",
+        "sourceSha256": "9733db9a0da3fb4c983bd32ea1a2933d6f237dfd57e38ba403970d6d5a1a8a4c",
+        "sourceLines": [
+          572,
+          573,
+          595
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/ui6-matrix-b-then-a-second.txt",
+      "bytes": 570,
+      "sha256": "86c1c03200f0da643ed54ebc471ed5e4bdbb73470366d7c08a530d42b3e869f3",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-b-then-a-second-fix1111-pcie-functional-fix-v1-a-vmware.log",
+        "sourceSha256": "c8fce9b2c704f5145952d9d294a5e192202121da7413389c085b96f39f06e400",
+        "sourceLines": [
+          572,
+          573,
+          595
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/ui6-matrix-on-both.txt",
+      "bytes": 601,
+      "sha256": "0619106132e608f0d16ae1ac23cac5a301f17dcf7eb00ddcbeeee640fedbcd3d",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-on-both-fix1111-pcie-functional-fix-v1-both-vmware.log",
+        "sourceSha256": "05c6dcce5a84cd871bfbb2ec53082598bbe254d74303d1ed4234c4adaa57ca78",
+        "sourceLines": [
+          565,
+          573
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
+      "path": "raw/after-header-fix-config-space.txt",
+      "bytes": 8054,
+      "sha256": "d527eca114bda33b56ba1895eb1209a28a371941405a82b152a2d3db5bf042db",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "after-header-fix-config-space.txt",
+        "sourceSha256": "d527eca114bda33b56ba1895eb1209a28a371941405a82b152a2d3db5bf042db",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/after-header-fix-vsi-values.txt",
+      "bytes": 155,
+      "sha256": "9161cf98cb54cf749bd8da4b804c2cf790b162429073fc36d81b439c93543b89",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "after-header-fix-vsi-values.txt",
+        "sourceSha256": "9161cf98cb54cf749bd8da4b804c2cf790b162429073fc36d81b439c93543b89",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/before-header-fix-config-space.txt",
+      "bytes": 8054,
+      "sha256": "012f352e5f6ee9adf0f8d1e0c71e2020c5c581245bee670baf9f4d715ac8c3cb",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "before-header-fix-config-space.txt",
+        "sourceSha256": "012f352e5f6ee9adf0f8d1e0c71e2020c5c581245bee670baf9f4d715ac8c3cb",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/before-header-fix-vsi-values.txt",
+      "bytes": 155,
+      "sha256": "3a54d1d919a20e44e3869daa9486cd57f82d44cb54b5b2a426d833cb90e12389",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "before-header-fix-vsi-values.txt",
+        "sourceSha256": "3a54d1d919a20e44e3869daa9486cd57f82d44cb54b5b2a426d833cb90e12389",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-active-policy-request.json",
+      "bytes": 315,
+      "sha256": "07a94d3565cc917e3fb407b09bfce1cbe78f167c04c3f49833eabeed036d0081",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-active-policy-request.json",
+        "sourceSha256": "07a94d3565cc917e3fb407b09bfce1cbe78f167c04c3f49833eabeed036d0081",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-active-verified.json",
+      "bytes": 861,
+      "sha256": "eda69a19ad3c11ce8bbdc71242943ed29874f4955ee1d17a6ce1a43bfa475246",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-active-verified.json",
+        "sourceSha256": "eda69a19ad3c11ce8bbdc71242943ed29874f4955ee1d17a6ce1a43bfa475246",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-a-then-b-first.json",
+      "bytes": 1795,
+      "sha256": "acf265e17396dc6cb4826fd25bc268f88687a442d4fa582b87b4e73605692be2",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-a-then-b-first.json",
+        "sourceSha256": "acf265e17396dc6cb4826fd25bc268f88687a442d4fa582b87b4e73605692be2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+      "bytes": 1798,
+      "sha256": "5aeac330ff0c26170a1785653ada02c61c36c440ea25288d1b478abfaf6ae84c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+        "sourceSha256": "5aeac330ff0c26170a1785653ada02c61c36c440ea25288d1b478abfaf6ae84c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-a-then-b-off-fix1111-pcie-functional-fix-v1-b.json",
+      "bytes": 1798,
+      "sha256": "2f636b8ecab33e4ed176501da1facb5db3057ef6f018213e99b1fe2a0c70b321",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-a-then-b-off-fix1111-pcie-functional-fix-v1-b.json",
+        "sourceSha256": "2f636b8ecab33e4ed176501da1facb5db3057ef6f018213e99b1fe2a0c70b321",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-a-then-b-second.json",
+      "bytes": 1795,
+      "sha256": "b3a83a68ece9f5e21790633755d4036d45e51d3eecbce623c31919ea99017180",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-a-then-b-second.json",
+        "sourceSha256": "b3a83a68ece9f5e21790633755d4036d45e51d3eecbce623c31919ea99017180",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-after.json",
+      "bytes": 5389,
+      "sha256": "10aa2e9c5845df8223978aaddcf6852dedf94a81965757ab2339a18374863f75",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-after.json",
+        "sourceSha256": "ef8a8584b52705e050ce5f6e5426a61855ebae5b77ab66a6962b527a893e0b0a",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-b-then-a-first.json",
+      "bytes": 1795,
+      "sha256": "ff160cc1d018d186238984e7611f3f4f3b9603de30fa66e9377ac1fdb220eaf6",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-b-then-a-first.json",
+        "sourceSha256": "ff160cc1d018d186238984e7611f3f4f3b9603de30fa66e9377ac1fdb220eaf6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-b-then-a-off-fix1111-pcie-functional-fix-v1-a.json",
+      "bytes": 1798,
+      "sha256": "6f8548ed89f497bef9e2a21cbaa922ec15a386421b1e356c0cecac631780c3f1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-b-then-a-off-fix1111-pcie-functional-fix-v1-a.json",
+        "sourceSha256": "6f8548ed89f497bef9e2a21cbaa922ec15a386421b1e356c0cecac631780c3f1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+      "bytes": 1797,
+      "sha256": "8ba1ec3ae26cebd932982f5627c36686cc6478940451390376f864ac0ec55e5e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+        "sourceSha256": "8ba1ec3ae26cebd932982f5627c36686cc6478940451390376f864ac0ec55e5e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-b-then-a-second.json",
+      "bytes": 1795,
+      "sha256": "9179f9c797153886ff4cce99ea5c2a9f8c216bbf0bb4e6b186180e3821aa0d77",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-b-then-a-second.json",
+        "sourceSha256": "9179f9c797153886ff4cce99ea5c2a9f8c216bbf0bb4e6b186180e3821aa0d77",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-both-sustained.json",
+      "bytes": 1068,
+      "sha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-both-sustained.json",
+        "sourceSha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-config-a.json",
+      "bytes": 1796,
+      "sha256": "828489e8a8e94e739893827e7d63588842122fb3f2dc97821dfc4cf081f8ae40",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-config-a.json",
+        "sourceSha256": "828489e8a8e94e739893827e7d63588842122fb3f2dc97821dfc4cf081f8ae40",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-config-b.json",
+      "bytes": 1796,
+      "sha256": "c254e4fe6d4eeeb96d2abbe33d45f36b8ec42ed893025975411498d59b188a9f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-config-b.json",
+        "sourceSha256": "c254e4fe6d4eeeb96d2abbe33d45f36b8ec42ed893025975411498d59b188a9f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-config-both.json",
+      "bytes": 2652,
+      "sha256": "fa2096abedb960baff440167ef1a440e8058ae512885d832ff4acd37f60dc890",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-config-both.json",
+        "sourceSha256": "fa2096abedb960baff440167ef1a440e8058ae512885d832ff4acd37f60dc890",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-config-reverse.json",
+      "bytes": 2676,
+      "sha256": "248a0b999d58b559181a69e6c8a9d2affad58e1649f57509fd1fe0c30d9c727e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-config-reverse.json",
+        "sourceSha256": "248a0b999d58b559181a69e6c8a9d2affad58e1649f57509fd1fe0c30d9c727e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-enable.json",
+      "bytes": 796,
+      "sha256": "4552c0fabe2e2cea2f967e601612f77d1738084f9fd2b983b47f1323eb301bd5",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-enable.json",
+        "sourceSha256": "4552c0fabe2e2cea2f967e601612f77d1738084f9fd2b983b47f1323eb301bd5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-exit-maintenance.json",
+      "bytes": 343,
+      "sha256": "8e847ebbae14b34ecb0e12633f9f69ab41716e080f9299a85fcd697074d47be6",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-exit-maintenance.json",
+        "sourceSha256": "8e847ebbae14b34ecb0e12633f9f69ab41716e080f9299a85fcd697074d47be6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-off-both.json",
+      "bytes": 2634,
+      "sha256": "7d247a8df37721f5500663e250f0c63af24dc3574182c8f4a3e66d7a038d0053",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-off-both.json",
+        "sourceSha256": "7d247a8df37721f5500663e250f0c63af24dc3574182c8f4a3e66d7a038d0053",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-off-reverse.json",
+      "bytes": 2658,
+      "sha256": "41704c0e83fef217784b50380e9a2057d60ef0967ec98c690af55910cb3581e8",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-off-reverse.json",
+        "sourceSha256": "41704c0e83fef217784b50380e9a2057d60ef0967ec98c690af55910cb3581e8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-on-both.json",
+      "bytes": 2631,
+      "sha256": "1816ef17e7a641c9b5c7e927dae498170ed6fb50461c526089900fe772638616",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-on-both.json",
+        "sourceSha256": "1816ef17e7a641c9b5c7e927dae498170ed6fb50461c526089900fe772638616",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-on-reverse.json",
+      "bytes": 2656,
+      "sha256": "d85119726fc9688bac6dfecab605ec5c750d60c56f2d4fd4e6b183a4a4e3bb6a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-on-reverse.json",
+        "sourceSha256": "d85119726fc9688bac6dfecab605ec5c750d60c56f2d4fd4e6b183a4a4e3bb6a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-results.json",
+      "bytes": 748,
+      "sha256": "00fb8b466617b96fa5b2a09aa4901485c03c8f1919c39d5b57e5cde705eea677",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-results.json",
+        "sourceSha256": "00fb8b466617b96fa5b2a09aa4901485c03c8f1919c39d5b57e5cde705eea677",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-effective-probe-reverse-sustained.json",
+      "bytes": 1080,
+      "sha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-effective-probe-reverse-sustained.json",
+        "sourceSha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-policy-management-guard.json",
+      "bytes": 1242,
+      "sha256": "dee2ec5f2c5a766ad79498ef3293ffe50effcce9ba9b8d9755390c70b600ec40",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-policy-management-guard.json",
+        "sourceSha256": "dee2ec5f2c5a766ad79498ef3293ffe50effcce9ba9b8d9755390c70b600ec40",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/functional-policy-request.json",
+      "bytes": 286,
+      "sha256": "6493ffd10ebd8c4021ab6dd79527f6b4dd37c7bed6767b7833215a2585689e5d",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "functional-policy-request.json",
+        "sourceSha256": "6493ffd10ebd8c4021ab6dd79527f6b4dd37c7bed6767b7833215a2585689e5d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/legacy-control/conventional-baseline-results.json",
+      "bytes": 564,
+      "sha256": "714955a8f13ac7514b796910a8a51bac8a0c83ab5290dbb7b2fa8d9726762155",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-legacy-e1000-fix-v1",
+        "sourceFile": "conventional-baseline-results.json",
+        "sourceSha256": "714955a8f13ac7514b796910a8a51bac8a0c83ab5290dbb7b2fa8d9726762155",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/legacy-control/persisted-map-probe-results.json",
+      "bytes": 564,
+      "sha256": "311504231e45435b5974732a1b48c494f79b65ebf68e35b3b46285caa1bbabbb",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-legacy-e1000-fix-v1",
+        "sourceFile": "persisted-map-probe-results.json",
+        "sourceSha256": "311504231e45435b5974732a1b48c494f79b65ebf68e35b3b46285caa1bbabbb",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/manifest-before-mf-header.json",
+      "bytes": 4962,
+      "sha256": "89f61b7d4c07dc1d597dd1cd7aed3a611e9fc48fc5b034ad449b09f171293e63",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "manifest-before-mf-header.json",
+        "sourceSha256": "89f61b7d4c07dc1d597dd1cd7aed3a611e9fc48fc5b034ad449b09f171293e63",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/manifest-before-ui-memory.json",
+      "bytes": 5093,
+      "sha256": "2c4899fca0664bd78855303fd84b5eb02d432d69fadb5d7a28538f260af62ed7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "manifest-before-ui-memory.json",
+        "sourceSha256": "2c4899fca0664bd78855303fd84b5eb02d432d69fadb5d7a28538f260af62ed7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-change.json",
+      "bytes": 530,
+      "sha256": "2670a493fc15fecde41c6fd197a73018e1a612fc1a20e515ee3bde581873455f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-change.json",
+        "sourceSha256": "2670a493fc15fecde41c6fd197a73018e1a612fc1a20e515ee3bde581873455f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-a-then-b-first.json",
+      "bytes": 1796,
+      "sha256": "93743a189a5e140fde1059fe2084281d74292dc71ebca7a6758a3256a2665f13",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-a-then-b-first.json",
+        "sourceSha256": "93743a189a5e140fde1059fe2084281d74292dc71ebca7a6758a3256a2665f13",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+      "bytes": 1798,
+      "sha256": "391f975ceb97981a3c92cdb331f06bbddbb69ed226dc90601a6d9b870fd97541",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+        "sourceSha256": "391f975ceb97981a3c92cdb331f06bbddbb69ed226dc90601a6d9b870fd97541",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-a-then-b-second.json",
+      "bytes": 3278,
+      "sha256": "048c2ecb153f9614c962d382bbc55937780fb64c740d9cf84c20267f803bad19",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-a-then-b-second.json",
+        "sourceSha256": "048c2ecb153f9614c962d382bbc55937780fb64c740d9cf84c20267f803bad19",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-after.json",
+      "bytes": 5389,
+      "sha256": "3702f3c2b167860b5541b73ab0f69b5a6d22484e17a588896a8d1a94b835efdf",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-after.json",
+        "sourceSha256": "547f39dc4f4e02a37a753777be977628d5cc7e8f749841d896464ac0b4444948",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-b-then-a-first.json",
+      "bytes": 1795,
+      "sha256": "b421d7ed7e0311eec071f32653c49193025aeb9ccd6baba01d093689589ee81b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-b-then-a-first.json",
+        "sourceSha256": "b421d7ed7e0311eec071f32653c49193025aeb9ccd6baba01d093689589ee81b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+      "bytes": 1798,
+      "sha256": "daf62034658cd662498d063d2448f2ba4cdf3b5d9f8a0be90ce25b923d7ea149",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+        "sourceSha256": "daf62034658cd662498d063d2448f2ba4cdf3b5d9f8a0be90ce25b923d7ea149",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-b-then-a-second.json",
+      "bytes": 3277,
+      "sha256": "cda46e352914692e6693d1b447d2cb6999d20f8319a76e6aa6f3f1c743bcef3e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-b-then-a-second.json",
+        "sourceSha256": "cda46e352914692e6693d1b447d2cb6999d20f8319a76e6aa6f3f1c743bcef3e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-both-sustained.json",
+      "bytes": 1068,
+      "sha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-both-sustained.json",
+        "sourceSha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-config-a.json",
+      "bytes": 1796,
+      "sha256": "c364ea42a9aff4094e08331d3ff1c625ad03ec405c665a57e2a39175c88105a0",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-config-a.json",
+        "sourceSha256": "c364ea42a9aff4094e08331d3ff1c625ad03ec405c665a57e2a39175c88105a0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-config-b.json",
+      "bytes": 1796,
+      "sha256": "46eba202ec8f585de52c1e0351654ae833962c1842018def9e3e0076202b0d5a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-config-b.json",
+        "sourceSha256": "46eba202ec8f585de52c1e0351654ae833962c1842018def9e3e0076202b0d5a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-config-both.json",
+      "bytes": 2650,
+      "sha256": "5832b82d5e04900abbeebd5dcf694260b4ee3747ba9ae1b347394e4c4ef9b51c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-config-both.json",
+        "sourceSha256": "5832b82d5e04900abbeebd5dcf694260b4ee3747ba9ae1b347394e4c4ef9b51c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-config-reverse.json",
+      "bytes": 2676,
+      "sha256": "7b7338fb847de4d802316b1cd700eac58ff486881cb0e9161be808af6b5d3871",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-config-reverse.json",
+        "sourceSha256": "7b7338fb847de4d802316b1cd700eac58ff486881cb0e9161be808af6b5d3871",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-enable.json",
+      "bytes": 796,
+      "sha256": "e2fb0544c463777aa8fbc5d87db5fce7755c903da01a5b1cfda9ea45d95f7927",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-enable.json",
+        "sourceSha256": "e2fb0544c463777aa8fbc5d87db5fce7755c903da01a5b1cfda9ea45d95f7927",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-exit-maintenance.json",
+      "bytes": 341,
+      "sha256": "1401f0b08be6b1dcb4fe8555193a504ee736aff64d02ab86560c83900eecf41a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-exit-maintenance.json",
+        "sourceSha256": "1401f0b08be6b1dcb4fe8555193a504ee736aff64d02ab86560c83900eecf41a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-off-both.json",
+      "bytes": 2634,
+      "sha256": "4301785bd6295258c52c7674eeab2d2f2541e1f390de3d00ebc822cf3335a889",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-off-both.json",
+        "sourceSha256": "4301785bd6295258c52c7674eeab2d2f2541e1f390de3d00ebc822cf3335a889",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-off-reverse.json",
+      "bytes": 2658,
+      "sha256": "e718e6260ea379f35cc54581828dcd852a1f0447d78f8c4259ad11372ae10150",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-off-reverse.json",
+        "sourceSha256": "e718e6260ea379f35cc54581828dcd852a1f0447d78f8c4259ad11372ae10150",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-on-both.json",
+      "bytes": 2630,
+      "sha256": "ed5c243df08ad52d1807e8323a123eede917be7c05163596736a4bb6b881d0d5",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-on-both.json",
+        "sourceSha256": "ed5c243df08ad52d1807e8323a123eede917be7c05163596736a4bb6b881d0d5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-on-reverse.json",
+      "bytes": 2655,
+      "sha256": "c70299793b9c803c686e11b8d4ef79075c0eec5a669f5fdca082ea70c61b9b70",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-on-reverse.json",
+        "sourceSha256": "c70299793b9c803c686e11b8d4ef79075c0eec5a669f5fdca082ea70c61b9b70",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-results.json",
+      "bytes": 744,
+      "sha256": "36fb25342c4683835db7e75456e07e37ced33072b1d820f572c46f7827783dd1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-results.json",
+        "sourceSha256": "36fb25342c4683835db7e75456e07e37ced33072b1d820f572c46f7827783dd1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-matrix-reverse-sustained.json",
+      "bytes": 1080,
+      "sha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-matrix-reverse-sustained.json",
+        "sourceSha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/mf-header-runtime.json",
+      "bytes": 3647,
+      "sha256": "2be7280ee8f09289b82d2562c1a01cd0b79f509407c864601a0017e71f8d037a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "mf-header-runtime.json",
+        "sourceSha256": "2be7280ee8f09289b82d2562c1a01cd0b79f509407c864601a0017e71f8d037a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-a-then-b-first.json",
+      "bytes": 1802,
+      "sha256": "e75b3a5b3b279bd9e7e063d9d96c4f9328bfa076bee8f97f9ee41ff40052a3f3",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-a-then-b-first.json",
+        "sourceSha256": "e75b3a5b3b279bd9e7e063d9d96c4f9328bfa076bee8f97f9ee41ff40052a3f3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+      "bytes": 1805,
+      "sha256": "8246d50d3656524401689ae2e0b13167075306d17af5e92162da9d177b468d25",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+        "sourceSha256": "8246d50d3656524401689ae2e0b13167075306d17af5e92162da9d177b468d25",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-a-then-b-second.json",
+      "bytes": 3285,
+      "sha256": "380fddec556e462c31b18903e8abf630f43ed6659c0a207f5736a0597fb07859",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-a-then-b-second.json",
+        "sourceSha256": "380fddec556e462c31b18903e8abf630f43ed6659c0a207f5736a0597fb07859",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-after-pci.txt",
+      "bytes": 8063,
+      "sha256": "c7d221ab8956f7ea7467304a6055e0422a4e871957b3d11ccd1d0b9e655bac8f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-after-pci.txt",
+        "sourceSha256": "c7d221ab8956f7ea7467304a6055e0422a4e871957b3d11ccd1d0b9e655bac8f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-after.json",
+      "bytes": 5389,
+      "sha256": "a06bdfccb5a7f1032a7455f0e9d9b0905ef37371a557a2d61929ad879ae1c06c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-after.json",
+        "sourceSha256": "3b92068620286484c38ac2123363f58211c91b9e0535336729b2544add9588b0",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-b-then-a-first.json",
+      "bytes": 1803,
+      "sha256": "21831b6a1aa21541b124bc0dd87e9fcf4a1b691389af00559d6ebe27df442016",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-b-then-a-first.json",
+        "sourceSha256": "21831b6a1aa21541b124bc0dd87e9fcf4a1b691389af00559d6ebe27df442016",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+      "bytes": 1804,
+      "sha256": "2db96594221f6082fde881ed92680a36105e578c9b9d56e8d90ae94eacb42fee",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+        "sourceSha256": "2db96594221f6082fde881ed92680a36105e578c9b9d56e8d90ae94eacb42fee",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-b-then-a-second.json",
+      "bytes": 3284,
+      "sha256": "86fd683cb8bbb2fb15f91a4a9dcb1a37f57885f59ce139d971659014ae613a62",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-b-then-a-second.json",
+        "sourceSha256": "86fd683cb8bbb2fb15f91a4a9dcb1a37f57885f59ce139d971659014ae613a62",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-both-sustained.json",
+      "bytes": 1068,
+      "sha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-both-sustained.json",
+        "sourceSha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-config-a.json",
+      "bytes": 1803,
+      "sha256": "ec4df6141970d0dce4b56de916516a0d977215605633774b64b5042886444e09",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-config-a.json",
+        "sourceSha256": "ec4df6141970d0dce4b56de916516a0d977215605633774b64b5042886444e09",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-config-b.json",
+      "bytes": 1803,
+      "sha256": "aead7019c7128a748c7d354a2ebc27cbc069be8d11b741782018582799fbf2ac",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-config-b.json",
+        "sourceSha256": "aead7019c7128a748c7d354a2ebc27cbc069be8d11b741782018582799fbf2ac",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-config-both.json",
+      "bytes": 2658,
+      "sha256": "4395e09f709b60b5584172c8599bdef8ebd8ebba0267ea0a9d579a7314027f0f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-config-both.json",
+        "sourceSha256": "4395e09f709b60b5584172c8599bdef8ebd8ebba0267ea0a9d579a7314027f0f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-config-reverse.json",
+      "bytes": 2683,
+      "sha256": "2f82c59761f4238ee30482e73bc4113a284d7ecf3151bf1aad61a7b10c2de9e3",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-config-reverse.json",
+        "sourceSha256": "2f82c59761f4238ee30482e73bc4113a284d7ecf3151bf1aad61a7b10c2de9e3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-enable.json",
+      "bytes": 796,
+      "sha256": "1732a2ddce84761c6f9b0689b32646aa560fc4e0177e64b0a7bbda4154f18d99",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-enable.json",
+        "sourceSha256": "1732a2ddce84761c6f9b0689b32646aa560fc4e0177e64b0a7bbda4154f18d99",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-exit-maintenance.json",
+      "bytes": 349,
+      "sha256": "0cfecb9e6c13005e8d0ae470bdf3fad7662fbb9878804ee9510b7f6044b72f65",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-exit-maintenance.json",
+        "sourceSha256": "0cfecb9e6c13005e8d0ae470bdf3fad7662fbb9878804ee9510b7f6044b72f65",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-off-both.json",
+      "bytes": 2641,
+      "sha256": "f4050bcea24f93cd10c56c3ef04bea669b857218c23a81c1577fcea628667bff",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-off-both.json",
+        "sourceSha256": "f4050bcea24f93cd10c56c3ef04bea669b857218c23a81c1577fcea628667bff",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-off-reverse.json",
+      "bytes": 2665,
+      "sha256": "6e16301181f6cf6011a1af5ef7f955d0c93b4595dba6627fe1ad9a54f240d43a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-off-reverse.json",
+        "sourceSha256": "6e16301181f6cf6011a1af5ef7f955d0c93b4595dba6627fe1ad9a54f240d43a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-on-both.json",
+      "bytes": 2639,
+      "sha256": "f4354aa2788044b5a187f5e285d19eabc1b48d9f169bf06b7a0dbdc01f3fd443",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-on-both.json",
+        "sourceSha256": "f4354aa2788044b5a187f5e285d19eabc1b48d9f169bf06b7a0dbdc01f3fd443",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-on-reverse.json",
+      "bytes": 2662,
+      "sha256": "4aa027f2988d748f94fbcb14348d285cfbd512da983d4a09d90a33f8fe81b0b0",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-on-reverse.json",
+        "sourceSha256": "4aa027f2988d748f94fbcb14348d285cfbd512da983d4a09d90a33f8fe81b0b0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-results.json",
+      "bytes": 744,
+      "sha256": "9ee937e9658037c2088e2bcb7f3e7e0f158510d93529416f917cf7501713cc59",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-results.json",
+        "sourceSha256": "9ee937e9658037c2088e2bcb7f3e7e0f158510d93529416f917cf7501713cc59",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-matrix-reverse-sustained.json",
+      "bytes": 1080,
+      "sha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-matrix-reverse-sustained.json",
+        "sourceSha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-a-disable-baseline.json",
+      "bytes": 796,
+      "sha256": "4d46fba792d1de957d74066b8cce394d8367f70ccf0c378f4838566e5ea6ec53",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-a-disable-baseline.json",
+        "sourceSha256": "4d46fba792d1de957d74066b8cce394d8367f70ccf0c378f4838566e5ea6ec53",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-a-disable.json",
+      "bytes": 781,
+      "sha256": "e23978916876a854a2c73c52e7687f512bdcb26867831c7f4dbc7927c9e58e87",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-a-disable.json",
+        "sourceSha256": "e23978916876a854a2c73c52e7687f512bdcb26867831c7f4dbc7927c9e58e87",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-a-disabled-pci.txt",
+      "bytes": 8041,
+      "sha256": "12acccfe5d86e4751e9531c237804525b926647e12dff5d5e862d03b2e0ab336",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-a-disabled-pci.txt",
+        "sourceSha256": "12acccfe5d86e4751e9531c237804525b926647e12dff5d5e862d03b2e0ab336",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-a-disabled.json",
+      "bytes": 5393,
+      "sha256": "c48202b472485cdfdf71fe9a956202fd68735b941c48d8a8811cf7ed18ec969a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-a-disabled.json",
+        "sourceSha256": "bb5abb225e9ea738e11f1d9c3100c1ae87fde1ae53b9963e6da8d062484e040f",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-a-enable-baseline.json",
+      "bytes": 801,
+      "sha256": "5071b814ce3ad96bcc5939734e72f908f10cf86fca133d501b05d34e61b553ba",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-a-enable-baseline.json",
+        "sourceSha256": "5071b814ce3ad96bcc5939734e72f908f10cf86fca133d501b05d34e61b553ba",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-a-enable.json",
+      "bytes": 780,
+      "sha256": "a228b3aed122b71b09fb60fff268c4dd4c517d3b95e055482efc7e4b8040510b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-a-enable.json",
+        "sourceSha256": "a228b3aed122b71b09fb60fff268c4dd4c517d3b95e055482efc7e4b8040510b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-a-enabled-pci.txt",
+      "bytes": 8063,
+      "sha256": "c7d221ab8956f7ea7467304a6055e0422a4e871957b3d11ccd1d0b9e655bac8f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-a-enabled-pci.txt",
+        "sourceSha256": "c7d221ab8956f7ea7467304a6055e0422a4e871957b3d11ccd1d0b9e655bac8f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-a-enabled.json",
+      "bytes": 5389,
+      "sha256": "8e30888ca1557d38c6cc117f8dd5e936dd545db5b490824501f6fdd7b89229ad",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-a-enabled.json",
+        "sourceSha256": "8d360372c231fc2795037320ee47b739c4993406d9fd5f9113599e926bf10aa2",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-b-disable-baseline.json",
+      "bytes": 796,
+      "sha256": "6f5747b3982b47460da521959145db3b5e7501c0c51f5bc29285aaa5f4196dcd",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-b-disable-baseline.json",
+        "sourceSha256": "6f5747b3982b47460da521959145db3b5e7501c0c51f5bc29285aaa5f4196dcd",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-b-disable.json",
+      "bytes": 781,
+      "sha256": "43c05c828cf3d00d7a2b92ff67e938ceee8f13d67a2d7abdc025e13960449b44",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-b-disable.json",
+        "sourceSha256": "43c05c828cf3d00d7a2b92ff67e938ceee8f13d67a2d7abdc025e13960449b44",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-b-disabled-pci.txt",
+      "bytes": 8041,
+      "sha256": "12acccfe5d86e4751e9531c237804525b926647e12dff5d5e862d03b2e0ab336",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-b-disabled-pci.txt",
+        "sourceSha256": "12acccfe5d86e4751e9531c237804525b926647e12dff5d5e862d03b2e0ab336",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-b-disabled.json",
+      "bytes": 5393,
+      "sha256": "ebf7984e21d34d29817989bb07ea095c8c2a9d729bec84a7ad14076a3a6e5aba",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-b-disabled.json",
+        "sourceSha256": "92ec15fae724839427f5f96dafbb8cdc18d646aa2bf0e8b29169b92125cc23cf",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-b-enable-baseline.json",
+      "bytes": 805,
+      "sha256": "88db294549d001db7409eeda2a1de74aa7b772b11c139edb4606ffb5abe0cd2d",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-b-enable-baseline.json",
+        "sourceSha256": "88db294549d001db7409eeda2a1de74aa7b772b11c139edb4606ffb5abe0cd2d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-b-enable.json",
+      "bytes": 780,
+      "sha256": "f480e9dac12e49861f748267e0022124cb58f18f0fafc94d06179f4afb516dfd",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-b-enable.json",
+        "sourceSha256": "f480e9dac12e49861f748267e0022124cb58f18f0fafc94d06179f4afb516dfd",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-b-enabled-pci.txt",
+      "bytes": 8063,
+      "sha256": "c7d221ab8956f7ea7467304a6055e0422a4e871957b3d11ccd1d0b9e655bac8f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-b-enabled-pci.txt",
+        "sourceSha256": "c7d221ab8956f7ea7467304a6055e0422a4e871957b3d11ccd1d0b9e655bac8f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-b-enabled.json",
+      "bytes": 5389,
+      "sha256": "8a3e14d13d8f7d73227f710613d2eef597300dcbecb59b1e401e80f61bdb854d",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-b-enabled.json",
+        "sourceSha256": "0456f569a047348ec8e7d0e97723a992f6cc1bbda75be40d86afa10edbbcb5cb",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-finish.json",
+      "bytes": 805,
+      "sha256": "b631e324af19cd5429e91648d0c655ad27bab500be72f730eb3a31bdaea8ebf7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-finish.json",
+        "sourceSha256": "b631e324af19cd5429e91648d0c655ad27bab500be72f730eb3a31bdaea8ebf7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-owner-results.json",
+      "bytes": 3457,
+      "sha256": "df5d7468f43f6bad457b1a99004e601fd75bab356b58e28abda5baa00c936517",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-owner-results.json",
+        "sourceSha256": "df5d7468f43f6bad457b1a99004e601fd75bab356b58e28abda5baa00c936517",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-policy-final.json",
+      "bytes": 997,
+      "sha256": "a29980bc5a11e245665a3701c74a081dbb170e58dbafe70e5a66fe71bf2d0367",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "native-mf-policy-final.json",
+        "sourceSha256": "a29980bc5a11e245665a3701c74a081dbb170e58dbafe70e5a66fe71bf2d0367",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-a-then-b-first.json",
+      "bytes": 1796,
+      "sha256": "3a9676ee1ccbdc276323daa414bba2cb7a3d0409c7b23b4593327b2e3c227461",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-a-then-b-first.json",
+        "sourceSha256": "3a9676ee1ccbdc276323daa414bba2cb7a3d0409c7b23b4593327b2e3c227461",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+      "bytes": 1798,
+      "sha256": "00dc96c965e907007602b60dae36e63b01ed5979500af6d9257485051281d9c5",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+        "sourceSha256": "00dc96c965e907007602b60dae36e63b01ed5979500af6d9257485051281d9c5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-a-then-b-off-fix1111-pcie-functional-fix-v1-b.json",
+      "bytes": 1798,
+      "sha256": "7fc7e0401b3d911d840bf1f23da3a3902a9a8a4089a83c1956829531b73e4f72",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-a-then-b-off-fix1111-pcie-functional-fix-v1-b.json",
+        "sourceSha256": "7fc7e0401b3d911d840bf1f23da3a3902a9a8a4089a83c1956829531b73e4f72",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-a-then-b-second.json",
+      "bytes": 1796,
+      "sha256": "44381f4a3cd2311ed53b95d092b07213d3076583115ab0d714e772fdfcc187e5",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-a-then-b-second.json",
+        "sourceSha256": "44381f4a3cd2311ed53b95d092b07213d3076583115ab0d714e772fdfcc187e5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-after.json",
+      "bytes": 5389,
+      "sha256": "cf137652e3f5e736d080c7466713dfff336858262fb5c42d5b23d1e2b5f7a40c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-after.json",
+        "sourceSha256": "fefc451dd92a7c3709623d248176fc7130896e304e2e7ecb14a26e46919ef654",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-b-then-a-first.json",
+      "bytes": 1795,
+      "sha256": "c4aeb878dff538a8ce089624c5e71bb5feae456fc24a9925d25020a0d78549b8",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-b-then-a-first.json",
+        "sourceSha256": "c4aeb878dff538a8ce089624c5e71bb5feae456fc24a9925d25020a0d78549b8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-b-then-a-off-fix1111-pcie-functional-fix-v1-a.json",
+      "bytes": 1797,
+      "sha256": "42dc3825b959f6972a3326bf8806e44b4d2f03e5ecc1f3d1041817751c44e082",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-b-then-a-off-fix1111-pcie-functional-fix-v1-a.json",
+        "sourceSha256": "42dc3825b959f6972a3326bf8806e44b4d2f03e5ecc1f3d1041817751c44e082",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+      "bytes": 1798,
+      "sha256": "2dfa80e0b4719f52ee02b69e99b22e0eb4d1f7b3bb4583ecfa165e208a09fd42",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+        "sourceSha256": "2dfa80e0b4719f52ee02b69e99b22e0eb4d1f7b3bb4583ecfa165e208a09fd42",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-b-then-a-second.json",
+      "bytes": 1794,
+      "sha256": "47172d6ff8836154b2cc399b99b777a4c93c0a1a60873e183445b0970f767814",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-b-then-a-second.json",
+        "sourceSha256": "47172d6ff8836154b2cc399b99b777a4c93c0a1a60873e183445b0970f767814",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-both-sustained.json",
+      "bytes": 1068,
+      "sha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-both-sustained.json",
+        "sourceSha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-config-a-create-fix1111-pcie-functional-fix-v1-a.json",
+      "bytes": 318,
+      "sha256": "49bb84e9b78345b9400b106022b22132562d68c82e3e4f87d61fb9df1616a0c4",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-config-a-create-fix1111-pcie-functional-fix-v1-a.json",
+        "sourceSha256": "49bb84e9b78345b9400b106022b22132562d68c82e3e4f87d61fb9df1616a0c4",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-config-a.json",
+      "bytes": 1386,
+      "sha256": "f89a0f80a50c26b8ad90f22b548989b0ee52f353b068848a2be5dd7584baafc6",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-config-a.json",
+        "sourceSha256": "f89a0f80a50c26b8ad90f22b548989b0ee52f353b068848a2be5dd7584baafc6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-config-b-create-fix1111-pcie-functional-fix-v1-b.json",
+      "bytes": 318,
+      "sha256": "289e8cf9f298b8a30dccaa2fc50fdafe4aff8ca1ccfd8ccabc3d2decc30b8653",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-config-b-create-fix1111-pcie-functional-fix-v1-b.json",
+        "sourceSha256": "289e8cf9f298b8a30dccaa2fc50fdafe4aff8ca1ccfd8ccabc3d2decc30b8653",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-config-b.json",
+      "bytes": 1385,
+      "sha256": "92423a69b5f18e719840271718b2718639e7f72863b2b304b921568fa1a912b7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-config-b.json",
+        "sourceSha256": "92423a69b5f18e719840271718b2718639e7f72863b2b304b921568fa1a912b7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-config-both-create-fix1111-pcie-functional-fix-v1-both.json",
+      "bytes": 318,
+      "sha256": "112fdbf0dfdf08bfa9953b72e8d7879c460e9ccd0683847b8d11ac8161b03852",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-config-both-create-fix1111-pcie-functional-fix-v1-both.json",
+        "sourceSha256": "112fdbf0dfdf08bfa9953b72e8d7879c460e9ccd0683847b8d11ac8161b03852",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-config-both.json",
+      "bytes": 1836,
+      "sha256": "f09980e248b357f7272eaefb864cb7d7801a117be066e5d1ac17e998722d9320",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-config-both.json",
+        "sourceSha256": "f09980e248b357f7272eaefb864cb7d7801a117be066e5d1ac17e998722d9320",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-config-reverse-create-fix1111-pcie-functional-fix-v1-reverse.json",
+      "bytes": 318,
+      "sha256": "71d91364a74999085d6317f19a34dffb624cdd55170eff8321072b84261f72b3",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-config-reverse-create-fix1111-pcie-functional-fix-v1-reverse.json",
+        "sourceSha256": "71d91364a74999085d6317f19a34dffb624cdd55170eff8321072b84261f72b3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-config-reverse.json",
+      "bytes": 1860,
+      "sha256": "10b68659f50b73396ee7a709ddad7d71869720fafd7c57064bc9cff4c5acab0b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-config-reverse.json",
+        "sourceSha256": "10b68659f50b73396ee7a709ddad7d71869720fafd7c57064bc9cff4c5acab0b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-enable.json",
+      "bytes": 800,
+      "sha256": "05f1d989f56ebc74f21932306ca2999bbc9042bf4cd49a765c3dad0067497169",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-enable.json",
+        "sourceSha256": "05f1d989f56ebc74f21932306ca2999bbc9042bf4cd49a765c3dad0067497169",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-off-both.json",
+      "bytes": 2634,
+      "sha256": "402df5b5aee41b2640876d1e04c58f362648ffc4b6c3d63206a2c225ec0cd391",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-off-both.json",
+        "sourceSha256": "402df5b5aee41b2640876d1e04c58f362648ffc4b6c3d63206a2c225ec0cd391",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-off-reverse.json",
+      "bytes": 2658,
+      "sha256": "271d4ff6be23c85c13e2d7fb99872a2e2a516d7f028856cc7e24cdca158cb5c0",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-off-reverse.json",
+        "sourceSha256": "271d4ff6be23c85c13e2d7fb99872a2e2a516d7f028856cc7e24cdca158cb5c0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-on-both.json",
+      "bytes": 2631,
+      "sha256": "e4ad6b761f39c07fc4c9baaf6487e0cd5e15efdf4fc98b1519db5fa48c5a8933",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-on-both.json",
+        "sourceSha256": "e4ad6b761f39c07fc4c9baaf6487e0cd5e15efdf4fc98b1519db5fa48c5a8933",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-on-reverse.json",
+      "bytes": 2656,
+      "sha256": "d7ace4fe9883ce1f887d52ffdc7b362e540966436fbb5017ede2a6327d6654c7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-on-reverse.json",
+        "sourceSha256": "d7ace4fe9883ce1f887d52ffdc7b362e540966436fbb5017ede2a6327d6654c7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-results.json",
+      "bytes": 748,
+      "sha256": "3c95ca4bf177ecb639d3e84c406646e637424201de7a2b4116f87680a30fe6ce",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-results.json",
+        "sourceSha256": "3c95ca4bf177ecb639d3e84c406646e637424201de7a2b4116f87680a30fe6ce",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/pcie-baseline-reverse-sustained.json",
+      "bytes": 1080,
+      "sha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "pcie-baseline-reverse-sustained.json",
+        "sourceSha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/preflight-pci.txt",
+      "bytes": 8041,
+      "sha256": "3b9f9c9997c2ccecb15e5bdbff89164b3e0d235b72cc12b9d74f3e86a7cbeeb5",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "preflight-pci.txt",
+        "sourceSha256": "3b9f9c9997c2ccecb15e5bdbff89164b3e0d235b72cc12b9d74f3e86a7cbeeb5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/preflight.json",
+      "bytes": 1651,
+      "sha256": "caf1f94c73e69082908d174b2d499a1ddb6d570590ec83503ac70f896dcda7ef",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "preflight.json",
+        "sourceSha256": "ede5fedbd77c99dbeb7ae25a9626edbb79cfb3368052c22b0a9187c7885a8c36",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/remove-policy-control-request.json",
+      "bytes": 316,
+      "sha256": "c33a19c05c5bc0a44b75759eb66c6142dbbc52fc87e159987e8810bba10a8caa",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "remove-policy-control-request.json",
+        "sourceSha256": "c33a19c05c5bc0a44b75759eb66c6142dbbc52fc87e159987e8810bba10a8caa",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/resume-runtime.json",
+      "bytes": 3648,
+      "sha256": "d341bec101c6600f9a39ecb2c3c95bed18c807cddea630f53642ca695b5a85e5",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "resume-runtime.json",
+        "sourceSha256": "d341bec101c6600f9a39ecb2c3c95bed18c807cddea630f53642ca695b5a85e5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui-host-both-on.json",
+      "bytes": 17382,
+      "sha256": "c562708b781c2e42101cebf5cc1294a89fb9fe01612f190bbbd65aa67736fc8a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui-host-both-on.json",
+        "sourceSha256": "c562708b781c2e42101cebf5cc1294a89fb9fe01612f190bbbd65aa67736fc8a",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/ui-host-toggle.json",
+      "bytes": 17046,
+      "sha256": "3fcafca439fa944460d9dc585768f82e1c39cadd661978a9bc843edb20a038bc",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui-host-toggle.json",
+        "sourceSha256": "3fcafca439fa944460d9dc585768f82e1c39cadd661978a9bc843edb20a038bc",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/ui-memory-adjust-shutdown-before.json",
+      "bytes": 5389,
+      "sha256": "56a431be212f3dea65813afecc6a0f2d079c5ba6aae0d07e4a03eff3ed6db0b1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui-memory-adjust-shutdown-before.json",
+        "sourceSha256": "ac048f105323405f41c2ac075e11e3cb5a565359ff6438b9579c72cd6e963f8c",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/ui-memory-adjustment.json",
+      "bytes": 318,
+      "sha256": "57add30aff216f25a2fc75275b779b6af047b06c5a29a40d031e246509a2f0d2",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui-memory-adjustment.json",
+        "sourceSha256": "57add30aff216f25a2fc75275b779b6af047b06c5a29a40d031e246509a2f0d2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui-memory-recovery-shutdown-before.json",
+      "bytes": 4475,
+      "sha256": "0e1b222ea55aa5c184e6a23df7ef30dc16732af971da8b2458dc7177f919f92f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui-memory-recovery-shutdown-before.json",
+        "sourceSha256": "0523c9ccad05e1fd6f86fb70003bdb244ecd60039ddd09c931dcd41885e38c4f",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/ui-memory-recovery-shutdown-maintenance.json",
+      "bytes": 351,
+      "sha256": "6a6d6eb0937fe7137dae521236502c26c2e8744a24425fefa93e6818f892db2b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui-memory-recovery-shutdown-maintenance.json",
+        "sourceSha256": "6a6d6eb0937fe7137dae521236502c26c2e8744a24425fefa93e6818f892db2b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui-memory-recovery-shutdown-request.json",
+      "bytes": 98,
+      "sha256": "e40f20af3e1a409454990aefb064c42fb3674137d4a08489139b506807995f7b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui-memory-recovery-shutdown-request.json",
+        "sourceSha256": "e40f20af3e1a409454990aefb064c42fb3674137d4a08489139b506807995f7b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-a-then-b-first.json",
+      "bytes": 1795,
+      "sha256": "8f7b3c1358dd10033065962a9f2fc525e73c05d3a918d864b9181e6eedeb1da3",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-a-then-b-first.json",
+        "sourceSha256": "8f7b3c1358dd10033065962a9f2fc525e73c05d3a918d864b9181e6eedeb1da3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+      "bytes": 1798,
+      "sha256": "eab7807bf7ba2642c180efd7764989aea6b88eae784f3f624035af7882cd3bea",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-a-then-b-off-fix1111-pcie-functional-fix-v1-a.json",
+        "sourceSha256": "eab7807bf7ba2642c180efd7764989aea6b88eae784f3f624035af7882cd3bea",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-a-then-b-second.json",
+      "bytes": 3279,
+      "sha256": "c40038a18583291b7b39bab8097f46d7d5e7c394837ca4b31d3b63fc4e4e3f57",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-a-then-b-second.json",
+        "sourceSha256": "c40038a18583291b7b39bab8097f46d7d5e7c394837ca4b31d3b63fc4e4e3f57",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-after.json",
+      "bytes": 5389,
+      "sha256": "67b54d772fd079401de9756b3d68e29ebabedbc30b6f6f6bd5e1e5df8e6a2618",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-after.json",
+        "sourceSha256": "50c64a6b84554ca00f14a74a547e49759237500893addb750984d32c1ad9481d",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-b-then-a-first.json",
+      "bytes": 1795,
+      "sha256": "37885278c741d54bc8b870cccfb82f906ab1b682e62e3992614fc120401d7d18",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-b-then-a-first.json",
+        "sourceSha256": "37885278c741d54bc8b870cccfb82f906ab1b682e62e3992614fc120401d7d18",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+      "bytes": 1797,
+      "sha256": "02cae4e441c47fa648640004481e967f8e501414570ae026ae554b597b07a9c9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-b-then-a-off-fix1111-pcie-functional-fix-v1-b.json",
+        "sourceSha256": "02cae4e441c47fa648640004481e967f8e501414570ae026ae554b597b07a9c9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-b-then-a-second.json",
+      "bytes": 3279,
+      "sha256": "3bccf1af07330075729161b429051ffd7e11c85862d7de90c79e8712a3bbd798",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-b-then-a-second.json",
+        "sourceSha256": "3bccf1af07330075729161b429051ffd7e11c85862d7de90c79e8712a3bbd798",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-both-sustained.json",
+      "bytes": 1068,
+      "sha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-both-sustained.json",
+        "sourceSha256": "a9aaaff895e3c0bd96456e5ed4c56df2c4fad494534fb03bb2842a314a0d5fb7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-config-a.json",
+      "bytes": 1795,
+      "sha256": "1dd5b866dadc9b41f2382d0a569f8f7d31af0c0e7e8528ae1dc828c777871adf",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-config-a.json",
+        "sourceSha256": "1dd5b866dadc9b41f2382d0a569f8f7d31af0c0e7e8528ae1dc828c777871adf",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-config-b.json",
+      "bytes": 1796,
+      "sha256": "c589276afb45e12156b39b5d3b7b964b1c00b5d2b514b420548a187adcf65964",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-config-b.json",
+        "sourceSha256": "c589276afb45e12156b39b5d3b7b964b1c00b5d2b514b420548a187adcf65964",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-config-both.json",
+      "bytes": 2652,
+      "sha256": "145c28dbfe0812c0f37a31486c52d35e9ce6fb36d4d8c7c14b9ddfe4545923f7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-config-both.json",
+        "sourceSha256": "145c28dbfe0812c0f37a31486c52d35e9ce6fb36d4d8c7c14b9ddfe4545923f7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-config-reverse.json",
+      "bytes": 2675,
+      "sha256": "45dfedf675d8346df045da8f3ba4d07ab86e35210db2fabf91b8460b0d55359d",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-config-reverse.json",
+        "sourceSha256": "45dfedf675d8346df045da8f3ba4d07ab86e35210db2fabf91b8460b0d55359d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-enable.json",
+      "bytes": 796,
+      "sha256": "4e262655aa89dd944374942c8b58c209566ed6b7735caa86d9a89dfcbc4e2baa",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-enable.json",
+        "sourceSha256": "4e262655aa89dd944374942c8b58c209566ed6b7735caa86d9a89dfcbc4e2baa",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-exit-maintenance.json",
+      "bytes": 341,
+      "sha256": "e232c085aa645bbacca9024fa17ca1695c79c2e6c86fade4d62d5c77d78c6dce",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-exit-maintenance.json",
+        "sourceSha256": "e232c085aa645bbacca9024fa17ca1695c79c2e6c86fade4d62d5c77d78c6dce",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-off-both.json",
+      "bytes": 2633,
+      "sha256": "4f388cf7ed1c67fba04604ed112b9712301b7950b92de416757f77a54c30a150",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-off-both.json",
+        "sourceSha256": "4f388cf7ed1c67fba04604ed112b9712301b7950b92de416757f77a54c30a150",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-off-reverse.json",
+      "bytes": 2657,
+      "sha256": "541934c4a7f0516cb9e8bc5c81f941af0f0c84e45455f400660b091320ce10a1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-off-reverse.json",
+        "sourceSha256": "541934c4a7f0516cb9e8bc5c81f941af0f0c84e45455f400660b091320ce10a1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-on-both.json",
+      "bytes": 2631,
+      "sha256": "b6504a90c01d78bc3b51bd442209b7c6b2b4686c813cfcffc97e73307d41e4f9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-on-both.json",
+        "sourceSha256": "b6504a90c01d78bc3b51bd442209b7c6b2b4686c813cfcffc97e73307d41e4f9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-on-reverse.json",
+      "bytes": 2655,
+      "sha256": "5dda2682a27f7085cd7273e997458197ee651bfdd3c278afef95d16215df56ed",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-on-reverse.json",
+        "sourceSha256": "5dda2682a27f7085cd7273e997458197ee651bfdd3c278afef95d16215df56ed",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-results.json",
+      "bytes": 744,
+      "sha256": "4499cd7084a346b7392849fe1970eb7dc4d6107033a014bcfa4679357a048aa0",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-results.json",
+        "sourceSha256": "4499cd7084a346b7392849fe1970eb7dc4d6107033a014bcfa4679357a048aa0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-matrix-reverse-sustained.json",
+      "bytes": 1080,
+      "sha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-matrix-reverse-sustained.json",
+        "sourceSha256": "55a4fd42774a4b2e1e91b1e42c511588783a627baab02d158174d897f6244bc9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui6-policy-verified.json",
+      "bytes": 993,
+      "sha256": "def153f4200a08357901de6df9d034ee8ad6acfa73f7f980473f6e484af2c21c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui6-policy-verified.json",
+        "sourceSha256": "def153f4200a08357901de6df9d034ee8ad6acfa73f7f980473f6e484af2c21c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vc-before-ui.json",
+      "bytes": 5400,
+      "sha256": "d2f322548bb1b98f3ebccd936681d1ae937c8aa8751a44b42b1b8ad78635ccc8",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-before-ui.json",
+        "sourceSha256": "d2f322548bb1b98f3ebccd936681d1ae937c8aa8751a44b42b1b8ad78635ccc8",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 7094,
+      "sha256": "ffd0c2a6e8ebeb341cf76686f9e09655cdc08b5fcf8d5fa31c74225e74cd3bee",
+      "provenance": {
+        "transformation": "authored report, metadata or offline evidence verifier"
+      }
+    },
+    {
+      "path": "screenshots/host-01-select-a.jpg",
+      "bytes": 112563,
+      "sha256": "3560470d05c473d94cc381ebf14707b8e0e49310875ff95e6f3eb736bda130c9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "host-01-select-a.jpg",
+        "sourceSha256": "3560470d05c473d94cc381ebf14707b8e0e49310875ff95e6f3eb736bda130c9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/host-01-select-a.txt",
+      "bytes": 11612,
+      "sha256": "0f943c011b5b1514dfdc116c1e5bff64ebc178c0d7b5c684acb6192a0a8ebf1b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "host-01-select-a.txt",
+        "sourceSha256": "0f943c011b5b1514dfdc116c1e5bff64ebc178c0d7b5c684acb6192a0a8ebf1b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/host-02-enabled.jpg",
+      "bytes": 110981,
+      "sha256": "a584155b1cf88e83d771fca7d44cf7ec7e537167bf3491f4bd7c261f57c232e6",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "host-02-enabled.jpg",
+        "sourceSha256": "a584155b1cf88e83d771fca7d44cf7ec7e537167bf3491f4bd7c261f57c232e6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/host-02-enabled.txt",
+      "bytes": 13411,
+      "sha256": "02a9dff566739b0be60ff107790544fb16f262d67f03558cf19a59ff6fd018dd",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "host-02-enabled.txt",
+        "sourceSha256": "02a9dff566739b0be60ff107790544fb16f262d67f03558cf19a59ff6fd018dd",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/host-03-both-before-power.jpg",
+      "bytes": 117569,
+      "sha256": "f810f1d648b141c4d74cb2a44fc6eba17b806f0b7b2dddcebe1312b2b6e9d56e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "host-03-both-before-power.jpg",
+        "sourceSha256": "f810f1d648b141c4d74cb2a44fc6eba17b806f0b7b2dddcebe1312b2b6e9d56e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/host-03-both-before-power.txt",
+      "bytes": 10948,
+      "sha256": "1e822eabb5149369538044afe145793c179c51aa30b36002b5b6e6b951a4ae9c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "host-03-both-before-power.txt",
+        "sourceSha256": "1e822eabb5149369538044afe145793c179c51aa30b36002b5b6e6b951a4ae9c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/host-04-both-after-power.jpg",
+      "bytes": 135064,
+      "sha256": "f777c02f24f4da1d63fc825f9333968f5d945247eb2fef044049011c42a579c9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "host-04-both-after-power.jpg",
+        "sourceSha256": "f777c02f24f4da1d63fc825f9333968f5d945247eb2fef044049011c42a579c9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/host-04-both-after-power.txt",
+      "bytes": 11791,
+      "sha256": "07a2882b97b9e55808d7ff2ed1925623d48863a110d72c2e99e17f33b47f0983",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "host-04-both-after-power.txt",
+        "sourceSha256": "07a2882b97b9e55808d7ff2ed1925623d48863a110d72c2e99e17f33b47f0983",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/timeline.jsonl",
+      "bytes": 879,
+      "sha256": "047079fe1fff0dafe733f4050af577fc4fb4a92a5426f939659a62a9ba5c5cbd",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "timeline.jsonl",
+        "sourceSha256": "047079fe1fff0dafe733f4050af577fc4fb4a92a5426f939659a62a9ba5c5cbd",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/inspect_dependency_host.py.txt",
+      "bytes": 2524,
+      "sha256": "903f1f72dd5e29ae9b86e9f811a2acffa5bf42f6b1dc85c9071afe587400f4e3",
+      "provenance": {
+        "sourceRun": "final local helper snapshot",
+        "sourceFile": "inspect_dependency_host.py",
+        "sourceSha256": "903f1f72dd5e29ae9b86e9f811a2acffa5bf42f6b1dc85c9071afe587400f4e3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/prepare_dependency_interaction_run.py.txt",
+      "bytes": 8490,
+      "sha256": "9be34c8c0d398fd90ac5d35defc8deefe6186994eb17a8a3c57b01f4ba1ceb59",
+      "provenance": {
+        "sourceRun": "final local helper snapshot",
+        "sourceFile": "prepare_dependency_interaction_run.py",
+        "sourceSha256": "9be34c8c0d398fd90ac5d35defc8deefe6186994eb17a8a3c57b01f4ba1ceb59",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/README.md",
+      "bytes": 1991,
+      "sha256": "d309ad7f6bd92c2e08efa953139baaf64c77c27eb7be67247488bf8e35f8d1c8",
+      "provenance": {
+        "transformation": "authored report, metadata or offline evidence verifier"
+      }
+    },
+    {
+      "path": "source-snapshots/repair_dependency_positive_control.py.txt",
+      "bytes": 18371,
+      "sha256": "76b60d0df9ab5c96906ea1f4b5fa7f77cbd600d02803681fe3b2b6ef692cc67f",
+      "provenance": {
+        "sourceRun": "final local helper snapshot",
+        "sourceFile": "repair_dependency_positive_control.py",
+        "sourceSha256": "76b60d0df9ab5c96906ea1f4b5fa7f77cbd600d02803681fe3b2b6ef692cc67f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/start-qemu-esxi8-mf.sh.txt",
+      "bytes": 23012,
+      "sha256": "e6023c7e91ab859ded7dcb9d45a3b2f7e65d8712cc4f7fb583feebc140b8ad75",
+      "provenance": {
+        "sourceRun": "final local helper snapshot",
+        "sourceFile": "start-qemu-esxi8-mf.sh",
+        "sourceSha256": "e6023c7e91ab859ded7dcb9d45a3b2f7e65d8712cc4f7fb583feebc140b8ad75",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/wait_dependency_policy.py.txt",
+      "bytes": 4106,
+      "sha256": "7c27541e2cdf77fa265129e6243b99e68b8a4828c700651b32ce3374d725a584",
+      "provenance": {
+        "sourceRun": "final local helper snapshot",
+        "sourceFile": "wait_dependency_policy.py",
+        "sourceSha256": "7c27541e2cdf77fa265129e6243b99e68b8a4828c700651b32ce3374d725a584",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "summary.json",
+      "bytes": 3439,
+      "sha256": "201b50da4c2ad0dd676c93cb7e6774057f6f068b1a3430c8ed159b59161e7f2d",
+      "provenance": {
+        "transformation": "authored report, metadata or offline evidence verifier"
+      }
+    },
+    {
+      "path": "verify_bundle.py",
+      "bytes": 5345,
+      "sha256": "1dd58560b7eda87e786a98f3e21431b71a8fd2ccf4f8c0ef02c36cb6da59b87d",
+      "provenance": {
+        "transformation": "authored report, metadata or offline evidence verifier"
+      }
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "at": "2026-11-11T11:26:59.757100+00:00",
+  "before": {
+    "name": "fix1111-pcie-functional-fix-v1-b",
+    "id": "2892",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-b/fix1111-pcie-functional-fix-v1-b/fix1111-pcie-functional-fix-v1-b.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  },
+  "task": {
+    "taskId": "haTask-2892-vim.VirtualMachine.powerOn-291",
+    "state": "error",
+    "descriptionId": "VirtualMachine.powerOn",
+    "queueTime": "2026-11-11 11:26:50.910102+00:00",
+    "startTime": "2026-11-11 11:26:50.914614+00:00",
+    "completeTime": "2026-11-11 11:26:58.775602+00:00",
+    "elapsedSeconds": 8.264101263000157,
+    "fault": {
+      "type": "vim.fault.GenericVmConfigFault",
+      "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = \"Module 'DevicePowerOn' power on failed. \",\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = \"Module 'DevicePowerOn' power on failed. \"\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = \"Module 'DevicePowerOn' power on failed. \"\n}",
+      "faultMessages": [
+        {
+          "key": "msg.moduletable.powerOnFailed",
+          "message": "Module 'DevicePowerOn' power on failed. "
+        },
+        {
+          "key": "msg.vmx.poweron.failed",
+          "message": "Failed to start the virtual machine."
+        }
+      ]
+    }
+  },
+  "after": {
+    "name": "fix1111-pcie-functional-fix-v1-b",
+    "id": "2892",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-b/fix1111-pcie-functional-fix-v1-b/fix1111-pcie-functional-fix-v1-b.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}

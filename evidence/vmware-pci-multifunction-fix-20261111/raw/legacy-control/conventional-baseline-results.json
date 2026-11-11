@@ -1,0 +1,31 @@
+{
+  "at": "2026-11-11T10:47:43.495304+00:00",
+  "results": [
+    {
+      "case": "both",
+      "task": "error",
+      "powerState": "poweredOff"
+    },
+    {
+      "case": "reverse",
+      "task": "error",
+      "powerState": "poweredOff"
+    }
+  ],
+  "pci": [
+    {
+      "id": "0000:02:01.0",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:02:01.1",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:01:00.0"
+    }
+  ]
+}

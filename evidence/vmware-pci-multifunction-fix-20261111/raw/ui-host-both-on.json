@@ -1,0 +1,352 @@
+{
+  "at": "2026-11-11T11:41:18.692073+00:00",
+  "endpointProduct": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+  "hostProduct": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+  "bootTime": "2026-11-11 11:30:03.410126+00:00",
+  "pci": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    }
+  ],
+  "vms": [
+    {
+      "name": "fix1111-pcie-functional-fix-v1-both",
+      "id": "2889",
+      "powerState": "poweredOn",
+      "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-both/fix1111-pcie-functional-fix-v1-both/fix1111-pcie-functional-fix-v1-both.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        },
+        {
+          "key": 13001,
+          "label": "PCI device 1",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-reverse",
+      "id": "2890",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-reverse/fix1111-pcie-functional-fix-v1-reverse/fix1111-pcie-functional-fix-v1-reverse.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        },
+        {
+          "key": 13001,
+          "label": "PCI device 1",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-a",
+      "id": "2891",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-a/fix1111-pcie-functional-fix-v1-a/fix1111-pcie-functional-fix-v1-a.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-b",
+      "id": "2892",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-b/fix1111-pcie-functional-fix-v1-b/fix1111-pcie-functional-fix-v1-b.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769235333",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:23.634673+00:00",
+      "completeTime": "2026-11-11 11:31:23.651793+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2889-vim.VirtualMachine.reconfigure-1769235356",
+      "entity": "fix1111-pcie-functional-fix-v1-both",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:27.746269+00:00",
+      "completeTime": "2026-11-11 11:31:28.404878+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2889-vim.VirtualMachine.powerOn-1769235366",
+      "entity": "fix1111-pcie-functional-fix-v1-both",
+      "operation": "VirtualMachine.powerOn",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:29.646936+00:00",
+      "completeTime": "2026-11-11 11:31:32.564378+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2889-vim.VirtualMachine.powerOff-1769235413",
+      "entity": "fix1111-pcie-functional-fix-v1-both",
+      "operation": "VirtualMachine.powerOff",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:40.199877+00:00",
+      "completeTime": "2026-11-11 11:31:40.616248+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2890-vim.VirtualMachine.reconfigure-1769235441",
+      "entity": "fix1111-pcie-functional-fix-v1-reverse",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:43.063403+00:00",
+      "completeTime": "2026-11-11 11:31:43.306509+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2890-vim.VirtualMachine.powerOn-1769235452",
+      "entity": "fix1111-pcie-functional-fix-v1-reverse",
+      "operation": "VirtualMachine.powerOn",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:44.511236+00:00",
+      "completeTime": "2026-11-11 11:31:46.494273+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2890-vim.VirtualMachine.powerOff-1769235503",
+      "entity": "fix1111-pcie-functional-fix-v1-reverse",
+      "operation": "VirtualMachine.powerOff",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:52.948842+00:00",
+      "completeTime": "2026-11-11 11:31:53.414584+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2891-vim.VirtualMachine.reconfigure-1769235522",
+      "entity": "fix1111-pcie-functional-fix-v1-a",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:56.365390+00:00",
+      "completeTime": "2026-11-11 11:31:56.700496+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2892-vim.VirtualMachine.reconfigure-1769235534",
+      "entity": "fix1111-pcie-functional-fix-v1-b",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "startTime": "2026-11-11 11:31:58.610937+00:00",
+      "completeTime": "2026-11-11 11:31:59.048463+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2891-vim.VirtualMachine.powerOn-1769235545",
+      "entity": "fix1111-pcie-functional-fix-v1-a",
+      "operation": "VirtualMachine.powerOn",
+      "state": "success",
+      "startTime": "2026-11-11 11:32:00.162761+00:00",
+      "completeTime": "2026-11-11 11:32:02.180889+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2892-vim.VirtualMachine.powerOn-1769235566",
+      "entity": "fix1111-pcie-functional-fix-v1-b",
+      "operation": "VirtualMachine.powerOn",
+      "state": "error",
+      "startTime": "2026-11-11 11:32:03.625378+00:00",
+      "completeTime": "2026-11-11 11:32:11.566392+00:00",
+      "fault": {
+        "type": "vim.fault.GenericVmConfigFault",
+        "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = \"Module 'DevicePowerOn' power on failed. \",\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = \"Module 'DevicePowerOn' power on failed. \"\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = \"Module 'DevicePowerOn' power on failed. \"\n}",
+        "faultMessages": [
+          {
+            "key": "msg.moduletable.powerOnFailed",
+            "message": "Module 'DevicePowerOn' power on failed. "
+          },
+          {
+            "key": "msg.vmx.poweron.failed",
+            "message": "Failed to start the virtual machine."
+          }
+        ]
+      }
+    },
+    {
+      "id": "haTask-2891-vim.VirtualMachine.powerOff-1769235610",
+      "entity": "fix1111-pcie-functional-fix-v1-a",
+      "operation": "VirtualMachine.powerOff",
+      "state": "success",
+      "startTime": "2026-11-11 11:32:13.326095+00:00",
+      "completeTime": "2026-11-11 11:32:13.664673+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2892-vim.VirtualMachine.powerOn-1769235623",
+      "entity": "fix1111-pcie-functional-fix-v1-b",
+      "operation": "VirtualMachine.powerOn",
+      "state": "success",
+      "startTime": "2026-11-11 11:32:15.585587+00:00",
+      "completeTime": "2026-11-11 11:32:17.573675+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2891-vim.VirtualMachine.powerOn-1769235644",
+      "entity": "fix1111-pcie-functional-fix-v1-a",
+      "operation": "VirtualMachine.powerOn",
+      "state": "error",
+      "startTime": "2026-11-11 11:32:18.842537+00:00",
+      "completeTime": "2026-11-11 11:32:26.713507+00:00",
+      "fault": {
+        "type": "vim.fault.GenericVmConfigFault",
+        "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = \"Module 'DevicePowerOn' power on failed. \",\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = \"Module 'DevicePowerOn' power on failed. \"\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = \"Module 'DevicePowerOn' power on failed. \"\n}",
+        "faultMessages": [
+          {
+            "key": "msg.moduletable.powerOnFailed",
+            "message": "Module 'DevicePowerOn' power on failed. "
+          },
+          {
+            "key": "msg.vmx.poweron.failed",
+            "message": "Failed to start the virtual machine."
+          }
+        ]
+      }
+    },
+    {
+      "id": "haTask-2892-vim.VirtualMachine.powerOff-1769235697",
+      "entity": "fix1111-pcie-functional-fix-v1-b",
+      "operation": "VirtualMachine.powerOff",
+      "state": "success",
+      "startTime": "2026-11-11 11:32:28.496884+00:00",
+      "completeTime": "2026-11-11 11:32:29.056621+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236082",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:33:28.562795+00:00",
+      "completeTime": "2026-11-11 11:33:29.535071+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236130",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:33:33.499474+00:00",
+      "completeTime": "2026-11-11 11:33:33.932001+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236222",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:33:45.974445+00:00",
+      "completeTime": "2026-11-11 11:33:46.002117+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236246",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:33:49.273311+00:00",
+      "completeTime": "2026-11-11 11:33:50.277149+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236355",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:34:08.788949+00:00",
+      "completeTime": "2026-11-11 11:34:08.806555+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236371",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:34:12.128052+00:00",
+      "completeTime": "2026-11-11 11:34:12.664137+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236469",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:34:24.048836+00:00",
+      "completeTime": "2026-11-11 11:34:24.081679+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236490",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:34:27.550624+00:00",
+      "completeTime": "2026-11-11 11:34:28.591556+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769236592",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:34:40.962646+00:00",
+      "completeTime": "2026-11-11 11:34:40.998152+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1769237227",
+      "entity": "esxi-a.lab.local",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "startTime": "2026-11-11 11:38:29.629019+00:00",
+      "completeTime": "2026-11-11 11:38:30.795306+00:00",
+      "fault": null
+    },
+    {
+      "id": "haTask-2889-vim.VirtualMachine.powerOn-1769237670",
+      "entity": "fix1111-pcie-functional-fix-v1-both",
+      "operation": "VirtualMachine.powerOn",
+      "state": "success",
+      "startTime": "2026-11-11 11:40:21.924886+00:00",
+      "completeTime": "2026-11-11 11:40:42.019889+00:00",
+      "fault": null
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-11T11:23:25.277302+00:00",
+  "change": "Enable multifunction flag for Function 1 as well as Function 0",
+  "onlyNewQemuDeviceProperty": "test_fn1,multifunction=on",
+  "previousManifestSha256": "89f61b7d4c07dc1d597dd1cd7aed3a611e9fc48fc5b034ad449b09f171293e63",
+  "oldLauncherSha256": "32cd7adc1d9536687413e4746364775b48cc17a08fc44bf63375fb2d49a2c9fa",
+  "newLauncherSha256": "e6023c7e91ab859ded7dcb9d45a3b2f7e65d8712cc4f7fb583feebc140b8ad75",
+  "disksAndPolicyReused": true,
+  "hostWasShutDownNormally": true
+}

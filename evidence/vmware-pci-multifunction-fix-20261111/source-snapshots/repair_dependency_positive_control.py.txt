@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+"""Run-scoped positive controls; preserve evidence and never assume the outcome."""
+import argparse
+import json
+from pathlib import Path
+import re
+import shlex
+import ssl
+import time
+
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim, vmodl
+from esxi_passthru_capability import EsxiSsh, caveat_field, utc_now
+import test_esxi_owner_activation as owner
+import test_esxi_dependency_interaction as lab
+
+ROOT = Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('action', choices=['preflight','collect','owner-matrix','activate','pair','matrix','policy','cleanup','shutdown'])
+    parser.add_argument('--run-id', required=True)
+    parser.add_argument('--label', required=True)
+    parser.add_argument('--endpoint', choices=['esxi','vcenter'], default='esxi')
+    parser.add_argument('--shareable', choices=['true','false','remove'], default='false')
+    parser.add_argument('--include-already-nonshareable-management', action='store_true',
+                        help='Allow only the known lab management NIC if its FPT flag is already false and owner stays VMkernel')
+    parser.add_argument('--policy-boot-passthrough', action='store_true',
+                        help='Persist passthrough ownership before reboot so jumpstart can restore passthru.map attributes')
+    parser.add_argument('--require-nonshareable', action='store_true')
+    parser.add_argument('--lightweight-shutdown', action='store_true', help='Skip optional SSH inventory collection during resource recovery; retain host/VM safety guards')
+    args = parser.parse_args()
+    if not re.fullmatch(r'20\d{6}-esxi8-[a-z0-9-]+',args.run_id) or not re.fullmatch(r'[a-z0-9-]+',args.label):
+        raise RuntimeError('Invalid run identifier')
+    out=ROOT/args.run_id
+    manifest=json.loads((out/'manifest.json').read_text())
+    settings=manifest['launchEnvironment']
+    topology=settings['QEMU_ESXI_TOPOLOGY']
+    model=settings['QEMU_ESXI_TEST_FN0_MODEL']
+    targets=['0000:02:01.0','0000:02:01.1'] if topology=='legacy' else ['0000:01:00.0','0000:01:00.1']
+    expected={'e1000':(0x8086,0x100e),'e1000e':(0x8086,0x10d3),'virtio-net-pci':(0x1af4,0x1041)}[model]
+    lab.OUT=out
+    lab.TARGETS=targets
+    names={k:args.run_id.replace('20261111-esxi8-','fix1111-')+'-'+k for k in ['a','b','both','reverse']}
+    lab.NAMES=names
+    password=caveat_field('esxi8-auto-codex-credentials','Password')
+    ssh=EsxiSsh('172.31.91.10',password,retries=1)
+    if args.endpoint=='esxi':
+        endpoint,user,secret='172.31.91.10','root',password
+    else:
+        endpoint='192.168.91.131'
+        user=caveat_field('vcsa803-codex-credentials','SSO Username')
+        secret=caveat_field('vcsa803-codex-credentials','SSO Password')
+    si=SmartConnect(host=endpoint,user=user,pwd=secret,sslContext=ssl._create_unverified_context(),connectionPoolTimeout=20)
+    try:
+        content=si.RetrieveContent()
+        host=next(h for h in owner.inventory(content,vim.HostSystem) if h.hardware.systemInfo.uuid=='6a4e818a-51ce-7d7f-a21f-000c29abaf6d')
+        if host.config.product.build!='24280767' or host.runtime.connectionState!='connected':
+            raise RuntimeError('Unexpected host build or connection')
+        pci={d.id:d for d in host.hardware.pciDevice}
+        if any((pci[t].vendorId&0xffff,pci[t].deviceId&0xffff)!=expected for t in targets):
+            raise RuntimeError('Target identity differs from manifest')
+        def save(name,value):
+            lab.save(args.label+'-'+name,value)
+        def inventory():
+            return {v.name:v for v in host.vm if v.config is not None}
+        def snapshot(label):
+            data={'at':utc_now(),'endpointProduct':str(content.about),'hostProduct':str(host.config.product),
+                  'bootTime':str(host.runtime.bootTime),'uuid':host.hardware.systemInfo.uuid,
+                  'maintenance':host.runtime.inMaintenanceMode,'pci':owner.passthru_state(host,set(targets)),
+                  'vms':[lab.vm_state(v) for v in inventory().values()]}
+            lab.save(label+'.json',data)
+            commands={'pci':'esxcli hardware pci list','storage':'esxcli storage filesystem list',
+                      'bootbank':'ls -ld /bootbank /altbootbank; ls -l /bootbank/boot.cfg; esxcli storage core adapter list',
+                      'map':'cat /etc/vmware/passthru.map',
+                      'policy-loader':"grep -i -E 'passthru.map|fpt.*shar|100e' /var/run/log/vmkernel.log /var/run/log/syslog.log; grep -R -n 'passthru.map' /etc/init.d /sbin/*.py /usr/lib/vmware/*.py 2>/dev/null"}
+            for suffix,command in commands.items():
+                r=ssh.run(command,check=False,timeout=45)
+                (out/(label+'-'+suffix+'.txt')).write_text(r.stdout+r.stderr)
+            return data
+        def host_toggle(ids,enabled,label):
+            value={'at':utc_now(),'ids':ids,'enabled':enabled,'applyNow':True,
+                   'before':owner.passthru_state(host,set(targets))}
+            try:
+                host.configManager.pciPassthruSystem.UpdatePassthruConfig(config=[vim.host.PciPassthruConfig(id=t,passthruEnabled=enabled,applyNow=True) for t in ids])
+                value['outcome']='success'
+            except Exception as error:
+                value['outcome']='fault';value['fault']=owner.fault_snapshot(error)
+            time.sleep(2)
+            value['after']=owner.passthru_state(host,set(targets))
+            lab.save(label+'.json',value)
+            return value
+        def power(vm,on,label):
+            result=lab.power(ssh,host,vm,label,on)
+            for log in ['vmkernel','hostd']:
+                r=ssh.run('tail -n 1800 /var/run/log/'+log+'.log',check=False,timeout=30)
+                (out/(label+'-'+log+'.log')).write_text(r.stdout)
+            return result
+        def configure(key,ids,label):
+            vms=inventory()
+            vm=vms.get(names[key])
+            if vm is None:
+                vm=lab.create_empty(content,host,names[key],record_prefix=label+'-create')
+            if vm.runtime.powerState!='poweredOff':
+                raise RuntimeError('Configuration target is not powered off')
+            available={d.pciDevice.id:d for d in host.parent.environmentBrowser.QueryConfigTarget(host=host).pciPassthrough}
+            changes=[vim.vm.device.VirtualDeviceSpec(operation='remove',device=d) for d in vm.config.hardware.device if isinstance(d,vim.vm.device.VirtualPCIPassthrough)]
+            changes.extend(vim.vm.device.VirtualDeviceSpec(operation='add',device=owner.static_device(available[t],-100-i)) for i,t in enumerate(ids))
+            before=lab.vm_state(vm)
+            record,_=lab.task_record(vm.ReconfigVM_Task(spec=vim.vm.ConfigSpec(deviceChange=changes)))
+            lab.save(label+'.json',{'ids':ids,'before':before,'task':record,'after':lab.vm_state(vm)})
+            if record['state']!='success': raise RuntimeError('Configuration failed')
+            return vm
+        if args.action=='preflight':
+            value=snapshot(args.label)
+            print(json.dumps(value),flush=True)
+            return
+        if args.action=='collect':
+            vms=[v for n,v in inventory().items() if n in names.values()]
+            refs={t._moId:t for t in content.taskManager.recentTask}
+            for vm in vms: refs.update({t._moId:t for t in vm.recentTask})
+            records=[]
+            for task in refs.values():
+                try: info=task.info
+                except vmodl.fault.ManagedObjectNotFound: continue
+                if info.entityName not in names.values() and 'passthru' not in info.descriptionId.lower(): continue
+                records.append({'id':task._moId,'entity':info.entityName,'operation':info.descriptionId,
+                                'state':str(info.state),'startTime':str(info.startTime),'completeTime':str(info.completeTime),
+                                'fault':owner.fault_snapshot(info.error) if info.error else None})
+            data={'at':utc_now(),'endpointProduct':str(content.about),'hostProduct':str(host.config.product),
+                  'bootTime':str(host.runtime.bootTime),'pci':owner.passthru_state(host,set(targets)),
+                  'vms':[lab.vm_state(v) for v in vms],'tasks':records}
+            lab.save(args.label+'.json',data)
+            for vm in vms: lab.vm_logs(ssh,vm,args.label)
+            for log in ['vmkernel','hostd']:
+                r=ssh.run('tail -n 2000 /var/run/log/'+log+'.log',check=False,timeout=30)
+                (out/(args.label+'-'+log+'.log')).write_text(r.stdout)
+            print(json.dumps({'vms':[{k:v[k] for k in ['name','powerState']} for v in data['vms']],'tasks':records}),flush=True)
+            return
+        unrelated=[n for n,v in inventory().items() if v.runtime.powerState=='poweredOn' and n not in names.values()]
+        if unrelated:
+            raise RuntimeError('Unrelated powered-on VMs: '+repr(unrelated))
+        if args.action=='shutdown':
+            if any(v.runtime.powerState=='poweredOn' for v in inventory().values()):
+                raise RuntimeError('Shutdown requires all VMs off')
+            if args.lightweight_shutdown:
+                save('before.json',{'at':utc_now(),'hostProduct':str(host.config.product),'uuid':host.hardware.systemInfo.uuid,
+                                    'bootTime':str(host.runtime.bootTime),'vms':[lab.vm_state(v) for v in inventory().values()]})
+            else:
+                snapshot(args.label+'-before')
+            if not host.runtime.inMaintenanceMode:
+                task,_=lab.task_record(host.EnterMaintenanceMode_Task(timeout=60),timeout=90)
+                save('maintenance.json',task)
+                if task['state']!='success': raise RuntimeError('Maintenance failed')
+            r=ssh.run('esxcli system shutdown poweroff --delay=10 --reason=dependency-positive-control-finish',check=False,timeout=30)
+            save('request.json',{'at':utc_now(),'returncode':r.returncode,'stdout':r.stdout,'stderr':r.stderr})
+            print('Normal ESXi shutdown requested',flush=True)
+            return
+        if args.action=='policy':
+            matched=[d.id for d in pci.values() if (d.vendorId&0xffff,d.deviceId&0xffff)==expected]
+            if set(matched)!=set(targets):
+                if not (args.include_already_nonshareable_management and args.shareable in {'false','remove'}
+                        and model=='e1000e' and topology=='pcie'
+                        and set(matched)==set(targets+['0000:00:05.0'])):
+                    raise RuntimeError('Rule selector includes non-test devices: '+repr(matched))
+                native=ssh.run('esxcli hardware pci list',timeout=30).stdout
+                management=re.search(r'(?ms)^0000:00:05\.0\n.*?(?=^0000:|\Z)',native).group()
+                if not all(re.search(p,management) for p in [r'Configured Owner: VMkernel',r'Current Owner: VMkernel',r'FPT Sharable: false']):
+                    raise RuntimeError('Management metadata would change')
+                mgmt_state=owner.passthru_state(host,{'0000:00:05.0'})
+                if not mgmt_state or any(p['capable'] or p['enabled'] or p['active'] for p in mgmt_state):
+                    raise RuntimeError('Management passthrough guard failed')
+                save('management-guard.json',{'at':utc_now(),'native':management,'state':mgmt_state,
+                                             'meaning':'Rule repeats existing false flag; no management owner change requested'})
+            if any(v.runtime.powerState=='poweredOn' for v in inventory().values()):
+                raise RuntimeError('Policy update requires all VMs off')
+            before=snapshot(args.label+'-before')
+            bank=ssh.run('readlink -f /bootbank').stdout.strip()
+            if not bank.startswith('/vmfs/volumes/'):
+                raise RuntimeError('Persistent bootbank not established: '+bank)
+            host_toggle(targets,False,args.label+'-disable')
+            original=ssh.run('cat /etc/vmware/passthru.map').stdout
+            selector=f'{expected[0]:04x} {expected[1]:04x}'
+            lines=[line for line in original.splitlines() if not re.match(r'^\s*'+selector.replace(' ',r'\s+')+r'\s',line,re.I)]
+            updated='\n'.join(lines).rstrip()+'\n'
+            if args.shareable!='remove':
+                updated+=f'\n# Isolated dependency validation {args.run_id}\n{selector} default {args.shareable}\n'
+            (out/(args.label+'-map-before.txt')).write_text(original)
+            ssh.run('printf %s '+shlex.quote(updated)+' > /etc/vmware/passthru.map')
+            actual=ssh.run('cat /etc/vmware/passthru.map').stdout
+            if actual!=updated: raise RuntimeError('Map readback mismatch')
+            (out/(args.label+'-map-after.txt')).write_text(actual)
+            if args.policy_boot_passthrough:
+                activated=host_toggle(targets,True,args.label+'-boot-owner')
+                if not all(p['enabled'] and p['active'] for p in activated['after']):
+                    raise RuntimeError('Cannot persist passthrough boot ownership')
+            backup=ssh.run('/sbin/auto-backup.sh',timeout=90)
+            (out/(args.label+'-backup.txt')).write_text(backup.stdout+backup.stderr)
+            if not host.runtime.inMaintenanceMode:
+                task,_=lab.task_record(host.EnterMaintenanceMode_Task(timeout=60),timeout=90)
+                save('maintenance.json',task)
+                if task['state']!='success': raise RuntimeError('Maintenance failed')
+            save('request.json',{'at':utc_now(),'selector':selector,'shareable':args.shareable,'bootTime':before['bootTime'],
+                                 'matched':matched,'targets':targets,'bootInPassthrough':args.policy_boot_passthrough})
+            ssh.run('esxcli system shutdown reboot --delay=10 --reason=dependency-policy-control',timeout=30)
+            print('Policy written, backed up, reboot requested; next command must verify effective state',flush=True)
+            return
+        if args.action=='cleanup':
+            for vm in list(inventory().values()):
+                if vm.name not in names.values(): continue
+                vm_name=vm.name
+                if vm.runtime.powerState=='poweredOn': power(vm,False,args.label+'-off-'+vm_name)
+                record,_=lab.task_record(vm.Destroy_Task())
+                save('destroy-'+vm_name+'.json',record)
+                if record['state']!='success':raise RuntimeError('Cleanup failed')
+            host_toggle(targets,False,args.label+'-disable')
+            snapshot(args.label+'-after')
+            print('Owned test VMs removed and targets disabled',flush=True)
+            return
+        if host.runtime.inMaintenanceMode:
+            task,_=lab.task_record(host.ExitMaintenanceMode_Task(timeout=60),timeout=90)
+            save('exit-maintenance.json',task)
+            if task['state']!='success':raise RuntimeError('Maintenance exit failed')
+        if any(v.runtime.powerState=='poweredOn' for v in inventory().values()):
+            raise RuntimeError('Matrix must start with all guests off')
+        if args.action=='owner-matrix':
+            results=[]
+            for suffix,bdf in zip(['a','b'],targets):
+                host_toggle(targets,False,args.label+'-'+suffix+'-enable-baseline')
+                results.append(host_toggle([bdf],True,args.label+'-'+suffix+'-enable'))
+                snapshot(args.label+'-'+suffix+'-enabled')
+                host_toggle(targets,True,args.label+'-'+suffix+'-disable-baseline')
+                results.append(host_toggle([bdf],False,args.label+'-'+suffix+'-disable'))
+                snapshot(args.label+'-'+suffix+'-disabled')
+            host_toggle(targets,False,args.label+'-finish')
+            save('results.json',results)
+            print(json.dumps([{'ids':v['ids'],'enabled':v['enabled'],'outcome':v['outcome'],'after':v['after']} for v in results]),flush=True)
+            return
+        current=host_toggle(targets,True,args.label+'-enable')
+        if not all(p['enabled'] and p['active'] for p in current['after']):
+            raise RuntimeError('Both-active baseline not established')
+        if args.action=='activate':
+            print(json.dumps(snapshot(args.label+'-after')),flush=True)
+            return
+        if args.require_nonshareable:
+            native=ssh.run('esxcli hardware pci list',timeout=30).stdout
+            observed={}
+            for bdf in targets:
+                block=re.search(r'(?ms)^'+re.escape(bdf)+r'\n.*?(?=^0000:|\Z)',native)
+                observed[bdf]=bool(block and re.search(r'FPT Sharable:\s*false',block.group()))
+            save('nonshareable-gate.json',{'at':utc_now(),'effective':observed,'passed':all(observed.values())})
+            if not all(observed.values()): raise RuntimeError('Required nonshareable policy is not effective')
+        results=[]
+        for key,ids in [('both',targets),('reverse',list(reversed(targets)))]:
+            vm=configure(key,ids,args.label+'-config-'+key)
+            result=power(vm,True,args.label+'-on-'+key)
+            results.append({'case':key,'task':result['task']['state'],'powerState':result['after']['powerState']})
+            if vm.runtime.powerState=='poweredOn':
+                time.sleep(5)
+                save(key+'-sustained.json',lab.vm_state(vm))
+                power(vm,False,args.label+'-off-'+key)
+        if args.action=='matrix':
+            a=configure('a',[targets[0]],args.label+'-config-a')
+            b=configure('b',[targets[1]],args.label+'-config-b')
+            for first,second,order in [(a,b,'a-then-b'),(b,a,'b-then-a')]:
+                first_result=power(first,True,args.label+'-'+order+'-first')
+                second_result=power(second,True,args.label+'-'+order+'-second')
+                results.append({'case':order,'first':first_result['task']['state'],'second':second_result['task']['state']})
+                for vm in [second,first]:
+                    if vm.runtime.powerState=='poweredOn': power(vm,False,args.label+'-'+order+'-off-'+vm.name)
+        save('results.json',{'at':utc_now(),'results':results,'pci':owner.passthru_state(host,set(targets))})
+        snapshot(args.label+'-after')
+        print(json.dumps(results),flush=True)
+    finally:
+        Disconnect(si)
+
+
+if __name__=='__main__':
+    main()

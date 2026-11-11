@@ -1,0 +1,8 @@
+Source run: 20261111-esxi8-pcie-functional-fix-v1
+Source file: mf-header-matrix-b-then-a-second-fix1111-pcie-functional-fix-v1-a-vmware.log
+Source SHA-256: f83f8d2ebcaccff454f125315a2180de7b64dd322a4c192ad7b2b5292afe546a
+Original line numbers follow. Only selected lines are included.
+
+570: 2026-11-11T11:27:21.636Z In(05) vmx - AH Failed to find a suitable device for pciPassthru0
+571: 2026-11-11T11:27:21.637Z In(05) vmx - Module 'DevicePowerOn' power on failed.
+592: 2026-11-11T11:27:21.686Z In(05)+ vmx - Power on failure messages: Module 'DevicePowerOn' power on failed.

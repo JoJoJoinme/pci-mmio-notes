@@ -1,0 +1,131 @@
+{
+  "runId": "20261111-esxi8-pcie-functional-fix-v1",
+  "startedAt": "2026-11-11T10:59:12.360136+00:00",
+  "experimentIds": [
+    "VMW-DEP-001",
+    "VMW-OWNER-002"
+  ],
+  "caseIds": [
+    "A05",
+    "O05",
+    "O10"
+  ],
+  "riskIds": [
+    "R01",
+    "R02",
+    "R04"
+  ],
+  "scope": "PCIe multifunction baseline and persisted explicit functional dependency with same-VM positive control",
+  "host": "172.31.91.10",
+  "state": "/root/vm/20261111-esxi8-pcie-functional-fix-v1",
+  "kernel": "6.6.123.2-microsoft-standard-WSL2+",
+  "qemuVersion": "QEMU emulator version 11.0.2\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "sources": {
+    "/root/vm/esxi8-mf/esxi8-system.qcow2": {
+      "sha256": "a8d810322ff5ba3942f1a34b7e8a5f49b08e0abf7427b8633239d0fcfa68b1ea",
+      "size": 1547632640
+    },
+    "/root/vm/esxi8-mf/esxi8-datastore.qcow2": {
+      "sha256": "8f602feb40772b22f164c0b61da0c752ff0bbca21b01f5faa4e00ee56bdd9323",
+      "size": 665255936
+    },
+    "/root/vm/esxi8-mf/OVMF_VARS.fd": {
+      "sha256": "7b652cb4211ca0158a5ef35908db3ebe5d1d27cfa0fa5d877640a9e0a3c1f21a",
+      "size": 131072
+    },
+    "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64": {
+      "sha256": "10d9717b7df2320d52b69a52ed1aa12b5e7288cee59c578fd9cdd28fe060abd6",
+      "size": 83680776
+    },
+    "/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/start-qemu-esxi8-mf.sh": {
+      "sha256": "32cd7adc1d9536687413e4746364775b48cc17a08fc44bf63375fb2d49a2c9fa",
+      "size": 22897
+    }
+  },
+  "launchEnvironment": {
+    "QEMU_ESXI_INSTANCE": "dep-interaction",
+    "QEMU_ESXI_NAME": "20261111-esxi8-pcie-functional-fix-v1",
+    "QEMU_ESXI_VM_DIR": "/root/vm/20261111-esxi8-pcie-functional-fix-v1",
+    "QEMU_ESXI_SYSTEM_DISK": "/root/vm/20261111-esxi8-pcie-functional-fix-v1/system.qcow2",
+    "QEMU_ESXI_DATASTORE_DISK": "/root/vm/20261111-esxi8-pcie-functional-fix-v1/datastore.qcow2",
+    "QEMU_ESXI_OVMF_VARS": "/root/vm/20261111-esxi8-pcie-functional-fix-v1/OVMF_VARS.fd",
+    "QEMU_ESXI_QEMU_BINARY": "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+    "QEMU_ESXI_TOPOLOGY": "pcie",
+    "QEMU_ESXI_TEST_FN0_MODEL": "e1000e",
+    "QEMU_ESXI_TEST_FN1_MODEL": "e1000e",
+    "QEMU_ESXI_IVSHMEM_SIZE": "0",
+    "QEMU_ESXI_EDU": "0",
+    "QEMU_ESXI_MEMORY_MB": "8192",
+    "QEMU_ESXI_VCPU_COUNT": "4",
+    "QEMU_ESXI_UUID": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "QEMU_ESXI_MGMT_MAC": "00:0c:29:ab:af:6d",
+    "QEMU_ESXI_TAP": "tap-esxi8-dep",
+    "QEMU_ESXI_VNC_DISPLAY": "7",
+    "QEMU_ESXI_QTEST_SOCKET": "/root/vm/20261111-esxi8-pcie-functional-fix-v1/qtest.sock",
+    "QEMU_ESXI_DHCP": "0",
+    "QEMU_ESXI_TRACE": "0"
+  },
+  "qemuPid": 1814,
+  "qemuArgv": [
+    "/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64",
+    "-L",
+    "/usr/share/qemu",
+    "-name",
+    "20261111-esxi8-pcie-functional-fix-v1",
+    "-machine",
+    "q35,accel=kvm,kernel-irqchip=split",
+    "-cpu",
+    "host,+vmx,-vmx-tsc-scaling",
+    "-smp",
+    "4",
+    "-m",
+    "8192",
+    "-uuid",
+    "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "-device",
+    "intel-iommu,intremap=on,caching-mode=on,device-iotlb=on",
+    "-drive",
+    "if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd",
+    "-drive",
+    "if=pflash,format=raw,file=/root/vm/20261111-esxi8-pcie-functional-fix-v1/OVMF_VARS.fd",
+    "-drive",
+    "if=none,id=system,file=/root/vm/20261111-esxi8-pcie-functional-fix-v1/system.qcow2,format=qcow2,cache=writeback,discard=unmap",
+    "-drive",
+    "if=none,id=datastore,file=/root/vm/20261111-esxi8-pcie-functional-fix-v1/datastore.qcow2,format=qcow2,cache=writeback,discard=unmap",
+    "-device",
+    "ide-hd,drive=system,bus=ide.0,serial=ESXI8SYS-dep-interaction,bootindex=1",
+    "-device",
+    "ide-hd,drive=datastore,bus=ide.1,serial=ESXI8DATA-dep-interaction,bootindex=2",
+    "-netdev",
+    "tap,id=mgmt,ifname=tap-esxi8-dep,script=no,downscript=no,vnet_hdr=off",
+    "-device",
+    "e1000e,netdev=mgmt,mac=00:0c:29:ab:af:6d,bus=pcie.0,addr=0x05.0",
+    "-netdev",
+    "user,id=test0,restrict=on",
+    "-netdev",
+    "user,id=test1,restrict=on",
+    "-netdev",
+    "user,id=test2,restrict=on",
+    "-device",
+    "pcie-root-port,id=test_rp,bus=pcie.0,chassis=8,slot=8,addr=0x08.0",
+    "-device",
+    "e1000e,id=test_fn0,netdev=test0,mac=52:54:00:08:00:00,bus=test_rp,addr=0x00.0,multifunction=on",
+    "-device",
+    "e1000e,id=test_fn1,netdev=test1,mac=52:54:00:08:00:01,bus=test_rp,addr=0x00.1",
+    "-vga",
+    "std",
+    "-vnc",
+    "127.0.0.1:7",
+    "-monitor",
+    "unix:/root/vm/20261111-esxi8-pcie-functional-fix-v1/monitor.sock,server,nowait",
+    "-serial",
+    "file:/root/vm/20261111-esxi8-pcie-functional-fix-v1/serial.log",
+    "-qtest",
+    "unix:/root/vm/20261111-esxi8-pcie-functional-fix-v1/qtest.sock,server=on,wait=off",
+    "-pidfile",
+    "/root/vm/20261111-esxi8-pcie-functional-fix-v1/qemu.pid",
+    "-daemonize",
+    "-D",
+    "/root/vm/20261111-esxi8-pcie-functional-fix-v1/qemu.log"
+  ]
+}

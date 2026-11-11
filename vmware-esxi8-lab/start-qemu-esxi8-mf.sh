@@ -109,6 +109,9 @@ test_fn0_identity_options=""
 test_fn1_identity_options=""
 test_fn0_aer_options=""
 test_fn1_aer_options=""
+if [[ "${QEMU_ESXI_TEST_FN1_MULTIFUNCTION:-0}" == "1" ]]; then
+  test_fn1_identity_options+=",multifunction=on"
+fi
 
 case "$test_fn0_model" in
   e1000e)

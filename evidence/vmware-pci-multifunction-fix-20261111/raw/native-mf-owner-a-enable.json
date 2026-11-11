@@ -1,0 +1,41 @@
+{
+  "at": "2026-11-11T11:33:33.961943+00:00",
+  "ids": [
+    "0000:01:00.0"
+  ],
+  "enabled": true,
+  "applyNow": true,
+  "before": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:00:08.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:00:08.0"
+    }
+  ],
+  "outcome": "success",
+  "after": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    }
+  ]
+}

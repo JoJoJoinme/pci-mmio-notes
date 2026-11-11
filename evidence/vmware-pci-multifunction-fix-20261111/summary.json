@@ -1,0 +1,147 @@
+{
+  "status": "POSITIVE_CONTROL_ESTABLISHED",
+  "dateLocal": "2026-11-11",
+  "timezone": "Asia/Shanghai",
+  "esxi": "8.0.3 build-24280767",
+  "hostClient": "2.18.0-23593406",
+  "vcenter": "8.0.3 build-24674346",
+  "qemu": "QEMU emulator version 11.0.2\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "targets": [
+    "0000:01:00.0",
+    "0000:01:00.1"
+  ],
+  "dependency": "0000:00:08.0",
+  "resetMethod": "Bridge reset",
+  "fix": "Set multifunction=on on Function 1 as well as Function 0 in the PCIe profile",
+  "finalExtraPassthruMapRule": null,
+  "acsOrIommuIsolationBypassUsed": false,
+  "vcenterUiStatus": "PENDING_SERVICE_RECOVERY",
+  "outerMemoryMiB": {
+    "initialApiAndHostUi": 8192,
+    "vcenterUiPreparation": 6144
+  },
+  "phases": {
+    "pcie-baseline": [
+      {
+        "case": "both",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "reverse",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "a-then-b",
+        "first": "success",
+        "second": "success"
+      },
+      {
+        "case": "b-then-a",
+        "first": "success",
+        "second": "success"
+      }
+    ],
+    "functional-effective-probe": [
+      {
+        "case": "both",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "reverse",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "a-then-b",
+        "first": "success",
+        "second": "success"
+      },
+      {
+        "case": "b-then-a",
+        "first": "success",
+        "second": "success"
+      }
+    ],
+    "mf-header-matrix": [
+      {
+        "case": "both",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "reverse",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "a-then-b",
+        "first": "success",
+        "second": "error"
+      },
+      {
+        "case": "b-then-a",
+        "first": "success",
+        "second": "error"
+      }
+    ],
+    "native-mf-matrix": [
+      {
+        "case": "both",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "reverse",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "a-then-b",
+        "first": "success",
+        "second": "error"
+      },
+      {
+        "case": "b-then-a",
+        "first": "success",
+        "second": "error"
+      }
+    ],
+    "ui6-matrix": [
+      {
+        "case": "both",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "reverse",
+        "task": "success",
+        "powerState": "poweredOn"
+      },
+      {
+        "case": "a-then-b",
+        "first": "success",
+        "second": "error"
+      },
+      {
+        "case": "b-then-a",
+        "first": "success",
+        "second": "error"
+      }
+    ]
+  },
+  "limitations": [
+    "Original conventional PCI bridge alias failure is not claimed fixed",
+    "Synthetic PCIe multifunction reset-dependency scenario",
+    "Power-on/control-plane validation only; no guest OS I/O workload",
+    "Host enable/disable in-flight atomicity and fault injection not tested"
+  ],
+  "uiEvidenceFiles": [
+    "host-01-select-a.jpg",
+    "host-02-enabled.jpg",
+    "host-03-both-before-power.jpg",
+    "host-04-both-after-power.jpg"
+  ]
+}

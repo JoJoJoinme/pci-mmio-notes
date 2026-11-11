@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-11T11:04:24.033619+00:00",
+  "native": "0000:00:05.0\n   Address: 0000:00:05.0\n   Segment: 0x0000\n   Bus: 0x00\n   Slot: 0x05\n   Function: 0x0\n   Vendor Name: Intel Corporation\n   Device Name: 82574L Gigabit Network Connection\n   Configured Owner: VMkernel\n   Current Owner: VMkernel\n   Vendor ID: 0x8086\n   Device ID: 0x10d3\n   SubVendor ID: 0x8086\n   SubDevice ID: 0x0000\n   Device Class: 0x0200\n   Device Class Name: Ethernet controller\n   Programming Interface: 0x00\n   Revision ID: 0x00\n   Interrupt Line: 0x0a\n   IRQ: 255\n   Interrupt Vector: 0x00\n   PCI Pin: 0x00\n   Spawned Bus: 0x00\n   Flags: 0x3001\n   Module ID: 52\n   Module Name: ne1000\n   Chassis: 0\n   Physical Slot: -1\n   Slot Description: \n   Device Layer Bus Address: p0000:00:05.0\n   Passthru Capable: false\n   Parent Device Address: \n   Dependent Device Address: \n   Reset Method: None\n   FPT Sharable: false\n   NUMA Node: -1\n   Hardware Label: \n   Virtual Function: \n\n",
+  "state": [
+    {
+      "id": "0000:00:05.0",
+      "capable": false,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": ""
+    }
+  ],
+  "meaning": "Rule repeats existing false flag; no management owner change requested"
+}

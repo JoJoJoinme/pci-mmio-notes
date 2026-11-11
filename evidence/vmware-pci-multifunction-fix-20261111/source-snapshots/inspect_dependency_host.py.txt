@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+import argparse
+from pathlib import Path
+import re
+from esxi_passthru_capability import EsxiSsh, caveat_field
+
+parser=argparse.ArgumentParser()
+parser.add_argument('--run-id',required=True)
+parser.add_argument('--label',required=True)
+parser.add_argument('--only',default=None)
+args=parser.parse_args()
+if not re.fullmatch(r'20\d{6}-esxi8-[a-z0-9-]+',args.run_id) or not re.fullmatch(r'[a-z0-9-]+',args.label): raise ValueError('Identifier')
+out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/args.run_id
+ssh=EsxiSsh('172.31.91.10',caveat_field('esxi8-auto-codex-credentials','Password'),retries=1)
+commands={
+    'services':'vmware -vl; date -u; readlink -f /bootbank; /etc/init.d/hostd status; /etc/init.d/rhttpproxy status; esxcli storage filesystem list',
+    'hostd':'tail -n 150 /var/run/log/hostd.log',
+    'vmkernel':'tail -n 800 /var/run/log/vmkernel.log',
+    'syslog':'tail -n 600 /var/run/log/syslog.log',
+    'pci':'localcli hardware pci list',
+    'network':'localcli network nic list; localcli network ip interface ipv4 get',
+    'map-loader':"grep -a -i -E 'passthru.map|fptShareable|Restoring passthru' /var/run/log/syslog.log; ls -l /etc/vmware/passthru.map; ls /usr/lib/vmware/vmkctl; which python; which python3; ls /etc/init.d/*pci*; /sbin/jumpstart -h 2>&1",
+    'vsi':'vsish -e ls /hardware/pci/seg/0/bus/1/slot/0/func/0/; vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/0/fptShareable',
+    'vsi-values':'date -u; vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/0/fptShareable; vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/1/fptShareable; vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/0/passthruDependent; vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/1/passthruDependent',
+    'headers':'vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/0/pciConfigHeader; vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/1/pciConfigHeader',
+    'config-space':'vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/0/pciConfigSpace; vsish -e get /hardware/pci/seg/0/bus/1/slot/0/func/1/pciConfigSpace',
+}
+if args.only:
+    commands={name:commands[name] for name in args.only.split(',')}
+for name,command in commands.items():
+    try:
+        result=ssh.run(command,check=False,timeout=45)
+        (out/(args.label+'-'+name+'.txt')).write_text(result.stdout+result.stderr)
+        print(name+': exit='+str(result.returncode)+' bytes='+str(len(result.stdout)),flush=True)
+    except Exception as error:
+        print(name+': '+type(error).__name__,flush=True)

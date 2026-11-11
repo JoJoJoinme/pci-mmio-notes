@@ -1,0 +1,91 @@
+{
+  "at": "2026-11-11T11:42:50.821833+00:00",
+  "endpointProduct": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware vCenter Server',\n   fullName = 'VMware vCenter Server 8.0.3 build-24674346',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '00500',\n   build = '24674346',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'linux-x64',\n   productLineId = 'vpx',\n   apiType = 'VirtualCenter',\n   apiVersion = '8.0.3.0',\n   instanceUuid = 'dcbfc99c-a5d9-46f3-809d-edb52800b3d7',\n   licenseProductName = 'VMware VirtualCenter Server',\n   licenseProductVersion = '8.0'\n}",
+  "hostProduct": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+  "bootTime": "2026-11-11 11:30:03.410126+00:00",
+  "pci": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    }
+  ],
+  "vms": [
+    {
+      "name": "fix1111-pcie-functional-fix-v1-b",
+      "id": "vm-4107",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-b/fix1111-pcie-functional-fix-v1-b/fix1111-pcie-functional-fix-v1-b.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-both",
+      "id": "vm-4106",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-both/fix1111-pcie-functional-fix-v1-both/fix1111-pcie-functional-fix-v1-both.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        },
+        {
+          "key": 13001,
+          "label": "PCI device 1",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-a",
+      "id": "vm-4105",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-a/fix1111-pcie-functional-fix-v1-a/fix1111-pcie-functional-fix-v1-a.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-reverse",
+      "id": "vm-4104",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] fix1111-pcie-functional-fix-v1-reverse/fix1111-pcie-functional-fix-v1-reverse/fix1111-pcie-functional-fix-v1-reverse.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        },
+        {
+          "key": 13001,
+          "label": "PCI device 1",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    }
+  ],
+  "tasks": []
+}

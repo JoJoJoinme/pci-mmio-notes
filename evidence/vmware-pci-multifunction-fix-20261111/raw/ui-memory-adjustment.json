@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11T12:03:47.120994+00:00",
+  "oldMemoryMiB": 8192,
+  "newMemoryMiB": 6144,
+  "reason": "Co-resident VCSA left Windows about 400 MiB free and browser/SSH operations timed out",
+  "requiresRetest": true,
+  "previousManifestSha256": "2c4899fca0664bd78855303fd84b5eb02d432d69fadb5d7a28538f260af62ed7"
+}

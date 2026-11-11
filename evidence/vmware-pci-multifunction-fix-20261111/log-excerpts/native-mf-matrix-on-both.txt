@@ -1,0 +1,7 @@
+Source run: 20261111-esxi8-pcie-functional-fix-v1
+Source file: native-mf-matrix-on-both-fix1111-pcie-functional-fix-v1-both-vmware.log
+Source SHA-256: 1daba040f3270039b947f60d968c90ac9cf77eb03eac3470b6474e6cd0f2dcd5
+Original line numbers follow. Only selected lines are included.
+
+564: 2026-11-11T11:31:31.122Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:01:00.0 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1
+572: 2026-11-11T11:31:31.128Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:01:00.1 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1
