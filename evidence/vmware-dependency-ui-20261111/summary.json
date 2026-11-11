@@ -51,6 +51,21 @@
     "vCenter API",
     "vCenter UI"
   ],
+  "failureInvestigation": {
+    "status": "FAILURE_STAGE_IDENTIFIED_ROOT_CAUSE_UNRESOLVED",
+    "source": "Host Client same-VM attempt; matching VMX world 207713",
+    "observedSequence": [
+      "A registered",
+      "B repeated Expected no IOMMU domain warning",
+      "B admission failed",
+      "whole VM power-on failed",
+      "A domain disabled and its state record destroyed"
+    ],
+    "sameVmPositiveControlPassed": false,
+    "crossVmPolicyAsFailureCauseProven": false,
+    "sharedBridgeDomainHandlingHypothesis": "Plausible, not established by the logged warning alone",
+    "hostEnableTransactionAtomicityTested": false
+  },
   "disableFollowup": {
     "run": "20261111-esxi8-dependency-disable-v1",
     "scope": "Idle pair, no powered-on passthrough VM, live apply without reboot",

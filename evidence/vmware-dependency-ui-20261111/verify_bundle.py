@@ -158,6 +158,14 @@ def check_documents():
             require(destination.is_relative_to(ROOT.parents[1]) and destination.exists(), f'{path.name}: broken link {raw}')
     excluded = read('raw/excluded-functional/policy-validation.json')
     require(excluded['status'] == 'SETUP_INVALID_BOOTBANK_VOLATILE' and not excluded['usableAsDependencyEvidence'], 'Invalid setup must remain excluded')
+    initialization = (ROOT / 'log-excerpts/esxi-ui-same-vm-initialization.txt').read_text(encoding='utf-8')
+    iommu = (ROOT / 'log-excerpts/esxi-ui-same-vm-iommu.txt').read_text(encoding='utf-8')
+    require('Registered a PCI device for 0000:02:01.0' in initialization and
+            'AH Failed to find a suitable device for pciPassthru1' in initialization, 'Same-VM partial initialization evidence')
+    require('Expected no IOMMU domain for 0000:02:01.1, got Success' in iommu and
+            'Disable Domain for device 0000:02:01.0' in iommu, 'Same-VM IOMMU check and cleanup evidence')
+    require(read('summary.json')['failureInvestigation']['crossVmPolicyAsFailureCauseProven'] is False,
+            'Do not turn a failed same-VM control into proof of policy causation')
 
 
 def main():

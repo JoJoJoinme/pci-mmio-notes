@@ -63,6 +63,29 @@ API 请求使用 `UpdatePassthruConfig`、`applyNow=true`。单设备禁用请�
 
 任务报告 `DevicePowerOn` 失败；VM 日志原文为 `AH Failed to find a suitable device`，见 [ESXi B 失败摘录](log-excerpts/esxi-ui-b-while-a.txt)、[vCenter B 失败摘录](log-excerpts/vcenter-ui-b-while-a.txt) 和 [同 VM 双设备摘录](log-excerpts/vcenter-ui-same-vm-both.txt)。本轮没有出现可据以报告的 `Device ... is already in use` 错误，也不能仅凭这些故障文本确定 DMA、ACS 或复位机制中的哪一项是直接原因。
 
+### 为什么同 VM 共同分配仍然失败
+
+共同分配满足依赖规则中的一项必要条件，不保证这个合成拓扑满足其余硬件与驱动条件。本轮同 VM 正对照失败，不能据此得出“VMware 不允许把依赖设备放进同一台 VM”。也不能仅凭不同 VM 中第二台失败，就认定已验证了跨 VM 分配规则的拦截：同一个设备初始化问题可能影响两种放置方式。
+
+2026-11-11 复核原始 Host Client 同 VM 日志，找到更具体的失败阶段。以下时间均为 UTC，VMX world 为 `207713`：
+
+| 时间 | 原始观察 |
+| --- | --- |
+| 2026-11-10 17:21:00.874 | vmware.log：`Registered a PCI device for 0000:02:01.0`，A 已注册 |
+| 17:21:00.877 起 | vmkernel：B 反复出现 `Expected no IOMMU domain for 0000:02:01.1, got Success`，每次随后销毁 B 的初始化记录 |
+| 17:21:07.382 | vmware.log：`AH Failed to find a suitable device for pciPassthru1`，接着 DevicePowerOn 失败 |
+| 17:21:11.430—11.435 | vmkernel：对 A 执行 `Disable Domain`，随后销毁 A 的初始化记录 |
+
+见 [注册及开机失败摘录](log-excerpts/esxi-ui-same-vm-initialization.txt) 和 [IOMMU 检查及清理摘录](log-excerpts/esxi-ui-same-vm-iommu.txt)。这将诊断从通用开机错误推进到 B 的 IOMMU 域关联检查；其中 `got Success` 是警告中的检查返回结果，不能读作 B 初始化成功。
+
+传统 PCI 桥共享 requester ID，与上述现象相符；A 建立关联后，B 未按同 VM 共享域路径成功处理，是待验证解释。现有日志没有给出域 ID、归属比较或对照结果，不能进一步认定 QEMU 缺陷、ESXi 缺陷或某项配置是根因。后续需在干净启动下对照相同设备的 PCIe/传统 PCI 桥放置，并反转同 VM 内的设备添加顺序，先建立一个依赖关系明确且同 VM 可成功的正对照。未在本次日志复核中重启实验或执行这些新用例。
+
+### 是否可能部分成功
+
+同 VM 开机过程存在“A 已注册、B 失败、整机开机失败”的部分进展，并有 A 的后续清理记录。这不等于运行中的 VM 可以只使用其中一项，也不证明所有资源的清理都具有原子性。
+
+主机切换直通是另一条操作路径。现有启用记录未观察到 A/B 混合的最终状态；补充脚本的状态轮询从 `UpdatePassthruConfig` 返回后开始，且未注入中途故障。因此没有验证调用执行中的瞬态、故障后部分成功或事务回滚原子性。VM 开机的部分初始化现象不能作为主机开关部分成功的证据。
+
 ## 实验范围与规范依据
 
 实验为 Windows → WSL2 → QEMU/KVM → ESXi → 空 EFI 测试 VM。外层 4 vCPU、8192 MiB；内层 VM 为 1 vCPU、768 MiB、vmx-20、全额内存预留。没有 guest OS I/O 负载。

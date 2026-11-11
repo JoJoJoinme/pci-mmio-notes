@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-11-11T08:16:41.229641+00:00",
+  "createdAt": "2026-11-11T10:27:08.856945+00:00",
   "hashAlgorithm": "SHA-256",
   "selfExcluded": true,
   "sourceRuns": {
@@ -139,6 +139,76 @@
           [
             641,
             648
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/esxi-ui-same-vm-initialization.txt",
+      "bytes": 792,
+      "sha256": "77ab765431fd70e24adba4143d9615d2e913c68d010903833039bb2fda73d702",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-same-vm-both-dep-20261110-both-vmware.log",
+        "sourceSha256": "e2fd04f4a4d172048e17f83d68f0a05764bb44e94604ac3f5b1219078bec034c",
+        "sourceLineRanges": [
+          [
+            601,
+            601
+          ],
+          [
+            622,
+            623
+          ],
+          [
+            644,
+            644
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/esxi-ui-same-vm-iommu.txt",
+      "bytes": 5087,
+      "sha256": "638394ae0ec8014aeb4399eca85411316fd3ff87cc43f93b2ea39f23c2828b3a",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-same-vm-both-vmkernel.log",
+        "sourceSha256": "6cf446e9360531a5436a422281ef97a778e886cafca6f1401b692ca808254706",
+        "sourceLineRanges": [
+          [
+            552,
+            552
+          ],
+          [
+            591,
+            602
+          ],
+          [
+            609,
+            614
+          ],
+          [
+            616,
+            618
+          ],
+          [
+            628,
+            630
+          ],
+          [
+            648,
+            650
+          ],
+          [
+            681,
+            683
+          ],
+          [
+            729,
+            730
           ]
         ],
         "transformation": "selected original lines with line-number prefixes"
@@ -1496,8 +1566,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 12345,
-      "sha256": "a2a08ec8365133fed414e0824b3e1eda1aaf5fede784a63acacc0d474446c5b6",
+      "bytes": 14939,
+      "sha256": "259a3fbb31aef81712563a77a33ee96e8e2427c0300f79f5ba559c14defe646d",
       "provenance": {
         "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
       }
@@ -2296,16 +2366,16 @@
     },
     {
       "path": "summary.json",
-      "bytes": 3581,
-      "sha256": "082c3450fcc63b577617210ad1284e293ef890c49588a22d279177401bbf66d0",
+      "bytes": 4219,
+      "sha256": "b476771591ea016d6901b327bdeb7a5f68b410a6a46b78b00215ffcd64a798b7",
       "provenance": {
         "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
       }
     },
     {
       "path": "verify_bundle.py",
-      "bytes": 8946,
-      "sha256": "bc64ec703aa33015581b35978013fe27faae7977cb4856759cd46968f38f1ad7",
+      "bytes": 9726,
+      "sha256": "05947d08e8084f8b9217a78cb44f5ca73460ec55d3d489f877bcd1a893c9febe",
       "provenance": {
         "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
       }
