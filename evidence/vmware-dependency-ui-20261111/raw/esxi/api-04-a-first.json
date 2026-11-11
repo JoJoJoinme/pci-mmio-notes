@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-10T15:41:35.684864+00:00",
+  "before": {
+    "name": "dep-20261110-a",
+    "id": "2896",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] dep-20261110-a/dep-20261110-a/dep-20261110-a.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  },
+  "task": {
+    "taskId": "haTask-2896-vim.VirtualMachine.powerOn-975205382",
+    "state": "success",
+    "descriptionId": "VirtualMachine.powerOn",
+    "queueTime": "2026-11-10 15:41:27.431473+00:00",
+    "startTime": "2026-11-10 15:41:27.433857+00:00",
+    "completeTime": "2026-11-10 15:41:33.796847+00:00",
+    "elapsedSeconds": 7.185704982000004
+  },
+  "after": {
+    "name": "dep-20261110-a",
+    "id": "2896",
+    "powerState": "poweredOn",
+    "vmx": "[pci-mmio-local] dep-20261110-a/dep-20261110-a/dep-20261110-a.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}

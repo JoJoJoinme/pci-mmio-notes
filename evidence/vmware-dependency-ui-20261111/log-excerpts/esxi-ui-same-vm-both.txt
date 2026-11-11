@@ -1,0 +1,39 @@
+Source run: 20261110-esxi8-dependency-interaction-v1
+Source file: ui-same-vm-both-dep-20261110-both-vmware.log
+Source SHA-256: e2fd04f4a4d172048e17f83d68f0a05764bb44e94604ac3f5b1219078bec034c
+Line numbers refer to the retained original file.
+
+--- original lines 192-203 ---
+192: 2026-11-10T17:20:56.336Z In(05) vmx - DICT             sched.mem.min = "768"
+193: 2026-11-10T17:20:56.336Z In(05) vmx - DICT         sched.mem.minSize = "768"
+194: 2026-11-10T17:20:56.336Z In(05) vmx - DICT             sched.mem.pin = "TRUE"
+195: 2026-11-10T17:20:56.336Z In(05) vmx - DICT           pciPassthru0.id = "00000:002:01.0"
+196: 2026-11-10T17:20:56.336Z In(05) vmx - DICT     pciPassthru0.deviceId = "0x10d3"
+197: 2026-11-10T17:20:56.336Z In(05) vmx - DICT     pciPassthru0.vendorId = "0x8086"
+198: 2026-11-10T17:20:56.336Z In(05) vmx - DICT     pciPassthru0.systemId = "6a4e818a-51ce-7d7f-a21f-000c29abaf6d"
+199: 2026-11-10T17:20:56.336Z In(05) vmx - DICT      pciPassthru0.present = "TRUE"
+200: 2026-11-10T17:20:56.336Z In(05) vmx - DICT           pciPassthru1.id = "00000:002:01.1"
+201: 2026-11-10T17:20:56.336Z In(05) vmx - DICT     pciPassthru1.deviceId = "0x10d3"
+202: 2026-11-10T17:20:56.336Z In(05) vmx - DICT     pciPassthru1.vendorId = "0x8086"
+203: 2026-11-10T17:20:56.336Z In(05) vmx - DICT     pciPassthru1.systemId = "6a4e818a-51ce-7d7f-a21f-000c29abaf6d"
+
+--- original lines 619-626 ---
+619: 2026-11-10T17:21:04.040Z Wa(03) vmx - PCIPassthru: Selected device 0000:02:01.1 is outside of the NUMA configuration
+620: 2026-11-10T17:21:07.380Z Wa(03) vmx - PCIPassthru: Failed to get NumaNode for sbdf 0000:02:01.1
+621: 2026-11-10T17:21:07.381Z Wa(03) vmx - PCIPassthru: Selected device 0000:02:01.1 is outside of the NUMA configuration
+622: 2026-11-10T17:21:07.382Z In(05) vmx - AH Failed to find a suitable device for pciPassthru1
+623: 2026-11-10T17:21:07.382Z In(05) vmx - Module 'DevicePowerOn' power on failed.
+624: 2026-11-10T17:21:07.382Z In(05) vmx - VMX_PowerOn: ModuleTable_PowerOn = 0
+625: 2026-11-10T17:21:11.438Z In(05) svga - SVGA thread is exiting the main loop
+626: 2026-11-10T17:21:11.445Z In(05) vmx - SVMotion_PowerOff: Not running Storage vMotion. Nothing to do
+
+--- original lines 641-648 ---
+641: 2026-11-10T17:21:11.539Z In(05) vmx - STATSFILE: Amount of dynamic storage used: 632
+642: 2026-11-10T17:21:11.539Z In(05) vmx - STATSFILE: Number of entries made: 57
+643: 2026-11-10T17:21:11.545Z In(05) vmx - 
+644: 2026-11-10T17:21:11.545Z In(05)+ vmx - Power on failure messages: Module 'DevicePowerOn' power on failed.
+645: 2026-11-10T17:21:11.545Z In(05)+ vmx - Failed to start the virtual machine.
+646: 2026-11-10T17:21:11.545Z In(05)+ vmx - 
+647: 2026-11-10T17:21:11.546Z In(05) vmx - VigorTransport_ServerSendResponse seq=21: Completed Bootstrap.PowerOn request with messages in 15370165 US.
+648: 2026-11-10T17:21:11.546Z In(05) vmx - Vix: [mainDispatch.c:4211]: VMAutomation_ReportPowerOpFinished: statevar=0, newAppState=1870, success=1 additionalError=0
+

@@ -1,0 +1,235 @@
+Browser tab: 1, Title: "esxi-a.lab.local - VMware ESXi", URL: "https://127.0.0.1:18443/ui/#/host/manage/hardware/pci-devices".
+0 AXWebArea esxi-a.lab.local - VMware ESXi, URL: 127.0.0.1:18443/ui/#/host/manage/hardware/pci-devices
+	1 container
+		2 link Description: VMware.com, Value: vmware.com/
+		3 text ESXi Host Client
+		4 content list
+			5 link Description: root@127.0.0.1 , Value: 127.0.0.1:18443/ui/, ID: userMenuLink
+			6 link Description: Help , Value: 127.0.0.1:18443/ui/
+			7 container
+				8 search text field (settable) Description: Search, ID: search-field
+				9 image
+		10 container
+			11 container
+				12 text Navigator
+				13 container Navigator
+				14 content list
+					15 container
+						16 link Description: Host, Value: 127.0.0.1:18443/ui/#/host
+						17 content list
+							18 link Description: Manage, Value: 127.0.0.1:18443/ui/#/host/manage
+							19 link Description: Monitor, Value: 127.0.0.1:18443/ui/#/host/monitor
+					20 container
+						21 link Description: Virtual Machines 9, Value: 127.0.0.1:18443/ui/#/host/vms
+					22 container
+						23 link Description: Storage 2, Value: 127.0.0.1:18443/ui/#/host/storage
+					24 container
+						25 link Description: Networking 1, Value: 127.0.0.1:18443/ui/#/host/networking
+			26 container
+				27 text esxi-a.lab.local - Manage
+				271 container
+					272 content list
+						273 link Description: System, Help: Configure system settings, Value: 127.0.0.1:18443/ui/
+						274 link Description: Hardware, Help: Configure hardware for this host, Value: 127.0.0.1:18443/ui/
+						275 link Description: Licensing, Help: Configure the license for this host, Value: 127.0.0.1:18443/ui/
+						276 link Description: Packages, Help: Configure software installed on this host, Value: 127.0.0.1:18443/ui/
+						277 link Description: Services, Help: Configure services running on this host, Value: 127.0.0.1:18443/ui/
+						278 link Description: Security & users, Help: Configure security settings and user permissions for this host, Value: 127.0.0.1:18443/ui/
+					279 container
+						280 content list
+							281 link Description: PCI Devices, Value: 127.0.0.1:18443/ui/
+							282 link Description: Power Management, Value: 127.0.0.1:18443/ui/
+						283 container
+							284 content list
+								285 link Description: Toggle passthrough, Help: Toggle passthrough for the selected devices, Value: 127.0.0.1:18443/ui/
+								286 link Description: Configure SR-IOV, Help: Configure SR-IOV for the selected device, Value: 127.0.0.1:18443/ui/
+								287 link Description: Hardware label, Help: Configure hardware label for the selected device, Value: 127.0.0.1:18443/ui/
+								288 link Description: Reboot host, Help: Reboot the host, Value: 127.0.0.1:18443/ui/
+								289 link Description: Refresh, Help: Refresh the advanced settings grid, Value: 127.0.0.1:18443/ui/
+							290 container
+								291 search text field (settable) Description: Search, ID: search-field-pciDevicesGrid
+							292 table
+								293 row Address Description SR-IOV Passthrough Hardware Label
+									294 cell
+										295 checkbox (disabled, settable, integer) 0
+									296 cell
+										297 link 127.0.0.1:18443/ui/#
+										298 text Address
+									299 cell
+										300 link 127.0.0.1:18443/ui/#
+										301 text Description
+									302 cell
+										303 link 127.0.0.1:18443/ui/#
+										304 text SR-IOV
+									305 cell
+										306 link 127.0.0.1:18443/ui/#
+										307 text Passthrough
+									308 cell
+										309 link 127.0.0.1:18443/ui/#
+										310 text Hardware Label
+							311 table
+								312 container
+									313 row 0000:00:00.0 Intel Corporation QEMU Virtual Machine Not capable Not capable
+										314 cell
+											315 checkbox (disabled, settable, integer) 0
+										316 cell
+											317 text 0000:00:00.0
+										318 cell
+											319 text Intel Corporation QEMU Virtual Machine
+										320 cell
+											321 text Not capable
+										322 cell
+											323 text Not capable
+									324 row 0000:00:01.0 Unknown VGA compatible controller Not capable Not capable
+										325 cell
+											326 checkbox (disabled, settable, integer) 0
+										327 cell
+											328 text 0000:00:01.0
+										329 cell
+											330 text Unknown  VGA compatible controller
+										331 cell
+											332 text Not capable
+										333 cell
+											334 text Not capable
+									335 row 0000:00:05.0 Intel Corporation 82574L Gigabit Network Connection Not capable Not capable
+										336 cell
+											337 checkbox (disabled, settable, integer) 0
+										338 cell
+											339 text 0000:00:05.0
+										340 cell
+											341 text Intel Corporation 82574L Gigabit Network Connection
+										342 cell
+											343 text Not capable
+										344 cell
+											345 text Not capable
+									346 row 0000:00:08.0 Red Hat, Inc. QEMU PCIe Root port Not capable Not capable
+										347 cell
+											348 checkbox (disabled, settable, integer) 0
+										349 cell
+											350 text 0000:00:08.0
+										351 cell
+											352 text Red Hat, Inc. QEMU PCIe Root port
+										353 cell
+											354 text Not capable
+										355 cell
+											356 text Not capable
+									357 row 0000:01:00.0 Red Hat, Inc PCI bridge Not capable Not capable
+										358 cell
+											359 checkbox (disabled, settable, integer) 0
+										360 cell
+											361 text 0000:01:00.0
+										362 cell
+											363 text Red Hat, Inc  PCI bridge
+										364 cell
+											365 text Not capable
+										366 cell
+											367 text Not capable
+									368 row 0000:02:01.1 Intel Corporation 82574L Gigabit Network Connection Not capable Disabled
+										369 cell
+											370 checkbox (settable, integer) 1
+										371 cell
+											372 text 0000:02:01.1
+										373 cell
+											374 text Intel Corporation 82574L Gigabit Network Connection
+										375 cell
+											376 text Not capable
+										377 cell
+											378 text Disabled
+									379 row 0000:02:01.0 Intel Corporation 82574L Gigabit Network Connection Not capable Disabled
+										380 cell aria_active_cell
+											381 checkbox (settable, integer) 1
+										382 cell
+											383 text 0000:02:01.0
+										384 cell
+											385 text Intel Corporation 82574L Gigabit Network Connection
+										386 cell
+											387 text Not capable
+										388 cell
+											389 text Disabled
+									390 row 0000:00:1f.0 Intel Corporation QEMU Virtual Machine Not capable Not capable
+										391 cell
+											392 checkbox (disabled, settable, integer) 0
+										393 cell
+											394 text 0000:00:1f.0
+										395 cell
+											396 text Intel Corporation QEMU Virtual Machine
+										397 cell
+											398 text Not capable
+										399 cell
+											400 text Not capable
+									401 row 0000:00:1f.2 Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA AHCI Controller Not capable Not capable
+										402 cell
+											403 checkbox (disabled, settable, integer) 0
+										404 cell
+											405 text 0000:00:1f.2
+										406 cell
+											407 text Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA AHCI Controller
+										408 cell
+											409 text Not capable
+										410 cell
+											411 text Not capable
+									412 row 0000:00:1f.3 Intel Corporation QEMU Virtual Machine Not capable Not capable
+										413 cell
+											414 checkbox (disabled, settable, integer) 0
+										415 cell
+											416 text 0000:00:1f.3
+										417 cell
+											418 text Intel Corporation QEMU Virtual Machine
+										419 cell
+											420 text Not capable
+										421 cell
+											422 text Not capable
+							423 text 10 items
+							424 pop up button (collapsed, settable) Value: Quick filters..., Secondary Actions: Expand
+								425 menu
+									426 (selected) Quick filters...
+									427 Passthrough capable
+									428 Passthrough active
+									429 SR-IOV capable
+									430 SR-IOV active
+			227 container
+				228 container
+					229 text Recent tasks
+					230 container Minimize
+				231 container
+					232 table
+						233 row Task Target Initiator Queued Started Result Completed
+							234 cell
+								235 link 127.0.0.1:18443/ui/#
+								236 link Description: Task, Value: 127.0.0.1:18443/ui/#
+							237 cell
+								238 link 127.0.0.1:18443/ui/#
+								239 link Description: Target, Value: 127.0.0.1:18443/ui/#
+							240 cell
+								241 link 127.0.0.1:18443/ui/#
+								242 link Description: Initiator, Value: 127.0.0.1:18443/ui/#
+							243 cell
+								244 link 127.0.0.1:18443/ui/#
+								245 link Description: Queued, Value: 127.0.0.1:18443/ui/#
+							246 cell
+								247 link 127.0.0.1:18443/ui/#
+								248 link Description: Started, Value: 127.0.0.1:18443/ui/#
+							249 cell
+								250 link 127.0.0.1:18443/ui/#
+								251 link Description: Result, Value: 127.0.0.1:18443/ui/#
+							252 cell
+								253 link 127.0.0.1:18443/ui/#
+								254 link Description: Completed, Value: 127.0.0.1:18443/ui/#
+					255 table
+						431 row Update Options esxi-a.lab.local root 11/11/2026 00:53:43 11/11/2026 00:53:43 Completed successfully 11/11/2026 00:53:43
+							432 cell
+								433 text Update Options
+							434 cell
+								435 text esxi-a.lab.local
+							436 cell
+								437 text root
+							438 cell
+								439 text 11/11/2026 00:53:43
+							440 cell
+								441 text 11/11/2026 00:53:43
+							442 cell
+								443 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.option.OptionManager.updateValues-970737541
+							444 cell
+								445 text 11/11/2026 00:53:43
+
+The focused UI element is 381 checkbox (settable, integer) 1

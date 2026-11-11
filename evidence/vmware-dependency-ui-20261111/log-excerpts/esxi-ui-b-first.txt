@@ -1,0 +1,23 @@
+Source run: 20261110-esxi8-dependency-interaction-v1
+Source file: ui-b-first-on-dep-20261110-b-vmware.log
+Source SHA-256: 50b90181f3edf7947bf9373f578166cd4f415d9eac53e4ef45283d37000ef318
+Line numbers refer to the retained original file.
+
+--- original lines 191-197 ---
+191: 2026-11-10T17:17:55.639Z In(05) vmx - DICT             sched.mem.min = "768"
+192: 2026-11-10T17:17:55.639Z In(05) vmx - DICT         sched.mem.minSize = "768"
+193: 2026-11-10T17:17:55.639Z In(05) vmx - DICT             sched.mem.pin = "TRUE"
+194: 2026-11-10T17:17:55.639Z In(05) vmx - DICT           pciPassthru0.id = "00000:002:01.1"
+195: 2026-11-10T17:17:55.639Z In(05) vmx - DICT     pciPassthru0.deviceId = "0x10d3"
+196: 2026-11-10T17:17:55.639Z In(05) vmx - DICT     pciPassthru0.vendorId = "0x8086"
+197: 2026-11-10T17:17:55.639Z In(05) vmx - DICT     pciPassthru0.systemId = "6a4e818a-51ce-7d7f-a21f-000c29abaf6d"
+
+--- original lines 559-565 ---
+559: 2026-11-10T17:18:00.145Z In(05) vmx - PCIPassthru: Device has PCI Express Cap Version 1(size 36)
+560: 2026-11-10T17:18:00.145Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:02:01.1 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1
+561: 2026-11-10T17:18:00.151Z No(00) vmx - ConfigDB: Setting vmci0.id = "1441800533"
+562: 2026-11-10T17:18:00.203Z No(00) vmx - PowerOnTiming: Module DevicePowerOn took 4101864 us
+563: 2026-11-10T17:18:00.206Z In(05) vmx - GuestLib Generated SessionId 2626551943378572295
+564: 2026-11-10T17:18:00.206Z In(05) vmx - WORKER: Creating new group with maxThreads=1 (16)
+565: 2026-11-10T17:18:00.206Z In(05) vmx - DISKUTIL: (null) : max toolsVersion = 0, type = 0
+

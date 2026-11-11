@@ -1,0 +1,417 @@
+Browser tab: 1, Title: "esxi-a.lab.local - VMware ESXi", URL: "https://127.0.0.1:18443/ui/#/host/vms/2906".
+0 AXWebArea esxi-a.lab.local - VMware ESXi, URL: 127.0.0.1:18443/ui/#/host/vms/2906
+	1 container
+		2 link Description: VMware.com, Value: vmware.com/
+		3 text ESXi Host Client
+		4 content list
+			5 link Description: root@127.0.0.1 , Value: 127.0.0.1:18443/ui/, ID: userMenuLink
+			6 link Description: Help , Value: 127.0.0.1:18443/ui/
+			7 container
+				8 search text field (settable) Description: Search, ID: search-field
+				9 image
+		10 container
+			1573 container
+				1574 button Close
+				1575 link Value: 127.0.0.1:18443/ui/#/host/vms/2906/monitor/tasks/haTask-2906-vim.VirtualMachine.powerOn-970747113, Description: Failed to power on virtual machine dep-20261110-a. Module 'DevicePowerOn' power on failed. Click here for more details.
+				1576 link dismiss
+					1577 text dismiss
+			11 container
+				12 text Navigator
+				13 container Navigator
+				14 content list
+					15 container
+						16 link Description: Host, Value: 127.0.0.1:18443/ui/#/host
+						17 content list
+							18 link Description: Manage, Value: 127.0.0.1:18443/ui/#/host/manage
+							19 link Description: Monitor, Value: 127.0.0.1:18443/ui/#/host/monitor
+					732 container
+						733 link Description: Virtual Machines 9, Value: 127.0.0.1:18443/ui/#/host/vms
+						734 content list
+							746 container
+								747 link Description: dep-20261110-both, Value: 127.0.0.1:18443/ui/#/host/vms/2909
+								748 content list
+									749 link Description: Monitor, Value: 127.0.0.1:18443/ui/#/host/vms/2909/monitor
+							761 container
+								762 link Description: dep-20261110-b, Value: 127.0.0.1:18443/ui/#/host/vms/2908
+								763 content list
+									764 link Description: Monitor, Value: 127.0.0.1:18443/ui/#/host/vms/2908/monitor
+							752 container
+								753 link Description: dep-20261110-a, Value: 127.0.0.1:18443/ui/#/host/vms/2906
+								754 content list
+									755 link Description: Monitor, Value: 127.0.0.1:18443/ui/#/host/vms/2906/monitor
+							739 link Description: More VMs..., Value: 127.0.0.1:18443/ui/#/host/vms
+					22 container
+						23 link Description: Storage 2, Value: 127.0.0.1:18443/ui/#/host/storage
+					24 container
+						25 link Description: Networking 1, Value: 127.0.0.1:18443/ui/#/host/networking
+			26 container
+				27 text dep-20261110-a
+				1461 container
+					1504 container
+						1505 image Click to open a browser console to this virtual machine
+					1462 container
+						1463 text dep-20261110-a
+						1464 text Guest OS
+						1465 text Other 5.x Linux (64-bit)
+						1466 text Compatibility
+						1467 text ESXi 8.0 virtual machine
+						1468 text VMware Tools
+						1469 text No
+						1470 text CPUs
+						1471 text 1
+						1472 text Memory
+						1473 text 768 MB
+					1474 container
+						1475 image CPU
+						1476 text CPU 0 MHz
+					1477 container
+						1478 image MEMORY
+						1479 text MEMORY 0 B
+					1480 container
+						1481 image STORAGE
+						1482 text STORAGE 64.99 KB
+					1483 content list
+						1484 link Description: Console, Help: Open a console to this virtual machine, Value: 127.0.0.1:18443/ui/
+						1485 link Description: Monitor, Help: Monitor this virtual machine, Value: 127.0.0.1:18443/ui/
+						1486 link Description: Power on, Help: Power on this virtual machine, Value: 127.0.0.1:18443/ui/
+						1487 link Description: Power off, Help: Power off this virtual machine, Value: 127.0.0.1:18443/ui/
+						1488 link Description: Suspend, Help: Suspend this virtual machine, Value: 127.0.0.1:18443/ui/
+						1489 link Description: Restart, Help: Restart this virtual machine, Value: 127.0.0.1:18443/ui/
+						1490 link Description: Edit, Help: Edit this virtual machine's settings, Value: 127.0.0.1:18443/ui/
+						1491 link Description: Refresh, Help: Refresh this virtual machine's summary, Value: 127.0.0.1:18443/ui/
+						1492 link Description: Actions, Help: Actions for this virtual machine, Value: 127.0.0.1:18443/ui/
+					1493 container
+						1494 text General Information
+					1495 container
+						1506 container Networking
+							1507 text Networking
+						1496 link
+						1508 container VMware Tools
+							1509 text VMware Tools
+						1497 container VMware Tools is not installed. Actions
+							1510 text VMware Tools is not installed.
+							1498 content list
+								1499 link Description: Actions, Help: Actions for selected objects in this list, Value: 127.0.0.1:18443/ui/
+						1511 container Storage
+							1512 text Storage
+						1513 container 0 disk
+							1514 text 0 disk
+						1515 container Notes
+							1516 text Notes
+						1517 container Edit notes
+							1518 content list
+								1519 link Edit notes
+									1520 text Edit notes
+					1500 container
+						1501 text Hardware Configuration
+					1578 container
+						1579 container CPU
+							1580 text CPU
+						1581 container 1 vCPUs
+							1582 text 1 vCPUs
+						1583 container Memory
+							1584 text Memory
+						1585 container 768 MB
+							1586 text 768 MB
+						1587 container Video card
+							1588 text Video card
+						1589 container 4 MB
+							1590 text 4 MB
+						1591 container PCI device 0
+							1592 text PCI device 0
+						1593 container 82574L Gigabit Network Connection
+							1594 text 82574L Gigabit Network Connection
+						1595 container Others
+							1596 text Others
+						1597 container Additional Hardware
+							1598 text Additional Hardware
+					1502 container
+						1503 text Resource Consumption
+					1542 container
+						1543 container Consumed host CPU
+							1544 text Consumed host CPU
+						1545 container 0 MHz
+							1546 text 0 MHz
+						1547 container Consumed host memory
+							1548 text Consumed host memory
+						1549 container 0 MB
+							1550 text 0 MB
+						1551 container Active guest memory
+							1552 text Active guest memory
+						1553 container 0 MB
+							1554 text 0 MB
+						1555 container Storage
+							1556 text Storage
+						1557 container Provisioned
+							1558 text Provisioned
+						1559 container Unknown
+							1560 text Unknown
+						1561 container Uncommitted
+							1562 text Uncommitted
+						1563 container 234.93 MB
+							1564 text 234.93 MB
+						1565 container Not-shared
+							1566 text Not-shared
+						1567 container 64.99 KB
+							1568 text 64.99 KB
+						1569 container Used
+							1570 text Used
+						1571 container 64.99 KB
+							1572 text 64.99 KB
+			227 container
+				228 container
+					229 text Recent tasks
+					230 container Minimize
+				231 container
+					232 table
+						233 row Task Target Initiator Queued Started Result Completed
+							234 cell
+								235 link 127.0.0.1:18443/ui/#
+								236 link Description: Task, Value: 127.0.0.1:18443/ui/#
+							237 cell
+								238 link 127.0.0.1:18443/ui/#
+								239 link Description: Target, Value: 127.0.0.1:18443/ui/#
+							240 cell
+								241 link 127.0.0.1:18443/ui/#
+								242 link Description: Initiator, Value: 127.0.0.1:18443/ui/#
+							243 cell
+								244 link 127.0.0.1:18443/ui/#
+								245 link Description: Queued, Value: 127.0.0.1:18443/ui/#
+							246 cell
+								247 link 127.0.0.1:18443/ui/#
+								248 link Description: Started, Value: 127.0.0.1:18443/ui/#
+							249 cell
+								250 link 127.0.0.1:18443/ui/#
+								251 link Description: Result, Value: 127.0.0.1:18443/ui/#
+							252 cell
+								253 link 127.0.0.1:18443/ui/#
+								254 link Description: Completed, Value: 127.0.0.1:18443/ui/#
+					255 table
+						455 container
+							1599 row Power On VM dep-20261110-b root 11/11/2026 01:17:54 11/11/2026 01:17:54 Completed successfully 11/11/2026 01:18:01
+								1600 cell
+									1601 text Power On VM
+								1602 cell
+									1603 link Description: dep-20261110-b, Value: 127.0.0.1:18443/ui/#/host/vms/2908
+								1604 cell
+									1605 text root
+								1606 cell
+									1607 text 11/11/2026 01:17:54
+								1608 cell
+									1609 text 11/11/2026 01:17:54
+								1610 cell
+									1611 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2908-vim.VirtualMachine.powerOn-970747000
+								1612 cell
+									1613 text 11/11/2026 01:18:01
+							1614 row Power Off VM dep-20261110-a root 11/11/2026 01:16:39 11/11/2026 01:16:39 Completed successfully 11/11/2026 01:16:44
+								1615 cell
+									1616 text Power Off VM
+								1617 cell
+									1618 link Description: dep-20261110-a, Value: 127.0.0.1:18443/ui/#/host/vms/2906
+								1619 cell
+									1620 text root
+								1621 cell
+									1622 text 11/11/2026 01:16:39
+								1623 cell
+									1624 text 11/11/2026 01:16:39
+								1625 cell
+									1626 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2906-vim.VirtualMachine.powerOff-970746535
+								1627 cell
+									1628 text 11/11/2026 01:16:44
+							1629 row Power On VM dep-20261110-b root 11/11/2026 01:08:35 11/11/2026 01:08:35 Failed - Module 'DevicePowerOn' power on failed. 11/11/2026 01:08:44
+								1630 cell
+									1631 text Power On VM
+								1632 cell
+									1633 link Description: dep-20261110-b, Value: 127.0.0.1:18443/ui/#/host/vms/2908
+								1634 cell
+									1635 text root
+								1636 cell
+									1637 text 11/11/2026 01:08:35
+								1638 cell
+									1639 text 11/11/2026 01:08:35
+								1640 cell
+									1641 link Description: Failed - Module 'DevicePowerOn' power on failed., Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2908-vim.VirtualMachine.powerOn-970743344
+								1642 cell
+									1643 text 11/11/2026 01:08:44
+							1644 row Power On VM dep-20261110-a root 11/11/2026 01:07:00 11/11/2026 01:07:00 Completed successfully 11/11/2026 01:07:08
+								1645 cell
+									1646 text Power On VM
+								1647 cell
+									1648 link Description: dep-20261110-a, Value: 127.0.0.1:18443/ui/#/host/vms/2906
+								1649 cell
+									1650 text root
+								1651 cell
+									1652 text 11/11/2026 01:07:00
+								1653 cell
+									1654 text 11/11/2026 01:07:00
+								1655 cell
+									1656 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2906-vim.VirtualMachine.powerOn-970742607
+								1657 cell
+									1658 text 11/11/2026 01:07:08
+							1659 row Reconfig VM dep-20261110-both root 11/11/2026 01:05:36 11/11/2026 01:05:36 Completed successfully 11/11/2026 01:05:37
+								1660 cell
+									1661 text Reconfig VM
+								1662 cell
+									1663 link Description: dep-20261110-both, Value: 127.0.0.1:18443/ui/#/host/vms/2909
+								1664 cell
+									1665 text root
+								1666 cell
+									1667 text 11/11/2026 01:05:36
+								1668 cell
+									1669 text 11/11/2026 01:05:36
+								1670 cell
+									1671 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2909-vim.VirtualMachine.reconfigure-970742116
+								1672 cell
+									1673 text 11/11/2026 01:05:37
+							1674 row Reconfig VM dep-20261110-b root 11/11/2026 01:01:21 11/11/2026 01:01:21 Completed successfully 11/11/2026 01:01:22
+								1675 cell
+									1676 text Reconfig VM
+								1677 cell
+									1678 link Description: dep-20261110-b, Value: 127.0.0.1:18443/ui/#/host/vms/2908
+								1679 cell
+									1680 text root
+								1681 cell
+									1682 text 11/11/2026 01:01:21
+								1683 cell
+									1684 text 11/11/2026 01:01:21
+								1685 cell
+									1686 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2908-vim.VirtualMachine.reconfigure-970740374
+								1687 cell
+									1688 text 11/11/2026 01:01:22
+							1689 row Reload esxi-a.lab.local root 11/11/2026 00:59:08 11/11/2026 00:59:08 Completed successfully 11/11/2026 00:59:08
+								1690 cell
+									1691 text Reload
+								1692 cell
+									1693 text esxi-a.lab.local
+								1694 cell
+									1695 text root
+								1696 cell
+									1697 text 11/11/2026 00:59:08
+								1698 cell
+									1699 text 11/11/2026 00:59:08
+								1700 cell
+									1701 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970739528
+								1702 cell
+									1703 text 11/11/2026 00:59:08
+							1704 row Reload esxi-a.lab.local root 11/11/2026 00:59:07 11/11/2026 00:59:07 Completed successfully 11/11/2026 00:59:07
+								1705 cell
+									1706 text Reload
+								1707 cell
+									1708 text esxi-a.lab.local
+								1709 cell
+									1710 text root
+								1711 cell
+									1712 text 11/11/2026 00:59:07
+								1713 cell
+									1714 text 11/11/2026 00:59:07
+								1715 cell
+									1716 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970739514
+								1717 cell
+									1718 text 11/11/2026 00:59:07
+							1719 row Reconfig VM dep-20261110-a root 11/11/2026 00:58:49 11/11/2026 00:58:49 Completed successfully 11/11/2026 00:58:51
+								1720 cell
+									1721 text Reconfig VM
+								1722 cell
+									1723 link Description: dep-20261110-a, Value: 127.0.0.1:18443/ui/#/host/vms/2906
+								1724 cell
+									1725 text root
+								1726 cell
+									1727 text 11/11/2026 00:58:49
+								1728 cell
+									1729 text 11/11/2026 00:58:49
+								1730 cell
+									1731 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2906-vim.VirtualMachine.reconfigure-970739415
+								1732 cell
+									1733 text 11/11/2026 00:58:51
+							1734 row Reload esxi-a.lab.local root 11/11/2026 00:55:40 11/11/2026 00:55:40 Completed successfully 11/11/2026 00:55:40
+								1735 cell
+									1736 text Reload
+								1737 cell
+									1738 text esxi-a.lab.local
+								1739 cell
+									1740 text root
+								1741 cell
+									1742 text 11/11/2026 00:55:40
+								1743 cell
+									1744 text 11/11/2026 00:55:40
+								1745 cell
+									1746 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970738060
+								1747 cell
+									1748 text 11/11/2026 00:55:40
+							1749 row Reload esxi-a.lab.local root 11/11/2026 00:55:38 11/11/2026 00:55:38 Completed successfully 11/11/2026 00:55:38
+								1750 cell
+									1751 text Reload
+								1752 cell
+									1753 text esxi-a.lab.local
+								1754 cell
+									1755 text root
+								1756 cell
+									1757 text 11/11/2026 00:55:38
+								1758 cell
+									1759 text 11/11/2026 00:55:38
+								1760 cell
+									1761 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970738056
+								1762 cell
+									1763 text 11/11/2026 00:55:38
+							1764 row Update Passthru Config esxi-a.lab.local root 11/11/2026 00:55:14 11/11/2026 00:55:14 Completed successfully 11/11/2026 00:55:16
+								1765 cell
+									1766 text Update Passthru Config
+								1767 cell
+									1768 text esxi-a.lab.local
+								1769 cell
+									1770 text root
+								1771 cell
+									1772 text 11/11/2026 00:55:14
+								1773 cell
+									1774 text 11/11/2026 00:55:14
+								1775 cell
+									1776 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-970738036
+								1777 cell
+									1778 text 11/11/2026 00:55:16
+							1779 row Update Options esxi-a.lab.local root 11/11/2026 00:53:43 11/11/2026 00:53:43 Completed successfully 11/11/2026 00:53:43
+								1780 cell
+									1781 text Update Options
+								1782 cell
+									1783 text esxi-a.lab.local
+								1784 cell
+									1785 text root
+								1786 cell
+									1787 text 11/11/2026 00:53:43
+								1788 cell
+									1789 text 11/11/2026 00:53:43
+								1790 cell
+									1791 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.option.OptionManager.updateValues-970737541
+								1792 cell
+									1793 text 11/11/2026 00:53:43
+							1794 row Reload esxi-a.lab.local root 11/11/2026 00:52:08 11/11/2026 00:52:08 Completed successfully 11/11/2026 00:52:08
+								1795 cell
+									1796 text Reload
+								1797 cell
+									1798 text esxi-a.lab.local
+								1799 cell
+									1800 text root
+								1801 cell
+									1802 text 11/11/2026 00:52:08
+								1803 cell
+									1804 text 11/11/2026 00:52:08
+								1805 cell
+									1806 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970736965
+								1807 cell
+									1808 text 11/11/2026 00:52:08
+							1809 row Power On VM dep-20261110-a root 11/11/2026 01:18:38 11/11/2026 01:18:38 Failed - Module 'DevicePowerOn' power on failed. 11/11/2026 01:18:47
+								1810 cell
+									1811 text Power On VM
+								1812 cell
+									1813 link Description: dep-20261110-a, Value: 127.0.0.1:18443/ui/#/host/vms/2906
+								1814 cell
+									1815 text root
+								1816 cell
+									1817 text 11/11/2026 01:18:38
+								1818 cell
+									1819 text 11/11/2026 01:18:38
+								1820 cell
+									1821 link Description: Failed - Module 'DevicePowerOn' power on failed., Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2906-vim.VirtualMachine.powerOn-970747113
+								1822 cell
+									1823 text 11/11/2026 01:18:47
+
+The focused UI element is 1486 link Description: Power on, URL: 127.0.0.1:18443/ui/, Help: Power on this virtual machine

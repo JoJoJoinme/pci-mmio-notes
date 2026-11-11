@@ -1,0 +1,621 @@
+- link "Skip to main content":
+  - /url: javascript:void(0)
+- banner:
+  - button "Menu - Product navigation":
+  - button "vSphere Client - Product shortcuts":
+    - generic: vSphere Client
+  - combobox:
+    - textbox "Search in all environments"
+  - button "Refresh application":
+    - button:
+  - button "vSphere Client - User menu":
+    - text: Administrator@VSPHERE.LOCAL
+  - button "Send Feedback":
+  - button "Help menu":
+    - generic "vSphere Help":
+- button "Toggle panel" [expanded]:
+- navigation "Inventory Trees":
+  - tablist:
+    - tab "Hosts and Clusters" [selected]
+    - tab "VMs and Templates"
+    - tab "Storage"
+    - tab "Networking"
+  - tabpanel "Hosts and Clusters":
+    - tree:
+      - treeitem "vCenter server 192.168.91.131" [expanded] [level=1]:
+        - button:
+          - generic: 
+        - generic "192.168.91.131":
+          - generic "vCenter server"
+          - text: 192.168.91.131
+      - treeitem "Datacenter PCI-Lab" [expanded] [level=2]:
+        - button:
+          - generic: 
+        - generic "PCI-Lab":
+          - generic "Datacenter"
+          - text: PCI-Lab
+      - treeitem "Cluster PCI-DirectPath-Lab" [expanded] [level=3]:
+        - button:
+          - generic: 
+        - generic "PCI-DirectPath-Lab":
+          - generic "Cluster"
+          - text: PCI-DirectPath-Lab
+      - treeitem "Host Host 172.31.91.10" [level=4]:
+        - button "Host" [disabled]
+        - generic "172.31.91.10":
+          - generic "Host"
+          - text: 172.31.91.10
+      - treeitem "Host Host 172.31.91.11 (Not responding)" [level=4]:
+        - button "Host" [disabled]
+        - generic "172.31.91.11 (Not responding)":
+          - generic "Host"
+          - text: 172.31.91.11 (Not responding)
+      - treeitem "Virtual machine Virtual machine /vmfs/volumes/6a4e88e0-06d8dba2-e355-000c29abaf6d/pci-mmio-efi-default (inaccessible)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "/vmfs/volumes/6a4e88e0-06d8dba2-e355-000c29abaf6d/pci-mmio-efi-default (inaccessible)":
+          - generic "Virtual machine"
+          - text: /vmfs/volumes/6a4e88e0-06d8dba2-e355-000c29abaf6d/pci-mmio-efi-default (inaccessible)
+      - treeitem "Virtual machine Virtual machine /vmfs/volumes/8b09b63b-7ec8552f/rmrr/20260713-esxi8-rmrr-bios-v5/bio (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "/vmfs/volumes/8b09b63b-7ec8552f/rmrr/20260713-esxi8-rmrr-bios-v5/bio (orphaned)":
+          - generic "Virtual machine"
+          - text: /vmfs/volumes/8b09b63b-7ec8552f/rmrr/20260713-esxi8-rmrr-bios-v5/bio (orphaned)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-dynamic-aggregate (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-dynamic-aggregate (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-dynamic-aggregate (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-dynamic-aggregate-2x1g (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-dynamic-aggregate-2x1g (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-dynamic-aggregate-2x1g (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-single-4g (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-single-4g (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-single-4g (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-single-4g-size4-only (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-single-4g-size4-only (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-single-4g-size4-only (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-single-4g-true-only (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-single-4g-true-only (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-single-4g-true-only (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-single-4g-true-size4 (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-single-4g-true-size4 (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-single-4g-true-size4 (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-single-8g-absent (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-single-8g-absent (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-single-8g-absent (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-single-8g-true-only (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-single-8g-true-only (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-single-8g-true-only (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-aggregate-20260711-single-8g-true-size8 (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-aggregate-20260711-single-8g-true-size8 (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-aggregate-20260711-single-8g-true-size8 (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-envelope-blocker-20260711-dynamic-envelope (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-envelope-blocker-20260711-dynamic-envelope (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-envelope-blocker-20260711-dynamic-envelope (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-envelope-blocker-20260711-dynamic-envelope-isolated (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-envelope-blocker-20260711-dynamic-envelope-isolated (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-envelope-blocker-20260711-dynamic-envelope-isolated (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-envelope-target-20260711-dynamic-envelope (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-envelope-target-20260711-dynamic-envelope (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-envelope-target-20260711-dynamic-envelope (disconnected)
+      - treeitem "Virtual machine Virtual machine dynamic-envelope-target-20260711-dynamic-envelope-isolated (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "dynamic-envelope-target-20260711-dynamic-envelope-isolated (disconnected)":
+          - generic "Virtual machine"
+          - text: dynamic-envelope-target-20260711-dynamic-envelope-isolated (disconnected)
+      - treeitem "Virtual machine Virtual machine guest-reboot-20260712-r01-guest-reboot (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "guest-reboot-20260712-r01-guest-reboot (disconnected)":
+          - generic "Virtual machine"
+          - text: guest-reboot-20260712-r01-guest-reboot (disconnected)
+      - treeitem "Virtual machine Virtual machine guest-reboot-20260712-r01-guest-reboot-efivar-v2 (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "guest-reboot-20260712-r01-guest-reboot-efivar-v2 (disconnected)":
+          - generic "Virtual machine"
+          - text: guest-reboot-20260712-r01-guest-reboot-efivar-v2 (disconnected)
+      - treeitem "Virtual machine Virtual machine host-crash-probe-20260711-host-crash (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "host-crash-probe-20260711-host-crash (disconnected)":
+          - generic "Virtual machine"
+          - text: host-crash-probe-20260711-host-crash (disconnected)
+      - treeitem "Virtual machine Virtual machine interrupt-mode-20260712-i01-intx (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "interrupt-mode-20260712-i01-intx (disconnected)":
+          - generic "Virtual machine"
+          - text: interrupt-mode-20260712-i01-intx (disconnected)
+      - treeitem "Virtual machine Virtual machine interrupt-mode-20260712-i01-intx-v2 (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "interrupt-mode-20260712-i01-intx-v2 (disconnected)":
+          - generic "Virtual machine"
+          - text: interrupt-mode-20260712-i01-intx-v2 (disconnected)
+      - treeitem "Virtual machine Virtual machine layout-default-20260715-esxi8-api-createvm-default-v1 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "layout-default-20260715-esxi8-api-createvm-default-v1 (orphaned)":
+          - generic "Virtual machine"
+          - text: layout-default-20260715-esxi8-api-createvm-default-v1 (orphaned)
+      - treeitem "Virtual machine Virtual machine layout-default-bios-20260715-esxi8-api-createvm-assert-bios-v2 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "layout-default-bios-20260715-esxi8-api-createvm-assert-bios-v2 (orphaned)":
+          - generic "Virtual machine"
+          - text: layout-default-bios-20260715-esxi8-api-createvm-assert-bios-v2 (orphaned)
+      - treeitem "Virtual machine Virtual machine layout-default-bios-20260715-esxi8-api-createvm-bios-default-v1 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "layout-default-bios-20260715-esxi8-api-createvm-bios-default-v1 (orphaned)":
+          - generic "Virtual machine"
+          - text: layout-default-bios-20260715-esxi8-api-createvm-bios-default-v1 (orphaned)
+      - treeitem "Virtual machine Virtual machine layout-default-efi-20260715-esxi8-api-createvm-assert-efi-v2 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "layout-default-efi-20260715-esxi8-api-createvm-assert-efi-v2 (orphaned)":
+          - generic "Virtual machine"
+          - text: layout-default-efi-20260715-esxi8-api-createvm-assert-efi-v2 (orphaned)
+      - treeitem "Virtual machine Virtual machine LF00-i440bx-bios (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF00-i440bx-bios (orphaned)":
+          - generic "Virtual machine"
+          - text: LF00-i440bx-bios (orphaned)
+      - treeitem "Virtual machine Virtual machine LF00-i440bx-bios (1) (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF00-i440bx-bios (1) (orphaned)":
+          - generic "Virtual machine"
+          - text: LF00-i440bx-bios (1) (orphaned)
+      - treeitem "Virtual machine Virtual machine LF00-i440bx-bios (2) (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF00-i440bx-bios (2) (orphaned)":
+          - generic "Virtual machine"
+          - text: LF00-i440bx-bios (2) (orphaned)
+      - treeitem "Virtual machine Virtual machine LF01-i440bx-efi (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF01-i440bx-efi (orphaned)":
+          - generic "Virtual machine"
+          - text: LF01-i440bx-efi (orphaned)
+      - treeitem "Virtual machine Virtual machine LF01-i440bx-efi (1)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF01-i440bx-efi (1)":
+          - generic "Virtual machine"
+          - text: LF01-i440bx-efi (1)
+      - treeitem "Virtual machine Virtual machine LF01-i440bx-efi (2) (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF01-i440bx-efi (2) (orphaned)":
+          - generic "Virtual machine"
+          - text: LF01-i440bx-efi (2) (orphaned)
+      - treeitem "Virtual machine Virtual machine LF02-acpi-efi (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF02-acpi-efi (orphaned)":
+          - generic "Virtual machine"
+          - text: LF02-acpi-efi (orphaned)
+      - treeitem "Virtual machine Virtual machine LF02-acpi-efi (1) (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF02-acpi-efi (1) (orphaned)":
+          - generic "Virtual machine"
+          - text: LF02-acpi-efi (1) (orphaned)
+      - treeitem "Virtual machine Virtual machine LF02-acpi-efi (2) (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF02-acpi-efi (2) (orphaned)":
+          - generic "Virtual machine"
+          - text: LF02-acpi-efi (2) (orphaned)
+      - treeitem "Virtual machine Virtual machine LF03-acpi-bios-negative (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF03-acpi-bios-negative (orphaned)":
+          - generic "Virtual machine"
+          - text: LF03-acpi-bios-negative (orphaned)
+      - treeitem "Virtual machine Virtual machine LF03-acpi-bios-negative (1) (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF03-acpi-bios-negative (1) (orphaned)":
+          - generic "Virtual machine"
+          - text: LF03-acpi-bios-negative (1) (orphaned)
+      - treeitem "Virtual machine Virtual machine LF04-absent-bios-default (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF04-absent-bios-default (orphaned)":
+          - generic "Virtual machine"
+          - text: LF04-absent-bios-default (orphaned)
+      - treeitem "Virtual machine Virtual machine LF05-absent-efi-default (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "LF05-absent-efi-default (orphaned)":
+          - generic "Virtual machine"
+          - text: LF05-absent-efi-default (orphaned)
+      - treeitem "Virtual machine Virtual machine p2p-v6-path-probe (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "p2p-v6-path-probe (orphaned)":
+          - generic "Virtual machine"
+          - text: p2p-v6-path-probe (orphaned)
+      - treeitem "Virtual machine Virtual machine rmrr-vmx-fixed (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "rmrr-vmx-fixed (orphaned)":
+          - generic "Virtual machine"
+          - text: rmrr-vmx-fixed (orphaned)
+      - treeitem "Virtual machine Virtual machine sriov-20260714-esxi8-sriov-igb-i350-v5-pf (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "sriov-20260714-esxi8-sriov-igb-i350-v5-pf (orphaned)":
+          - generic "Virtual machine"
+          - text: sriov-20260714-esxi8-sriov-igb-i350-v5-pf (orphaned)
+      - treeitem "Virtual machine Virtual machine sriov-20260714-esxi8-sriov-pf-control-v2-pf (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "sriov-20260714-esxi8-sriov-pf-control-v2-pf (orphaned)":
+          - generic "Virtual machine"
+          - text: sriov-20260714-esxi8-sriov-pf-control-v2-pf (orphaned)
+      - treeitem "Virtual machine Virtual machine sriov-20260714-esxi8-sriov-v1-pf (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "sriov-20260714-esxi8-sriov-v1-pf (orphaned)":
+          - generic "Virtual machine"
+          - text: sriov-20260714-esxi8-sriov-v1-pf (orphaned)
+      - treeitem "Virtual machine Virtual machine sriov-20260714-esxi8-sriov-vf-visible-v3-pf (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "sriov-20260714-esxi8-sriov-vf-visible-v3-pf (orphaned)":
+          - generic "Virtual machine"
+          - text: sriov-20260714-esxi8-sriov-vf-visible-v3-pf (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-edu-cy-quarantine-timeline-001-v10 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-edu-cy-quarantine-timeline-001-v10 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-edu-cy-quarantine-timeline-001-v10 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-edu-cy-quarantine-timeline-001-v11 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-edu-cy-quarantine-timeline-001-v11 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-edu-cy-quarantine-timeline-001-v11 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-edu-cy-quarantine-timeline-001-v12 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-edu-cy-quarantine-timeline-001-v12 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-edu-cy-quarantine-timeline-001-v12 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-edu-ncy-quarantine-timeline-001-v2 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-edu-ncy-quarantine-timeline-001-v2 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-edu-ncy-quarantine-timeline-001-v2 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-edu-ncy-quarantine-timeline-001-v4 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-edu-ncy-quarantine-timeline-001-v4 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-edu-ncy-quarantine-timeline-001-v4 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-edu-ncy-quarantine-timeline-001-v6" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-edu-ncy-quarantine-timeline-001-v6":
+          - generic "Virtual machine"
+          - text: timeline-edu-ncy-quarantine-timeline-001-v6
+      - treeitem "Virtual machine Virtual machine timeline-edu-ncy-quarantine-timeline-001-v7" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-edu-ncy-quarantine-timeline-001-v7":
+          - generic "Virtual machine"
+          - text: timeline-edu-ncy-quarantine-timeline-001-v7
+      - treeitem "Virtual machine Virtual machine timeline-edu-ncy-quarantine-timeline-001-v9 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-edu-ncy-quarantine-timeline-001-v9 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-edu-ncy-quarantine-timeline-001-v9 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-sibling-cy-quarantine-timeline-001-v10 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-sibling-cy-quarantine-timeline-001-v10 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-sibling-cy-quarantine-timeline-001-v10 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-sibling-cy-quarantine-timeline-001-v11 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-sibling-cy-quarantine-timeline-001-v11 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-sibling-cy-quarantine-timeline-001-v11 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-sibling-cy-quarantine-timeline-001-v12 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-sibling-cy-quarantine-timeline-001-v12 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-sibling-cy-quarantine-timeline-001-v12 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-sibling-ncy-quarantine-timeline-001-v2 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-sibling-ncy-quarantine-timeline-001-v2 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-sibling-ncy-quarantine-timeline-001-v2 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-sibling-ncy-quarantine-timeline-001-v4 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-sibling-ncy-quarantine-timeline-001-v4 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-sibling-ncy-quarantine-timeline-001-v4 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-sibling-ncy-quarantine-timeline-001-v6 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-sibling-ncy-quarantine-timeline-001-v6 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-sibling-ncy-quarantine-timeline-001-v6 (orphaned)
+      - treeitem "Virtual machine Virtual machine timeline-sibling-ncy-quarantine-timeline-001-v9 (orphaned)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "timeline-sibling-ncy-quarantine-timeline-001-v9 (orphaned)":
+          - generic "Virtual machine"
+          - text: timeline-sibling-ncy-quarantine-timeline-001-v9 (orphaned)
+      - treeitem "Virtual machine Virtual machine vcdep-20261111-a" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "vcdep-20261111-a":
+          - generic "Virtual machine"
+          - text: vcdep-20261111-a
+      - treeitem "Virtual machine Virtual machine vcdep-20261111-b" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "vcdep-20261111-b":
+          - generic "Virtual machine"
+          - text: vcdep-20261111-b
+      - treeitem "Virtual machine Virtual machine vcdep-20261111-both" [level=4] [selected]:
+        - button "Virtual machine" [disabled]
+        - generic "vcdep-20261111-both":
+          - generic "Virtual machine"
+          - text: vcdep-20261111-both
+      - treeitem "Virtual machine Virtual machine vmotion-baseline-20260711-vmotion (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "vmotion-baseline-20260711-vmotion (disconnected)":
+          - generic "Virtual machine"
+          - text: vmotion-baseline-20260711-vmotion (disconnected)
+      - treeitem "Virtual machine Virtual machine vmotion-blocker-20260711-vmotion (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "vmotion-blocker-20260711-vmotion (disconnected)":
+          - generic "Virtual machine"
+          - text: vmotion-blocker-20260711-vmotion (disconnected)
+      - treeitem "Virtual machine Virtual machine vmotion-classic-20260711-vmotion" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "vmotion-classic-20260711-vmotion":
+          - generic "Virtual machine"
+          - text: vmotion-classic-20260711-vmotion
+      - treeitem "Virtual machine Virtual machine vmotion-dynamic-20260711-vmotion (disconnected)" [level=4]:
+        - button "Virtual machine" [disabled]
+        - generic "vmotion-dynamic-20260711-vmotion (disconnected)":
+          - generic "Virtual machine"
+          - text: vmotion-dynamic-20260711-vmotion (disconnected)
+- separator
+- main:
+  - generic "Virtual Machine"
+  - heading "vcdep-20261111-both" [level=1]
+  - button "Power On" [active]
+  - tooltip "Power On"
+  - button "Shut Down Guest OS" [disabled]
+  - button "Launch Console"
+  - button "Edit Settings..."
+  - button "Take Snapshot..."
+  - button "Actions":
+    - text: Actions
+  - navigation:
+    - tablist:
+      - tab "Summary" [selected]
+      - tab "Monitor"
+      - tab "Configure"
+      - tab "Permissions"
+      - tab "Datastores"
+      - tab "Networks"
+      - tab "Snapshots"
+      - tab "Updates"
+  - generic: Issues and Alarms
+  - img "Warning":
+  - generic: There is no network assigned to this virtual machine.
+  - button "Actions":
+    - text: Actions
+  - generic: Guest OS
+  - generic: Powered Off
+  - button "Launch Remote Console"
+  - button "Remote Console signpost":
+  - button "Launch Web Console" [disabled]
+  - generic: Virtual Machine Details
+  - button "Actions":
+    - text: Actions
+  - table:
+    - row "Power Status Powered Off":
+      - cell "Power Status"
+      - cell "Powered Off":
+        - generic: Powered Off
+    - row "Guest OS Other 5.x Linux (64-bit)":
+      - cell "Guest OS"
+      - cell "Other 5.x Linux (64-bit)": Other 5.x Linux (64-bit)
+    - row "VMware Tools Not running, not installed VMware Tools signpost":
+      - cell "VMware Tools"
+      - cell "Not running, not installed VMware Tools signpost":
+        - text: Not running, not installed
+        - button "VMware Tools signpost":
+    - row "DNS Name":
+      - cell "DNS Name"
+      - cell
+    - row "IP Addresses":
+      - cell "IP Addresses"
+      - cell
+    - row "Encryption Not encrypted":
+      - cell "Encryption"
+      - cell "Not encrypted": Not encrypted
+  - generic "Linux"
+  - generic: Usage
+  - paragraph: "Last updated: 11/11/26, 9:54 AM"
+  - list:
+    - text: CPU
+    - text: 0 MHz used
+    - text: Memory
+    - text: 0 MB used
+    - text: Storage
+    - text: 9.57 KB used
+  - button "View Stats"
+  - generic: VM Hardware
+  - table:
+    - row "CPU 1 CPU(s), 0 MHz used":
+      - cell "CPU"
+      - cell "1 CPU(s), 0 MHz used"
+    - row "Memory 1 GB, 0 GB memory active":
+      - cell "Memory"
+      - cell "1 GB, 0 GB memory active"
+    - row "Compatibility ESXi 8.0 and later (VM version 20)":
+      - cell "Compatibility"
+      - cell "ESXi 8.0 and later (VM version 20)"
+  - button "Edit"
+  - generic: PCI Devices
+  - generic "0000:02:01.0 | 82574L Gigabit Network Connection"
+  - text: (DirectPath I/O)
+  - generic "0000:02:01.1 | 82574L Gigabit Network Connection"
+  - text: (DirectPath I/O)
+  - button "Edit"
+  - generic: Related Objects
+  - text: Cluster
+  - link "PCI-DirectPath-Lab":
+    - /url: javascript:void(0)
+  - text: Host
+  - link "172.31.91.10":
+    - /url: javascript:void(0)
+  - text: Storage
+  - link "pci-mmio-local":
+    - /url: javascript:void(0)
+  - generic: Tags
+  - generic: No tags assigned
+  - button "Assign"
+  - generic: Notes
+  - generic: No notes assigned
+  - button "Add"
+  - generic: Storage Policies
+  - generic: VM Storage Policies
+  - text: VM Storage Policy Compliance
+  - generic: "--"
+  - generic: Last Checked Date
+  - generic: VM Replication Groups
+  - button "Check Compliance"
+  - generic: Custom Attributes
+  - generic: No custom attributes assigned
+  - button "Add"
+  - generic: Snapshots
+  - generic: No snapshot taken
+  - button "Manage"
+  - generic: Compute Policies
+  - button "View all policies"
+  - generic: CPU Topology
+  - text: CPU topology
+  - button "CPU Topology signpost":
+  - generic: Assigned at power on
+  - text: vCPUs
+  - generic: "1"
+  - text: Cores per socket
+  - button "Cores per socket signpost":
+  - generic: Assigned at power on
+  - text: Threads per core
+  - generic: "1"
+  - text: NUMA nodes
+  - button "NUMA nodes signpost":
+  - generic: Assigned at power on
+  - button "Edit"
+  - button "Settings":
+    - generic: Settings
+- separator
+- button "Toggle panel" [expanded]:
+- tablist:
+  - tab "Recent Tasks" [selected]
+  - tab "Alarms"
+- tabpanel "Recent Tasks":
+  - grid:
+    - rowgroup:
+      - row "Task Name Toggle filter Column resize handle Use left or right key to resize the column Target Toggle filter Column resize handle Use left or right key to resize the column Status Toggle filter Column resize handle Use left or right key to resize the column Details Toggle filter Column resize handle Use left or right key to resize the column Initiator Toggle filter Column resize handle Use left or right key to resize the column Queued For Toggle filter Column resize handle Use left or right key to resize the column Start Time Toggle filter Column resize handle Use left or right key to resize the column Completion Time Toggle filter Column resize handle Use left or right key to resize the column Server Toggle filter":
+        - columnheader "Task Name Toggle filter Column resize handle Use left or right key to resize the column":
+          - button "Task Name"
+          - button "Toggle filter":
+          - button "Column resize handle"
+          - generic: Use left or right key to resize the column
+        - columnheader "Target Toggle filter Column resize handle Use left or right key to resize the column":
+          - button "Target"
+          - button "Toggle filter":
+          - button "Column resize handle"
+          - generic: Use left or right key to resize the column
+        - columnheader "Status Toggle filter Column resize handle Use left or right key to resize the column":
+          - button "Status"
+          - button "Toggle filter":
+          - button "Column resize handle"
+          - generic: Use left or right key to resize the column
+        - columnheader "Details Toggle filter Column resize handle Use left or right key to resize the column":
+          - button "Details"
+          - button "Toggle filter":
+          - button "Column resize handle"
+          - generic: Use left or right key to resize the column
+        - columnheader "Initiator Toggle filter Column resize handle Use left or right key to resize the column":
+          - button "Initiator"
+          - button "Toggle filter":
+          - button "Column resize handle"
+          - generic: Use left or right key to resize the column
+        - columnheader "Queued For Toggle filter Column resize handle Use left or right key to resize the column":
+          - button "Queued For"
+          - button "Toggle filter":
+          - button "Column resize handle"
+          - generic: Use left or right key to resize the column
+        - columnheader "Start Time Toggle filter Column resize handle Use left or right key to resize the column":
+          - button "Start Time":
+            - text: Start Time
+          - button "Toggle filter":
+          - button "Column resize handle"
+          - generic: Use left or right key to resize the column
+        - columnheader "Completion Time Toggle filter Column resize handle Use left or right key to resize the column":
+          - button "Completion Time"
+          - button "Toggle filter":
+          - button "Column resize handle"
+          - generic: Use left or right key to resize the column
+        - columnheader "Server Toggle filter":
+          - button "Server"
+          - button "Toggle filter":
+    - rowgroup:
+      - row "Power On virtual machine Virtual machine vcdep-20261111-both Module DevicePowerOn power on failed. Failed to start the virtual machine. Powering on the new Virtual Machine VSPHERE.LOCAL\\Administrator 40 ms 11/11/2026, 9:54:40 AM 11/11/2026, 9:55:01 AM 192.168.91.131":
+        - gridcell "Power On virtual machine":
+          - generic: Power On virtual machine
+        - gridcell "Virtual machine vcdep-20261111-both":
+          - link "Virtual machine vcdep-20261111-both":
+            - /url: javascript:void(0)
+            - generic "Virtual machine"
+            - text: vcdep-20261111-both
+        - gridcell "Module DevicePowerOn power on failed. Failed to start the virtual machine.":
+          - text: Module DevicePowerOn power on failed. Failed to start the virtual machine.
+        - gridcell "Powering on the new Virtual Machine":
+          - generic: Powering on the new Virtual Machine
+        - gridcell "VSPHERE.LOCAL\\Administrator":
+          - generic: VSPHERE.LOCAL\Administrator
+        - gridcell "40 ms":
+          - generic: 40 ms
+        - gridcell "11/11/2026, 9:54:40 AM":
+          - generic: 11/11/2026, 9:54:40 AM
+        - gridcell "11/11/2026, 9:55:01 AM":
+          - generic: 11/11/2026, 9:55:01 AM
+        - gridcell "192.168.91.131":
+          - link "192.168.91.131":
+            - /url: javascript:void(0)
+    - rowgroup:
+      - row "Power On virtual machine Virtual machine vcdep-20261111-a Module DevicePowerOn power on failed. Failed to start the virtual machine. Powering on the new Virtual Machine VSPHERE.LOCAL\\Administrator 28 ms 11/11/2026, 9:52:56 AM 11/11/2026, 9:53:07 AM 192.168.91.131":
+        - gridcell "Power On virtual machine":
+          - generic: Power On virtual machine
+        - gridcell "Virtual machine vcdep-20261111-a":
+          - link "Virtual machine vcdep-20261111-a":
+            - /url: javascript:void(0)
+            - generic "Virtual machine"
+            - text: vcdep-20261111-a
+        - gridcell "Module DevicePowerOn power on failed. Failed to start the virtual machine.":
+          - text: Module DevicePowerOn power on failed. Failed to start the virtual machine.
+        - gridcell "Powering on the new Virtual Machine":
+          - generic: Powering on the new Virtual Machine
+        - gridcell "VSPHERE.LOCAL\\Administrator":
+          - generic: VSPHERE.LOCAL\Administrator
+        - gridcell "28 ms":
+          - generic: 28 ms
+        - gridcell "11/11/2026, 9:52:56 AM":
+          - generic: 11/11/2026, 9:52:56 AM
+        - gridcell "11/11/2026, 9:53:07 AM":
+          - generic: 11/11/2026, 9:53:07 AM
+        - gridcell "192.168.91.131":
+          - link "192.168.91.131":
+            - /url: javascript:void(0)
+  - button "Manage Columns"
+  - combobox "Task Status Filter":
+    - option "All"
+    - option "Running"
+    - option "Failed" [selected]
+  - link "More Tasks":
+    - /url: javascript:void(0)
+  - generic: 2 items
+- generic: Press Space to move the item with keyboard, Space to drop it on valid target and Escape to cancel the operation.

@@ -1,0 +1,8 @@
+.gitattributes text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.py text eol=lf
+raw/** -text
+screenshots/** -text
+source-snapshots/** -text
+log-excerpts/** -text

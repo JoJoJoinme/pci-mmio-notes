@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-11T08:13:42.1256571Z",
+  "qemuStopped": true,
+  "vcsaSuspendExit": 0,
+  "vmwareRunningList": [
+    "Total running VMs: 0"
+  ],
+  "hyperV": {
+    "name": "win10-home",
+    "state": "Saved"
+  },
+  "baseImagesUnchanged": true,
+  "networkRemoved": true
+}

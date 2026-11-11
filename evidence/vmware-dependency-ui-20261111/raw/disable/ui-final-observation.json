@@ -1,0 +1,11 @@
+{
+  "recordedAt": "2026-11-11T08:05:58.3617893Z",
+  "source": "Operator transcription of final CUA DOM tool output; not a saved DOM snapshot or screenshot",
+  "phase": "vCenter UI single B disable",
+  "visibleText": [
+    "Passthrough has been disabled for 82574L Gigabit Network Connection.",
+    "0000:02:01.0 Disabled",
+    "0000:02:01.1 Disabled"
+  ],
+  "observation": "Both Disabled rows were visible before and after one read-only Refresh. No repeat Toggle. Exact UI transition time was not sampled."
+}

@@ -1,0 +1,12 @@
+{
+  "phase": "before-reboot",
+  "selector": "1af4:1041",
+  "matchingRows": [
+    [
+      "1af4",
+      "1041",
+      "default",
+      "false"
+    ]
+  ]
+}

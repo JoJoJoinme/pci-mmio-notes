@@ -1,0 +1,38 @@
+{
+  "at": "2026-11-10T15:41:07.931936+00:00",
+  "surface": "SOAP ReconfigVM_Task",
+  "requestedBdfs": [
+    "0000:02:01.1"
+  ],
+  "before": {
+    "name": "dep-20261110-b",
+    "id": "2897",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] dep-20261110-b/dep-20261110-b/dep-20261110-b.vmx",
+    "memoryMB": 768,
+    "devices": []
+  },
+  "task": {
+    "taskId": "haTask-2897-vim.VirtualMachine.reconfigure-975205351",
+    "state": "success",
+    "descriptionId": "VirtualMachine.reconfigure",
+    "queueTime": "2026-11-10 15:41:05.830177+00:00",
+    "startTime": "2026-11-10 15:41:05.831727+00:00",
+    "completeTime": "2026-11-10 15:41:05.976012+00:00",
+    "elapsedSeconds": 1.0334301540000013
+  },
+  "after": {
+    "name": "dep-20261110-b",
+    "id": "2897",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] dep-20261110-b/dep-20261110-b/dep-20261110-b.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}

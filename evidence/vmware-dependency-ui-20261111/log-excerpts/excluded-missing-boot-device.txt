@@ -1,0 +1,9 @@
+Source run: 20261110-esxi8-functional-dependency-v1
+Source file: ahci-reclaim.txt
+Source SHA-256: 487b526f0f81732bee8aca1a23f5ba9b01193a7b4ecabb98e8d81dc7c55fcfa0
+Line numbers refer to the retained original file.
+
+--- original lines 13-14 ---
+13: 2026-11-10T15:55:50.098Z Al(177) vmkalert: cpu1:131550)ALERT: Failed to find boot device after 120 seconds
+14: 2026-11-10T15:55:50.175Z Al(177) vmkalert: cpu1:131550)ALERT: No persistent storage available for system logs and data. ESX is operating with limited system storage space, logs and system data will be lost on reboot.
+

@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+"""Collect API, tasks and logs after an independently performed Host Client action."""
+import argparse
+import json
+from pathlib import Path
+import re
+import ssl
+
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim, vmodl
+from esxi_passthru_capability import EsxiSsh, caveat_field, utc_now
+import test_esxi_owner_activation as owner
+from test_esxi_dependency_interaction import NAMES, OUT, TARGETS, vm_state, vm_logs
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("label")
+    args = parser.parse_args()
+    if not re.fullmatch(r"[a-z0-9-]+", args.label):
+        raise ValueError("Invalid evidence label")
+    label = "ui-" + args.label
+    password = caveat_field("esxi8-auto-codex-credentials", "Password")
+    ssh = EsxiSsh("172.31.91.10", password, retries=1)
+    si = SmartConnect(host="172.31.91.10", user="root", pwd=password,
+                      sslContext=ssl._create_unverified_context())
+    try:
+        content = si.RetrieveContent()
+        host = owner.inventory(content, vim.HostSystem)[0]
+        if host.hardware.systemInfo.uuid != "6a4e818a-51ce-7d7f-a21f-000c29abaf6d" or host.config.product.build != "24280767":
+            raise RuntimeError("Unexpected test host")
+        vms = [v for v in owner.inventory(content, vim.VirtualMachine) if v.name in NAMES.values()]
+        tasks = {t._moId: t for t in content.taskManager.recentTask}
+        for vm in vms:
+            tasks.update({t._moId: t for t in vm.recentTask})
+        records = []
+        expired_tasks = []
+        for task in tasks.values():
+            try:
+                info = task.info
+            except vmodl.fault.ManagedObjectNotFound:
+                expired_tasks.append(task._moId)
+                continue
+            if info.entityName not in NAMES.values() and "passthru" not in info.descriptionId.lower():
+                continue
+            records.append({"taskId": task._moId, "descriptionId": info.descriptionId,
+                            "entityName": info.entityName, "state": str(info.state),
+                            "queueTime": str(info.queueTime), "startTime": str(info.startTime),
+                            "completeTime": str(info.completeTime),
+                            "fault": owner.fault_snapshot(info.error) if info.error else None})
+        data = {"at": utc_now(), "hostBootTime": str(host.runtime.bootTime),
+                "version": str(host.config.product),
+                "devices": [{"id": d.id, "enabled": d.passthruEnabled, "active": d.passthruActive,
+                             "dependentDevice": d.dependentDevice} for d in host.config.pciPassthruInfo if d.id in TARGETS],
+                "vms": [vm_state(v) for v in vms], "tasks": records,
+                "expiredTaskReferences": expired_tasks}
+        (OUT / (label + ".json")).write_text(json.dumps(data, indent=2, default=str) + "\n")
+        for vm in vms:
+            vm_logs(ssh, vm, label)
+        for log in ["hostd", "vmkernel"]:
+            r = ssh.run("tail -n 1200 /var/run/log/" + log + ".log", check=False)
+            (OUT / (label + "-" + log + ".log")).write_text(r.stdout)
+        print(json.dumps({"label": label, "vms": [{"name": v["name"], "powerState": v["powerState"], "pciCount": len(v.get("devices", []))} for v in data["vms"]], "tasks": [{"entity": r["entityName"], "operation": r["descriptionId"], "state": r["state"]} for r in records]}, default=str))
+    finally:
+        Disconnect(si)
+
+
+if __name__ == "__main__":
+    main()

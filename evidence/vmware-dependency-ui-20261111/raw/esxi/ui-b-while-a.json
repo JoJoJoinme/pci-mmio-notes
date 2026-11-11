@@ -1,0 +1,124 @@
+{
+  "at": "2026-11-10T17:11:22.858014+00:00",
+  "hostBootTime": "2026-11-10 16:05:56.131595+00:00",
+  "version": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+  "devices": [
+    {
+      "id": "0000:02:01.0",
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:02:01.1",
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:01:00.0"
+    }
+  ],
+  "vms": [
+    {
+      "name": "dep-20261110-a",
+      "id": "2906",
+      "powerState": "poweredOn",
+      "vmx": "[pci-mmio-local] dep-20261110-a/dep-20261110-a/dep-20261110-a.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    },
+    {
+      "name": "dep-20261110-b",
+      "id": "2908",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] dep-20261110-b/dep-20261110-b/dep-20261110-b.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    },
+    {
+      "name": "dep-20261110-both",
+      "id": "2909",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] dep-20261110-both/dep-20261110-both/dep-20261110-both.vmx",
+      "memoryMB": 768,
+      "devices": [
+        {
+          "key": 13000,
+          "label": "PCI device 0",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        },
+        {
+          "key": 13001,
+          "label": "PCI device 1",
+          "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "haTask-2908-vim.VirtualMachine.reconfigure-970740374",
+      "descriptionId": "VirtualMachine.reconfigure",
+      "entityName": "dep-20261110-b",
+      "state": "success",
+      "queueTime": "2026-11-10 17:01:21.511405+00:00",
+      "startTime": "2026-11-10 17:01:21.524626+00:00",
+      "completeTime": "2026-11-10 17:01:22.126395+00:00",
+      "fault": null
+    },
+    {
+      "taskId": "haTask-2909-vim.VirtualMachine.reconfigure-970742116",
+      "descriptionId": "VirtualMachine.reconfigure",
+      "entityName": "dep-20261110-both",
+      "state": "success",
+      "queueTime": "2026-11-10 17:05:36.255130+00:00",
+      "startTime": "2026-11-10 17:05:36.282015+00:00",
+      "completeTime": "2026-11-10 17:05:37.184835+00:00",
+      "fault": null
+    },
+    {
+      "taskId": "haTask-2906-vim.VirtualMachine.powerOn-970742607",
+      "descriptionId": "VirtualMachine.powerOn",
+      "entityName": "dep-20261110-a",
+      "state": "success",
+      "queueTime": "2026-11-10 17:07:00.311960+00:00",
+      "startTime": "2026-11-10 17:07:00.320693+00:00",
+      "completeTime": "2026-11-10 17:07:08.369904+00:00",
+      "fault": null
+    },
+    {
+      "taskId": "haTask-2908-vim.VirtualMachine.powerOn-970743344",
+      "descriptionId": "VirtualMachine.powerOn",
+      "entityName": "dep-20261110-b",
+      "state": "error",
+      "queueTime": "2026-11-10 17:08:35.448486+00:00",
+      "startTime": "2026-11-10 17:08:35.456670+00:00",
+      "completeTime": "2026-11-10 17:08:44.799836+00:00",
+      "fault": {
+        "type": "vim.fault.GenericVmConfigFault",
+        "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = \"Module 'DevicePowerOn' power on failed. \",\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = \"Module 'DevicePowerOn' power on failed. \"\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = \"Module 'DevicePowerOn' power on failed. \"\n}",
+        "faultMessages": [
+          {
+            "key": "msg.moduletable.powerOnFailed",
+            "message": "Module 'DevicePowerOn' power on failed. "
+          },
+          {
+            "key": "msg.vmx.poweron.failed",
+            "message": "Failed to start the virtual machine."
+          }
+        ]
+      }
+    }
+  ],
+  "expiredTaskReferences": []
+}

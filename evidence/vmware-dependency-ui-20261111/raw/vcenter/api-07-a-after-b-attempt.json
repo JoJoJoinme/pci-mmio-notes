@@ -1,0 +1,45 @@
+{
+  "label": "api-07-a-after-b-attempt",
+  "peerPowerStatesBefore": {
+    "vcdep-20261111-both": "poweredOff",
+    "vcdep-20261111-a": "poweredOff",
+    "vcdep-20261111-b": "poweredOn"
+  },
+  "task": {
+    "taskId": "task-7122",
+    "state": "error",
+    "descriptionId": "VirtualMachine.powerOn",
+    "queueTime": "2026-11-10 17:49:38.310628+00:00",
+    "startTime": "2026-11-10 17:49:38.341672+00:00",
+    "completeTime": "2026-11-10 17:49:49.286585+00:00",
+    "elapsedSeconds": 11.327304904999437,
+    "fault": {
+      "type": "vim.fault.GenericVmConfigFault",
+      "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = 'Module DevicePowerOn power on failed. ',\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = 'Module DevicePowerOn power on failed. '\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = 'Module DevicePowerOn power on failed. '\n}",
+      "faultMessages": [
+        {
+          "key": "msg.moduletable.powerOnFailed",
+          "message": "Module DevicePowerOn power on failed. "
+        },
+        {
+          "key": "msg.vmx.poweron.failed",
+          "message": "Failed to start the virtual machine."
+        }
+      ]
+    }
+  },
+  "after": {
+    "name": "vcdep-20261111-a",
+    "id": "vm-4030",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] vcdep-20261111-a/vcdep-20261111-a.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}

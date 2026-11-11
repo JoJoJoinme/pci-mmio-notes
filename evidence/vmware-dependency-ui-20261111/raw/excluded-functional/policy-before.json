@@ -1,0 +1,28 @@
+{
+  "at": "2026-11-10T15:52:23.525032+00:00",
+  "bootTime": "2026-11-10 15:47:09.754049+00:00",
+  "targets": [
+    "0000:01:00.0",
+    "0000:01:00.1"
+  ],
+  "matchedDevices": [
+    "0000:01:00.0",
+    "0000:01:00.1"
+  ],
+  "passthru": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.1"
+    }
+  ]
+}

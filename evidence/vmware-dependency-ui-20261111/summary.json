@@ -1,0 +1,128 @@
+{
+  "status": "OBSERVED_BOUNDED_RESEARCH",
+  "dateLocal": "2026-11-11",
+  "timezone": "Asia/Shanghai",
+  "experimentIds": [
+    "VMW-DEP-001",
+    "VMW-OWNER-002"
+  ],
+  "legacyCaseLabels": [
+    "A05",
+    "O05",
+    "O10"
+  ],
+  "relatedRiskIds": [
+    "R01",
+    "R02",
+    "R04"
+  ],
+  "closesProductOrPhysicalGate": false,
+  "observations": {
+    "hostClient": {
+      "selectingAImmediatelySelectsB": true,
+      "hostToggleEnablesBoth": true,
+      "vmAddingAAutoAddsB": false,
+      "dependencySpecificVmWarningObserved": false
+    },
+    "vcenter": {
+      "selectingAImmediatelySelectsB": false,
+      "hostToggleEnablesBoth": true,
+      "vmAddingAAutoAddsB": false,
+      "dependencySpecificVmWarningObserved": false,
+      "uiPowerTaskOperation": "Datacenter.ExecuteVmPowerOnLRO"
+    },
+    "allFourLanes": {
+      "configurationDeviceCounts": [
+        1,
+        1,
+        2
+      ],
+      "aFirst": "success",
+      "bWhileAOn": "error",
+      "bFirstAfterRelease": "success",
+      "aWhileBOn": "error",
+      "sameVmBoth": "error",
+      "powerFailure": "DevicePowerOn"
+    }
+  },
+  "evidenceLanes": [
+    "ESXi API",
+    "Host Client UI",
+    "vCenter API",
+    "vCenter UI"
+  ],
+  "disableFollowup": {
+    "run": "20261111-esxi8-dependency-disable-v1",
+    "scope": "Idle pair, no powered-on passthrough VM, live apply without reboot",
+    "apiOnlyADisablesBoth": {
+      "esxi": true,
+      "vcenter": true
+    },
+    "apiOnlyBDisablesBoth": {
+      "esxi": true,
+      "vcenter": true
+    },
+    "hostClientSelectingEitherSelectsBoth": true,
+    "vcenterSelectingEitherKeepsOtherUnchecked": true,
+    "uiToggleEitherDisablesBoth": {
+      "hostClient": true,
+      "vcenter": true
+    },
+    "finalEnabledAndActive": false,
+    "configuredAndCurrentOwner": "VMkernel",
+    "moduleName": "ne1000",
+    "vcenterStaleEnabledRowsAfterDisableObserved": true,
+    "exactUiRefreshLatencyMeasured": false,
+    "runningVmDisableTested": false
+  },
+  "excluded": [
+    {
+      "run": "20261110-esxi8-functional-dependency-v1",
+      "status": "SETUP_INVALID_BOOTBANK_VOLATILE",
+      "reason": "The map override disappeared after reboot; both functions remained shareable."
+    },
+    {
+      "observation": "Host Client capture 16",
+      "reason": "No completed power-off; 16b and API confirmation supersede it."
+    },
+    {
+      "observation": "vCenter navigation/editor race",
+      "reason": "Wrong A editor canceled without edits; B guard stopped addition."
+    },
+    {
+      "observation": "Early vCenter same-VM collection",
+      "reason": "Task was running; final collection establishes the error."
+    },
+    {
+      "observation": "Initial vCenter CreateVM",
+      "reason": "PBM setup failure before PCI assignment; excluded from dependency conclusions."
+    }
+  ],
+  "limitations": [
+    "Single ESXi/vCenter/Host Client build tuple",
+    "Synthetic conventional PCI bridge only",
+    "Same-VM coassignment positive control did not succeed",
+    "No physical hardware qualification",
+    "No guest I/O workload",
+    "Step screenshots and text snapshots, not continuous video"
+  ],
+  "cleanup": {
+    "temporaryVmsRemoved": true,
+    "hostPassthroughDisabled": true,
+    "baseImagesUnchanged": true,
+    "disableFollowup": {
+      "at": "2026-11-11T08:13:42.1256571Z",
+      "qemuStopped": true,
+      "vcsaSuspendExit": 0,
+      "vmwareRunningList": [
+        "Total running VMs: 0"
+      ],
+      "hyperV": {
+        "name": "win10-home",
+        "state": "Saved"
+      },
+      "baseImagesUnchanged": true,
+      "networkRemoved": true
+    }
+  }
+}

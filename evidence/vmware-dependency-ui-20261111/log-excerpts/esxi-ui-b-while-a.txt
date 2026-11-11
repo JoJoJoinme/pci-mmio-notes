@@ -1,0 +1,34 @@
+Source run: 20261110-esxi8-dependency-interaction-v1
+Source file: ui-b-while-a-dep-20261110-b-vmware.log
+Source SHA-256: 1d75629ed4e5b4f49ea27f1f7e6607223fbbd8cd00a50cd08a40756ddac10712
+Line numbers refer to the retained original file.
+
+--- original lines 192-198 ---
+192: 2026-11-10T17:08:36.205Z In(05) vmx - DICT             sched.mem.min = "768"
+193: 2026-11-10T17:08:36.205Z In(05) vmx - DICT         sched.mem.minSize = "768"
+194: 2026-11-10T17:08:36.205Z In(05) vmx - DICT             sched.mem.pin = "TRUE"
+195: 2026-11-10T17:08:36.205Z In(05) vmx - DICT           pciPassthru0.id = "00000:002:01.1"
+196: 2026-11-10T17:08:36.205Z In(05) vmx - DICT     pciPassthru0.deviceId = "0x10d3"
+197: 2026-11-10T17:08:36.205Z In(05) vmx - DICT     pciPassthru0.vendorId = "0x8086"
+198: 2026-11-10T17:08:36.205Z In(05) vmx - DICT     pciPassthru0.systemId = "6a4e818a-51ce-7d7f-a21f-000c29abaf6d"
+
+--- original lines 606-613 ---
+606: 2026-11-10T17:08:40.906Z Wa(03) vmx - PCIPassthru: Selected device 0000:02:01.1 is outside of the NUMA configuration
+607: 2026-11-10T17:08:44.416Z Wa(03) vmx - PCIPassthru: Failed to get NumaNode for sbdf 0000:02:01.1
+608: 2026-11-10T17:08:44.417Z Wa(03) vmx - PCIPassthru: Selected device 0000:02:01.1 is outside of the NUMA configuration
+609: 2026-11-10T17:08:44.418Z In(05) vmx - AH Failed to find a suitable device for pciPassthru0
+610: 2026-11-10T17:08:44.419Z In(05) vmx - Module 'DevicePowerOn' power on failed.
+611: 2026-11-10T17:08:44.419Z No(00) vmx - PowerOnTiming: ALL took 8295482 us
+612: 2026-11-10T17:08:44.419Z In(05) vmx - VMX_PowerOn: ModuleTable_PowerOn = 0
+613: 2026-11-10T17:08:44.420Z In(05) svga - SVGA thread is exiting the main loop
+
+--- original lines 629-636 ---
+629: 2026-11-10T17:08:44.494Z In(05) vmx - STATSFILE: Amount of dynamic storage used: 632
+630: 2026-11-10T17:08:44.494Z In(05) vmx - STATSFILE: Number of entries made: 57
+631: 2026-11-10T17:08:44.510Z In(05) vmx - 
+632: 2026-11-10T17:08:44.510Z In(05)+ vmx - Power on failure messages: Module 'DevicePowerOn' power on failed.
+633: 2026-11-10T17:08:44.510Z In(05)+ vmx - Failed to start the virtual machine.
+634: 2026-11-10T17:08:44.510Z In(05)+ vmx - 
+635: 2026-11-10T17:08:44.511Z In(05) vmx - VigorTransport_ServerSendResponse seq=21: Completed Bootstrap.PowerOn request with messages in 8418181 US.
+636: 2026-11-10T17:08:44.511Z In(05) vmx - Vix: [mainDispatch.c:4211]: VMAutomation_ReportPowerOpFinished: statevar=0, newAppState=1870, success=1 additionalError=0
+

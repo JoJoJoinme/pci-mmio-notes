@@ -1,0 +1,604 @@
+- link:
+  - /url: javascript:void(0)
+  - text: Skip to main content
+- banner:
+  - button:
+  - button:
+    - generic: vSphere Client
+  - combobox:
+    - textbox:
+      - /placeholder: Search in all environments
+  - button:
+    - button:
+  - button:
+    - text: Administrator@VSPHERE.LOCAL
+  - button:
+  - button:
+- button [expanded]:
+- navigation:
+  - tablist:
+    - tab [selected]
+    - tab
+    - tab
+    - tab
+  - tabpanel:
+    - tree:
+      - treeitem [expanded] [level=1]:
+        - button:
+          - generic: 
+        - generic: 192.168.91.131
+      - treeitem [expanded] [level=2]:
+        - button:
+          - generic: 
+        - generic: PCI-Lab
+      - treeitem [expanded] [level=3]:
+        - button:
+          - generic: 
+        - generic: PCI-DirectPath-Lab
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: 172.31.91.10
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: 172.31.91.11 (Not responding)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: /vmfs/volumes/6a4e88e0-06d8dba2-e355-000c29abaf6d/pci-mmio-efi-default (inaccessible)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: /vmfs/volumes/8b09b63b-7ec8552f/rmrr/20260713-esxi8-rmrr-bios-v5/bio (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-dynamic-aggregate (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-dynamic-aggregate-2x1g (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-single-4g (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-single-4g-size4-only (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-single-4g-true-only (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-single-4g-true-size4 (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-single-8g-absent (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-single-8g-true-only (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-aggregate-20260711-single-8g-true-size8 (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-envelope-blocker-20260711-dynamic-envelope (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-envelope-blocker-20260711-dynamic-envelope-isolated (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-envelope-target-20260711-dynamic-envelope (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: dynamic-envelope-target-20260711-dynamic-envelope-isolated (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: guest-reboot-20260712-r01-guest-reboot (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: guest-reboot-20260712-r01-guest-reboot-efivar-v2 (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: host-crash-probe-20260711-host-crash (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: interrupt-mode-20260712-i01-intx (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: interrupt-mode-20260712-i01-intx-v2 (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: layout-default-20260715-esxi8-api-createvm-default-v1 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: layout-default-bios-20260715-esxi8-api-createvm-assert-bios-v2 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: layout-default-bios-20260715-esxi8-api-createvm-bios-default-v1 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: layout-default-efi-20260715-esxi8-api-createvm-assert-efi-v2 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF00-i440bx-bios (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF00-i440bx-bios (1) (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF00-i440bx-bios (2) (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF01-i440bx-efi (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF01-i440bx-efi (1)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF01-i440bx-efi (2) (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF02-acpi-efi (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF02-acpi-efi (1) (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF02-acpi-efi (2) (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF03-acpi-bios-negative (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF03-acpi-bios-negative (1) (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF04-absent-bios-default (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: LF05-absent-efi-default (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: p2p-v6-path-probe (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: rmrr-vmx-fixed (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: sriov-20260714-esxi8-sriov-igb-i350-v5-pf (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: sriov-20260714-esxi8-sriov-pf-control-v2-pf (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: sriov-20260714-esxi8-sriov-v1-pf (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: sriov-20260714-esxi8-sriov-vf-visible-v3-pf (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-edu-cy-quarantine-timeline-001-v10 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-edu-cy-quarantine-timeline-001-v11 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-edu-cy-quarantine-timeline-001-v12 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-edu-ncy-quarantine-timeline-001-v2 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-edu-ncy-quarantine-timeline-001-v4 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-edu-ncy-quarantine-timeline-001-v6
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-edu-ncy-quarantine-timeline-001-v7
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-edu-ncy-quarantine-timeline-001-v9 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-sibling-cy-quarantine-timeline-001-v10 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-sibling-cy-quarantine-timeline-001-v11 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-sibling-cy-quarantine-timeline-001-v12 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-sibling-ncy-quarantine-timeline-001-v2 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-sibling-ncy-quarantine-timeline-001-v4 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-sibling-ncy-quarantine-timeline-001-v6 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: timeline-sibling-ncy-quarantine-timeline-001-v9 (orphaned)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: vcdep-20261111-a
+      - treeitem [level=4] [selected]:
+        - button [disabled]
+        - generic: vcdep-20261111-b
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: vcdep-20261111-both
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: vmotion-baseline-20260711-vmotion (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: vmotion-blocker-20260711-vmotion (disconnected)
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: vmotion-classic-20260711-vmotion
+      - treeitem [level=4]:
+        - button [disabled]
+        - generic: vmotion-dynamic-20260711-vmotion (disconnected)
+- separator
+- main:
+  - heading [level=1]: vcdep-20261111-b
+  - button
+  - button [disabled]
+  - button
+  - button
+  - button
+  - button:
+    - text: Actions
+  - navigation:
+    - tablist:
+      - tab [selected]: Summary
+      - tab: Monitor
+      - tab: Configure
+      - tab: Permissions
+      - tab: Datastores
+      - tab: Networks
+      - tab: Snapshots
+      - tab: Updates
+  - generic: Issues and Alarms
+  - generic: There is no network assigned to this virtual machine.
+  - button:
+    - text: Actions
+  - generic: Guest OS
+  - generic: Powered Off
+  - button: Launch Remote Console
+  - button:
+  - button [disabled]: Launch Web Console
+  - generic: Virtual Machine Details
+  - button:
+    - text: Actions
+  - table:
+    - row:
+      - cell: Power Status
+      - cell:
+        - generic: Powered Off
+    - row:
+      - cell: Guest OS
+      - cell: Other 5.x Linux (64-bit)
+    - row:
+      - cell: VMware Tools
+      - cell:
+        - text: Not running, not installed
+        - button:
+    - row:
+      - cell: DNS Name
+      - cell
+    - row:
+      - cell: IP Addresses
+      - cell
+    - row:
+      - cell: Encryption
+      - cell: Not encrypted
+  - generic: Usage
+  - paragraph: "Last updated: 11/11/26, 9:40 AM"
+  - list:
+    - text: CPU
+    - text: 0 MHz used
+    - text: Memory
+    - text: 0 MB used
+    - text: Storage
+    - text: 9.46 KB used
+  - button: View Stats
+  - generic: VM Hardware
+  - table:
+    - row:
+      - cell: CPU
+      - cell: 1 CPU(s), 0 MHz used
+    - row:
+      - cell: Memory
+      - cell: 1 GB, 0 GB memory active
+    - row:
+      - cell: Compatibility
+      - cell: ESXi 8.0 and later (VM version 20)
+  - button: Edit
+  - generic: PCI Devices
+  - generic: No PCI devices
+  - button: Edit
+  - generic: Related Objects
+  - text: Cluster
+  - link:
+    - /url: javascript:void(0)
+    - text: PCI-DirectPath-Lab
+  - text: Host
+  - link:
+    - /url: javascript:void(0)
+    - text: 172.31.91.10
+  - text: Storage
+  - link:
+    - /url: javascript:void(0)
+    - text: pci-mmio-local
+  - generic: Tags
+  - generic: No tags assigned
+  - button: Assign
+  - generic: Notes
+  - generic: No notes assigned
+  - button: Add
+  - generic: Storage Policies
+  - generic: VM Storage Policies
+  - text: VM Storage Policy Compliance
+  - generic: "--"
+  - generic: Last Checked Date
+  - generic: VM Replication Groups
+  - button: Check Compliance
+  - generic: Custom Attributes
+  - generic: No custom attributes assigned
+  - button: Add
+  - generic: Snapshots
+  - generic: No snapshot taken
+  - button: Manage
+  - generic: Compute Policies
+  - button: View all policies
+  - generic: CPU Topology
+  - text: CPU topology
+  - button:
+  - generic: Assigned at power on
+  - text: vCPUs
+  - generic: "1"
+  - text: Cores per socket
+  - button:
+  - generic: Assigned at power on
+  - text: Threads per core
+  - generic: "1"
+  - text: NUMA nodes
+  - button:
+  - generic: Assigned at power on
+  - button: Edit
+  - button:
+    - generic: Settings
+- separator
+- button [expanded]:
+- tablist:
+  - tab [selected]: Recent Tasks
+  - tab: Alarms
+- tabpanel:
+  - grid:
+    - rowgroup:
+      - row:
+        - columnheader:
+          - button: Task Name
+          - button:
+          - button
+          - generic: Use left or right key to resize the column
+        - columnheader:
+          - button: Target
+          - button:
+          - button
+          - generic: Use left or right key to resize the column
+        - columnheader:
+          - button: Status
+          - button:
+          - button
+          - generic: Use left or right key to resize the column
+        - columnheader:
+          - button: Details
+          - button:
+          - button
+          - generic: Use left or right key to resize the column
+        - columnheader:
+          - button: Initiator
+          - button:
+          - button
+          - generic: Use left or right key to resize the column
+        - columnheader:
+          - button: Queued For
+          - button:
+          - button
+          - generic: Use left or right key to resize the column
+        - columnheader:
+          - button:
+            - text: Start Time
+          - button:
+          - button
+          - generic: Use left or right key to resize the column
+        - columnheader:
+          - button: Completion Time
+          - button:
+          - button
+          - generic: Use left or right key to resize the column
+        - columnheader:
+          - button: Server
+          - button:
+    - rowgroup:
+      - row:
+        - gridcell:
+          - generic: Download patch definitions
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+        - gridcell:
+          - text: Queued
+        - gridcell
+        - gridcell:
+          - generic: VMware vSphere Lifecycle Manager Update Download
+        - gridcell
+        - gridcell
+        - gridcell
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+    - rowgroup:
+      - row:
+        - gridcell:
+          - generic: Scheduled hardware compatibility check
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+        - gridcell:
+          - text: Queued
+        - gridcell
+        - gridcell:
+          - generic: VMware vSphere Lifecycle Manager HCL Validation
+        - gridcell
+        - gridcell
+        - gridcell
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+    - rowgroup:
+      - row:
+        - gridcell:
+          - generic: Download patch definitions
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+        - gridcell:
+          - text: Queued
+        - gridcell
+        - gridcell:
+          - generic: VMware vSphere Lifecycle Manager Update Download
+        - gridcell
+        - gridcell
+        - gridcell
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+    - rowgroup:
+      - row:
+        - gridcell:
+          - generic: Reconfigure virtual machine
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: vcdep-20261111-a
+        - gridcell:
+          - text: Completed
+        - gridcell:
+          - generic: Reconfiguring Virtual Machine on destination host
+        - gridcell:
+          - generic: VSPHERE.LOCAL\Administrator
+        - gridcell:
+          - generic: 38 ms
+        - gridcell:
+          - generic: 11/11/2026, 9:38:07 AM
+        - gridcell:
+          - generic: 11/11/2026, 9:38:09 AM
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+    - rowgroup:
+      - row:
+        - gridcell:
+          - generic: Refresh PCI passthrough device information
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 172.31.91.10
+        - gridcell:
+          - text: Completed
+        - gridcell
+        - gridcell:
+          - generic: VSPHERE.LOCAL\Administrator
+        - gridcell:
+          - generic: 25 ms
+        - gridcell:
+          - generic: 11/11/2026, 9:33:20 AM
+        - gridcell:
+          - generic: 11/11/2026, 9:33:20 AM
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+    - rowgroup:
+      - row:
+        - gridcell:
+          - generic: Update PCI passthrough configuration
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 172.31.91.10
+        - gridcell:
+          - text: Completed
+        - gridcell
+        - gridcell:
+          - generic: VSPHERE.LOCAL\Administrator
+        - gridcell:
+          - generic: 40 ms
+        - gridcell:
+          - generic: 11/11/2026, 9:33:19 AM
+        - gridcell:
+          - generic: 11/11/2026, 9:33:20 AM
+        - gridcell:
+          - link:
+            - /url: javascript:void(0)
+            - text: 192.168.91.131
+  - button: Manage Columns
+  - combobox
+  - link:
+    - /url: javascript:void(0)
+    - text: More Tasks
+  - generic: 6 items
+- dialog "Edit Settings vcdep-20261111-b":
+  - generic: Beginning of Modal Content
+  - heading "Edit Settings" [level=1]
+  - heading "vcdep-20261111-b" [level=2]
+  - button "Close":
+  - tablist:
+    - tab "Virtual Hardware" [selected]
+    - tab "VM Options"
+    - tab "Advanced Parameters"
+  - tabpanel "Virtual Hardware":
+    - button "Add New Device":
+      - text: Add New Device
+    - button:
+      - generic: CPU
+      - combobox
+      - button:
+    - button:
+      - generic: Memory *
+      - textbox: "768"
+      - button:
+      - combobox
+    - button [expanded] [active]:
+      - generic: New PCI device *
+      - generic: 0000:02:01.1 | Intel Corporation 82574L Gigabit Network Connection
+      - button:
+    - region "3. New PCI device * 0000:02:01.1 | Intel Corporation 82574L Gigabit Network Connection More actions for New PCI device":
+      - img "Info":
+      - generic: "Note: Some virtual machine operations are unavailable when PCI/PCIe passthrough devices are present. Consult user guide for virtual machine operation limitations with PCI/PCIe passthrough devices."
+      - separator
+      - generic: Device
+      - text: 0000:02:01.1 | 82574L Gigabit Network Connection
+      - button "Remove"
+      - generic: Access Type
+      - generic: DirectPath IO
+    - button:
+      - generic: Video card
+      - combobox
+    - button:
+      - generic: Security Devices
+      - generic: Not Configured
+    - button:
+      - generic: Other
+      - generic: Additional Hardware
+  - button "Cancel"
+  - button "OK"
+  - generic: End of Modal Content
+- generic: Press Space to move the item with keyboard, Space to drop it on valid target and Escape to cancel the operation.

@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+"""Prepare and collect a vCenter UI dependency experiment; never simulate UI actions."""
+import argparse
+import json
+from pathlib import Path
+import re
+import ssl
+import time
+
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim, vmodl
+from esxi_passthru_capability import EsxiSsh, caveat_field, utc_now
+import test_esxi_owner_activation as owner
+from test_esxi_dependency_interaction import task_record, vm_state, vm_logs
+
+OUT = Path("/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/20261111-vcenter8-dependency-ui-v1")
+TARGETS = ["0000:02:01.0", "0000:02:01.1"]
+NAMES = ["vcdep-20261111-a", "vcdep-20261111-b", "vcdep-20261111-both"]
+FOLDER = "PCI-dependency-UI-20261111"
+
+
+def save(name, value):
+    (OUT / name).write_text(json.dumps(value, indent=2, default=str) + "\n")
+
+
+def pci_state(host):
+    return [{"id": d.id, "capable": d.passthruCapable, "enabled": d.passthruEnabled,
+             "active": d.passthruActive, "dependentDevice": d.dependentDevice}
+            for d in host.configManager.pciPassthruSystem.pciPassthruInfo if d.id in TARGETS]
+
+
+def collect(content, host, ssh, label):
+    vms = [v for v in owner.inventory(content, vim.VirtualMachine) if v.name in NAMES]
+    task_refs = {t._moId: t for t in content.taskManager.recentTask}
+    for vm in vms:
+        task_refs.update({t._moId: t for t in vm.recentTask})
+    tasks, expired = [], []
+    for task in task_refs.values():
+        try:
+            info = task.info
+        except vmodl.fault.ManagedObjectNotFound:
+            expired.append(task._moId)
+            continue
+        if info.entityName not in NAMES and "passthru" not in info.descriptionId.lower():
+            continue
+        tasks.append({"id": task._moId, "entity": info.entityName, "operation": info.descriptionId,
+                      "state": str(info.state), "queueTime": str(info.queueTime),
+                      "startTime": str(info.startTime), "completeTime": str(info.completeTime),
+                      "fault": owner.fault_snapshot(info.error) if info.error else None})
+    data = {"at": utc_now(), "vcenter": str(content.about),
+            "host": {"id": host._moId, "name": host.name, "connectionState": str(host.runtime.connectionState),
+                     "bootTime": str(host.runtime.bootTime), "uuid": host.hardware.systemInfo.uuid,
+                     "product": str(host.config.product)},
+            "pci": pci_state(host), "vms": [vm_state(v) for v in vms],
+            "tasks": tasks, "expiredTaskReferences": expired}
+    save(label + ".json", data)
+    for vm in vms:
+        path = owner.vm_log_path(vm)
+        if path:
+            root = path.rsplit("/", 1)[0]
+            import shlex
+            for suffix, remote in [("vmware.log", path), ("vmx.txt", root + "/" + vm.name + ".vmx")]:
+                r = ssh.run("cat " + shlex.quote(remote), check=False, timeout=30)
+                (OUT / f"{label}-{vm.name}-{suffix}").write_text(r.stdout)
+    for log in ["hostd", "vmkernel"]:
+        r = ssh.run("tail -n 1500 /var/run/log/" + log + ".log", check=False)
+        (OUT / (label + "-" + log + ".log")).write_text(r.stdout)
+    r = ssh.run("esxcli hardware pci list", check=False)
+    (OUT / (label + "-pci.txt")).write_text(r.stdout)
+    print(json.dumps({"label": label, "host": data["host"]["connectionState"], "pci": data["pci"],
+                      "vms": [{"id": v["id"], "name": v["name"], "powerState": v["powerState"], "pciCount": len(v.get("devices", []))} for v in data["vms"]],
+                      "tasks": [{"entity": t["entity"], "operation": t["operation"], "state": t["state"]} for t in tasks]}))
+    return data
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action", choices=["prepare", "collect", "api-matrix", "cleanup"])
+    parser.add_argument("--label", default="snapshot")
+    parser.add_argument("--resume-empty-folder", action="store_true")
+    args = parser.parse_args()
+    if not re.fullmatch(r"[a-z0-9-]+", args.label):
+        raise ValueError("Invalid evidence label")
+    si = SmartConnect(host="192.168.91.131", user=caveat_field("vcsa803-codex-credentials", "SSO Username"),
+                      pwd=caveat_field("vcsa803-codex-credentials", "SSO Password"),
+                      sslContext=ssl._create_unverified_context())
+    ssh = EsxiSsh("172.31.91.10", caveat_field("esxi8-auto-codex-credentials", "Password"), retries=1)
+    try:
+        content = si.RetrieveContent()
+        hosts = [h for h in owner.inventory(content, vim.HostSystem) if h.name == "172.31.91.10"]
+        if len(hosts) != 1:
+            raise RuntimeError("Expected one target host")
+        host = hosts[0]
+        if host.runtime.connectionState != "connected" or host.hardware.systemInfo.uuid != "6a4e818a-51ce-7d7f-a21f-000c29abaf6d" or host.config.product.build != "24280767":
+            raise RuntimeError("Live target host identity or build mismatch")
+        state = pci_state(host)
+        if len(state) != 2 or {p["dependentDevice"] for p in state} != {"0000:01:00.0"}:
+            raise RuntimeError("Shared dependency not observed")
+        if args.action == "prepare":
+            if any(v.name in NAMES for v in owner.inventory(content, vim.VirtualMachine)):
+                raise RuntimeError("Run VM names already exist; refusing to overwrite")
+            for vm in host.vm:
+                if vm.runtime.powerState == "poweredOn" and vm.config:
+                    if any(isinstance(d, vim.vm.device.VirtualPCIPassthrough) for d in vm.config.hardware.device):
+                        raise RuntimeError("An existing running VM uses passthrough")
+            collect(content, host, ssh, "prepare-before")
+            system = host.configManager.pciPassthruSystem
+            system.UpdatePassthruConfig(config=[vim.host.PciPassthruConfig(id=b, passthruEnabled=False, applyNow=True) for b in TARGETS])
+            deadline = time.monotonic() + 30
+            while any(p["enabled"] or p["active"] for p in pci_state(host)):
+                if time.monotonic() > deadline:
+                    raise TimeoutError("Host reset baseline did not become inactive")
+                time.sleep(1)
+            dc = next(d for d in owner.inventory(content, vim.Datacenter) if d._moId == "datacenter-3")
+            folders = [c for c in dc.vmFolder.childEntity if c.name == FOLDER]
+            if folders:
+                recorded = json.loads((OUT / "folder.json").read_text())
+                if not args.resume_empty_folder or len(folders) != 1 or folders[0]._moId != recorded["id"] or folders[0].childEntity:
+                    raise RuntimeError("Run folder exists and cannot be safely resumed")
+                folder = folders[0]
+            else:
+                folder = dc.vmFolder.CreateFolder(FOLDER)
+                save("folder.json", {"name": folder.name, "id": folder._moId})
+            ds = next(d for d in host.datastore if d.name == "pci-mmio-local")
+            if not ds.summary.accessible:
+                raise RuntimeError("Local datastore unavailable")
+            for name in NAMES:
+                spec = vim.vm.ConfigSpec(name=name, guestId="other5xLinux64Guest", version="vmx-20",
+                                        files=vim.vm.FileInfo(vmPathName=f"[pci-mmio-local] {name}"),
+                                        numCPUs=1, memoryMB=768, firmware="efi", memoryReservationLockedToMax=True)
+                task, vm = task_record(folder.CreateVM_Task(config=spec, pool=host.parent.resourcePool, host=host))
+                save("create-" + name + ".json", task)
+                if task["state"] != "success":
+                    raise RuntimeError("CreateVM failed")
+            collect(content, host, ssh, "prepare-after")
+        elif args.action == "collect":
+            collect(content, host, ssh, args.label)
+        elif args.action == "api-matrix":
+            vms = {v.name: v for v in owner.inventory(content, vim.VirtualMachine) if v.name in NAMES}
+            if set(vms) != set(NAMES):
+                raise RuntimeError("Three prepared VMs required")
+            if any(v.runtime.powerState != "poweredOff" or any(isinstance(d, vim.vm.device.VirtualPCIPassthrough) for d in v.config.hardware.device) for v in vms.values()):
+                raise RuntimeError("API matrix requires powered-off VMs without PCI devices")
+            if any(p["enabled"] or p["active"] for p in pci_state(host)):
+                raise RuntimeError("API matrix requires the disabled host baseline")
+            system = host.configManager.pciPassthruSystem
+            observation = {"at": utc_now(), "surface": "vCenter SOAP API", "vcenter": str(content.about), "steps": []}
+            unknown = False
+
+            def record_power(vm, label, on=True):
+                before = {n: str(v.runtime.powerState) for n, v in vms.items()}
+                task, _ = task_record(vm.PowerOnVM_Task(host=host) if on else vm.PowerOffVM_Task())
+                step = {"label": label, "peerPowerStatesBefore": before, "task": task, "after": vm_state(vm)}
+                save(label + ".json", step)
+                path = owner.vm_log_path(vm)
+                import shlex
+                if path:
+                    r = ssh.run("cat " + shlex.quote(path), check=False, timeout=45)
+                    (OUT / (label + "-vmware.log")).write_text(r.stdout)
+                observation["steps"].append(step)
+                print(label + ": " + task["state"], flush=True)
+
+            try:
+                before = pci_state(host)
+                system.UpdatePassthruConfig(config=[vim.host.PciPassthruConfig(id=TARGETS[0], passthruEnabled=True, applyNow=True)])
+                deadline = time.monotonic() + 30
+                while not all(p["active"] for p in pci_state(host)):
+                    if time.monotonic() > deadline:
+                        raise TimeoutError("Host activation not confirmed")
+                    time.sleep(1)
+                save("api-01-host-enable-a.json", {"request": [TARGETS[0]], "before": before, "after": pci_state(host)})
+                available = {p.pciDevice.id: p for p in host.parent.environmentBrowser.QueryConfigTarget(host=host).pciPassthrough}
+                config_ok = True
+                for name, bdfs in zip(NAMES, [TARGETS[:1], TARGETS[1:], TARGETS]):
+                    vm = vms[name]
+                    before_vm = vm_state(vm)
+                    changes = [vim.vm.device.VirtualDeviceSpec(operation="add", device=owner.static_device(available[bdf], -100-i)) for i, bdf in enumerate(bdfs)]
+                    task, _ = task_record(vm.ReconfigVM_Task(spec=vim.vm.ConfigSpec(deviceChange=changes)))
+                    step = {"label": "api-02-config-" + name, "requestedBdfs": bdfs, "before": before_vm, "task": task, "after": vm_state(vm)}
+                    save(step["label"] + ".json", step)
+                    observation["steps"].append(step)
+                    config_ok = config_ok and task["state"] == "success"
+                    print(step["label"] + ": " + task["state"], flush=True)
+                if config_ok:
+                    a, b, both = [vms[n] for n in NAMES]
+                    record_power(a, "api-03-a-first")
+                    record_power(b, "api-04-b-after-a-attempt")
+                    for v in (a, b):
+                        if v.runtime.powerState == "poweredOn": record_power(v, "api-05-off-" + v.name, False)
+                    record_power(b, "api-06-b-first")
+                    record_power(a, "api-07-a-after-b-attempt")
+                    for v in (a, b):
+                        if v.runtime.powerState == "poweredOn": record_power(v, "api-08-off-" + v.name, False)
+                    record_power(both, "api-09-same-vm-both")
+                observation["status"] = "OBSERVED" if config_ok else "OBSERVED_CONFIG_DENIAL"
+            except TimeoutError as error:
+                unknown = True
+                observation["status"] = "UNKNOWN_TIMEOUT"
+                observation["error"] = str(error)
+                raise
+            except Exception as error:
+                unknown = True
+                observation["status"] = "INCOMPLETE_UNEXPECTED_ERROR"
+                observation["error"] = {"type": type(error).__name__, "message": str(error)}
+                raise
+            finally:
+                save("api-matrix-result.json", observation)
+                collect(content, host, ssh, "api-matrix-end")
+                if not unknown:
+                    for name, vm in vms.items():
+                        if vm.runtime.powerState == "poweredOn":
+                            task, _ = task_record(vm.PowerOffVM_Task())
+                            save("api-restore-off-" + name + ".json", task)
+                            if task["state"] != "success": raise RuntimeError("Restore power-off failed")
+                        changes = [vim.vm.device.VirtualDeviceSpec(operation="remove", device=d) for d in vm.config.hardware.device if isinstance(d, vim.vm.device.VirtualPCIPassthrough)]
+                        if changes:
+                            task, _ = task_record(vm.ReconfigVM_Task(spec=vim.vm.ConfigSpec(deviceChange=changes)))
+                            save("api-restore-empty-" + name + ".json", task)
+                            if task["state"] != "success": raise RuntimeError("Restore empty VM failed")
+                    system.UpdatePassthruConfig(config=[vim.host.PciPassthruConfig(id=bdf, passthruEnabled=False, applyNow=True) for bdf in TARGETS])
+                    deadline = time.monotonic() + 30
+                    while any(p["enabled"] or p["active"] for p in pci_state(host)):
+                        if time.monotonic() > deadline:
+                            raise TimeoutError("UI baseline disable has not been confirmed")
+                        time.sleep(1)
+                    collect(content, host, ssh, "ui-baseline-restored")
+        else:
+            cleanup_label = "cleanup" if args.label == "snapshot" else args.label
+            collect(content, host, ssh, "before-" + cleanup_label)
+            recorded = json.loads((OUT / "prepare-after.json").read_text())
+            expected_ids = {v["id"] for v in recorded["vms"]}
+            folder_info = json.loads((OUT / "folder.json").read_text())
+            owned = [v for v in owner.inventory(content, vim.VirtualMachine) if v._moId in expected_ids]
+            if any(v.name not in NAMES or v.parent._moId != folder_info["id"] for v in owned):
+                raise RuntimeError("Recorded test VM identity or folder has changed")
+            for vm in owned:
+                if vm.runtime.powerState == "poweredOn":
+                    task, _ = task_record(vm.PowerOffVM_Task())
+                    save("cleanup-off-" + vm.name + ".json", task)
+                    if task["state"] != "success":
+                        raise RuntimeError("Power off failed")
+                name = vm.name
+                task, _ = task_record(vm.Destroy_Task())
+                save("cleanup-" + name + ".json", task)
+            folder = vim.Folder(folder_info["id"], si._stub)
+            if folder.name != FOLDER:
+                raise RuntimeError("Recorded test folder name has changed")
+            if not folder.childEntity:
+                task, _ = task_record(folder.Destroy_Task())
+                save("cleanup-folder.json", task)
+            for vm in host.vm:
+                if vm.runtime.powerState == "poweredOn" and vm.config:
+                    if any(isinstance(d, vim.vm.device.VirtualPCIPassthrough) for d in vm.config.hardware.device):
+                        raise RuntimeError("A running passthrough VM prevents resetting host baseline")
+            system = host.configManager.pciPassthruSystem
+            system.UpdatePassthruConfig(config=[vim.host.PciPassthruConfig(id=b, passthruEnabled=False, applyNow=True) for b in TARGETS])
+            deadline = time.monotonic() + 30
+            while any(p["enabled"] or p["active"] for p in pci_state(host)):
+                if time.monotonic() > deadline:
+                    raise TimeoutError("Host baseline reset not confirmed")
+                time.sleep(1)
+            collect(content, host, ssh, "after-" + cleanup_label)
+    finally:
+        Disconnect(si)
+
+
+if __name__ == "__main__":
+    main()

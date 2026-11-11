@@ -1,0 +1,72 @@
+{
+  "at": "2026-11-11T02:08:53.048379+00:00",
+  "vcenter": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware vCenter Server',\n   fullName = 'VMware vCenter Server 8.0.3 build-24674346',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '00500',\n   build = '24674346',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'linux-x64',\n   productLineId = 'vpx',\n   apiType = 'VirtualCenter',\n   apiVersion = '8.0.3.0',\n   instanceUuid = 'dcbfc99c-a5d9-46f3-809d-edb52800b3d7',\n   licenseProductName = 'VMware VirtualCenter Server',\n   licenseProductVersion = '8.0'\n}",
+  "host": {
+    "id": "host-13",
+    "name": "172.31.91.10",
+    "connectionState": "connected",
+    "bootTime": "2026-11-10 16:05:56.131595+00:00",
+    "uuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "product": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}"
+  },
+  "pci": [
+    {
+      "id": "0000:02:01.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:02:01.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    }
+  ],
+  "vms": [],
+  "tasks": [
+    {
+      "id": "task-7151",
+      "entity": "172.31.91.10",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "queueTime": "2026-11-11 02:08:48.072317+00:00",
+      "startTime": "2026-11-11 02:08:48.089236+00:00",
+      "completeTime": "2026-11-11 02:08:50.153935+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7147",
+      "entity": "vcdep-20261111-both",
+      "operation": "VirtualMachine.destroy",
+      "state": "success",
+      "queueTime": "2026-11-11 02:02:40.934510+00:00",
+      "startTime": "2026-11-11 02:02:40.957582+00:00",
+      "completeTime": "2026-11-11 02:02:41.764324+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7148",
+      "entity": "vcdep-20261111-a",
+      "operation": "VirtualMachine.destroy",
+      "state": "success",
+      "queueTime": "2026-11-11 02:02:42.120928+00:00",
+      "startTime": "2026-11-11 02:02:42.133651+00:00",
+      "completeTime": "2026-11-11 02:02:43.121362+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7149",
+      "entity": "vcdep-20261111-b",
+      "operation": "VirtualMachine.destroy",
+      "state": "success",
+      "queueTime": "2026-11-11 02:02:43.343792+00:00",
+      "startTime": "2026-11-11 02:02:43.378182+00:00",
+      "completeTime": "2026-11-11 02:02:45.153216+00:00",
+      "fault": null
+    }
+  ],
+  "expiredTaskReferences": []
+}

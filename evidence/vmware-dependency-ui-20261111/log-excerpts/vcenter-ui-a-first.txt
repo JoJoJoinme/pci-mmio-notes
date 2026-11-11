@@ -1,0 +1,23 @@
+Source run: 20261111-vcenter8-dependency-ui-v1
+Source file: ui-a-first-on-vcdep-20261111-a-vmware.log
+Source SHA-256: 812df79032038b6794833e64bb1dcd86ce40c69151d0d31efb5a113eaf9df168
+Line numbers refer to the retained original file.
+
+--- original lines 213-219 ---
+213: 2026-11-11T01:47:08.799Z In(05) vmx - DICT    monitor.phys_bits_used = "45"
+214: 2026-11-11T01:47:08.799Z In(05) vmx - DICT             cleanShutdown = "TRUE"
+215: 2026-11-11T01:47:08.799Z In(05) vmx - DICT              softPowerOff = "FALSE"
+216: 2026-11-11T01:47:08.799Z In(05) vmx - DICT           pciPassthru0.id = "00000:002:01.0"
+217: 2026-11-11T01:47:08.799Z In(05) vmx - DICT     pciPassthru0.deviceId = "0x10d3"
+218: 2026-11-11T01:47:08.799Z In(05) vmx - DICT     pciPassthru0.vendorId = "0x8086"
+219: 2026-11-11T01:47:08.799Z In(05) vmx - DICT     pciPassthru0.systemId = "6a4e818a-51ce-7d7f-a21f-000c29abaf6d"
+
+--- original lines 558-564 ---
+558: 2026-11-11T01:47:13.099Z In(05) vmx - PCIPassthru: Device has PCI Express Cap Version 1(size 36)
+559: 2026-11-11T01:47:13.099Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:02:01.0 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1
+560: 2026-11-11T01:47:13.103Z No(00) vmx - ConfigDB: Setting vmci0.id = "-1719995224"
+561: 2026-11-11T01:47:13.104Z No(00) vmx - PowerOnTiming: Module DevicePowerOn took 4049005 us
+562: 2026-11-11T01:47:13.105Z In(05) vmx - GuestLib Generated SessionId 1939030185279002472
+563: 2026-11-11T01:47:13.106Z In(05) vmx - WORKER: Creating new group with maxThreads=1 (16)
+564: 2026-11-11T01:47:13.106Z In(05) vmx - DISKUTIL: (null) : max toolsVersion = 0, type = 0
+

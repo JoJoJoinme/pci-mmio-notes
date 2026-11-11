@@ -1,0 +1,203 @@
+{
+  "at": "2026-11-11T07:31:53.724327+00:00",
+  "request": {
+    "ids": [
+      "0000:02:01.0",
+      "0000:02:01.1"
+    ],
+    "passthruEnabled": true,
+    "applyNow": true
+  },
+  "before": {
+    "at": "2026-11-11T07:31:52.850120+00:00",
+    "endpointProduct": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+    "hostProduct": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+    "hostUuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "hostBootTime": "2026-11-11 07:22:42.208328+00:00",
+    "pci": [
+      {
+        "id": "0000:02:01.0",
+        "capable": true,
+        "enabled": false,
+        "active": false,
+        "dependentDevice": "0000:01:00.0"
+      },
+      {
+        "id": "0000:02:01.1",
+        "capable": true,
+        "enabled": false,
+        "active": false,
+        "dependentDevice": "0000:01:00.0"
+      }
+    ],
+    "native": {
+      "0000:02:01.0": {
+        "Configured Owner": "VMkernel",
+        "Current Owner": "VMkernel",
+        "Vendor ID": "0x8086",
+        "Device ID": "0x10d3",
+        "Module Name": "ne1000",
+        "Dependent Device Address": "0000:01:00.0",
+        "Reset Method": "Bridge reset",
+        "FPT Sharable": "true"
+      },
+      "0000:02:01.1": {
+        "Configured Owner": "VMkernel",
+        "Current Owner": "VMkernel",
+        "Vendor ID": "0x8086",
+        "Device ID": "0x10d3",
+        "Module Name": "ne1000",
+        "Dependent Device Address": "0000:01:00.0",
+        "Reset Method": "Bridge reset",
+        "FPT Sharable": "true"
+      }
+    }
+  },
+  "samples": [
+    {
+      "at": "2026-11-11T07:31:55.433430+00:00",
+      "pci": [
+        {
+          "id": "0000:02:01.0",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        },
+        {
+          "id": "0000:02:01.1",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        }
+      ]
+    },
+    {
+      "at": "2026-11-11T07:31:56.479264+00:00",
+      "pci": [
+        {
+          "id": "0000:02:01.0",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        },
+        {
+          "id": "0000:02:01.1",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        }
+      ]
+    },
+    {
+      "at": "2026-11-11T07:31:57.520620+00:00",
+      "pci": [
+        {
+          "id": "0000:02:01.0",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        },
+        {
+          "id": "0000:02:01.1",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        }
+      ]
+    },
+    {
+      "at": "2026-11-11T07:31:58.618234+00:00",
+      "pci": [
+        {
+          "id": "0000:02:01.0",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        },
+        {
+          "id": "0000:02:01.1",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        }
+      ]
+    },
+    {
+      "at": "2026-11-11T07:32:00.580576+00:00",
+      "pci": [
+        {
+          "id": "0000:02:01.0",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        },
+        {
+          "id": "0000:02:01.1",
+          "capable": true,
+          "enabled": true,
+          "active": true,
+          "dependentDevice": "0000:01:00.0"
+        }
+      ]
+    }
+  ],
+  "callOutcome": "success",
+  "after": {
+    "at": "2026-11-11T07:32:03.328302+00:00",
+    "endpointProduct": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+    "hostProduct": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+    "hostUuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "hostBootTime": "2026-11-11 07:22:42.208328+00:00",
+    "pci": [
+      {
+        "id": "0000:02:01.0",
+        "capable": true,
+        "enabled": true,
+        "active": true,
+        "dependentDevice": "0000:01:00.0"
+      },
+      {
+        "id": "0000:02:01.1",
+        "capable": true,
+        "enabled": true,
+        "active": true,
+        "dependentDevice": "0000:01:00.0"
+      }
+    ],
+    "native": {
+      "0000:02:01.0": {
+        "Configured Owner": "VM Passthru",
+        "Current Owner": "VM Passthru",
+        "Vendor ID": "0x8086",
+        "Device ID": "0x10d3",
+        "Module Name": "pciPassthru",
+        "Dependent Device Address": "0000:01:00.0",
+        "Reset Method": "Bridge reset",
+        "FPT Sharable": "true"
+      },
+      "0000:02:01.1": {
+        "Configured Owner": "VM Passthru",
+        "Current Owner": "VM Passthru",
+        "Vendor ID": "0x8086",
+        "Device ID": "0x10d3",
+        "Module Name": "pciPassthru",
+        "Dependent Device Address": "0000:01:00.0",
+        "Reset Method": "Bridge reset",
+        "FPT Sharable": "true"
+      }
+    }
+  },
+  "changedIds": [
+    "0000:02:01.0",
+    "0000:02:01.1"
+  ]
+}

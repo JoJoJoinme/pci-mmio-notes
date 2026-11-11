@@ -1,0 +1,23 @@
+VMware_bootbank_esx-ui_2.18.0-23593406
+   Name: esx-ui
+   Version: 2.18.0-23593406
+   Type: bootbank
+   Vendor: VMware
+   Acceptance Level: VMwareCertified
+   Summary: VMware Host Client
+   Description: An embedded web UI for ESXi
+   ReferenceURLs: 
+   Creation Date: 2024-04-01
+   Depends: esx-version >= 5.0.0
+   Conflicts: 
+   Replaces: 
+   Provides: 
+   Maintenance Mode Required: False
+   Hardware Platforms Required: 
+   Live Install Allowed: True
+   Live Remove Allowed: True
+   Stateless Ready: True
+   Overlay: False
+   Tags: 
+   Payloads: esx-ui
+   Platforms: host

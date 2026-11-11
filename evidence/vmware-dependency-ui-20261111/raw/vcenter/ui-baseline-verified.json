@@ -1,0 +1,256 @@
+{
+  "at": "2026-11-10T17:51:49.919050+00:00",
+  "vcenter": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware vCenter Server',\n   fullName = 'VMware vCenter Server 8.0.3 build-24674346',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '00500',\n   build = '24674346',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'linux-x64',\n   productLineId = 'vpx',\n   apiType = 'VirtualCenter',\n   apiVersion = '8.0.3.0',\n   instanceUuid = 'dcbfc99c-a5d9-46f3-809d-edb52800b3d7',\n   licenseProductName = 'VMware VirtualCenter Server',\n   licenseProductVersion = '8.0'\n}",
+  "host": {
+    "id": "host-13",
+    "name": "172.31.91.10",
+    "connectionState": "connected",
+    "bootTime": "2026-11-10 16:05:56.131595+00:00",
+    "uuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "product": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}"
+  },
+  "pci": [
+    {
+      "id": "0000:02:01.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:02:01.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    }
+  ],
+  "vms": [
+    {
+      "name": "vcdep-20261111-both",
+      "id": "vm-4032",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] vcdep-20261111-both/vcdep-20261111-both.vmx",
+      "memoryMB": 768,
+      "devices": []
+    },
+    {
+      "name": "vcdep-20261111-a",
+      "id": "vm-4030",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] vcdep-20261111-a/vcdep-20261111-a.vmx",
+      "memoryMB": 768,
+      "devices": []
+    },
+    {
+      "name": "vcdep-20261111-b",
+      "id": "vm-4031",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] vcdep-20261111-b/vcdep-20261111-b.vmx",
+      "memoryMB": 768,
+      "devices": []
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-7128",
+      "entity": "172.31.91.10",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "queueTime": "2026-11-10 17:50:23.031542+00:00",
+      "startTime": "2026-11-10 17:50:23.047427+00:00",
+      "completeTime": "2026-11-10 17:50:25.081929+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7110",
+      "entity": "172.31.91.10",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "queueTime": "2026-11-10 17:45:53.964115+00:00",
+      "startTime": "2026-11-10 17:45:54.009199+00:00",
+      "completeTime": "2026-11-10 17:45:54.395114+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7114",
+      "entity": "172.31.91.10",
+      "operation": "host.PciPassthruSystem.updatePassthruConfig",
+      "state": "success",
+      "queueTime": "2026-11-10 17:48:51.571341+00:00",
+      "startTime": "2026-11-10 17:48:51.603282+00:00",
+      "completeTime": "2026-11-10 17:48:53.130253+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7115",
+      "entity": "vcdep-20261111-a",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "queueTime": "2026-11-10 17:48:53.764381+00:00",
+      "startTime": "2026-11-10 17:48:53.825469+00:00",
+      "completeTime": "2026-11-10 17:48:55.118935+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7116",
+      "entity": "vcdep-20261111-b",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "queueTime": "2026-11-10 17:48:56.310582+00:00",
+      "startTime": "2026-11-10 17:48:56.330641+00:00",
+      "completeTime": "2026-11-10 17:48:58.592240+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7117",
+      "entity": "vcdep-20261111-both",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "queueTime": "2026-11-10 17:48:59.888015+00:00",
+      "startTime": "2026-11-10 17:48:59.907340+00:00",
+      "completeTime": "2026-11-10 17:49:01.935217+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7118",
+      "entity": "vcdep-20261111-a",
+      "operation": "VirtualMachine.powerOn",
+      "state": "success",
+      "queueTime": "2026-11-10 17:49:02.342887+00:00",
+      "startTime": "2026-11-10 17:49:02.364266+00:00",
+      "completeTime": "2026-11-10 17:49:09.826737+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7119",
+      "entity": "vcdep-20261111-b",
+      "operation": "VirtualMachine.powerOn",
+      "state": "error",
+      "queueTime": "2026-11-10 17:49:11.067371+00:00",
+      "startTime": "2026-11-10 17:49:11.087315+00:00",
+      "completeTime": "2026-11-10 17:49:23.366668+00:00",
+      "fault": {
+        "type": "vim.fault.GenericVmConfigFault",
+        "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = 'Module DevicePowerOn power on failed. ',\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = 'Module DevicePowerOn power on failed. '\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = 'Module DevicePowerOn power on failed. '\n}",
+        "faultMessages": [
+          {
+            "key": "msg.moduletable.powerOnFailed",
+            "message": "Module DevicePowerOn power on failed. "
+          },
+          {
+            "key": "msg.vmx.poweron.failed",
+            "message": "Failed to start the virtual machine."
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-7120",
+      "entity": "vcdep-20261111-a",
+      "operation": "VirtualMachine.powerOff",
+      "state": "success",
+      "queueTime": "2026-11-10 17:49:23.847459+00:00",
+      "startTime": "2026-11-10 17:49:23.864153+00:00",
+      "completeTime": "2026-11-10 17:49:28.881190+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7121",
+      "entity": "vcdep-20261111-b",
+      "operation": "VirtualMachine.powerOn",
+      "state": "success",
+      "queueTime": "2026-11-10 17:49:29.489713+00:00",
+      "startTime": "2026-11-10 17:49:29.513636+00:00",
+      "completeTime": "2026-11-10 17:49:37.149691+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7122",
+      "entity": "vcdep-20261111-a",
+      "operation": "VirtualMachine.powerOn",
+      "state": "error",
+      "queueTime": "2026-11-10 17:49:38.310628+00:00",
+      "startTime": "2026-11-10 17:49:38.341672+00:00",
+      "completeTime": "2026-11-10 17:49:49.286585+00:00",
+      "fault": {
+        "type": "vim.fault.GenericVmConfigFault",
+        "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = 'Module DevicePowerOn power on failed. ',\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = 'Module DevicePowerOn power on failed. '\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = 'Module DevicePowerOn power on failed. '\n}",
+        "faultMessages": [
+          {
+            "key": "msg.moduletable.powerOnFailed",
+            "message": "Module DevicePowerOn power on failed. "
+          },
+          {
+            "key": "msg.vmx.poweron.failed",
+            "message": "Failed to start the virtual machine."
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-7123",
+      "entity": "vcdep-20261111-b",
+      "operation": "VirtualMachine.powerOff",
+      "state": "success",
+      "queueTime": "2026-11-10 17:49:50.182732+00:00",
+      "startTime": "2026-11-10 17:49:50.203919+00:00",
+      "completeTime": "2026-11-10 17:49:55.330933+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7124",
+      "entity": "vcdep-20261111-both",
+      "operation": "VirtualMachine.powerOn",
+      "state": "error",
+      "queueTime": "2026-11-10 17:49:55.959739+00:00",
+      "startTime": "2026-11-10 17:49:55.979263+00:00",
+      "completeTime": "2026-11-10 17:50:12.821083+00:00",
+      "fault": {
+        "type": "vim.fault.GenericVmConfigFault",
+        "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = 'Module DevicePowerOn power on failed. ',\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = 'Module DevicePowerOn power on failed. '\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = 'Module DevicePowerOn power on failed. '\n}",
+        "faultMessages": [
+          {
+            "key": "msg.moduletable.powerOnFailed",
+            "message": "Module DevicePowerOn power on failed. "
+          },
+          {
+            "key": "msg.vmx.poweron.failed",
+            "message": "Failed to start the virtual machine."
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-7125",
+      "entity": "vcdep-20261111-both",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "queueTime": "2026-11-10 17:50:19.474684+00:00",
+      "startTime": "2026-11-10 17:50:19.515825+00:00",
+      "completeTime": "2026-11-10 17:50:20.510924+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7126",
+      "entity": "vcdep-20261111-a",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "queueTime": "2026-11-10 17:50:20.682734+00:00",
+      "startTime": "2026-11-10 17:50:20.702135+00:00",
+      "completeTime": "2026-11-10 17:50:21.589853+00:00",
+      "fault": null
+    },
+    {
+      "id": "task-7127",
+      "entity": "vcdep-20261111-b",
+      "operation": "VirtualMachine.reconfigure",
+      "state": "success",
+      "queueTime": "2026-11-10 17:50:21.883164+00:00",
+      "startTime": "2026-11-10 17:50:21.907307+00:00",
+      "completeTime": "2026-11-10 17:50:22.917099+00:00",
+      "fault": null
+    }
+  ],
+  "expiredTaskReferences": []
+}

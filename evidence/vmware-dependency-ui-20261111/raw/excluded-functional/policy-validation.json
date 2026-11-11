@@ -1,0 +1,8 @@
+{
+  "status": "SETUP_INVALID_BOOTBANK_VOLATILE",
+  "persisted": false,
+  "effectiveNonshareable": false,
+  "usableAsDependencyEvidence": false,
+  "observedBootbank": "/tmp/_bootbankned_uov3",
+  "observation": "Rule was absent after reboot; both functions remained FPT Sharable=true and had separate dependentDevice values."
+}

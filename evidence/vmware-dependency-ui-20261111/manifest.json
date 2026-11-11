@@ -1,0 +1,2314 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-11-11T08:16:41.229641+00:00",
+  "hashAlgorithm": "SHA-256",
+  "selfExcluded": true,
+  "sourceRuns": {
+    "esxi": "20261110-esxi8-dependency-interaction-v1",
+    "vcenter": "20261111-vcenter8-dependency-ui-v1",
+    "disable": "20261111-esxi8-dependency-disable-v1",
+    "excluded-functional": "20261110-esxi8-functional-dependency-v1"
+  },
+  "note": "Hashes attest archived bytes. Source files outside this curated package are retained locally; excerpt source hashes cannot be independently recomputed from excerpts.",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 162,
+      "sha256": "61f84e07d2c27868eda4658c0fce074e0283d03a6a34ebaab51f5ac6c07b6c0c",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
+      }
+    },
+    {
+      "path": "environment.json",
+      "bytes": 1570,
+      "sha256": "8c7a554ab1b4c691085ca422e26f6a48751657ed79bfb4753703a69380a39da5",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
+      }
+    },
+    {
+      "path": "log-excerpts/esxi-ui-a-first.txt",
+      "bytes": 1652,
+      "sha256": "bf33756eec32e05eed1893e6d0bb79194a1b8d168303434f4097f0e85ba03040",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-a-first-on-dep-20261110-a-vmware.log",
+        "sourceSha256": "c441daaefb335d3dd2be5c8d410fe3fe0ff645fd898b27cc1e834976cca6d45c",
+        "sourceLineRanges": [
+          [
+            192,
+            198
+          ],
+          [
+            595,
+            601
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/esxi-ui-a-while-b.txt",
+      "bytes": 2489,
+      "sha256": "b795d5f90269369fd66b006b227dc1744e690b79f21730d43555a30f12563c71",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-a-while-b-dep-20261110-a-vmware.log",
+        "sourceSha256": "15bf1d40e78eab4ada154fd4dfe2d0f77018cf23cee1d3bfa1e94f6670a81e17",
+        "sourceLineRanges": [
+          [
+            191,
+            197
+          ],
+          [
+            579,
+            586
+          ],
+          [
+            602,
+            609
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/esxi-ui-b-first.txt",
+      "bytes": 1650,
+      "sha256": "85b40a3532fe3fc1544c8c04a32630640f418da3deb86c68d9900ef158506380",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-b-first-on-dep-20261110-b-vmware.log",
+        "sourceSha256": "50b90181f3edf7947bf9373f578166cd4f415d9eac53e4ef45283d37000ef318",
+        "sourceLineRanges": [
+          [
+            191,
+            197
+          ],
+          [
+            559,
+            565
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/esxi-ui-b-while-a.txt",
+      "bytes": 2488,
+      "sha256": "76004e51f265090f60df2d447ad96df6522592060863fe58887fc25ae7ffd072",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-b-while-a-dep-20261110-b-vmware.log",
+        "sourceSha256": "1d75629ed4e5b4f49ea27f1f7e6607223fbbd8cd00a50cd08a40756ddac10712",
+        "sourceLineRanges": [
+          [
+            192,
+            198
+          ],
+          [
+            606,
+            613
+          ],
+          [
+            629,
+            636
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/esxi-ui-same-vm-both.txt",
+      "bytes": 2983,
+      "sha256": "f75d8548da5cd2488283194fd427e59802560e8320ef073e0175e75541ab1a22",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-same-vm-both-dep-20261110-both-vmware.log",
+        "sourceSha256": "e2fd04f4a4d172048e17f83d68f0a05764bb44e94604ac3f5b1219078bec034c",
+        "sourceLineRanges": [
+          [
+            192,
+            203
+          ],
+          [
+            619,
+            626
+          ],
+          [
+            641,
+            648
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/excluded-missing-boot-device.txt",
+      "bytes": 576,
+      "sha256": "56244fb98c21496debaf426c85b170e63f2e39107dedc571f43675ba9439d7d6",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-functional-dependency-v1",
+        "sourceFile": "ahci-reclaim.txt",
+        "sourceSha256": "487b526f0f81732bee8aca1a23f5ba9b01193a7b4ecabb98e8d81dc7c55fcfa0",
+        "sourceLineRanges": [
+          [
+            13,
+            14
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/excluded-volatile-bootbank.txt",
+      "bytes": 348,
+      "sha256": "809624d1e1fc57c5d38a3ec1e78a31ba5cacb459400d4f3e1a066c408ecba368",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-functional-dependency-v1",
+        "sourceFile": "persistence-diagnostic.txt",
+        "sourceSha256": "d10132be0fb1baf5aba95232a64180040db1536e2263fd4405aad8e192a67299",
+        "sourceLineRanges": [
+          [
+            1,
+            1
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/vcenter-ui-a-first.txt",
+      "bytes": 1648,
+      "sha256": "34e218a85cedbf1d5dc54ed8b9cebfce268e379b74a28441205aa6da934d4a9c",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-a-first-on-vcdep-20261111-a-vmware.log",
+        "sourceSha256": "812df79032038b6794833e64bb1dcd86ce40c69151d0d31efb5a113eaf9df168",
+        "sourceLineRanges": [
+          [
+            213,
+            219
+          ],
+          [
+            558,
+            564
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/vcenter-ui-a-while-b.txt",
+      "bytes": 2486,
+      "sha256": "c8806ae06932bf014e7d5ebe3b91e7c0750c19e25cf754fd5d690bf65c5ee0c9",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-a-while-b-vcdep-20261111-a-vmware.log",
+        "sourceSha256": "453050f7c6db095368b9ef59d80b6ad784a9ac43820ce39231dae680c5b76f7e",
+        "sourceLineRanges": [
+          [
+            213,
+            219
+          ],
+          [
+            570,
+            577
+          ],
+          [
+            593,
+            600
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/vcenter-ui-b-first.txt",
+      "bytes": 1647,
+      "sha256": "25540fada4b4047f702d6b7f456bebfff00cc735253e885fb9c21bcc6dbc7cb6",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-b-first-on-vcdep-20261111-b-vmware.log",
+        "sourceSha256": "9e58b9351fdd30f80a72d96a76c6c23428aa7b54d859ec87111e66ce5319a7d0",
+        "sourceLineRanges": [
+          [
+            213,
+            219
+          ],
+          [
+            558,
+            564
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/vcenter-ui-b-while-a.txt",
+      "bytes": 2486,
+      "sha256": "751310150258d01dc0613628b747a7c5f3d3fd8956253e1f4560cd24ab6485a9",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-b-while-a-vcdep-20261111-b-vmware.log",
+        "sourceSha256": "d3e6925ba0091c761fd8d1eea63673d9d25c680866486d289921259975cd2d49",
+        "sourceLineRanges": [
+          [
+            213,
+            219
+          ],
+          [
+            570,
+            577
+          ],
+          [
+            593,
+            600
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "log-excerpts/vcenter-ui-same-vm-both.txt",
+      "bytes": 2991,
+      "sha256": "27755f20cfdea2a8fb2e25a6b7869757ee4157565779d66223b2049a281bb762",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-same-vm-both-final-vcdep-20261111-both-vmware.log",
+        "sourceSha256": "956c72f16e5df4c7683c72e46a73ac386b541a0ffe038dee2166adf674c7fab6",
+        "sourceLineRanges": [
+          [
+            205,
+            216
+          ],
+          [
+            575,
+            582
+          ],
+          [
+            597,
+            604
+          ]
+        ],
+        "transformation": "selected original lines with line-number prefixes"
+      }
+    },
+    {
+      "path": "raw/disable/environment-restoration.json",
+      "bytes": 284,
+      "sha256": "39832bb4e4cce462a71c365cb88dfc008606e171dbf697e795320f8dfcdb07b9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "environment-restoration.json",
+        "sourceSha256": "39832bb4e4cce462a71c365cb88dfc008606e171dbf697e795320f8dfcdb07b9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-host-ui-a-baseline.json",
+      "bytes": 7205,
+      "sha256": "e5ba7b4779c0f504394b946758778d1ffbd9b041d31ada3fb1a5c0078c94547c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-host-ui-a-baseline.json",
+        "sourceSha256": "e5ba7b4779c0f504394b946758778d1ffbd9b041d31ada3fb1a5c0078c94547c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-host-ui-a-disabled.json",
+      "bytes": 2295,
+      "sha256": "c68f1c6bbe87d03d715f3f7151b0f3d9080a6c1e1064aff20e3d11130dbcaa09",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-host-ui-a-disabled.json",
+        "sourceSha256": "c68f1c6bbe87d03d715f3f7151b0f3d9080a6c1e1064aff20e3d11130dbcaa09",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-host-ui-b-baseline.json",
+      "bytes": 7724,
+      "sha256": "def36374e72b2cb94430d1f91c425f777eac49e8580269f73c3f4fd1f8ae22f7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-host-ui-b-baseline.json",
+        "sourceSha256": "def36374e72b2cb94430d1f91c425f777eac49e8580269f73c3f4fd1f8ae22f7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-host-ui-b-disabled.json",
+      "bytes": 2295,
+      "sha256": "85b47f3e55458f0a4c95ae7bcae92c3c3a357ef6be0255bb807530e9dd63f4a6",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-host-ui-b-disabled.json",
+        "sourceSha256": "85b47f3e55458f0a4c95ae7bcae92c3c3a357ef6be0255bb807530e9dd63f4a6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-disable-a-after-pci.txt",
+      "bytes": 8977,
+      "sha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-disable-a-after-pci.txt",
+        "sourceSha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-disable-a-before-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-disable-a-before-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-disable-a.json",
+      "bytes": 7645,
+      "sha256": "b706b8259a1902d8249010cba27655e80bcdae3f4dfb217f2ecc79d440f2712d",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-disable-a.json",
+        "sourceSha256": "b706b8259a1902d8249010cba27655e80bcdae3f4dfb217f2ecc79d440f2712d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-disable-b-after-pci.txt",
+      "bytes": 8977,
+      "sha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-disable-b-after-pci.txt",
+        "sourceSha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-disable-b-before-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-disable-b-before-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-disable-b.json",
+      "bytes": 7645,
+      "sha256": "5722ff67a79ae7cc518822cedfcf0752d75b2f6414e818358bbaf231f237bfc1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-disable-b.json",
+        "sourceSha256": "5722ff67a79ae7cc518822cedfcf0752d75b2f6414e818358bbaf231f237bfc1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-prepare-a-after-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-prepare-a-after-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-prepare-a-before-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-prepare-a-before-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-prepare-a.json",
+      "bytes": 7618,
+      "sha256": "4dc157a23272c1aae87116e1172591642fdb5365e711aa729825538d67acabd4",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-prepare-a.json",
+        "sourceSha256": "4dc157a23272c1aae87116e1172591642fdb5365e711aa729825538d67acabd4",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-prepare-b-after-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-prepare-b-after-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-prepare-b-before-pci.txt",
+      "bytes": 8977,
+      "sha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-prepare-b-before-pci.txt",
+        "sourceSha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-single-disable-prepare-b.json",
+      "bytes": 7642,
+      "sha256": "e399e72e62a6dffe61ca895a5d8ccd878fc9230fdd84f69d6621f21e5b92870d",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-single-disable-prepare-b.json",
+        "sourceSha256": "e399e72e62a6dffe61ca895a5d8ccd878fc9230fdd84f69d6621f21e5b92870d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/esxi-vc-ui-a-direct-check.json",
+      "bytes": 2622,
+      "sha256": "6e317d4f22eaa91ecabd60a2967aed41aa14fb7868131e3e86ac0333d059047b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "esxi-vc-ui-a-direct-check.json",
+        "sourceSha256": "6e317d4f22eaa91ecabd60a2967aed41aa14fb7868131e3e86ac0333d059047b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/final-shutdown-maintenance.json",
+      "bytes": 352,
+      "sha256": "da5f2ba6b39331df91ecc1dbaae41b10d45cfa926242fc33a547657eefbfad73",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "final-shutdown-maintenance.json",
+        "sourceSha256": "da5f2ba6b39331df91ecc1dbaae41b10d45cfa926242fc33a547657eefbfad73",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/final-shutdown-request.json",
+      "bytes": 98,
+      "sha256": "0501a6b627bc9551942da13461d89eb1c1f949ad4de4c0a338bfdb1fd1b22ca7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "final-shutdown-request.json",
+        "sourceSha256": "0501a6b627bc9551942da13461d89eb1c1f949ad4de4c0a338bfdb1fd1b22ca7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/network-cleanup.json",
+      "bytes": 757,
+      "sha256": "227af1730e3e8f0efbf6073325561616a4c1440a9c707879b62c58bc525220d1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "network-cleanup.json",
+        "sourceSha256": "227af1730e3e8f0efbf6073325561616a4c1440a9c707879b62c58bc525220d1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/suspend-result.json",
+      "bytes": 67,
+      "sha256": "6fe95b7c098588c2969e9af37b26d9f9fffe38340d45c6503f9d7f80ddf9fa9e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "suspend-result.json",
+        "sourceSha256": "6fe95b7c098588c2969e9af37b26d9f9fffe38340d45c6503f9d7f80ddf9fa9e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/ui-final-observation.json",
+      "bytes": 520,
+      "sha256": "69bb4ea75b395f41069556df00087aeeace8a98e2b4def1714f7aa659c58a7cd",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui-final-observation.json",
+        "sourceSha256": "69bb4ea75b395f41069556df00087aeeace8a98e2b4def1714f7aa659c58a7cd",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/ui-timeline.jsonl",
+      "bytes": 5754,
+      "sha256": "1a8a0dcedbfa8b2e99132aa48cee2f680d89b4e080ab97ba0032ab871187cbab",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/timeline.jsonl",
+        "sourceSha256": "1a8a0dcedbfa8b2e99132aa48cee2f680d89b4e080ab97ba0032ab871187cbab",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-disable-a-after-pci.txt",
+      "bytes": 8977,
+      "sha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-disable-a-after-pci.txt",
+        "sourceSha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-disable-a-before-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-disable-a-before-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-disable-a.json",
+      "bytes": 7843,
+      "sha256": "6349cbee9afa10ce8b3a611c82094e20cb387d3310ec9f6e55692e374923b5ca",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-disable-a.json",
+        "sourceSha256": "6349cbee9afa10ce8b3a611c82094e20cb387d3310ec9f6e55692e374923b5ca",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-disable-b-after-pci.txt",
+      "bytes": 8977,
+      "sha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-disable-b-after-pci.txt",
+        "sourceSha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-disable-b-before-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-disable-b-before-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-disable-b.json",
+      "bytes": 9579,
+      "sha256": "670b4219d9539f0d48ad6c8c75b548c476f99c19c86b60eda213bdcac97a5fb6",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-disable-b.json",
+        "sourceSha256": "670b4219d9539f0d48ad6c8c75b548c476f99c19c86b60eda213bdcac97a5fb6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-prepare-a-after-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-prepare-a-after-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-prepare-a-before-pci.txt",
+      "bytes": 8977,
+      "sha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-prepare-a-before-pci.txt",
+        "sourceSha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-prepare-a.json",
+      "bytes": 7840,
+      "sha256": "3837db7b308bfd5ac781ed5ec2eed7029ae48ed314a142ea7d1142b8011bfed0",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-prepare-a.json",
+        "sourceSha256": "3837db7b308bfd5ac781ed5ec2eed7029ae48ed314a142ea7d1142b8011bfed0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-prepare-b-after-pci.txt",
+      "bytes": 8999,
+      "sha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-prepare-b-after-pci.txt",
+        "sourceSha256": "f3a14fc8a97aa36554ac79abc4bc0337d725227ca33b1645e39891dd26f917e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-prepare-b-before-pci.txt",
+      "bytes": 8977,
+      "sha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-prepare-b-before-pci.txt",
+        "sourceSha256": "27793eaf8840fcd272f9f0dd64adf436cc220b84c6fdba19a130c37c06311a47",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-single-disable-prepare-b.json",
+      "bytes": 7403,
+      "sha256": "e77f383c4863c85382e0fdfb3ad6c5f798bdf27dbfbf7e67cfad022b45e7b080",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-single-disable-prepare-b.json",
+        "sourceSha256": "e77f383c4863c85382e0fdfb3ad6c5f798bdf27dbfbf7e67cfad022b45e7b080",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-vc-ui-a-baseline.json",
+      "bytes": 7403,
+      "sha256": "7e92291164e103bcf71220760f592fe4120ed18602f56693f83a6afa7733a63b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-vc-ui-a-baseline.json",
+        "sourceSha256": "7e92291164e103bcf71220760f592fe4120ed18602f56693f83a6afa7733a63b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-vc-ui-a-disabled.json",
+      "bytes": 2353,
+      "sha256": "ec182b9cd93c176ba8c3eb97fc6be593ccbd5d7288ab856e2fc311e1ebf6f2aa",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-vc-ui-a-disabled.json",
+        "sourceSha256": "ec182b9cd93c176ba8c3eb97fc6be593ccbd5d7288ab856e2fc311e1ebf6f2aa",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-vc-ui-a-refresh-check.json",
+      "bytes": 2680,
+      "sha256": "e862979ff31db1e7f71775882c92d45550b7ef0fef5d7f6e844a08bd1638190c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-vc-ui-a-refresh-check.json",
+        "sourceSha256": "e862979ff31db1e7f71775882c92d45550b7ef0fef5d7f6e844a08bd1638190c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-vc-ui-b-baseline.json",
+      "bytes": 9448,
+      "sha256": "e1fc446d3b99757034a6125709026b58aa39fde74881a1e057c179fe0ae3cca0",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-vc-ui-b-baseline.json",
+        "sourceSha256": "e1fc446d3b99757034a6125709026b58aa39fde74881a1e057c179fe0ae3cca0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/disable/vcenter-vc-ui-b-disabled.json",
+      "bytes": 2680,
+      "sha256": "b76d0503530d6d931a092bdb79bd5688bfb86b380dea6420b8dbb944499a1014",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "vcenter-vc-ui-b-disabled.json",
+        "sourceSha256": "b76d0503530d6d931a092bdb79bd5688bfb86b380dea6420b8dbb944499a1014",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-01-disable-both.json",
+      "bytes": 847,
+      "sha256": "fea455c42c8668d921e632ba276b46d1b352e2cd780faddd84c456b6fee5f121",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-01-disable-both.json",
+        "sourceSha256": "fea455c42c8668d921e632ba276b46d1b352e2cd780faddd84c456b6fee5f121",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-02-enable-only-a.json",
+      "bytes": 826,
+      "sha256": "459e84f95fff65cae57221024072b0fd2ba1183396a9063b0ab178cb704ed97b",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-02-enable-only-a.json",
+        "sourceSha256": "459e84f95fff65cae57221024072b0fd2ba1183396a9063b0ab178cb704ed97b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-03-configure-a.json",
+      "bytes": 1339,
+      "sha256": "924c2eb2b8f1e81da318a0f0a7504348a606b538a95862a9ceccd2b1c092be08",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-03-configure-a.json",
+        "sourceSha256": "924c2eb2b8f1e81da318a0f0a7504348a606b538a95862a9ceccd2b1c092be08",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-03-configure-b.json",
+      "bytes": 1339,
+      "sha256": "72ab5cee7776c86a5dd3a198a3940dfda99579349e08bbdf1ad7a34bae4b413b",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-03-configure-b.json",
+        "sourceSha256": "72ab5cee7776c86a5dd3a198a3940dfda99579349e08bbdf1ad7a34bae4b413b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-03-configure-both.json",
+      "bytes": 1789,
+      "sha256": "1252837ed3e0c25b40b853e45ad206362a243fbc369795dfcd09529d21a4906b",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-03-configure-both.json",
+        "sourceSha256": "1252837ed3e0c25b40b853e45ad206362a243fbc369795dfcd09529d21a4906b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-04-a-first.json",
+      "bytes": 1657,
+      "sha256": "3b04211c1c491750eb4c52f786b37935bb88f9bd78b6dd78db4616666dc5e757",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-04-a-first.json",
+        "sourceSha256": "3b04211c1c491750eb4c52f786b37935bb88f9bd78b6dd78db4616666dc5e757",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-05-b-while-a.json",
+      "bytes": 3140,
+      "sha256": "afaddcc70e120ad95f55492000e45d2ea810607a1fbd66a00a5c83710a8ff68b",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-05-b-while-a.json",
+        "sourceSha256": "afaddcc70e120ad95f55492000e45d2ea810607a1fbd66a00a5c83710a8ff68b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-06-off-dep-20261110-a.json",
+      "bytes": 1659,
+      "sha256": "0e21582be7bdb4ed8ae932c0c2fc3ae21eaadae015a860ad404459a16294609c",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-06-off-dep-20261110-a.json",
+        "sourceSha256": "0e21582be7bdb4ed8ae932c0c2fc3ae21eaadae015a860ad404459a16294609c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-07-b-first.json",
+      "bytes": 1657,
+      "sha256": "1f07faac26152935ea8160ff581bc7e727f63d8b4abb9247f19118b65530e8e5",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-07-b-first.json",
+        "sourceSha256": "1f07faac26152935ea8160ff581bc7e727f63d8b4abb9247f19118b65530e8e5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-08-a-while-b.json",
+      "bytes": 3140,
+      "sha256": "5e7bdb49327e7e736fd994c65e67b1e961fafb20234b262b97391ce35929c92d",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-08-a-while-b.json",
+        "sourceSha256": "5e7bdb49327e7e736fd994c65e67b1e961fafb20234b262b97391ce35929c92d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-09-off-dep-20261110-b.json",
+      "bytes": 1660,
+      "sha256": "283feff36dbd1ad0068ca9fb4c40f5b9a6f117ee0eec87c5d4a884994315f72f",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-09-off-dep-20261110-b.json",
+        "sourceSha256": "283feff36dbd1ad0068ca9fb4c40f5b9a6f117ee0eec87c5d4a884994315f72f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/api-10-same-vm-both.json",
+      "bytes": 3977,
+      "sha256": "9eda3d7ad5f3043986e8d72164ff6f7c71478446967ed9627e71853e125c6f86",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "api-10-same-vm-both.json",
+        "sourceSha256": "9eda3d7ad5f3043986e8d72164ff6f7c71478446967ed9627e71853e125c6f86",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/preflight-pci.txt",
+      "bytes": 8999,
+      "sha256": "cf205a168cbc1b9a11fc82dbd97c877044656798b53cbe8c703af22f42794a47",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "preflight-pci.txt",
+        "sourceSha256": "cf205a168cbc1b9a11fc82dbd97c877044656798b53cbe8c703af22f42794a47",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/preflight-ui-version.txt",
+      "bytes": 575,
+      "sha256": "f3c8192f0edfdf04e8f2e145a9d3561f1996f50823e98ec62ce8b71d63fdd013",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "preflight-ui-version.txt",
+        "sourceSha256": "f3c8192f0edfdf04e8f2e145a9d3561f1996f50823e98ec62ce8b71d63fdd013",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-a-first-on.json",
+      "bytes": 4893,
+      "sha256": "548678322e0c36863168123a7fd82c9bebf3e8513f8b72cea30def77e93793c9",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-a-first-on.json",
+        "sourceSha256": "548678322e0c36863168123a7fd82c9bebf3e8513f8b72cea30def77e93793c9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-a-off-confirmed.json",
+      "bytes": 6007,
+      "sha256": "60b61a58441cadeee5e345491176ac202b33d0334085bfbf34ead575460a4496",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-a-off-confirmed.json",
+        "sourceSha256": "60b61a58441cadeee5e345491176ac202b33d0334085bfbf34ead575460a4496",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-a-while-b.json",
+      "bytes": 6006,
+      "sha256": "f79b83d185f35caaada2eb3c8801646d16d907778ca306c8f2a8f9ab6e02f90d",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-a-while-b.json",
+        "sourceSha256": "f79b83d185f35caaada2eb3c8801646d16d907778ca306c8f2a8f9ab6e02f90d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-b-first-on.json",
+      "bytes": 6006,
+      "sha256": "63955dec3a8fd704adf9fb8fb41a72b5bddaf97512262ef637237eb672dfffd7",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-b-first-on.json",
+        "sourceSha256": "63955dec3a8fd704adf9fb8fb41a72b5bddaf97512262ef637237eb672dfffd7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-b-while-a.json",
+      "bytes": 6405,
+      "sha256": "0e18fba360a95789a683aa0272d80a88bd29b6fce4e2e4b037677dc1df1549ca",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-b-while-a.json",
+        "sourceSha256": "0e18fba360a95789a683aa0272d80a88bd29b6fce4e2e4b037677dc1df1549ca",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-both-saved.json",
+      "bytes": 4941,
+      "sha256": "c5e98930f8ae1b1eaff57276693f71c64f930b5f2bf24df319643c4d482a883e",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-both-saved.json",
+        "sourceSha256": "c5e98930f8ae1b1eaff57276693f71c64f930b5f2bf24df319643c4d482a883e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-final-cleanup-dep-20261110-a.json",
+      "bytes": 328,
+      "sha256": "31f2b926e7a05624e56d819bf25d16df5564247c820844bef2af58e81970e34d",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-final-cleanup-dep-20261110-a.json",
+        "sourceSha256": "31f2b926e7a05624e56d819bf25d16df5564247c820844bef2af58e81970e34d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-final-cleanup-dep-20261110-b.json",
+      "bytes": 328,
+      "sha256": "d26eb7ac441f78037c60e7d2236bc28942634609bc3a1c5bba96ab5c96851351",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-final-cleanup-dep-20261110-b.json",
+        "sourceSha256": "d26eb7ac441f78037c60e7d2236bc28942634609bc3a1c5bba96ab5c96851351",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-final-cleanup-dep-20261110-both.json",
+      "bytes": 328,
+      "sha256": "2e250b3960b8e5f2015e29a1f59ee4f9b9d96306be4a5e19dfa02bb7f0a2a322",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-final-cleanup-dep-20261110-both.json",
+        "sourceSha256": "2e250b3960b8e5f2015e29a1f59ee4f9b9d96306be4a5e19dfa02bb7f0a2a322",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-host-toggle.json",
+      "bytes": 2041,
+      "sha256": "e6aa928711d143f8396f488d2119f22e89bce20de6357207edcedde7d21ff5d7",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-host-toggle.json",
+        "sourceSha256": "f5aa152d7058c8dc328b12fcf292ae082cd3145107053a7256ccdd2fcc7eeee1",
+        "transformation": "omit unrelated VM inventory; retain version, PCI state and this run's VMs"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-prep-baseline.json",
+      "bytes": 2045,
+      "sha256": "8382a6227ccf7dbb42fb903da83c7960258877831faec5caba92d63a73102a7d",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-prep-baseline.json",
+        "sourceSha256": "229b6aea6ce0a23f5ddd5cf6c66a4d1a96eff45f5a7acb44912fc8353033c6ae",
+        "transformation": "omit unrelated VM inventory; retain version, PCI state and this run's VMs"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-same-vm-both.json",
+      "bytes": 8265,
+      "sha256": "05ef8aaac8001e294226d333bda4c7e47c1a619603bfa57cd26d318bf42663ab",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-same-vm-both.json",
+        "sourceSha256": "05ef8aaac8001e294226d333bda4c7e47c1a619603bfa57cd26d318bf42663ab",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-timeline.jsonl",
+      "bytes": 5090,
+      "sha256": "a54e6c6bc7e1500a0322ea7ab348c0ac39ac67628e784726059c3503fd775d83",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/timeline.jsonl",
+        "sourceSha256": "a54e6c6bc7e1500a0322ea7ab348c0ac39ac67628e784726059c3503fd775d83",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-vma-saved.json",
+      "bytes": 2463,
+      "sha256": "c3bf3c1c7305f5f7a235af270214bdafbf3b3b02db235e74ff4207e36ff8fe18",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-vma-saved.json",
+        "sourceSha256": "077b75fa0dce4253b01aa3065c84bfbeb1d72cf078644a26d8cd4c1b82d073cb",
+        "transformation": "omit unrelated VM inventory; retain version, PCI state and this run's VMs"
+      }
+    },
+    {
+      "path": "raw/esxi/ui-vmb-saved.json",
+      "bytes": 3710,
+      "sha256": "37a6115b0e5613c7b2f7ddca78f2825a9b4c70f287389988d6febfcbaee1845f",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui-vmb-saved.json",
+        "sourceSha256": "37a6115b0e5613c7b2f7ddca78f2825a9b4c70f287389988d6febfcbaee1845f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/excluded-functional/map-after-reboot.json",
+      "bytes": 79,
+      "sha256": "b6ee8f0ded729ddbffe038a1ffe85393b6702421bcd643b3322f9d25a0eee2ea",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-functional-dependency-v1",
+        "sourceFile": "policy-map-after-reboot.txt",
+        "sourceSha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+        "transformation": "parse only the experimental selector; omit vendor-supplied configuration comments"
+      }
+    },
+    {
+      "path": "raw/excluded-functional/map-before-reboot.json",
+      "bytes": 154,
+      "sha256": "579bc4e51e402af75cc71db779a1cf9e80b5fd281c112a10180a58b24dfaa55c",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-functional-dependency-v1",
+        "sourceFile": "policy-map-after-write.txt",
+        "sourceSha256": "b63d96af8c5d7391bf3edc80105bead23abd5000ab44ef57ec0d26adc5a45a98",
+        "transformation": "parse only the experimental selector; omit vendor-supplied configuration comments"
+      }
+    },
+    {
+      "path": "raw/excluded-functional/policy-after-reboot.json",
+      "bytes": 419,
+      "sha256": "cac7e06d8856861d76db100b4da34449a7a4c42982b4f6ce6ed09fb74814cbaf",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-functional-dependency-v1",
+        "sourceFile": "policy-after-reboot.json",
+        "sourceSha256": "cac7e06d8856861d76db100b4da34449a7a4c42982b4f6ce6ed09fb74814cbaf",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/excluded-functional/policy-before.json",
+      "bytes": 544,
+      "sha256": "5b88df521d40ab0b0d14f44d06e995552199c972dbeff358e21580ba6a5f0ea0",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-functional-dependency-v1",
+        "sourceFile": "policy-before.json",
+        "sourceSha256": "5b88df521d40ab0b0d14f44d06e995552199c972dbeff358e21580ba6a5f0ea0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/excluded-functional/policy-pci-after-reboot.txt",
+      "bytes": 8013,
+      "sha256": "5e7ccdbc576b46a7fc79b334065e2fe4c5de7b1d9c74a36ebd076f03957ae9ee",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-functional-dependency-v1",
+        "sourceFile": "policy-pci-after-reboot.txt",
+        "sourceSha256": "5e7ccdbc576b46a7fc79b334065e2fe4c5de7b1d9c74a36ebd076f03957ae9ee",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/excluded-functional/policy-validation.json",
+      "bytes": 334,
+      "sha256": "9da622e19ceb66efa112b6fb66142d8f73d0d1663116ddf5f59214524750b497",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-functional-dependency-v1",
+        "sourceFile": "policy-validation.json",
+        "sourceSha256": "9da622e19ceb66efa112b6fb66142d8f73d0d1663116ddf5f59214524750b497",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/after-finish-cleanup.json",
+      "bytes": 3180,
+      "sha256": "3decb59f061ab986dce5b45a18a4a34d3ae4b18a0fb0c0b57556f4adf7e1fe75",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "after-finish-cleanup.json",
+        "sourceSha256": "3decb59f061ab986dce5b45a18a4a34d3ae4b18a0fb0c0b57556f4adf7e1fe75",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-01-host-enable-a.json",
+      "bytes": 677,
+      "sha256": "1f76c3b62c55de0f4ff31778da72bde7ecc391a9fc7110d1eb0d949603580e0c",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-01-host-enable-a.json",
+        "sourceSha256": "1f76c3b62c55de0f4ff31778da72bde7ecc391a9fc7110d1eb0d949603580e0c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-02-config-vcdep-20261111-a.json",
+      "bytes": 1247,
+      "sha256": "a984c5a28afd56f009fc1b2c6e8b77709e898c9226732fa069be264bd3c96d26",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-02-config-vcdep-20261111-a.json",
+        "sourceSha256": "a984c5a28afd56f009fc1b2c6e8b77709e898c9226732fa069be264bd3c96d26",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-02-config-vcdep-20261111-b.json",
+      "bytes": 1248,
+      "sha256": "17c459a7c0ea3b1ece4bcc8ad9144b876e7601017cb63650f5fff5eaad6b3d0d",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-02-config-vcdep-20261111-b.json",
+        "sourceSha256": "17c459a7c0ea3b1ece4bcc8ad9144b876e7601017cb63650f5fff5eaad6b3d0d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-02-config-vcdep-20261111-both.json",
+      "bytes": 1695,
+      "sha256": "2830f112440d69cf2aee1c2d20e1be2d29d8185a708952fa1dfa9a801e770bc2",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-02-config-vcdep-20261111-both.json",
+        "sourceSha256": "2830f112440d69cf2aee1c2d20e1be2d29d8185a708952fa1dfa9a801e770bc2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-03-a-first.json",
+      "bytes": 1119,
+      "sha256": "6bd5954b0f2b16c26f15952aacb6fb2832fb68a5f3cb589efa8fba5d898a37ec",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-03-a-first.json",
+        "sourceSha256": "6bd5954b0f2b16c26f15952aacb6fb2832fb68a5f3cb589efa8fba5d898a37ec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-04-b-after-a-attempt.json",
+      "bytes": 2598,
+      "sha256": "45f2b4a4d38283d07c89e6a254587dfb5da78fa6b962387098de32f9c8d7b696",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-04-b-after-a-attempt.json",
+        "sourceSha256": "45f2b4a4d38283d07c89e6a254587dfb5da78fa6b962387098de32f9c8d7b696",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-05-off-vcdep-20261111-a.json",
+      "bytes": 1133,
+      "sha256": "cbef709c8dbc650980adf1f2e1d32d5adf8d8d03d31a15b36797e01ff6f25196",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-05-off-vcdep-20261111-a.json",
+        "sourceSha256": "cbef709c8dbc650980adf1f2e1d32d5adf8d8d03d31a15b36797e01ff6f25196",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-06-b-first.json",
+      "bytes": 1118,
+      "sha256": "0203028821149cf4bfe36fbe209ef33e7ce5b4fbc9f18b875144ee0d2f25e296",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-06-b-first.json",
+        "sourceSha256": "0203028821149cf4bfe36fbe209ef33e7ce5b4fbc9f18b875144ee0d2f25e296",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-07-a-after-b-attempt.json",
+      "bytes": 2598,
+      "sha256": "86f60b220961834ad0437260f693fdc9e6d56ab96d1479d41829969fb7001caf",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-07-a-after-b-attempt.json",
+        "sourceSha256": "86f60b220961834ad0437260f693fdc9e6d56ab96d1479d41829969fb7001caf",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-08-off-vcdep-20261111-b.json",
+      "bytes": 1133,
+      "sha256": "1a48b079a766ca330918227514790c335fdf8c94915ea72b56b9693d16761fee",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-08-off-vcdep-20261111-b.json",
+        "sourceSha256": "1a48b079a766ca330918227514790c335fdf8c94915ea72b56b9693d16761fee",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/api-09-same-vm-both.json",
+      "bytes": 3008,
+      "sha256": "6a8a88dfde523457734efdcba54f010c4835d9e8f244fd2891c59dd91f840ee7",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "api-09-same-vm-both.json",
+        "sourceSha256": "6a8a88dfde523457734efdcba54f010c4835d9e8f244fd2891c59dd91f840ee7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/cleanup-folder.json",
+      "bytes": 283,
+      "sha256": "59a078db0d2617a60952a77ee1c796229bd021135d06b6512c56a31573b6b3c0",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "cleanup-folder.json",
+        "sourceSha256": "59a078db0d2617a60952a77ee1c796229bd021135d06b6512c56a31573b6b3c0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/cleanup-vcdep-20261111-a.json",
+      "bytes": 291,
+      "sha256": "91054aae025a3cb81ccba95f3dc174f59a429eae38bf313251d991f5e368928e",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "cleanup-vcdep-20261111-a.json",
+        "sourceSha256": "91054aae025a3cb81ccba95f3dc174f59a429eae38bf313251d991f5e368928e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/cleanup-vcdep-20261111-b.json",
+      "bytes": 291,
+      "sha256": "84f723283adcc29fc5a34d4eb81f3d295cc6a6b5eda02be941aba4be2ae166a1",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "cleanup-vcdep-20261111-b.json",
+        "sourceSha256": "84f723283adcc29fc5a34d4eb81f3d295cc6a6b5eda02be941aba4be2ae166a1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/cleanup-vcdep-20261111-both.json",
+      "bytes": 291,
+      "sha256": "4515dcf3bc9647c45b6eb053962782d5043c7b2b82adcb784a980b8a5e3150f6",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "cleanup-vcdep-20261111-both.json",
+        "sourceSha256": "4515dcf3bc9647c45b6eb053962782d5043c7b2b82adcb784a980b8a5e3150f6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/prepare-after.json",
+      "bytes": 3193,
+      "sha256": "1ee245a7f761c41690939a43a9e66525edb8384b65d0f9eae7a28d83b3ee459c",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "prepare-after.json",
+        "sourceSha256": "1ee245a7f761c41690939a43a9e66525edb8384b65d0f9eae7a28d83b3ee459c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/setup-pbm-create-failure.json",
+      "bytes": 958,
+      "sha256": "96523facff20a379c78fb0fc2f9822a0e77e826ed2daf39111135129ca6930ac",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "setup-pbm-create-failure.json",
+        "sourceSha256": "96523facff20a379c78fb0fc2f9822a0e77e826ed2daf39111135129ca6930ac",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-a-first-on.json",
+      "bytes": 5525,
+      "sha256": "99a7adab81581f1b998de64e45b0777a02756df6aa3dfade0011b9bc69b4fc4b",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-a-first-on.json",
+        "sourceSha256": "99a7adab81581f1b998de64e45b0777a02756df6aa3dfade0011b9bc69b4fc4b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-a-off.json",
+      "bytes": 7339,
+      "sha256": "a4c4d98d4fc08a03ad973fac409e224fcc89e214b240c76ca656fb3a22c476e5",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-a-off.json",
+        "sourceSha256": "a4c4d98d4fc08a03ad973fac409e224fcc89e214b240c76ca656fb3a22c476e5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-a-saved.json",
+      "bytes": 3935,
+      "sha256": "d6c0fc1acd66072bdd46d01498517e865b38f8194ca04822c60d3a4798b922e1",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-a-saved.json",
+        "sourceSha256": "d6c0fc1acd66072bdd46d01498517e865b38f8194ca04822c60d3a4798b922e1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-a-while-b.json",
+      "bytes": 9158,
+      "sha256": "a464eed1e7f63cf5d334955352aaba41eb811c859c5c62735d8faddf09828220",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-a-while-b.json",
+        "sourceSha256": "a464eed1e7f63cf5d334955352aaba41eb811c859c5c62735d8faddf09828220",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-b-first-on.json",
+      "bytes": 7342,
+      "sha256": "08a68474dcecc85a52e808dcb7fa970db7c3c9ce3603ebdec3ed1c8860925290",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-b-first-on.json",
+        "sourceSha256": "08a68474dcecc85a52e808dcb7fa970db7c3c9ce3603ebdec3ed1c8860925290",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-b-off.json",
+      "bytes": 9493,
+      "sha256": "91b7806225928107f369595e76b872aba3de5e6190b51ac86f10b355511e251c",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-b-off.json",
+        "sourceSha256": "91b7806225928107f369595e76b872aba3de5e6190b51ac86f10b355511e251c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-b-saved.json",
+      "bytes": 4694,
+      "sha256": "60a55241c6cf040c565d2b822e0194637d7da007b325630a468c4ba4823fc035",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-b-saved.json",
+        "sourceSha256": "60a55241c6cf040c565d2b822e0194637d7da007b325630a468c4ba4823fc035",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-b-while-a.json",
+      "bytes": 7341,
+      "sha256": "f1b62beaf88afd0771f735625b1bd6e6bef9821956db62ffe5a689d8edaee813",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-b-while-a.json",
+        "sourceSha256": "f1b62beaf88afd0771f735625b1bd6e6bef9821956db62ffe5a689d8edaee813",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-baseline-verified.json",
+      "bytes": 12332,
+      "sha256": "f0e4dd632c2ce672863928945987f27283d6e8bff3b403c7415c933cba3a0eb6",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-baseline-verified.json",
+        "sourceSha256": "f0e4dd632c2ce672863928945987f27283d6e8bff3b403c7415c933cba3a0eb6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-both-saved.json",
+      "bytes": 5185,
+      "sha256": "5b4f3ea15be39d0147f352a7c97556ad0e1379f2a5dd246706f32872e078e978",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-both-saved.json",
+        "sourceSha256": "5b4f3ea15be39d0147f352a7c97556ad0e1379f2a5dd246706f32872e078e978",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-host-toggle.json",
+      "bytes": 3176,
+      "sha256": "eccc752ec67d683167cd1aa65cdde47ddc729d3ddb56aa64fd7ad594bc003dd9",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-host-toggle.json",
+        "sourceSha256": "eccc752ec67d683167cd1aa65cdde47ddc729d3ddb56aa64fd7ad594bc003dd9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-resume-baseline.json",
+      "bytes": 2491,
+      "sha256": "36540935e04de990e95b74d28bfa49bed18f53178440e95a7b76c63756f7c82f",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-resume-baseline.json",
+        "sourceSha256": "36540935e04de990e95b74d28bfa49bed18f53178440e95a7b76c63756f7c82f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-same-vm-both-final.json",
+      "bytes": 10631,
+      "sha256": "700ce36b3d06e636bf54f44f8054fd8d301820aae59268d5cc857364e1875aa3",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-same-vm-both-final.json",
+        "sourceSha256": "700ce36b3d06e636bf54f44f8054fd8d301820aae59268d5cc857364e1875aa3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-same-vm-both.json",
+      "bytes": 9809,
+      "sha256": "2ec6991359f0050148e01070a4a5b3ecf1a2d998704773bab4eaefe9fd6719b5",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui-same-vm-both.json",
+        "sourceSha256": "2ec6991359f0050148e01070a4a5b3ecf1a2d998704773bab4eaefe9fd6719b5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcenter/ui-timeline.jsonl",
+      "bytes": 6246,
+      "sha256": "16990f9f46fc767d55a431a93bee9c6218bc6f50ba1a6de7aa1d37a29d4a84e9",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/timeline.jsonl",
+        "sourceSha256": "16990f9f46fc767d55a431a93bee9c6218bc6f50ba1a6de7aa1d37a29d4a84e9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 12345,
+      "sha256": "a2a08ec8365133fed414e0824b3e1eda1aaf5fede784a63acacc0d474446c5b6",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-01-active-before-a.jpg",
+      "bytes": 87629,
+      "sha256": "bedbce7f7eb18486f3b48c9cc3eb463377a5e27573d0bc1788dfe2e58ad22007",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-01-active-before-a.jpg",
+        "sourceSha256": "bedbce7f7eb18486f3b48c9cc3eb463377a5e27573d0bc1788dfe2e58ad22007",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-01-active-before-a.txt",
+      "bytes": 7585,
+      "sha256": "f6cd1f17ba6405faf160288d32b04f66b1564a0662b4391ae62fb3f6041f435e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-01-active-before-a.txt",
+        "sourceSha256": "f6cd1f17ba6405faf160288d32b04f66b1564a0662b4391ae62fb3f6041f435e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-02-select-a.jpg",
+      "bytes": 89965,
+      "sha256": "9819b56cadd68c6660b98374bd91a1fb25323e6b985f059365aaec80cb9a5fb1",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-02-select-a.jpg",
+        "sourceSha256": "9819b56cadd68c6660b98374bd91a1fb25323e6b985f059365aaec80cb9a5fb1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-02-select-a.txt",
+      "bytes": 7605,
+      "sha256": "86f15189bafea226ebe30d47a41df66bcc98c8a68985f6600bfdf062449eb941",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-02-select-a.txt",
+        "sourceSha256": "86f15189bafea226ebe30d47a41df66bcc98c8a68985f6600bfdf062449eb941",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-03-a-disable-complete.jpg",
+      "bytes": 93227,
+      "sha256": "d437fee98ec68b13a07df0acb7d43d42051f28c61a7b2ff820face5fb76a102e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-03-a-disable-complete.jpg",
+        "sourceSha256": "d437fee98ec68b13a07df0acb7d43d42051f28c61a7b2ff820face5fb76a102e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-03-a-disable-complete.txt",
+      "bytes": 8301,
+      "sha256": "610e74a789cadcc4bbd5532d2fd801b216cb106f4d92abc76c408c41544604a3",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-03-a-disable-complete.txt",
+        "sourceSha256": "610e74a789cadcc4bbd5532d2fd801b216cb106f4d92abc76c408c41544604a3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-04-select-b.jpg",
+      "bytes": 105843,
+      "sha256": "288bb73b878b5c91a6ecbe90d412a37a0c792b18ed1096218d51b0cf93b5dcc8",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-04-select-b.jpg",
+        "sourceSha256": "288bb73b878b5c91a6ecbe90d412a37a0c792b18ed1096218d51b0cf93b5dcc8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-04-select-b.txt",
+      "bytes": 10122,
+      "sha256": "91873718a8a9a75adda467afcde3df444e5cd5a9512e47715ec405c314cf3202",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-04-select-b.txt",
+        "sourceSha256": "91873718a8a9a75adda467afcde3df444e5cd5a9512e47715ec405c314cf3202",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-05-b-disable-complete.jpg",
+      "bytes": 108188,
+      "sha256": "0046cdba26f0337b9c966ccd689f30a520ea4438af446604035d1da80704dfcc",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-05-b-disable-complete.jpg",
+        "sourceSha256": "0046cdba26f0337b9c966ccd689f30a520ea4438af446604035d1da80704dfcc",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/host-05-b-disable-complete.txt",
+      "bytes": 10818,
+      "sha256": "7fc3a77d82bad70647d6ab7eb48e975d1d9d5fd85a9516322a47bac0df057065",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/host-05-b-disable-complete.txt",
+        "sourceSha256": "7fc3a77d82bad70647d6ab7eb48e975d1d9d5fd85a9516322a47bac0df057065",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-01-active-before-a.jpg",
+      "bytes": 99347,
+      "sha256": "dc295787b1ccb9ab0e2630772d79fbb7b8a82e82645e674b0847a7d0ce465e4e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-01-active-before-a.jpg",
+        "sourceSha256": "dc295787b1ccb9ab0e2630772d79fbb7b8a82e82645e674b0847a7d0ce465e4e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-01-active-before-a.txt",
+      "bytes": 50357,
+      "sha256": "efc3035c7aeac2c1f46879b4e3803ec9655ee82b6b590048985d6731acdd9c90",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-01-active-before-a.txt",
+        "sourceSha256": "efc3035c7aeac2c1f46879b4e3803ec9655ee82b6b590048985d6731acdd9c90",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-02-select-a.jpg",
+      "bytes": 109755,
+      "sha256": "699f0718fb70354c0cb4316f3da9cf9fe7bd779b9e7a991c24bb91369fe8683b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-02-select-a.jpg",
+        "sourceSha256": "699f0718fb70354c0cb4316f3da9cf9fe7bd779b9e7a991c24bb91369fe8683b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-02-select-a.txt",
+      "bytes": 51488,
+      "sha256": "c6aa7230be6be17a213c906f6474ae203538e6dfc264d3de3e962b9a56f1b5d7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-02-select-a.txt",
+        "sourceSha256": "c6aa7230be6be17a213c906f6474ae203538e6dfc264d3de3e962b9a56f1b5d7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-03-a-disable-complete.jpg",
+      "bytes": 110493,
+      "sha256": "b9211396d0581f6c048a90a97ec4049935b1e8465d2ad0aa563e33058d619c6f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-03-a-disable-complete.jpg",
+        "sourceSha256": "b9211396d0581f6c048a90a97ec4049935b1e8465d2ad0aa563e33058d619c6f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-03-a-disable-complete.txt",
+      "bytes": 53700,
+      "sha256": "79d5994a7c78f65da664fcbc74225b78e19b071bfd4cd067af0b2796f7bee945",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-03-a-disable-complete.txt",
+        "sourceSha256": "79d5994a7c78f65da664fcbc74225b78e19b071bfd4cd067af0b2796f7bee945",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-03b-after-refresh.jpg",
+      "bytes": 100463,
+      "sha256": "561c0465b5ca1b86b160392c962ff5c33d8d954c7f2be2b64941320770a517b7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-03b-after-refresh.jpg",
+        "sourceSha256": "561c0465b5ca1b86b160392c962ff5c33d8d954c7f2be2b64941320770a517b7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-03b-after-refresh.txt",
+      "bytes": 48575,
+      "sha256": "ea2840e73b4065b3ae9026305a7a25b198d4b07f797f8068c1f2f97c0f8b223e",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-03b-after-refresh.txt",
+        "sourceSha256": "ea2840e73b4065b3ae9026305a7a25b198d4b07f797f8068c1f2f97c0f8b223e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-03e-all-devices-disabled.jpg",
+      "bytes": 99240,
+      "sha256": "09bfb2abfadab89355b7031e6a24114e51dbfb9fec5366936f38f1bce98bdf66",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-03e-all-devices-disabled.jpg",
+        "sourceSha256": "09bfb2abfadab89355b7031e6a24114e51dbfb9fec5366936f38f1bce98bdf66",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-03e-all-devices-disabled.txt",
+      "bytes": 42810,
+      "sha256": "89023bc1b84ccafa97e17d30c1735a20aee19a8ce5174c0727c86581ba08ab8d",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-03e-all-devices-disabled.txt",
+        "sourceSha256": "89023bc1b84ccafa97e17d30c1735a20aee19a8ce5174c0727c86581ba08ab8d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-04-only-b-selected.jpg",
+      "bytes": 109407,
+      "sha256": "3a51c3bc59079ab33479a78e7435bf2fd025632d63e48d12d81ff37a9e951709",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-04-only-b-selected.jpg",
+        "sourceSha256": "3a51c3bc59079ab33479a78e7435bf2fd025632d63e48d12d81ff37a9e951709",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-04-only-b-selected.txt",
+      "bytes": 45080,
+      "sha256": "b41bc72863c374d0d0f3bf508a7d193fea6c5b2c94c1e181298c7f9585e53104",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-04-only-b-selected.txt",
+        "sourceSha256": "b41bc72863c374d0d0f3bf508a7d193fea6c5b2c94c1e181298c7f9585e53104",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-05-b-toggle-initial.jpg",
+      "bytes": 109303,
+      "sha256": "44a9181e1a0efaab147c0e601b68f11654c44fcf37387f5a61bbe3f00eefea7b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-05-b-toggle-initial.jpg",
+        "sourceSha256": "44a9181e1a0efaab147c0e601b68f11654c44fcf37387f5a61bbe3f00eefea7b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/disable/vc-05-b-toggle-initial.txt",
+      "bytes": 45758,
+      "sha256": "d38ce1d4bfe3517f1aed2acfc1c96fa5b47558edd02e52e490030ab6fe759f28",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-dependency-disable-v1",
+        "sourceFile": "ui/vc-05-b-toggle-initial.txt",
+        "sourceSha256": "d38ce1d4bfe3517f1aed2acfc1c96fa5b47558edd02e52e490030ab6fe759f28",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/03-select-a-auto-selects-b.jpg",
+      "bytes": 90092,
+      "sha256": "a0431ba9e00a2f322b7ef87b9755a0451d75a2a234062c02d3fb39e1c7dda03d",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/03-select-a-auto-selects-b.jpg",
+        "sourceSha256": "a0431ba9e00a2f322b7ef87b9755a0451d75a2a234062c02d3fb39e1c7dda03d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/03-select-a-auto-selects-b.txt",
+      "bytes": 9686,
+      "sha256": "6cf3ae44d71b7484d67cbdbe1e6fc6dd9d3d0a770605dda6d2f7ac20b9472341",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/03-select-a-auto-selects-b.txt",
+        "sourceSha256": "6cf3ae44d71b7484d67cbdbe1e6fc6dd9d3d0a770605dda6d2f7ac20b9472341",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/04-host-toggle-complete.jpg",
+      "bytes": 99235,
+      "sha256": "39a9842bd98863cfda4ba3d7bc0ce447c490c4c8d8d2c182009ae6aa1d03c40f",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/04-host-toggle-complete.jpg",
+        "sourceSha256": "39a9842bd98863cfda4ba3d7bc0ce447c490c4c8d8d2c182009ae6aa1d03c40f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/04-host-toggle-complete.txt",
+      "bytes": 11744,
+      "sha256": "33c2cb53fde7ca56d5b110d7407c5061e0737e1140e92fdb4cd0366f4affdecf",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/04-host-toggle-complete.txt",
+        "sourceSha256": "33c2cb53fde7ca56d5b110d7407c5061e0737e1140e92fdb4cd0366f4affdecf",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/06-vm-a-expanded-before-save.jpg",
+      "bytes": 95639,
+      "sha256": "f72ae4a6958a74a810ed09e351c2b2e6905c22da57e2d9a8fb8e31ef81626900",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/06-vm-a-expanded-before-save.jpg",
+        "sourceSha256": "f72ae4a6958a74a810ed09e351c2b2e6905c22da57e2d9a8fb8e31ef81626900",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/06-vm-a-expanded-before-save.txt",
+      "bytes": 11414,
+      "sha256": "b74987353df4b7f534bc50679209ad546cc22d75b25205e82a8c187d243f21ba",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/06-vm-a-expanded-before-save.txt",
+        "sourceSha256": "b74987353df4b7f534bc50679209ad546cc22d75b25205e82a8c187d243f21ba",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/08-vm-b-single-device-before-save.jpg",
+      "bytes": 99999,
+      "sha256": "b675a4336cd31d6b69ced046b8147854c8dd4fbbf86d2e07708312ac50281363",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/08-vm-b-single-device-before-save.jpg",
+        "sourceSha256": "b675a4336cd31d6b69ced046b8147854c8dd4fbbf86d2e07708312ac50281363",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/08-vm-b-single-device-before-save.txt",
+      "bytes": 13329,
+      "sha256": "42915ef1674c6ce276460fffb9faf8398a3a70c20fc79a56b398b3f3f65603c3",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/08-vm-b-single-device-before-save.txt",
+        "sourceSha256": "42915ef1674c6ce276460fffb9faf8398a3a70c20fc79a56b398b3f3f65603c3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/12-vm-both-saved.jpg",
+      "bytes": 112363,
+      "sha256": "f77d70ac60337f8f2055cdc7c84020bef718a328a48aa6fd1ec12573944ff6be",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/12-vm-both-saved.jpg",
+        "sourceSha256": "f77d70ac60337f8f2055cdc7c84020bef718a328a48aa6fd1ec12573944ff6be",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/12-vm-both-saved.txt",
+      "bytes": 13253,
+      "sha256": "5d45fe2141caa00155a8b7b504b14f3c65ea31539f9aeaabd3735ad890242395",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/12-vm-both-saved.txt",
+        "sourceSha256": "5d45fe2141caa00155a8b7b504b14f3c65ea31539f9aeaabd3735ad890242395",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/15-vm-b-failure-details.jpg",
+      "bytes": 111175,
+      "sha256": "0a715a7f5e181b21c56e9120466fbba32a248dad8ae7b85d87a2b429f5a4d63f",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/15-vm-b-failure-details.jpg",
+        "sourceSha256": "0a715a7f5e181b21c56e9120466fbba32a248dad8ae7b85d87a2b429f5a4d63f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/15-vm-b-failure-details.txt",
+      "bytes": 15183,
+      "sha256": "1c111f98c862912c4b7cf83ceada288a437e78acfbc65abc5330b6e86947b157",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/15-vm-b-failure-details.txt",
+        "sourceSha256": "1c111f98c862912c4b7cf83ceada288a437e78acfbc65abc5330b6e86947b157",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/17-vm-b-first-powered-on.jpg",
+      "bytes": 143264,
+      "sha256": "01e81d1493b578c99f757f4b7e67c83ab7f5b8f4bbed07ca6609263b1c22f423",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/17-vm-b-first-powered-on.jpg",
+        "sourceSha256": "01e81d1493b578c99f757f4b7e67c83ab7f5b8f4bbed07ca6609263b1c22f423",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/17-vm-b-first-powered-on.txt",
+      "bytes": 17828,
+      "sha256": "8eb5ca5db6b0ae9e66f0ac82606b6afd712c6d3d0d41b9ae14c59a6d16462e46",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/17-vm-b-first-powered-on.txt",
+        "sourceSha256": "8eb5ca5db6b0ae9e66f0ac82606b6afd712c6d3d0d41b9ae14c59a6d16462e46",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/18-vm-a-reverse-power-on-failed.jpg",
+      "bytes": 117782,
+      "sha256": "eeb283ecd374f58b8f91192cb1298b084a8ed2b85952238538a1a97ea424b4fa",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/18-vm-a-reverse-power-on-failed.jpg",
+        "sourceSha256": "eeb283ecd374f58b8f91192cb1298b084a8ed2b85952238538a1a97ea424b4fa",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/18-vm-a-reverse-power-on-failed.txt",
+      "bytes": 17413,
+      "sha256": "b3c48ecf68d3c3f1c80bb8afc0bae6d174bcb0f3e4063efcc4e0906698058fe6",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/18-vm-a-reverse-power-on-failed.txt",
+        "sourceSha256": "b3c48ecf68d3c3f1c80bb8afc0bae6d174bcb0f3e4063efcc4e0906698058fe6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/20-vm-both-power-on-failed.jpg",
+      "bytes": 119316,
+      "sha256": "ef92794b7508c51d161c8d94873f4fdacdee9486f6a71dc58a27a9b81d973dd0",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/20-vm-both-power-on-failed.jpg",
+        "sourceSha256": "ef92794b7508c51d161c8d94873f4fdacdee9486f6a71dc58a27a9b81d973dd0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/esxi/20-vm-both-power-on-failed.txt",
+      "bytes": 18791,
+      "sha256": "4ae2746abde1c5df29f574b733f9ae2438b44d74fe75a19a4fb7464ab1e354a9",
+      "provenance": {
+        "sourceRun": "20261110-esxi8-dependency-interaction-v1",
+        "sourceFile": "ui/20-vm-both-power-on-failed.txt",
+        "sourceSha256": "4ae2746abde1c5df29f574b733f9ae2438b44d74fe75a19a4fb7464ab1e354a9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/04-only-a-selected.jpg",
+      "bytes": 194183,
+      "sha256": "adfb44943ad42cfec148619c6c96ae249239329635d298470a3d7f03bef2ac9f",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/04-only-a-selected.jpg",
+        "sourceSha256": "adfb44943ad42cfec148619c6c96ae249239329635d298470a3d7f03bef2ac9f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/04-only-a-selected.txt",
+      "bytes": 44001,
+      "sha256": "ec177dd77d24b142e0a45d52bdb60523fd74fbf5c6dcd1d3b8eb2f0e8b7700dd",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/04-only-a-selected.txt",
+        "sourceSha256": "ec177dd77d24b142e0a45d52bdb60523fd74fbf5c6dcd1d3b8eb2f0e8b7700dd",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/05-host-toggle-complete.jpg",
+      "bytes": 176874,
+      "sha256": "6e9d5b0f1545263628acfb6716ffa00d183f150e3e35ac7d2ee03a2739158dab",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/05-host-toggle-complete.jpg",
+        "sourceSha256": "6e9d5b0f1545263628acfb6716ffa00d183f150e3e35ac7d2ee03a2739158dab",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/05-host-toggle-complete.txt",
+      "bytes": 45144,
+      "sha256": "1e83a1e26783fa3f66ad2f697c9a94f7f5fc245f5744e2dcdbf26205cb9ec78a",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/05-host-toggle-complete.txt",
+        "sourceSha256": "1e83a1e26783fa3f66ad2f697c9a94f7f5fc245f5744e2dcdbf26205cb9ec78a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/06-vm-a-static-selection.jpg",
+      "bytes": 90663,
+      "sha256": "ffe9becf15fc29eff8bdf7e5ad32b827ff786b1063b2daa22ba035da8a789e61",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/06-vm-a-static-selection.jpg",
+        "sourceSha256": "ffe9becf15fc29eff8bdf7e5ad32b827ff786b1063b2daa22ba035da8a789e61",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/06-vm-a-static-selection.txt",
+      "bytes": 20624,
+      "sha256": "694b62564246a08d312f5f573a38aba96627e1a5022cfc83d5a8e6ae8b7a2886",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/06-vm-a-static-selection.txt",
+        "sourceSha256": "694b62564246a08d312f5f573a38aba96627e1a5022cfc83d5a8e6ae8b7a2886",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/07-vm-a-one-device-before-save.jpg",
+      "bytes": 123406,
+      "sha256": "955c05fb22d377ed4dbc98a6999a1370c28076d7f586ef3f2fed54137fea3244",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/07-vm-a-one-device-before-save.jpg",
+        "sourceSha256": "955c05fb22d377ed4dbc98a6999a1370c28076d7f586ef3f2fed54137fea3244",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/07-vm-a-one-device-before-save.txt",
+      "bytes": 18276,
+      "sha256": "4307ee557b5f20e38e5e0939e88a687e14f99e03e7701451c1b808cf3b72fd1d",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/07-vm-a-one-device-before-save.txt",
+        "sourceSha256": "4307ee557b5f20e38e5e0939e88a687e14f99e03e7701451c1b808cf3b72fd1d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/10-vm-b-one-device-before-save.jpg",
+      "bytes": 123155,
+      "sha256": "d6868015b64790447b955fc0f7c7a88c016a17a678823cb84e3d7a1e509a8e48",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/10-vm-b-one-device-before-save.jpg",
+        "sourceSha256": "d6868015b64790447b955fc0f7c7a88c016a17a678823cb84e3d7a1e509a8e48",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/10-vm-b-one-device-before-save.txt",
+      "bytes": 18981,
+      "sha256": "8da6f35765a268ef4d6c15e527e80766f69e773d469a17281e5458a09ac8d411",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/10-vm-b-one-device-before-save.txt",
+        "sourceSha256": "8da6f35765a268ef4d6c15e527e80766f69e773d469a17281e5458a09ac8d411",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/11-vm-b-saved.jpg",
+      "bytes": 144809,
+      "sha256": "3012b09f5da05d21a25f3ad898e6a6cd801073b5471f0f0345372a019cc8ab9e",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/11-vm-b-saved.jpg",
+        "sourceSha256": "3012b09f5da05d21a25f3ad898e6a6cd801073b5471f0f0345372a019cc8ab9e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/11-vm-b-saved.txt",
+      "bytes": 37150,
+      "sha256": "ffe1480ef196624c0610279f139311c8c6d9344b9d5b2dcf67c9531f49af4f3d",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/11-vm-b-saved.txt",
+        "sourceSha256": "ffe1480ef196624c0610279f139311c8c6d9344b9d5b2dcf67c9531f49af4f3d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/13-vm-both-saved.jpg",
+      "bytes": 145482,
+      "sha256": "9e37e0c4aa6b11351b5c27f5f8bc420494d1f23fef888437b31b56f33c36b37b",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/13-vm-both-saved.jpg",
+        "sourceSha256": "9e37e0c4aa6b11351b5c27f5f8bc420494d1f23fef888437b31b56f33c36b37b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/13-vm-both-saved.txt",
+      "bytes": 37554,
+      "sha256": "a92a2b27050c489859306c14ec5a3d223a90396e9e4c88fead6f23a9f3a5e171",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/13-vm-both-saved.txt",
+        "sourceSha256": "a92a2b27050c489859306c14ec5a3d223a90396e9e4c88fead6f23a9f3a5e171",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/15-vm-b-power-on-failed.jpg",
+      "bytes": 145772,
+      "sha256": "f5863d2c898c62bdb068dde4f744ce2a1dd81f92cedb683d71f3014cee3c3563",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/15-vm-b-power-on-failed.jpg",
+        "sourceSha256": "f5863d2c898c62bdb068dde4f744ce2a1dd81f92cedb683d71f3014cee3c3563",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/15-vm-b-power-on-failed.txt",
+      "bytes": 40755,
+      "sha256": "ec5a3e40053698c0bd34b698fb89bde80860f655611d47f8a1464333c200b4f6",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/15-vm-b-power-on-failed.txt",
+        "sourceSha256": "ec5a3e40053698c0bd34b698fb89bde80860f655611d47f8a1464333c200b4f6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/17-vm-b-first-powered-on.jpg",
+      "bytes": 150047,
+      "sha256": "3c0b75be4052a2d71d9e7b7ee973868190159cc6742b2a51e7618a0766646db7",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/17-vm-b-first-powered-on.jpg",
+        "sourceSha256": "3c0b75be4052a2d71d9e7b7ee973868190159cc6742b2a51e7618a0766646db7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/17-vm-b-first-powered-on.txt",
+      "bytes": 42711,
+      "sha256": "99c57ca3e930eaf6848ae61fcc10a38d9b0806c1a1440aedc13f72c1af26013b",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/17-vm-b-first-powered-on.txt",
+        "sourceSha256": "99c57ca3e930eaf6848ae61fcc10a38d9b0806c1a1440aedc13f72c1af26013b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/18-vm-a-reverse-power-on-failed.jpg",
+      "bytes": 151783,
+      "sha256": "068da0945d656560bac586f4cdd465b048398e01f79f09400c458465626afeec",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/18-vm-a-reverse-power-on-failed.jpg",
+        "sourceSha256": "068da0945d656560bac586f4cdd465b048398e01f79f09400c458465626afeec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/18-vm-a-reverse-power-on-failed.txt",
+      "bytes": 45390,
+      "sha256": "01f5acd5175294adee64ef1aac4c81c12314045f0d3235c13c233c0503fdea0a",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/18-vm-a-reverse-power-on-failed.txt",
+        "sourceSha256": "01f5acd5175294adee64ef1aac4c81c12314045f0d3235c13c233c0503fdea0a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/20-vm-both-power-on-failed.jpg",
+      "bytes": 148556,
+      "sha256": "6e0e22796ec735bcec52f81a8f8a17b716658b0e7557e36bb6b7b616dd1afa09",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/20-vm-both-power-on-failed.jpg",
+        "sourceSha256": "6e0e22796ec735bcec52f81a8f8a17b716658b0e7557e36bb6b7b616dd1afa09",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vcenter/20-vm-both-power-on-failed.txt",
+      "bytes": 33870,
+      "sha256": "5032d0bee51cd00d49144502c423eb3e1452e0c8b2dcb3cb4df73a5432d0ac8b",
+      "provenance": {
+        "sourceRun": "20261111-vcenter8-dependency-ui-v1",
+        "sourceFile": "ui/20-vm-both-power-on-failed.txt",
+        "sourceSha256": "5032d0bee51cd00d49144502c423eb3e1452e0c8b2dcb3cb4df73a5432d0ac8b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/collect_dependency_ui.py.txt",
+      "bytes": 3532,
+      "sha256": "c3c0936bd566416f2f333ee51dc6f6199966210e5ad86af234c7d1de04161cd3",
+      "provenance": {
+        "sourceFile": "vmware-esxi8-lab/collect_dependency_ui.py",
+        "sourceSha256": "c3c0936bd566416f2f333ee51dc6f6199966210e5ad86af234c7d1de04161cd3",
+        "transformation": "byte-identical final helper snapshot; .txt suffix prevents accidental execution/test discovery"
+      }
+    },
+    {
+      "path": "source-snapshots/collect_vcenter_dependency_readiness.py.txt",
+      "bytes": 2507,
+      "sha256": "a9d08a87b07fc5022a51d58d77702fa3d167d4ba5803b2b74ec73998447c4418",
+      "provenance": {
+        "sourceFile": "vmware-esxi8-lab/collect_vcenter_dependency_readiness.py",
+        "sourceSha256": "a9d08a87b07fc5022a51d58d77702fa3d167d4ba5803b2b74ec73998447c4418",
+        "transformation": "byte-identical final helper snapshot; .txt suffix prevents accidental execution/test discovery"
+      }
+    },
+    {
+      "path": "source-snapshots/declare_functional_dependency.py.txt",
+      "bytes": 6337,
+      "sha256": "9d7891862ddd51062881f5edeba1f769b731e030ec6a3e3ee83e40bab4e8b09d",
+      "provenance": {
+        "sourceFile": "vmware-esxi8-lab/declare_functional_dependency.py",
+        "sourceSha256": "9d7891862ddd51062881f5edeba1f769b731e030ec6a3e3ee83e40bab4e8b09d",
+        "transformation": "byte-identical final helper snapshot; .txt suffix prevents accidental execution/test discovery"
+      }
+    },
+    {
+      "path": "source-snapshots/dependency_ui_tcp_relay.py.txt",
+      "bytes": 1304,
+      "sha256": "916e6c0ef76bebde1c52ccb4a66a91ce845e3e32285072e7510cb9222c4d0335",
+      "provenance": {
+        "sourceFile": "vmware-esxi8-lab/dependency_ui_tcp_relay.py",
+        "sourceSha256": "916e6c0ef76bebde1c52ccb4a66a91ce845e3e32285072e7510cb9222c4d0335",
+        "transformation": "byte-identical final helper snapshot; .txt suffix prevents accidental execution/test discovery"
+      }
+    },
+    {
+      "path": "source-snapshots/prepare_dependency_interaction_run.py.txt",
+      "bytes": 7980,
+      "sha256": "53fc4ef5ef78430c6638c095d621920381e69833662ce50837d6df61166a93f8",
+      "provenance": {
+        "sourceFile": "vmware-esxi8-lab/prepare_dependency_interaction_run.py",
+        "sourceSha256": "53fc4ef5ef78430c6638c095d621920381e69833662ce50837d6df61166a93f8",
+        "transformation": "byte-identical final helper snapshot; .txt suffix prevents accidental execution/test discovery"
+      }
+    },
+    {
+      "path": "source-snapshots/README.md",
+      "bytes": 2909,
+      "sha256": "26cdfc947362d5cc555c2bb2db2ac9a32e6e1873063051dddc0508a0176f09da",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
+      }
+    },
+    {
+      "path": "source-snapshots/test_esxi_dependency_disable.py.txt",
+      "bytes": 7270,
+      "sha256": "f253af388f2c416093c20e954fd58a1cc566616e1655d83bdf6c83fd76f755bf",
+      "provenance": {
+        "sourceFile": "vmware-esxi8-lab/test_esxi_dependency_disable.py",
+        "sourceSha256": "f253af388f2c416093c20e954fd58a1cc566616e1655d83bdf6c83fd76f755bf",
+        "transformation": "byte-identical final helper snapshot; .txt suffix prevents accidental execution/test discovery"
+      }
+    },
+    {
+      "path": "source-snapshots/test_esxi_dependency_interaction.py.txt",
+      "bytes": 14774,
+      "sha256": "fe6806c7d4c9be80679314e1b47a1eba3cc449beb67e3af1bc12b3c36457e290",
+      "provenance": {
+        "sourceFile": "vmware-esxi8-lab/test_esxi_dependency_interaction.py",
+        "sourceSha256": "fe6806c7d4c9be80679314e1b47a1eba3cc449beb67e3af1bc12b3c36457e290",
+        "transformation": "byte-identical final helper snapshot; .txt suffix prevents accidental execution/test discovery"
+      }
+    },
+    {
+      "path": "source-snapshots/vcenter_dependency_ui.py.txt",
+      "bytes": 16311,
+      "sha256": "d533948b2efd9e2fa741ea12d5365cf042dbe368741cdb24ea25233534c49f20",
+      "provenance": {
+        "sourceFile": "vmware-esxi8-lab/vcenter_dependency_ui.py",
+        "sourceSha256": "d533948b2efd9e2fa741ea12d5365cf042dbe368741cdb24ea25233534c49f20",
+        "transformation": "byte-identical final helper snapshot; .txt suffix prevents accidental execution/test discovery"
+      }
+    },
+    {
+      "path": "summary.json",
+      "bytes": 3581,
+      "sha256": "082c3450fcc63b577617210ad1284e293ef890c49588a22d279177401bbf66d0",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
+      }
+    },
+    {
+      "path": "verify_bundle.py",
+      "bytes": 8946,
+      "sha256": "bc64ec703aa33015581b35978013fe27faae7977cb4856759cd46968f38f1ad7",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier derived from the retained evidence"
+      }
+    }
+  ]
+}

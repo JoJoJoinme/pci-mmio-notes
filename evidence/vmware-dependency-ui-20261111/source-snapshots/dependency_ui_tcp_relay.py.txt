@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+"""Loopback-only, byte-for-byte TLS relay to the isolated ESXi lab."""
+import select
+import socket
+import socketserver
+import time
+
+
+class Relay(socketserver.BaseRequestHandler):
+    def handle(self):
+        try:
+            with socket.create_connection(("172.31.91.10", 443), timeout=10) as remote:
+                sockets = [self.request, remote]
+                while True:
+                    readable, _, _ = select.select(sockets, [], [], 60)
+                    if not readable:
+                        return
+                    for source in readable:
+                        data = source.recv(65536)
+                        if not data:
+                            return
+                        destination = remote if source is self.request else self.request
+                        destination.sendall(data)
+        except (OSError, TimeoutError):
+            return
+
+
+class Server(socketserver.ThreadingTCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
+with Server(("127.0.0.1", 18443), Relay) as server:
+    server.timeout = 1
+    print("TLS byte relay ready: 127.0.0.1:18443 -> 172.31.91.10:443; lifetime <= 4 hours", flush=True)
+    deadline = time.monotonic() + 14400
+    while time.monotonic() < deadline:
+        server.handle_request()

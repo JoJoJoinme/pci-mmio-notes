@@ -1,0 +1,56 @@
+{
+  "at": "2026-11-11T01:31:11.297882+00:00",
+  "vcenter": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware vCenter Server',\n   fullName = 'VMware vCenter Server 8.0.3 build-24674346',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '00500',\n   build = '24674346',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'linux-x64',\n   productLineId = 'vpx',\n   apiType = 'VirtualCenter',\n   apiVersion = '8.0.3.0',\n   instanceUuid = 'dcbfc99c-a5d9-46f3-809d-edb52800b3d7',\n   licenseProductName = 'VMware VirtualCenter Server',\n   licenseProductVersion = '8.0'\n}",
+  "host": {
+    "id": "host-13",
+    "name": "172.31.91.10",
+    "connectionState": "connected",
+    "bootTime": "2026-11-10 16:05:56.131595+00:00",
+    "uuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+    "product": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-24280767',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.35',\n   build = '24280767',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}"
+  },
+  "pci": [
+    {
+      "id": "0000:02:01.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:02:01.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    }
+  ],
+  "vms": [
+    {
+      "name": "vcdep-20261111-both",
+      "id": "vm-4032",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] vcdep-20261111-both/vcdep-20261111-both.vmx",
+      "memoryMB": 768,
+      "devices": []
+    },
+    {
+      "name": "vcdep-20261111-a",
+      "id": "vm-4030",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] vcdep-20261111-a/vcdep-20261111-a.vmx",
+      "memoryMB": 768,
+      "devices": []
+    },
+    {
+      "name": "vcdep-20261111-b",
+      "id": "vm-4031",
+      "powerState": "poweredOff",
+      "vmx": "[pci-mmio-local] vcdep-20261111-b/vcdep-20261111-b.vmx",
+      "memoryMB": 768,
+      "devices": []
+    }
+  ],
+  "tasks": [],
+  "expiredTaskReferences": []
+}

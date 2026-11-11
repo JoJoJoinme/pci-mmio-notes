@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-10T15:56:16.601461+00:00",
+  "bootTime": "2026-11-10 15:53:14.214514+00:00",
+  "passthru": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.1"
+    }
+  ]
+}

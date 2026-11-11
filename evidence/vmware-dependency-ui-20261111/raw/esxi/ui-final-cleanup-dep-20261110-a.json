@@ -1,0 +1,9 @@
+{
+  "taskId": "haTask-2906-vim.ManagedEntity.destroy-970749171",
+  "state": "success",
+  "descriptionId": "ManagedEntity.destroy",
+  "queueTime": "2026-11-10 17:25:07.687284+00:00",
+  "startTime": "2026-11-10 17:25:07.692548+00:00",
+  "completeTime": "2026-11-10 17:25:08.490496+00:00",
+  "elapsedSeconds": 1.0601797339995755
+}

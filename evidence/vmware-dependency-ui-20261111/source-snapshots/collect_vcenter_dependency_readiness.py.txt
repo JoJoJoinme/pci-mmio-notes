@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""Read existing VCSA readiness and inventory without changing its configuration."""
+import json
+from pathlib import Path
+import ssl
+
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim
+from esxi_passthru_capability import EsxiSsh, caveat_field, utc_now
+import test_esxi_owner_activation as owner
+
+OUT = Path("/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/20261111-vcenter8-dependency-ui-v1")
+
+
+def main():
+    result = {"at": utc_now(), "address": "192.168.91.131"}
+    si = None
+    try:
+        si = SmartConnect(host="192.168.91.131", user=caveat_field("vcsa803-codex-credentials", "SSO Username"),
+                          pwd=caveat_field("vcsa803-codex-credentials", "SSO Password"),
+                          sslContext=ssl._create_unverified_context(), connectionPoolTimeout=20)
+        content = si.RetrieveContent()
+        result["about"] = str(content.about)
+        result["currentTime"] = str(si.CurrentTime())
+        result["hosts"] = [{"id": h._moId, "name": h.name, "connectionState": str(h.runtime.connectionState),
+                            "maintenance": h.runtime.inMaintenanceMode, "bootTime": str(h.runtime.bootTime),
+                            "parentName": h.parent.name} for h in owner.inventory(content, vim.HostSystem)]
+        result["datacenters"] = [{"id": d._moId, "name": d.name} for d in owner.inventory(content, vim.Datacenter)]
+        result["clusters"] = [{"id": c._moId, "name": c.name} for c in owner.inventory(content, vim.ClusterComputeResource)]
+        result["apiReady"] = True
+    except Exception as error:
+        result["apiReady"] = False
+        result["apiError"] = {"type": type(error).__name__, "message": str(error)}
+    finally:
+        if si is not None:
+            Disconnect(si)
+    ssh = EsxiSsh("192.168.91.131", caveat_field("vcsa803-codex-credentials", "Root Password"), retries=1)
+    try:
+        remote = ssh.run("/usr/lib/vmware-vpx/vpxd -v; service-control --status vmware-vpxd vsphere-ui; chage -l root; df -h /storage/db /storage/log /", check=False, timeout=45)
+        (OUT / "appliance-readiness.txt").write_text(remote.stdout + remote.stderr)
+        result["sshExit"] = remote.returncode
+    except Exception as error:
+        result["sshError"] = {"type": type(error).__name__, "message": str(error)}
+    (OUT / "readiness.json").write_text(json.dumps(result, indent=2, default=str) + "\n")
+    print(json.dumps(result, default=str))
+
+
+if __name__ == "__main__":
+    main()

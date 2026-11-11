@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+"""Declare nonshareable synthetic virtio functions on the disposable lab only."""
+import json
+import re
+from pathlib import Path
+import shlex
+import ssl
+import time
+
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim
+from esxi_passthru_capability import EsxiSsh, caveat_field, utc_now
+import test_esxi_owner_activation as owner
+from test_esxi_dependency_interaction import task_record
+
+OUT = Path("/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/20261110-esxi8-functional-dependency-v1")
+TARGETS = ["0000:01:00.0", "0000:01:00.1"]
+
+
+class InvalidSetup(RuntimeError):
+    pass
+
+
+def save(name, value):
+    (OUT / name).write_text(json.dumps(value, indent=2, default=str) + "\n")
+
+
+def main():
+    manifest = json.loads((OUT / "manifest.json").read_text())
+    settings = manifest["launchEnvironment"]
+    if settings["QEMU_ESXI_TEST_FN0_MODEL"] != "virtio-net-pci" or settings["QEMU_ESXI_TOPOLOGY"] != "pcie":
+        raise RuntimeError("Only the isolated virtio PCIe profile is allowed")
+    password = caveat_field("esxi8-auto-codex-credentials", "Password")
+    ssh = EsxiSsh("172.31.91.10", password, retries=1)
+
+    def connect():
+        return SmartConnect(host="172.31.91.10", user="root", pwd=password, sslContext=ssl._create_unverified_context(), connectionPoolTimeout=15)
+
+    si = connect()
+    try:
+        content = si.RetrieveContent()
+        host = owner.inventory(content, vim.HostSystem)[0]
+        if host.hardware.systemInfo.uuid != "6a4e818a-51ce-7d7f-a21f-000c29abaf6d" or host.config.product.build != "24280767":
+            raise RuntimeError("Unexpected ESXi instance")
+        devices = {d.id: d for d in host.hardware.pciDevice}
+        if any((devices[bdf].vendorId & 0xffff, devices[bdf].deviceId & 0xffff) != (0x1af4, 0x1041) for bdf in TARGETS):
+            raise RuntimeError("Targets are not the synthetic virtio functions")
+        matched = [d.id for d in devices.values() if (d.vendorId & 0xffff, d.deviceId & 0xffff) == (0x1af4, 0x1041)]
+        if set(matched) != set(TARGETS):
+            raise RuntimeError("passthru.map selector would affect devices outside the test pair")
+        if any(v.runtime.powerState == "poweredOn" for v in owner.inventory(content, vim.VirtualMachine)):
+            raise RuntimeError("All guests must be off")
+        old_boot = str(host.runtime.bootTime)
+        original = ssh.run("cat /etc/vmware/passthru.map").stdout
+        if any(line.strip().lower().startswith("1af4") for line in original.splitlines() if not line.lstrip().startswith("#")):
+            raise RuntimeError("Existing virtio override requires inspection; refusing to overwrite")
+        (OUT / "policy-map-before.txt").write_text(original)
+        save("policy-before.json", {"at": utc_now(), "bootTime": old_boot, "targets": TARGETS,
+                                    "matchedDevices": matched, "passthru": owner.passthru_state(host, set(TARGETS))})
+        host.configManager.pciPassthruSystem.UpdatePassthruConfig(config=[
+            vim.host.PciPassthruConfig(id=bdf, passthruEnabled=False, applyNow=True) for bdf in TARGETS])
+        updated = original.rstrip() + "\n\n# Disposable functional dependency experiment 20261110\n1af4 1041 default false\n"
+        ssh.run("printf %s " + shlex.quote(updated) + " > /etc/vmware/passthru.map")
+        actual = ssh.run("cat /etc/vmware/passthru.map").stdout
+        (OUT / "policy-map-after-write.txt").write_text(actual)
+        if actual != updated:
+            raise RuntimeError("passthru.map readback differs")
+        backup = ssh.run("/sbin/auto-backup.sh", timeout=90)
+        (OUT / "policy-config-backup.txt").write_text(backup.stdout + backup.stderr)
+        if not host.runtime.inMaintenanceMode:
+            record, _ = task_record(host.EnterMaintenanceMode_Task(timeout=60), timeout=90)
+            save("policy-maintenance.json", record)
+            if record["state"] != "success":
+                raise RuntimeError("Maintenance failed")
+        r = ssh.run("esxcli system shutdown reboot --delay=10 --reason=functional-dependency-policy-test")
+        save("policy-reboot-request.json", {"at": utc_now(), "exit": r.returncode, "stdout": r.stdout, "stderr": r.stderr})
+    finally:
+        Disconnect(si)
+    print("Functional dependency declared for exactly two virtio functions; waiting for reboot", flush=True)
+    started = time.monotonic()
+    while time.monotonic() - started < 600:
+        time.sleep(10)
+        session = None
+        try:
+            session = connect()
+            current = owner.inventory(session.RetrieveContent(), vim.HostSystem)[0]
+            if str(current.runtime.bootTime) == old_boot:
+                continue
+            data = {"at": utc_now(), "bootTime": str(current.runtime.bootTime),
+                    "passthru": owner.passthru_state(current, set(TARGETS))}
+            save("policy-after-reboot.json", data)
+            pci_text = ssh.run("esxcli hardware pci list", timeout=45).stdout
+            (OUT / "policy-pci-after-reboot.txt").write_text(pci_text)
+            restored_map = ssh.run("cat /etc/vmware/passthru.map").stdout
+            (OUT / "policy-map-after-reboot.txt").write_text(restored_map)
+            effective = {}
+            for bdf in TARGETS:
+                block = re.search(r"(?ms)^" + re.escape(bdf) + r"\n.*?(?=^0000:|\Z)", pci_text)
+                effective[bdf] = bool(block and re.search(r"FPT Sharable:\s*false", block.group()))
+            usable = restored_map == updated and all(effective.values())
+            save("policy-validation.json", {"at": utc_now(), "persisted": restored_map == updated,
+                                           "nonshareable": effective, "usableAsDependencyEvidence": usable})
+            if not usable:
+                raise InvalidSetup("Configuration persistence or effective nonshareable state was not established")
+            print(json.dumps(data), flush=True)
+            return
+        except InvalidSetup:
+            raise
+        except Exception as error:
+            print(f"Waiting for hostd: {int(time.monotonic()-started)}s ({type(error).__name__})", flush=True)
+        finally:
+            if session is not None:
+                Disconnect(session)
+    raise TimeoutError("Host reboot readiness deadline")
+
+
+if __name__ == "__main__":
+    main()

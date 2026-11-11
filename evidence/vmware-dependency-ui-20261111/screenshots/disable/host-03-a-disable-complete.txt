@@ -1,0 +1,276 @@
+- banner:
+  - link "VMware.com":
+    - /url: //www.vmware.com
+  - generic: ESXi Host Client
+  - list:
+    - link "root@127.0.0.1":
+      - /url: ""
+      - text: root@127.0.0.1
+    - link "Help":
+      - /url: ""
+      - text: Help
+    - search:
+      - searchbox "Search"
+- alert:
+  - button "Close":
+    - generic: Close
+  - generic: Successfully toggled passthrough for devices. dismiss
+- generic "Navigator":
+  - emphasis
+  - text: Navigator
+  - emphasis
+- list:
+  - emphasis
+  - link "Host":
+    - /url: "#/host"
+    - generic "Host"
+  - list:
+    - link "Manage":
+      - /url: "#/host/manage"
+      - generic "Manage"
+    - link "Monitor":
+      - /url: "#/host/monitor"
+      - generic "Monitor"
+  - emphasis
+  - link "Virtual Machines 6":
+    - /url: "#/host/vms"
+    - generic "Virtual Machines"
+    - generic: "6"
+  - emphasis
+  - link "Storage 2":
+    - /url: "#/host/storage"
+    - generic "Storage"
+    - generic: "2"
+  - emphasis
+  - link "Networking 1":
+    - /url: "#/host/networking"
+    - generic "Networking"
+    - generic: "1"
+- emphasis
+- text: esxi-a.lab.local - Manage
+- list:
+  - link "System":
+    - /url: ""
+  - link "Hardware":
+    - /url: ""
+  - link "Licensing":
+    - /url: ""
+  - link "Packages":
+    - /url: ""
+  - link "Services":
+    - /url: ""
+  - link "Security & users":
+    - /url: ""
+- list:
+  - link "PCI Devices":
+    - /url: ""
+  - link "Power Management":
+    - /url: ""
+- list:
+  - link "Toggle passthrough":
+    - /url: ""
+    - text: Toggle passthrough
+  - link "Configure SR-IOV":
+    - /url: ""
+    - text: Configure SR-IOV
+  - link "Hardware label":
+    - /url: ""
+    - text: Hardware label
+  - link "Reboot host":
+    - /url: ""
+    - text: Reboot host
+  - link "Refresh":
+    - /url: ""
+    - text: Refresh
+- searchbox "Search"
+- grid:
+  - rowgroup:
+    - row "Address Description SR-IOV Passthrough Hardware Label":
+      - columnheader:
+        - checkbox [disabled]
+      - columnheader "Address":
+        - link:
+          - /url: "#"
+        - text: Address
+      - columnheader "Description":
+        - link:
+          - /url: "#"
+        - text: Description
+      - columnheader "SR-IOV":
+        - link:
+          - /url: "#"
+        - text: SR-IOV
+      - columnheader "Passthrough":
+        - link:
+          - /url: "#"
+        - text: Passthrough
+      - columnheader "Hardware Label":
+        - link:
+          - /url: "#"
+        - text: Hardware Label
+- grid:
+  - rowgroup:
+    - row "0000:00:00.0 Intel Corporation QEMU Virtual Machine Not capable Not capable":
+      - gridcell:
+        - checkbox [disabled]
+      - gridcell "0000:00:00.0":
+        - generic "0000:00:00.0"
+      - gridcell "Intel Corporation QEMU Virtual Machine"
+      - gridcell "Not capable"
+      - gridcell "Not capable"
+      - gridcell
+    - row "0000:00:01.0 Unknown VGA compatible controller Not capable Not capable":
+      - gridcell:
+        - checkbox [disabled]
+      - gridcell "0000:00:01.0":
+        - generic "0000:00:01.0"
+      - gridcell "Unknown VGA compatible controller"
+      - gridcell "Not capable"
+      - gridcell "Not capable"
+      - gridcell
+    - row "0000:00:05.0 Intel Corporation 82574L Gigabit Network Connection Not capable Not capable":
+      - gridcell:
+        - checkbox [disabled]
+      - gridcell "0000:00:05.0":
+        - generic "0000:00:05.0"
+      - gridcell "Intel Corporation 82574L Gigabit Network Connection"
+      - gridcell "Not capable"
+      - gridcell "Not capable"
+      - gridcell
+    - row "0000:00:08.0 Red Hat, Inc. QEMU PCIe Root port Not capable Not capable":
+      - gridcell:
+        - checkbox [disabled]
+      - gridcell "0000:00:08.0":
+        - generic "0000:00:08.0"
+      - gridcell "Red Hat, Inc. QEMU PCIe Root port"
+      - gridcell "Not capable"
+      - gridcell "Not capable"
+      - gridcell
+    - row "0000:01:00.0 Red Hat, Inc PCI bridge Not capable Not capable":
+      - gridcell:
+        - checkbox [disabled]
+      - gridcell "0000:01:00.0":
+        - generic "0000:01:00.0"
+      - gridcell "Red Hat, Inc PCI bridge"
+      - gridcell "Not capable"
+      - gridcell "Not capable"
+      - gridcell
+    - row "0000:02:01.1 Intel Corporation 82574L Gigabit Network Connection Not capable Disabled":
+      - gridcell:
+        - checkbox
+      - gridcell "0000:02:01.1":
+        - generic "0000:02:01.1"
+      - gridcell "Intel Corporation 82574L Gigabit Network Connection"
+      - gridcell "Not capable"
+      - gridcell "Disabled"
+      - gridcell
+    - row "0000:02:01.0 Intel Corporation 82574L Gigabit Network Connection Not capable Disabled":
+      - gridcell:
+        - checkbox
+      - gridcell "0000:02:01.0":
+        - generic "0000:02:01.0"
+      - gridcell "Intel Corporation 82574L Gigabit Network Connection"
+      - gridcell "Not capable"
+      - gridcell "Disabled"
+      - gridcell
+    - row "0000:00:1f.0 Intel Corporation QEMU Virtual Machine Not capable Not capable":
+      - gridcell:
+        - checkbox [disabled]
+      - gridcell "0000:00:1f.0":
+        - generic "0000:00:1f.0"
+      - gridcell "Intel Corporation QEMU Virtual Machine"
+      - gridcell "Not capable"
+      - gridcell "Not capable"
+      - gridcell
+    - row "0000:00:1f.2 Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA AHCI Controller Not capable Not capable":
+      - gridcell:
+        - checkbox [disabled]
+      - gridcell "0000:00:1f.2":
+        - generic "0000:00:1f.2"
+      - gridcell "Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA AHCI Controller"
+      - gridcell "Not capable"
+      - gridcell "Not capable"
+      - gridcell
+    - row "0000:00:1f.3 Intel Corporation QEMU Virtual Machine Not capable Not capable":
+      - gridcell:
+        - checkbox [disabled]
+      - gridcell "0000:00:1f.3":
+        - generic "0000:00:1f.3"
+      - gridcell "Intel Corporation QEMU Virtual Machine"
+      - gridcell "Not capable"
+      - gridcell "Not capable"
+      - gridcell
+- generic: 10 items
+- combobox:
+  - option "Quick filters..." [selected]
+  - option "Passthrough capable"
+  - option "Passthrough active"
+  - option "SR-IOV capable"
+  - option "SR-IOV active"
+- emphasis
+- text: Recent tasks
+- emphasis
+- grid:
+  - rowgroup:
+    - row "Task Target Initiator Queued Started Result Completed":
+      - columnheader "Task":
+        - link:
+          - /url: "#"
+        - link "Task":
+          - /url: "#"
+      - columnheader "Target":
+        - link:
+          - /url: "#"
+        - link "Target":
+          - /url: "#"
+      - columnheader "Initiator":
+        - link:
+          - /url: "#"
+        - link "Initiator":
+          - /url: "#"
+      - columnheader "Queued":
+        - link:
+          - /url: "#"
+        - link "Queued":
+          - /url: "#"
+      - columnheader "Started":
+        - link:
+          - /url: "#"
+        - link "Started":
+          - /url: "#"
+      - columnheader "Result":
+        - link:
+          - /url: "#"
+        - link "Result":
+          - /url: "#"
+          - text: Result
+      - columnheader "Completed":
+        - link:
+          - /url: "#"
+        - link "Completed":
+          - /url: "#"
+          - text: Completed
+- grid:
+  - rowgroup:
+    - row "Update Passthru Config esxi-a.lab.local root 11/11/2026 15:36:18 11/11/2026 15:36:18 Completed successfully 11/11/2026 15:36:21":
+      - gridcell "Update Passthru Config"
+      - gridcell "esxi-a.lab.local"
+      - gridcell "root"
+      - gridcell "11/11/2026 15:36:18"
+      - gridcell "11/11/2026 15:36:18"
+      - gridcell "Completed successfully":
+        - link "Completed successfully":
+          - /url: "#/host/monitor/tasks/haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-1514942933"
+          - text: Completed successfully
+      - gridcell "11/11/2026 15:36:21"
+    - row "Update Options esxi-a.lab.local root 11/11/2026 15:35:22 11/11/2026 15:35:22 Completed successfully 11/11/2026 15:35:22":
+      - gridcell "Update Options"
+      - gridcell "esxi-a.lab.local"
+      - gridcell "root"
+      - gridcell "11/11/2026 15:35:22"
+      - gridcell "11/11/2026 15:35:22"
+      - gridcell "Completed successfully":
+        - link "Completed successfully":
+          - /url: "#/host/monitor/tasks/haTask-ha-host-vim.option.OptionManager.updateValues-1514942621"
+          - text: Completed successfully
+      - gridcell "11/11/2026 15:35:22"

@@ -1,0 +1,9 @@
+{
+  "taskId": "task-7149",
+  "state": "success",
+  "descriptionId": "VirtualMachine.destroy",
+  "queueTime": "2026-11-11 02:02:43.343792+00:00",
+  "startTime": "2026-11-11 02:02:43.378182+00:00",
+  "completeTime": "2026-11-11 02:02:45.153216+00:00",
+  "elapsedSeconds": 2.1067574140033685
+}

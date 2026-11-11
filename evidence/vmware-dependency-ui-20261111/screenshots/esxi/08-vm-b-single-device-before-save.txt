@@ -1,0 +1,340 @@
+Browser tab: 1, Title: "esxi-a.lab.local - VMware ESXi", URL: "https://127.0.0.1:18443/ui/#/host/vms/2908".
+0 AXWebArea esxi-a.lab.local - VMware ESXi, URL: 127.0.0.1:18443/ui/#/host/vms/2908
+	1 container
+		2 link Description: VMware.com, Value: vmware.com/
+		3 text ESXi Host Client
+		4 content list
+			5 link Description: root@127.0.0.1 , Value: 127.0.0.1:18443/ui/, ID: userMenuLink
+			6 link Description: Help , Value: 127.0.0.1:18443/ui/
+			7 container
+				8 search text field (settable) Description: Search, ID: search-field
+				9 image
+		10 container
+			313 container
+				314 button Close
+				315 text Successfully toggled passthrough for devices.
+				316 link dismiss
+					317 text dismiss
+			11 container
+				12 text Navigator
+				13 container Navigator
+				14 content list
+					15 container
+						16 link Description: Host, Value: 127.0.0.1:18443/ui/#/host
+						17 content list
+							18 link Description: Manage, Value: 127.0.0.1:18443/ui/#/host/manage
+							19 link Description: Monitor, Value: 127.0.0.1:18443/ui/#/host/monitor
+					732 container
+						733 link Description: Virtual Machines 9, Value: 127.0.0.1:18443/ui/#/host/vms
+						734 content list
+							740 container
+								741 link Description: dep-20261110-b, Value: 127.0.0.1:18443/ui/#/host/vms/2908
+								742 content list
+									743 link Description: Monitor, Value: 127.0.0.1:18443/ui/#/host/vms/2908/monitor
+							744 container
+								745 link Description: dep-20261110-a, Value: 127.0.0.1:18443/ui/#/host/vms/2906
+							739 link Description: More VMs..., Value: 127.0.0.1:18443/ui/#/host/vms
+					22 container
+						23 link Description: Storage 2, Value: 127.0.0.1:18443/ui/#/host/storage
+					24 container
+						25 link Description: Networking 1, Value: 127.0.0.1:18443/ui/#/host/networking
+			26 container
+				27 text dep-20261110-b
+				746 container
+					747 container
+						748 image Click to open a browser console to this virtual machine
+					749 container
+						750 text dep-20261110-b
+						751 text Guest OS
+						752 text Other 5.x Linux (64-bit)
+						753 text Compatibility
+						754 text ESXi 8.0 virtual machine
+						755 text VMware Tools
+						756 text No
+						757 text CPUs
+						758 text 1
+						759 text Memory
+						760 text 768 MB
+					761 container
+						762 image CPU
+						763 text CPU 0 MHz
+					764 container
+						765 image MEMORY
+						766 text MEMORY 0 B
+					767 container
+						768 image STORAGE
+						769 text STORAGE 1,016 B
+					770 content list
+						771 link Description: Console, Help: Open a console to this virtual machine, Value: 127.0.0.1:18443/ui/
+						772 link Description: Monitor, Help: Monitor this virtual machine, Value: 127.0.0.1:18443/ui/
+						773 link Description: Power on, Help: Power on this virtual machine, Value: 127.0.0.1:18443/ui/
+						774 link Description: Power off, Help: Power off this virtual machine, Value: 127.0.0.1:18443/ui/
+						775 link Description: Suspend, Help: Suspend this virtual machine, Value: 127.0.0.1:18443/ui/
+						776 link Description: Restart, Help: Restart this virtual machine, Value: 127.0.0.1:18443/ui/
+						777 link Description: Edit, Help: Edit this virtual machine's settings, Value: 127.0.0.1:18443/ui/
+						778 link Description: Refresh, Help: Refresh this virtual machine's summary, Value: 127.0.0.1:18443/ui/
+						779 link Description: Actions, Help: Actions for this virtual machine, Value: 127.0.0.1:18443/ui/
+					780 container
+						781 text General Information
+					782 container
+						783 container Networking
+							784 text Networking
+						785 link
+						786 container VMware Tools
+							787 text VMware Tools
+						788 container Unknown
+							789 text Unknown
+						790 container Storage
+							791 text Storage
+						792 container 0 disk
+							793 text 0 disk
+						794 container Notes
+							795 text Notes
+						796 container Edit notes
+							797 content list
+								798 link Edit notes
+									799 text Edit notes
+					800 container
+						801 text Hardware Configuration
+					802 container
+						803 container CPU
+							804 text CPU
+						805 container 1 vCPUs
+							806 text 1 vCPUs
+						807 container Memory
+							808 text Memory
+						809 container 768 MB
+							810 text 768 MB
+						811 container Video card
+							812 text Video card
+						813 container 4 MB
+							814 text 4 MB
+						815 container Others
+							816 text Others
+						817 container Additional Hardware
+							818 text Additional Hardware
+					819 container
+						820 text Resource Consumption
+					821 container
+						822 container Consumed host CPU
+							823 text Consumed host CPU
+						824 container 0 MHz
+							825 text 0 MHz
+						826 container Consumed host memory
+							827 text Consumed host memory
+						828 container 0 MB
+							829 text 0 MB
+						830 container Active guest memory
+							831 text Active guest memory
+						832 container 0 MB
+							833 text 0 MB
+						834 container Storage
+							835 text Storage
+						836 container Provisioned
+							837 text Provisioned
+						838 container Unknown
+							839 text Unknown
+						840 container Uncommitted
+							841 text Uncommitted
+						842 container 2.23 GB
+							843 text 2.23 GB
+						844 container Not-shared
+							845 text Not-shared
+						846 container 1,016 B
+							847 text 1,016 B
+						848 container Used
+							849 text Used
+						850 container 1,016 B
+							851 text 1,016 B
+			227 container
+				228 container
+					229 text Recent tasks
+					230 container Minimize
+				231 container
+					232 table
+						233 row Task Target Initiator Queued Started Result Completed
+							234 cell
+								235 link 127.0.0.1:18443/ui/#
+								236 link Description: Task, Value: 127.0.0.1:18443/ui/#
+							237 cell
+								238 link 127.0.0.1:18443/ui/#
+								239 link Description: Target, Value: 127.0.0.1:18443/ui/#
+							240 cell
+								241 link 127.0.0.1:18443/ui/#
+								242 link Description: Initiator, Value: 127.0.0.1:18443/ui/#
+							243 cell
+								244 link 127.0.0.1:18443/ui/#
+								245 link Description: Queued, Value: 127.0.0.1:18443/ui/#
+							246 cell
+								247 link 127.0.0.1:18443/ui/#
+								248 link Description: Started, Value: 127.0.0.1:18443/ui/#
+							249 cell
+								250 link 127.0.0.1:18443/ui/#
+								251 link Description: Result, Value: 127.0.0.1:18443/ui/#
+							252 cell
+								253 link 127.0.0.1:18443/ui/#
+								254 link Description: Completed, Value: 127.0.0.1:18443/ui/#
+					255 table
+						455 container
+							852 row Reload esxi-a.lab.local root 11/11/2026 00:59:08 11/11/2026 00:59:08 Completed successfully 11/11/2026 00:59:08
+								853 cell
+									854 text Reload
+								855 cell
+									856 text esxi-a.lab.local
+								857 cell
+									858 text root
+								859 cell
+									860 text 11/11/2026 00:59:08
+								861 cell
+									862 text 11/11/2026 00:59:08
+								863 cell
+									864 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970739528
+								865 cell
+									866 text 11/11/2026 00:59:08
+							867 row Reload esxi-a.lab.local root 11/11/2026 00:59:07 11/11/2026 00:59:07 Completed successfully 11/11/2026 00:59:07
+								868 cell
+									869 text Reload
+								870 cell
+									871 text esxi-a.lab.local
+								872 cell
+									873 text root
+								874 cell
+									875 text 11/11/2026 00:59:07
+								876 cell
+									877 text 11/11/2026 00:59:07
+								878 cell
+									879 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970739514
+								880 cell
+									881 text 11/11/2026 00:59:07
+							882 row Reconfig VM dep-20261110-a root 11/11/2026 00:58:49 11/11/2026 00:58:49 Completed successfully 11/11/2026 00:58:51
+								883 cell
+									884 text Reconfig VM
+								885 cell
+									886 link Description: dep-20261110-a, Value: 127.0.0.1:18443/ui/#/host/vms/2906
+								887 cell
+									888 text root
+								889 cell
+									890 text 11/11/2026 00:58:49
+								891 cell
+									892 text 11/11/2026 00:58:49
+								893 cell
+									894 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-2906-vim.VirtualMachine.reconfigure-970739415
+								895 cell
+									896 text 11/11/2026 00:58:51
+							897 row Reload esxi-a.lab.local root 11/11/2026 00:55:40 11/11/2026 00:55:40 Completed successfully 11/11/2026 00:55:40
+								898 cell
+									899 text Reload
+								900 cell
+									901 text esxi-a.lab.local
+								902 cell
+									903 text root
+								904 cell
+									905 text 11/11/2026 00:55:40
+								906 cell
+									907 text 11/11/2026 00:55:40
+								908 cell
+									909 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970738060
+								910 cell
+									911 text 11/11/2026 00:55:40
+							912 row Reload esxi-a.lab.local root 11/11/2026 00:55:38 11/11/2026 00:55:38 Completed successfully 11/11/2026 00:55:38
+								913 cell
+									914 text Reload
+								915 cell
+									916 text esxi-a.lab.local
+								917 cell
+									918 text root
+								919 cell
+									920 text 11/11/2026 00:55:38
+								921 cell
+									922 text 11/11/2026 00:55:38
+								923 cell
+									924 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.ManagedEntity.reload-970738056
+								925 cell
+									926 text 11/11/2026 00:55:38
+							927 row Update Passthru Config esxi-a.lab.local root 11/11/2026 00:55:14 11/11/2026 00:55:14 Completed successfully 11/11/2026 00:55:16
+								928 cell
+									929 text Update Passthru Config
+								930 cell
+									931 text esxi-a.lab.local
+								932 cell
+									933 text root
+								934 cell
+									935 text 11/11/2026 00:55:14
+								936 cell
+									937 text 11/11/2026 00:55:14
+								938 cell
+									939 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.host.PciPassthruSystem.updatePassthruConfig-970738036
+								940 cell
+									941 text 11/11/2026 00:55:16
+							942 row Update Options esxi-a.lab.local root 11/11/2026 00:53:43 11/11/2026 00:53:43 Completed successfully 11/11/2026 00:53:43
+								943 cell
+									944 text Update Options
+								945 cell
+									946 text esxi-a.lab.local
+								947 cell
+									948 text root
+								949 cell
+									950 text 11/11/2026 00:53:43
+								951 cell
+									952 text 11/11/2026 00:53:43
+								953 cell
+									954 link Description: Completed successfully, Value: 127.0.0.1:18443/ui/#/host/monitor/tasks/haTask-ha-host-vim.option.OptionManager.updateValues-970737541
+								955 cell
+									956 text 11/11/2026 00:53:43
+		957 container
+			958 text Edit settings - dep-20261110-b (ESXi 8.0 virtual machine)
+			959 container
+				960 button Virtual Hardware
+				961 button VM Options
+				962 content list
+					963 link Description: Add hard disk, Help: Add a hard disk to virtual machine, Value: 127.0.0.1:18443/ui/
+					964 link Description: Add network adapter, Help: Add a network adapter to the virtual machine, Value: 127.0.0.1:18443/ui/
+					965 link Description: Add other device, Help: Add other hardware to this virtual machine, Value: 127.0.0.1:18443/ui/
+				966 container
+					967 container CPU
+						968 text CPU
+					969 container 1
+						970 container
+							971 container CPU
+								972 pop up button (collapsed, settable) CPU, Value: 1, Secondary Actions: Expand
+									973 menu
+										974 (selected) 1
+										975 2
+										976 3
+										977 4
+					978 container Memory
+						979 text Memory
+					980 container 768 MB
+						981 container
+							982 container Hard disk
+								983 text field (settable) Hard disk, Value: 768
+							984 container Memory Unit
+								985 pop up button (collapsed, settable) Memory Unit, Value: MB, Secondary Actions: Expand
+									986 menu
+										987 (selected) MB
+										988 GB
+										989 TB
+					990 container Video Card
+						991 text Video Card
+					992 container Specify custom settings
+						993 container Video Card
+							994 pop up button (collapsed, settable) Video Card, Value: Specify custom settings, Secondary Actions: Expand
+								995 menu
+									996 Default settings
+									997 (selected) Specify custom settings
+					998 container New PCI device
+						999 text New PCI device
+					1000 container 82574L Gigabit Network Connection - 0000:02:01.1
+						1001 container
+							1002 pop up button (collapsed, settable) Value: 82574L Gigabit Network Connection - 0000:02:01.1, Secondary Actions: Expand
+								1003 menu
+									1004 82574L Gigabit Network Connection - 0000:02:01.0
+									1005 (selected) 82574L Gigabit Network Connection - 0000:02:01.1
+					1006 container Note
+						1007 text Note
+					1008 container   Some virtual machine operations are unavailable when PCI/PCIe passthrough devices are present. You cannot suspend, migrate with vMotion, or take or restore snapshots of such virtual machines.
+						1009 text Some virtual machine operations are unavailable when PCI/PCIe passthrough devices are present. You cannot suspend, migrate with vMotion, or take or restore snapshots of such virtual machines.
+			1010 button SAVE
+			1011 button CANCEL
+
+The focused UI element is 998 container New PCI device

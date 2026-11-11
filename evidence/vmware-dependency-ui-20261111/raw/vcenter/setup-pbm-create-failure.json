@@ -1,0 +1,14 @@
+{
+  "taskId": "task-7109",
+  "state": "error",
+  "descriptionId": "Folder.createVm",
+  "queueTime": "2026-11-10 17:38:56.112973+00:00",
+  "startTime": "2026-11-10 17:38:56.133557+00:00",
+  "completeTime": "2026-11-10 17:38:56.364475+00:00",
+  "elapsedSeconds": 1.0932673540000906,
+  "fault": {
+    "type": "vmodl.fault.SystemError",
+    "message": "(vmodl.fault.SystemError) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = \"A general system error occurred:  PBM error occurred during PreCreateCheckCallback: No version for VMODL calls to <<last binding: <<TCP '127.0.0.1 : 57482'>, <TCP '127.0.0.1 : 1080'>> >, /pbm/sdk>\",\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [],\n   reason = \" PBM error occurred during PreCreateCheckCallback: No version for VMODL calls to <<last binding: <<TCP '127.0.0.1 : 57482'>, <TCP '127.0.0.1 : 1080'>> >, /pbm/sdk>\"\n}",
+    "faultMessages": []
+  }
+}

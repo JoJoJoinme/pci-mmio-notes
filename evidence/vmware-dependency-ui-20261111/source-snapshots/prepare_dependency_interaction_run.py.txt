@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Boot an isolated overlay of the existing ESXi lab and collect readiness."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import time
+
+from esxi_passthru_capability import EsxiSsh, caveat_field, utc_now
+
+RUN = "20261110-esxi8-dependency-interaction-v1"
+OUT = Path("/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs") / RUN
+STATE = Path("/root/vm") / RUN
+BASE = Path("/root/vm/esxi8-mf")
+LAB = Path(__file__).resolve().parent
+QEMU = Path("/root/src/qemu-11.0.2/build-lab/qemu-system-x86_64")
+
+
+def save(name, obj):
+    (OUT / name).write_text(json.dumps(obj, indent=2, default=str) + "\n")
+
+
+def digest(path):
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(4 * 1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def main():
+    global RUN, OUT, STATE
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--resume", action="store_true", help="Reuse only this run's isolated overlays")
+    parser.add_argument("--run-id", default=RUN)
+    parser.add_argument("--topology", choices=["legacy", "pcie"], default="legacy")
+    parser.add_argument("--model", choices=["e1000e", "virtio-net-pci"], default="e1000e")
+    parser.add_argument("--scope", default=None)
+    args = parser.parse_args()
+    if not re.fullmatch(r"20\d{6}-esxi8-[a-z0-9-]+", args.run_id):
+        raise RuntimeError("Run ID must be a simple name in this experiment namespace")
+    RUN = args.run_id
+    OUT = Path("/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs") / RUN
+    STATE = Path("/root/vm") / RUN
+    OUT.mkdir(parents=True, exist_ok=True)
+    memory_command = "Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory,FreeVirtualMemory | ConvertTo-Json -Compress"
+    memory = json.loads(subprocess.check_output([
+        "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "-NoProfile", "-NonInteractive", "-Command", memory_command
+    ], text=True).strip())
+    save("latest-memory-preflight.json", {"at": utc_now(), **memory, "units": "KiB", "minimumPhysicalGiB": 10, "minimumCommitHeadroomGiB": 14})
+    if memory["FreePhysicalMemory"] < 10 * 1024 * 1024 or memory["FreeVirtualMemory"] < 14 * 1024 * 1024:
+        print("Host memory preflight failed; no VM started. Need 10 GiB available physical memory and 14 GiB commit headroom.", flush=True)
+        return 3
+    if STATE.exists() and any(STATE.iterdir()) and not args.resume:
+        raise RuntimeError("Refusing to reuse an existing run state")
+    running = subprocess.run(["pgrep", "-af", "qemu-system"], text=True, capture_output=True)
+    if running.returncode == 0:
+        raise RuntimeError("Existing QEMU process requires target isolation review")
+    STATE.mkdir(mode=0o700, exist_ok=True)
+    if args.resume:
+        previous = json.loads((OUT / "manifest.json").read_text())
+        if previous["state"] != str(STATE):
+            raise RuntimeError("Unexpected resume state directory")
+        for required in ["system.qcow2", "datastore.qcow2", "OVMF_VARS.fd", "launch.sh"]:
+            if not (STATE / required).is_file():
+                raise RuntimeError("Missing resume artifact: " + required)
+        env = {**os.environ, **previous["launchEnvironment"]}
+        start = subprocess.run(["bash", "--noprofile", "--norc", str(STATE / "launch.sh")], env=env, capture_output=True, text=True)
+        save("resume-launch.json", {"at": utc_now(), "returncode": start.returncode, "stdout": start.stdout, "stderr": start.stderr})
+        if start.returncode:
+            return start.returncode
+        print("Resumed isolated run. Re-run preflight after hostd becomes available.", flush=True)
+        return 0
+    manifest = {
+        "runId": RUN, "startedAt": utc_now(),
+        "experimentIds": ["VMW-DEP-001", "VMW-OWNER-002"],
+        "caseIds": ["A05", "O05", "O10"], "riskIds": ["R01", "R02", "R04"],
+        "scope": args.scope or f"Synthetic {args.topology} topology with {args.model}: Host Client, configuration API and power-on",
+        "host": "172.31.91.10", "state": str(STATE),
+        "kernel": subprocess.check_output(["uname", "-r"], text=True).strip(),
+        "qemuVersion": subprocess.check_output([str(QEMU), "--version"], text=True).strip(),
+        "sources": {},
+    }
+    for source in [BASE / "esxi8-system.qcow2", BASE / "esxi8-datastore.qcow2", BASE / "OVMF_VARS.fd", QEMU, LAB / "start-qemu-esxi8-mf.sh"]:
+        manifest["sources"][str(source)] = {"sha256": digest(source), "size": source.stat().st_size}
+    for label, source in [("system", BASE / "esxi8-system.qcow2"), ("datastore", BASE / "esxi8-datastore.qcow2")]:
+        subprocess.run(["qemu-img", "create", "-f", "qcow2", "-F", "qcow2", "-b", str(source), str(STATE / f"{label}.qcow2")], check=True)
+    shutil.copyfile(BASE / "OVMF_VARS.fd", STATE / "OVMF_VARS.fd")
+    launcher = STATE / "launch.sh"
+    launcher.write_text((LAB / "start-qemu-esxi8-mf.sh").read_text().replace("\r\n", "\n"))
+    overrides = {
+        "QEMU_ESXI_INSTANCE": "dep-interaction", "QEMU_ESXI_NAME": RUN,
+        "QEMU_ESXI_VM_DIR": str(STATE), "QEMU_ESXI_SYSTEM_DISK": str(STATE / "system.qcow2"),
+        "QEMU_ESXI_DATASTORE_DISK": str(STATE / "datastore.qcow2"),
+        "QEMU_ESXI_OVMF_VARS": str(STATE / "OVMF_VARS.fd"),
+        "QEMU_ESXI_QEMU_BINARY": str(QEMU), "QEMU_ESXI_TOPOLOGY": args.topology,
+        "QEMU_ESXI_TEST_FN0_MODEL": args.model, "QEMU_ESXI_TEST_FN1_MODEL": args.model,
+        "QEMU_ESXI_IVSHMEM_SIZE": "0", "QEMU_ESXI_EDU": "0",
+        "QEMU_ESXI_MEMORY_MB": "8192", "QEMU_ESXI_VCPU_COUNT": "4",
+        "QEMU_ESXI_UUID": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+        "QEMU_ESXI_MGMT_MAC": "00:0c:29:ab:af:6d", "QEMU_ESXI_TAP": "tap-esxi8-dep",
+        "QEMU_ESXI_VNC_DISPLAY": "7", "QEMU_ESXI_QTEST_SOCKET": str(STATE / "qtest.sock"),
+        "QEMU_ESXI_DHCP": "0", "QEMU_ESXI_TRACE": "0",
+    }
+    manifest["launchEnvironment"] = overrides
+    save("manifest.json", manifest)
+    start = subprocess.run(["bash", "--noprofile", "--norc", str(launcher)], env={**os.environ, **overrides}, text=True, capture_output=True)
+    save("launch.json", {"returncode": start.returncode, "stdout": start.stdout, "stderr": start.stderr})
+    if start.returncode:
+        print(start.stderr, flush=True)
+        return start.returncode
+    pid = int((STATE / "qemu.pid").read_text())
+    manifest["qemuPid"] = pid
+    manifest["qemuArgv"] = Path(f"/proc/{pid}/cmdline").read_bytes().decode().split("\0")[:-1]
+    save("manifest.json", manifest)
+    print(f"QEMU started: PID={pid}; isolated overlays={STATE}", flush=True)
+    ssh = EsxiSsh("172.31.91.10", caveat_field("esxi8-auto-codex-credentials", "Password"), retries=1)
+    start_time = time.monotonic()
+    attempts = []
+    while time.monotonic() - start_time < 660:
+        if not Path(f"/proc/{pid}").exists():
+            raise RuntimeError("QEMU exited before readiness")
+        try:
+            r = ssh.run("vmware -vl; vim-cmd hostsvc/hostsummary", check=False, timeout=25)
+            attempts.append({"at": utc_now(), "exit": r.returncode, "stderr": r.stderr})
+            if r.returncode == 0 and "VMware ESXi" in r.stdout and "overallStatus" in r.stdout:
+                (OUT / "host-readiness.txt").write_text(r.stdout)
+                save("readiness.json", {"ready": True, "at": utc_now(), "attempts": attempts})
+                print("ESXi SSH + hostd ready", flush=True)
+                return 0
+        except subprocess.TimeoutExpired:
+            attempts.append({"at": utc_now(), "result": "ssh-timeout"})
+        save("readiness.json", {"ready": False, "attempts": attempts})
+        print(f"Waiting for ESXi: {int(time.monotonic() - start_time)}s", flush=True)
+        time.sleep(10)
+    save("readiness.json", {"ready": False, "status": "deadline", "attempts": attempts})
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

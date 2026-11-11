@@ -1,0 +1,37 @@
+{
+  "request": [
+    "0000:02:01.0"
+  ],
+  "before": [
+    {
+      "id": "0000:02:01.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:02:01.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    }
+  ],
+  "after": [
+    {
+      "id": "0000:02:01.0",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:02:01.1",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:01:00.0"
+    }
+  ]
+}

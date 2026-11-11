@@ -1,0 +1,8 @@
+Source run: 20261110-esxi8-functional-dependency-v1
+Source file: persistence-diagnostic.txt
+Source SHA-256: d10132be0fb1baf5aba95232a64180040db1536e2263fd4405aad8e192a67299
+Line numbers refer to the retained original file.
+
+--- original lines 1-1 ---
+1: lrwxrwxrwx    1 root     root            22 Nov 10 15:55 /bootbank -> /tmp/_bootbankned_uov3
+

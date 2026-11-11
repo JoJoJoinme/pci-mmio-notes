@@ -1,0 +1,49 @@
+{
+  "recordDateLocal": "2026-11-11",
+  "timezone": "Asia/Shanghai",
+  "esxi": "8.0.3 build-24280767",
+  "apiVersion": "8.0.3.0",
+  "hostClient": "2.18.0-23593406",
+  "vcenter": "8.0.3 build-24674346",
+  "qemuVersion": "QEMU emulator version 11.0.2\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "substrateKernel": "6.6.123.2-microsoft-standard-WSL2+",
+  "topology": {
+    "rootPort": "0000:00:08.0",
+    "legacyBridge": "0000:01:00.0",
+    "a": "0000:02:01.0",
+    "b": "0000:02:01.1",
+    "vendorDevice": "8086:10d3",
+    "resetMethod": "Bridge reset",
+    "fptSharable": true
+  },
+  "outerCpuFlags": "host,+vmx,-vmx-tsc-scaling",
+  "outerVcpus": 4,
+  "outerMemoryMiB": 8192,
+  "guest": {
+    "firmware": "efi",
+    "hardwareVersion": 20,
+    "vcpus": 1,
+    "memoryMiB": 768,
+    "fullMemoryReservation": true,
+    "guestOsIoValidated": false
+  },
+  "initialSetupManifestSha256": "dbbea2ae72c32a8d197489a67e8e72d76d84e072c1028331d0d821ddcd21ae87",
+  "qemuBinarySha256": "10d9717b7df2320d52b69a52ed1aa12b5e7288cee59c578fd9cdd28fe060abd6",
+  "unchangedBaseImages": [
+    {
+      "name": "esxi8-system.qcow2",
+      "sha256": "a8d810322ff5ba3942f1a34b7e8a5f49b08e0abf7427b8633239d0fcfa68b1ea",
+      "unchanged": true
+    },
+    {
+      "name": "esxi8-datastore.qcow2",
+      "sha256": "8f602feb40772b22f164c0b61da0c752ff0bbca21b01f5faa4e00ee56bdd9323",
+      "unchanged": true
+    },
+    {
+      "name": "OVMF_VARS.fd",
+      "sha256": "7b652cb4211ca0158a5ef35908db3ebe5d1d27cfa0fa5d877640a9e0a3c1f21a",
+      "unchanged": true
+    }
+  ]
+}

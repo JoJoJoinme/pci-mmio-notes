@@ -1,0 +1,31 @@
+{
+  "label": "api-03-a-first",
+  "peerPowerStatesBefore": {
+    "vcdep-20261111-both": "poweredOff",
+    "vcdep-20261111-a": "poweredOff",
+    "vcdep-20261111-b": "poweredOff"
+  },
+  "task": {
+    "taskId": "task-7118",
+    "state": "success",
+    "descriptionId": "VirtualMachine.powerOn",
+    "queueTime": "2026-11-10 17:49:02.342887+00:00",
+    "startTime": "2026-11-10 17:49:02.364266+00:00",
+    "completeTime": "2026-11-10 17:49:09.826737+00:00",
+    "elapsedSeconds": 8.298959011999614
+  },
+  "after": {
+    "name": "vcdep-20261111-a",
+    "id": "vm-4030",
+    "powerState": "poweredOn",
+    "vmx": "[pci-mmio-local] vcdep-20261111-a/vcdep-20261111-a.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}
