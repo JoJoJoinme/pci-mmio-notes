@@ -2,3 +2,5 @@
 {"at":"2026-11-11T11:39:46.181Z","label":"host-02-enabled","note":"After the Host Client Toggle; paired snapshot records both functions Active.","url":"https://127.0.0.1:18443/ui/#/host/manage/hardware/pci-devices"}
 {"at":"2026-11-11T11:40:22.913Z","label":"host-03-both-before-power","note":"Correct VM name and two PCI device entries confirmed before UI Power on.","url":"https://127.0.0.1:18443/ui/#/host/vms/2889"}
 {"at":"2026-11-11T11:40:57.771Z","label":"host-04-both-after-power","note":"Post-click UI capture; task timestamp and API collection determine the outcome, not earlier task rows.","url":"https://127.0.0.1:18443/ui/#/host/vms/2889"}
+{"at":"2026-11-11T13:22:20.565Z","label":"vc-00-service-unavailable","note":"Environment recovery observation, excluded from PCI behavior results; no VM operations performed in vCenter UI."}
+{"at":"2026-11-11T14:30:09.884Z","label":"vc-01-login-recovered","note":"Authenticated vCenter UI shows Administrator@VSPHERE.LOCAL after environment recovery; PCI UI operations still pending."}

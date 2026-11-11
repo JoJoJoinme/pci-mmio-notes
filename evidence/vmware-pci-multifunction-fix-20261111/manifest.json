@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-11-11T12:53:43.094871+00:00",
+  "createdAt": "2026-11-11T15:49:04.202176+00:00",
   "hashAlgorithm": "SHA-256",
   "selfExcluded": true,
   "files": [
@@ -240,6 +240,25 @@
       }
     },
     {
+      "path": "log-excerpts/vcenter-license-service-health.txt",
+      "bytes": 461,
+      "sha256": "ca41e509a4553bf03649c01638117663e1cb0ce39cd550cef603dd5eafdb9e2c",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vcsa-license-observe.txt",
+        "sourceSha256": "c556c58840769855e8db10c24fba2ecf3ad404c44a2a7ee9f18ab1641cf51115",
+        "sourceLines": [
+          1,
+          2,
+          4,
+          7,
+          49,
+          87
+        ],
+        "transformation": "selected original lines with original line-number prefixes"
+      }
+    },
+    {
       "path": "raw/after-header-fix-config-space.txt",
       "bytes": 8054,
       "sha256": "d527eca114bda33b56ba1895eb1209a28a371941405a82b152a2d3db5bf042db",
@@ -280,6 +299,83 @@
         "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
         "sourceFile": "before-header-fix-vsi-values.txt",
         "sourceSha256": "3a54d1d919a20e44e3869daa9486cd57f82d44cb54b5b2a426d833cb90e12389",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/environment-recovery.json",
+      "bytes": 1933,
+      "sha256": "03f1288e7c5e60d00a0d39351cf8b0e5747c28214e81b00f074ca9441bdeabfd",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "environment-recovery.json",
+        "sourceSha256": "03f1288e7c5e60d00a0d39351cf8b0e5747c28214e81b00f074ca9441bdeabfd",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/final-cleanup-destroy-fix1111-pcie-functional-fix-v1-both.json",
+      "bytes": 665,
+      "sha256": "c4ef2347bf0748fe32fe4ed57d0a0b9ff6674fd161d0a3b9c8a16c55bb9a569a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "final-cleanup-destroy-fix1111-pcie-functional-fix-v1-both.json",
+        "sourceSha256": "c4ef2347bf0748fe32fe4ed57d0a0b9ff6674fd161d0a3b9c8a16c55bb9a569a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/final-network-cleanup.json",
+      "bytes": 806,
+      "sha256": "23bbde48c16aac0b4e7e1a903328c5fdcf7795a449083cab305a55d977011fd6",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "final-network-cleanup.json",
+        "sourceSha256": "23bbde48c16aac0b4e7e1a903328c5fdcf7795a449083cab305a55d977011fd6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/final-preserved-state.json",
+      "bytes": 1265,
+      "sha256": "78ac4e92b99b90c05f06f3c05719316573fe98576b36857d4205397d6ccef2c9",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "final-preserved-state.json",
+        "sourceSha256": "8a6ae9ffca663b58e6461617fd38ac1843c383432ab742e3769b42262faf92cb",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/final-shutdown-before.json",
+      "bytes": 4475,
+      "sha256": "bf60537e398baef399119b1ff37fe3d6cd1ece7bca420f2bf444972f886e5ed5",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "final-shutdown-before.json",
+        "sourceSha256": "d0263f6dfea7b3b08fb335fbfe68e15d9c9d53a96520e9ffe4a3fecf4c28cede",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/final-shutdown-request.json",
+      "bytes": 98,
+      "sha256": "d7334e71720baf63cc1bf7861e242aabf03efc51afb4c21d1758dc13c0410d80",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "final-shutdown-request.json",
+        "sourceSha256": "d7334e71720baf63cc1bf7861e242aabf03efc51afb4c21d1758dc13c0410d80",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/final-windows-cleanup.json",
+      "bytes": 290,
+      "sha256": "7d7732e991d1ce97714fc41d519cfaf1ae6fa2d435bb37e09ee0787db8935a93",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "final-windows-cleanup.json",
+        "sourceSha256": "7d7732e991d1ce97714fc41d519cfaf1ae6fa2d435bb37e09ee0787db8935a93",
         "transformation": "byte-identical copy"
       }
     },
@@ -1605,12 +1701,23 @@
     },
     {
       "path": "raw/resume-runtime.json",
-      "bytes": 3648,
-      "sha256": "d341bec101c6600f9a39ecb2c3c95bed18c807cddea630f53642ca695b5a85e5",
+      "bytes": 3647,
+      "sha256": "b68e3fcc9192baa8234528325e3883e994f9ad438a5f13f44313deb13cb49d15",
       "provenance": {
         "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
         "sourceFile": "resume-runtime.json",
-        "sourceSha256": "d341bec101c6600f9a39ecb2c3c95bed18c807cddea630f53642ca695b5a85e5",
+        "sourceSha256": "b68e3fcc9192baa8234528325e3883e994f9ad438a5f13f44313deb13cb49d15",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/ui-final-host-verified.json",
+      "bytes": 993,
+      "sha256": "e063e777e026acc06a0fe05d9c6c0bd09b37fb393ed9b7eced22604fb4c1660a",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "ui-final-host-verified.json",
+        "sourceSha256": "e063e777e026acc06a0fe05d9c6c0bd09b37fb393ed9b7eced22604fb4c1660a",
         "transformation": "byte-identical copy"
       }
     },
@@ -1934,9 +2041,119 @@
       }
     },
     {
+      "path": "raw/vc-license-metadata.json",
+      "bytes": 1499,
+      "sha256": "03584af7165928001472f836906c582bd07ae280f5a4b834062549141fdbeafe",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-license-metadata.json",
+        "sourceSha256": "03584af7165928001472f836906c582bd07ae280f5a4b834062549141fdbeafe",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vc-reconnect-license-failure.json",
+      "bytes": 2593,
+      "sha256": "4145314742ca85574432c3738c2b02eefce8fc53548f09c1c174d5a2443888d4",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-reconnect-license-failure.json",
+        "sourceSha256": "4145314742ca85574432c3738c2b02eefce8fc53548f09c1c174d5a2443888d4",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/vc-reconnect-observation.json",
+      "bytes": 1778,
+      "sha256": "6b2412050c5b2935d2039ef4a0c5fc98fe31a606caf958e762734402ee9ee902",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-reconnect-observation.json",
+        "sourceSha256": "6b2412050c5b2935d2039ef4a0c5fc98fe31a606caf958e762734402ee9ee902",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vc-reconnect.json",
+      "bytes": 3253,
+      "sha256": "f915b29224ed4807d5ccb7865e94d945d4689bbaf43a80e07c41fd55b5204c01",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-reconnect.json",
+        "sourceSha256": "f915b29224ed4807d5ccb7865e94d945d4689bbaf43a80e07c41fd55b5204c01",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/vc-ui-start-reserve-before.json",
+      "bytes": 4475,
+      "sha256": "825cba496edbcf71198e7cebcb646b2d3317657dbadaf752b0a770f4a3877986",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-ui-start-reserve-before.json",
+        "sourceSha256": "ae8482fc00545eba30de670fcdaa9dab4de56fa3cb53d0cda24a3680e5ebb193",
+        "transformation": "omit unrelated VM inventory; retain test VMs and all other fields"
+      }
+    },
+    {
+      "path": "raw/vc-ui-start-reserve-maintenance.json",
+      "bytes": 345,
+      "sha256": "ebc2e80202fe1d9dfbd831f884c2d6435e973267daa448dfa01c6fc0da16c840",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-ui-start-reserve-maintenance.json",
+        "sourceSha256": "ebc2e80202fe1d9dfbd831f884c2d6435e973267daa448dfa01c6fc0da16c840",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vc-ui-start-reserve-request.json",
+      "bytes": 98,
+      "sha256": "796dc9a6be08cc42c2ee30c9e5b8cbee912835fe184d4153ab4177fda445f9d7",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-ui-start-reserve-request.json",
+        "sourceSha256": "796dc9a6be08cc42c2ee30c9e5b8cbee912835fe184d4153ab4177fda445f9d7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/vcsa-checkpoint-recovery.json",
+      "bytes": 690,
+      "sha256": "670cea87a443c022152705c4309c0ba1456cbca4f5ad228fb2812be67bb35d8f",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vcsa-checkpoint-recovery.json",
+        "sourceSha256": "670cea87a443c022152705c4309c0ba1456cbca4f5ad228fb2812be67bb35d8f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/wsl-cap-change.json",
+      "bytes": 350,
+      "sha256": "00737e069e9348fa70fa128794989d5a137da92bdab537485c8b88df30c134e2",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "wsl-cap-change.json",
+        "sourceSha256": "00737e069e9348fa70fa128794989d5a137da92bdab537485c8b88df30c134e2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/wsl-cap-restored.json",
+      "bytes": 152,
+      "sha256": "ec9f4c8e15f17cfe7c32e691efd3aef2632ef914e8412c9efcecc5cab7f0a9c4",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "wsl-cap-restored.json",
+        "sourceSha256": "ec9f4c8e15f17cfe7c32e691efd3aef2632ef914e8412c9efcecc5cab7f0a9c4",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
       "path": "README.md",
-      "bytes": 7094,
-      "sha256": "ffd0c2a6e8ebeb341cf76686f9e09655cdc08b5fcf8d5fa31c74225e74cd3bee",
+      "bytes": 8721,
+      "sha256": "6da3eeb11145191bf2f68e4c121c646630aac0b4b9f7591282b3721c07f4d712",
       "provenance": {
         "transformation": "authored report, metadata or offline evidence verifier"
       }
@@ -2031,12 +2248,56 @@
     },
     {
       "path": "screenshots/timeline.jsonl",
-      "bytes": 879,
-      "sha256": "047079fe1fff0dafe733f4050af577fc4fb4a92a5426f939659a62a9ba5c5cbd",
+      "bytes": 1265,
+      "sha256": "a6199bd0a2db2ff3cd59e13bb068d64fcffd8bd134c51f4ef2cf53fe0cb05a02",
       "provenance": {
         "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
         "sourceFile": "timeline.jsonl",
-        "sourceSha256": "047079fe1fff0dafe733f4050af577fc4fb4a92a5426f939659a62a9ba5c5cbd",
+        "sourceSha256": "a6199bd0a2db2ff3cd59e13bb068d64fcffd8bd134c51f4ef2cf53fe0cb05a02",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vc-00-service-unavailable.jpg",
+      "bytes": 33941,
+      "sha256": "6795c585f3cfc9bc9f942091accd225cf11e25b6975e6e989cc4dd77c0c25e1b",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-00-service-unavailable.jpg",
+        "sourceSha256": "6795c585f3cfc9bc9f942091accd225cf11e25b6975e6e989cc4dd77c0c25e1b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vc-00-service-unavailable.txt",
+      "bytes": 541,
+      "sha256": "003eb80d74dba5a33154d0c7b33ef5db320c551ba55f135d5d76c86a414ac529",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-00-service-unavailable.txt",
+        "sourceSha256": "003eb80d74dba5a33154d0c7b33ef5db320c551ba55f135d5d76c86a414ac529",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vc-01-login-recovered.jpg",
+      "bytes": 98536,
+      "sha256": "7c783ce2444ba239d57ce85287c24a5685c30c503163efa6453f3828a20882ba",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-01-login-recovered.jpg",
+        "sourceSha256": "7c783ce2444ba239d57ce85287c24a5685c30c503163efa6453f3828a20882ba",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "screenshots/vc-01-login-recovered.txt",
+      "bytes": 37047,
+      "sha256": "c04eef6c1f350ebd4a45dbfb6865da06bcf2493ff6f7690b08a6c109045c3922",
+      "provenance": {
+        "sourceRun": "20261111-esxi8-pcie-functional-fix-v1",
+        "sourceFile": "vc-01-login-recovered.txt",
+        "sourceSha256": "c04eef6c1f350ebd4a45dbfb6865da06bcf2493ff6f7690b08a6c109045c3922",
         "transformation": "byte-identical copy"
       }
     },
@@ -2053,12 +2314,12 @@
     },
     {
       "path": "source-snapshots/prepare_dependency_interaction_run.py.txt",
-      "bytes": 8490,
-      "sha256": "9be34c8c0d398fd90ac5d35defc8deefe6186994eb17a8a3c57b01f4ba1ceb59",
+      "bytes": 9205,
+      "sha256": "2121613cf2361f6db6dad100c92c701a030adb20829a8a8e52a8f23e4b1d9208",
       "provenance": {
         "sourceRun": "final local helper snapshot",
         "sourceFile": "prepare_dependency_interaction_run.py",
-        "sourceSha256": "9be34c8c0d398fd90ac5d35defc8deefe6186994eb17a8a3c57b01f4ba1ceb59",
+        "sourceSha256": "2121613cf2361f6db6dad100c92c701a030adb20829a8a8e52a8f23e4b1d9208",
         "transformation": "byte-identical copy"
       }
     },
@@ -2105,16 +2366,16 @@
     },
     {
       "path": "summary.json",
-      "bytes": 3439,
-      "sha256": "201b50da4c2ad0dd676c93cb7e6774057f6f068b1a3430c8ed159b59161e7f2d",
+      "bytes": 3626,
+      "sha256": "43f7de55f69a56f7ed84155e5eaec07334754335b753acdee9b4fc3f58a79dcf",
       "provenance": {
         "transformation": "authored report, metadata or offline evidence verifier"
       }
     },
     {
       "path": "verify_bundle.py",
-      "bytes": 5345,
-      "sha256": "1dd58560b7eda87e786a98f3e21431b71a8fd2ccf4f8c0ef02c36cb6da59b87d",
+      "bytes": 6731,
+      "sha256": "7b25753d3199d705e6cce373e96ce4f6cd598faf79ed0d5bd894920f21061735",
       "provenance": {
         "transformation": "authored report, metadata or offline evidence verifier"
       }

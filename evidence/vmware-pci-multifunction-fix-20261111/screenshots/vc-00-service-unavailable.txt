@@ -1,0 +1,14 @@
+- generic: VMware vSphere Client
+- img "info"
+- generic: vSphere Client service has stopped working.
+- text: For troubleshooting refer
+- link "Skyline Health Diagnostics":
+  - /url: https://docs.vmware.com/en/VMware-Skyline-Health-Diagnostics/index.html
+- text: .
+- text: Learn more by checking
+- link "VMware vSphere Documentation and Support":
+  - /url: https://www.vmware.com/support/product-support/vsphere/index.html
+- text: .
+- text: For appliance administration, navigate to
+- link "vCenter Server Management appliance":
+  - /url: "#"

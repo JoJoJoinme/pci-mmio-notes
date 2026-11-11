@@ -1,0 +1,11 @@
+Source run: 20261111-esxi8-pcie-functional-fix-v1
+Source file: vcsa-license-observe.txt
+Source SHA-256: c556c58840769855e8db10c24fba2ecf3ad404c44a2a7ee9f18ab1641cf51115
+Original line numbers follow. Only selected lines are included.
+
+1: Wed Nov 11 03:41:30 PM UTC 2026
+2: Name: cis-license
+4: RunState: STARTED
+7: HealthState: HEALTHY
+49: 2026-11-11T15:37:07.678Z In(05) host-2522 <cis-license> Service STARTED successfully.
+87: Wed Nov 11 03:41:31 PM UTC 2026

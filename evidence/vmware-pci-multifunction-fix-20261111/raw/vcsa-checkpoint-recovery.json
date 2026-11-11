@@ -1,0 +1,26 @@
+{
+  "startedAt": "2026-11-11T13:23:47.5368475Z",
+  "sourceCheckpoint": "before-pci-dependency-ui-20261111",
+  "preservedCurrentStateAs": "before-vcenter-cold-recovery-20261111",
+  "steps": [
+    {
+      "action": "snapshot current powered-off state",
+      "exit": 0,
+      "at": "2026-11-11T13:23:52.1549811Z"
+    },
+    {
+      "action": "restore known pre-experiment checkpoint",
+      "exit": 0,
+      "at": "2026-11-11T13:24:02.8512408Z"
+    },
+    {
+      "action": "resume restored appliance",
+      "exit": 0,
+      "at": "2026-11-11T13:26:38.7122134Z"
+    }
+  ],
+  "running": [
+    "Total running VMs: 1",
+    "E:\\vm\\vmware\\vcsa803\\vcsa803.vmx"
+  ]
+}

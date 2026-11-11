@@ -1,0 +1,66 @@
+{
+  "at": "2026-11-11T15:43:17.976725+00:00",
+  "availableLicenses": [
+    {
+      "name": "Product Evaluation",
+      "editionKey": "eval",
+      "total": 0,
+      "used": null,
+      "costUnit": "",
+      "properties": []
+    }
+  ],
+  "assignments": [
+    {
+      "entityId": "host-13",
+      "entityDisplayName": "172.31.91.10",
+      "license": {
+        "name": "Evaluation Mode",
+        "editionKey": "esxEval",
+        "total": 0,
+        "used": null,
+        "costUnit": "cpuPackage:32core",
+        "properties": [
+          {
+            "key": "expirationDate",
+            "value": "2026-09-23 04:07:16+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "entityId": "host-17",
+      "entityDisplayName": "172.31.91.11",
+      "license": {
+        "name": "Evaluation Mode",
+        "editionKey": "esxEval",
+        "total": 0,
+        "used": null,
+        "costUnit": "cpuPackage:32core",
+        "properties": [
+          {
+            "key": "expirationDate",
+            "value": "2026-09-30 18:48:53+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "entityId": "dcbfc99c-a5d9-46f3-809d-edb52800b3d7",
+      "entityDisplayName": "192.168.91.131",
+      "license": {
+        "name": "Evaluation Mode",
+        "editionKey": "vcEval",
+        "total": 0,
+        "used": null,
+        "costUnit": "server",
+        "properties": [
+          {
+            "key": "expirationDate",
+            "value": "2026-09-09 00:00:00+00:00"
+          }
+        ]
+      }
+    }
+  ]
+}

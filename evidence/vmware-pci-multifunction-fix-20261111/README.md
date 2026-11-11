@@ -42,7 +42,13 @@ A=`0000:01:00.0`，B=`0000:01:00.1`，设备模型为 e1000e，VID:DID=`8086:10d
 
 为继续界面验证，正常关闭实验实例后将外层 ESXi 改为 6144 MiB，并重跑完整矩阵：[6 GiB 矩阵](raw/ui6-matrix-results.json)仍为同 VM 成功、跨 VM 第二台失败。此资源调整见 [记录](raw/ui-memory-adjustment.json)，两阶段 QEMU 参数分别保存在 [8 GiB](raw/mf-header-runtime.json)和 [6 GiB](raw/resume-runtime.json)。6 GiB 是本次资源受限的嵌套实验配置，不构成受支持的服务器规格结论。
 
-vCenter 本次界面复验尚未完成：冷启动后的认证与管理服务仍在恢复。当前已完成的界面证据来自 Host Client，不把 API 调用或旧场景的 vCenter 截图当作本次 vCenter 界面证据。
+vCenter 本次界面复验受许可证过期阻挡。恢复登录与管理服务后，首次重连因许可证服务未运行而失败；启动该服务并确认 HEALTHY 后，第二次重连明确返回 `vmodl.fault.NotEnoughLicenses`：vCenter 的 Evaluation Mode 已过期。对应 [首次失败](raw/vc-reconnect-license-failure.json)、[服务恢复](log-excerpts/vcenter-license-service-health.txt)、[最终重连 task-7110](raw/vc-reconnect.json)及[不含密钥的许可证元数据](raw/vc-license-metadata.json)。最终错误同时出现在 vCenter 的 Recent Tasks 界面；现有许可证清单没有可用的正式许可证。
+
+因此，本轮有效的界面开机证据来自 Host Client；没有把旧场景的 vCenter 截图、管理服务恢复或重连失败当作本次 PCI 行为的验证。继续本轮 vCenter UI 复验需要有效的 vCenter 许可及成功连接的实验主机。
+
+为恢复管理环境，保留冷启动故障状态快照后恢复既有检查点，恢复 IPv6 loopback，并将 SPS 启动宽限时间由 600 秒调至 900 秒。这些属于管理环境恢复，与 PCI 修正分开记录，见[恢复说明](raw/environment-recovery.json)和[检查点回执](raw/vcsa-checkpoint-recovery.json)。
+
+结束时四台测试 VM 均为 poweredOff、A/B 直通均 disabled/inactive；测试 VM 配置保留在实验覆盖盘中。删除测试 VM 的尝试返回 InvalidState，因此未把删除动作记为成功。ESXi 正常关机、VCSA 挂起保留恢复状态，专用隧道、端口转发和临时路由已撤除；Windows 的临时 WSL 内存限制已恢复原文件。基础镜像哈希未变。对应[保留状态](raw/final-preserved-state.json)、[网络与镜像校验](raw/final-network-cleanup.json)、[Windows 收尾](raw/final-windows-cleanup.json)和[WSL 配置恢复](raw/wsl-cap-restored.json)。
 
 ## 复现和核验
 

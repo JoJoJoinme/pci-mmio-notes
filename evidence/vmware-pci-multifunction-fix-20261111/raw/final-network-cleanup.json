@@ -1,0 +1,30 @@
+{
+  "at": "2026-11-11T15:46:28.334350+00:00",
+  "qemuStopped": true,
+  "remoteDedicatedListenerStopped": true,
+  "tunnelProcessStopped": true,
+  "tunRemoved": true,
+  "tapRemoved": true,
+  "labeledNatRulesRemoved": [
+    "pci-lab-vcsa-to-esxi",
+    "pci-lab-esxi-to-vcsa"
+  ],
+  "ownedHostRouteRemoved": true,
+  "baseImageHashes": [
+    {
+      "name": "esxi8-system.qcow2",
+      "sha256": "a8d810322ff5ba3942f1a34b7e8a5f49b08e0abf7427b8633239d0fcfa68b1ea",
+      "unchanged": true
+    },
+    {
+      "name": "esxi8-datastore.qcow2",
+      "sha256": "8f602feb40772b22f164c0b61da0c752ff0bbca21b01f5faa4e00ee56bdd9323",
+      "unchanged": true
+    },
+    {
+      "name": "OVMF_VARS.fd",
+      "sha256": "7b652cb4211ca0158a5ef35908db3ebe5d1d27cfa0fa5d877640a9e0a3c1f21a",
+      "unchanged": true
+    }
+  ]
+}

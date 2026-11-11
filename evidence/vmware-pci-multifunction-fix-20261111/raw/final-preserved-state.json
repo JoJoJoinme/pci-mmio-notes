@@ -1,0 +1,58 @@
+{
+  "at": "2026-11-11T15:44:34.951170+00:00",
+  "vms": [
+    {
+      "name": "fix1111-pcie-functional-fix-v1-both",
+      "powerState": "poweredOff",
+      "connectionState": "connected"
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-reverse",
+      "powerState": "poweredOff",
+      "connectionState": "connected"
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-a",
+      "powerState": "poweredOff",
+      "connectionState": "connected"
+    },
+    {
+      "name": "fix1111-pcie-functional-fix-v1-b",
+      "powerState": "poweredOff",
+      "connectionState": "connected"
+    }
+  ],
+  "maintenance": true,
+  "before": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    }
+  ],
+  "after": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:00:08.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:00:08.0"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-11T14:57:08.907514+00:00",
+  "oldMemoryCap": "default",
+  "newMemoryCap": "10GB",
+  "temporary": true,
+  "originalSha256": "06a7468d62d75ee137d6f6949e40a8eaa5fbee8d87eab6b44c1a76412bb7d4ae",
+  "appliedSha256": "b18b16f230f6b8e83df55f8549ab142b5bea38ba72882f19fdc7158600a36260",
+  "restoreOnlyIfAppliedHashMatches": true
+}

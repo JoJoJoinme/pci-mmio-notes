@@ -15,7 +15,9 @@
   "fix": "Set multifunction=on on Function 1 as well as Function 0 in the PCIe profile",
   "finalExtraPassthruMapRule": null,
   "acsOrIommuIsolationBypassUsed": false,
-  "vcenterUiStatus": "PENDING_SERVICE_RECOVERY",
+  "vcenterUiStatus": "BLOCKED_EXPIRED_VCENTER_EVALUATION_LICENSE",
+  "vcenterUiBlockerTask": "task-7110",
+  "vcenterUiBlockerFault": "vmodl.fault.NotEnoughLicenses",
   "outerMemoryMiB": {
     "initialApiAndHostUi": 8192,
     "vcenterUiPreparation": 6144
@@ -142,6 +144,8 @@
     "host-01-select-a.jpg",
     "host-02-enabled.jpg",
     "host-03-both-before-power.jpg",
-    "host-04-both-after-power.jpg"
+    "host-04-both-after-power.jpg",
+    "vc-00-service-unavailable.jpg",
+    "vc-01-login-recovered.jpg"
   ]
 }

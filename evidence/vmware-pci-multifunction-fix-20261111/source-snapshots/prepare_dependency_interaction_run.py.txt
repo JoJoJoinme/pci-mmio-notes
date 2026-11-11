@@ -53,9 +53,20 @@ def main():
     memory = json.loads(subprocess.check_output([
         "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "-NoProfile", "-NonInteractive", "-Command", memory_command
     ], text=True).strip())
-    save("latest-memory-preflight.json", {"at": utc_now(), **memory, "units": "KiB", "minimumPhysicalGiB": 10, "minimumCommitHeadroomGiB": 14})
-    if memory["FreePhysicalMemory"] < 10 * 1024 * 1024 or memory["FreeVirtualMemory"] < 14 * 1024 * 1024:
-        print("Host memory preflight failed; no VM started. Need 10 GiB available physical memory and 14 GiB commit headroom.", flush=True)
+    planned_memory_mib = 8192
+    if args.resume:
+        resume_manifest = json.loads((OUT / "manifest.json").read_text())
+        if resume_manifest["state"] != str(STATE):
+            raise RuntimeError("Unexpected resume state directory")
+        planned_memory_mib = int(resume_manifest["launchEnvironment"]["QEMU_ESXI_MEMORY_MB"])
+    if not 4096 <= planned_memory_mib <= 32768:
+        raise RuntimeError("Unexpected experiment memory allocation")
+    physical_floor_mib = planned_memory_mib + 2048
+    commit_floor_mib = planned_memory_mib + 6144
+    save("latest-memory-preflight.json", {"at": utc_now(), **memory, "units": "KiB", "guestMemoryMiB": planned_memory_mib,
+         "minimumPhysicalGiB": physical_floor_mib / 1024, "minimumCommitHeadroomGiB": commit_floor_mib / 1024})
+    if memory["FreePhysicalMemory"] < physical_floor_mib * 1024 or memory["FreeVirtualMemory"] < commit_floor_mib * 1024:
+        print(f"Host memory preflight failed; no VM started. Need {physical_floor_mib / 1024:g} GiB available physical memory and {commit_floor_mib / 1024:g} GiB commit headroom.", flush=True)
         return 3
     if STATE.exists() and any(STATE.iterdir()) and not args.resume:
         raise RuntimeError("Refusing to reuse an existing run state")

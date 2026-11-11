@@ -1,0 +1,14 @@
+{
+  "taskId": "haTask-2889-vim.ManagedEntity.destroy-258",
+  "state": "error",
+  "descriptionId": "ManagedEntity.destroy",
+  "queueTime": "2026-11-11 15:43:18.356951+00:00",
+  "startTime": "2026-11-11 15:43:18.364486+00:00",
+  "completeTime": "2026-11-11 15:43:18.367011+00:00",
+  "elapsedSeconds": 0.05073937900033343,
+  "fault": {
+    "type": "vim.fault.InvalidState",
+    "message": "(vim.fault.InvalidState) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = 'The operation is not allowed in the current state.',\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) []\n}",
+    "faultMessages": []
+  }
+}

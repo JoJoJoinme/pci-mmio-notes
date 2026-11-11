@@ -1,0 +1,23 @@
+{
+  "at": "2026-11-11T15:25:22.181307+00:00",
+  "host": "172.31.91.10",
+  "state": "notResponding",
+  "tasks": [
+    {
+      "id": "task-7109",
+      "operation": "HostSystem.reconnect",
+      "state": "error",
+      "startTime": "2026-11-11 15:20:49.458459+00:00",
+      "fault": {
+        "type": "vim.fault.LicenseAssignmentFailed",
+        "message": "(vim.fault.LicenseAssignmentFailed) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = 'Cannot complete the license assignment operation',\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'com.vmware.vim.vc.license.error.licenseAssignmentFailedNoLicenseService',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = 'entityType',\n               value = 'hostEntity'\n            },\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = 'entityDisplayName',\n               value = '172.31.91.10'\n            }\n         ],\n         message = 'Can not assign a license to Host 172.31.91.10. Make sure the License Service is available.'\n      }\n   ],\n   reason = <unset>\n}",
+        "faultMessages": [
+          {
+            "key": "com.vmware.vim.vc.license.error.licenseAssignmentFailedNoLicenseService",
+            "message": "Can not assign a license to Host 172.31.91.10. Make sure the License Service is available."
+          }
+        ]
+      }
+    }
+  ]
+}

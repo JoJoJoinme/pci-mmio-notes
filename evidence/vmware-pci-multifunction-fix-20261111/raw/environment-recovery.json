@@ -1,0 +1,62 @@
+{
+  "at": "2026-11-11T15:48:36.904962+00:00",
+  "scope": "Management appliance recovery; excluded from PCI behavior matrix",
+  "checkpointReceipt": "vcsa-checkpoint-recovery.json",
+  "retainedApplianceChanges": [
+    {
+      "setting": "IPv6 loopback enabled",
+      "path": "/etc/sysctl.d/99-z-pci-lab-loopback.conf",
+      "key": "net.ipv6.conf.lo.disable_ipv6",
+      "value": 0,
+      "otherInterfacesNotEnabled": true
+    },
+    {
+      "setting": "SPS startup grace",
+      "oldSeconds": 600,
+      "newSeconds": 900,
+      "backupDirectory": "/root/pci-lab-vmon-backup-20261111"
+    }
+  ],
+  "startupGraceReadback": {
+    "changed": [
+      {
+        "service": "vapi-endpoint",
+        "oldSeconds": 900,
+        "newSeconds": 900,
+        "originalSha256": "e751ca1caa01349dbfa22a3f06e5ca120422f3bc357b4495d6acd26ec18c699d"
+      },
+      {
+        "service": "vsphere-ui",
+        "oldSeconds": 1200,
+        "newSeconds": 1200,
+        "originalSha256": "7fe19988fac052c0b8f467aceed00c56290ff8009587514bee4f838ec4cde4cd"
+      },
+      {
+        "service": "sps",
+        "oldSeconds": 600,
+        "newSeconds": 900,
+        "originalSha256": "9cc2992ed594c42938a0a9e26fcbfbafb1ac381a0d6dbe3e0eb559bdc296320e"
+      }
+    ],
+    "reloadPid": 2522,
+    "healthChecksRetained": true
+  },
+  "licenseServiceFinalObservedState": {
+    "source": "vcsa-license-observe.txt",
+    "runState": "STARTED",
+    "healthState": "HEALTHY"
+  },
+  "finalBlocker": {
+    "taskId": "task-7110",
+    "fault": "vmodl.fault.NotEnoughLicenses",
+    "reason": "vCenter Evaluation Mode expired"
+  },
+  "newPciVcenterUiActionsCompleted": false,
+  "testVmsRetainedPoweredOff": true,
+  "cleanupDeleteAttempt": {
+    "result": "InvalidState",
+    "source": "final-cleanup-destroy-fix1111-pcie-functional-fix-v1-both.json"
+  },
+  "temporaryNetworkRemoved": true,
+  "vcsaSuspended": true
+}

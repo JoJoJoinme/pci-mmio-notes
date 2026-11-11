@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-11T15:41:55.320582+00:00",
+  "vcenter": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware vCenter Server',\n   fullName = 'VMware vCenter Server 8.0.3 build-24674346',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '00500',\n   build = '24674346',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'linux-x64',\n   productLineId = 'vpx',\n   apiType = 'VirtualCenter',\n   apiVersion = '8.0.3.0',\n   instanceUuid = 'dcbfc99c-a5d9-46f3-809d-edb52800b3d7',\n   licenseProductName = 'VMware VirtualCenter Server',\n   licenseProductVersion = '8.0'\n}",
+  "hostUuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d",
+  "before": "disconnected",
+  "task": {
+    "taskId": "task-7110",
+    "state": "error",
+    "descriptionId": "HostSystem.reconnect",
+    "queueTime": "2026-11-11 15:41:56.205449+00:00",
+    "startTime": "2026-11-11 15:41:56.293635+00:00",
+    "completeTime": "2026-11-11 15:42:19.460006+00:00",
+    "elapsedSeconds": 23.644901740000023,
+    "fault": {
+      "type": "vmodl.fault.NotEnoughLicenses",
+      "message": "(vmodl.fault.NotEnoughLicenses) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = 'License not available to perform the operation.',\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'com.vmware.vim.vc.license.error.licenseExpired',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = 'entity',\n               value = 'dcbfc99c-a5d9-46f3-809d-edb52800b3d7'\n            },\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = 'entityType',\n               value = 'vcEntity'\n            },\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = 'edition',\n               value = 'Evaluation Mode'\n            },\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = 'editionKey',\n               value = 'vcEval'\n            },\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = 'entityDisplayName',\n               value = '192.168.91.131'\n            }\n         ],\n         message = 'The Evaluation Mode license assigned to vCenter Server 192.168.91.131 has expired. Recommend updating the license.'\n      }\n   ]\n}",
+      "faultMessages": [
+        {
+          "key": "com.vmware.vim.vc.license.error.licenseExpired",
+          "message": "The Evaluation Mode license assigned to vCenter Server 192.168.91.131 has expired. Recommend updating the license."
+        }
+      ]
+    }
+  },
+  "after": "disconnected",
+  "vms": []
+}
