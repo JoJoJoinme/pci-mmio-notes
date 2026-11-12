@@ -1,0 +1,8 @@
+import json,subprocess,sys
+from pathlib import Path
+run='20261112-esxi8-legacy-bridge-cause-v1'
+out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/run
+original=json.loads((out/'control-map-set.json').read_text())
+request={'source':'control-map-set.json','bootTime':original['bootTime'],'selector':'8086 10d3','shareable':'false','matched':original['targets']+['0000:00:05.0'],'targets':original['targets']}
+(out/'control-map-compatible-request.json').write_text(json.dumps(request,indent=2)+'\n')
+sys.exit(subprocess.call(['python3','/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/wait_dependency_policy.py','--run-id',run,'--policy-label','control-map-compatible','--label','control-map-effective']))

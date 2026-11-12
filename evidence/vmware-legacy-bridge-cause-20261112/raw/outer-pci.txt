@@ -1,0 +1,82 @@
+iininfinfoinfo info pinfo pcinfo pci
+  Bus  0, device   0, function 0:
+    Host bridge: PCI device 8086:29c0
+      PCI subsystem 1af4:1100
+      id ""
+  Bus  0, device   1, function 0:
+    VGA controller: PCI device 1234:1111
+      PCI subsystem 1af4:1100
+      BAR0: 32 bit prefetchable memory at 0xc0000000 [0xc0ffffff]
+      BAR2: 32 bit memory at 0xc1386000 [0xc1386fff]
+      BAR6: 32 bit memory (not mapped)
+      id ""
+  Bus  0, device   5, function 0:
+    Ethernet controller: PCI device 8086:10d3
+      PCI subsystem 8086:0000
+      IRQ 10, pin A
+      BAR0: 32 bit memory at 0xc1360000 [0xc137ffff]
+      BAR1: 32 bit memory at 0xc1340000 [0xc135ffff]
+      BAR2: I/O at 0x7060 [0x707f]
+      BAR3: 32 bit memory at 0xc1380000 [0xc1383fff]
+      BAR6: 32 bit memory (not mapped)
+      id ""
+  Bus  0, device   8, function 0:
+    PCI bridge: PCI device 1b36:000c
+      IRQ 10, pin A
+      BUS 0.
+      secondary bus 1.
+      subordinate bus 2.
+      IO range [0x6000, 0x6fff]
+      memory range [0xc1000000, 0xc12fffff]
+      prefetchable memory range [0xfffffffffff00000, 0x000fffff]
+      BAR0: 32 bit memory at 0xc1385000 [0xc1385fff]
+      id "test_rp"
+  Bus  1, device   0, function 0:
+    PCI bridge: PCI device 1b36:000e
+      IRQ 10, pin A
+      BUS 1.
+      secondary bus 2.
+      subordinate bus 2.
+      IO range [0x6000, 0x6fff]
+      memory range [0xc1000000, 0xc11fffff]
+      prefetchable memory range [0xfffffffffff00000, 0x000fffff]
+      BAR0: 64 bit memory at 0xc1200000 [0xc12000ff]
+      id "test_legacy"
+  Bus  2, device   1, function 0:
+    Ethernet controller: PCI device 8086:10d3
+      PCI subsystem 8086:0000
+      IRQ 10, pin A
+      BAR0: 32 bit memory at 0xc1060000 [0xc107ffff]
+      BAR1: 32 bit memory at 0xc1040000 [0xc105ffff]
+      BAR2: I/O at 0x6020 [0x603f]
+      BAR3: 32 bit memory at 0xc1084000 [0xc1087fff]
+      BAR6: 32 bit memory (not mapped)
+      id "test_fn0"
+  Bus  2, device   1, function 1:
+    Ethernet controller: PCI device 8086:10d3
+      PCI subsystem 8086:0000
+      IRQ 10, pin A
+      BAR0: 32 bit memory at 0xc1020000 [0xc103ffff]
+      BAR1: 32 bit memory at 0xc1000000 [0xc101ffff]
+      BAR2: I/O at 0x6000 [0x601f]
+      BAR3: 32 bit memory at 0xc1080000 [0xc1083fff]
+      BAR6: 32 bit memory (not mapped)
+      id "test_fn1"
+  Bus  0, device  31, function 0:
+    ISA bridge: PCI device 8086:2918
+      PCI subsystem 1af4:1100
+      id ""
+  Bus  0, device  31, function 2:
+    SATA controller: PCI device 8086:2922
+      PCI subsystem 1af4:1100
+      IRQ 10, pin A
+      BAR4: I/O at 0x7040 [0x705f]
+      BAR5: 32 bit memory at 0xc1384000 [0xc1384fff]
+      id ""
+  Bus  0, device  31, function 3:
+    SMBus: PCI device 8086:2930
+      PCI subsystem 1af4:1100
+      IRQ 10, pin A
+      BAR4: I/O at 0x7000 [0x703f]
+      id ""
+(qemu) 

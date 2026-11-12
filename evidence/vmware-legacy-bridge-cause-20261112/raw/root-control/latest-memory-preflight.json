@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-12T11:58:53.651717+00:00",
+  "FreePhysicalMemory": 12128996,
+  "FreeVirtualMemory": 22610216,
+  "units": "KiB",
+  "guestMemoryMiB": 8192,
+  "minimumPhysicalGiB": 10.0,
+  "minimumCommitHeadroomGiB": 14.0
+}

@@ -1,0 +1,38 @@
+{
+  "at": "2026-11-12T11:39:38.808548+00:00",
+  "version": "11.0.2",
+  "files": [
+    {
+      "file": "hw/pci/pci.c",
+      "upstreamUrl": "https://raw.githubusercontent.com/qemu/qemu/v11.0.2/hw/pci/pci.c",
+      "upstreamSha256": "78e729f19429020ffa3102eb7f70beb29278db2eda516209653567eb5b26d033",
+      "localSha256": "78e729f19429020ffa3102eb7f70beb29278db2eda516209653567eb5b26d033",
+      "byteIdentical": true,
+      "diffLines": 0
+    },
+    {
+      "file": "hw/i386/intel_iommu.c",
+      "upstreamUrl": "https://raw.githubusercontent.com/qemu/qemu/v11.0.2/hw/i386/intel_iommu.c",
+      "upstreamSha256": "81f6e4dc24d39c66341098d2fd1e1fb21b5efcfbd2026ae3cd0ae233e9ae8001",
+      "localSha256": "81f6e4dc24d39c66341098d2fd1e1fb21b5efcfbd2026ae3cd0ae233e9ae8001",
+      "byteIdentical": true,
+      "diffLines": 0
+    },
+    {
+      "file": "hw/i386/intel_iommu_internal.h",
+      "upstreamUrl": "https://raw.githubusercontent.com/qemu/qemu/v11.0.2/hw/i386/intel_iommu_internal.h",
+      "upstreamSha256": "746781d8cc40ba7229e5a3a71ba56b5ec2d211aa7ea3fb2fb5ea5384c1cd816d",
+      "localSha256": "746781d8cc40ba7229e5a3a71ba56b5ec2d211aa7ea3fb2fb5ea5384c1cd816d",
+      "byteIdentical": true,
+      "diffLines": 0
+    },
+    {
+      "file": "hw/pci-bridge/pcie_pci_bridge.c",
+      "upstreamUrl": "https://raw.githubusercontent.com/qemu/qemu/v11.0.2/hw/pci-bridge/pcie_pci_bridge.c",
+      "upstreamSha256": "0185d2151d87310365b2695f34db8a2298edb6be48f3d594c07d5d6c3f6dcb33",
+      "localSha256": "0185d2151d87310365b2695f34db8a2298edb6be48f3d594c07d5d6c3f6dcb33",
+      "byteIdentical": true,
+      "diffLines": 0
+    }
+  ]
+}

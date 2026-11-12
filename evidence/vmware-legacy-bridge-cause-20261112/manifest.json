@@ -1,0 +1,1645 @@
+{
+  "schemaVersion": 1,
+  "selfExcluded": true,
+  "hashAlgorithm": "SHA-256",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 166,
+      "sha256": "e30cc2b333c216b7d2cf825680ba2c65b6d2f975ba6ae110391124d9b6e8f469",
+      "provenance": {
+        "transformation": "authored report or offline verifier"
+      }
+    },
+    {
+      "path": "log-excerpts/e1000-control-both.txt",
+      "bytes": 4877,
+      "sha256": "0d14e5f42143a37180da1e83854c7eb2dc9a50f68a95affc0c1194034c89c31d",
+      "provenance": {
+        "sourceFile": "conventional-baseline-on-both-vmkernel.log",
+        "sourceRun": "20261111-esxi8-legacy-e1000-fix-v1",
+        "sourceSha256": "82834b8140de43e4a5b14e382f3205da841a863d7e576d975f3cb9870d1e7c0b",
+        "sourceLines": [
+          1576,
+          1623,
+          1624,
+          1625,
+          1626,
+          1627,
+          1628,
+          1629,
+          1630,
+          1631,
+          1632,
+          1633,
+          1634,
+          1637,
+          1638,
+          1639,
+          1640,
+          1641,
+          1642,
+          1649,
+          1650,
+          1651,
+          1662,
+          1663,
+          1664,
+          1685,
+          1686,
+          1687,
+          1722,
+          1723,
+          1724,
+          1778,
+          1779
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/e1000-control-reverse.txt",
+      "bytes": 4880,
+      "sha256": "565f6f1a893d8a766ca91630d0b3d1213e63c1a8ec857120860c0a31863e1ae1",
+      "provenance": {
+        "sourceFile": "conventional-baseline-on-reverse-vmkernel.log",
+        "sourceRun": "20261111-esxi8-legacy-e1000-fix-v1",
+        "sourceSha256": "2b594a6ba046284e07317e90aff6c736af88ed4eb4c4523169fe641487599c0f",
+        "sourceLines": [
+          1565,
+          1612,
+          1613,
+          1614,
+          1615,
+          1616,
+          1617,
+          1618,
+          1619,
+          1620,
+          1621,
+          1622,
+          1623,
+          1626,
+          1627,
+          1628,
+          1635,
+          1636,
+          1637,
+          1641,
+          1642,
+          1643,
+          1653,
+          1654,
+          1655,
+          1674,
+          1675,
+          1676,
+          1713,
+          1714,
+          1715,
+          1770,
+          1771
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-a-vmkernel.txt",
+      "bytes": 360,
+      "sha256": "1e57583703d96e68c6eb8363f0a3394198bc65ebf5b5e80f71805fd79cbfdcbc",
+      "provenance": {
+        "sourceFile": "native-mf-a-vmkernel.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "1b39cd9d4537b320d929b1b343ed3c3df9cbf404e259b82b01160cc1e99dafe8",
+        "sourceLines": [
+          2426
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-a-vmware.txt",
+      "bytes": 521,
+      "sha256": "ed1bbb24590c428bd77ab8ad9a74e898e299a5f643e4955fc8d711f19e88a26c",
+      "provenance": {
+        "sourceFile": "native-mf-a-20261112-esxi8-legacy-bridge-cause-v1-a-vmware.log",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "70694a8f50a463ea09586ab3d909ae20ba3acb0874a74a21a71e9944967a2435",
+        "sourceLines": [
+          584,
+          586
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-b-vmkernel.txt",
+      "bytes": 360,
+      "sha256": "28ca24154e9b55f2f7318269c22648c44c228516cf378072b5f59572bc47df5c",
+      "provenance": {
+        "sourceFile": "native-mf-b-vmkernel.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "22d04c4133dff0d4446088434f7c7e69f95dc7840ccc26bb73a7a4b85ce502da",
+        "sourceLines": [
+          2426
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-b-vmware.txt",
+      "bytes": 521,
+      "sha256": "6fa02de03b05ecef4b6690e64a55e1f9172736bea4921b2a219d35c0da0f6d38",
+      "provenance": {
+        "sourceFile": "native-mf-b-20261112-esxi8-legacy-bridge-cause-v1-b-vmware.log",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "81015dbe49c6d74f898e1e0f4ac22b34c4be87bd531b578b6c0256a040544bb2",
+        "sourceLines": [
+          584,
+          586
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-both-vmkernel.txt",
+      "bytes": 4865,
+      "sha256": "ee3595711701dbb472e9a6e9c3a955c2748b8e1d8d542d3f6168f00f3021dbaf",
+      "provenance": {
+        "sourceFile": "native-mf-both-vmkernel.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "cfb8162b55793f0b98f545ffca7fcb5917a8f49f2b21b1813593d8b988237a29",
+        "sourceLines": [
+          2399,
+          2429,
+          2430,
+          2431,
+          2432,
+          2433,
+          2434,
+          2435,
+          2436,
+          2437,
+          2438,
+          2439,
+          2440,
+          2441,
+          2442,
+          2443,
+          2450,
+          2451,
+          2452,
+          2453,
+          2454,
+          2455,
+          2457,
+          2458,
+          2459,
+          2468,
+          2469,
+          2470,
+          2474,
+          2475,
+          2476,
+          2486,
+          2487
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-both-vmware.txt",
+      "bytes": 722,
+      "sha256": "f6ec884e401feac629e83a251be73e364b6fd553e1b2ca9899ba5eb26323ec94",
+      "provenance": {
+        "sourceFile": "native-mf-both-20261112-esxi8-legacy-bridge-cause-v1-both-vmware.log",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "03c76ba5dd23919e68bf68d27642e646b292313172314ccb73c9744d28596477",
+        "sourceLines": [
+          590,
+          611,
+          612,
+          634
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-reverse-vmkernel.txt",
+      "bytes": 4868,
+      "sha256": "b6fa0d69b658a074783334d530d5fa99643cbbf117962d4adc042d216be475e1",
+      "provenance": {
+        "sourceFile": "native-mf-reverse-vmkernel.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "9e0dce0a231cdefdb203a6672b79d8f6dcb69df0ab3f91c17f0d5efde11efa8f",
+        "sourceLines": [
+          2390,
+          2418,
+          2419,
+          2420,
+          2421,
+          2422,
+          2423,
+          2424,
+          2425,
+          2426,
+          2427,
+          2428,
+          2429,
+          2430,
+          2431,
+          2432,
+          2433,
+          2434,
+          2435,
+          2436,
+          2437,
+          2438,
+          2440,
+          2441,
+          2442,
+          2451,
+          2452,
+          2453,
+          2464,
+          2465,
+          2466,
+          2478,
+          2479
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/native-mf-reverse-vmware.txt",
+      "bytes": 728,
+      "sha256": "6737882947014d5a11add083ae9f59e87c0b9fcbd96047d39c5117c5f79b3007",
+      "provenance": {
+        "sourceFile": "native-mf-reverse-20261112-esxi8-legacy-bridge-cause-v1-reverse-vmware.log",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "23aa536832b4754c51fd0d87f8e16b1f48c0587ce231053b29c7bbc708ecd4c8",
+        "sourceLines": [
+          590,
+          611,
+          612,
+          634
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/nonshareable-both-vmkernel.txt",
+      "bytes": 4868,
+      "sha256": "3a317a55919fcac97e25cba58e4db8dfb5f4ccceb92c5ef27b458737dfa574cd",
+      "provenance": {
+        "sourceFile": "nonshareable-both-vmkernel.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "d50542c1848ba5cafc285702709d25748aa3af2bec10fb7021e46eb179b6f73d",
+        "sourceLines": [
+          2429,
+          2430,
+          2431,
+          2432,
+          2433,
+          2434,
+          2435,
+          2436,
+          2437,
+          2438,
+          2439,
+          2440,
+          2441,
+          2442,
+          2443,
+          2444,
+          2445,
+          2446,
+          2447,
+          2448,
+          2449,
+          2450,
+          2451,
+          2452,
+          2453,
+          2454,
+          2455,
+          2456,
+          2457,
+          2458,
+          2459,
+          2477,
+          2478
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/nonshareable-both-vmware.txt",
+      "bytes": 725,
+      "sha256": "ce857cda257784016844bdc56a9b6b53f8a0e492ae65c40a5ad0538af11c2ef3",
+      "provenance": {
+        "sourceFile": "nonshareable-both-20261112-esxi8-legacy-bridge-cause-v1-both-vmware.log",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "76ef9e459a9d714f4cc48867403e0817155566f843adbc8f8410169e30b5ffb2",
+        "sourceLines": [
+          556,
+          577,
+          578,
+          600
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/nonshareable-reverse-vmkernel.txt",
+      "bytes": 4871,
+      "sha256": "5eafa66b7a14403b2dbe5ebd4636947a8a60fe75b57dfccd32cbf08562d9d92e",
+      "provenance": {
+        "sourceFile": "nonshareable-reverse-vmkernel.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "f3565a5a8ebbbe75f84fb6f3e9250bf32dbb36075ad605b559325aa0154d12e4",
+        "sourceLines": [
+          2402,
+          2414,
+          2415,
+          2416,
+          2417,
+          2418,
+          2419,
+          2420,
+          2421,
+          2422,
+          2423,
+          2424,
+          2425,
+          2426,
+          2427,
+          2428,
+          2435,
+          2436,
+          2437,
+          2438,
+          2439,
+          2440,
+          2442,
+          2443,
+          2444,
+          2447,
+          2448,
+          2449,
+          2465,
+          2466,
+          2467,
+          2478,
+          2479
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/nonshareable-reverse-vmware.txt",
+      "bytes": 731,
+      "sha256": "348b027e3e75d817286b58e97d81dc4c369a15505fed002295fa3da40efc2f76",
+      "provenance": {
+        "sourceFile": "nonshareable-reverse-20261112-esxi8-legacy-bridge-cause-v1-reverse-vmware.log",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "11d457d7a734ad28df2d4c27b5149cddc6b89fe5c4492449de3616289b391ea8",
+        "sourceLines": [
+          556,
+          577,
+          578,
+          600
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/root-control-both-vmware.txt",
+      "bytes": 598,
+      "sha256": "61e2687e16340928ff7fcfb09d3fa5955d8cea03f3ba791efaa4d318840c3dab",
+      "provenance": {
+        "sourceFile": "root-control-both-20261112-esxi8-pcie-domain-control-v1-both-vmware.log",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "89e9355bcb3ff5f604362e46a42f540c3dd9b5f2125ee6e78b56575484cbb6cd",
+        "sourceLines": [
+          590,
+          598
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "log-excerpts/root-control-reverse-vmware.txt",
+      "bytes": 604,
+      "sha256": "4c1df3af4936b2169affcff7b477750c8fb2d7d093a2696af79b2bd38abf5ee0",
+      "provenance": {
+        "sourceFile": "root-control-reverse-20261112-esxi8-pcie-domain-control-v1-reverse-vmware.log",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "5bafed3820192710c84f988918a8c16b1a589f732571f9597e180e68caba6d2c",
+        "sourceLines": [
+          590,
+          599
+        ],
+        "transformation": "selected log lines with original line numbers and task-time filter"
+      }
+    },
+    {
+      "path": "raw/control-map-compatible-request.json",
+      "bytes": 278,
+      "sha256": "c61707c676d0c0dbcac8527379146d504b5d4a7a80ccf95ccdebd2f215517b18",
+      "provenance": {
+        "sourceFile": "control-map-compatible-request.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "c61707c676d0c0dbcac8527379146d504b5d4a7a80ccf95ccdebd2f215517b18",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/control-map-effective.json",
+      "bytes": 1091,
+      "sha256": "bba72d863eb701de569980321809fdda78068f72f8ad27bfca68029dc33fbcd8",
+      "provenance": {
+        "sourceFile": "control-map-effective.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "bba72d863eb701de569980321809fdda78068f72f8ad27bfca68029dc33fbcd8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/control-map-restore.json",
+      "bytes": 1413,
+      "sha256": "c42d4dc6f55929e7cad2e376ddabc89464ed25c22484dac659cca1de09fbb0eb",
+      "provenance": {
+        "sourceFile": "control-map-restore.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "c42d4dc6f55929e7cad2e376ddabc89464ed25c22484dac659cca1de09fbb0eb",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/control-map-set.json",
+      "bytes": 1430,
+      "sha256": "7810ac7a963ac2561564a4cf10e1fa18743e1ce04b9959b206e2f551c5f6a492",
+      "provenance": {
+        "sourceFile": "control-map-set.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "7810ac7a963ac2561564a4cf10e1fa18743e1ce04b9959b206e2f551c5f6a492",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/e1000-control-both.json",
+      "bytes": 4093,
+      "sha256": "be45c680482f023039c3cce0dfa075448e685d5f78a0238d5775ba6f3a1f47fe",
+      "provenance": {
+        "sourceFile": "conventional-baseline-on-both.json",
+        "sourceRun": "20261111-esxi8-legacy-e1000-fix-v1",
+        "sourceSha256": "be45c680482f023039c3cce0dfa075448e685d5f78a0238d5775ba6f3a1f47fe",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/e1000-control-reverse.json",
+      "bytes": 4118,
+      "sha256": "cc260cd7e82595bd1d1dd6f5ceb0c2d192d8646dd78ba6e7edec3f477832cdae",
+      "provenance": {
+        "sourceFile": "conventional-baseline-on-reverse.json",
+        "sourceRun": "20261111-esxi8-legacy-e1000-fix-v1",
+        "sourceSha256": "cc260cd7e82595bd1d1dd6f5ceb0c2d192d8646dd78ba6e7edec3f477832cdae",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/finish-hyperv-restoration.json",
+      "bytes": 151,
+      "sha256": "d754da32f74ce275d846f749819502f9daa79c4ff3943f703a3312f83adf84cc",
+      "provenance": {
+        "sourceFile": "finish-hyperv-restoration.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "d754da32f74ce275d846f749819502f9daa79c4ff3943f703a3312f83adf84cc",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/finish-runtime.json",
+      "bytes": 654,
+      "sha256": "b8748f8c70963e43edce877aaea6801e79a2a4187466985f3ef0586a8dbaffe7",
+      "provenance": {
+        "sourceFile": "finish-runtime.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "b8748f8c70963e43edce877aaea6801e79a2a4187466985f3ef0586a8dbaffe7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/finish-shutdown-before.json",
+      "bytes": 4587,
+      "sha256": "ea97847f2b965cd3e89aa6561fddf9fc04bc7084b1f1b6d3d88ea8f97937574a",
+      "provenance": {
+        "sourceFile": "finish-shutdown-before.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "d90c9a48e224b1e92d6e51da2f6796b005b59b0314eb2a71d4319ca87094c139",
+        "transformation": "omit unrelated VM inventory"
+      }
+    },
+    {
+      "path": "raw/finish-shutdown-maintenance.json",
+      "bytes": 350,
+      "sha256": "cb29fc8e377fd56026712a3897061c68543041712f4ef5901e6d5a7798d79e09",
+      "provenance": {
+        "sourceFile": "finish-shutdown-maintenance.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "cb29fc8e377fd56026712a3897061c68543041712f4ef5901e6d5a7798d79e09",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/manifest.json",
+      "bytes": 5372,
+      "sha256": "f24bd79fa22f9b407fcc3b33da4904ca8739df49a05578bdd7e2b38f308905a6",
+      "provenance": {
+        "sourceFile": "manifest.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "f24bd79fa22f9b407fcc3b33da4904ca8739df49a05578bdd7e2b38f308905a6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-activated.json",
+      "bytes": 273,
+      "sha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+      "provenance": {
+        "sourceFile": "native-mf-activated.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-config-a.json",
+      "bytes": 1121,
+      "sha256": "913a09c1101c59e2d61e450030d1166b36cd784d0e7b9ad9ccb5f65cd053f2cc",
+      "provenance": {
+        "sourceFile": "native-mf-config-a.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "913a09c1101c59e2d61e450030d1166b36cd784d0e7b9ad9ccb5f65cd053f2cc",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-config-b.json",
+      "bytes": 1120,
+      "sha256": "7f034ba46ab30ce674a2e7c72ca4b134dc4b7bc4f9afda9ac48840c040e2b005",
+      "provenance": {
+        "sourceFile": "native-mf-config-b.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "7f034ba46ab30ce674a2e7c72ca4b134dc4b7bc4f9afda9ac48840c040e2b005",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-config-both.json",
+      "bytes": 1559,
+      "sha256": "a61569df6712fe66697005ed74acd48a2dc0bd856ab4bf55bf4e0cd98c9d8f05",
+      "provenance": {
+        "sourceFile": "native-mf-config-both.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "a61569df6712fe66697005ed74acd48a2dc0bd856ab4bf55bf4e0cd98c9d8f05",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-config-reverse.json",
+      "bytes": 1571,
+      "sha256": "841f2311565f256131c9ec9b8999d08ad5cfb2d1a76eb2a5c0f1efc9371525d2",
+      "provenance": {
+        "sourceFile": "native-mf-config-reverse.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "841f2311565f256131c9ec9b8999d08ad5cfb2d1a76eb2a5c0f1efc9371525d2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-context-a.json",
+      "bytes": 5664,
+      "sha256": "d2554e51d6b50432d16911ac728abceddc778f16362495f7c9b0c2775d905b55",
+      "provenance": {
+        "sourceFile": "native-mf-context-a.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "d2554e51d6b50432d16911ac728abceddc778f16362495f7c9b0c2775d905b55",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-context-b.json",
+      "bytes": 5664,
+      "sha256": "681b6519df67dc01e377d23b44558749b1a4b40f7a17f1e8c351270216a8521f",
+      "provenance": {
+        "sourceFile": "native-mf-context-b.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "681b6519df67dc01e377d23b44558749b1a4b40f7a17f1e8c351270216a8521f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-context-both.json",
+      "bytes": 7575,
+      "sha256": "8bee7fb21f9b27a6ab6d60889f48b029cf9c9be438c36829e8a90eae39ddc659",
+      "provenance": {
+        "sourceFile": "native-mf-context-both.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "8bee7fb21f9b27a6ab6d60889f48b029cf9c9be438c36829e8a90eae39ddc659",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-context-reverse.json",
+      "bytes": 7574,
+      "sha256": "cef033a539fb7115cdd186959619fe50aa528ad613261126e24fe1687fff436e",
+      "provenance": {
+        "sourceFile": "native-mf-context-reverse.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "cef033a539fb7115cdd186959619fe50aa528ad613261126e24fe1687fff436e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-create-20261112-esxi8-legacy-bridge-cause-v1-a.json",
+      "bytes": 317,
+      "sha256": "0de8e81d0e85b461cd2c4f9247cb6cd29f9d5d164e1a896d301d7433c83216e0",
+      "provenance": {
+        "sourceFile": "native-mf-create-20261112-esxi8-legacy-bridge-cause-v1-a.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "0de8e81d0e85b461cd2c4f9247cb6cd29f9d5d164e1a896d301d7433c83216e0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-create-20261112-esxi8-legacy-bridge-cause-v1-b.json",
+      "bytes": 318,
+      "sha256": "91b32f6462bbe6d9f34e07f91af9f171061cb710a10dbd33775307e22afb8b46",
+      "provenance": {
+        "sourceFile": "native-mf-create-20261112-esxi8-legacy-bridge-cause-v1-b.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "91b32f6462bbe6d9f34e07f91af9f171061cb710a10dbd33775307e22afb8b46",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-create-20261112-esxi8-legacy-bridge-cause-v1-both.json",
+      "bytes": 317,
+      "sha256": "b0cc8669775e421da2a10bd633e060a0b9f59f513c0327ab8b850d1223c92980",
+      "provenance": {
+        "sourceFile": "native-mf-create-20261112-esxi8-legacy-bridge-cause-v1-both.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "b0cc8669775e421da2a10bd633e060a0b9f59f513c0327ab8b850d1223c92980",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-create-20261112-esxi8-legacy-bridge-cause-v1-reverse.json",
+      "bytes": 317,
+      "sha256": "43b9cdd493707880029cd16de4881bf6bf4beb1b279e7d61ff91791f7d6d523c",
+      "provenance": {
+        "sourceFile": "native-mf-create-20261112-esxi8-legacy-bridge-cause-v1-reverse.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "43b9cdd493707880029cd16de4881bf6bf4beb1b279e7d61ff91791f7d6d523c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-function-0-config.txt",
+      "bytes": 4027,
+      "sha256": "ec72d831c86a330c3fc2ef6b285a640d0e9623870eda24067ce2312724be54d2",
+      "provenance": {
+        "sourceFile": "native-mf-function-0-config.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "ec72d831c86a330c3fc2ef6b285a640d0e9623870eda24067ce2312724be54d2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-function-1-config.txt",
+      "bytes": 4027,
+      "sha256": "a6fe167b72dd304c71ba55037e6cf3cdc7648870adcff316dde80e821c2ed7e0",
+      "provenance": {
+        "sourceFile": "native-mf-function-1-config.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "a6fe167b72dd304c71ba55037e6cf3cdc7648870adcff316dde80e821c2ed7e0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-host-before.json",
+      "bytes": 992,
+      "sha256": "195deb5a6e61a8ef0dc23c29d02c1c238230ccc2f2a7fc4bb05dd43b0404fcfb",
+      "provenance": {
+        "sourceFile": "native-mf-host-before.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "c72ced328ccfe222603a946827c8a645a450d32d9bd3a9d750e8adf8b37bffb7",
+        "transformation": "omit unrelated VM inventory"
+      }
+    },
+    {
+      "path": "raw/native-mf-initial-context.json",
+      "bytes": 1637,
+      "sha256": "34ce04e709380769d8107219217fb1603ea012f4246a77b960ad72773d2fea42",
+      "provenance": {
+        "sourceFile": "native-mf-initial-context.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "34ce04e709380769d8107219217fb1603ea012f4246a77b960ad72773d2fea42",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-map.txt",
+      "bytes": 2045,
+      "sha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+      "provenance": {
+        "sourceFile": "native-mf-map.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-off-a.json",
+      "bytes": 325,
+      "sha256": "7a921feb5bf105bb92433f987a671fd50889ff54f72684e7c1d0bc8a7667da5f",
+      "provenance": {
+        "sourceFile": "native-mf-off-a.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "7a921feb5bf105bb92433f987a671fd50889ff54f72684e7c1d0bc8a7667da5f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-off-b.json",
+      "bytes": 326,
+      "sha256": "9fa5b254dd196a103b4a65ef76316be93d2dafc14014b231df773420fff95d1c",
+      "provenance": {
+        "sourceFile": "native-mf-off-b.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "9fa5b254dd196a103b4a65ef76316be93d2dafc14014b231df773420fff95d1c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-power-a.json",
+      "bytes": 1852,
+      "sha256": "c6a5b842d3b9fc45bae0a1deaf33d0ae54b7124b2823bafd5b15a0e3b01a07ce",
+      "provenance": {
+        "sourceFile": "native-mf-power-a.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "c6a5b842d3b9fc45bae0a1deaf33d0ae54b7124b2823bafd5b15a0e3b01a07ce",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-power-b.json",
+      "bytes": 1850,
+      "sha256": "8d03dea57f844606fc701ed5d9cfc5ceca4871ff175cce84e117fc22968bf914",
+      "provenance": {
+        "sourceFile": "native-mf-power-b.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "8d03dea57f844606fc701ed5d9cfc5ceca4871ff175cce84e117fc22968bf914",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-power-both.json",
+      "bytes": 4171,
+      "sha256": "a2ea3b5ed1fb1499b488577a0bc8687498444d1f55c4c3334843bc56fc3ed824",
+      "provenance": {
+        "sourceFile": "native-mf-power-both.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "a2ea3b5ed1fb1499b488577a0bc8687498444d1f55c4c3334843bc56fc3ed824",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-power-reverse.json",
+      "bytes": 4195,
+      "sha256": "d6e1f7fec5ac6270f3b29d1be4c95a9841eb637c729efe7e1bcf3d67762315ab",
+      "provenance": {
+        "sourceFile": "native-mf-power-reverse.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "d6e1f7fec5ac6270f3b29d1be4c95a9841eb637c729efe7e1bcf3d67762315ab",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/native-mf-results.json",
+      "bytes": 825,
+      "sha256": "e0b3e09f80164afc6d137e070f1bd53a6bd9019ab9a1366aa1d196035dc0b3ee",
+      "provenance": {
+        "sourceFile": "native-mf-results.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "e0b3e09f80164afc6d137e070f1bd53a6bd9019ab9a1366aa1d196035dc0b3ee",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-activated.json",
+      "bytes": 273,
+      "sha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+      "provenance": {
+        "sourceFile": "nonshareable-activated.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-config-both.json",
+      "bytes": 1565,
+      "sha256": "b3e9c1b99b338309118628f4046b04359b7bd7465fd56a57b45b736309d20dec",
+      "provenance": {
+        "sourceFile": "nonshareable-config-both.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "b3e9c1b99b338309118628f4046b04359b7bd7465fd56a57b45b736309d20dec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-config-reverse.json",
+      "bytes": 1577,
+      "sha256": "d718dafc113366ac754c9edc6ff90be65ab39551cf058b2473ebd5290676a24d",
+      "provenance": {
+        "sourceFile": "nonshareable-config-reverse.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "d718dafc113366ac754c9edc6ff90be65ab39551cf058b2473ebd5290676a24d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-context-both.json",
+      "bytes": 7574,
+      "sha256": "b7aaeaa16957b8ef9bb6e0f5f28fb3b6c4f7eaeade44f668c7b098928012e835",
+      "provenance": {
+        "sourceFile": "nonshareable-context-both.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "b7aaeaa16957b8ef9bb6e0f5f28fb3b6c4f7eaeade44f668c7b098928012e835",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-context-reverse.json",
+      "bytes": 7574,
+      "sha256": "a515b6d51691b0a5102f26567ba77c988e8580daaa21652924d1c35a896e6d3e",
+      "provenance": {
+        "sourceFile": "nonshareable-context-reverse.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "a515b6d51691b0a5102f26567ba77c988e8580daaa21652924d1c35a896e6d3e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-exit-maintenance.json",
+      "bytes": 348,
+      "sha256": "23ce694c1b4561308385737e4c5d30b17350b4a4aac14d080053eb183d6acade",
+      "provenance": {
+        "sourceFile": "nonshareable-exit-maintenance.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "23ce694c1b4561308385737e4c5d30b17350b4a4aac14d080053eb183d6acade",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-function-0-config.txt",
+      "bytes": 4027,
+      "sha256": "47e522cffcfdb31868629acec506484e09e4d7c79308ffbd8450c37814d8e18a",
+      "provenance": {
+        "sourceFile": "nonshareable-function-0-config.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "47e522cffcfdb31868629acec506484e09e4d7c79308ffbd8450c37814d8e18a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-function-0-shareable.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "provenance": {
+        "sourceFile": "nonshareable-function-0-shareable.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-function-1-config.txt",
+      "bytes": 4027,
+      "sha256": "579ff4c54a0fa6bc706b08c5a833bdff57d8c28d454ecf603921be8d5c7fccdf",
+      "provenance": {
+        "sourceFile": "nonshareable-function-1-config.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "579ff4c54a0fa6bc706b08c5a833bdff57d8c28d454ecf603921be8d5c7fccdf",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-function-1-shareable.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "provenance": {
+        "sourceFile": "nonshareable-function-1-shareable.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-host-before.json",
+      "bytes": 4850,
+      "sha256": "92354caa0dc3ab485f406f4901bc42eaba511ebe01c991c157edfde66c8cb167",
+      "provenance": {
+        "sourceFile": "nonshareable-host-before.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "fd6bd66ed53b20b6227cfd2fca81999fa26d4f209dc3b583c1f85bdbf1f7630b",
+        "transformation": "omit unrelated VM inventory"
+      }
+    },
+    {
+      "path": "raw/nonshareable-initial-context.json",
+      "bytes": 1637,
+      "sha256": "a45b1e41e1a906f271988d89b4c494ab4552fba5be5ead731407edfb1a71c9a8",
+      "provenance": {
+        "sourceFile": "nonshareable-initial-context.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "a45b1e41e1a906f271988d89b4c494ab4552fba5be5ead731407edfb1a71c9a8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-map.txt",
+      "bytes": 2152,
+      "sha256": "2096a334a9c00973bd142fe2ec82bd5cb6d1d80960f66c7cc3a3209498a2d5e2",
+      "provenance": {
+        "sourceFile": "nonshareable-map.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "2096a334a9c00973bd142fe2ec82bd5cb6d1d80960f66c7cc3a3209498a2d5e2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-power-both.json",
+      "bytes": 4176,
+      "sha256": "47e12146cec83676921e34bb76540c3202cf2cc49fccdcb81ff53d68e5a5ca56",
+      "provenance": {
+        "sourceFile": "nonshareable-power-both.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "47e12146cec83676921e34bb76540c3202cf2cc49fccdcb81ff53d68e5a5ca56",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-power-reverse.json",
+      "bytes": 4201,
+      "sha256": "42abeaf5c93c68efbec80a37ce1a003603275a8cc691f39cbce39900d1d4e1ab",
+      "provenance": {
+        "sourceFile": "nonshareable-power-reverse.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "42abeaf5c93c68efbec80a37ce1a003603275a8cc691f39cbce39900d1d4e1ab",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/nonshareable-results.json",
+      "bytes": 604,
+      "sha256": "d7e3f71fab1e0f74b3ef59fac34130a55193dc48015b5a46e965e82e8bc65bd5",
+      "provenance": {
+        "sourceFile": "nonshareable-results.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "d7e3f71fab1e0f74b3ef59fac34130a55193dc48015b5a46e965e82e8bc65bd5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/outer-mtree.txt",
+      "bytes": 25069,
+      "sha256": "6dc98c60a44bce883470b79fb76d24116fd5e86aad3622e359325200e590928c",
+      "provenance": {
+        "sourceFile": "outer-mtree.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "6dc98c60a44bce883470b79fb76d24116fd5e86aad3622e359325200e590928c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/outer-pci.txt",
+      "bytes": 2891,
+      "sha256": "765daa5ac393e8796bd54b6d84e45656d2970ebd0894101a4fe212463d38b51b",
+      "provenance": {
+        "sourceFile": "outer-pci.txt",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "765daa5ac393e8796bd54b6d84e45656d2970ebd0894101a4fe212463d38b51b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/readiness.json",
+      "bytes": 4861,
+      "sha256": "5060d2126a7dc52dc17c76b4927626865259858b9779ccd98e710a1d46ac0a99",
+      "provenance": {
+        "sourceFile": "readiness.json",
+        "sourceRun": "20261112-esxi8-legacy-bridge-cause-v1",
+        "sourceSha256": "5060d2126a7dc52dc17c76b4927626865259858b9779ccd98e710a1d46ac0a99",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/finish-host-state.json",
+      "bytes": 4231,
+      "sha256": "5732b6de394f53ea63644118dd170dc27feeb3bb98f213cd3c405cadfc82b8e4",
+      "provenance": {
+        "sourceFile": "finish-host-state.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "ebb92924445e4e504ff09d37ebd46a9453e5eeba5739b91d5e16d054166ef96a",
+        "transformation": "omit unrelated VM inventory"
+      }
+    },
+    {
+      "path": "raw/root-control/finish-maintenance.json",
+      "bytes": 352,
+      "sha256": "95016e8189a0aa6971875cc6ba8e8d514f43bd88b655e8901ca4256a59b2d45b",
+      "provenance": {
+        "sourceFile": "finish-maintenance.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "95016e8189a0aa6971875cc6ba8e8d514f43bd88b655e8901ca4256a59b2d45b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/finish-runtime.json",
+      "bytes": 654,
+      "sha256": "1f8b4f04312a8233fe8bb5e6e8181cdb74bc420dae2fafb7ec0c36597f246e9b",
+      "provenance": {
+        "sourceFile": "finish-runtime.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "1f8b4f04312a8233fe8bb5e6e8181cdb74bc420dae2fafb7ec0c36597f246e9b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/finish-shutdown-request.json",
+      "bytes": 160,
+      "sha256": "0d4027e4ad38c392c7a31f068f615bb94945ef91b0a92bddafc0b9853e12ea2e",
+      "provenance": {
+        "sourceFile": "finish-shutdown-request.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "0d4027e4ad38c392c7a31f068f615bb94945ef91b0a92bddafc0b9853e12ea2e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/latest-memory-preflight.json",
+      "bytes": 224,
+      "sha256": "a2643628b55453df128056429aa74631614b16e87c5dbe1278acdf624252a9c0",
+      "provenance": {
+        "sourceFile": "latest-memory-preflight.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "a2643628b55453df128056429aa74631614b16e87c5dbe1278acdf624252a9c0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/launch.json",
+      "bytes": 188,
+      "sha256": "ab87028256c50fc33fabac0ee390b12d2e7ca9a3cce9594f987dd4ab27ce8ea7",
+      "provenance": {
+        "sourceFile": "launch.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "ab87028256c50fc33fabac0ee390b12d2e7ca9a3cce9594f987dd4ab27ce8ea7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/manifest.json",
+      "bytes": 5263,
+      "sha256": "642e12f76ce0df39fe013e70854fb0cb151c7a3fc2d25ae155884d502cd9cf4d",
+      "provenance": {
+        "sourceFile": "manifest.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "642e12f76ce0df39fe013e70854fb0cb151c7a3fc2d25ae155884d502cd9cf4d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/readiness.json",
+      "bytes": 4855,
+      "sha256": "3ba0f6e3d9627e6131ec8cd97db1e8a627bf7328587f99018c2102f4682e0503",
+      "provenance": {
+        "sourceFile": "readiness.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "3ba0f6e3d9627e6131ec8cd97db1e8a627bf7328587f99018c2102f4682e0503",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-activated.json",
+      "bytes": 273,
+      "sha256": "5605c95582aea71dd761c59e58235f7a1683c3d20bbefe98555de6ebc96168e0",
+      "provenance": {
+        "sourceFile": "root-control-activated.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "5605c95582aea71dd761c59e58235f7a1683c3d20bbefe98555de6ebc96168e0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-config-both.json",
+      "bytes": 1566,
+      "sha256": "522fea3ab573d004ac7df0e51b070ea7c79dea6a5794dcb59f9e90c53ca44783",
+      "provenance": {
+        "sourceFile": "root-control-config-both.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "522fea3ab573d004ac7df0e51b070ea7c79dea6a5794dcb59f9e90c53ca44783",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-config-reverse.json",
+      "bytes": 1578,
+      "sha256": "018331b1e5657754a28666906666091b59842d5343dd822781cdc16b500c3809",
+      "provenance": {
+        "sourceFile": "root-control-config-reverse.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "018331b1e5657754a28666906666091b59842d5343dd822781cdc16b500c3809",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-context-both.json",
+      "bytes": 4717,
+      "sha256": "b6fad23077070576155a8bbb0df478fed2bd92966dedfc20305845f1acef90f0",
+      "provenance": {
+        "sourceFile": "root-control-context-both.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "b6fad23077070576155a8bbb0df478fed2bd92966dedfc20305845f1acef90f0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-context-reverse.json",
+      "bytes": 4717,
+      "sha256": "b5b034295876f4c614794f2f9f7b6e98d868eac717fa391d7161a9f0fb515e8a",
+      "provenance": {
+        "sourceFile": "root-control-context-reverse.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "b5b034295876f4c614794f2f9f7b6e98d868eac717fa391d7161a9f0fb515e8a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-create-20261112-esxi8-pcie-domain-control-v1-both.json",
+      "bytes": 325,
+      "sha256": "532471f1e5f13d28ef285daaeee7b41d2cea3e6087850c5243e2a52a5dfae86c",
+      "provenance": {
+        "sourceFile": "root-control-create-20261112-esxi8-pcie-domain-control-v1-both.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "532471f1e5f13d28ef285daaeee7b41d2cea3e6087850c5243e2a52a5dfae86c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-create-20261112-esxi8-pcie-domain-control-v1-reverse.json",
+      "bytes": 324,
+      "sha256": "9293a901b8aadc45fdcb93d6f5c638d836b7362dadfb5bdc02c24d6d58cca1d3",
+      "provenance": {
+        "sourceFile": "root-control-create-20261112-esxi8-pcie-domain-control-v1-reverse.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "9293a901b8aadc45fdcb93d6f5c638d836b7362dadfb5bdc02c24d6d58cca1d3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-function-0-config.txt",
+      "bytes": 4027,
+      "sha256": "47e522cffcfdb31868629acec506484e09e4d7c79308ffbd8450c37814d8e18a",
+      "provenance": {
+        "sourceFile": "root-control-function-0-config.txt",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "47e522cffcfdb31868629acec506484e09e4d7c79308ffbd8450c37814d8e18a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-function-1-config.txt",
+      "bytes": 4027,
+      "sha256": "579ff4c54a0fa6bc706b08c5a833bdff57d8c28d454ecf603921be8d5c7fccdf",
+      "provenance": {
+        "sourceFile": "root-control-function-1-config.txt",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "579ff4c54a0fa6bc706b08c5a833bdff57d8c28d454ecf603921be8d5c7fccdf",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-host-before.json",
+      "bytes": 996,
+      "sha256": "849f5221deccbdf2a883a2e065954aaf64d9c14c2bbf2306d216b691aa72fa80",
+      "provenance": {
+        "sourceFile": "root-control-host-before.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "5f46c4744f2ad22cab69daa8f8978393ae8c32cde6d336ea48e409fb6134524d",
+        "transformation": "omit unrelated VM inventory"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-initial-context.json",
+      "bytes": 1348,
+      "sha256": "5e951e38ad7a6ae2ec87236a3ff9b41f69bb4842be0ac32160233e99f5984cfc",
+      "provenance": {
+        "sourceFile": "root-control-initial-context.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "5e951e38ad7a6ae2ec87236a3ff9b41f69bb4842be0ac32160233e99f5984cfc",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-map.txt",
+      "bytes": 2045,
+      "sha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+      "provenance": {
+        "sourceFile": "root-control-map.txt",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-off-both.json",
+      "bytes": 333,
+      "sha256": "f8d2b2914221a8d77e419a2505faf08057aa955e195c5f805a3fde710bef4927",
+      "provenance": {
+        "sourceFile": "root-control-off-both.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "f8d2b2914221a8d77e419a2505faf08057aa955e195c5f805a3fde710bef4927",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-off-reverse.json",
+      "bytes": 333,
+      "sha256": "7be49dd6c4ee803e7d598989b1a1e5c077a3ea6e46d1833c2c74b19042ef3cec",
+      "provenance": {
+        "sourceFile": "root-control-off-reverse.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "7be49dd6c4ee803e7d598989b1a1e5c077a3ea6e46d1833c2c74b19042ef3cec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-power-both.json",
+      "bytes": 2694,
+      "sha256": "e5ac4077218bfa5b393e9fffd098081846b6b69b2a940871c7735bc85d15d7ab",
+      "provenance": {
+        "sourceFile": "root-control-power-both.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "e5ac4077218bfa5b393e9fffd098081846b6b69b2a940871c7735bc85d15d7ab",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-power-reverse.json",
+      "bytes": 2718,
+      "sha256": "a226f9340551d321f180b461516971d903982930a9735f56fdc2718ded48eef9",
+      "provenance": {
+        "sourceFile": "root-control-power-reverse.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "a226f9340551d321f180b461516971d903982930a9735f56fdc2718ded48eef9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-control-results.json",
+      "bytes": 606,
+      "sha256": "af450528a2b93febdf62b7a0de52e8aa6d7f991e243ab9a6f41aceaf7b16ee85",
+      "provenance": {
+        "sourceFile": "root-control-results.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "af450528a2b93febdf62b7a0de52e8aa6d7f991e243ab9a6f41aceaf7b16ee85",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-activated.json",
+      "bytes": 273,
+      "sha256": "5605c95582aea71dd761c59e58235f7a1683c3d20bbefe98555de6ebc96168e0",
+      "provenance": {
+        "sourceFile": "root-single-activated.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "5605c95582aea71dd761c59e58235f7a1683c3d20bbefe98555de6ebc96168e0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-config-a.json",
+      "bytes": 1128,
+      "sha256": "84c047f594ad506e9d3664655037df0b3951782cac7adc2b0c5bca8b8556e219",
+      "provenance": {
+        "sourceFile": "root-single-config-a.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "84c047f594ad506e9d3664655037df0b3951782cac7adc2b0c5bca8b8556e219",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-config-b.json",
+      "bytes": 1127,
+      "sha256": "8080f75f8dce2862b85578443a03c5738d38302a711598cae2d75cc2c7c8f8c5",
+      "provenance": {
+        "sourceFile": "root-single-config-b.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "8080f75f8dce2862b85578443a03c5738d38302a711598cae2d75cc2c7c8f8c5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-context-a.json",
+      "bytes": 4717,
+      "sha256": "11dd986a7224fce9d9872077b6cc11da9eed2b8da53b0f59a96559f51501c87a",
+      "provenance": {
+        "sourceFile": "root-single-context-a.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "11dd986a7224fce9d9872077b6cc11da9eed2b8da53b0f59a96559f51501c87a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-context-b.json",
+      "bytes": 4717,
+      "sha256": "65e45b6c7c6175a54c14ce7c3c55d89aa8f1225772fd731161b0e07a2204be1c",
+      "provenance": {
+        "sourceFile": "root-single-context-b.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "65e45b6c7c6175a54c14ce7c3c55d89aa8f1225772fd731161b0e07a2204be1c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-create-20261112-esxi8-pcie-domain-control-v1-a.json",
+      "bytes": 324,
+      "sha256": "5698cf666fd04f5e924d8991833882a7adedcf0e517b4404fb0fff33ce6592f4",
+      "provenance": {
+        "sourceFile": "root-single-create-20261112-esxi8-pcie-domain-control-v1-a.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "5698cf666fd04f5e924d8991833882a7adedcf0e517b4404fb0fff33ce6592f4",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-create-20261112-esxi8-pcie-domain-control-v1-b.json",
+      "bytes": 324,
+      "sha256": "675038bb709b68baf26e0066cc634fffe06104b4a4300afd2ff6b1d928432914",
+      "provenance": {
+        "sourceFile": "root-single-create-20261112-esxi8-pcie-domain-control-v1-b.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "675038bb709b68baf26e0066cc634fffe06104b4a4300afd2ff6b1d928432914",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-host-before.json",
+      "bytes": 3354,
+      "sha256": "44fc8131a645e3fdf1e151a04cc4b1a63d9dbde04c09732cd67fa3a15a2509ed",
+      "provenance": {
+        "sourceFile": "root-single-host-before.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "a261135d4488aee3278373850d0cfbc8a9683ba4e2c7c42eb0ab2ed04478a6e8",
+        "transformation": "omit unrelated VM inventory"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-initial-context.json",
+      "bytes": 1348,
+      "sha256": "a6408783e42b165c60b1cbdf9a3788d45cddd851489318deeea5fcf405588e65",
+      "provenance": {
+        "sourceFile": "root-single-initial-context.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "a6408783e42b165c60b1cbdf9a3788d45cddd851489318deeea5fcf405588e65",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-off-a.json",
+      "bytes": 333,
+      "sha256": "ec4983acaec4ba22cf16e460abc64a749865882d8b783b49b00a729e3c5384a4",
+      "provenance": {
+        "sourceFile": "root-single-off-a.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "ec4983acaec4ba22cf16e460abc64a749865882d8b783b49b00a729e3c5384a4",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-off-b.json",
+      "bytes": 333,
+      "sha256": "805c3abdfb7a9e7f508038a9bfb01afcf45ca94ac192f2202f36aca211befcc4",
+      "provenance": {
+        "sourceFile": "root-single-off-b.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "805c3abdfb7a9e7f508038a9bfb01afcf45ca94ac192f2202f36aca211befcc4",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-power-a.json",
+      "bytes": 1858,
+      "sha256": "c5854385fba8ea82d9d2607f19b55c3124312addf302568fae09598f194f4e05",
+      "provenance": {
+        "sourceFile": "root-single-power-a.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "c5854385fba8ea82d9d2607f19b55c3124312addf302568fae09598f194f4e05",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-power-b.json",
+      "bytes": 1858,
+      "sha256": "d55fd4bf0c64b6e43658e7de99ed74bd9e65e7274457d66f98b9560d374b116e",
+      "provenance": {
+        "sourceFile": "root-single-power-b.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "d55fd4bf0c64b6e43658e7de99ed74bd9e65e7274457d66f98b9560d374b116e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/root-control/root-single-results.json",
+      "bytes": 597,
+      "sha256": "0af0ab5cb5e5b88ef1b239dd2d1b9f86e23cf4dda361f92a4551333e2ded9e9a",
+      "provenance": {
+        "sourceFile": "root-single-results.json",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "0af0ab5cb5e5b88ef1b239dd2d1b9f86e23cf4dda361f92a4551333e2ded9e9a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 10072,
+      "sha256": "5aca70f16d74e8da72419839e620dab334cc693df8941801ba386854369c62fb",
+      "provenance": {
+        "transformation": "authored report or offline verifier"
+      }
+    },
+    {
+      "path": "source-analysis/comparison.json",
+      "bytes": 1669,
+      "sha256": "7937206deb1fc7183df3905342cb55e8db6d3a36ce4e237e60dbfbe32929d48d",
+      "provenance": {
+        "sourceFile": "comparison.json",
+        "sourceRun": "source-analysis",
+        "sourceSha256": "7937206deb1fc7183df3905342cb55e8db6d3a36ce4e237e60dbfbe32929d48d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/bridge-trace-events.txt",
+      "bytes": 174,
+      "sha256": "fb192edd1ef954ee0bef3d328b1320960c2f7012036c521f82cb7ffe3938b32a",
+      "provenance": {
+        "sourceFile": "bridge-trace-events",
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceSha256": "fb192edd1ef954ee0bef3d328b1320960c2f7012036c521f82cb7ffe3938b32a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/bridge_cause_probe.py.txt",
+      "bytes": 8503,
+      "sha256": "d5164a83777b552790e70e131ec6ea27966ff488845c35007fc6539f403c8961",
+      "provenance": {
+        "sourceFile": "bridge_cause_probe.py",
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceSha256": "d5164a83777b552790e70e131ec6ea27966ff488845c35007fc6539f403c8961",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/compare_qemu_source.py.txt",
+      "bytes": 1477,
+      "sha256": "f791bb9af7b8d0d7aca07b34f4447defa65b34bc0751a43fdea8aecb5dc27c67",
+      "provenance": {
+        "sourceFile": "compare_qemu_source.py",
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceSha256": "f791bb9af7b8d0d7aca07b34f4447defa65b34bc0751a43fdea8aecb5dc27c67",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/esxi_passthru_capability.py.txt",
+      "bytes": 21818,
+      "sha256": "862681a213651eb0f8c71938261f8434a7dbec28637f3273c2532cce567acefd",
+      "provenance": {
+        "sourceFile": "esxi_passthru_capability.py",
+        "sourceRun": "vmware-esxi8-lab",
+        "sourceSha256": "862681a213651eb0f8c71938261f8434a7dbec28637f3273c2532cce567acefd",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/executed-root-control.py.txt",
+      "bytes": 8350,
+      "sha256": "b61c17b87fd2a69b015a3bcd3d028a591781d69dff28142accaa5a06fdc6117c",
+      "provenance": {
+        "sourceFile": "root-control-probe-source.py.txt",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "b61c17b87fd2a69b015a3bcd3d028a591781d69dff28142accaa5a06fdc6117c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/executed-root-single.py.txt",
+      "bytes": 8503,
+      "sha256": "d5164a83777b552790e70e131ec6ea27966ff488845c35007fc6539f403c8961",
+      "provenance": {
+        "sourceFile": "root-single-probe-source.py.txt",
+        "sourceRun": "20261112-esxi8-pcie-domain-control-v1",
+        "sourceSha256": "d5164a83777b552790e70e131ec6ea27966ff488845c35007fc6539f403c8961",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/prepare_dependency_interaction_run.py.txt",
+      "bytes": 9568,
+      "sha256": "a629e260834afeeee80943c1596828778eca9cbe9ad321e3cf4c4584bd86667e",
+      "provenance": {
+        "sourceFile": "prepare_dependency_interaction_run.py",
+        "sourceRun": "vmware-esxi8-lab",
+        "sourceSha256": "a629e260834afeeee80943c1596828778eca9cbe9ad321e3cf4c4584bd86667e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/README.md",
+      "bytes": 2189,
+      "sha256": "58ba897f17e46aade67e646e844125087f70b9621528860ae623d410dbb2310e",
+      "provenance": {
+        "transformation": "authored report or offline verifier"
+      }
+    },
+    {
+      "path": "source-snapshots/set_bridge_policy.py.txt",
+      "bytes": 3588,
+      "sha256": "5192a1f098a0a2fe413cd64e220e60ba0bc824097a4ad4d746d54d2d11c3130d",
+      "provenance": {
+        "sourceFile": "set_bridge_policy.py",
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceSha256": "5192a1f098a0a2fe413cd64e220e60ba0bc824097a4ad4d746d54d2d11c3130d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/test_esxi_dependency_interaction.py.txt",
+      "bytes": 14774,
+      "sha256": "fe6806c7d4c9be80679314e1b47a1eba3cc449beb67e3af1bc12b3c36457e290",
+      "provenance": {
+        "sourceFile": "test_esxi_dependency_interaction.py",
+        "sourceRun": "vmware-esxi8-lab",
+        "sourceSha256": "fe6806c7d4c9be80679314e1b47a1eba3cc449beb67e3af1bc12b3c36457e290",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/wait_bridge_policy.py.txt",
+      "bytes": 713,
+      "sha256": "af4d9f5fad39d5e64845b54bb2706d6f292ef5aa7269e995a73a32e9e5142d52",
+      "provenance": {
+        "sourceFile": "wait_bridge_policy.py",
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceSha256": "af4d9f5fad39d5e64845b54bb2706d6f292ef5aa7269e995a73a32e9e5142d52",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/wait_dependency_policy.py.txt",
+      "bytes": 4106,
+      "sha256": "7c27541e2cdf77fa265129e6243b99e68b8a4828c700651b32ce3374d725a584",
+      "provenance": {
+        "sourceFile": "wait_dependency_policy.py",
+        "sourceRun": "vmware-esxi8-lab",
+        "sourceSha256": "7c27541e2cdf77fa265129e6243b99e68b8a4828c700651b32ce3374d725a584",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "summary.json",
+      "bytes": 4438,
+      "sha256": "3c6b2002f26c82c551a87a2cf28764060313e3ef869230621a00adf149a9e03c",
+      "provenance": {
+        "transformation": "authored report or offline verifier"
+      }
+    },
+    {
+      "path": "verify_bundle.py",
+      "bytes": 5959,
+      "sha256": "e8e13799f4a7c87535e182bca2ceaaacc7a555bf47af64cf6c4d8b7055eb5b87",
+      "provenance": {
+        "transformation": "authored report or offline verifier"
+      }
+    }
+  ]
+}

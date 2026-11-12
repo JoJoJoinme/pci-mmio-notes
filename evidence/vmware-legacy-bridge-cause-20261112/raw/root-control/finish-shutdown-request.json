@@ -1,0 +1,6 @@
+{
+  "at": "2026-11-12T12:10:31.099262+00:00",
+  "api": "ShutdownHost_Task",
+  "force": false,
+  "taskId": "haTask-ha-host-vim.HostSystem.shutdown-1768912848"
+}

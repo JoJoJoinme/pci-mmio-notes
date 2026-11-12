@@ -1,0 +1,9 @@
+Source file: native-mf-both-20261112-esxi8-legacy-bridge-cause-v1-both-vmware.log
+Source run: 20261112-esxi8-legacy-bridge-cause-v1
+Source SHA-256: 03c76ba5dd23919e68bf68d27642e646b292313172314ccb73c9744d28596477
+Selected original lines; original line numbers follow.
+
+590: 2026-11-12T11:44:54.162Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:02:01.0 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1
+611: 2026-11-12T11:45:00.097Z In(05) vmx - AH Failed to find a suitable device for pciPassthru1
+612: 2026-11-12T11:45:00.097Z In(05) vmx - Module 'DevicePowerOn' power on failed.
+634: 2026-11-12T11:45:04.796Z In(05)+ vmx - Power on failure messages: Module 'DevicePowerOn' power on failed.

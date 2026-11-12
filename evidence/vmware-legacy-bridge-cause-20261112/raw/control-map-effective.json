@@ -1,0 +1,51 @@
+{
+  "at": "2026-11-12T11:52:34.513925+00:00",
+  "bootTime": "2026-11-12 11:50:14.232631+00:00",
+  "oldBootTime": "2026-11-12 11:39:11.717858+00:00",
+  "policyAction": "false",
+  "rule": "8086 10d3 default false",
+  "matchingRows": [
+    [
+      "8086",
+      "10d3",
+      "default",
+      "false"
+    ]
+  ],
+  "persisted": true,
+  "effectiveShareable": {
+    "0000:02:01.0": "true",
+    "0000:02:01.1": "true",
+    "0000:00:05.0": "false"
+  },
+  "vsiFptShareable": {
+    "0000:02:01.0": "0",
+    "0000:02:01.1": "0"
+  },
+  "expectedVsiValue": "0",
+  "bootbank": "/vmfs/volumes/3d0f2b50-b6498248-5484-7786fb3b87f1",
+  "pci": [
+    {
+      "id": "0000:00:05.0",
+      "capable": false,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": ""
+    },
+    {
+      "id": "0000:02:01.0",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    },
+    {
+      "id": "0000:02:01.1",
+      "capable": true,
+      "enabled": false,
+      "active": false,
+      "dependentDevice": "0000:01:00.0"
+    }
+  ],
+  "valid": true
+}

@@ -1,0 +1,56 @@
+# passthrough attributes for devices
+#
+# file format: vendor-id device-id resetMethod fptShareable
+# vendor/device id: xxxx (in hex) (ffff can be used for wildchar match)
+# reset methods: flr, d3d0, link, bridge, default
+# fptShareable: true/default, false
+#
+# Description:
+#
+# - fptShareable: when set to true means the PCI device can be shared.
+#   Sharing refers to using multiple functions of a multi‐function
+#   device in different contexts. That is, sharing between two
+#   virtual machines or between a virtual machine and VMkernel.
+#
+# - resetMethod: override for the type of reset to apply to a PCI device.
+#   Bus reset and link reset prevent functions in a multi-function
+#   device from being assigned to different virtual machines, or from
+#   being assigned between the VMkernel and virtual machines. In
+#   some devices it's possible to use PCI power management capability
+#   D3->D0 transitions to reset the device. In the absence of the
+#   override, the VMkernel decides the type of PCI reset to apply
+#   based on the device's capabilities. The VMkernel prioritizes
+#   function level reset (flr).
+#
+# Restrictions:
+#
+# - PCI SR-IOV physical and virtual functions (PFs/VFs) are not allowed
+#   in the list below. Those must support function-level-reset and
+#   must be shareable.
+#
+
+# Intel 82579LM Gig NIC can be reset with d3d0
+8086  1502  d3d0     default
+# Intel 82598 10Gig cards can be reset with d3d0
+8086  10b6  d3d0     default
+8086  10c6  d3d0     default
+8086  10c7  d3d0     default
+8086  10c8  d3d0     default
+8086  10dd  d3d0     default
+# Broadcom 57710/57711/57712 10Gig cards are not shareable
+14e4  164e  default  false
+14e4  164f  default  false
+14e4  1650  default  false
+14e4  1662  link     false
+# Qlogic 8Gb FC card can not be shared
+1077  2532  default  false
+# LSILogic 1068 based SAS controllers
+1000  0056  d3d0     default
+1000  0058  d3d0     default
+# NVIDIA (FLR issue on Ampere and Hopper GPUs)
+10de  ffff  bridge   false
+# AMD FCH SATA Controller [AHCI mode]
+1022  7901  d3d0     default
+
+# Isolated legacy bridge root-cause control 20261112-esxi8-legacy-bridge-cause-v1
+8086 10d3 default false

@@ -1,0 +1,9 @@
+{
+  "taskId": "haTask-2891-vim.VirtualMachine.powerOff-516",
+  "state": "success",
+  "descriptionId": "VirtualMachine.powerOff",
+  "queueTime": "2026-11-12 11:46:10.176070+00:00",
+  "startTime": "2026-11-12 11:46:10.196179+00:00",
+  "completeTime": "2026-11-12 11:46:15.257395+00:00",
+  "elapsedSeconds": 5.534393288000047
+}

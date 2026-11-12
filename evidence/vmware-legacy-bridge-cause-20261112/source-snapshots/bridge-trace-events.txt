@@ -1,0 +1,8 @@
+vtd_replay_ce_valid
+vtd_replay_ce_invalid
+vtd_iotlb_cc_update
+vtd_dmar_fault
+vtd_context_cache_reset
+vtd_inv_desc_cc_device
+vtd_inv_desc_cc_devices
+vtd_inv_desc_iotlb_domain

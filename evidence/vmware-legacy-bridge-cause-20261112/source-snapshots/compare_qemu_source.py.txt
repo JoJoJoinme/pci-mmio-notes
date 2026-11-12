@@ -1,0 +1,21 @@
+import hashlib,json,urllib.request,difflib
+from pathlib import Path
+from datetime import datetime,timezone
+out=Path(r'E:\Code\PCI\_artifacts\vmware-directpath-runs\20261112-esxi8-legacy-bridge-cause-v1')/'source-analysis'
+out.mkdir(exist_ok=True)
+local=Path(r'\\wsl$\Ubuntu-22.04\root\src\qemu-11.0.2')
+opener=urllib.request.build_opener(urllib.request.ProxyHandler({'https':'http://127.0.0.1:7890'}))
+records=[]
+for name in ['hw/pci/pci.c','hw/i386/intel_iommu.c','hw/i386/intel_iommu_internal.h','hw/pci-bridge/pcie_pci_bridge.c']:
+    url='https://raw.githubusercontent.com/qemu/qemu/v11.0.2/'+name
+    with opener.open(url,timeout=40) as response:upstream=response.read()
+    current=(local/name).read_bytes()
+    stem=name.replace('/','-')
+    (out/(stem+'.upstream')).write_bytes(upstream)
+    (out/(stem+'.local')).write_bytes(current)
+    diff=''.join(difflib.unified_diff(upstream.decode().splitlines(True),current.decode().splitlines(True),fromfile='upstream/'+name,tofile='local/'+name))
+    (out/(stem+'.diff')).write_text(diff,encoding='utf-8')
+    records.append({'file':name,'upstreamUrl':url,'upstreamSha256':hashlib.sha256(upstream).hexdigest(),'localSha256':hashlib.sha256(current).hexdigest(),'byteIdentical':upstream==current,'diffLines':len(diff.splitlines())})
+data={'at':datetime.now(timezone.utc).isoformat(),'version':'11.0.2','files':records}
+(out/'comparison.json').write_text(json.dumps(data,indent=2)+'\n',encoding='utf-8')
+print(json.dumps(data))

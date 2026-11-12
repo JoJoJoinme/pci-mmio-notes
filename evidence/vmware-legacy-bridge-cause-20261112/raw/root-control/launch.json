@@ -1,0 +1,5 @@
+{
+  "returncode": 0,
+  "stdout": "ACCEPT  all opt -- in br-esxi8 out br-esxi8  0.0.0.0/0  -> 0.0.0.0/0  \nACCEPT  all opt    in br-esxi8 out br-esxi8  ::/0  -> ::/0  \n",
+  "stderr": ""
+}

@@ -1,0 +1,7 @@
+Source file: root-control-both-20261112-esxi8-pcie-domain-control-v1-both-vmware.log
+Source run: 20261112-esxi8-pcie-domain-control-v1
+Source SHA-256: 89e9355bcb3ff5f604362e46a42f540c3dd9b5f2125ee6e78b56575484cbb6cd
+Selected original lines; original line numbers follow.
+
+590: 2026-11-12T12:06:22.081Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:01:00.0 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1
+598: 2026-11-12T12:06:22.083Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:01:00.1 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1

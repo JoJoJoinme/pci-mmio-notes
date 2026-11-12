@@ -1,0 +1,6 @@
+Source file: native-mf-b-vmkernel.txt
+Source run: 20261112-esxi8-legacy-bridge-cause-v1
+Source SHA-256: 22d04c4133dff0d4446088434f7c7e69f95dc7840ccc26bb73a7a4b85ce502da
+Selected original lines; original line numbers follow.
+
+2426: 2026-11-12T11:46:27.453Z In(182) vmkernel: cpu3:134952)PCIPassthru: 4636: pcipDevInfo(0x4312d6c016c0) allocated for 0000:02:01.1

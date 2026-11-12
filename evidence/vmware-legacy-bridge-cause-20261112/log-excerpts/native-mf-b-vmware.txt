@@ -1,0 +1,7 @@
+Source file: native-mf-b-20261112-esxi8-legacy-bridge-cause-v1-b-vmware.log
+Source run: 20261112-esxi8-legacy-bridge-cause-v1
+Source SHA-256: 81015dbe49c6d74f898e1e0f4ac22b34c4be87bd531b578b6c0256a040544bb2
+Selected original lines; original line numbers follow.
+
+584: 2026-11-12T11:46:31.652Z In(05) vmx - PCIPassthru: Registered a PCI device for 0000:02:01.1 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1
+586: 2026-11-12T11:46:32.081Z No(00) vmx - PowerOnTiming: Module DevicePowerOn took 4636060 us

@@ -1,0 +1,50 @@
+{
+  "at": "2026-11-12T12:06:40.233422+00:00",
+  "before": {
+    "name": "20261112-esxi8-pcie-domain-control-v1-reverse",
+    "id": "2890",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] 20261112-esxi8-pcie-domain-control-v1-reverse/20261112-esxi8-pcie-domain-control-v1-reverse/20261112-esxi8-pcie-domain-control-v1-reverse.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      },
+      {
+        "key": 13001,
+        "label": "PCI device 1",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  },
+  "task": {
+    "taskId": "haTask-2890-vim.VirtualMachine.powerOn-1768912234",
+    "state": "success",
+    "descriptionId": "VirtualMachine.powerOn",
+    "queueTime": "2026-11-12 12:06:33.720628+00:00",
+    "startTime": "2026-11-12 12:06:33.741451+00:00",
+    "completeTime": "2026-11-12 12:06:38.507190+00:00",
+    "elapsedSeconds": 5.510718994000172
+  },
+  "after": {
+    "name": "20261112-esxi8-pcie-domain-control-v1-reverse",
+    "id": "2890",
+    "powerState": "poweredOn",
+    "vmx": "[pci-mmio-local] 20261112-esxi8-pcie-domain-control-v1-reverse/20261112-esxi8-pcie-domain-control-v1-reverse/20261112-esxi8-pcie-domain-control-v1-reverse.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      },
+      {
+        "key": 13001,
+        "label": "PCI device 1",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}

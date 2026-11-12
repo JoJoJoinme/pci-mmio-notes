@@ -1,0 +1,395 @@
+iininfinfoinfo info minfo mtinfo mtrinfo mtreinfo mtree
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-00.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-00.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-1f.2
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-1f.2-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+address-space: VGA
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-01.0 0000000000000000-ffffffffffffffff
+
+address-space: I/O
+  0000000000000000-000000000000ffff (prio 0, container): io
+    0000000000000000-0000000000000007 (prio 0, i/o): dma-chan
+    0000000000000008-000000000000000f (prio 0, i/o): dma-cont
+    0000000000000020-0000000000000021 (prio 0, i/o): pic
+    0000000000000040-0000000000000043 (prio 0, i/o): pit
+    0000000000000060-0000000000000060 (prio 0, i/o): i8042-data
+    0000000000000061-0000000000000061 (prio 0, i/o): pcspk
+    0000000000000064-0000000000000064 (prio 0, i/o): i8042-cmd
+    0000000000000070-0000000000000071 (prio 0, i/o): rtc
+      0000000000000070-0000000000000070 (prio 0, i/o): rtc-index
+    000000000000007e-000000000000007f (prio 0, i/o): kvmvapic
+    0000000000000080-0000000000000080 (prio 0, i/o): ioport80
+    0000000000000081-0000000000000083 (prio 0, i/o): dma-page
+    0000000000000087-0000000000000087 (prio 0, i/o): dma-page
+    0000000000000089-000000000000008b (prio 0, i/o): dma-page
+    000000000000008f-000000000000008f (prio 0, i/o): dma-page
+    0000000000000092-0000000000000092 (prio 0, i/o): port92
+    00000000000000a0-00000000000000a1 (prio 0, i/o): pic
+    00000000000000b2-00000000000000b3 (prio 0, i/o): apm-io
+    00000000000000c0-00000000000000cf (prio 0, i/o): dma-chan
+    00000000000000d0-00000000000000df (prio 0, i/o): dma-cont
+    00000000000000f0-00000000000000f0 (prio 0, i/o): ioportF0
+    00000000000001ce-00000000000001d1 (prio 0, i/o): vbe
+    0000000000000378-000000000000037f (prio 0, i/o): parallel
+    00000000000003b4-00000000000003b5 (prio 0, i/o): vga
+    00000000000003ba-00000000000003ba (prio 0, i/o): vga
+    00000000000003c0-00000000000003cf (prio 0, i/o): vga
+    00000000000003d4-00000000000003d5 (prio 0, i/o): vga
+    00000000000003da-00000000000003da (prio 0, i/o): vga
+    00000000000003f8-00000000000003ff (prio 0, i/o): serial
+    00000000000004d0-00000000000004d0 (prio 0, i/o): elcr
+    00000000000004d1-00000000000004d1 (prio 0, i/o): elcr
+    0000000000000510-0000000000000511 (prio 0, i/o): fwcfg
+    0000000000000514-000000000000051b (prio 0, i/o): fwcfg.dma
+    0000000000000600-000000000000067f (prio 0, i/o): ich9-pm
+      0000000000000600-0000000000000603 (prio 0, i/o): acpi-evt
+      0000000000000604-0000000000000605 (prio 0, i/o): acpi-cnt
+      0000000000000608-000000000000060b (prio 0, i/o): acpi-tmr
+      0000000000000620-000000000000062f (prio 0, i/o): acpi-gpe0
+      0000000000000630-0000000000000637 (prio 0, i/o): acpi-smi
+      0000000000000660-000000000000067f (prio 0, i/o): sm-tco
+    0000000000000cc0-0000000000000cd7 (prio 0, i/o): acpi-pci-hotplug
+    0000000000000cd8-0000000000000ce3 (prio 0, i/o): acpi-cpu-hotplug
+    0000000000000cf8-0000000000000cfb (prio 0, i/o): pci-conf-idx
+    0000000000000cf9-0000000000000cf9 (prio 1, i/o): lpc-reset-control
+    0000000000000cfc-0000000000000cff (prio 0, i/o): pci-conf-data
+    0000000000005658-0000000000005658 (prio 0, i/o): vmport
+    0000000000006000-0000000000006fff (prio 1, container): alias pci_bridge_io @pci_bridge_io 0000000000006000-0000000000006fff
+    0000000000007000-000000000000703f (prio 1, i/o): pm-smbus
+    0000000000007040-000000000000705f (prio 1, i/o): ahci-idp
+    0000000000007060-000000000000707f (prio 1, i/o): e1000e-io
+
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-08.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-08.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+address-space: KVM-SMRAM
+address-space: cpu-smm-0
+address-space: cpu-smm-1
+address-space: cpu-smm-2
+address-space: cpu-smm-3
+  0000000000000000-ffffffffffffffff (prio 0, container): mem-container-smram
+    0000000000000000-00000000ffffffff (prio 10, i/o): smram
+    0000000000000000-ffffffffffffffff (prio 0, container): alias mem-smram @system 0000000000000000-ffffffffffffffff
+
+address-space: pci_bridge_pci_mem
+  0000000000000000-ffffffffffffffff (prio 0, container): pci_bridge_pci
+    00000000c1000000-00000000c11fffff (prio 1, container): alias pci_bridge_mem @pci_bridge_pci 00000000c1000000-00000000c11fffff
+    00000000c1200000-00000000c12000ff (prio 1, i/o): shpc-bar
+      00000000c1200000-00000000c120009f (prio 0, i/o): shpc-mmio
+    fffffffffff00000-fffffffffff00000 (prio 1, container): alias pci_bridge_pref_mem @pci_bridge_pci fffffffffff00000-fffffffffff00000
+
+address-space: pci_bridge_pci_mem
+  0000000000000000-ffffffffffffffff (prio 0, container): pci_bridge_pci
+    00000000c1000000-00000000c101ffff (prio 1, i/o): e1000e-flash
+    00000000c1020000-00000000c103ffff (prio 1, i/o): e1000e-mmio
+    00000000c1040000-00000000c105ffff (prio 1, i/o): e1000e-flash
+    00000000c1060000-00000000c107ffff (prio 1, i/o): e1000e-mmio
+    00000000c1080000-00000000c1083fff (prio 1, i/o): e1000e-msix
+      00000000c1080000-00000000c108004f (prio 0, i/o): msix-table
+      00000000c1082000-00000000c1082007 (prio 0, i/o): msix-pba
+    00000000c1084000-00000000c1087fff (prio 1, i/o): e1000e-msix
+      00000000c1084000-00000000c108404f (prio 0, i/o): msix-table
+      00000000c1086000-00000000c1086007 (prio 0, i/o): msix-pba
+
+address-space: e1000e
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-00.0 0000000000000000-ffffffffffffffff
+
+address-space: ich9-ahci
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-1f.2 0000000000000000-ffffffffffffffff
+
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-00.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-00.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-01.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-01.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+address-space: mch
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-00.0 0000000000000000-ffffffffffffffff
+
+address-space: ICH9-LPC
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-1f.0 0000000000000000-ffffffffffffffff
+
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-1f.3
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-1f.3-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+address-space: ICH9-SMB
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-1f.3 0000000000000000-ffffffffffffffff
+
+address-space: pcie-root-port
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-08.0 0000000000000000-ffffffffffffffff
+
+address-space: pcie-pci-bridge
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-00.0 0000000000000000-ffffffffffffffff
+
+address-space: pci_bridge_pci_io
+  0000000000000000-00000000ffffffff (prio 0, container): pci_bridge_io
+    0000000000006000-0000000000006fff (prio 1, container): alias pci_bridge_io @pci_bridge_io 0000000000006000-0000000000006fff
+
+address-space: pci_bridge_pci_io
+  0000000000000000-00000000ffffffff (prio 0, container): pci_bridge_io
+    0000000000006000-000000000000601f (prio 1, i/o): e1000e-io
+    0000000000006020-000000000000603f (prio 1, i/o): e1000e-io
+
+address-space: e1000e
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-00.0 0000000000000000-ffffffffffffffff
+
+address-space: e1000e
+  0000000000000000-ffffffffffffffff (prio 0, container): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, container): alias bus master @vtd-05.0 0000000000000000-ffffffffffffffff
+
+address-space: cpu-memory-0
+address-space: cpu-memory-1
+address-space: cpu-memory-2
+address-space: cpu-memory-3
+address-space: memory
+  0000000000000000-ffffffffffffffff (prio 0, container): system
+    0000000000000000-000000007fffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-000000007fffffff
+    0000000000000000-ffffffffffffffff (prio -1, i/o): pci
+      00000000000a0000-00000000000affff (prio 2, ram): alias vga.chain4 @vga.vram 0000000000000000-000000000000ffff
+      00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
+      00000000000c0000-00000000000dffff (prio 1, rom): pc.rom
+      00000000000e0000-00000000000fffff (prio 1, romd): alias isa-bios @system.flash0 00000000001c0000-00000000001dffff
+      00000000c0000000-00000000c0ffffff (prio 1, ram): vga.vram
+      00000000c1000000-00000000c12fffff (prio 1, container): alias pci_bridge_mem @pci_bridge_pci 00000000c1000000-00000000c12fffff
+      00000000c1340000-00000000c135ffff (prio 1, i/o): e1000e-flash
+      00000000c1360000-00000000c137ffff (prio 1, i/o): e1000e-mmio
+      00000000c1380000-00000000c1383fff (prio 1, i/o): e1000e-msix
+        00000000c1380000-00000000c138004f (prio 0, i/o): msix-table
+        00000000c1382000-00000000c1382007 (prio 0, i/o): msix-pba
+      00000000c1384000-00000000c1384fff (prio 1, i/o): ahci
+      00000000c1385000-00000000c1385fff (prio 1, i/o): pcie-root-port-msix
+        00000000c1385000-00000000c138500f (prio 0, i/o): msix-table
+        00000000c1385800-00000000c1385807 (prio 0, i/o): msix-pba
+      00000000c1386000-00000000c1386fff (prio 1, i/o): vga.mmio
+        00000000c1386000-00000000c138617f (prio 0, i/o): edid
+        00000000c1386400-00000000c138641f (prio 0, i/o): vga ioports remapped
+        00000000c1386500-00000000c1386515 (prio 0, i/o): bochs dispi interface
+        00000000c1386600-00000000c1386607 (prio 0, i/o): qemu extended regs
+      fffffffffff00000-fffffffffff00000 (prio 1, container): alias pci_bridge_pref_mem @pci_bridge_pci fffffffffff00000-fffffffffff00000
+    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff
+    00000000000c0000-00000000000c3fff (prio 1, ram): alias pam-rom @pc.ram 00000000000c0000-00000000000c3fff
+    00000000000c4000-00000000000c7fff (prio 1, i/o): alias pam-pci @pci 00000000000c4000-00000000000c7fff
+    00000000000c8000-00000000000cbfff (prio 1, i/o): alias pam-pci @pci 00000000000c8000-00000000000cbfff
+    00000000000cc000-00000000000cffff (prio 1, i/o): alias pam-pci @pci 00000000000cc000-00000000000cffff
+    00000000000d0000-00000000000d3fff (prio 1, i/o): alias pam-pci @pci 00000000000d0000-00000000000d3fff
+    00000000000d4000-00000000000d7fff (prio 1, i/o): alias pam-pci @pci 00000000000d4000-00000000000d7fff
+    00000000000d8000-00000000000dbfff (prio 1, i/o): alias pam-pci @pci 00000000000d8000-00000000000dbfff
+    00000000000dc000-00000000000dffff (prio 1, i/o): alias pam-pci @pci 00000000000dc000-00000000000dffff
+    00000000000e0000-00000000000e3fff (prio 1, i/o): alias pam-pci @pci 00000000000e0000-00000000000e3fff
+    00000000000e4000-00000000000e7fff (prio 1, i/o): alias pam-pci @pci 00000000000e4000-00000000000e7fff
+    00000000000e8000-00000000000ebfff (prio 1, i/o): alias pam-pci @pci 00000000000e8000-00000000000ebfff
+    00000000000ec000-00000000000effff (prio 1, i/o): alias pam-pci @pci 00000000000ec000-00000000000effff
+    00000000000f0000-00000000000fffff (prio 1, i/o): alias pam-pci @pci 00000000000f0000-00000000000fffff
+    00000000b0000000-00000000bfffffff (prio 0, i/o): pcie-mmcfg-mmio
+    00000000fec00000-00000000fec00fff (prio 0, i/o): ioapic
+    00000000fed00000-00000000fed003ff (prio 0, i/o): hpet
+    00000000fed1c000-00000000fed1ffff (prio 1, i/o): lpc-rcrb-mmio
+    00000000fed90000-00000000fed9022f (prio 0, i/o): intel_iommu
+    00000000fee00000-00000000feefffff (prio 4096, i/o): kvm-apic-msi
+    00000000ffe00000-00000000ffe1ffff (prio 0, romd): system.flash1
+    00000000ffe20000-00000000ffffffff (prio 0, romd): system.flash0
+    0000000100000000-000000027fffffff (prio 0, ram): alias ram-above-4g @pc.ram 0000000080000000-00000001ffffffff
+
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-05.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-05.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-00.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-00.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+address-space: vtd-root
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-1f.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-1f.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: vtd-nodmar
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-nodmar
+    0000000000000000-ffffffffffffffff (prio 0, container): alias vtd-sys-alias @system 0000000000000000-ffffffffffffffff
+    00000000fee00000-00000000feefffff (prio 1, i/o): vtd-ir
+
+memory-region: vtd-ir
+  00000000fee00000-00000000feefffff (prio 1, i/o): vtd-ir
+
+memory-region: vtd-01.0
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-01.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-01.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: pci_bridge_io
+  0000000000000000-00000000ffffffff (prio 0, container): pci_bridge_io
+    0000000000006000-0000000000006fff (prio 1, container): alias pci_bridge_io @pci_bridge_io 0000000000006000-0000000000006fff
+
+memory-region: pc.ram
+  0000000000000000-00000001ffffffff (prio 0, ram): pc.ram
+
+memory-region: system
+  0000000000000000-ffffffffffffffff (prio 0, container): system
+    0000000000000000-000000007fffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-000000007fffffff
+    0000000000000000-ffffffffffffffff (prio -1, i/o): pci
+      00000000000a0000-00000000000affff (prio 2, ram): alias vga.chain4 @vga.vram 0000000000000000-000000000000ffff
+      00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
+      00000000000c0000-00000000000dffff (prio 1, rom): pc.rom
+      00000000000e0000-00000000000fffff (prio 1, romd): alias isa-bios @system.flash0 00000000001c0000-00000000001dffff
+      00000000c0000000-00000000c0ffffff (prio 1, ram): vga.vram
+      00000000c1000000-00000000c12fffff (prio 1, container): alias pci_bridge_mem @pci_bridge_pci 00000000c1000000-00000000c12fffff
+      00000000c1340000-00000000c135ffff (prio 1, i/o): e1000e-flash
+      00000000c1360000-00000000c137ffff (prio 1, i/o): e1000e-mmio
+      00000000c1380000-00000000c1383fff (prio 1, i/o): e1000e-msix
+        00000000c1380000-00000000c138004f (prio 0, i/o): msix-table
+        00000000c1382000-00000000c1382007 (prio 0, i/o): msix-pba
+      00000000c1384000-00000000c1384fff (prio 1, i/o): ahci
+      00000000c1385000-00000000c1385fff (prio 1, i/o): pcie-root-port-msix
+        00000000c1385000-00000000c138500f (prio 0, i/o): msix-table
+        00000000c1385800-00000000c1385807 (prio 0, i/o): msix-pba
+      00000000c1386000-00000000c1386fff (prio 1, i/o): vga.mmio
+        00000000c1386000-00000000c138617f (prio 0, i/o): edid
+        00000000c1386400-00000000c138641f (prio 0, i/o): vga ioports remapped
+        00000000c1386500-00000000c1386515 (prio 0, i/o): bochs dispi interface
+        00000000c1386600-00000000c1386607 (prio 0, i/o): qemu extended regs
+      fffffffffff00000-fffffffffff00000 (prio 1, container): alias pci_bridge_pref_mem @pci_bridge_pci fffffffffff00000-fffffffffff00000
+    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff
+    00000000000c0000-00000000000c3fff (prio 1, ram): alias pam-rom @pc.ram 00000000000c0000-00000000000c3fff
+    00000000000c4000-00000000000c7fff (prio 1, i/o): alias pam-pci @pci 00000000000c4000-00000000000c7fff
+    00000000000c8000-00000000000cbfff (prio 1, i/o): alias pam-pci @pci 00000000000c8000-00000000000cbfff
+    00000000000cc000-00000000000cffff (prio 1, i/o): alias pam-pci @pci 00000000000cc000-00000000000cffff
+    00000000000d0000-00000000000d3fff (prio 1, i/o): alias pam-pci @pci 00000000000d0000-00000000000d3fff
+    00000000000d4000-00000000000d7fff (prio 1, i/o): alias pam-pci @pci 00000000000d4000-00000000000d7fff
+    00000000000d8000-00000000000dbfff (prio 1, i/o): alias pam-pci @pci 00000000000d8000-00000000000dbfff
+    00000000000dc000-00000000000dffff (prio 1, i/o): alias pam-pci @pci 00000000000dc000-00000000000dffff
+    00000000000e0000-00000000000e3fff (prio 1, i/o): alias pam-pci @pci 00000000000e0000-00000000000e3fff
+    00000000000e4000-00000000000e7fff (prio 1, i/o): alias pam-pci @pci 00000000000e4000-00000000000e7fff
+    00000000000e8000-00000000000ebfff (prio 1, i/o): alias pam-pci @pci 00000000000e8000-00000000000ebfff
+    00000000000ec000-00000000000effff (prio 1, i/o): alias pam-pci @pci 00000000000ec000-00000000000effff
+    00000000000f0000-00000000000fffff (prio 1, i/o): alias pam-pci @pci 00000000000f0000-00000000000fffff
+    00000000b0000000-00000000bfffffff (prio 0, i/o): pcie-mmcfg-mmio
+    00000000fec00000-00000000fec00fff (prio 0, i/o): ioapic
+    00000000fed00000-00000000fed003ff (prio 0, i/o): hpet
+    00000000fed1c000-00000000fed1ffff (prio 1, i/o): lpc-rcrb-mmio
+    00000000fed90000-00000000fed9022f (prio 0, i/o): intel_iommu
+    00000000fee00000-00000000feefffff (prio 4096, i/o): kvm-apic-msi
+    00000000ffe00000-00000000ffe1ffff (prio 0, romd): system.flash1
+    00000000ffe20000-00000000ffffffff (prio 0, romd): system.flash0
+    0000000100000000-000000027fffffff (prio 0, ram): alias ram-above-4g @pc.ram 0000000080000000-00000001ffffffff
+
+memory-region: pci_bridge_pci
+  0000000000000000-ffffffffffffffff (prio 0, container): pci_bridge_pci
+    00000000c1000000-00000000c101ffff (prio 1, i/o): e1000e-flash
+    00000000c1020000-00000000c103ffff (prio 1, i/o): e1000e-mmio
+    00000000c1040000-00000000c105ffff (prio 1, i/o): e1000e-flash
+    00000000c1060000-00000000c107ffff (prio 1, i/o): e1000e-mmio
+    00000000c1080000-00000000c1083fff (prio 1, i/o): e1000e-msix
+      00000000c1080000-00000000c108004f (prio 0, i/o): msix-table
+      00000000c1082000-00000000c1082007 (prio 0, i/o): msix-pba
+    00000000c1084000-00000000c1087fff (prio 1, i/o): e1000e-msix
+      00000000c1084000-00000000c108404f (prio 0, i/o): msix-table
+      00000000c1086000-00000000c1086007 (prio 0, i/o): msix-pba
+
+memory-region: vtd-00.0
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-00.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-00.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: vtd-1f.2
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-1f.2
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-1f.2-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: vtd-00.0
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-00.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-00.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: vtd-1f.0
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-1f.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-1f.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: vtd-1f.3
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-1f.3
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-1f.3-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: vtd-08.0
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-08.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-08.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: vtd-00.0
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-00.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-00.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: pci_bridge_io
+  0000000000000000-00000000ffffffff (prio 0, container): pci_bridge_io
+    0000000000006000-000000000000601f (prio 1, i/o): e1000e-io
+    0000000000006020-000000000000603f (prio 1, i/o): e1000e-io
+
+memory-region: vtd-05.0
+  0000000000000000-ffffffffffffffff (prio 0, container): vtd-05.0
+    0000000000000000-ffffffffffffffff (prio 0, i/o): vtd-05.0-dmar
+      00000000fee00000-00000000feefffff (prio 1, i/o): alias vtd-ir @vtd-ir 0000000000000000-00000000000fffff
+
+memory-region: vga.vram
+  00000000c0000000-00000000c0ffffff (prio 1, ram): vga.vram
+
+memory-region: system.flash0
+  00000000ffe20000-00000000ffffffff (prio 0, romd): system.flash0
+
+memory-region: pci_bridge_pci
+  0000000000000000-ffffffffffffffff (prio 0, container): pci_bridge_pci
+    00000000c1000000-00000000c11fffff (prio 1, container): alias pci_bridge_mem @pci_bridge_pci 00000000c1000000-00000000c11fffff
+    00000000c1200000-00000000c12000ff (prio 1, i/o): shpc-bar
+      00000000c1200000-00000000c120009f (prio 0, i/o): shpc-mmio
+    fffffffffff00000-fffffffffff00000 (prio 1, container): alias pci_bridge_pref_mem @pci_bridge_pci fffffffffff00000-fffffffffff00000
+
+memory-region: pci
+  0000000000000000-ffffffffffffffff (prio -1, i/o): pci
+    00000000000a0000-00000000000affff (prio 2, ram): alias vga.chain4 @vga.vram 0000000000000000-000000000000ffff
+    00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
+    00000000000c0000-00000000000dffff (prio 1, rom): pc.rom
+    00000000000e0000-00000000000fffff (prio 1, romd): alias isa-bios @system.flash0 00000000001c0000-00000000001dffff
+    00000000c0000000-00000000c0ffffff (prio 1, ram): vga.vram
+    00000000c1000000-00000000c12fffff (prio 1, container): alias pci_bridge_mem @pci_bridge_pci 00000000c1000000-00000000c12fffff
+    00000000c1340000-00000000c135ffff (prio 1, i/o): e1000e-flash
+    00000000c1360000-00000000c137ffff (prio 1, i/o): e1000e-mmio
+    00000000c1380000-00000000c1383fff (prio 1, i/o): e1000e-msix
+      00000000c1380000-00000000c138004f (prio 0, i/o): msix-table
+      00000000c1382000-00000000c1382007 (prio 0, i/o): msix-pba
+    00000000c1384000-00000000c1384fff (prio 1, i/o): ahci
+    00000000c1385000-00000000c1385fff (prio 1, i/o): pcie-root-port-msix
+      00000000c1385000-00000000c138500f (prio 0, i/o): msix-table
+      00000000c1385800-00000000c1385807 (prio 0, i/o): msix-pba
+    00000000c1386000-00000000c1386fff (prio 1, i/o): vga.mmio
+      00000000c1386000-00000000c138617f (prio 0, i/o): edid
+      00000000c1386400-00000000c138641f (prio 0, i/o): vga ioports remapped
+      00000000c1386500-00000000c1386515 (prio 0, i/o): bochs dispi interface
+      00000000c1386600-00000000c1386607 (prio 0, i/o): qemu extended regs
+    fffffffffff00000-fffffffffff00000 (prio 1, container): alias pci_bridge_pref_mem @pci_bridge_pci fffffffffff00000-fffffffffff00000
+
+(qemu) 

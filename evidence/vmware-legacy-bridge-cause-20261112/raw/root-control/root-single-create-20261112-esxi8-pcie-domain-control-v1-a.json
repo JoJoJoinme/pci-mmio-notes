@@ -1,0 +1,9 @@
+{
+  "taskId": "haTask-ha-folder-vm-vim.Folder.createVm-1768912563",
+  "state": "success",
+  "descriptionId": "Folder.createVm",
+  "queueTime": "2026-11-12 12:08:36.894640+00:00",
+  "startTime": "2026-11-12 12:08:36.914556+00:00",
+  "completeTime": "2026-11-12 12:08:41.354433+00:00",
+  "elapsedSeconds": 4.575583430999814
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "0000:02:01.0",
+    "capable": true,
+    "enabled": true,
+    "active": true,
+    "dependentDevice": "0000:01:00.0"
+  },
+  {
+    "id": "0000:02:01.1",
+    "capable": true,
+    "enabled": true,
+    "active": true,
+    "dependentDevice": "0000:01:00.0"
+  }
+]

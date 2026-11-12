@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-12T12:09:17.924009+00:00",
+  "before": {
+    "name": "20261112-esxi8-pcie-domain-control-v1-b",
+    "id": "2892",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] 20261112-esxi8-pcie-domain-control-v1-b/20261112-esxi8-pcie-domain-control-v1-b/20261112-esxi8-pcie-domain-control-v1-b.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  },
+  "task": {
+    "taskId": "haTask-2892-vim.VirtualMachine.powerOn-1768912631",
+    "state": "success",
+    "descriptionId": "VirtualMachine.powerOn",
+    "queueTime": "2026-11-12 12:09:08.021367+00:00",
+    "startTime": "2026-11-12 12:09:08.054504+00:00",
+    "completeTime": "2026-11-12 12:09:15.665032+00:00",
+    "elapsedSeconds": 8.434669921000022
+  },
+  "after": {
+    "name": "20261112-esxi8-pcie-domain-control-v1-b",
+    "id": "2892",
+    "powerState": "poweredOn",
+    "vmx": "[pci-mmio-local] 20261112-esxi8-pcie-domain-control-v1-b/20261112-esxi8-pcie-domain-control-v1-b/20261112-esxi8-pcie-domain-control-v1-b.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:01:00.1',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}

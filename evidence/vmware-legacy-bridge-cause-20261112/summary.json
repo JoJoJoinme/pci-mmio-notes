@@ -1,0 +1,195 @@
+{
+  "at": "2026-11-12T12:18:30.081241+00:00",
+  "status": "SECOND_FUNCTION_EXISTING_DOMAIN_CHECK_REPRODUCED",
+  "scope": "ESXi 8.0.3 build-24280767, QEMU 11.0.2, synthetic PCIe-to-PCI bridge",
+  "targets": [
+    "0000:02:01.0",
+    "0000:02:01.1"
+  ],
+  "qemuDmaAlias": "0000:02:00.0",
+  "dependentDevice": "0000:01:00.0",
+  "nativeCases": [
+    {
+      "case": "both",
+      "task": "error",
+      "powerState": "poweredOff",
+      "samples": 130
+    },
+    {
+      "case": "reverse",
+      "task": "error",
+      "powerState": "poweredOff",
+      "samples": 93
+    },
+    {
+      "case": "a",
+      "task": "success",
+      "powerState": "poweredOn",
+      "samples": 73
+    },
+    {
+      "case": "b",
+      "task": "success",
+      "powerState": "poweredOn",
+      "samples": 80
+    }
+  ],
+  "nonshareableCases": [
+    {
+      "case": "both",
+      "task": "error",
+      "powerState": "poweredOff",
+      "samples": 96
+    },
+    {
+      "case": "reverse",
+      "task": "error",
+      "powerState": "poweredOff",
+      "samples": 88
+    }
+  ],
+  "pcieCases": [
+    {
+      "case": "both",
+      "task": "success",
+      "powerState": "poweredOn",
+      "samples": 37
+    },
+    {
+      "case": "reverse",
+      "task": "success",
+      "powerState": "poweredOn",
+      "samples": 33
+    }
+  ],
+  "pcieSingleCases": [
+    {
+      "case": "a",
+      "task": "success",
+      "powerState": "poweredOn",
+      "samples": 48
+    },
+    {
+      "case": "b",
+      "task": "success",
+      "powerState": "poweredOn",
+      "samples": 49
+    }
+  ],
+  "pcieFinalContexts": {
+    "both": {
+      "00:05.0": {
+        "rootLow": "0x10dafe001",
+        "present": true,
+        "contextAddress": "0x10dafe280",
+        "low": "0x10b25b001",
+        "high": "0x102",
+        "domainId": 1,
+        "translationType": 0,
+        "pageTable": "0x10b25b000"
+      },
+      "00:08.0": {
+        "rootLow": "0x10dafe001",
+        "present": false,
+        "contextAddress": "0x10dafe400",
+        "low": "0x0",
+        "high": "0x0",
+        "domainId": 0,
+        "translationType": 0,
+        "pageTable": "0x0"
+      },
+      "01:00.0": {
+        "rootLow": "0x10daff001",
+        "present": true,
+        "contextAddress": "0x10daff000",
+        "low": "0x1a724d001",
+        "high": "0x202",
+        "domainId": 2,
+        "translationType": 0,
+        "pageTable": "0x1a724d000"
+      },
+      "01:00.1": {
+        "rootLow": "0x10daff001",
+        "present": true,
+        "contextAddress": "0x10daff010",
+        "low": "0x1a724d001",
+        "high": "0x202",
+        "domainId": 2,
+        "translationType": 0,
+        "pageTable": "0x1a724d000"
+      },
+      "02:00.0": {
+        "rootLow": "0x0",
+        "present": false
+      },
+      "02:01.0": {
+        "rootLow": "0x0",
+        "present": false
+      },
+      "02:01.1": {
+        "rootLow": "0x0",
+        "present": false
+      }
+    },
+    "reverse": {
+      "00:05.0": {
+        "rootLow": "0x10dafe001",
+        "present": true,
+        "contextAddress": "0x10dafe280",
+        "low": "0x10b25b001",
+        "high": "0x102",
+        "domainId": 1,
+        "translationType": 0,
+        "pageTable": "0x10b25b000"
+      },
+      "00:08.0": {
+        "rootLow": "0x10dafe001",
+        "present": false,
+        "contextAddress": "0x10dafe400",
+        "low": "0x0",
+        "high": "0x0",
+        "domainId": 0,
+        "translationType": 0,
+        "pageTable": "0x0"
+      },
+      "01:00.0": {
+        "rootLow": "0x10daff001",
+        "present": true,
+        "contextAddress": "0x10daff000",
+        "low": "0x164e2a001",
+        "high": "0x202",
+        "domainId": 2,
+        "translationType": 0,
+        "pageTable": "0x164e2a000"
+      },
+      "01:00.1": {
+        "rootLow": "0x10daff001",
+        "present": true,
+        "contextAddress": "0x10daff010",
+        "low": "0x164e2a001",
+        "high": "0x202",
+        "domainId": 2,
+        "translationType": 0,
+        "pageTable": "0x164e2a000"
+      },
+      "02:00.0": {
+        "rootLow": "0x0",
+        "present": false
+      },
+      "02:01.0": {
+        "rootLow": "0x0",
+        "present": false
+      },
+      "02:01.1": {
+        "rootLow": "0x0",
+        "present": false
+      }
+    }
+  },
+  "nonshareableEffective": true,
+  "limitations": [
+    "ESXi internal branch selection and vendor defect classification unconfirmed",
+    "No guest OS DMA workload",
+    "No physical hardware validation"
+  ]
+}

@@ -2,7 +2,9 @@
 
 2026-11-11，在 ESXi 8.0.3 build-24280767 的合成 PCIe 多功能设备场景中，已经建立完整成功对照：**两个 Function 放在同一台 VM 可以开机；分别配置到两台 VM 后，第二台开机失败；交换启动顺序结果相同。只启用或禁用其中一项，主机都会共同切换两项。**
 
-关键修正是为 QEMU 的第二个 Function 也设置 `multifunction=on`。修正前只有 Function 0 设置该标志，ESXi 报告两项的依赖不同；修正后两项都依赖同一个 PCIe root port。移除试验性 `passthru.map` 规则并重启后，预期矩阵仍然成立，最终场景不依赖额外规则。
+这里包含两项作用不同的改变：移除传统桥、改为直接位于 PCIe root port 下后，同 VM 双设备已经能够开机；再为第二个 Function 补上 `multifunction=on`，才使本例 ESXi 把两项识别为共同依赖，得到跨 VM 第二台启动失败的对照。不能把多功能标记单独写成“同 VM 开机成功”的原因。移除试验性 `passthru.map` 规则并重启后，最终矩阵仍然成立。
+
+2026-11-12 补充：[传统桥下为什么同 VM 双设备仍失败](../vmware-legacy-bridge-cause-20261112/README.md)。新实验在保留传统桥并补齐两个多功能标记后仍复现失败，并直接采集了 VT-d context 的整体切换和回退。
 
 这是新的 PCIe 成功对照。[此前传统 PCI 桥场景](../vmware-dependency-ui-20261111/README.md)的共享 requester ID / IOMMU 域检查失败仍保留为历史结果，未宣称已修复该传统桥场景，也没有修改 ESXi 二进制或关闭 IOMMU/ACS 检查。
 

@@ -1,0 +1,256 @@
+#!/usr/bin/env python3
+"""Record each public API phase separately from Host Client observations."""
+import argparse
+import json
+from pathlib import Path
+import shlex
+import ssl
+import time
+
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim
+
+from esxi_passthru_capability import EsxiSsh, caveat_field, utc_now
+import test_esxi_owner_activation as owner
+
+OUT = Path("/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs/20261110-esxi8-dependency-interaction-v1")
+TARGETS = ["0000:02:01.0", "0000:02:01.1"]
+NAMES = {"a": "dep-20261110-a", "b": "dep-20261110-b", "both": "dep-20261110-both"}
+DS = "pci-mmio-local"
+EXPECTED_DEPENDENCY = "0000:01:00.0"
+
+
+def save(name, obj):
+    (OUT / name).write_text(json.dumps(obj, indent=2, default=str) + "\n")
+
+
+def vm_state(vm):
+    if vm.runtime.connectionState != "connected" or vm.config is None:
+        return {"name": vm.name, "id": vm._moId, "powerState": str(vm.runtime.powerState),
+                "connectionState": str(vm.runtime.connectionState)}
+    return {"name": vm.name, "id": vm._moId, "powerState": str(vm.runtime.powerState),
+            "vmx": vm.config.files.vmPathName, "memoryMB": vm.config.hardware.memoryMB,
+            "devices": [{"key": d.key, "label": d.deviceInfo.label,
+                         "backing": str(d.backing)} for d in vm.config.hardware.device
+                        if isinstance(d, vim.vm.device.VirtualPCIPassthrough)]}
+
+
+def task_record(task, timeout=240):
+    started = time.monotonic()
+    while task.info.state in ("queued", "running"):
+        if time.monotonic() - started > timeout:
+            raise TimeoutError(f"Task {task._moId} remains {task.info.state}; do not retry")
+        time.sleep(1)
+    info = task.info
+    result = {"taskId": task._moId, "state": str(info.state), "descriptionId": info.descriptionId,
+              "queueTime": str(info.queueTime), "startTime": str(info.startTime),
+              "completeTime": str(info.completeTime), "elapsedSeconds": time.monotonic() - started}
+    if info.error:
+        result["fault"] = owner.fault_snapshot(info.error)
+    return result, info.result
+
+
+def vm_logs(ssh, vm, label):
+    path = owner.vm_log_path(vm)
+    root = path.rsplit("/", 1)[0]
+    for suffix, remote in [("vmware.log", path), ("vmx.txt", root + "/" + vm.name + ".vmx"),
+                           ("guest-serial.log", root + "/guest-serial.log")]:
+        r = ssh.run("cat " + shlex.quote(remote), check=False, timeout=30)
+        (OUT / f"{label}-{vm.name}-{suffix}").write_text(r.stdout)
+
+
+def snapshot(content, host, ssh, label):
+    data = {"at": utc_now(), "version": str(host.config.product),
+            "uuid": host.hardware.systemInfo.uuid, "hostBootTime": str(host.runtime.bootTime),
+            "maintenance": host.runtime.inMaintenanceMode,
+            "passthru": owner.passthru_state(host, set(TARGETS + ["0000:01:00.0", "0000:00:05.0"])),
+            "vms": [vm_state(v) for v in owner.inventory(content, vim.VirtualMachine)]}
+    commands = {"pci": "esxcli hardware pci list", "passthru": "esxcli hardware pci pcipassthru list",
+                "network": "esxcli network nic list", "storage": "esxcli storage filesystem list",
+                "map": "cat /etc/vmware/passthru.map", "ui-version": "esxcli software vib get -n esx-ui"}
+    for name, command in commands.items():
+        r = ssh.run(command, check=False, timeout=45)
+        (OUT / f"{label}-{name}.txt").write_text(r.stdout + r.stderr)
+    save(label + ".json", data)
+    return data
+
+
+def set_owner(host, ssh, enabled, label):
+    before = owner.passthru_state(host, set(TARGETS))
+    requested = [TARGETS[0]] if enabled else TARGETS
+    result = {"at": utc_now(), "surface": "SOAP UpdatePassthruConfig", "request": requested,
+              "enabled": enabled, "applyNow": True, "before": before}
+    try:
+        host.configManager.pciPassthruSystem.UpdatePassthruConfig(config=[
+            vim.host.PciPassthruConfig(id=bdf, passthruEnabled=enabled, applyNow=True) for bdf in requested])
+        result["outcome"] = "success"
+    except Exception as error:
+        result["outcome"] = "fault"
+        result["fault"] = owner.fault_snapshot(error)
+    result["after"] = owner.passthru_state(host, set(TARGETS))
+    save(label + ".json", result)
+    print(json.dumps(result), flush=True)
+
+
+def create_empty(content, host, name, record_prefix="create"):
+    spec = vim.vm.ConfigSpec(name=name, guestId="other5xLinux64Guest", version="vmx-20",
+                            files=vim.vm.FileInfo(vmPathName=f"[{DS}] {name}"), numCPUs=1,
+                            memoryMB=768, firmware="efi", memoryReservationLockedToMax=True)
+    dc = owner.inventory(content, vim.Datacenter)[0]
+    record, vm = task_record(dc.vmFolder.CreateVM_Task(config=spec, pool=host.parent.resourcePool, host=host))
+    save(f"{record_prefix}-{name}.json", record)
+    if record["state"] != "success":
+        raise RuntimeError(f"CreateVM failed: {record}")
+    return vm
+
+
+def power(ssh, host, vm, label, on=True):
+    before = vm_state(vm)
+    task = vm.PowerOnVM_Task(host=host) if on else vm.PowerOffVM_Task()
+    record, _ = task_record(task)
+    result = {"at": utc_now(), "before": before, "task": record, "after": vm_state(vm)}
+    save(label + ".json", result)
+    vm_logs(ssh, vm, label)
+    print(f"{label}: {record['state']}", flush=True)
+    return result
+
+
+def main():
+    global OUT, TARGETS, NAMES, EXPECTED_DEPENDENCY
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action", choices=["preflight", "api-owner", "create", "matrix", "snapshot", "cleanup", "shutdown", "ui-reset", "ui-create"])
+    parser.add_argument("--label", default="snapshot")
+    parser.add_argument("--functional-profile", action="store_true")
+    args = parser.parse_args()
+    if args.functional_profile:
+        OUT = OUT.parent / "20261110-esxi8-functional-dependency-v1"
+        TARGETS = ["0000:01:00.0", "0000:01:00.1"]
+        NAMES = {k: "func-20261110-" + k for k in ("a", "b", "both")}
+        EXPECTED_DEPENDENCY = TARGETS[0]
+    password = caveat_field("esxi8-auto-codex-credentials", "Password")
+    ssh = EsxiSsh("172.31.91.10", password, retries=1)
+    si = SmartConnect(host="172.31.91.10", user="root", pwd=password,
+                      sslContext=ssl._create_unverified_context(), connectionPoolTimeout=30)
+    try:
+        content = si.RetrieveContent()
+        host = owner.inventory(content, vim.HostSystem)[0]
+        if host.hardware.systemInfo.uuid != "6a4e818a-51ce-7d7f-a21f-000c29abaf6d":
+            raise RuntimeError("Unexpected host UUID")
+        if host.config.product.build != "24280767":
+            raise RuntimeError("Unexpected ESXi build")
+        devices = owner.passthru_state(host, set(TARGETS))
+        if args.action not in ("preflight", "snapshot", "shutdown", "cleanup") and (len(devices) != 2 or {d["dependentDevice"] for d in devices} != {EXPECTED_DEPENDENCY}):
+            raise RuntimeError("Required shared dependency not observed")
+        vms = {v.name: v for v in owner.inventory(content, vim.VirtualMachine)}
+        unexpected_on = [v.name for v in vms.values() if v.runtime.powerState == "poweredOn" and v.name not in NAMES.values()]
+        if unexpected_on and args.action not in ("snapshot", "preflight"):
+            raise RuntimeError(f"Unrelated running VMs: {unexpected_on}")
+        if args.action == "shutdown":
+            shutdown_prefix = "" if args.label == "snapshot" else args.label + "-"
+            states = [vm_state(v) for v in vms.values()]
+            if any(v["powerState"] == "poweredOn" for v in states):
+                raise RuntimeError("Refusing host shutdown while any VM is on")
+            save(shutdown_prefix + "shutdown-before.json", {"at": utc_now(), "vms": states, "product": str(host.config.product), "uuid": host.hardware.systemInfo.uuid, "passthru": devices})
+            r = ssh.run("esxcli hardware pci list", check=False, timeout=30)
+            (OUT / (shutdown_prefix + "shutdown-pci-all.txt")).write_text(r.stdout + r.stderr)
+            if not host.runtime.inMaintenanceMode:
+                record, _ = task_record(host.EnterMaintenanceMode_Task(timeout=60), timeout=90)
+                save(shutdown_prefix + "shutdown-maintenance.json", record)
+                if record["state"] != "success":
+                    raise RuntimeError("Could not enter maintenance mode")
+            r = ssh.run("esxcli system shutdown poweroff --delay=10 --reason=dependency-test-host-memory-pressure", check=False, timeout=30)
+            save(shutdown_prefix + "shutdown-request.json", {"at": utc_now(), "returncode": r.returncode, "stdout": r.stdout, "stderr": r.stderr})
+            print(r.stdout + r.stderr, flush=True)
+        elif args.action in ("preflight", "snapshot"):
+            data = snapshot(content, host, ssh, args.action if args.action == "preflight" else args.label)
+            print(json.dumps({"passthru": data["passthru"], "vms": data["vms"], "maintenance": data["maintenance"]}), flush=True)
+        elif args.action == "api-owner":
+            set_owner(host, ssh, False, "api-01-disable-both")
+            set_owner(host, ssh, True, "api-02-enable-only-a")
+        elif args.action == "ui-create":
+            if any(n in vms for n in NAMES.values()):
+                raise RuntimeError("UI VMs already exist; inspect them before reuse")
+            if host.runtime.inMaintenanceMode:
+                record, _ = task_record(host.ExitMaintenanceMode_Task(timeout=60), timeout=90)
+                save("ui-create-exit-maintenance.json", record)
+                if record["state"] != "success":
+                    raise RuntimeError("Could not exit maintenance mode")
+            for name in NAMES.values():
+                create_empty(content, host, name, record_prefix="ui-create")
+            set_owner(host, ssh, False, "ui-prep-disable-both")
+            snapshot(content, host, ssh, "ui-prep-baseline")
+        elif args.action == "ui-reset":
+            for name in NAMES.values():
+                if name not in vms:
+                    raise RuntimeError("UI preparation requires the run's three existing VMs")
+                vm = vms[name]
+                if vm.runtime.powerState == "poweredOn":
+                    power(ssh, host, vm, "ui-prep-off-" + name, False)
+                changes = [vim.vm.device.VirtualDeviceSpec(operation="remove", device=d)
+                           for d in vm.config.hardware.device if isinstance(d, vim.vm.device.VirtualPCIPassthrough)]
+                if changes:
+                    record, _ = task_record(vm.ReconfigVM_Task(spec=vim.vm.ConfigSpec(deviceChange=changes)))
+                    save("ui-prep-remove-" + name + ".json", record)
+                    if record["state"] != "success":
+                        raise RuntimeError("Failed to clear a run VM's PCI test configuration")
+            set_owner(host, ssh, False, "ui-prep-disable-both")
+            snapshot(content, host, ssh, "ui-prep-baseline")
+        elif args.action == "create":
+            if any(n in vms for n in NAMES.values()):
+                raise RuntimeError("Run VMs already exist; inspect rather than recreate")
+            if host.runtime.inMaintenanceMode:
+                record, _ = task_record(host.ExitMaintenanceMode_Task(timeout=60), timeout=90)
+                save("create-exit-maintenance.json", record)
+                if record["state"] != "success":
+                    raise RuntimeError("Could not exit maintenance mode")
+            datastore = next((d for d in host.datastore if d.name == DS), None)
+            if datastore is None or not datastore.summary.accessible:
+                raise RuntimeError("Isolated local datastore is not accessible")
+            available = {d.pciDevice.id: d for d in host.parent.environmentBrowser.QueryConfigTarget(host=host).pciPassthrough}
+            for key, ids in [("a", TARGETS[:1]), ("b", TARGETS[1:]), ("both", TARGETS)]:
+                vm = create_empty(content, host, NAMES[key])
+                before = vm_state(vm)
+                changes = [vim.vm.device.VirtualDeviceSpec(operation="add", device=owner.static_device(available[bdf], -100-i))
+                           for i, bdf in enumerate(ids)]
+                record, _ = task_record(vm.ReconfigVM_Task(spec=vim.vm.ConfigSpec(deviceChange=changes)))
+                result = {"at": utc_now(), "surface": "SOAP ReconfigVM_Task", "requestedBdfs": ids,
+                          "before": before, "task": record, "after": vm_state(vm)}
+                save(f"api-03-configure-{key}.json", result)
+                vm_logs(ssh, vm, f"api-03-{key}")
+                print(f"Configure {key}: {record['state']}", flush=True)
+        elif args.action == "matrix":
+            a, b, both = [vms[NAMES[k]] for k in ("a", "b", "both")]
+            if any(v.runtime.powerState != "poweredOff" for v in (a, b, both)):
+                raise RuntimeError("Matrix requires all run VMs powered off")
+            try:
+                power(ssh, host, a, "api-04-a-first")
+                power(ssh, host, b, "api-05-b-while-a" if a.runtime.powerState == "poweredOn" else "api-05-b-after-a-failure")
+                for v in (a, b):
+                    if v.runtime.powerState == "poweredOn": power(ssh, host, v, "api-06-off-" + v.name, False)
+                power(ssh, host, b, "api-07-b-first")
+                power(ssh, host, a, "api-08-a-while-b" if b.runtime.powerState == "poweredOn" else "api-08-a-after-b-failure")
+                for v in (a, b):
+                    if v.runtime.powerState == "poweredOn": power(ssh, host, v, "api-09-off-" + v.name, False)
+                power(ssh, host, both, "api-10-same-vm-both")
+            finally:
+                r = ssh.run("tail -n 2400 /var/run/log/vmkernel.log", check=False)
+                (OUT / "api-matrix-vmkernel.log").write_text(r.stdout)
+                r = ssh.run("tail -n 2400 /var/run/log/hostd.log", check=False)
+                (OUT / "api-matrix-hostd.log").write_text(r.stdout)
+        elif args.action == "cleanup":
+            cleanup_prefix = "final" if args.label == "snapshot" else args.label
+            for name in NAMES.values():
+                if name not in vms: continue
+                vm = vms[name]
+                vm_logs(ssh, vm, cleanup_prefix)
+                if vm.runtime.powerState == "poweredOn": power(ssh, host, vm, cleanup_prefix + "-off-" + name, False)
+                record, _ = task_record(vm.Destroy_Task())
+                filename = "cleanup-" + name if args.label == "snapshot" else cleanup_prefix + "-cleanup-" + name
+                save(filename + ".json", record)
+            print("Run VMs cleaned up", flush=True)
+    finally:
+        Disconnect(si)
+
+
+if __name__ == "__main__":
+    main()

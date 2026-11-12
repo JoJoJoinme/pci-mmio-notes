@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Wait for a changed boot and verify persisted/effective dependency policy."""
+import argparse
+import json
+from pathlib import Path
+import re
+import socket
+import ssl
+import time
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim
+from esxi_passthru_capability import EsxiSsh, caveat_field, utc_now
+import test_esxi_owner_activation as owner
+
+parser=argparse.ArgumentParser()
+parser.add_argument('--run-id',required=True)
+parser.add_argument('--policy-label',required=True)
+parser.add_argument('--label',required=True)
+args=parser.parse_args()
+if not re.fullmatch(r'20\d{6}-esxi8-[a-z0-9-]+',args.run_id): raise ValueError('Run ID')
+if not all(re.fullmatch(r'[a-z0-9-]+',x) for x in [args.policy_label,args.label]): raise ValueError('Label')
+out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/args.run_id
+request=json.loads((out/(args.policy_label+'-request.json')).read_text())
+secret=caveat_field('esxi8-auto-codex-credentials','Password')
+ssh=EsxiSsh('172.31.91.10',secret,retries=1)
+started=time.monotonic()
+while time.monotonic()-started<660:
+    si=None
+    try:
+        with socket.create_connection(('172.31.91.10',443),timeout=3): pass
+        si=SmartConnect(host='172.31.91.10',user='root',pwd=secret,sslContext=ssl._create_unverified_context(),connectionPoolTimeout=10)
+        host=owner.inventory(si.RetrieveContent(),vim.HostSystem)[0]
+        if host.hardware.systemInfo.uuid!='6a4e818a-51ce-7d7f-a21f-000c29abaf6d': raise RuntimeError('Host identity')
+        if str(host.runtime.bootTime)==request['bootTime']: raise RuntimeError('Old boot still running')
+        mapping=ssh.run('cat /etc/vmware/passthru.map',timeout=20).stdout
+        native=ssh.run('esxcli hardware pci list',timeout=30).stdout
+        bank=ssh.run('readlink -f /bootbank',timeout=20).stdout.strip()
+        rule=None if request['shareable']=='remove' else request['selector']+' default '+request['shareable']
+        matches=[line.split() for line in mapping.splitlines() if not line.lstrip().startswith('#') and line.split()[:2]==request['selector'].split()]
+        persisted=not matches if request['shareable']=='remove' else rule in mapping
+        effective={}
+        for bdf in request['matched']:
+            block=re.search(r'(?ms)^'+re.escape(bdf)+r'\n.*?(?=^0000:|\Z)',native)
+            match=re.search(r'FPT Sharable:\s*(true|false)',block.group()) if block else None
+            effective[bdf]=match.group(1) if match else None
+        vsi={}
+        for bdf in request.get('targets',request['matched']):
+            segment,bus,slot_function=bdf.split(':')
+            slot,function=slot_function.split('.')
+            node='/hardware/pci/seg/{}/bus/{}/slot/{}/func/{}/fptShareable'.format(*[int(x,16) for x in [segment,bus,slot,function]])
+            vsi[bdf]=ssh.run('vsish -e get '+node,timeout=15).stdout.strip()
+        expected='1' if request['shareable'] in {'true','remove'} else '0'
+        data={'at':utc_now(),'bootTime':str(host.runtime.bootTime),'oldBootTime':request['bootTime'],
+              'policyAction':request['shareable'],'rule':rule,'matchingRows':matches,'persisted':persisted,'effectiveShareable':effective,'vsiFptShareable':vsi,'expectedVsiValue':expected,'bootbank':bank,
+              'pci':owner.passthru_state(host,set(request['matched']))}
+        data['valid']=data['persisted'] and bank.startswith('/vmfs/volumes/') and all(x==expected for x in vsi.values())
+        (out/(args.label+'-map.txt')).write_text(mapping)
+        (out/(args.label+'-pci.txt')).write_text(native)
+        (out/(args.label+'.json')).write_text(json.dumps(data,indent=2)+'\n')
+        print(json.dumps(data),flush=True)
+        if not data['valid']: raise SystemExit('New boot reached, but policy validation failed')
+        break
+    except SystemExit:
+        raise
+    except Exception as error:
+        print(f'Waiting for new boot: {int(time.monotonic()-started)}s ({type(error).__name__})',flush=True)
+    finally:
+        if si: Disconnect(si)
+    time.sleep(10)
+else:
+    raise SystemExit('Host/policy validation deadline')

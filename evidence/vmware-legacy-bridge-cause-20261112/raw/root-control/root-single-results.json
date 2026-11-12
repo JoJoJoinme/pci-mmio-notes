@@ -1,0 +1,33 @@
+{
+  "at": "2026-11-12T12:09:22.496957+00:00",
+  "cases": [
+    {
+      "case": "a",
+      "task": "success",
+      "powerState": "poweredOn",
+      "samples": 48
+    },
+    {
+      "case": "b",
+      "task": "success",
+      "powerState": "poweredOn",
+      "samples": 49
+    }
+  ],
+  "pci": [
+    {
+      "id": "0000:01:00.0",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    },
+    {
+      "id": "0000:01:00.1",
+      "capable": true,
+      "enabled": true,
+      "active": true,
+      "dependentDevice": "0000:00:08.0"
+    }
+  ]
+}
