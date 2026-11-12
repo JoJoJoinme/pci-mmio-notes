@@ -1,0 +1,20 @@
+{
+  "build": "8.0.3-0.35.24280767",
+  "readOnlyImageAccess": true,
+  "bootbank": "/dev/sda5",
+  "systemImageSha256": "a8d810322ff5ba3942f1a34b7e8a5f49b08e0abf7427b8633239d0fcfa68b1ea",
+  "kernelArchiveSha256": "59e99d09da77ea83148fa022f7e3c1b7f18f38c001e2df61ad05b564bbaf7dd2",
+  "moduleArchive": "sb.v00",
+  "moduleArchiveSha256": "82b2355cb13776603759153de6d4f30e2dc14ea917f73f68856ca1d41c6b45e6",
+  "moduleExtraction": {
+    "file": "sb.v00-warning-module-0.elf",
+    "archiveOffset": 214970368,
+    "bytes": 168248,
+    "sha256": "ca5e97d71c9360804c2b3d480e4272c52d0225efbe45fe0b359c739da41077ca",
+    "elfType": 1,
+    "warningFileOffset": 56073
+  },
+  "method": "gzip k.b00; gzip and xz sb.v00; locate and validate the ELF containing the exact warning; inspect symbols, relocations and selected control flow",
+  "vendorBinariesPublished": false,
+  "fullDisassemblyPublished": false
+}

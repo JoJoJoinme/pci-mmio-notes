@@ -12,6 +12,22 @@
       }
     },
     {
+      "path": "README.md",
+      "bytes": 10658,
+      "sha256": "1ba1f1fd2ffedbfa0057d3616235aecb3a3323592fb9857a932fb9461f213ee2",
+      "provenance": {
+        "transformation": "authored report or offline verifier"
+      }
+    },
+    {
+      "path": "ROOT-CAUSE-STATUS.md",
+      "provenance": {
+        "transformation": "authored 5 Whys analysis and product impact; no new hardware run"
+      },
+      "bytes": 6947,
+      "sha256": "fa562ff636f980034f9de33c5f56a72cdc65de1850fe19b477d5765e2fdf824e"
+    },
+    {
       "path": "log-excerpts/e1000-control-both.txt",
       "bytes": 4877,
       "sha256": "0d14e5f42143a37180da1e83854c7eb2dc9a50f68a95affc0c1194034c89c31d",
@@ -1478,14 +1494,6 @@
       }
     },
     {
-      "path": "README.md",
-      "bytes": 10072,
-      "sha256": "5aca70f16d74e8da72419839e620dab334cc693df8941801ba386854369c62fb",
-      "provenance": {
-        "transformation": "authored report or offline verifier"
-      }
-    },
-    {
       "path": "source-analysis/comparison.json",
       "bytes": 1669,
       "sha256": "7937206deb1fc7183df3905342cb55e8db6d3a36ce4e237e60dbfbe32929d48d",
@@ -1494,6 +1502,38 @@
         "sourceRun": "source-analysis",
         "sourceSha256": "7937206deb1fc7183df3905342cb55e8db6d3a36ce4e237e60dbfbe32929d48d",
         "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-analysis/esxi-image-provenance.json",
+      "provenance": {
+        "transformation": "archive and extracted-ELF hash metadata from read-only bootbank inspection"
+      },
+      "bytes": 890,
+      "sha256": "380dbf0a5a37779b45fd27a5622a6cfcc5f32dc928ee4f6f0f88ac9469a4d5a6"
+    },
+    {
+      "path": "source-analysis/guest-iommu-mode.json",
+      "provenance": {
+        "transformation": "selected original log lines with source hashes and original line numbers"
+      },
+      "bytes": 1616,
+      "sha256": "cdcaff6edc07f2cdc7559b419bf299f2777f3612b5a9d4e502473d03c9dd3725"
+    },
+    {
+      "path": "source-analysis/static-path-verification.json",
+      "provenance": {
+        "transformation": "output of the read-only verify_static_paths.py against exact licensed local ELF hashes; no binaries published"
+      },
+      "bytes": 2050,
+      "sha256": "209938f1e845e5d27ed3a438789942d9bf8f572052f22b40149f709b1898b7c2"
+    },
+    {
+      "path": "source-snapshots/README.md",
+      "bytes": 2189,
+      "sha256": "58ba897f17e46aade67e646e844125087f70b9621528860ae623d410dbb2310e",
+      "provenance": {
+        "transformation": "authored report or offline verifier"
       }
     },
     {
@@ -1574,14 +1614,6 @@
       }
     },
     {
-      "path": "source-snapshots/README.md",
-      "bytes": 2189,
-      "sha256": "58ba897f17e46aade67e646e844125087f70b9621528860ae623d410dbb2310e",
-      "provenance": {
-        "transformation": "authored report or offline verifier"
-      }
-    },
-    {
       "path": "source-snapshots/set_bridge_policy.py.txt",
       "bytes": 3588,
       "sha256": "5192a1f098a0a2fe413cd64e220e60ba0bc824097a4ad4d746d54d2d11c3130d",
@@ -1627,19 +1659,27 @@
     },
     {
       "path": "summary.json",
-      "bytes": 4438,
-      "sha256": "3c6b2002f26c82c551a87a2cf28764060313e3ef869230621a00adf149a9e03c",
+      "bytes": 5056,
+      "sha256": "a76057516f1ceceb4eed1a41ad6878005ecc958df32d0c696beb34db1eae2a9e",
       "provenance": {
         "transformation": "authored report or offline verifier"
       }
     },
     {
       "path": "verify_bundle.py",
-      "bytes": 5959,
-      "sha256": "e8e13799f4a7c87535e182bca2ceaaacc7a555bf47af64cf6c4d8b7055eb5b87",
+      "bytes": 6763,
+      "sha256": "3b5659a17c4a6cfc3737fac78b39eedcdfdcf8aef24536eb1628e43fab3009e5",
       "provenance": {
         "transformation": "authored report or offline verifier"
       }
+    },
+    {
+      "path": "verify_static_paths.py",
+      "provenance": {
+        "transformation": "authored read-only static instruction and relocation verifier"
+      },
+      "bytes": 6140,
+      "sha256": "9348cf6dee51ba4e0f3e12b554abdeb3deadea376539530bcbc11aa34d31924c"
     }
   ]
 }

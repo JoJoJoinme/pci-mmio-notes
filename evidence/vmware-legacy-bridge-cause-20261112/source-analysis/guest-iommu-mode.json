@@ -1,0 +1,18 @@
+[
+  {
+    "run": "20261112-esxi8-legacy-bridge-cause-v1",
+    "sourceFile": "native-mf-both-20261112-esxi8-legacy-bridge-cause-v1-both-vmware.log",
+    "sourceSha256": "03c76ba5dd23919e68bf68d27642e646b292313172314ccb73c9744d28596477",
+    "originalLine": 418,
+    "selectedModule": "viommu-none.vmm",
+    "line": "2026-11-12T11:44:42.324Z In(05) vmx - vmm-modules: [vmm.vmm, vmce-vmce.vmm, viommu-none.vmm, vprobe-none.vmm, hv-vt.vmm, gphys-ept.vmm, callstack-none.vmm, pcip-pcip.vmm, videio-none.vmm, !pciPassthruUMKShared=0x0, !pciPassthruUMShared=0x3200, !tdxSharedVMData=0x3c00, !vmSamples=0x3c00, !theIOSpace=0x3c40, !ttGPPerVcpu=0xaa00, {UseUnwind}=0x0, numVCPUsAsAddr=0x1, {SharedAreaReservations}=0xaa40, {rodataSize}=0x234b7, {textAddr}=0xfffffffffc000000, {textSize}=0x9b28d, <MonSrcFile>]"
+  },
+  {
+    "run": "20261112-esxi8-pcie-domain-control-v1",
+    "sourceFile": "root-control-both-20261112-esxi8-pcie-domain-control-v1-both-vmware.log",
+    "sourceSha256": "89e9355bcb3ff5f604362e46a42f540c3dd9b5f2125ee6e78b56575484cbb6cd",
+    "originalLine": 418,
+    "selectedModule": "viommu-none.vmm",
+    "line": "2026-11-12T12:06:21.443Z In(05) vmx - vmm-modules: [vmm.vmm, vmce-vmce.vmm, viommu-none.vmm, vprobe-none.vmm, hv-vt.vmm, gphys-ept.vmm, callstack-none.vmm, pcip-pcip.vmm, videio-none.vmm, !pciPassthruUMKShared=0x0, !pciPassthruUMShared=0x3200, !tdxSharedVMData=0x3c00, !vmSamples=0x3c00, !theIOSpace=0x3c40, !ttGPPerVcpu=0xaa00, {UseUnwind}=0x0, numVCPUsAsAddr=0x1, {SharedAreaReservations}=0xaa40, {rodataSize}=0x234b7, {textAddr}=0xfffffffffc000000, {textSize}=0x9b28d, <MonSrcFile>]"
+  }
+]

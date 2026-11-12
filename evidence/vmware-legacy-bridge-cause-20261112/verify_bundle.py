@@ -46,6 +46,13 @@ def main():
     require(policy['valid'] and set(policy['vsiFptShareable'].values())=={'0'},'Both explicit policy flags effective')
     require(all(x['byteIdentical'] and x['upstreamSha256']==x['localSha256'] for x in read('source-analysis/comparison.json')['files']),'Upstream source equality')
     require(read('raw/control-map-restore.json')['rule'] is None,'Original map restored')
+    static=read('source-analysis/static-path-verification.json')
+    require(static['status']=='PASS' and static['checks']==31,'Recorded exact-build static checks')
+    require(static['moduleSha256']==read('source-analysis/esxi-image-provenance.json')['moduleExtraction']['sha256'],'Static module provenance binding')
+    require(not static['fixValidated'] and not read('summary.json')['fixValidated'],'Static analysis is not a repaired run')
+    require(read('summary.json')['rootCauseClosure']=='MECHANISM_IDENTIFIED_FIX_UNVALIDATED','Root-cause and repair statuses are distinct')
+    require(all(x['selectedModule']=='viommu-none.vmm' for x in read('source-analysis/guest-iommu-mode.json')),'Guest vIOMMU exclusion evidence')
+    ast.parse((ROOT/'verify_static_paths.py').read_text(encoding='utf-8'))
     for case in ['both','reverse']:
         power=read('raw/root-control/root-control-power-'+case+'.json')
         require(power['task']['state']=='success' and power['after']['powerState']=='poweredOn' and len(power['after']['devices'])==2,'PCIe paired success')

@@ -188,8 +188,15 @@
   },
   "nonshareableEffective": true,
   "limitations": [
-    "ESXi internal branch selection and vendor defect classification unconfirmed",
+    "Repair preserving the original shared DMA identity not validated",
+    "Vendor defect classification and other registration paths unconfirmed",
     "No guest OS DMA workload",
     "No physical hardware validation"
-  ]
+  ],
+  "rootCauseClosure": "MECHANISM_IDENTIFIED_FIX_UNVALIDATED",
+  "productImpact": "Validate full-bundle ownership, shared mapping reuse and release in the target backend; PCIe reset-dependency success does not qualify legacy DMA-alias handling",
+  "rootCauseMechanism": "Per-SBDF registration assumes a new device has no guest-domain association; lower IOMMU switching updates the aliasing bridge subtree, invalidating that precondition for the next member",
+  "fixValidated": false,
+  "vendorDefectClassification": "UNCONFIRMED",
+  "staticChecks": 31
 }
