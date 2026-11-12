@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12T16:39:40.110111+00:00",
+  "product": "(vim.AboutInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   name = 'VMware ESXi',\n   fullName = 'VMware ESXi 8.0.3 build-25595708',\n   vendor = 'VMware, Inc.',\n   version = '8.0.3',\n   patchLevel = '3.102',\n   build = '25595708',\n   localeVersion = 'INTL',\n   localeBuild = '000',\n   osType = 'vmnix-x86',\n   productLineId = 'embeddedEsx',\n   apiType = 'HostAgent',\n   apiVersion = '8.0.3.0',\n   instanceUuid = <unset>,\n   licenseProductName = 'VMware ESX Server',\n   licenseProductVersion = '8.0'\n}",
+  "oldBootTime": "2026-11-12 16:30:46.508378+00:00",
+  "bootTime": "2026-11-12 16:38:40.650162+00:00",
+  "targetBuildVerified": true,
+  "uuid": "6a4e818a-51ce-7d7f-a21f-000c29abaf6d"
+}

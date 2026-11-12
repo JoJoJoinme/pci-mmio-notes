@@ -1,0 +1,23 @@
+import argparse,json,hashlib,subprocess
+from pathlib import Path
+from datetime import datetime,timezone
+p=argparse.ArgumentParser();p.add_argument('--run-id',default='20261112-esxi8-legacy-bridge-cause-v1');args=p.parse_args()
+run=args.run_id;out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/run
+manifest=json.loads((out/'manifest.json').read_text())
+for p in Path('/proc').glob('[0-9]*'):
+    try:a=(p/'cmdline').read_bytes().decode().split('\0')
+    except (FileNotFoundError,PermissionError):continue
+    if a and a[0].endswith('/qemu-system-x86_64') and (run in a or any('ifname=tap-esxi8-dep' in x for x in a)):raise RuntimeError('ESXi using the owned network is still running')
+if Path('/sys/class/net/tap-esxi8-dep').exists():
+    subprocess.run(['ip','link','delete','tap-esxi8-dep'],check=True)
+hashes=[]
+for source,expected in manifest['sources'].items():
+    if not source.startswith('/root/vm/esxi8-mf/'):continue
+    h=hashlib.sha256()
+    with open(source,'rb') as f:
+        for data in iter(lambda:f.read(1024*1024),b''):h.update(data)
+    hashes.append({'name':Path(source).name,'sha256':h.hexdigest(),'unchanged':h.hexdigest()==expected['sha256']})
+assert all(x['unchanged'] for x in hashes)
+result={'at':datetime.now(timezone.utc).isoformat(),'qemuStopped':True,'tapRemoved':not Path('/sys/class/net/tap-esxi8-dep').exists(),'baseImageHashes':hashes,'vcenterStarted':False,'temporaryVtdTableWritesUsed':False}
+(out/'finish-runtime.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(result))

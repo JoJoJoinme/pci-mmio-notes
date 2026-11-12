@@ -1,0 +1,7 @@
+{
+  "at": "2026-11-12T16:55:06.014753+00:00",
+  "profile": "LVO_9.1.0.0-LVO.910.12.2",
+  "command": "esxcli software profile update -d /vmfs/volumes/pci-mmio-local/alias-esx91-offline.zip -p LVO_9.1.0.0-LVO.910.12.2",
+  "noSignatureCheckUsed": false,
+  "oldBootTime": "2026-11-12 16:50:08.949355+00:00"
+}

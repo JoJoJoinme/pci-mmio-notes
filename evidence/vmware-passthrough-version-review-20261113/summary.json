@@ -1,0 +1,119 @@
+{
+  "status": "REPRODUCED_IN_TESTED_NEWER_BUILDS",
+  "localDate": "2026-11-13",
+  "timezone": "Asia/Shanghai",
+  "runs": [
+    {
+      "label": "u3k",
+      "runId": "20261113-esxi8-u3k-alias-validation-v1",
+      "build": "25595708",
+      "model": "e1000e",
+      "cases": [
+        {
+          "case": "both",
+          "task": "error",
+          "powerState": "poweredOff",
+          "samples": 84
+        },
+        {
+          "case": "reverse",
+          "task": "error",
+          "powerState": "poweredOff",
+          "samples": 79
+        },
+        {
+          "case": "a",
+          "task": "success",
+          "powerState": "poweredOn",
+          "samples": 36
+        },
+        {
+          "case": "b",
+          "task": "success",
+          "powerState": "poweredOn",
+          "samples": 41
+        }
+      ]
+    },
+    {
+      "label": "esx91",
+      "runId": "20261113-esxi8-to-esx91-alias-validation-v1",
+      "build": "25433460",
+      "model": "e1000e",
+      "cases": [
+        {
+          "case": "both",
+          "task": "error",
+          "powerState": "poweredOff",
+          "samples": 55
+        },
+        {
+          "case": "reverse",
+          "task": "error",
+          "powerState": "poweredOff",
+          "samples": 50
+        },
+        {
+          "case": "a",
+          "task": "success",
+          "powerState": "poweredOn",
+          "samples": 36
+        },
+        {
+          "case": "b",
+          "task": "success",
+          "powerState": "poweredOn",
+          "samples": 36
+        }
+      ]
+    },
+    {
+      "label": "esx91-native",
+      "runId": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+      "build": "25433460",
+      "model": "e1000",
+      "cases": [
+        {
+          "case": "both",
+          "task": "error",
+          "powerState": "poweredOff",
+          "samples": 55
+        },
+        {
+          "case": "reverse",
+          "task": "error",
+          "powerState": "poweredOff",
+          "samples": 50
+        },
+        {
+          "case": "a",
+          "task": "success",
+          "powerState": "poweredOn",
+          "samples": 36
+        },
+        {
+          "case": "b",
+          "task": "success",
+          "powerState": "poweredOn",
+          "samples": 36
+        }
+      ]
+    }
+  ],
+  "engineeringAssessment": "Software compatibility/initialization gap in the tested normal FPT path; no evidence of one damaged adapter",
+  "vendorBugConfirmed": false,
+  "designIntentConfirmed": false,
+  "fixValidated": false,
+  "latestKnownEsx91": {
+    "version": "9.1.1.0100",
+    "build": "25782009",
+    "mediaObtained": false,
+    "runtimeTested": false,
+    "fixStatus": "UNKNOWN"
+  },
+  "limitations": [
+    "Synthetic nested platform, not physical hardware qualification",
+    "Power-on and mapping-state tests, no guest OS I/O workload",
+    "Runtime conclusions apply only to the recorded builds and topologies"
+  ]
+}

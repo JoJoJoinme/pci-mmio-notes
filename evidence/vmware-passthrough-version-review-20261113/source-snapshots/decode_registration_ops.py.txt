@@ -1,0 +1,27 @@
+import json,struct,sys
+from pathlib import Path
+sys.path.insert(0,r'E:\Code\PCI\publish-vmware-dependency-20261111\evidence\vmware-legacy-bridge-cause-20261112')
+from verify_static_paths import Elf,EXPECTED_PCIP
+folder=Path(__file__).parent/'static-esxi';elf=Elf(folder/'sb.v00-warning-module-0.elf',EXPECTED_PCIP)
+symbol=elf.symbols['passthruImpls'];section=elf.sections[symbol[3]];start=symbol[4];size=symbol[5]
+functions={r[4]:n for n,r in elf.symbols.items() if r[1]&15==2 and r[3]==elf.sections.index(elf.named['.text'])}
+rels={}
+for s in elf.sections:
+    if s[1]!=4 or s[7]!=symbol[3]:continue
+    for i in range(s[5]//s[9]):
+        off,info,addend=struct.unpack_from('<QQq',elf.data,s[4]+i*s[9]);name,r=elf.symbol_tables[s[6]][info>>32]
+        if start<=off<start+size:rels[off]={'type':info&0xffffffff,'symbol':name,'addend':addend,'function':functions.get(r[4]+addend,name)}
+rows=[]
+for mode in range(size//56):
+    row={'mode':mode,'slots':[]}
+    for i in range(7):
+        off=start+mode*56+i*8;value=struct.unpack_from('<Q',elf.data,section[4]+off)[0]
+        row['slots'].append({'byteOffset':hex(i*8),'raw':value,'relocation':rels.get(off)})
+    rows.append(row)
+messages={}
+for name in ['.LC51','.LC52','.LC53','.LC54','.LC55','.LC56','.LC57','.LC58']:
+    s=elf.symbols[name];sec=elf.sections[s[3]];off=sec[4]+s[4]
+    messages[name]=elf.data[off:elf.data.index(b'\0',off)].decode(errors='replace')
+result={'moduleSha256':elf.sha,'table':'passthruImpls','stride':56,'modes':rows,'messages':messages}
+(folder/'registration-ops.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(result))

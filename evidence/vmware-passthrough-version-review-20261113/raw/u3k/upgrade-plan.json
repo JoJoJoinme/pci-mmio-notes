@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-12T16:34:50.470565+00:00",
+  "runId": "20261113-esxi8-u3k-alias-validation-v1",
+  "fromBuild": "24280767",
+  "targetBuild": "25595708",
+  "oldBootTime": "2026-11-12 16:30:46.508378+00:00",
+  "remoteBundle": "/vmfs/volumes/pci-mmio-local/alias-u3k-offline.zip",
+  "sha256": "96186a8904b71b4860019135835efc6a1d2ef72ef070a67ba5ee2676220b3394",
+  "profilesQueryExit": 0
+}

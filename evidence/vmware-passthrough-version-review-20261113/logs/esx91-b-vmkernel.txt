@@ -1,0 +1,9 @@
+Source run: 20261113-esxi8-to-esx91-alias-validation-v1
+Source file: esx91-default-b-vmkernel.txt
+Source SHA-256: f165fcc0fe4d5f7c41f44e97e8fb7133990932883323c263509fe2cf73e6a92a
+Task window (UTC, milliseconds): 2026-11-12T17:01:23.631 to 2026-11-12T17:01:28.916
+Filter: PCIPassthru:.*(?:0000:02:01\.[01]|IOMMU)
+Matching lines: 0
+Selected original lines within the matching task time window.
+
+No lines match this filter in the captured source and task window. Use the separate task, VMX log and mapping-state receipts for this positive control; this is not proof of complete kernel logging.

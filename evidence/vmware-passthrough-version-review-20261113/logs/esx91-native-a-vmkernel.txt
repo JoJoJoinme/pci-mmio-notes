@@ -1,0 +1,9 @@
+Source run: 20261113-esxi8-to-esx91-nativepci-validation-v1
+Source file: esx91-nativepci-a-vmkernel.txt
+Source SHA-256: 206d99ca2149507d734733459c7d28c1d1c55687f7fff065d09b32e183fab1a9
+Task window (UTC, milliseconds): 2026-11-12T17:15:50.460 to 2026-11-12T17:15:55.592
+Filter: PCIPassthru:.*(?:0000:02:01\.[01]|IOMMU)
+Matching lines: 0
+Selected original lines within the matching task time window.
+
+No lines match this filter in the captured source and task window. Use the separate task, VMX log and mapping-state receipts for this positive control; this is not proof of complete kernel logging.

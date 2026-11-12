@@ -1,0 +1,60 @@
+{
+  "reviewedPages": [
+    {
+      "at": "2026-11-12T16:54:44.298131+00:00",
+      "label": "8u3k",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere/8-0/release-notes/esxi-update-and-patch-release-notes/vsphere-esxi-80u3k-release-notes.html",
+      "status": 200,
+      "bytes": 215539,
+      "sha256": "a12e69a05f1bd605e0ecd7586563f84ad11c7073fa3930b2864ce5ba433b2369"
+    },
+    {
+      "at": "2026-11-12T16:54:45.241843+00:00",
+      "label": "9.1.0.0100",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/release-notes/patch-releases-9-1-0-x/vsphere/esx/esx-9-1-0-0100-release-notes.html",
+      "status": 200,
+      "bytes": 99223,
+      "sha256": "d23b0b769d4bf9446094dd8ae653ed5bddb97f787c6fd36a3047a1870d4477bd"
+    },
+    {
+      "at": "2026-11-12T16:54:46.086731+00:00",
+      "label": "9.1.1.0100",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/release-notes/patch-releases-9-1-1-x/vsphere/esx/esx-9-1-1-0100-release-notes.html",
+      "status": 200,
+      "bytes": 94926,
+      "sha256": "7f32a1623bf26858fdf09c50059a350a2001a3bc77d34bdf005c7ff24c59ca9f"
+    },
+    {
+      "at": "2026-11-12T17:00:44.151528+00:00",
+      "label": "8u3j",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere/8-0/release-notes/esxi-update-and-patch-release-notes/vsphere-esxi-80u3j-release-notes.html",
+      "status": 200,
+      "bytes": 967487,
+      "sha256": "c37755ff79401bc18f839e47f848bef57807d106f1b0748435cbeaad81db85fd"
+    },
+    {
+      "at": "2026-11-12T17:00:45.183315+00:00",
+      "label": "9.1.0.0200",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/release-notes/patch-releases-9-1-0-x/vsphere/esx/esx-9-1-0-0200-release-notes.html",
+      "status": 200,
+      "bytes": 95695,
+      "sha256": "8f7382d2d409d657bf9f968ae5d281e1ab06d3db4b0f533b2f90744b5a9abf1d"
+    },
+    {
+      "at": "2026-11-12T17:00:45.949756+00:00",
+      "label": "9.1.1.0",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/release-notes/vmware-cloud-foundation-9-1-1-0-release-notes/esx-9-1-1-0-release-notes.html",
+      "status": 200,
+      "bytes": 721011,
+      "sha256": "f76392a47e76627ca7098aed4f7350b98188f9b4f9ed04ca05cf887d19d09fdc"
+    }
+  ],
+  "matchingFixConfirmed": false,
+  "reviewMethod": "Visible article text and context review for IOMMU, PCI, passthrough, DirectPath and bridge; unrelated CPU-name matches excluded",
+  "relatedTopicsReviewed": [
+    "guest vIOMMU and VMXNET3 migration/snapshot faults",
+    "MSI/MSI-X programming during device probe",
+    "lpfc detachment DMA race"
+  ],
+  "interpretation": "No reviewed item was sufficiently matched to the same-VM aliased-requester registration failure. Absence of a matching note is not proof a version is unfixed."
+}

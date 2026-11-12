@@ -1,0 +1,57 @@
+"""Read selected ISO9660 files through bounded HTTP Range requests."""
+import argparse,hashlib,json,re,struct,urllib.parse,urllib.request
+from html.parser import HTMLParser
+from pathlib import Path
+from datetime import datetime,timezone
+class Links(HTMLParser):
+    def __init__(self):super().__init__();self.hrefs=[]
+    def handle_starttag(self,tag,attrs):
+        if tag=='a':self.hrefs.extend(v for k,v in attrs if k=='href')
+class Remote:
+    def __init__(self,url,opener):self.url=url;self.opener=opener;self.total=None;self.etag=None;self.requests=[]
+    def read(self,start,size):
+        headers={'Range':f'bytes={start}-{start+size-1}','Accept-Encoding':'identity'}
+        if self.etag:headers['If-Range']=self.etag
+        with self.opener.open(urllib.request.Request(self.url,headers=headers),timeout=60) as r:
+            if r.status!=206:raise RuntimeError('Server did not provide a byte range; response '+str(r.status))
+            cr=r.headers.get('Content-Range','');match=re.fullmatch(r'bytes (\d+)-(\d+)/(\d+)',cr)
+            if not match or tuple(map(int,match.groups()[:2]))!=(start,start+size-1):raise RuntimeError('Unexpected range: '+cr)
+            total=int(match.group(3));etag=r.headers.get('ETag')
+            if self.total is not None and self.total!=total:raise RuntimeError('ISO size changed')
+            if self.etag and etag!=self.etag:raise RuntimeError('ISO identity changed')
+            self.total=total;self.etag=etag;data=r.read(size+1)
+            if len(data)!=size:raise RuntimeError('Wrong response length')
+            self.requests.append({'start':start,'bytes':size,'contentRange':cr,'etag':etag});return data
+def u32(data,off):return struct.unpack_from('<I',data,off)[0]
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--directory',required=True);p.add_argument('--filename',required=True);p.add_argument('--label',required=True);args=p.parse_args()
+    out=Path(__file__).parent/'version-images'/args.label;out.mkdir(parents=True,exist_ok=True)
+    opener=urllib.request.build_opener(urllib.request.ProxyHandler({'https':'http://127.0.0.1:7890','http':'http://127.0.0.1:7890'}))
+    html=opener.open(args.directory,timeout=45).read().decode();links=Links();links.feed(html)
+    candidates=[urllib.parse.urljoin(args.directory,h) for h in links.hrefs if urllib.parse.unquote(h).rsplit('/',1)[-1]==args.filename]
+    assert len(set(candidates))==1,'Exact listed ISO not uniquely found'
+    url=candidates[0];remote=Remote(url,opener)
+    descriptor=remote.read(16*2048,2048)
+    assert descriptor[0]==1 and descriptor[1:6]==b'CD001','ISO9660 primary descriptor absent'
+    root=descriptor[156:];extent=u32(root,2);size=u32(root,10);directory=remote.read(extent*2048,size)
+    files={};offset=0
+    while offset<len(directory):
+        length=directory[offset]
+        if length==0:offset=(offset//2048+1)*2048;continue
+        record=directory[offset:offset+length];n=record[32];name=record[33:33+n].decode('ascii',errors='replace').split(';')[0].lower()
+        if name not in ['\x00','\x01']:files[name]={'extent':u32(record,2),'bytes':u32(record,10),'directory':bool(record[25]&2)}
+        offset+=length
+    results=[]
+    for name in ['boot.cfg','k.b00','sb.v00','vmx.v00']:
+        info=files[name];assert not info['directory'] and info['bytes']<200*1024*1024
+        destination=out/name;assert not destination.exists(),'Refusing to replace a previous module copy'
+        digest=hashlib.sha256()
+        with destination.open('wb') as f:
+            for offset in range(0,info['bytes'],4*1024*1024):
+                chunk=remote.read(info['extent']*2048+offset,min(4*1024*1024,info['bytes']-offset));f.write(chunk);digest.update(chunk)
+        row={'file':name,**info,'sha256':digest.hexdigest()};results.append(row);print(json.dumps(row),flush=True)
+    manifest={'at':datetime.now(timezone.utc).isoformat(),'sourceDirectory':args.directory,'isoUrl':url,'isoTotalBytes':remote.total,'etag':remote.etag,
+              'downloadMode':'HTTP Range; selected ISO9660 files only; full ISO digest not calculated','files':results,'requests':remote.requests,
+              'bootConfig':(out/'boot.cfg').read_text()}
+    (out/'source.json').write_bytes((json.dumps(manifest,indent=2)+'\n').encode());print(json.dumps({'label':args.label,'build':re.search(r'^build=(.+)$',manifest['bootConfig'],re.M).group(1),'bytesDownloaded':sum(r['bytes'] for r in remote.requests)}))
+if __name__=='__main__':main()

@@ -1,0 +1,13 @@
+Source run: 20261113-esxi8-to-esx91-alias-validation-v1
+Source file: esx91-default-both-20261113-esxi8-to-esx91-alias-validation-v1-both-vmware.log
+Source SHA-256: 9365c9b2955df2740fbbbfcd99201ed080414779ebb2e25b4fd300d411645750
+Task window (UTC, milliseconds): 2026-11-12T17:00:40.870 to 2026-11-12T17:00:50.526
+Filter: Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages
+Matching lines: 5
+Selected original lines within the matching task time window.
+
+599: 2026-11-12T17:00:46.196Z -INFO vmx 133717 [esx@4413 threadName="vmx"] PCIPassthru: Registered a PCI device for 0000:02:01.0 vIRQ 0x11, physical MSI = Enabled (vmmInt = Enabled), IntrPin = 1
+605: 2026-11-12T17:00:46.200Z -ERROR vmx 133717 [esx@4413 threadName="vmx"] AH Failed to find a suitable device for pciPassthru1
+606: 2026-11-12T17:00:46.200Z -INFO vmx 133717 [esx@4413 threadName="vmx"] Module 'DevicePowerOn' power on failed.
+628: 2026-11-12T17:00:50.304Z +INFO vmx 133717 [esx@4413 threadName="vmx"] Power on failure messages: Allocation failed for pciPassthru1.
+629: 2026-11-12T17:00:50.304Z +INFO vmx 133717 [esx@4413 threadName="vmx"] Module 'DevicePowerOn' power on failed.

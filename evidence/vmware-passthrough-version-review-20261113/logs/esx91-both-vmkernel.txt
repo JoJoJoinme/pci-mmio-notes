@@ -1,0 +1,10 @@
+Source run: 20261113-esxi8-to-esx91-alias-validation-v1
+Source file: esx91-default-both-vmkernel.txt
+Source SHA-256: 5d66ab0cc31e5ab913498dbe2530da3e8ae82a6059a7fdb21ee9784ab31a7717
+Task window (UTC, milliseconds): 2026-11-12T17:00:40.870 to 2026-11-12T17:00:50.526
+Filter: PCIPassthru:.*(?:0000:02:01\.[01]|IOMMU)
+Matching lines: 2
+Selected original lines within the matching task time window.
+
+2497: 2026-11-12T17:00:46.199Z -WARNING vmkwarning - [esx@4413] cpu2:133717) PCIPassthru: 5808: Expected no IOMMU domain for 0000:02:01.1, got Success
+2498: 2026-11-12T17:00:50.235Z -INFO vmkernel - [esx@4413] cpu1:133717)PCIPassthru: 1834: Disable Domain for device 0000:02:01.0

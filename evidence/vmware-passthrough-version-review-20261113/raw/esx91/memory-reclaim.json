@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-12T16:48:49.3545668Z",
+  "action": "Shutdown idle WSL after test QEMU exit to release retained memory",
+  "before": {
+    "FreePhysicalMemory": 20451044,
+    "FreeVirtualMemory": 32657636
+  },
+  "after": {
+    "FreePhysicalMemory": 20444788,
+    "FreeVirtualMemory": 32653628
+  }
+}

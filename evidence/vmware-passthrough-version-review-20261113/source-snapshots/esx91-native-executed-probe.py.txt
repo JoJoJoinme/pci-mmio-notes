@@ -1,0 +1,123 @@
+"""Guarded four-case DirectPath probe with read-only VT-d context sampling."""
+import argparse,json,ssl,sys,socket,threading,time,hashlib,shlex
+from pathlib import Path
+sys.path.insert(0,'/mnt/e/Code/PCI/github-export/vmware-esxi8-lab')
+from pyVim.connect import SmartConnect,Disconnect
+from pyVmomi import vim
+from esxi_passthru_capability import caveat_field,EsxiSsh,utc_now
+import test_esxi_dependency_interaction as lab
+import test_esxi_owner_activation as owner
+
+class ContextReader:
+    def __init__(self,path):
+        self.sock=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);self.sock.settimeout(3);self.sock.connect(str(path));self.f=self.sock.makefile('rwb',buffering=0)
+    def read(self,address,width=8):
+        self.f.write(f"read{ {4:'l',8:'q'}[width]} 0x{address:x}\n".encode())
+        while True:
+            line=self.f.readline().decode().strip()
+            if line.startswith('OK '):return int(line.split()[1],16)
+            if not line or line.startswith('FAIL'):raise RuntimeError('qtest read failed: '+line)
+    def snapshot(self):
+        base=0xfed90000
+        rt=self.read(base+0x20);gsts=self.read(base+0x1c,4)
+        if rt&0xc00:raise RuntimeError('This decoder only supports legacy VT-d root tables')
+        result={'at':utc_now(),'rtaddr':hex(rt),'gsts':hex(gsts),'translationEnabled':bool(gsts&(1<<31)),'contexts':{}}
+        for bus,devfn in [(0,0x28),(0,0x40),(1,0),(1,1),(2,0),(2,8),(2,9)]:
+            root=self.read((rt&~0xfff)+bus*16) if rt&~0xfff else 0
+            value={'rootLow':hex(root),'present':False}
+            if root&1:
+                address=(root&~0xfff)+devfn*16;lo=self.read(address);hi=self.read(address+8)
+                value.update({'contextAddress':hex(address),'low':hex(lo),'high':hex(hi),'present':bool(lo&1),'domainId':(hi>>8)&0xffff,'translationType':(lo>>2)&3,'pageTable':hex(lo&~0xfff)})
+            result['contexts'][f'{bus:02x}:{devfn>>3:02x}.{devfn&7}']=value
+        return result
+    def close(self):self.f.close();self.sock.close()
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--run-id',required=True);p.add_argument('--label',required=True);p.add_argument('--expected-build',default='24280767');p.add_argument('--inspect-only',action='store_true');p.add_argument('--pairs-only',action='store_true');p.add_argument('--singles-only',action='store_true');args=p.parse_args()
+    assert args.expected_build in {'24280767','25595708','25433460'}
+    assert not (args.pairs_only and args.singles_only)
+    out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/args.run_id
+    manifest=json.loads((out/'manifest.json').read_text());state=Path(manifest['state'])
+    (out/(args.label+'-probe-source.py.txt')).write_bytes(Path(__file__).read_bytes())
+    pid=int((state/'qemu.pid').read_text());argv=Path(f'/proc/{pid}/cmdline').read_bytes().decode().split('\0')
+    assert args.run_id in argv and argv[0]==manifest['qemuArgv'][0]
+    topology=manifest['launchEnvironment']['QEMU_ESXI_TOPOLOGY']
+    assert topology in {'legacy','pcie'}
+    model=manifest['launchEnvironment']['QEMU_ESXI_TEST_FN0_MODEL']
+    assert model==manifest['launchEnvironment']['QEMU_ESXI_TEST_FN1_MODEL'] and model in {'e1000e','e1000'}
+    expected_device_id=0x10d3 if model=='e1000e' else 0x100e
+    lab.OUT=out;targets=['0000:02:01.0','0000:02:01.1'] if topology=='legacy' else ['0000:01:00.0','0000:01:00.1'];lab.TARGETS=targets
+    names={k:args.run_id+'-'+k for k in ['a','b','both','reverse']}
+    password=caveat_field('esxi8-auto-codex-credentials','Password');ssh=EsxiSsh('172.31.91.10',password,retries=1)
+    si=SmartConnect(host='172.31.91.10',user='root',pwd=password,sslContext=ssl._create_unverified_context())
+    def save(name,value):lab.save(args.label+'-'+name+'.json',value)
+    def remote(name,command):
+        r=ssh.run(command,check=False,timeout=45);(out/(args.label+'-'+name+'.txt')).write_text(r.stdout+r.stderr);return r.stdout
+    reader=None
+    try:
+        content=si.RetrieveContent();host=owner.inventory(content,vim.HostSystem)[0]
+        assert host.hardware.systemInfo.uuid=='6a4e818a-51ce-7d7f-a21f-000c29abaf6d' and host.config.product.build==args.expected_build
+        devs={d.id:d for d in host.hardware.pciDevice}
+        assert all((devs[t].vendorId&0xffff,devs[t].deviceId&0xffff)==(0x8086,expected_device_id) for t in targets)
+        reader=ContextReader(state/'qtest.sock')
+        save('host-before',{'at':utc_now(),'product':str(host.config.product),'bootTime':str(host.runtime.bootTime),'pci':owner.passthru_state(host,set(targets)),'vms':[lab.vm_state(v) for v in host.vm]})
+        remote('pci','esxcli hardware pci list')
+        remote('map','cat /etc/vmware/passthru.map')
+        remote('hardware-vsi','vsish -e ls /hardware/')
+        remote('iommu-vsi','vsish -e ls /hardware/iommu/')
+        for fn in [0,1]:
+            path=f'/hardware/pci/seg/0/bus/{2 if topology=="legacy" else 1}/slot/{1 if topology=="legacy" else 0}/func/{fn}/'
+            remote(f'function-{fn}-vsi','vsish -e ls '+path)
+            remote(f'function-{fn}-config','vsish -e get '+path+'pciConfigSpace')
+            remote(f'function-{fn}-shareable','vsish -e get '+path+'fptShareable')
+        save('initial-context',reader.snapshot())
+        if args.inspect_only:return
+        assert all(v.runtime.powerState=='poweredOff' for v in host.vm),'Guest already running'
+        if host.runtime.inMaintenanceMode:
+            rec,_=lab.task_record(host.ExitMaintenanceMode_Task(timeout=60));save('exit-maintenance',rec);assert rec['state']=='success'
+        host.configManager.pciPassthruSystem.UpdatePassthruConfig(config=[vim.host.PciPassthruConfig(id=t,passthruEnabled=True,applyNow=True) for t in targets])
+        status=owner.passthru_state(host,set(targets));save('activated',status)
+        assert all(d['enabled'] and d['active'] for d in status)
+        assert {d['dependentDevice'] for d in status}=={'0000:01:00.0' if topology=='legacy' else '0000:00:08.0'}
+        available={d.pciDevice.id:d for d in host.parent.environmentBrowser.QueryConfigTarget(host=host).pciPassthrough}
+        cases=[('both',targets),('reverse',list(reversed(targets))),('a',targets[:1]),('b',targets[1:])]
+        if args.pairs_only:cases=cases[:2]
+        if args.singles_only:cases=cases[2:]
+        summary=[]
+        for key,ids in cases:
+            existing={v.name:v for v in host.vm};vm=existing.get(names[key])
+            if vm is None:vm=lab.create_empty(content,host,names[key],record_prefix=args.label+'-create')
+            assert vm.runtime.powerState=='poweredOff'
+            changes=[vim.vm.device.VirtualDeviceSpec(operation='remove',device=d) for d in vm.config.hardware.device if isinstance(d,vim.vm.device.VirtualPCIPassthrough)]
+            changes += [vim.vm.device.VirtualDeviceSpec(operation='add',device=owner.static_device(available[t],-100-i)) for i,t in enumerate(ids)]
+            rec,_=lab.task_record(vm.ReconfigVM_Task(spec=vim.vm.ConfigSpec(deviceChange=changes)));save('config-'+key,{'ids':ids,'task':rec,'vm':lab.vm_state(vm)});assert rec['state']=='success'
+            stop=threading.Event();samples=[];errors=[];polls=[0]
+            def sample():
+                last=None
+                while not stop.is_set():
+                    try:
+                        now=reader.snapshot();polls[0]+=1
+                        signature=json.dumps({k:v for k,v in now.items() if k!='at'},sort_keys=True)
+                        if signature!=last:samples.append(now);last=signature
+                    except Exception as error:errors.append(type(error).__name__+': '+str(error));break
+                    stop.wait(0.2)
+            thread=threading.Thread(target=sample);thread.start()
+            try:
+                before=lab.vm_state(vm);rec,_=lab.task_record(vm.PowerOnVM_Task(host=host));after=lab.vm_state(vm)
+                save('power-'+key,{'at':utc_now(),'before':before,'task':rec,'after':after})
+                time.sleep(1)
+            finally:
+                stop.set();thread.join(timeout=5)
+            save('context-'+key,{'polls':polls[0],'changes':samples,'samplingErrors':errors,'after':reader.snapshot()})
+            assert not errors,'Context sampler failed'
+            lab.vm_logs(ssh,vm,args.label+'-'+key)
+            remote(key+'-vmkernel','tail -n 2500 /var/run/log/vmkernel.log')
+            summary.append({'case':key,'task':rec['state'],'powerState':after['powerState'],'samples':polls[0]})
+            print(json.dumps(summary[-1]),flush=True)
+            if vm.runtime.powerState=='poweredOn':
+                off,_=lab.task_record(vm.PowerOffVM_Task());save('off-'+key,off);assert off['state']=='success'
+        save('results',{'at':utc_now(),'cases':summary,'pci':owner.passthru_state(host,set(targets))})
+    finally:
+        if reader:reader.close()
+        Disconnect(si)
+if __name__=='__main__':main()

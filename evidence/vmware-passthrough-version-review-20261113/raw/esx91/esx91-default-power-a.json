@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-12T17:01:16.075742+00:00",
+  "before": {
+    "name": "20261113-esxi8-to-esx91-alias-validation-v1-a",
+    "id": "2899",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] 20261113-esxi8-to-esx91-alias-validation-v1-a/20261113-esxi8-to-esx91-alias-validation-v1-a/20261113-esxi8-to-esx91-alias-validation-v1-a.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  },
+  "task": {
+    "taskId": "haTask-2899-vim.VirtualMachine.powerOn-2258",
+    "state": "success",
+    "descriptionId": "VirtualMachine.powerOn",
+    "queueTime": "2026-11-12 17:01:08.264664+00:00",
+    "startTime": "2026-11-12 17:01:08.267392+00:00",
+    "completeTime": "2026-11-12 17:01:13.489322+00:00",
+    "elapsedSeconds": 6.121297228000003
+  },
+  "after": {
+    "name": "20261113-esxi8-to-esx91-alias-validation-v1-a",
+    "id": "2899",
+    "powerState": "poweredOn",
+    "vmx": "[pci-mmio-local] 20261113-esxi8-to-esx91-alias-validation-v1-a/20261113-esxi8-to-esx91-alias-validation-v1-a/20261113-esxi8-to-esx91-alias-validation-v1-a.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '10d3',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}

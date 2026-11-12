@@ -1,0 +1,68 @@
+{
+  "at": "2026-11-12T17:15:34.851602+00:00",
+  "before": {
+    "name": "20261113-esxi8-to-esx91-nativepci-validation-v1-both",
+    "id": "2909",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] 20261113-esxi8-to-esx91-nativepci-validation-v1-both/20261113-esxi8-to-esx91-nativepci-validation-v1-both/20261113-esxi8-to-esx91-nativepci-validation-v1-both.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '100e',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      },
+      {
+        "key": 13001,
+        "label": "PCI device 1",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.1',\n   deviceId = '100e',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  },
+  "task": {
+    "taskId": "haTask-2909-vim.VirtualMachine.powerOn-117",
+    "state": "error",
+    "descriptionId": "VirtualMachine.powerOn",
+    "queueTime": "2026-11-12 17:15:22.921108+00:00",
+    "startTime": "2026-11-12 17:15:22.924762+00:00",
+    "completeTime": "2026-11-12 17:15:32.595577+00:00",
+    "elapsedSeconds": 10.236004133999984,
+    "fault": {
+      "type": "vim.fault.GenericVmConfigFault",
+      "message": "(vim.fault.GenericVmConfigFault) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   msg = 'Allocation failed for pciPassthru1.',\n   faultCause = <unset>,\n   faultMessage = (vmodl.LocalizableMessage) [\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.assignHw.allocation.failure',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'pciPassthru1'\n            }\n         ],\n         message = 'Allocation failed for pciPassthru1.'\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.moduletable.powerOnFailed',\n         arg = (vmodl.KeyAnyValue) [\n            (vmodl.KeyAnyValue) {\n               dynamicType = <unset>,\n               dynamicProperty = (vmodl.DynamicProperty) [],\n               key = '1',\n               value = 'DevicePowerOn'\n            }\n         ],\n         message = \"Module 'DevicePowerOn' power on failed.\\n\"\n      },\n      (vmodl.LocalizableMessage) {\n         dynamicType = <unset>,\n         dynamicProperty = (vmodl.DynamicProperty) [],\n         key = 'msg.vmx.poweron.failed',\n         arg = (vmodl.KeyAnyValue) [],\n         message = 'Failed to start the virtual machine.'\n      }\n   ],\n   reason = 'Allocation failed for pciPassthru1.'\n}",
+      "faultMessages": [
+        {
+          "key": "msg.assignHw.allocation.failure",
+          "message": "Allocation failed for pciPassthru1."
+        },
+        {
+          "key": "msg.moduletable.powerOnFailed",
+          "message": "Module 'DevicePowerOn' power on failed.\n"
+        },
+        {
+          "key": "msg.vmx.poweron.failed",
+          "message": "Failed to start the virtual machine."
+        }
+      ]
+    }
+  },
+  "after": {
+    "name": "20261113-esxi8-to-esx91-nativepci-validation-v1-both",
+    "id": "2909",
+    "powerState": "poweredOff",
+    "vmx": "[pci-mmio-local] 20261113-esxi8-to-esx91-nativepci-validation-v1-both/20261113-esxi8-to-esx91-nativepci-validation-v1-both/20261113-esxi8-to-esx91-nativepci-validation-v1-both.vmx",
+    "memoryMB": 768,
+    "devices": [
+      {
+        "key": 13000,
+        "label": "PCI device 0",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.0',\n   deviceId = '100e',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      },
+      {
+        "key": 13001,
+        "label": "PCI device 1",
+        "backing": "(vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo) {\n   dynamicType = <unset>,\n   dynamicProperty = (vmodl.DynamicProperty) [],\n   deviceName = '',\n   useAutoDetect = <unset>,\n   id = '0000:02:01.1',\n   deviceId = '100e',\n   systemId = '6a4e818a-51ce-7d7f-a21f-000c29abaf6d',\n   vendorId = -32634\n}"
+      }
+    ]
+  }
+}

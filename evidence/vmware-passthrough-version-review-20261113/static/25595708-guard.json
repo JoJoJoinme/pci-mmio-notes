@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "build": "25595708",
+  "moduleSha256": "f5911caac9fa163786ce59a78bfc20284696d205b4a76c8180a141fd0214e089",
+  "function": "PCIPassthruRegisterDeviceInt",
+  "functionAddress": "0x4734",
+  "functionBytes": 3926,
+  "queryCallAddress": "0x5307",
+  "statusCompareAddress": "0x5311",
+  "normalContinuationAddress": "0x4d45",
+  "expectedAbsenceStatus": "0x0bad0003",
+  "successStatusRejectedByThisGuard": true,
+  "sameOwnerAlternativeBetweenQueryAndWarning": false,
+  "warningSourceLine": 5304,
+  "failureStatus": "0x0bad0005",
+  "registrationFunctionContainsSbdfAndDependencyChecks": true,
+  "scope": "Selected guard and surrounding conditions only; runtime is recorded separately; no claim that all versions or registration modes are equivalent",
+  "tools": {
+    "capstone": "5.0.7"
+  }
+}

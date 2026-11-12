@@ -1,0 +1,13 @@
+Source run: 20261113-esxi8-to-esx91-nativepci-validation-v1
+Source file: esx91-nativepci-reverse-20261113-esxi8-to-esx91-nativepci-validation-v1-reverse-vmware.log
+Source SHA-256: 6ca7f3a87bde35e68ccee1ef76ca3569e64e98a79d3b1ee36586fe349491bddb
+Task window (UTC, milliseconds): 2026-11-12T17:15:37.276 to 2026-11-12T17:15:46.348
+Filter: Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages
+Matching lines: 5
+Selected original lines within the matching task time window.
+
+596: 2026-11-12T17:15:41.973Z -INFO vmx 133471 [esx@4413 threadName="vmx"] PCIPassthru: Registered a PCI device for 0000:02:01.1 vIRQ 0x11, physical MSI = Disabled (vmmInt = Disabled), IntrPin = 1
+602: 2026-11-12T17:15:41.982Z -ERROR vmx 133471 [esx@4413 threadName="vmx"] AH Failed to find a suitable device for pciPassthru1
+603: 2026-11-12T17:15:41.982Z -INFO vmx 133471 [esx@4413 threadName="vmx"] Module 'DevicePowerOn' power on failed.
+624: 2026-11-12T17:15:46.054Z +INFO vmx 133471 [esx@4413 threadName="vmx"] Power on failure messages: Allocation failed for pciPassthru1.
+625: 2026-11-12T17:15:46.054Z +INFO vmx 133471 [esx@4413 threadName="vmx"] Module 'DevicePowerOn' power on failed.

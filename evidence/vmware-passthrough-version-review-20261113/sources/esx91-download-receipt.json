@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-12T16:43:42.571713+00:00",
+  "url": "https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/9.1/s/VMware-ESX-9.1.0.0100-25433460-LNV-S02-20260608.zip",
+  "checksumUrl": "https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/9.1/s/sha1sum.txt",
+  "filename": "VMware-ESX-9.1.0.0100-25433460-LNV-S02-20260608.zip",
+  "bytes": 723018103,
+  "sha1": "14dbb4e8cdf3ded0a60210dfc505602fc76bbfa7",
+  "vendorSha1Matched": true,
+  "sha256": "3b90fdf778eb97a8fba20eb185b4da79d0bb56b277a3bbae98547b389fd0b604"
+}

@@ -1,0 +1,25 @@
+import json,socket,ssl,sys,time
+from pathlib import Path
+sys.path.insert(0,'/mnt/e/Code/PCI/github-export/vmware-esxi8-lab')
+from esxi_passthru_capability import caveat_field,utc_now
+from pyVim.connect import SmartConnect,Disconnect
+from pyVmomi import vim
+import test_esxi_owner_activation as owner
+run='20261113-esxi8-to-esx91-alias-validation-v1';out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/run;plan=json.loads((out/'upgrade-plan.json').read_text())
+secret=caveat_field('esxi8-auto-codex-credentials','Password');started=time.monotonic()
+for attempt in range(90):
+    si=None
+    try:
+        with socket.create_connection(('172.31.91.10',443),timeout=3):pass
+        si=SmartConnect(host='172.31.91.10',user='root',pwd=secret,sslContext=ssl._create_unverified_context())
+        content=si.RetrieveContent();host=owner.inventory(content,vim.HostSystem)[0]
+        assert host.hardware.systemInfo.uuid=='6a4e818a-51ce-7d7f-a21f-000c29abaf6d'
+        if str(host.runtime.bootTime)==plan['oldBootTime']:raise RuntimeError('Old boot still running')
+        assert host.config.product.build==plan['targetBuild'],'Booted unexpected build'
+        record={'at':utc_now(),'product':str(host.config.product),'oldBootTime':plan['oldBootTime'],'bootTime':str(host.runtime.bootTime),'targetBuildVerified':True,'uuid':host.hardware.systemInfo.uuid}
+        (out/'upgrade-verified.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record),flush=True);break
+    except Exception as error:print(f'Waiting for target build: {int(time.monotonic()-started)}s ({type(error).__name__})',flush=True)
+    finally:
+        if si:Disconnect(si)
+    time.sleep(10)
+else:raise RuntimeError('Target build readiness deadline')

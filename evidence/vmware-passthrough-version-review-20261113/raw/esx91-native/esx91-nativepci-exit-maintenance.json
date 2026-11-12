@@ -1,0 +1,9 @@
+{
+  "taskId": "haTask-ha-host-vim.HostSystem.exitMaintenanceMode-102",
+  "state": "success",
+  "descriptionId": "HostSystem.exitMaintenanceMode",
+  "queueTime": "2026-11-12 17:15:18.618848+00:00",
+  "startTime": "2026-11-12 17:15:18.624673+00:00",
+  "completeTime": "2026-11-12 17:15:18.816054+00:00",
+  "elapsedSeconds": 1.053916820000012
+}

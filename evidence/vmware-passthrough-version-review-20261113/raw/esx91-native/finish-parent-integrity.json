@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-12T17:27:31.350554+00:00",
+  "parentRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+  "hashes": [
+    {
+      "file": "system.qcow2",
+      "sha256": "e02538dfa7e827e1710cf77be71d842d1c62bc4d0af2bda3cab5438ad60c941c",
+      "unchanged": true
+    },
+    {
+      "file": "datastore.qcow2",
+      "sha256": "2ec881acc9bdf02209a162ad1eecc11e6326546326088988d2f9bc3b3b062d2d",
+      "unchanged": true
+    }
+  ],
+  "verifiedAfterChildShutdown": true
+}

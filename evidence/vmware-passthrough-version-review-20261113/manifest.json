@@ -1,0 +1,2377 @@
+{
+  "schemaVersion": 1,
+  "hashAlgorithm": "SHA-256",
+  "selfExcluded": true,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 216,
+      "sha256": "2bb727f0b0e3a99b0ff40b930b73cd3deb96350b09b8558621d4203772c0e448",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    },
+    {
+      "path": "logs/esx91-a-vmkernel.txt",
+      "bytes": 591,
+      "sha256": "412ae6d244b7f78aa7c5db5bbf5971f0f6ac094bac2e53ffa09f5c96bff438f5",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-a-vmkernel.txt",
+        "sourceSha256": "90167ab24e55cf90f8183a6cc79bbdb1ef3b89ac3c7aa75d5b9eafa47de56cce",
+        "sourceLines": [],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:01:08.267",
+          "end": "2026-11-12T17:01:13.489"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-a-vmware.txt",
+      "bytes": 802,
+      "sha256": "f0b95401f4cb08d6a558ac293cec7e50da76477458ed5e94aba086d56b1dffb7",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-a-20261113-esxi8-to-esx91-alias-validation-v1-a-vmware.log",
+        "sourceSha256": "a31e757db8d6a7402ad9208127834636188b29317b1baeacec2b7ddaf38c7de7",
+        "sourceLines": [
+          592,
+          595
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:01:08.267",
+          "end": "2026-11-12T17:01:13.489"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-b-vmkernel.txt",
+      "bytes": 591,
+      "sha256": "2f5417bf0029b90c91d955915294769691ac2a4b077cfe22eb588c4fcd28c287",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-b-vmkernel.txt",
+        "sourceSha256": "f165fcc0fe4d5f7c41f44e97e8fb7133990932883323c263509fe2cf73e6a92a",
+        "sourceLines": [],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:01:23.631",
+          "end": "2026-11-12T17:01:28.916"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-b-vmware.txt",
+      "bytes": 802,
+      "sha256": "a395d5c493935ccbce2a7d1d6df464c49184a4ddd6ed7b9e1ac0c29b15fc6d87",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-b-20261113-esxi8-to-esx91-alias-validation-v1-b-vmware.log",
+        "sourceSha256": "d7b8dd2d9d20e4eeba22b23ad73dd76730bbfe6040f24f891190b4a32d157a33",
+        "sourceLines": [
+          592,
+          595
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:01:23.631",
+          "end": "2026-11-12T17:01:28.916"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-both-vmkernel.txt",
+      "bytes": 676,
+      "sha256": "e1f794583e5337261e4d4d24c07861138faa9ecd7c41b478e4dead21dd9691e4",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-both-vmkernel.txt",
+        "sourceSha256": "5d66ab0cc31e5ab913498dbe2530da3e8ae82a6059a7fdb21ee9784ab31a7717",
+        "sourceLines": [
+          2497,
+          2498
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:00:40.870",
+          "end": "2026-11-12T17:00:50.526"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-both-vmware.txt",
+      "bytes": 1176,
+      "sha256": "00172c038870a4a9bb6343629524164ef1396ba5b8a94c9a11d8cb169257ef72",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-both-20261113-esxi8-to-esx91-alias-validation-v1-both-vmware.log",
+        "sourceSha256": "9365c9b2955df2740fbbbfcd99201ed080414779ebb2e25b4fd300d411645750",
+        "sourceLines": [
+          599,
+          605,
+          606,
+          628,
+          629
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:00:40.870",
+          "end": "2026-11-12T17:00:50.526"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-native-a-vmkernel.txt",
+      "bytes": 597,
+      "sha256": "a696d0dc172fc2c23e6b2d510712200649e7c21ef49b5aef914e69fa61c23d86",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-a-vmkernel.txt",
+        "sourceSha256": "206d99ca2149507d734733459c7d28c1d1c55687f7fff065d09b32e183fab1a9",
+        "sourceLines": [],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:15:50.460",
+          "end": "2026-11-12T17:15:55.592"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-native-a-vmware.txt",
+      "bytes": 814,
+      "sha256": "63e743217e48eafd93dcf913e614b46907a926cd06c5d03d4e89b34da08246a8",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-a-20261113-esxi8-to-esx91-nativepci-validation-v1-a-vmware.log",
+        "sourceSha256": "8286e2a7d646761327082ddac96f51d3b225844a03d84bc8b1a6dd83583d962a",
+        "sourceLines": [
+          590,
+          593
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:15:50.460",
+          "end": "2026-11-12T17:15:55.592"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-native-b-vmkernel.txt",
+      "bytes": 597,
+      "sha256": "7beec4e6e37183e39c198a49f94eeb22899428e20bce923cbb099c5d93f52733",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-b-vmkernel.txt",
+        "sourceSha256": "5a7dc9e031731b945e927bb48e2e139d8640816e209d4e083692873f59112df5",
+        "sourceLines": [],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:16:05.785",
+          "end": "2026-11-12T17:16:11.125"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-native-b-vmware.txt",
+      "bytes": 814,
+      "sha256": "fd993a21c3feb83cc15b90991e5ce130a75a3880fb1431e2fd7bf7616ff04f19",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-b-20261113-esxi8-to-esx91-nativepci-validation-v1-b-vmware.log",
+        "sourceSha256": "a04a151d6458aa79c01f1228c09990def30cee8e6cfe57f65e92030a07d8213a",
+        "sourceLines": [
+          590,
+          593
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:16:05.785",
+          "end": "2026-11-12T17:16:11.125"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-native-both-vmkernel.txt",
+      "bytes": 682,
+      "sha256": "bbe40d3832b6cc0481ff12d37c978f918fb818eedea2283edca4ab51f92bd7de",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-both-vmkernel.txt",
+        "sourceSha256": "003e586f757d82197a68a94cc9e346dfdd97552a62ed46f48c94f6081e2d777e",
+        "sourceLines": [
+          2437,
+          2478
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:15:22.924",
+          "end": "2026-11-12T17:15:32.595"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-native-both-vmware.txt",
+      "bytes": 1188,
+      "sha256": "ba3812e4c72dd54569efdfb2d0c3fd799a0049d61afae1b1feb1fee45dc46126",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-both-20261113-esxi8-to-esx91-nativepci-validation-v1-both-vmware.log",
+        "sourceSha256": "c06c5d296db3c4347121153215798568c606dd4dc73759fe9fb1477101d80e62",
+        "sourceLines": [
+          597,
+          603,
+          604,
+          626,
+          627
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:15:22.924",
+          "end": "2026-11-12T17:15:32.595"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-native-reverse-vmkernel.txt",
+      "bytes": 685,
+      "sha256": "0175ee5255d75614f862efa113bbaab8ad116588faed7f3c184633311a4b97a9",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-reverse-vmkernel.txt",
+        "sourceSha256": "443543385eb6dbde52fcab8c93de427fa13fbabaec98af7c29427316619a66bb",
+        "sourceLines": [
+          2487,
+          2488
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:15:37.276",
+          "end": "2026-11-12T17:15:46.348"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-native-reverse-vmware.txt",
+      "bytes": 1194,
+      "sha256": "c52b1aa6ec5e8d93e010ab7c7d95b00233fb69a62a194cac1a7d3f4aa7ad68e3",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-reverse-20261113-esxi8-to-esx91-nativepci-validation-v1-reverse-vmware.log",
+        "sourceSha256": "6ca7f3a87bde35e68ccee1ef76ca3569e64e98a79d3b1ee36586fe349491bddb",
+        "sourceLines": [
+          596,
+          602,
+          603,
+          624,
+          625
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:15:37.276",
+          "end": "2026-11-12T17:15:46.348"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-reverse-vmkernel.txt",
+      "bytes": 679,
+      "sha256": "7767b1b7045cd47527dd3b81b3700c9ca8f04890eff56a97c8ead897c6f4ca56",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-reverse-vmkernel.txt",
+        "sourceSha256": "e343f88cd9de5fbfa9aade746f036d8db12a98cb38cdd4248689fc0f855dd100",
+        "sourceLines": [
+          2497,
+          2498
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:00:55.080",
+          "end": "2026-11-12T17:01:04.179"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/esx91-reverse-vmware.txt",
+      "bytes": 1182,
+      "sha256": "34a4c804187b07694956805665251584ba0bc49df29bb807d9c046ae035ac140",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-reverse-20261113-esxi8-to-esx91-alias-validation-v1-reverse-vmware.log",
+        "sourceSha256": "1389e420bd10315943a9abba3ce09ba159b27e3defcfe796aed192286d272603",
+        "sourceLines": [
+          598,
+          604,
+          605,
+          626,
+          627
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T17:00:55.080",
+          "end": "2026-11-12T17:01:04.179"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/u3k-a-vmkernel.txt",
+      "bytes": 521,
+      "sha256": "9268aec8a778f4332a2f548bafec9ffeb5bae016d44c00fc2cebe50448af9a1b",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-a-vmkernel.txt",
+        "sourceSha256": "2c3794c8330740b12712d4576816117f7ddef77482b4a6576c4288057843d765",
+        "sourceLines": [
+          2367
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T16:42:38.058",
+          "end": "2026-11-12T16:42:43.806"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/u3k-a-vmware.txt",
+      "bytes": 724,
+      "sha256": "ac1bd502ebf487830829e521f3220e85bd33d930a8ffd33d6f90721181716fd8",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-a-20261113-esxi8-u3k-alias-validation-v1-a-vmware.log",
+        "sourceSha256": "8baabe3d8835f8479dc9d0700b7e7ae73f5efd45bfbb54cb462918cf87dade28",
+        "sourceLines": [
+          583,
+          585
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T16:42:38.058",
+          "end": "2026-11-12T16:42:43.806"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/u3k-b-vmkernel.txt",
+      "bytes": 521,
+      "sha256": "3b30f5d8596c8985d5070fed9e819f693da5b2ae35c97e3eb399af9787dfc1cc",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-b-vmkernel.txt",
+        "sourceSha256": "bfe9603857bfd035c6cbea2985b0c6218341a13b4bdf2f55b3e0a8cb5ea3abda",
+        "sourceLines": [
+          2361
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T16:42:53.976",
+          "end": "2026-11-12T16:43:00.211"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/u3k-b-vmware.txt",
+      "bytes": 724,
+      "sha256": "af8c4cae1dfdd8d7eeb0774bbd8c7c253b97a5bd5dd3c573144928478990ae1d",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-b-20261113-esxi8-u3k-alias-validation-v1-b-vmware.log",
+        "sourceSha256": "6836aae62c8149d469eb88dd8fa33103fa66e6352a8c261e45a872f0a3099318",
+        "sourceLines": [
+          583,
+          585
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T16:42:53.976",
+          "end": "2026-11-12T16:43:00.211"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/u3k-both-vmkernel.txt",
+      "bytes": 5027,
+      "sha256": "c737e97988998570031fc766a7beb036d30af387fe91237ba78f93bc4a4c71be",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-both-vmkernel.txt",
+        "sourceSha256": "73fcddb6068caa23a3dec95befcaab11c18138a56bb2467d1f6e2f9f505b56c1",
+        "sourceLines": [
+          2200,
+          2265,
+          2266,
+          2267,
+          2268,
+          2269,
+          2270,
+          2272,
+          2273,
+          2274,
+          2275,
+          2276,
+          2277,
+          2278,
+          2279,
+          2280,
+          2289,
+          2290,
+          2291,
+          2295,
+          2296,
+          2297,
+          2314,
+          2315,
+          2316,
+          2337,
+          2338,
+          2339,
+          2391,
+          2392,
+          2393,
+          2459,
+          2460
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T16:41:57.755",
+          "end": "2026-11-12T16:42:13.590"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/u3k-both-vmware.txt",
+      "bytes": 925,
+      "sha256": "df6066cdaa322d9998ac240488ecc3dbb85460072ec750616e318e2d515e1012",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-both-20261113-esxi8-u3k-alias-validation-v1-both-vmware.log",
+        "sourceSha256": "f8a0dd79f19fad3dd80e42c6b8330d5ff027d3e212b53872fb1eb926e52dbdf5",
+        "sourceLines": [
+          590,
+          611,
+          612,
+          634
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T16:41:57.755",
+          "end": "2026-11-12T16:42:13.590"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/u3k-reverse-vmkernel.txt",
+      "bytes": 5030,
+      "sha256": "9a5d4515a1b0b592a7080c7f6dda8dcb66e90cc4997a3db622d338ee679726f1",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-reverse-vmkernel.txt",
+        "sourceSha256": "2ea4fc49e1ba532aa66f3d189b7f31d92143105da9d310fb3d3691b96e1d8b57",
+        "sourceLines": [
+          2209,
+          2278,
+          2279,
+          2280,
+          2281,
+          2282,
+          2283,
+          2284,
+          2285,
+          2286,
+          2287,
+          2288,
+          2289,
+          2296,
+          2297,
+          2298,
+          2299,
+          2300,
+          2301,
+          2305,
+          2306,
+          2307,
+          2324,
+          2325,
+          2326,
+          2344,
+          2345,
+          2346,
+          2392,
+          2393,
+          2394,
+          2463,
+          2464
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T16:42:18.383",
+          "end": "2026-11-12T16:42:33.477"
+        },
+        "filter": "PCIPassthru:.*(?:0000:02:01\\.[01]|IOMMU)",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "logs/u3k-reverse-vmware.txt",
+      "bytes": 931,
+      "sha256": "e9dca5cb6fc766fc49729e11bb48ce0711bd5e185d03c95583df825185490c08",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-reverse-20261113-esxi8-u3k-alias-validation-v1-reverse-vmware.log",
+        "sourceSha256": "52ff3d0e34c90e8edf1007ce70b34c0d0b2c52ad00c4da8aa9e93b7819667f45",
+        "sourceLines": [
+          589,
+          610,
+          611,
+          632
+        ],
+        "taskWindowUtcMilliseconds": {
+          "start": "2026-11-12T16:42:18.383",
+          "end": "2026-11-12T16:42:33.477"
+        },
+        "filter": "Registered a PCI device|AH Failed to find|DevicePowerOn|Power on failure messages",
+        "transformation": "selected original lines with original line numbers and task time filter"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-activated.json",
+      "bytes": 273,
+      "sha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-activated.json",
+        "sourceSha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-config-a.json",
+      "bytes": 1145,
+      "sha256": "66d8d66a38cfcb5bc51136e2ae33479bf2e96c77675368080290627cdeb96293",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-config-a.json",
+        "sourceSha256": "66d8d66a38cfcb5bc51136e2ae33479bf2e96c77675368080290627cdeb96293",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-config-b.json",
+      "bytes": 1145,
+      "sha256": "4919abb2bea4bc9b98940d7f8d9c8693a3af5383042ac4edd624b007b2614f6d",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-config-b.json",
+        "sourceSha256": "4919abb2bea4bc9b98940d7f8d9c8693a3af5383042ac4edd624b007b2614f6d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-config-both.json",
+      "bytes": 1584,
+      "sha256": "1906ecbb813b6ea7802fb0637e64443caf93b7553851db96c418d1c86e3f0885",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-config-both.json",
+        "sourceSha256": "1906ecbb813b6ea7802fb0637e64443caf93b7553851db96c418d1c86e3f0885",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-config-reverse.json",
+      "bytes": 1589,
+      "sha256": "12f4ff4741962931d5f5b839974afc1021cd2a4f5cc8da847750920a9311324d",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-config-reverse.json",
+        "sourceSha256": "12f4ff4741962931d5f5b839974afc1021cd2a4f5cc8da847750920a9311324d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-context-a.json",
+      "bytes": 6466,
+      "sha256": "6536eec7fbfbb3ba7eca7b4d9d6f89a13043a4f56d7c691c24e9a817c83c3353",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-context-a.json",
+        "sourceSha256": "6536eec7fbfbb3ba7eca7b4d9d6f89a13043a4f56d7c691c24e9a817c83c3353",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-context-b.json",
+      "bytes": 6466,
+      "sha256": "700c484543ecf618dbd80fd4fc96a018b0b7567084e56a3fdb9f765a1066b1c2",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-context-b.json",
+        "sourceSha256": "700c484543ecf618dbd80fd4fc96a018b0b7567084e56a3fdb9f765a1066b1c2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-context-both.json",
+      "bytes": 8650,
+      "sha256": "d9a2c0c2d1a08cb9ad465257c7eb88818e7de64cba9db72faff6fdb8aacd49ef",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-context-both.json",
+        "sourceSha256": "d9a2c0c2d1a08cb9ad465257c7eb88818e7de64cba9db72faff6fdb8aacd49ef",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-context-reverse.json",
+      "bytes": 8650,
+      "sha256": "fc6a3108bc9c778a39576190640a3b258fb0b159774203fa76fb26e6f1240492",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-context-reverse.json",
+        "sourceSha256": "fc6a3108bc9c778a39576190640a3b258fb0b159774203fa76fb26e6f1240492",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-create-20261113-esxi8-to-esx91-alias-validation-v1-a.json",
+      "bytes": 319,
+      "sha256": "edef2c8d6ce01024f21e1048a08bc674399842629775a85dbb832577bde1d49e",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-create-20261113-esxi8-to-esx91-alias-validation-v1-a.json",
+        "sourceSha256": "edef2c8d6ce01024f21e1048a08bc674399842629775a85dbb832577bde1d49e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-create-20261113-esxi8-to-esx91-alias-validation-v1-b.json",
+      "bytes": 319,
+      "sha256": "02c34bf9d159054230e6a6bda44b32cea39379cd659270c2f3fbffe9ec89d162",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-create-20261113-esxi8-to-esx91-alias-validation-v1-b.json",
+        "sourceSha256": "02c34bf9d159054230e6a6bda44b32cea39379cd659270c2f3fbffe9ec89d162",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-create-20261113-esxi8-to-esx91-alias-validation-v1-both.json",
+      "bytes": 319,
+      "sha256": "9bd7c496f98fdf3f1a188b87a4f351cfb5dfc9cb03d564167776b80b55c9284f",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-create-20261113-esxi8-to-esx91-alias-validation-v1-both.json",
+        "sourceSha256": "9bd7c496f98fdf3f1a188b87a4f351cfb5dfc9cb03d564167776b80b55c9284f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-create-20261113-esxi8-to-esx91-alias-validation-v1-reverse.json",
+      "bytes": 319,
+      "sha256": "8e26e71a3ff3ef8a3bffff2e37b3003067a37390ff888f043484c8d4f6323d63",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-create-20261113-esxi8-to-esx91-alias-validation-v1-reverse.json",
+        "sourceSha256": "8e26e71a3ff3ef8a3bffff2e37b3003067a37390ff888f043484c8d4f6323d63",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-exit-maintenance.json",
+      "bytes": 344,
+      "sha256": "7372f739bb8e3db6751150458a718494e4c06d45002727e2b212727deb35c71b",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-exit-maintenance.json",
+        "sourceSha256": "7372f739bb8e3db6751150458a718494e4c06d45002727e2b212727deb35c71b",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-function-0-config.txt",
+      "bytes": 4027,
+      "sha256": "ec72d831c86a330c3fc2ef6b285a640d0e9623870eda24067ce2312724be54d2",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-function-0-config.txt",
+        "sourceSha256": "ec72d831c86a330c3fc2ef6b285a640d0e9623870eda24067ce2312724be54d2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-function-0-shareable.txt",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-function-0-shareable.txt",
+        "sourceSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-function-1-config.txt",
+      "bytes": 4027,
+      "sha256": "a6fe167b72dd304c71ba55037e6cf3cdc7648870adcff316dde80e821c2ed7e0",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-function-1-config.txt",
+        "sourceSha256": "a6fe167b72dd304c71ba55037e6cf3cdc7648870adcff316dde80e821c2ed7e0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-function-1-shareable.txt",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-function-1-shareable.txt",
+        "sourceSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-host-before.json",
+      "bytes": 993,
+      "sha256": "47df8c67546cfb7ef6b9225f0ce347f61815206be6226f0090f2e512fedb25ac",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-host-before.json",
+        "sourceSha256": "a41f18ccf8cac8d3484ce0a65ce3562624a273af1fbbb75d9d067f322e308d13",
+        "transformation": "omit unrelated VM inventory; preserve owned experiment VMs"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-initial-context.json",
+      "bytes": 1871,
+      "sha256": "c8a870a9d2b6cc247d84508f010c18492708525907fb4280661627731b789e84",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-initial-context.json",
+        "sourceSha256": "c8a870a9d2b6cc247d84508f010c18492708525907fb4280661627731b789e84",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-map.txt",
+      "bytes": 2045,
+      "sha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-map.txt",
+        "sourceSha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-off-a.json",
+      "bytes": 326,
+      "sha256": "5a15474b7574f7fb984fb70fe622cb826efa7a2a2b00864ad68c5d4fddfaeb4e",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-off-a.json",
+        "sourceSha256": "5a15474b7574f7fb984fb70fe622cb826efa7a2a2b00864ad68c5d4fddfaeb4e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-off-b.json",
+      "bytes": 326,
+      "sha256": "8943f1d26cf9e71847542a136a0253cf10d007a84d45d3d23fbaec6af8429d3d",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-off-b.json",
+        "sourceSha256": "8943f1d26cf9e71847542a136a0253cf10d007a84d45d3d23fbaec6af8429d3d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-pci.txt",
+      "bytes": 9005,
+      "sha256": "25c48df9ea4ddc37a7bdca5c593238ace57220ef013d8fc4c398e1fedb50a8b8",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-pci.txt",
+        "sourceSha256": "25c48df9ea4ddc37a7bdca5c593238ace57220ef013d8fc4c398e1fedb50a8b8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-power-a.json",
+      "bytes": 1900,
+      "sha256": "65bfce0a3e0374ae78ced8347f5f37097da7f4cde13579bb6289ed5b3b8d17ab",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-power-a.json",
+        "sourceSha256": "65bfce0a3e0374ae78ced8347f5f37097da7f4cde13579bb6289ed5b3b8d17ab",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-power-b.json",
+      "bytes": 1900,
+      "sha256": "d0b1399aa6089a1eb4c9be0e795b7ab3547cec215b035e3f75e7268f4394a185",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-power-b.json",
+        "sourceSha256": "d0b1399aa6089a1eb4c9be0e795b7ab3547cec215b035e3f75e7268f4394a185",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-power-both.json",
+      "bytes": 4852,
+      "sha256": "a0902bbac879e6d325b9eae452772a562ecf1e81169c51610dc873eba8e69367",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-power-both.json",
+        "sourceSha256": "a0902bbac879e6d325b9eae452772a562ecf1e81169c51610dc873eba8e69367",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-power-reverse.json",
+      "bytes": 4876,
+      "sha256": "1513120214cd3d234618814f3242c1a68620d4f076743f708bae8cbf0efddc0d",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-power-reverse.json",
+        "sourceSha256": "1513120214cd3d234618814f3242c1a68620d4f076743f708bae8cbf0efddc0d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/esx91-default-results.json",
+      "bytes": 824,
+      "sha256": "6a6c00e311c7b4a0b94e9f6a04affa75e1e961ed79a59a31f79d09a2a86ed921",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-results.json",
+        "sourceSha256": "6a6c00e311c7b4a0b94e9f6a04affa75e1e961ed79a59a31f79d09a2a86ed921",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/finish-host-state.json",
+      "bytes": 4897,
+      "sha256": "6542975b205a8debe08a9fb44fd1de2d1f1810d6c5c105e78140c18b323628df",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "finish-host-state.json",
+        "sourceSha256": "6cb9e5e2be65a92a881f2cf77d4b1b0fbd627ff2fe678958aa7be6a5aef0e36d",
+        "transformation": "omit unrelated VM inventory; preserve owned experiment VMs"
+      }
+    },
+    {
+      "path": "raw/esx91/finish-maintenance.json",
+      "bytes": 346,
+      "sha256": "afef015f2597b2ecb7f11ca4b3d258baad0e8791d1117b9662432913740456f8",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "finish-maintenance.json",
+        "sourceSha256": "afef015f2597b2ecb7f11ca4b3d258baad0e8791d1117b9662432913740456f8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/finish-runtime.json",
+      "bytes": 654,
+      "sha256": "ff87b3bc83f482febb1a78676cce179c397dee02db515e6b845fc1ff86ee3dbf",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "finish-runtime.json",
+        "sourceSha256": "ff87b3bc83f482febb1a78676cce179c397dee02db515e6b845fc1ff86ee3dbf",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/finish-shutdown-request.json",
+      "bytes": 124,
+      "sha256": "688a067f4edfe5d9f55a16439145be946e651ad60dc970afb534ce49c47ecdee",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "finish-shutdown-request.json",
+        "sourceSha256": "688a067f4edfe5d9f55a16439145be946e651ad60dc970afb534ce49c47ecdee",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/latest-memory-preflight.json",
+      "bytes": 224,
+      "sha256": "f909292c1fa31ae98eb7434546e29e10fe8592a0cba19b20acbe6b3b73f70ecb",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "latest-memory-preflight.json",
+        "sourceSha256": "f909292c1fa31ae98eb7434546e29e10fe8592a0cba19b20acbe6b3b73f70ecb",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/manifest.json",
+      "bytes": 5468,
+      "sha256": "82e87f08beda5a072e2217c42cb27108ec7452be5c5ff481f6a691a44698ba65",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "manifest.json",
+        "sourceSha256": "82e87f08beda5a072e2217c42cb27108ec7452be5c5ff481f6a691a44698ba65",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/memory-reclaim.json",
+      "bytes": 313,
+      "sha256": "a6c7e6e2b8351fe1eda8dffcded87d5c08875927760d2183a03b4d918b97357e",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "memory-reclaim.json",
+        "sourceSha256": "a6c7e6e2b8351fe1eda8dffcded87d5c08875927760d2183a03b4d918b97357e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/readiness.json",
+      "bytes": 1921,
+      "sha256": "0d59e5f060fa82547a282c93871f2446094438c859125d649904a67bb8b0964a",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "readiness.json",
+        "sourceSha256": "0d59e5f060fa82547a282c93871f2446094438c859125d649904a67bb8b0964a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-apply-intent.json",
+      "bytes": 305,
+      "sha256": "98f871b280880e916864d8dc7b81f0a23d9989b3319853b872f7f8ddc57b00a6",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-apply-intent.json",
+        "sourceSha256": "98f871b280880e916864d8dc7b81f0a23d9989b3319853b872f7f8ddc57b00a6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-apply-result.json",
+      "bytes": 66,
+      "sha256": "89b4d048baf110fa7a53a2cbf0e6160b0854cf74d71fbf32627464d49404f270",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-apply-result.json",
+        "sourceSha256": "89b4d048baf110fa7a53a2cbf0e6160b0854cf74d71fbf32627464d49404f270",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-apply.txt",
+      "bytes": 15984,
+      "sha256": "4e9efaf01712085232d38c82d06e42a75dc766e1e487d7abd554f99e2bec7f3c",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-apply.txt",
+        "sourceSha256": "4e9efaf01712085232d38c82d06e42a75dc766e1e487d7abd554f99e2bec7f3c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-before.json",
+      "bytes": 703,
+      "sha256": "e08dbf1ca8d1dbbf2f2e959128777a3b907b6cda2232b54756ee6f4040773853",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-before.json",
+        "sourceSha256": "2afefd443543205c5ead7c42ad33bea5a3207c12da85fc54c8b229254202e631",
+        "transformation": "omit unrelated VM inventory; preserve owned experiment VMs"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-dry-run.json",
+      "bytes": 106,
+      "sha256": "060b7231faf8d057efac8ff35e0bf5b887908fd7439abb37ef1649e5530eb429",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-dry-run.json",
+        "sourceSha256": "060b7231faf8d057efac8ff35e0bf5b887908fd7439abb37ef1649e5530eb429",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-dry-run.txt",
+      "bytes": 15990,
+      "sha256": "2acb69fc1b562c9e2bf1e42081e558f4f866c1c024823d031d98a8f985add076",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-dry-run.txt",
+        "sourceSha256": "2acb69fc1b562c9e2bf1e42081e558f4f866c1c024823d031d98a8f985add076",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-maintenance.json",
+      "bytes": 345,
+      "sha256": "fe682ec0b750f99ed6e6c10350ce73b553bede9b0b8f11c9369ad3bcc4b3862f",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-maintenance.json",
+        "sourceSha256": "fe682ec0b750f99ed6e6c10350ce73b553bede9b0b8f11c9369ad3bcc4b3862f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-plan.json",
+      "bytes": 394,
+      "sha256": "81a665f52e4e6570214f84b0999f5f780ee796e3a9c01a1e65d003099759c884",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-plan.json",
+        "sourceSha256": "81a665f52e4e6570214f84b0999f5f780ee796e3a9c01a1e65d003099759c884",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-profiles.txt",
+      "bytes": 293,
+      "sha256": "cc6d481ad01b132ab4e5e163361e95d27fa79fdd19576439c95f25b39a65f1c5",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-profiles.txt",
+        "sourceSha256": "cc6d481ad01b132ab4e5e163361e95d27fa79fdd19576439c95f25b39a65f1c5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-reboot-request.json",
+      "bytes": 122,
+      "sha256": "b7f17398fd6d1c5eef5e044884a67f959ed501c87f8d14f118cd9dd3d2f44cfe",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-reboot-request.json",
+        "sourceSha256": "b7f17398fd6d1c5eef5e044884a67f959ed501c87f8d14f118cd9dd3d2f44cfe",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-upload.json",
+      "bytes": 98,
+      "sha256": "15ee36c2bd8b873b8dcf113d708ce52fe92db42a0ec9974b507a03458476254f",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-upload.json",
+        "sourceSha256": "15ee36c2bd8b873b8dcf113d708ce52fe92db42a0ec9974b507a03458476254f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91/upgrade-verified.json",
+      "bytes": 801,
+      "sha256": "580423fae2c15b52fe3f185f37510492f04d74af7adb072e04b6a48b1009d198",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "upgrade-verified.json",
+        "sourceSha256": "580423fae2c15b52fe3f185f37510492f04d74af7adb072e04b6a48b1009d198",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-activated.json",
+      "bytes": 273,
+      "sha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-activated.json",
+        "sourceSha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-config-a.json",
+      "bytes": 1160,
+      "sha256": "dfd84359b0e31e935f794f165e8dd6869b7dbfbaa61fc16719c7e896cb81c02c",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-config-a.json",
+        "sourceSha256": "dfd84359b0e31e935f794f165e8dd6869b7dbfbaa61fc16719c7e896cb81c02c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-config-b.json",
+      "bytes": 1160,
+      "sha256": "7db19df81842f20a307b01f2adc0d3f47d63a12b260135b631271ab62fa71688",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-config-b.json",
+        "sourceSha256": "7db19df81842f20a307b01f2adc0d3f47d63a12b260135b631271ab62fa71688",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-config-both.json",
+      "bytes": 1599,
+      "sha256": "5975584208a173b21c55fb736c64eabb6ae579b7c73080606c9d69678c01493c",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-config-both.json",
+        "sourceSha256": "5975584208a173b21c55fb736c64eabb6ae579b7c73080606c9d69678c01493c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-config-reverse.json",
+      "bytes": 1611,
+      "sha256": "9af076375b274797122774fd378848cc7b14e758f1a151f046ec3f4d29efb5d9",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-config-reverse.json",
+        "sourceSha256": "9af076375b274797122774fd378848cc7b14e758f1a151f046ec3f4d29efb5d9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-context-a.json",
+      "bytes": 6466,
+      "sha256": "fbd1a461db7669ae81b56084dd504dce5305391b8fd70d50e077a4aa5b17e86f",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-context-a.json",
+        "sourceSha256": "fbd1a461db7669ae81b56084dd504dce5305391b8fd70d50e077a4aa5b17e86f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-context-b.json",
+      "bytes": 6466,
+      "sha256": "935bf266dc7d15ef74bc926967cfb46ae848bda0dd40bf00d4a5ead0dbda29a6",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-context-b.json",
+        "sourceSha256": "935bf266dc7d15ef74bc926967cfb46ae848bda0dd40bf00d4a5ead0dbda29a6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-context-both.json",
+      "bytes": 8650,
+      "sha256": "e14f8aaa3f580dd8db7b6b7078838a6b8610c5bde977b945985a0e045201745c",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-context-both.json",
+        "sourceSha256": "e14f8aaa3f580dd8db7b6b7078838a6b8610c5bde977b945985a0e045201745c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-context-reverse.json",
+      "bytes": 8650,
+      "sha256": "13af36e283deb745eafcbc33580a7c537da49d2d1ebf7eef1536b7f01c624db9",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-context-reverse.json",
+        "sourceSha256": "13af36e283deb745eafcbc33580a7c537da49d2d1ebf7eef1536b7f01c624db9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-create-20261113-esxi8-to-esx91-nativepci-validation-v1-a.json",
+      "bytes": 318,
+      "sha256": "dbeea0ad13f8deaa8bf7c474f752b1310506147726495907a9bcf90a740925b9",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-create-20261113-esxi8-to-esx91-nativepci-validation-v1-a.json",
+        "sourceSha256": "dbeea0ad13f8deaa8bf7c474f752b1310506147726495907a9bcf90a740925b9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-create-20261113-esxi8-to-esx91-nativepci-validation-v1-b.json",
+      "bytes": 317,
+      "sha256": "7b23c3e3579b266af3098ce7e2787acdcfc76018e1353a4bdf81ecb35271d390",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-create-20261113-esxi8-to-esx91-nativepci-validation-v1-b.json",
+        "sourceSha256": "7b23c3e3579b266af3098ce7e2787acdcfc76018e1353a4bdf81ecb35271d390",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-create-20261113-esxi8-to-esx91-nativepci-validation-v1-both.json",
+      "bytes": 317,
+      "sha256": "1062e0d80208b47427f145b44688391961d71d840fe884e051623856788d5f93",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-create-20261113-esxi8-to-esx91-nativepci-validation-v1-both.json",
+        "sourceSha256": "1062e0d80208b47427f145b44688391961d71d840fe884e051623856788d5f93",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-create-20261113-esxi8-to-esx91-nativepci-validation-v1-reverse.json",
+      "bytes": 317,
+      "sha256": "1d56da3ae4e9eea0a0693e0f4078be155d49a5de79ecf7edb65cf97c5947a1ea",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-create-20261113-esxi8-to-esx91-nativepci-validation-v1-reverse.json",
+        "sourceSha256": "1d56da3ae4e9eea0a0693e0f4078be155d49a5de79ecf7edb65cf97c5947a1ea",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-exit-maintenance.json",
+      "bytes": 342,
+      "sha256": "14d35e3175866f92f657c28e86d416518c4335695b3d01d6607d1dfb52326b32",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-exit-maintenance.json",
+        "sourceSha256": "14d35e3175866f92f657c28e86d416518c4335695b3d01d6607d1dfb52326b32",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-function-0-config.txt",
+      "bytes": 4027,
+      "sha256": "2874c590c6881dd79984434707f1aaec3f1bae9889c1bab57d93b3958354e274",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-function-0-config.txt",
+        "sourceSha256": "2874c590c6881dd79984434707f1aaec3f1bae9889c1bab57d93b3958354e274",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-function-0-shareable.txt",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-function-0-shareable.txt",
+        "sourceSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-function-1-config.txt",
+      "bytes": 4027,
+      "sha256": "a019b28e9c86742d0f2b73766537d1deb48a14a077105db7a9c00cade3fac70a",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-function-1-config.txt",
+        "sourceSha256": "a019b28e9c86742d0f2b73766537d1deb48a14a077105db7a9c00cade3fac70a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-function-1-shareable.txt",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-function-1-shareable.txt",
+        "sourceSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-host-before.json",
+      "bytes": 997,
+      "sha256": "2dc7be9f0e219f65b4b08527efeac17b1dbe1f8586f015c9683add6793531a44",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-host-before.json",
+        "sourceSha256": "46c86e39287a55b01a4846d53f91ee2ff62005cb15f584230b5cb1af73a0e411",
+        "transformation": "omit unrelated VM inventory; preserve owned experiment VMs"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-initial-context.json",
+      "bytes": 1871,
+      "sha256": "f4c43ebdb07167df1c2c958bfd5729b0299679188b39bd1c43cb524ca7ccdfdc",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-initial-context.json",
+        "sourceSha256": "f4c43ebdb07167df1c2c958bfd5729b0299679188b39bd1c43cb524ca7ccdfdc",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-map.txt",
+      "bytes": 2045,
+      "sha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-map.txt",
+        "sourceSha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-off-a.json",
+      "bytes": 325,
+      "sha256": "f2575a9d1e4737f520c4e3cf2824dcd221865325431b4e8ae925560b5c58a102",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-off-a.json",
+        "sourceSha256": "f2575a9d1e4737f520c4e3cf2824dcd221865325431b4e8ae925560b5c58a102",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-off-b.json",
+      "bytes": 325,
+      "sha256": "18066b4d577da8f787111e752f5d19ba60fbd2a453ff8ede651ba38249da41d8",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-off-b.json",
+        "sourceSha256": "18066b4d577da8f787111e752f5d19ba60fbd2a453ff8ede651ba38249da41d8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-pci.txt",
+      "bytes": 8953,
+      "sha256": "b42b0f7fdda2cacf3cc6452251fa2a334399e09a370ce800997df51572b1895c",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-pci.txt",
+        "sourceSha256": "b42b0f7fdda2cacf3cc6452251fa2a334399e09a370ce800997df51572b1895c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-power-a.json",
+      "bytes": 1931,
+      "sha256": "0bc9ecd05aa5f8f27a0fdc46b2ba021b86380b74a5d92b075b0b2cce63d6412c",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-power-a.json",
+        "sourceSha256": "0bc9ecd05aa5f8f27a0fdc46b2ba021b86380b74a5d92b075b0b2cce63d6412c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-power-b.json",
+      "bytes": 1931,
+      "sha256": "f3116fd62a688555b558a6023e159862a9718c4c38ea1370ab8b6b259f015ae1",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-power-b.json",
+        "sourceSha256": "f3116fd62a688555b558a6023e159862a9718c4c38ea1370ab8b6b259f015ae1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-power-both.json",
+      "bytes": 4884,
+      "sha256": "8aca364c67d76d95c7c91ec8c77961e97e402151815213c7ae46be98080a5649",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-power-both.json",
+        "sourceSha256": "8aca364c67d76d95c7c91ec8c77961e97e402151815213c7ae46be98080a5649",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-power-reverse.json",
+      "bytes": 4900,
+      "sha256": "04e98b9dff4f370d6e770a6b5abef2ebc8720258b29646b44f58c61dbe50b723",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-power-reverse.json",
+        "sourceSha256": "04e98b9dff4f370d6e770a6b5abef2ebc8720258b29646b44f58c61dbe50b723",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/esx91-nativepci-results.json",
+      "bytes": 824,
+      "sha256": "2ea897767a1b07fcacfd560ca2e18153ff3ca61de98502ea3d3b965a1f6085ce",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-results.json",
+        "sourceSha256": "2ea897767a1b07fcacfd560ca2e18153ff3ca61de98502ea3d3b965a1f6085ce",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/finish-host-state.json",
+      "bytes": 4961,
+      "sha256": "f685ff86bf732c22748aa3e6a180af0f7ed33e7d2377d5a5506085c7a35d7a78",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "finish-host-state.json",
+        "sourceSha256": "0e1c8211885df307813211a248abedf559325203cba87f564b9e8a222e097021",
+        "transformation": "omit unrelated VM inventory; preserve owned experiment VMs"
+      }
+    },
+    {
+      "path": "raw/esx91-native/finish-maintenance.json",
+      "bytes": 345,
+      "sha256": "97ef3e7a98bf041f9aabcd71fdcf454d437810beb00b0f3486d37a185ce3c28c",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "finish-maintenance.json",
+        "sourceSha256": "97ef3e7a98bf041f9aabcd71fdcf454d437810beb00b0f3486d37a185ce3c28c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/finish-parent-integrity.json",
+      "bytes": 470,
+      "sha256": "55ace31ae08671f590febe1739acabdb347cf14e05ca4d86b16958d8d790adec",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "finish-parent-integrity.json",
+        "sourceSha256": "55ace31ae08671f590febe1739acabdb347cf14e05ca4d86b16958d8d790adec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/finish-runtime.json",
+      "bytes": 654,
+      "sha256": "8879d622b4294beccdcc8ec52fb1862d43d093d1f7711a30be9e64008448ecba",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "finish-runtime.json",
+        "sourceSha256": "8879d622b4294beccdcc8ec52fb1862d43d093d1f7711a30be9e64008448ecba",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/finish-shutdown-request.json",
+      "bytes": 123,
+      "sha256": "4c832ab96e1c95419830d9e86430830635d684c59e42879d6855082d7e9a245e",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "finish-shutdown-request.json",
+        "sourceSha256": "4c832ab96e1c95419830d9e86430830635d684c59e42879d6855082d7e9a245e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/latest-memory-preflight.json",
+      "bytes": 224,
+      "sha256": "a04f0d80f3e04523a04d0677875ea8c6ddbf7fb58f064e96e6266e6326cc415a",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "latest-memory-preflight.json",
+        "sourceSha256": "a04f0d80f3e04523a04d0677875ea8c6ddbf7fb58f064e96e6266e6326cc415a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/manifest.json",
+      "bytes": 6038,
+      "sha256": "71f084d981a538fed6b42419557a8fcbac4df2d5c64a425df620ebb4b0f6cf5c",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "manifest.json",
+        "sourceSha256": "71f084d981a538fed6b42419557a8fcbac4df2d5c64a425df620ebb4b0f6cf5c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/resume-runtime.json",
+      "bytes": 4151,
+      "sha256": "df49035d8f10c9ec2de87361c4b763914858b181e39e9e132699a04ce46437a9",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "resume-runtime.json",
+        "sourceSha256": "df49035d8f10c9ec2de87361c4b763914858b181e39e9e132699a04ce46437a9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/upgrade-plan.json",
+      "bytes": 331,
+      "sha256": "d114c09f425aa8b449a390ae6483ae91316c9cd870fe597076e90cb970ae17d3",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "upgrade-plan.json",
+        "sourceSha256": "d114c09f425aa8b449a390ae6483ae91316c9cd870fe597076e90cb970ae17d3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/esx91-native/upgrade-verified.json",
+      "bytes": 801,
+      "sha256": "eff6ebb2ad65ee02a6afc7188926efeb4cd23af8a618c575ddf035a5886af583",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "upgrade-verified.json",
+        "sourceSha256": "eff6ebb2ad65ee02a6afc7188926efeb4cd23af8a618c575ddf035a5886af583",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/resource-restored.json",
+      "bytes": 120,
+      "sha256": "5d068201c36881d4ffac584e8f03e5deb6b046b11f798e66bb15d9e065880a79",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "resource-restored.json",
+        "sourceSha256": "9ae30fcd68c97e777a6cf8856de491c6db09bf959d3d25d5ab888b7ee6510a45",
+        "transformation": "omit pre-existing host VM identity; retain resource-state receipt"
+      }
+    },
+    {
+      "path": "raw/u3k/finish-host-state.json",
+      "bytes": 4817,
+      "sha256": "7aa2de2c8248b7698aa7cd92b28cd3ac9845676594b8a8f7da0b202cbbb27269",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "finish-host-state.json",
+        "sourceSha256": "5434ae98fd13cae60aec0278bbce1e3714d826757b73787bad420afa44f6767f",
+        "transformation": "omit unrelated VM inventory; preserve owned experiment VMs"
+      }
+    },
+    {
+      "path": "raw/u3k/finish-maintenance.json",
+      "bytes": 351,
+      "sha256": "01cb3c3748774afd8b72c55f0c43bc423b1e583e94368653ea206f69b12395a9",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "finish-maintenance.json",
+        "sourceSha256": "01cb3c3748774afd8b72c55f0c43bc423b1e583e94368653ea206f69b12395a9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/finish-runtime.json",
+      "bytes": 654,
+      "sha256": "121d3d1d685a5ddf0447f270b3aca4ee84b98e784f7adf81df48504c8f6e04bb",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "finish-runtime.json",
+        "sourceSha256": "121d3d1d685a5ddf0447f270b3aca4ee84b98e784f7adf81df48504c8f6e04bb",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/finish-shutdown-request.json",
+      "bytes": 130,
+      "sha256": "1d336fa4af42343c5c14c27a2ac0447f78bd530e5cac646656696369066ba1df",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "finish-shutdown-request.json",
+        "sourceSha256": "1d336fa4af42343c5c14c27a2ac0447f78bd530e5cac646656696369066ba1df",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/latest-memory-preflight.json",
+      "bytes": 224,
+      "sha256": "7db2e8efc05e8f86c1170889417da0d85d22a089eb18a5e10038927b02d30a36",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "latest-memory-preflight.json",
+        "sourceSha256": "7db2e8efc05e8f86c1170889417da0d85d22a089eb18a5e10038927b02d30a36",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/manifest.json",
+      "bytes": 5374,
+      "sha256": "551122a0905ca8bbbac922ca07478ec2924d9afd3c8ee9a4cc85ef9b423b3d42",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "manifest.json",
+        "sourceSha256": "551122a0905ca8bbbac922ca07478ec2924d9afd3c8ee9a4cc85ef9b423b3d42",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/readiness.json",
+      "bytes": 1693,
+      "sha256": "f4cee8fb88329bda0b3445816c371fc55413ee80cab98954e3e10f286d606b14",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "readiness.json",
+        "sourceSha256": "f4cee8fb88329bda0b3445816c371fc55413ee80cab98954e3e10f286d606b14",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-activated.json",
+      "bytes": 273,
+      "sha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-activated.json",
+        "sourceSha256": "7989deea73420a94384f95f1943d156b866d2034cebcf774dc9674f13dd48244",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-config-a.json",
+      "bytes": 1132,
+      "sha256": "5bd2fbe47ca88c16c31f9d566556e4cc4e7fdfc55804bb9bb57306b265c22fc8",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-config-a.json",
+        "sourceSha256": "5bd2fbe47ca88c16c31f9d566556e4cc4e7fdfc55804bb9bb57306b265c22fc8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-config-b.json",
+      "bytes": 1132,
+      "sha256": "b2c26c00aa7bb2ff52f73415db83fff063589bcd37f0b354909405c02ca28ad5",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-config-b.json",
+        "sourceSha256": "b2c26c00aa7bb2ff52f73415db83fff063589bcd37f0b354909405c02ca28ad5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-config-both.json",
+      "bytes": 1570,
+      "sha256": "8b9fd14be1f16b6d7428c3b327834950750356bf73a709799e6cbd039aa3323f",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-config-both.json",
+        "sourceSha256": "8b9fd14be1f16b6d7428c3b327834950750356bf73a709799e6cbd039aa3323f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-config-reverse.json",
+      "bytes": 1580,
+      "sha256": "503f15d1317d7ea3531af4aec5b1ee2ea41122e071f2858cb9170236fd282738",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-config-reverse.json",
+        "sourceSha256": "503f15d1317d7ea3531af4aec5b1ee2ea41122e071f2858cb9170236fd282738",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-context-a.json",
+      "bytes": 6466,
+      "sha256": "e150fe77f5a6ce336cea2d8b2c5116d5b4415e2f0c494ff4ed1e5b28e21e2380",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-context-a.json",
+        "sourceSha256": "e150fe77f5a6ce336cea2d8b2c5116d5b4415e2f0c494ff4ed1e5b28e21e2380",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-context-b.json",
+      "bytes": 6466,
+      "sha256": "4160a2b9b2352e0f99ed3df9ce926bf163002fbc47790cbf0cc0507003fd8ea8",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-context-b.json",
+        "sourceSha256": "4160a2b9b2352e0f99ed3df9ce926bf163002fbc47790cbf0cc0507003fd8ea8",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-context-both.json",
+      "bytes": 8650,
+      "sha256": "9f3bd006dfbba2b7710e034941e5da477c5da7887b39213e916b1f0564fc616e",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-context-both.json",
+        "sourceSha256": "9f3bd006dfbba2b7710e034941e5da477c5da7887b39213e916b1f0564fc616e",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-context-reverse.json",
+      "bytes": 8650,
+      "sha256": "21f745134c5dcc583538206b718d508fb4410f244e5e8228a952d18feafad6c3",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-context-reverse.json",
+        "sourceSha256": "21f745134c5dcc583538206b718d508fb4410f244e5e8228a952d18feafad6c3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-create-20261113-esxi8-u3k-alias-validation-v1-a.json",
+      "bytes": 325,
+      "sha256": "e38dadaf83a8663a4d695d2319b3bf25d65dd4a9bae44bd945a83ffef5aa9098",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-create-20261113-esxi8-u3k-alias-validation-v1-a.json",
+        "sourceSha256": "e38dadaf83a8663a4d695d2319b3bf25d65dd4a9bae44bd945a83ffef5aa9098",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-create-20261113-esxi8-u3k-alias-validation-v1-b.json",
+      "bytes": 325,
+      "sha256": "1f10732bab0053a48c6df7553afc2a470263b70ac7a39d4f3cbd7fb03f944e37",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-create-20261113-esxi8-u3k-alias-validation-v1-b.json",
+        "sourceSha256": "1f10732bab0053a48c6df7553afc2a470263b70ac7a39d4f3cbd7fb03f944e37",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-create-20261113-esxi8-u3k-alias-validation-v1-both.json",
+      "bytes": 325,
+      "sha256": "36005b5420cdcc39820920cd3d77e144cdba457ac6bc48114fe9b6b59ac3d68f",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-create-20261113-esxi8-u3k-alias-validation-v1-both.json",
+        "sourceSha256": "36005b5420cdcc39820920cd3d77e144cdba457ac6bc48114fe9b6b59ac3d68f",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-create-20261113-esxi8-u3k-alias-validation-v1-reverse.json",
+      "bytes": 323,
+      "sha256": "fd1d135bc1353358e96c51e6dfe2beee92a60b824b9233447d81ca243c3a87e5",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-create-20261113-esxi8-u3k-alias-validation-v1-reverse.json",
+        "sourceSha256": "fd1d135bc1353358e96c51e6dfe2beee92a60b824b9233447d81ca243c3a87e5",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-exit-maintenance.json",
+      "bytes": 349,
+      "sha256": "9e04f129482c115ae5a9621f0084ddd715eb1426b4cca0a90dac59204959b4e2",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-exit-maintenance.json",
+        "sourceSha256": "9e04f129482c115ae5a9621f0084ddd715eb1426b4cca0a90dac59204959b4e2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-function-0-config.txt",
+      "bytes": 4027,
+      "sha256": "ec72d831c86a330c3fc2ef6b285a640d0e9623870eda24067ce2312724be54d2",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-function-0-config.txt",
+        "sourceSha256": "ec72d831c86a330c3fc2ef6b285a640d0e9623870eda24067ce2312724be54d2",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-function-0-shareable.txt",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-function-0-shareable.txt",
+        "sourceSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-function-1-config.txt",
+      "bytes": 4027,
+      "sha256": "a6fe167b72dd304c71ba55037e6cf3cdc7648870adcff316dde80e821c2ed7e0",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-function-1-config.txt",
+        "sourceSha256": "a6fe167b72dd304c71ba55037e6cf3cdc7648870adcff316dde80e821c2ed7e0",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-function-1-shareable.txt",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-function-1-shareable.txt",
+        "sourceSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-host-before.json",
+      "bytes": 993,
+      "sha256": "8b6bd4cd40bac1a622997158e8fa1bc000c030e3ef41983c938f45b969de3c4f",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-host-before.json",
+        "sourceSha256": "b138ec02d4d4e6e574c4e8228095b1b15698b22677f05c9c394f38f1b7ff5bcb",
+        "transformation": "omit unrelated VM inventory; preserve owned experiment VMs"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-initial-context.json",
+      "bytes": 1871,
+      "sha256": "fcdad6d5e639d9ae2b2807d76894f226b8fd2111ba9d1c44a92682f1104f7287",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-initial-context.json",
+        "sourceSha256": "fcdad6d5e639d9ae2b2807d76894f226b8fd2111ba9d1c44a92682f1104f7287",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-map.txt",
+      "bytes": 2045,
+      "sha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-map.txt",
+        "sourceSha256": "b23c96b6230f35d3cbce0189979e1574dca4e657ea1e45d804d3f6d87df9bfec",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-off-a.json",
+      "bytes": 331,
+      "sha256": "f5f913d561ee58469bb959195c7916eec1ee9e1a23396d67bb9623a762a334ed",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-off-a.json",
+        "sourceSha256": "f5f913d561ee58469bb959195c7916eec1ee9e1a23396d67bb9623a762a334ed",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-off-b.json",
+      "bytes": 332,
+      "sha256": "cfc8e65385d9a4c4cc1fd71057471c8889435a4cfa06894a4a3b449e02162cd1",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-off-b.json",
+        "sourceSha256": "cfc8e65385d9a4c4cc1fd71057471c8889435a4cfa06894a4a3b449e02162cd1",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-pci.txt",
+      "bytes": 9005,
+      "sha256": "4e960e4a8f14ade492ff965c560672334d4e5d4362d4e3c345f1836272f2c6bb",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-pci.txt",
+        "sourceSha256": "4e960e4a8f14ade492ff965c560672334d4e5d4362d4e3c345f1836272f2c6bb",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-power-a.json",
+      "bytes": 1866,
+      "sha256": "3ac450f845ac563237ad131d31bdc703a3c7560117e7977adb7e921f816ccb03",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-power-a.json",
+        "sourceSha256": "3ac450f845ac563237ad131d31bdc703a3c7560117e7977adb7e921f816ccb03",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-power-b.json",
+      "bytes": 1866,
+      "sha256": "69e5faf1f42c8c41714c2d1876371a858480edceb5429efa5c1c653c92c3f981",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-power-b.json",
+        "sourceSha256": "69e5faf1f42c8c41714c2d1876371a858480edceb5429efa5c1c653c92c3f981",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-power-both.json",
+      "bytes": 4186,
+      "sha256": "933212440ee1d7c1a703b5c79558ea5a566d712909f6e6ee6ba89a0147ef1889",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-power-both.json",
+        "sourceSha256": "933212440ee1d7c1a703b5c79558ea5a566d712909f6e6ee6ba89a0147ef1889",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-power-reverse.json",
+      "bytes": 4210,
+      "sha256": "933fd165bb8449e9b8aea3660d7424bda10f092171031482205837a713ec35ff",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-power-reverse.json",
+        "sourceSha256": "933fd165bb8449e9b8aea3660d7424bda10f092171031482205837a713ec35ff",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/u3k-default-results.json",
+      "bytes": 824,
+      "sha256": "bfe6443d131433d431dfd10fac998c938f5c68fbba05c5eabda0083b6950d08a",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-results.json",
+        "sourceSha256": "bfe6443d131433d431dfd10fac998c938f5c68fbba05c5eabda0083b6950d08a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-apply-intent.json",
+      "bytes": 301,
+      "sha256": "e92985fb6d311fd73d330575e8592b466fbdc168563ec6c2977df260ac76d479",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-apply-intent.json",
+        "sourceSha256": "e92985fb6d311fd73d330575e8592b466fbdc168563ec6c2977df260ac76d479",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-apply-result.json",
+      "bytes": 66,
+      "sha256": "d77ec9fc2eb41efbc539999f99d834e58e84e2ad579ac8e14280d05c7eeb090a",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-apply-result.json",
+        "sourceSha256": "d77ec9fc2eb41efbc539999f99d834e58e84e2ad579ac8e14280d05c7eeb090a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-apply.txt",
+      "bytes": 10939,
+      "sha256": "7bd8ff9d5fb1242891f21d103e4f7b5ae0e5cb77f8c2ebdd00821dcf74f97172",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-apply.txt",
+        "sourceSha256": "7bd8ff9d5fb1242891f21d103e4f7b5ae0e5cb77f8c2ebdd00821dcf74f97172",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-before.json",
+      "bytes": 703,
+      "sha256": "2834e96d203cfbed97eed17eb2d6de0eb28d811562858c590b3e61b0724839f7",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-before.json",
+        "sourceSha256": "b5ced53dd2da9aede192411f063c6a20d43d9445008d50afac2c16a04eece512",
+        "transformation": "omit unrelated VM inventory; preserve owned experiment VMs"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-dry-run.json",
+      "bytes": 106,
+      "sha256": "94c51e9f95791cd9a7f9af1d9b625c2aae4e92be22241de554f2320a24340a27",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-dry-run.json",
+        "sourceSha256": "94c51e9f95791cd9a7f9af1d9b625c2aae4e92be22241de554f2320a24340a27",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-dry-run.txt",
+      "bytes": 10945,
+      "sha256": "bcf181a220fe7e0f5ba4e90ffafa2a8eb3f9a55772364e4682167c1bd617d8c3",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-dry-run.txt",
+        "sourceSha256": "bcf181a220fe7e0f5ba4e90ffafa2a8eb3f9a55772364e4682167c1bd617d8c3",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-maintenance.json",
+      "bytes": 352,
+      "sha256": "afc7c1341aa5388e2b6c918516541b6c68301832bec4d95629895a743d21e15a",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-maintenance.json",
+        "sourceSha256": "afc7c1341aa5388e2b6c918516541b6c68301832bec4d95629895a743d21e15a",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-plan.json",
+      "bytes": 387,
+      "sha256": "96c4ef619a05095d2156ef45a0f2e2d78973d5c0897cb8c864df2c0850b9c711",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-plan.json",
+        "sourceSha256": "96c4ef619a05095d2156ef45a0f2e2d78973d5c0897cb8c864df2c0850b9c711",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-profiles.txt",
+      "bytes": 290,
+      "sha256": "a729a00bdc9adc3a7f81008006d2b774e3c621d37e243c09ee3529d66f6c64ce",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-profiles.txt",
+        "sourceSha256": "a729a00bdc9adc3a7f81008006d2b774e3c621d37e243c09ee3529d66f6c64ce",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-reboot-request.json",
+      "bytes": 128,
+      "sha256": "0b61ecd0baf20224b5382b71e35cd00162cd6a07fc8e251b562797ca79d510c4",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-reboot-request.json",
+        "sourceSha256": "0b61ecd0baf20224b5382b71e35cd00162cd6a07fc8e251b562797ca79d510c4",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-upload.json",
+      "bytes": 98,
+      "sha256": "c4278e89ba6eb7e34fe735d12f62fc9a71577b0c9d9770c74549f5566b8623c6",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-upload.json",
+        "sourceSha256": "c4278e89ba6eb7e34fe735d12f62fc9a71577b0c9d9770c74549f5566b8623c6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "raw/u3k/upgrade-verified.json",
+      "bytes": 801,
+      "sha256": "9ef398beb7964f62b24c118c8577296bc4abc56584911a5e3d1a460d6e4efea9",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "upgrade-verified.json",
+        "sourceSha256": "9ef398beb7964f62b24c118c8577296bc4abc56584911a5e3d1a460d6e4efea9",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 11215,
+      "sha256": "a206fad96aab4c2396bdde55c632c12ffd240786042321c4d0a12209f085a3cc",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    },
+    {
+      "path": "source-snapshots/apply_esx91_upgrade.py.txt",
+      "bytes": 3121,
+      "sha256": "aebb1864457fcc70af5fc141882f904abe40893634ed378d0eddad63a5b4e632",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "apply_esx91_upgrade.py",
+        "sourceSha256": "aebb1864457fcc70af5fc141882f904abe40893634ed378d0eddad63a5b4e632",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/apply_u3k_upgrade.py.txt",
+      "bytes": 3078,
+      "sha256": "ef51bacbfcd042adb5517abd7b80040ad5acf1a290dda0a3838c5e6f67384659",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "apply_u3k_upgrade.py",
+        "sourceSha256": "ef51bacbfcd042adb5517abd7b80040ad5acf1a290dda0a3838c5e6f67384659",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/decode_registration_ops.py.txt",
+      "bytes": 1624,
+      "sha256": "98a0c008053e1098e94a0b73a8e466dfbd2f980ef8e526f944ea976989bdee6c",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "decode_registration_ops.py",
+        "sourceSha256": "98a0c008053e1098e94a0b73a8e466dfbd2f980ef8e526f944ea976989bdee6c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/download_esx91_bundle.py.txt",
+      "bytes": 2840,
+      "sha256": "d1be2fa5c82b26ec50f5c61482ac01da1e97725cfcb5a7cee9c2deaa8febddbe",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "download_esx91_bundle.py",
+        "sourceSha256": "d1be2fa5c82b26ec50f5c61482ac01da1e97725cfcb5a7cee9c2deaa8febddbe",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/download_u3k_bundle.py.txt",
+      "bytes": 2794,
+      "sha256": "ca140fdf9c662777361589fe25720a85f1c7cfebcb65f26adbc2af03f59a1db4",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "download_u3k_bundle.py",
+        "sourceSha256": "ca140fdf9c662777361589fe25720a85f1c7cfebcb65f26adbc2af03f59a1db4",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/esx91-executed-probe.py.txt",
+      "bytes": 8635,
+      "sha256": "5946c5984ed102f34c8de7caedc7692f12da44251b29a1432ef87c23180e2b6d",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-alias-validation-v1",
+        "sourceFile": "esx91-default-probe-source.py.txt",
+        "sourceSha256": "5946c5984ed102f34c8de7caedc7692f12da44251b29a1432ef87c23180e2b6d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/esx91-native-executed-probe.py.txt",
+      "bytes": 8884,
+      "sha256": "ae716bfac3cec3afd4b1f8dbfca884d56594b3ff091b90c48c8c1f2180c3e2f6",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-to-esx91-nativepci-validation-v1",
+        "sourceFile": "esx91-nativepci-probe-source.py.txt",
+        "sourceSha256": "ae716bfac3cec3afd4b1f8dbfca884d56594b3ff091b90c48c8c1f2180c3e2f6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/extract_version_modules.py.txt",
+      "bytes": 3428,
+      "sha256": "d5653861fe4f11d81780d8a6d07e69f92785817888fb325dcac0bc4ea75ad833",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "extract_version_modules.py",
+        "sourceSha256": "d5653861fe4f11d81780d8a6d07e69f92785817888fb325dcac0bc4ea75ad833",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/fetch_iso_modules.py.txt",
+      "bytes": 4463,
+      "sha256": "3d3b0b0573882d43d8f680285c61576a9de0e59189832fe0b8ec0447af54b4a6",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "fetch_iso_modules.py",
+        "sourceSha256": "3d3b0b0573882d43d8f680285c61576a9de0e59189832fe0b8ec0447af54b4a6",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/finish_bridge_runtime.py.txt",
+      "bytes": 1541,
+      "sha256": "38c88e5c5473a02e189aa8243a17db8b822e2eaaf5444bfaf3bd14c67fe60081",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "finish_bridge_runtime.py",
+        "sourceSha256": "38c88e5c5473a02e189aa8243a17db8b822e2eaaf5444bfaf3bd14c67fe60081",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/finish_version_lab.py.txt",
+      "bytes": 2637,
+      "sha256": "3a02ce69482f2365cd3e495abb6a97154dbe484f459e5b55cf51886b4c0b7320",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "finish_version_lab.py",
+        "sourceSha256": "3a02ce69482f2365cd3e495abb6a97154dbe484f459e5b55cf51886b4c0b7320",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/prepare_esx91_nativepci.py.txt",
+      "bytes": 3052,
+      "sha256": "23bf1b015fa638d029223ab80ac4c5854320bb8c8633802e1654aa89bac37852",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "prepare_esx91_nativepci.py",
+        "sourceSha256": "23bf1b015fa638d029223ab80ac4c5854320bb8c8633802e1654aa89bac37852",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/prepare_esx91_upgrade.py.txt",
+      "bytes": 3058,
+      "sha256": "dbd6bb83fefa5d27d3c4a0474b96d1f8b0e4420786341074dd5a96847230d8f7",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "prepare_esx91_upgrade.py",
+        "sourceSha256": "dbd6bb83fefa5d27d3c4a0474b96d1f8b0e4420786341074dd5a96847230d8f7",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/prepare_u3k_upgrade.py.txt",
+      "bytes": 3016,
+      "sha256": "61523ceff382c32ba112907acba35ed1bad8709763aad92f0dc4c3a7b4d8045c",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "prepare_u3k_upgrade.py",
+        "sourceSha256": "61523ceff382c32ba112907acba35ed1bad8709763aad92f0dc4c3a7b4d8045c",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/README.md",
+      "bytes": 2178,
+      "sha256": "1dab323d3596b81cd4b6c661daef251a7b97acdd5c7e281f014cdc1e3902c145",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    },
+    {
+      "path": "source-snapshots/u3k-executed-probe.py.txt",
+      "bytes": 8635,
+      "sha256": "5946c5984ed102f34c8de7caedc7692f12da44251b29a1432ef87c23180e2b6d",
+      "provenance": {
+        "sourceRun": "20261113-esxi8-u3k-alias-validation-v1",
+        "sourceFile": "u3k-default-probe-source.py.txt",
+        "sourceSha256": "5946c5984ed102f34c8de7caedc7692f12da44251b29a1432ef87c23180e2b6d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/verify_native_parent_images.py.txt",
+      "bytes": 914,
+      "sha256": "ea804e772d4e1c9257e78c51ce9948198a521718831c530118edca031f91e307",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "verify_native_parent_images.py",
+        "sourceSha256": "ea804e772d4e1c9257e78c51ce9948198a521718831c530118edca031f91e307",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/wait_esx91_upgrade.py.txt",
+      "bytes": 1764,
+      "sha256": "2f9a97e388da289aac8c02dd5379e036c45a2e352bf7f6afb725bb8ff918c719",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "wait_esx91_upgrade.py",
+        "sourceSha256": "2f9a97e388da289aac8c02dd5379e036c45a2e352bf7f6afb725bb8ff918c719",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "source-snapshots/wait_u3k_upgrade.py.txt",
+      "bytes": 1734,
+      "sha256": "acb3cbd3c63c0ac996b4a4471780acf9b1d9621befb10c21846b0afaf1daa47d",
+      "provenance": {
+        "sourceRun": "pci-bridge-cause-20261112",
+        "sourceFile": "wait_u3k_upgrade.py",
+        "sourceSha256": "acb3cbd3c63c0ac996b4a4471780acf9b1d9621befb10c21846b0afaf1daa47d",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "sources/esx91-download-receipt.json",
+      "bytes": 529,
+      "sha256": "4f0adda939812a7c7c652491479906ffbb37cd9471beb7e0f7b0afe0205e2f26",
+      "provenance": {
+        "sourceRun": "input",
+        "sourceFile": "download-receipt.json",
+        "sourceSha256": "4f0adda939812a7c7c652491479906ffbb37cd9471beb7e0f7b0afe0205e2f26",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "sources/media.json",
+      "bytes": 4874,
+      "sha256": "aaf69e6b1baed29846ee69b71229acd4697d558e66ab1adc6235ce5f44d6e201",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    },
+    {
+      "path": "sources/release-notes-review.json",
+      "bytes": 2886,
+      "sha256": "26ccd193d1407f4ee12f8b82eec004aff4eb3f7a1af5db40877f2d176b397124",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    },
+    {
+      "path": "sources/u3k-download-receipt.json",
+      "bytes": 527,
+      "sha256": "3ff056ad2822c3b29db5dc87da2dc57a0495746a349d8951bdc7c8c802748742",
+      "provenance": {
+        "sourceRun": "input",
+        "sourceFile": "download-receipt.json",
+        "sourceSha256": "3ff056ad2822c3b29db5dc87da2dc57a0495746a349d8951bdc7c8c802748742",
+        "transformation": "byte-identical copy"
+      }
+    },
+    {
+      "path": "static/24280767-guard.json",
+      "bytes": 808,
+      "sha256": "a90a3ba3dadc013c12a60d70febcf0ab46db4b4325feb72dc742aa1d339b778c",
+      "provenance": {
+        "sourceModuleSha256": "ca5e97d71c9360804c2b3d480e4272c52d0225efbe45fe0b359c739da41077ca",
+        "transformation": "read-only selected guard verification against the exact licensed module"
+      }
+    },
+    {
+      "path": "static/25433460-guard.json",
+      "bytes": 808,
+      "sha256": "fef54e73b33a0dff1d3322a14a16287e5321a2705a840473476cab9b1ca7c52a",
+      "provenance": {
+        "sourceModuleSha256": "47d5ac91f8c8e2ddc0b68ef2a8c145aa427ad6a99f0c863ed380091cc2fcc8ca",
+        "transformation": "read-only selected guard verification against the exact licensed module"
+      }
+    },
+    {
+      "path": "static/25595708-guard.json",
+      "bytes": 808,
+      "sha256": "a393a410aba360effa61d5cc422c55a0727e51dc6b63a53883c6b2fe2aea40a7",
+      "provenance": {
+        "sourceModuleSha256": "f5911caac9fa163786ce59a78bfc20284696d205b4a76c8180a141fd0214e089",
+        "transformation": "read-only selected guard verification against the exact licensed module"
+      }
+    },
+    {
+      "path": "static/registration-modes.json",
+      "bytes": 6817,
+      "sha256": "d21c590f5e0b9ce4fec42a9c8d7ff8d8307d9fa02cbd66267205de01f9de2e4a",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    },
+    {
+      "path": "summary.json",
+      "bytes": 2914,
+      "sha256": "2bd64bbc79450354de4149cae294a9e73fa462824873f9f27ce5ddefe207af2c",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    },
+    {
+      "path": "verify_bundle.py",
+      "bytes": 6809,
+      "sha256": "86d62bfc8c56462104b43c55debc8caa64861d485e5288134a1f007dc668234f",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    },
+    {
+      "path": "verify_guard_predicate.py",
+      "bytes": 4950,
+      "sha256": "4a6297ab4ed68d8780125fb5702b4ad4bf34bea871f3fc8baaf6349128fc75a1",
+      "provenance": {
+        "transformation": "authored report, metadata or offline verifier"
+      }
+    }
+  ]
+}

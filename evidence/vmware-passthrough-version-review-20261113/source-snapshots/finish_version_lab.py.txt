@@ -1,0 +1,31 @@
+import argparse,json,re,ssl,subprocess,sys,time
+from pathlib import Path
+sys.path.insert(0,'/mnt/e/Code/PCI/github-export/vmware-esxi8-lab')
+from esxi_passthru_capability import caveat_field,utc_now
+from pyVim.connect import SmartConnect,Disconnect
+from pyVmomi import vim
+import test_esxi_owner_activation as owner
+import test_esxi_dependency_interaction as lab
+p=argparse.ArgumentParser();p.add_argument('--run-id',required=True);args=p.parse_args();run=args.run_id
+assert run in {'20261113-esxi8-u3k-alias-validation-v1','20261113-esxi8-to-esx91-alias-validation-v1','20261113-esxi8-to-esx91-nativepci-validation-v1'}
+out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/run;lab.OUT=out;plan=json.loads((out/'upgrade-plan.json').read_text());manifest=json.loads((out/'manifest.json').read_text())
+pid=int((Path(manifest['state'])/'qemu.pid').read_text());assert run in Path(f'/proc/{pid}/cmdline').read_bytes().decode().split('\0')
+si=SmartConnect(host='172.31.91.10',user='root',pwd=caveat_field('esxi8-auto-codex-credentials','Password'),sslContext=ssl._create_unverified_context())
+try:
+    host=owner.inventory(si.RetrieveContent(),vim.HostSystem)[0]
+    assert host.hardware.systemInfo.uuid=='6a4e818a-51ce-7d7f-a21f-000c29abaf6d' and host.config.product.build==plan['targetBuild']
+    assert all(v.runtime.powerState=='poweredOff' for v in host.vm)
+    targets={'0000:02:01.0','0000:02:01.1'}
+    host.configManager.pciPassthruSystem.UpdatePassthruConfig(config=[vim.host.PciPassthruConfig(id=t,passthruEnabled=False,applyNow=True) for t in sorted(targets)])
+    pci=owner.passthru_state(host,targets);assert len(pci)==2 and all(not d['enabled'] and not d['active'] for d in pci)
+    lab.save('finish-host-state.json',{'at':utc_now(),'product':str(host.config.product),'pci':pci,'vms':[lab.vm_state(v) for v in host.vm]})
+    if not host.runtime.inMaintenanceMode:
+        task,_=lab.task_record(host.EnterMaintenanceMode_Task(timeout=60));lab.save('finish-maintenance.json',task);assert task['state']=='success'
+    task=host.ShutdownHost_Task(force=False);lab.save('finish-shutdown-request.json',{'at':utc_now(),'taskId':task._moId,'force':False});print('Normal API shutdown requested',flush=True)
+finally:Disconnect(si)
+for i in range(120):
+    path=Path(f'/proc/{pid}/cmdline')
+    if not path.exists() or run not in path.read_bytes().decode().split('\0'):break
+    time.sleep(2)
+else:raise RuntimeError('Normal shutdown not observed; inspect without forcing stop')
+subprocess.run(['python3','/mnt/c/Users/14190/Documents/ChatGPT/Misc/pci-bridge-cause-20261112/finish_bridge_runtime.py','--run-id',run],check=True)

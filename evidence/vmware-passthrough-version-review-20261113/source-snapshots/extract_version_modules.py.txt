@@ -1,0 +1,52 @@
+import argparse,gzip,hashlib,io,json,lzma,struct,sys
+from pathlib import Path
+def unpack(data):
+    if data.startswith(b'\x1f\x8b'):data=gzip.decompress(data)
+    if data.startswith(b'\xfd7zXZ\x00'):data=lzma.decompress(data,memlimit=512*1024*1024)
+    if data.startswith(b'\x28\xb5\x2f\xfd'):
+        sys.path.insert(0,str(Path(__file__).parent/'analysis-libs'))
+        import zstandard
+        chunks=[];total=0;rest=data
+        while rest.startswith(b'\x28\xb5\x2f\xfd'):
+            decoder=zstandard.ZstdDecompressor().decompressobj();chunk=decoder.decompress(rest)
+            assert decoder.eof,'Incomplete Zstandard frame'
+            total+=len(chunk);assert total<=512*1024*1024,'Unpacked module exceeds analysis limit'
+            chunks.append(chunk);rest=decoder.unused_data
+        if rest:print(json.dumps({'nonZstdTrailerBytes':len(rest),'trailerPrefix':rest[:24].hex(),'trailerSha256':hashlib.sha256(rest).hexdigest()}),flush=True)
+        data=b''.join(chunks)
+    return data
+def images_with(data,needle):
+    targets=[];start=0
+    while True:
+        at=data.find(needle,start)
+        if at<0:break
+        targets.append(at);start=at+1
+    start=0;result=[]
+    while targets:
+        off=data.find(b'\x7fELF',start)
+        if off<0:break
+        start=off+4
+        try:
+            h=struct.unpack_from('<16sHHIQQQIHHHHHH',data,off)
+            if h[0][:7]!=b'\x7fELF\x02\x01\x01' or h[2]!=62 or h[11]!=64 or not 0<h[12]<10000:continue
+            if off+h[6]+h[12]*64>len(data):continue
+            sections=[struct.unpack_from('<IIQQQQIIQQ',data,off+h[6]+i*64) for i in range(h[12])]
+            size=max([64,h[6]+h[12]*64]+[s[4]+s[5] for s in sections if s[1]!=8])
+            if not any(off<=p<off+size for p in targets) or off+size>len(data):continue
+            result.append((off,data[off:off+size]))
+        except (struct.error,OverflowError):continue
+    return result
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--label',required=True);args=p.parse_args();folder=Path(__file__).parent/'version-images'/args.label
+    source=json.loads((folder/'source.json').read_text());result={'label':args.label,'sourceBuild':source['bootConfig'].split('build=',1)[1].splitlines()[0],'files':[]}
+    kernel=unpack((folder/'k.b00').read_bytes());assert kernel.startswith(b'\x7fELF');(folder/'kernel.elf').write_bytes(kernel)
+    result['files'].append({'file':'kernel.elf','sha256':hashlib.sha256(kernel).hexdigest(),'bytes':len(kernel)})
+    data=unpack((folder/'sb.v00').read_bytes());matches=images_with(data,b'PCIPassthruRegisterDeviceInt')
+    assert len(matches)==1,'Expected one PCI passthrough module'
+    for off,image in matches:
+        (folder/'pcip.elf').write_bytes(image);result['files'].append({'file':'pcip.elf','archive':'sb.v00','archiveOffset':off,'sha256':hashlib.sha256(image).hexdigest(),'bytes':len(image),'hasOldWarning':b'Expected no IOMMU domain' in image})
+    data=unpack((folder/'vmx.v00').read_bytes());matches=images_with(data,b'Registered a PCI device for')
+    for i,(off,image) in enumerate(matches):
+        name='vmx-'+str(i)+'.elf';(folder/name).write_bytes(image);result['files'].append({'file':name,'archive':'vmx.v00','archiveOffset':off,'sha256':hashlib.sha256(image).hexdigest(),'bytes':len(image)})
+    (folder/'extraction.json').write_bytes((json.dumps(result,indent=2)+'\n').encode());print(json.dumps(result))
+if __name__=='__main__':main()

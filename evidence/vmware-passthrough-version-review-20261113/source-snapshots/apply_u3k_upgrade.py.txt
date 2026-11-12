@@ -1,0 +1,38 @@
+import argparse,json,re,shlex,ssl,sys
+from pathlib import Path
+sys.path.insert(0,'/mnt/e/Code/PCI/github-export/vmware-esxi8-lab')
+from esxi_passthru_capability import caveat_field,EsxiSsh,utc_now
+from pyVim.connect import SmartConnect,Disconnect
+from pyVmomi import vim
+import test_esxi_owner_activation as owner
+import test_esxi_dependency_interaction as lab
+p=argparse.ArgumentParser();p.add_argument('--profile',required=True);p.add_argument('--allow-hardware-warning',action='store_true');args=p.parse_args()
+assert re.fullmatch(r'[A-Za-z0-9_.-]+',args.profile)
+run='20261113-esxi8-u3k-alias-validation-v1';out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/run;lab.OUT=out
+plan=json.loads((out/'upgrade-plan.json').read_text());assert plan['runId']==run and plan['targetBuild']=='25595708'
+assert any(line.split() and line.split()[0]==args.profile for line in (out/'upgrade-profiles.txt').read_text().splitlines())
+assert not (out/'upgrade-apply-intent.json').exists(),'An update was already submitted; inspect its effect instead of retrying'
+secret=caveat_field('esxi8-auto-codex-credentials','Password');ssh=EsxiSsh('172.31.91.10',secret,retries=1)
+si=SmartConnect(host='172.31.91.10',user='root',pwd=secret,sslContext=ssl._create_unverified_context())
+try:
+    host=owner.inventory(si.RetrieveContent(),vim.HostSystem)[0]
+    assert host.hardware.systemInfo.uuid=='6a4e818a-51ce-7d7f-a21f-000c29abaf6d' and host.config.product.build==plan['fromBuild']
+    assert all(v.runtime.powerState=='poweredOff' for v in host.vm)
+    if not host.runtime.inMaintenanceMode:
+        task,_=lab.task_record(host.EnterMaintenanceMode_Task(timeout=60));lab.save('upgrade-maintenance.json',task);assert task['state']=='success'
+    command='esxcli software profile update -d '+shlex.quote(plan['remoteBundle'])+' -p '+shlex.quote(args.profile)
+    if args.allow_hardware_warning:command+=' --no-hardware-warning'
+    print('Running signed-profile dry run',flush=True)
+    dry=ssh.run(command+' --dry-run',check=False,timeout=600)
+    (out/'upgrade-dry-run.txt').write_text(dry.stdout+dry.stderr)
+    lab.save('upgrade-dry-run.json',{'at':utc_now(),'returncode':dry.returncode,'hardwareWarningAcknowledged':args.allow_hardware_warning})
+    assert dry.returncode==0,'Dry run failed; inspect the complete output'
+    lab.save('upgrade-apply-intent.json',{'at':utc_now(),'profile':args.profile,'command':command,'noSignatureCheckUsed':False,'oldBootTime':plan['oldBootTime']})
+    print('Applying verified signed-profile update',flush=True)
+    result=ssh.run(command,check=False,timeout=1200)
+    (out/'upgrade-apply.txt').write_text(result.stdout+result.stderr)
+    lab.save('upgrade-apply-result.json',{'at':utc_now(),'returncode':result.returncode})
+    assert result.returncode==0,'Update returned failure; inspect without retrying'
+    print('Profile update returned success; requesting normal reboot',flush=True)
+    task=host.RebootHost_Task(force=False);lab.save('upgrade-reboot-request.json',{'at':utc_now(),'taskId':task._moId,'force':False})
+finally:Disconnect(si)

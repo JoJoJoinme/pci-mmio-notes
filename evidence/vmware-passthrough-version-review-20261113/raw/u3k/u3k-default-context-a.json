@@ -1,0 +1,240 @@
+{
+  "polls": 36,
+  "changes": [
+    {
+      "at": "2026-11-12T16:42:38.903233+00:00",
+      "rtaddr": "0x10a08f000",
+      "gsts": "0xc7000000",
+      "translationEnabled": true,
+      "contexts": {
+        "00:05.0": {
+          "rootLow": "0x10ea3c001",
+          "present": true,
+          "contextAddress": "0x10ea3c280",
+          "low": "0x10a37b001",
+          "high": "0x102",
+          "domainId": 1,
+          "translationType": 0,
+          "pageTable": "0x10a37b000"
+        },
+        "00:08.0": {
+          "rootLow": "0x10ea3c001",
+          "present": false,
+          "contextAddress": "0x10ea3c400",
+          "low": "0x0",
+          "high": "0x0",
+          "domainId": 0,
+          "translationType": 0,
+          "pageTable": "0x0"
+        },
+        "01:00.0": {
+          "rootLow": "0x10ea3d001",
+          "present": true,
+          "contextAddress": "0x10ea3d000",
+          "low": "0x10a37b001",
+          "high": "0x102",
+          "domainId": 1,
+          "translationType": 0,
+          "pageTable": "0x10a37b000"
+        },
+        "01:00.1": {
+          "rootLow": "0x10ea3d001",
+          "present": false,
+          "contextAddress": "0x10ea3d010",
+          "low": "0x0",
+          "high": "0x0",
+          "domainId": 0,
+          "translationType": 0,
+          "pageTable": "0x0"
+        },
+        "02:00.0": {
+          "rootLow": "0x10ea3e001",
+          "present": true,
+          "contextAddress": "0x10ea3e000",
+          "low": "0x10a37b001",
+          "high": "0x102",
+          "domainId": 1,
+          "translationType": 0,
+          "pageTable": "0x10a37b000"
+        },
+        "02:01.0": {
+          "rootLow": "0x10ea3e001",
+          "present": true,
+          "contextAddress": "0x10ea3e080",
+          "low": "0x10a37b001",
+          "high": "0x102",
+          "domainId": 1,
+          "translationType": 0,
+          "pageTable": "0x10a37b000"
+        },
+        "02:01.1": {
+          "rootLow": "0x10ea3e001",
+          "present": true,
+          "contextAddress": "0x10ea3e090",
+          "low": "0x10a37b001",
+          "high": "0x102",
+          "domainId": 1,
+          "translationType": 0,
+          "pageTable": "0x10a37b000"
+        }
+      }
+    },
+    {
+      "at": "2026-11-12T16:42:44.014086+00:00",
+      "rtaddr": "0x10a08f000",
+      "gsts": "0xc7000000",
+      "translationEnabled": true,
+      "contexts": {
+        "00:05.0": {
+          "rootLow": "0x10ea3c001",
+          "present": true,
+          "contextAddress": "0x10ea3c280",
+          "low": "0x10a37b001",
+          "high": "0x102",
+          "domainId": 1,
+          "translationType": 0,
+          "pageTable": "0x10a37b000"
+        },
+        "00:08.0": {
+          "rootLow": "0x10ea3c001",
+          "present": false,
+          "contextAddress": "0x10ea3c400",
+          "low": "0x0",
+          "high": "0x0",
+          "domainId": 0,
+          "translationType": 0,
+          "pageTable": "0x0"
+        },
+        "01:00.0": {
+          "rootLow": "0x10ea3d001",
+          "present": true,
+          "contextAddress": "0x10ea3d000",
+          "low": "0x1800fc001",
+          "high": "0x202",
+          "domainId": 2,
+          "translationType": 0,
+          "pageTable": "0x1800fc000"
+        },
+        "01:00.1": {
+          "rootLow": "0x10ea3d001",
+          "present": false,
+          "contextAddress": "0x10ea3d010",
+          "low": "0x0",
+          "high": "0x0",
+          "domainId": 0,
+          "translationType": 0,
+          "pageTable": "0x0"
+        },
+        "02:00.0": {
+          "rootLow": "0x10ea3e001",
+          "present": true,
+          "contextAddress": "0x10ea3e000",
+          "low": "0x1800fc001",
+          "high": "0x202",
+          "domainId": 2,
+          "translationType": 0,
+          "pageTable": "0x1800fc000"
+        },
+        "02:01.0": {
+          "rootLow": "0x10ea3e001",
+          "present": true,
+          "contextAddress": "0x10ea3e080",
+          "low": "0x1800fc001",
+          "high": "0x202",
+          "domainId": 2,
+          "translationType": 0,
+          "pageTable": "0x1800fc000"
+        },
+        "02:01.1": {
+          "rootLow": "0x10ea3e001",
+          "present": true,
+          "contextAddress": "0x10ea3e090",
+          "low": "0x1800fc001",
+          "high": "0x202",
+          "domainId": 2,
+          "translationType": 0,
+          "pageTable": "0x1800fc000"
+        }
+      }
+    }
+  ],
+  "samplingErrors": [],
+  "after": {
+    "at": "2026-11-12T16:42:46.361797+00:00",
+    "rtaddr": "0x10a08f000",
+    "gsts": "0xc7000000",
+    "translationEnabled": true,
+    "contexts": {
+      "00:05.0": {
+        "rootLow": "0x10ea3c001",
+        "present": true,
+        "contextAddress": "0x10ea3c280",
+        "low": "0x10a37b001",
+        "high": "0x102",
+        "domainId": 1,
+        "translationType": 0,
+        "pageTable": "0x10a37b000"
+      },
+      "00:08.0": {
+        "rootLow": "0x10ea3c001",
+        "present": false,
+        "contextAddress": "0x10ea3c400",
+        "low": "0x0",
+        "high": "0x0",
+        "domainId": 0,
+        "translationType": 0,
+        "pageTable": "0x0"
+      },
+      "01:00.0": {
+        "rootLow": "0x10ea3d001",
+        "present": true,
+        "contextAddress": "0x10ea3d000",
+        "low": "0x1800fc001",
+        "high": "0x202",
+        "domainId": 2,
+        "translationType": 0,
+        "pageTable": "0x1800fc000"
+      },
+      "01:00.1": {
+        "rootLow": "0x10ea3d001",
+        "present": false,
+        "contextAddress": "0x10ea3d010",
+        "low": "0x0",
+        "high": "0x0",
+        "domainId": 0,
+        "translationType": 0,
+        "pageTable": "0x0"
+      },
+      "02:00.0": {
+        "rootLow": "0x10ea3e001",
+        "present": true,
+        "contextAddress": "0x10ea3e000",
+        "low": "0x1800fc001",
+        "high": "0x202",
+        "domainId": 2,
+        "translationType": 0,
+        "pageTable": "0x1800fc000"
+      },
+      "02:01.0": {
+        "rootLow": "0x10ea3e001",
+        "present": true,
+        "contextAddress": "0x10ea3e080",
+        "low": "0x1800fc001",
+        "high": "0x202",
+        "domainId": 2,
+        "translationType": 0,
+        "pageTable": "0x1800fc000"
+      },
+      "02:01.1": {
+        "rootLow": "0x10ea3e001",
+        "present": true,
+        "contextAddress": "0x10ea3e090",
+        "low": "0x1800fc001",
+        "high": "0x202",
+        "domainId": 2,
+        "translationType": 0,
+        "pageTable": "0x1800fc000"
+      }
+    }
+  }
+}

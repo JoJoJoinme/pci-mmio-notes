@@ -1,0 +1,40 @@
+import hashlib,json,re,urllib.parse,urllib.request
+from pathlib import Path
+from datetime import datetime,timezone
+from fetch_iso_modules import Links
+directory='https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/9.1/'
+filename='VMware-ESX-9.1.0.0100-25433460-LNV-S02-20260608.zip'
+out=Path(r'E:\Code\PCI\_artifacts\vmware-directpath-runs\20261113-esxi8-to-esx91-alias-validation-v1\input');out.mkdir(parents=True,exist_ok=True)
+opener=urllib.request.build_opener(urllib.request.ProxyHandler({'https':'http://127.0.0.1:7890','http':'http://127.0.0.1:7890'}))
+html=opener.open(directory,timeout=45).read().decode();links=Links();links.feed(html)
+urls={urllib.parse.urljoin(directory,h) for h in links.hrefs if urllib.parse.unquote(h).rsplit('/',1)[-1]==filename};assert len(urls)==1
+url=urls.pop();expected=None;checksum_url=None
+for href in links.hrefs:
+    if not href.endswith('sha1sum.txt'):continue
+    candidate=urllib.parse.urljoin(directory,href);text=opener.open(candidate,timeout=45).read().decode()
+    for line in text.splitlines():
+        if filename in line:
+            match=re.search(r'\b[0-9a-fA-F]{40}\b',line)
+            if match:expected=match.group().lower();checksum_url=candidate
+assert expected,'No vendor SHA-1 for the exact listed bundle'
+target=out/filename;partial=out/(filename+'.partial');assert not target.exists(),'Bundle already downloaded; verify existing receipt'
+start=partial.stat().st_size if partial.exists() else 0
+headers={'Accept-Encoding':'identity'}
+if start:headers['Range']=f'bytes={start}-'
+sha1=hashlib.sha1();sha256=hashlib.sha256()
+if start:
+    with partial.open('rb') as f:
+        for data in iter(lambda:f.read(1024*1024),b''):sha1.update(data);sha256.update(data)
+with opener.open(urllib.request.Request(url,headers=headers),timeout=60) as r:
+    assert r.status==(206 if start else 200),'Resume response mismatch'
+    expected_total=start+int(r.headers['Content-Length']);count=start;next_report=count+64*1024*1024
+    with partial.open('ab' if start else 'wb') as f:
+        while True:
+            data=r.read(1024*1024)
+            if not data:break
+            f.write(data);sha1.update(data);sha256.update(data);count+=len(data)
+            if count>=next_report:print(json.dumps({'downloadedMiB':count//1048576,'totalMiB':expected_total//1048576}),flush=True);next_report=count+64*1024*1024
+assert count==expected_total and sha1.hexdigest()==expected,'Vendor checksum validation failed'
+partial.rename(target)
+receipt={'at':datetime.now(timezone.utc).isoformat(),'url':url,'checksumUrl':checksum_url,'filename':filename,'bytes':count,'sha1':sha1.hexdigest(),'vendorSha1Matched':True,'sha256':sha256.hexdigest()}
+(out/'download-receipt.json').write_bytes((json.dumps(receipt,indent=2)+'\n').encode());print(json.dumps(receipt))

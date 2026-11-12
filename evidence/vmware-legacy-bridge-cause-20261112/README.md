@@ -4,6 +4,8 @@
 
 **机制根因已定位，修复尚未验证。** 同 build 静态检查进一步确认：登记的新旧判断按 SBDF，底层切域按别名桥子树生效；“新设备尚无客体域”的前提会被前一个成员的初始化破坏。厂商缺陷归类和物理平台适用范围仍未确认。完整 5 Why、静态核对与产品影响见[根因状态与产品意义](ROOT-CAUSE-STATUS.md)。
 
+2026-11-13 后续已实际升级并复核 ESXi 8.0 U3k / 25595708 与 ESX 9.1.0.0100 / 25433460，二者仍复现；9.1 原生 PCI e1000 控制也复现。新版汇编条件、任务回执与软件侧归因见[问题归因与新版本复核](../vmware-passthrough-version-review-20261113/README.md)。最新 9.1.1.0100 未测试，不能据此判断其修复状态。
+
 2026-11-12 的新控制实验把失败定位到 **ESXi 注册第二个 Function 时对已有 IOMMU 域的检查**。在第一个 Function 成功注册后，桥及两个 Function 的 VT-d context 已指向相同的域和页表；第二个 Function 随后反复报 `Expected no IOMMU domain ... got Success`，VM 开机回滚。这是本次 ESXi 8.0.3 build-24280767 与 QEMU 11.0.2 组合中的实际失败路径。
 
 这不等于“传统桥从原理上不能把两个设备交给同一台 VM”。共享请求者 ID 要求共同分配，本来就应由共享域实现。Broadcom 也明确要求桥后的 Functions 共同分配，但不推荐这类拓扑，推荐 PCIe root port 或 switch downstream port。[官方要求 KB 312208](https://knowledge.broadcom.com/external/article/312208)

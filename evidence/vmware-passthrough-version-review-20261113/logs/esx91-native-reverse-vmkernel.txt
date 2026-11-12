@@ -1,0 +1,10 @@
+Source run: 20261113-esxi8-to-esx91-nativepci-validation-v1
+Source file: esx91-nativepci-reverse-vmkernel.txt
+Source SHA-256: 443543385eb6dbde52fcab8c93de427fa13fbabaec98af7c29427316619a66bb
+Task window (UTC, milliseconds): 2026-11-12T17:15:37.276 to 2026-11-12T17:15:46.348
+Filter: PCIPassthru:.*(?:0000:02:01\.[01]|IOMMU)
+Matching lines: 2
+Selected original lines within the matching task time window.
+
+2487: 2026-11-12T17:15:41.981Z -WARNING vmkwarning - [esx@4413] cpu3:133471) PCIPassthru: 5808: Expected no IOMMU domain for 0000:02:01.0, got Success
+2488: 2026-11-12T17:15:46.005Z -INFO vmkernel - [esx@4413] cpu3:133471)PCIPassthru: 1834: Disable Domain for device 0000:02:01.1

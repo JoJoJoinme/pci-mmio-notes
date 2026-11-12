@@ -1,0 +1,35 @@
+import hashlib,json,os,shlex,ssl,subprocess,sys
+from pathlib import Path
+sys.path.insert(0,'/mnt/e/Code/PCI/github-export/vmware-esxi8-lab')
+from esxi_passthru_capability import caveat_field,EsxiSsh,utc_now
+from pyVim.connect import SmartConnect,Disconnect
+from pyVmomi import vim
+import test_esxi_owner_activation as owner
+import test_esxi_dependency_interaction as lab
+run='20261113-esxi8-to-esx91-alias-validation-v1';out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/run;lab.OUT=out
+manifest=json.loads((out/'manifest.json').read_text());state=Path(manifest['state']);pid=int((state/'qemu.pid').read_text());assert run in Path(f'/proc/{pid}/cmdline').read_bytes().decode().split('\0')
+receipt=json.loads((out/'input/download-receipt.json').read_text());assert receipt['vendorSha1Matched'];bundle=out/'input'/receipt['filename']
+h=hashlib.sha256()
+with bundle.open('rb') as f:
+    for data in iter(lambda:f.read(1024*1024),b''):h.update(data)
+assert h.hexdigest()==receipt['sha256']
+password=caveat_field('esxi8-auto-codex-credentials','Password');ssh=EsxiSsh('172.31.91.10',password,retries=1)
+si=SmartConnect(host='172.31.91.10',user='root',pwd=password,sslContext=ssl._create_unverified_context())
+try:
+    content=si.RetrieveContent();host=owner.inventory(content,vim.HostSystem)[0]
+    assert host.hardware.systemInfo.uuid=='6a4e818a-51ce-7d7f-a21f-000c29abaf6d' and host.config.product.build=='24280767'
+    assert all(v.runtime.powerState=='poweredOff' for v in host.vm)
+    ds=next(d for d in host.datastore if d.name=='pci-mmio-local');assert ds.summary.accessible and ds.summary.freeSpace>3*1024**3
+    lab.save('upgrade-before.json',{'at':utc_now(),'product':str(host.config.product),'bootTime':str(host.runtime.bootTime),'maintenance':host.runtime.inMaintenanceMode,'vms':[lab.vm_state(v) for v in host.vm]})
+    remote='/vmfs/volumes/pci-mmio-local/alias-esx91-offline.zip'
+    env=os.environ.copy();env['SSHPASS']=password
+    cmd=['sshpass','-e','scp','-O','-o','StrictHostKeyChecking=no','-o','UserKnownHostsFile=/dev/null','-o','LogLevel=ERROR',str(bundle),'root@172.31.91.10:'+remote]
+    print('Uploading verified offline bundle to isolated VMFS',flush=True)
+    copied=subprocess.run(cmd,env=env,capture_output=True,text=True,timeout=600)
+    lab.save('upgrade-upload.json',{'at':utc_now(),'returncode':copied.returncode,'stdout':copied.stdout,'stderr':copied.stderr});assert copied.returncode==0
+    digest=ssh.run('sha256sum '+shlex.quote(remote),timeout=120).stdout.split()[0];assert digest==receipt['sha256']
+    profiles=ssh.run('esxcli software sources profile list -d '+shlex.quote(remote),timeout=180)
+    (out/'upgrade-profiles.txt').write_text(profiles.stdout+profiles.stderr)
+    plan={'at':utc_now(),'runId':run,'fromBuild':'24280767','targetBuild':'25433460','oldBootTime':str(host.runtime.bootTime),'remoteBundle':remote,'sha256':digest,'profilesQueryExit':profiles.returncode}
+    lab.save('upgrade-plan.json',plan);print(profiles.stdout,flush=True)
+finally:Disconnect(si)

@@ -1,0 +1,3 @@
+Name                      Vendor        Acceptance Level  Creation Time        Modification Time
+------------------------  ------------  ----------------  -------------------  -----------------
+LVO_9.1.0.0-LVO.910.12.2  Lenovo, Inc.  PartnerSupported  2026-06-08T08:06:31  2026-06-08T08:06:31

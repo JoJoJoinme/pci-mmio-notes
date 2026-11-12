@@ -1,0 +1,14 @@
+import hashlib,json
+from pathlib import Path
+from datetime import datetime,timezone
+run='20261113-esxi8-to-esx91-nativepci-validation-v1';out=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs')/run
+assert json.loads((out/'finish-runtime.json').read_text())['qemuStopped']
+manifest=json.loads((out/'manifest.json').read_text());rows=[]
+for item in manifest['parentImages']:
+    path=Path(item['file']);h=hashlib.sha256()
+    with path.open('rb') as f:
+        for data in iter(lambda:f.read(4*1024*1024),b''):h.update(data)
+    rows.append({'file':path.name,'sha256':h.hexdigest(),'unchanged':h.hexdigest()==item['sha256']})
+assert all(x['unchanged'] for x in rows)
+result={'at':datetime.now(timezone.utc).isoformat(),'parentRun':manifest['parentRun'],'hashes':rows,'verifiedAfterChildShutdown':True}
+(out/'finish-parent-integrity.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))

@@ -1,0 +1,38 @@
+import hashlib,json,shutil,subprocess,time
+from pathlib import Path
+root=Path('/mnt/e/Code/PCI/_artifacts/vmware-directpath-runs');parent='20261113-esxi8-to-esx91-alias-validation-v1';run='20261113-esxi8-to-esx91-nativepci-validation-v1'
+previous=root/parent;out=root/run;state=Path('/root/vm')/run
+assert json.loads((previous/'finish-runtime.json').read_text())['qemuStopped']
+assert not state.exists(),'Do not replace an existing run state'
+source=json.loads((previous/'manifest.json').read_text());parent_state=Path(source['state'])
+out.mkdir(exist_ok=True);state.mkdir(mode=0o700)
+manifest={k:v for k,v in source.items() if k not in {'qemuPid','qemuArgv'}}
+manifest.update(runId=run,state=str(state),scope='ESX 9.1 native PCI e1000 control, same aliasing bridge and both multifunction flags',parentRun=parent)
+env=dict(source['launchEnvironment'])
+for key in ['QEMU_ESXI_NAME','QEMU_ESXI_VM_DIR','QEMU_ESXI_SYSTEM_DISK','QEMU_ESXI_DATASTORE_DISK','QEMU_ESXI_OVMF_VARS','QEMU_ESXI_QTEST_SOCKET']:
+    env[key]=env[key].replace(parent,run)
+env['QEMU_ESXI_TEST_FN0_MODEL']='e1000';env['QEMU_ESXI_TEST_FN1_MODEL']='e1000';manifest['launchEnvironment']=env
+manifest['parentImages']=[]
+for label in ['system','datastore']:
+    path=parent_state/(label+'.qcow2');h=hashlib.sha256()
+    with path.open('rb') as f:
+        for data in iter(lambda:f.read(4*1024*1024),b''):h.update(data)
+    manifest['parentImages'].append({'file':str(path),'sha256':h.hexdigest(),'readOnlyBacking':True})
+    subprocess.run(['qemu-img','create','-f','qcow2','-F','qcow2','-b',str(path),str(state/(label+'.qcow2'))],check=True)
+shutil.copyfile(parent_state/'OVMF_VARS.fd',state/'OVMF_VARS.fd');shutil.copyfile(parent_state/'launch.sh',state/'launch.sh')
+(out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+(out/'upgrade-plan.json').write_text(json.dumps({'runId':run,'fromBuild':'25433460','targetBuild':'25433460','oldBootTime':json.loads((previous/'upgrade-verified.json').read_text())['bootTime'],'origin':'read-only child of completed ESX 9.1 updated overlay; no second software update','parentRun':parent},indent=2)+'\n')
+for attempt in range(60):
+    r=subprocess.run(['python3','/mnt/e/Code/PCI/github-export/vmware-esxi8-lab/prepare_dependency_interaction_run.py','--resume','--run-id',run],capture_output=True,text=True)
+    print(r.stdout+r.stderr,flush=True)
+    if r.returncode==0:
+        runtime=json.loads((out/'resume-runtime.json').read_text());manifest.update(qemuPid=runtime['qemuPid'],qemuArgv=runtime['qemuArgv'],startedAt=runtime['at'])
+        (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+        break
+    if r.returncode!=3:raise RuntimeError('Native PCI resume failed')
+    time.sleep(5)
+else:raise RuntimeError('Native PCI memory readiness deadline')
+waiter=Path(__file__).with_name('wait_esx91_nativepci.py')
+template=Path(__file__).with_name('wait_esx91_upgrade.py').read_text();assert parent in template
+waiter.write_text(template.replace(parent,run))
+subprocess.run(['python3',str(waiter)],check=True)

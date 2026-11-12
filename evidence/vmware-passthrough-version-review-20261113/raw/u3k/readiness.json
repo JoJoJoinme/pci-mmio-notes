@@ -1,0 +1,56 @@
+{
+  "ready": true,
+  "at": "2026-11-12T16:31:42.832892+00:00",
+  "attempts": [
+    {
+      "at": "2026-11-12T16:29:51.608379+00:00",
+      "exit": 255,
+      "stderr": "ssh: connect to host 172.31.91.10 port 22: No route to host\n"
+    },
+    {
+      "at": "2026-11-12T16:30:04.696105+00:00",
+      "exit": 255,
+      "stderr": "ssh: connect to host 172.31.91.10 port 22: No route to host\n"
+    },
+    {
+      "at": "2026-11-12T16:30:17.783944+00:00",
+      "exit": 255,
+      "stderr": "ssh: connect to host 172.31.91.10 port 22: No route to host\n"
+    },
+    {
+      "at": "2026-11-12T16:30:30.872223+00:00",
+      "exit": 255,
+      "stderr": "ssh: connect to host 172.31.91.10 port 22: No route to host\n"
+    },
+    {
+      "at": "2026-11-12T16:30:43.960462+00:00",
+      "exit": 255,
+      "stderr": "ssh: connect to host 172.31.91.10 port 22: No route to host\n"
+    },
+    {
+      "at": "2026-11-12T16:30:57.049808+00:00",
+      "exit": 255,
+      "stderr": "ssh: connect to host 172.31.91.10 port 22: No route to host\n"
+    },
+    {
+      "at": "2026-11-12T16:31:10.168511+00:00",
+      "exit": 255,
+      "stderr": "ssh: connect to host 172.31.91.10 port 22: No route to host\n"
+    },
+    {
+      "at": "2026-11-12T16:31:20.223452+00:00",
+      "exit": 255,
+      "stderr": "ssh: connect to host 172.31.91.10 port 22: Connection refused\n"
+    },
+    {
+      "at": "2026-11-12T16:31:31.669547+00:00",
+      "exit": 255,
+      "stderr": "Failed to login: Connection refused: The remote service is not running, OR is overloaded, OR a firewall is rejecting connections.\n"
+    },
+    {
+      "at": "2026-11-12T16:31:42.819504+00:00",
+      "exit": 0,
+      "stderr": ""
+    }
+  ]
+}

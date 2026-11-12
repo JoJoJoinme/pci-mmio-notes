@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-12T16:24:27.337030+00:00",
+  "url": "https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/8.0u3/s/VMware-ESXi-8.0.3k-25595708-LNV-S15-20260825.zip",
+  "checksumUrl": "https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/8.0u3/s/sha1sum.txt",
+  "filename": "VMware-ESXi-8.0.3k-25595708-LNV-S15-20260825.zip",
+  "bytes": 675507679,
+  "sha1": "bf40ac08bb387fb31beda1800ec7d4fdc4b8211d",
+  "vendorSha1Matched": true,
+  "sha256": "96186a8904b71b4860019135835efc6a1d2ef72ef070a67ba5ee2676220b3394"
+}

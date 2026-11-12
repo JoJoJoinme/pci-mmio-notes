@@ -1,0 +1,41 @@
+Source run: 20261113-esxi8-u3k-alias-validation-v1
+Source file: u3k-default-reverse-vmkernel.txt
+Source SHA-256: 2ea4fc49e1ba532aa66f3d189b7f31d92143105da9d310fb3d3691b96e1d8b57
+Task window (UTC, milliseconds): 2026-11-12T16:42:18.383 to 2026-11-12T16:42:33.477
+Filter: PCIPassthru:.*(?:0000:02:01\.[01]|IOMMU)
+Matching lines: 33
+Selected original lines within the matching task time window.
+
+2209: 2026-11-12T16:42:19.335Z In(182) vmkernel: cpu0:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe016c0) allocated for 0000:02:01.1
+2278: 2026-11-12T16:42:23.369Z In(182) vmkernel: cpu0:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2279: 2026-11-12T16:42:23.369Z Wa(180) vmkwarning: cpu0:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2280: 2026-11-12T16:42:23.369Z In(182) vmkernel: cpu0:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2281: 2026-11-12T16:42:23.385Z In(182) vmkernel: cpu0:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2282: 2026-11-12T16:42:23.385Z Wa(180) vmkwarning: cpu0:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2283: 2026-11-12T16:42:23.385Z In(182) vmkernel: cpu0:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2284: 2026-11-12T16:42:23.415Z In(182) vmkernel: cpu0:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2285: 2026-11-12T16:42:23.415Z Wa(180) vmkwarning: cpu0:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2286: 2026-11-12T16:42:23.415Z In(182) vmkernel: cpu0:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2287: 2026-11-12T16:42:23.474Z In(182) vmkernel: cpu1:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2288: 2026-11-12T16:42:23.474Z Wa(180) vmkwarning: cpu1:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2289: 2026-11-12T16:42:23.474Z In(182) vmkernel: cpu1:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2296: 2026-11-12T16:42:23.592Z In(182) vmkernel: cpu1:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2297: 2026-11-12T16:42:23.592Z Wa(180) vmkwarning: cpu1:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2298: 2026-11-12T16:42:23.592Z In(182) vmkernel: cpu1:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2299: 2026-11-12T16:42:23.757Z In(182) vmkernel: cpu3:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2300: 2026-11-12T16:42:23.757Z Wa(180) vmkwarning: cpu3:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2301: 2026-11-12T16:42:23.757Z In(182) vmkernel: cpu3:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2305: 2026-11-12T16:42:24.116Z In(182) vmkernel: cpu0:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2306: 2026-11-12T16:42:24.116Z Wa(180) vmkwarning: cpu0:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2307: 2026-11-12T16:42:24.116Z In(182) vmkernel: cpu0:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2324: 2026-11-12T16:42:25.031Z In(182) vmkernel: cpu1:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2325: 2026-11-12T16:42:25.031Z Wa(180) vmkwarning: cpu1:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2326: 2026-11-12T16:42:25.031Z In(182) vmkernel: cpu1:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2344: 2026-11-12T16:42:26.333Z In(182) vmkernel: cpu2:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2345: 2026-11-12T16:42:26.333Z Wa(180) vmkwarning: cpu2:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2346: 2026-11-12T16:42:26.333Z In(182) vmkernel: cpu2:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2392: 2026-11-12T16:42:29.187Z In(182) vmkernel: cpu0:133963)PCIPassthru: 4634: pcipDevInfo(0x4312dbe018d0) allocated for 0000:02:01.0
+2393: 2026-11-12T16:42:29.187Z Wa(180) vmkwarning: cpu0:133963)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.0, got Success
+2394: 2026-11-12T16:42:29.187Z In(182) vmkernel: cpu0:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe018d0 (0000:02:01.0), state 0, destroyed
+2463: 2026-11-12T16:42:33.223Z In(182) vmkernel: cpu3:133963)PCIPassthru: 1750: Disable Domain for device 0000:02:01.1
+2464: 2026-11-12T16:42:33.227Z In(182) vmkernel: cpu3:133963)PCIPassthru: 1039: pcipdevInfo: 0x4312dbe016c0 (0000:02:01.1), state 0, destroyed

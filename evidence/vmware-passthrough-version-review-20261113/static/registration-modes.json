@@ -1,0 +1,307 @@
+{
+  "moduleSha256": "ca5e97d71c9360804c2b3d480e4272c52d0225efbe45fe0b359c739da41077ca",
+  "table": "passthruImpls",
+  "stride": 56,
+  "modes": [
+    {
+      "mode": 0,
+      "slots": [
+        {
+          "byteOffset": "0x0",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 9544,
+            "function": "PCIPassthruFPTAllowPassthru"
+          }
+        },
+        {
+          "byteOffset": "0x8",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 3468,
+            "function": "PCIPassthruFPTSetupIntrProxy"
+          }
+        },
+        {
+          "byteOffset": "0x10",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 3564,
+            "function": "PCIPassthruFPTCleanupIntrProxy"
+          }
+        },
+        {
+          "byteOffset": "0x18",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 26860,
+            "function": "PCIPassthruFPTIntrProxyHandler"
+          }
+        },
+        {
+          "byteOffset": "0x20",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 3576,
+            "function": "PCIPassthruFPTGetInterrupt"
+          }
+        },
+        {
+          "byteOffset": "0x28",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 9508,
+            "function": "PCIPassthruRegisterNotify"
+          }
+        },
+        {
+          "byteOffset": "0x30",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 9460,
+            "function": "PCIPassthruUnregisterNotify"
+          }
+        }
+      ]
+    },
+    {
+      "mode": 1,
+      "slots": [
+        {
+          "byteOffset": "0x0",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x8",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 9204,
+            "function": "PCIPassthruUPTSetupIntrProxy"
+          }
+        },
+        {
+          "byteOffset": "0x10",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 8860,
+            "function": "PCIPassthruUPTCleanupIntrProxy"
+          }
+        },
+        {
+          "byteOffset": "0x18",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 33508,
+            "function": "PCIPassthruUPTIntrProxyHandler"
+          }
+        },
+        {
+          "byteOffset": "0x20",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x28",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x30",
+          "raw": 0,
+          "relocation": null
+        }
+      ]
+    },
+    {
+      "mode": 2,
+      "slots": [
+        {
+          "byteOffset": "0x0",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 8528,
+            "function": "PCIPassthruMPTAllowPassthru"
+          }
+        },
+        {
+          "byteOffset": "0x8",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x10",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x18",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x20",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x28",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 9508,
+            "function": "PCIPassthruRegisterNotify"
+          }
+        },
+        {
+          "byteOffset": "0x30",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 9460,
+            "function": "PCIPassthruUnregisterNotify"
+          }
+        }
+      ]
+    },
+    {
+      "mode": 3,
+      "slots": [
+        {
+          "byteOffset": "0x0",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 8528,
+            "function": "PCIPassthruMPTAllowPassthru"
+          }
+        },
+        {
+          "byteOffset": "0x8",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 3588,
+            "function": "PCIPassthruMPTSriovSetupIntrProxy"
+          }
+        },
+        {
+          "byteOffset": "0x10",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 23028,
+            "function": "PCIPassthruMPTSriovCleanupIntrProxy"
+          }
+        },
+        {
+          "byteOffset": "0x18",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 30528,
+            "function": "PCIPassthruMPTSriovIntrProxyHandler"
+          }
+        },
+        {
+          "byteOffset": "0x20",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 3604,
+            "function": "PCIPassthruMPTSriovGetInterrupt"
+          }
+        },
+        {
+          "byteOffset": "0x28",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 9508,
+            "function": "PCIPassthruRegisterNotify"
+          }
+        },
+        {
+          "byteOffset": "0x30",
+          "raw": 0,
+          "relocation": {
+            "type": 1,
+            "symbol": "",
+            "addend": 9460,
+            "function": "PCIPassthruUnregisterNotify"
+          }
+        }
+      ]
+    },
+    {
+      "mode": 4,
+      "slots": [
+        {
+          "byteOffset": "0x0",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x8",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x10",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x18",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x20",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x28",
+          "raw": 0,
+          "relocation": null
+        },
+        {
+          "byteOffset": "0x30",
+          "raw": 0,
+          "relocation": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+[
+  {
+    "label": "esxi8-u3k-25595708",
+    "build": "8.0.3-0.102.25595708",
+    "sourceDirectory": "https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/8.0u3/",
+    "isoUrl": "https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/8.0u3/s/VMware-ESXi-8.0.3k-25595708-LNV-S15-20260825.iso",
+    "isoTotalBytes": 707637248,
+    "downloadMode": "HTTP Range; selected ISO9660 files only; full ISO digest not calculated",
+    "wholeIsoHashVerified": false,
+    "downloadedFiles": [
+      {
+        "file": "boot.cfg",
+        "extent": 1544,
+        "bytes": 2057,
+        "directory": false,
+        "sha256": "02ad10d79f79997feeaa51ab55e85a6d02877048431a592c2826c0a1c9893a69"
+      },
+      {
+        "file": "k.b00",
+        "extent": 114815,
+        "bytes": 6566343,
+        "directory": false,
+        "sha256": "af961fc0d1d4ed41486ac4e86a927ae660fd4385428b6099011810630fd6ac9f"
+      },
+      {
+        "file": "sb.v00",
+        "extent": 140747,
+        "bytes": 50628149,
+        "directory": false,
+        "sha256": "a033482f50f8a21386beb36f3acbc471f2df770e9da01a9c6696fa8d5c8b5644"
+      },
+      {
+        "file": "vmx.v00",
+        "extent": 300685,
+        "bytes": 30869289,
+        "directory": false,
+        "sha256": "f767fa7e90a155968693d8ae87e3355270c0e4b995f1c45c38aaca119e11f452"
+      }
+    ],
+    "extractedFiles": [
+      {
+        "file": "kernel.elf",
+        "sha256": "3c55688c314300ae90849b34959ad3dd5d66d2d5b14d3349a1204e470df9ac52",
+        "bytes": 17325908
+      },
+      {
+        "file": "pcip.elf",
+        "archive": "sb.v00",
+        "archiveOffset": 215031808,
+        "sha256": "f5911caac9fa163786ce59a78bfc20284696d205b4a76c8180a141fd0214e089",
+        "bytes": 173008,
+        "hasOldWarning": true
+      },
+      {
+        "file": "vmx-0.elf",
+        "archive": "vmx.v00",
+        "archiveOffset": 790528,
+        "sha256": "c345d91b016571d076d85f5a34a40ca92daaaf0870e621436b10f3b56fb5c4b9",
+        "bytes": 28274568
+      },
+      {
+        "file": "vmx-1.elf",
+        "archive": "vmx.v00",
+        "archiveOffset": 29085696,
+        "sha256": "2a7d67d579a245bec61e630236d6dc56bec5e28e1baccc239eeb129546ed67fb",
+        "bytes": 36091352
+      },
+      {
+        "file": "vmx-2.elf",
+        "archive": "vmx.v00",
+        "archiveOffset": 65179648,
+        "sha256": "55ea86d941576da43c7ea0c156015ee9e4baf5afd80af64c2417c78c7912ff08",
+        "bytes": 33373616
+      }
+    ]
+  },
+  {
+    "label": "esx91-25433460",
+    "build": "9.1.0-0100.25433460",
+    "sourceDirectory": "https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/9.1/",
+    "isoUrl": "https://vmware.lenovo.com/content/2026_09/Lenovo_Custom_ISO/9.1/s/VMware-ESX-9.1.0.0100-25433460-LNV-S02-20260608.iso",
+    "isoTotalBytes": 747749376,
+    "downloadMode": "HTTP Range; selected ISO9660 files only; full ISO digest not calculated",
+    "wholeIsoHashVerified": false,
+    "downloadedFiles": [
+      {
+        "file": "boot.cfg",
+        "extent": 1134,
+        "bytes": 2385,
+        "directory": false,
+        "sha256": "0415242c0ab8b950cb4c13cce169fff603da724754b730bcd86e654a1e0ce2b5"
+      },
+      {
+        "file": "k.b00",
+        "extent": 144388,
+        "bytes": 7314098,
+        "directory": false,
+        "sha256": "33292817ff9851e4cd7588180a47706b8cb5b0a32d90c6c04ccb7b9fc0415e8c"
+      },
+      {
+        "file": "sb.v00",
+        "extent": 193594,
+        "bytes": 56587499,
+        "directory": false,
+        "sha256": "e196324f1d3de2d90006ac49a58984c6fef2af47b41dc863a3815bf47d65e297"
+      },
+      {
+        "file": "vmx.v00",
+        "extent": 325147,
+        "bytes": 34868164,
+        "directory": false,
+        "sha256": "1a5ef791d8821ba3338b1b1af40bfff3c39899f3329e52f8bf0ae09c3a5d2185"
+      }
+    ],
+    "extractedFiles": [
+      {
+        "file": "kernel.elf",
+        "sha256": "4ba67807aa379c9010abef59dbaaf06a740fab97a4eef9190ea1dbcdf6e1e002",
+        "bytes": 24282788
+      },
+      {
+        "file": "pcip.elf",
+        "archive": "sb.v00",
+        "archiveOffset": 218447872,
+        "sha256": "47d5ac91f8c8e2ddc0b68ef2a8c145aa427ad6a99f0c863ed380091cc2fcc8ca",
+        "bytes": 196392,
+        "hasOldWarning": true
+      },
+      {
+        "file": "vmx-0.elf",
+        "archive": "vmx.v00",
+        "archiveOffset": 1056768,
+        "sha256": "8fed406ef683c832c501e0179cb9265ff5ff98c410120a7334f36ab3303d6ee0",
+        "bytes": 28268256
+      },
+      {
+        "file": "vmx-1.elf",
+        "archive": "vmx.v00",
+        "archiveOffset": 29347840,
+        "sha256": "280c3ab436962d95e8632c15d7e58cc184f85aeacf3c154a77da80ede90f1ac3",
+        "bytes": 35962288
+      },
+      {
+        "file": "vmx-2.elf",
+        "archive": "vmx.v00",
+        "archiveOffset": 65310720,
+        "sha256": "6c223d10d2e52d3e068b4f83a5f6132d97c3c4d3471237e1c575d7cc90afa135",
+        "bytes": 33576304
+      }
+    ]
+  }
+]
