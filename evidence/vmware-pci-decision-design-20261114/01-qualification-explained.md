@@ -52,13 +52,15 @@ ACS 是 PCIe 的访问控制机制。这里关注的作用包括验证请求身�
 | 比较点 | VMware 已见实现 | Linux v6.6 上游实现 |
 | --- | --- | --- |
 | ACS 判断被用在哪里 | `PCIE_EnforceACS` 的结果进入 `meetsPassthruAcsReq`，再进入设备的 capable 布尔值 | `pci_acs_enabled` / `pci_acs_path_enabled` 的结果参与 PCI IOMMU group 的构造 |
-| 对缺乏隔离的处理 | 该资格路径可能返回 false；还有按类型处理、quirk 和策略例外 | 沿拓扑和 DMA alias 合并无法分隔的设备；不等于把全部设备永久禁止交给 VFIO |
-| 判断是否只靠 ACS bit | 否：读取 capability/control，结合节点类型、quirk，并缓存结果 | 否：含设备特例、类型规则；单功能 endpoint 可因没有内部同级通道而通过，并非必须有 ACS capability |
+| 对缺乏隔离的处理 | 所示路径中，root/downstream port 缺少 ACS 会进入不合格处理；没有 bypass 则本关 false。普通 endpoint 缺 ACS 则继续查上游。[类型与拒绝详表](03-acs-rule-details.md#types) | 沿拓扑和 DMA alias 合并无法分隔的设备；不等于把全部设备永久禁止交给 VFIO |
+| 判断是否只靠 ACS bit | 否：按类型检查 capability/control；例如特定 Intel 型号从 `+8` 读取控制寄存器，普通路径从 `+6` 读取，这种 quirk 不等于免检。[具体型号与指令](03-acs-rule-details.md#quirk) | 否：含设备特例、类型规则；单功能 endpoint 可因没有内部同级通道而通过，并非必须有 ACS capability |
 | 所要求的位 | M07 有 `0x0c`、`0x1d` 等掩码和类型分支，不能缩写为单一固定掩码 | group 路径请求 SV、RR、CR、UF；具体设备判断再按 capability 和类型规则处理 |
 | 软件放宽 | 所见代码有 `disableACSCheck`、特定 root-port 的 `disableACSCheckForRP` | 本仓库的 `pcie_acs_override` 补丁可令部分原本不满足的 ACS 判断返回通过；不是上游 v6.6 的标准开关 |
 | 是否同时解决复位/功能依赖 | 否 | 否；IOMMU group 也不能代替全部复位和功能依赖模型 |
 
 VMware 依据：[M07 原始指令](../vmware-pci-assembly-dossier-20261114/snippets/M07.asm)。Linux 依据：[PCI ACS 判断](https://github.com/torvalds/linux/blob/v6.6/drivers/pci/pci.c#L3556-L3684)、[PCI IOMMU group 构造](https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c#L1521-L1707)。
+
+**不要把 `dependentDevice` 直接叫作“VMware 的 IOMMU group”。** 依赖代表还可能吸收复位和功能约束；Linux DMA group、VFIO 复位范围以及 VMware 的配置/开机/切域范围，需要分开比较。[用相同条件逐项解释分组差异](04-linux-groups-vs-vmware-dependencies.md)
 
 ### 一个具体例子
 

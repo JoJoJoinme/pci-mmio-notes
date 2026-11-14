@@ -2,7 +2,9 @@
 
 这份文档把已经核对的汇编转换成可评审的设计：**先判定设备具备直通资格；开机时再检查宿主是否释放设备、依赖成员由谁使用，以及地址域状态是否允许本次登记。** 三者分别有自己的条件，不能合并成一个“可用”布尔值。
 
-阅读顺序：资格判断 → 主机 API 启用 → VM 开机检查；需要理解“为什么这两个设备会被归到一起”，再看依赖计算图。共四张图，图中 `A01`、`R08` 等编号可通过文末索引跳到原始汇编。
+阅读顺序：资格判断 → 主机 API 启用 → VM 开机检查；需要理解“为什么这两个设备会被归到一起”，再看依赖计算图。共五张图，图中 `A01`、`R08` 等编号可通过文末索引跳到原始汇编。
+
+若困惑是“VMware 的分组与 Linux IOMMU group 是不是一回事”，先读[分组、复位范围与依赖代表的对照](04-linux-groups-vs-vmware-dependencies.md)。ACS 中按类型检查、quirk 与 bypass 的细节另见[具体规则](03-acs-rule-details.md)。
 
 | 你关心的问题 | 设计入口 | 可单独查看的图 |
 | --- | --- | --- |
@@ -10,6 +12,7 @@
 | API 只启用 A，如何检查并联动依赖？ | [二、主机 API](#host-api) | [SVG](diagrams/04-host-api-enable.svg) · [PNG](diagrams/04-host-api-enable.png) · [Mermaid 源文件](diagrams/04-host-api-enable.mmd) |
 | VM 开机时怎样检查依赖？ | [三、开机检查链路](#power-on) | [SVG](diagrams/02-power-on.svg) · [PNG](diagrams/02-power-on.png) · [Mermaid 源文件](diagrams/02-power-on.mmd) |
 | 两个 BDF 怎样被识别为有关联？ | [四、依赖代表计算](#dependency) | [SVG](diagrams/03-dependency.svg) · [PNG](diagrams/03-dependency.png) · [Mermaid 源文件](diagrams/03-dependency.mmd) |
+| VMware 的关联范围与 Linux group 有何不同？ | [分组对照与三个场景](04-linux-groups-vs-vmware-dependencies.md) | [SVG](diagrams/05-groups-vs-dependencies.svg) · [PNG](diagrams/05-groups-vs-dependencies.png) · [Mermaid 源文件](diagrams/05-groups-vs-dependencies.mmd) |
 
 **证据范围：**这是依据 ESXi 8.0 U3b / build **24280767** 二进制重建的设计视图，不是 VMware 源码或官方架构图。资格函数有完整函数证据；开机图聚焦普通物理 PCI 的 FPT 新登记分支，保留已知条件分支，未展开所有特殊模式、迁移和复用路径。本次整理没有新增实机测试。完整指令、机器字节、重定位与既有运行记录在[汇编证据文档集](../vmware-pci-assembly-dossier-20261114/README.md)。
 

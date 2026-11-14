@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "Reconstructed design, based on existing binary evidence; no new runtime claims",
-  "sourceRevision": "f60d6773612bb66f7cdc257c83919a0e5acc4dea",
+  "sourceRevision": "0774e76d39fc15ffc34bae5e13bc16b838766cbd",
   "primaryBuild": "24280767",
   "snippetIndex": "evidence/vmware-pci-assembly-dossier-20261114/evidence/snippets.json",
   "sources": [
@@ -52,6 +52,10 @@
     {
       "path": "evidence/vmware-pci-multifunction-fix-20261111/raw/native-mf-owner-results.json",
       "sha256": "df5d7468f43f6bad457b1a99004e601fd75bab356b58e28abda5baa00c936517"
+    },
+    {
+      "path": "evidence/esxi8-acs-check-bypass-20260714-summary.json",
+      "sha256": "0105172607bc79c552f0e8c5d22129b300acd6a8ffd4203c250aba962ff54cc2"
     }
   ],
   "nodes": [
@@ -593,6 +597,105 @@
           "windowSha256": "4599497935f4705fb89dcf845423d735694ee6783d24f68c3ecaa66578c7960b"
         }
       ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "VA",
+      "snippets": [
+        {
+          "id": "M07",
+          "functionLabel": "PCIE_EnforceACS",
+          "startAddress": "0x4200000f52d4",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "51096facac62cfa185314701008cf3345e0fc7aefacfdb8e685d8e454ccee113"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "V1",
+      "snippets": [
+        {
+          "id": "D01",
+          "functionLabel": "VMKPCIPassthru_GetDeviceDependencies",
+          "startAddress": "0x4200001a0e38",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793"
+        },
+        {
+          "id": "D02",
+          "functionLabel": "IOMMU_GetReqIdDependencies",
+          "startAddress": "0x420000164608",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "2e28f2e0d92d2df6b6a7c219114e5509911fc5c68f93e1ec00c8fa603f19f2f9"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "VD",
+      "snippets": [
+        {
+          "id": "D01",
+          "functionLabel": "VMKPCIPassthru_GetDeviceDependencies",
+          "startAddress": "0x4200001a0e38",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "VC",
+      "snippets": [
+        {
+          "id": "O06",
+          "functionLabel": "PciDeviceImpl::GetDependentChildDevices",
+          "startAddress": "0x4cb510",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "566628e9ea27d3d465155d2d6683262bcc732522802f672ef5b6ccc6bd441b20"
+        },
+        {
+          "id": "O07",
+          "functionLabel": "PciDeviceImpl::SetConfiguredDeviceOwner",
+          "startAddress": "0x4c7b72",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "a1c5a143953e1bf6233068c07625cb7a7fa739147f9225fd8c97a6eaf3a35ebc"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "VO",
+      "snippets": [
+        {
+          "id": "R08",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x4de9",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "6ef505dcdd0f50a900a72f6bf23d47e4a2bb66912d52061befcc07ab7bedbfe1"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "VM",
+      "snippets": [
+        {
+          "id": "I04",
+          "functionLabel": "IOMMU_SwitchAddressDomain",
+          "startAddress": "0x4200001654e4",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "b96db720277a1c191972265faa857737c31718e0b7e98cc8169efd545b23b05e"
+        },
+        {
+          "id": "I05",
+          "functionLabel": "IOMMUSwitchDeviceIterator",
+          "startAddress": "0x420000164470",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "b69b9cd144ec112d2c8868e3ec0c799149475c04614e2e9919723cef39c9018e"
+        }
+      ]
     }
   ],
   "localSupplement": "supplement/snippets.json",
@@ -622,6 +725,49 @@
       "node": "READ",
       "sourceIds": [
         "API3"
+      ]
+    }
+  ],
+  "additionalSupplements": [
+    "acs-supplement/snippets.json"
+  ],
+  "linuxComparisonNodes": [
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "L1",
+      "sourceIds": [
+        "LINUX1",
+        "LINUX2",
+        "LINUX7"
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "LG",
+      "sourceIds": [
+        "LINUX2",
+        "LINUX3"
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "LO",
+      "sourceIds": [
+        "LINUX3"
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "LD",
+      "sourceIds": [
+        "LINUX3"
+      ]
+    },
+    {
+      "diagram": "diagrams/05-groups-vs-dependencies.mmd",
+      "node": "LR",
+      "sourceIds": [
+        "LINUX6"
       ]
     }
   ]

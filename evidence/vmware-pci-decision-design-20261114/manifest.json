@@ -10,13 +10,48 @@
     },
     {
       "path": "01-qualification-explained.md",
-      "bytes": 7468,
-      "sha256": "f5ddd9e4635654edcc9065ebade3461247ec339063882623a69876e49a5f02d4"
+      "bytes": 8046,
+      "sha256": "44cf6ccd8f8665557b5fc864c2811d5946d16a5ccf79d277f07653d641edbafd"
     },
     {
       "path": "02-host-api-enable.md",
       "bytes": 9154,
       "sha256": "cf13f2e8c9690873deb0b7d0b0e03e2031ec3c5535ef6fea69a68b19c741489f"
+    },
+    {
+      "path": "03-acs-rule-details.md",
+      "bytes": 8522,
+      "sha256": "233b223104535b4098f44574bf4b367527200314920191b87f88e18c4358e71e"
+    },
+    {
+      "path": "04-linux-groups-vs-vmware-dependencies.md",
+      "bytes": 11394,
+      "sha256": "2171335a4da8e15670d8c83446cbd5e856d402aad2a4bcd58c88d3399afb6121"
+    },
+    {
+      "path": "acs-supplement/objdump-verification.json",
+      "bytes": 399,
+      "sha256": "7d495baa916c31b3e7d4aed03d4083ba6f8f33d88deb55989e18bef1dd51e694"
+    },
+    {
+      "path": "acs-supplement/README.md",
+      "bytes": 3270,
+      "sha256": "84bf5fe7d1398b882529675dc0d21bf4451503de4f849e60e39f73365457cf93"
+    },
+    {
+      "path": "acs-supplement/selection-plan.json",
+      "bytes": 264,
+      "sha256": "6b4589df9f012bbb9ae35e298ef69313ed5be9b4bd1b983fb8ffefe16bdff234"
+    },
+    {
+      "path": "acs-supplement/snippets/Q01.asm",
+      "bytes": 2341,
+      "sha256": "0c23e616373787dba1a99479789013a3cac4d4354d92ec6da855a20255fcade9"
+    },
+    {
+      "path": "acs-supplement/snippets.json",
+      "bytes": 8204,
+      "sha256": "c35b201b3b07775349456291d6d3fac8157979d57b06795af0ab11c88a8065dc"
     },
     {
       "path": "diagrams/01-capable.mmd",
@@ -70,8 +105,8 @@
     },
     {
       "path": "diagrams/04-host-api-enable.png",
-      "bytes": 230523,
-      "sha256": "f7c83d31bef9dcb78380dde2735eb79ed883dd8ae5a395752c92653657fc1e94"
+      "bytes": 230524,
+      "sha256": "cf5f28dcf91c7b07a3e752855753350878efb1732fd96e555e4e237735b030ea"
     },
     {
       "path": "diagrams/04-host-api-enable.svg",
@@ -79,29 +114,44 @@
       "sha256": "899f3b7c9b6c263e51be91cfdafba30009c1d28a2dd451e321400d78c43f95bc"
     },
     {
+      "path": "diagrams/05-groups-vs-dependencies.mmd",
+      "bytes": 1698,
+      "sha256": "81f7814605c2fb64638e4fd7a3c6d71d63d1edeb5e63acf1cc7b0d9de8b00048"
+    },
+    {
+      "path": "diagrams/05-groups-vs-dependencies.png",
+      "bytes": 187506,
+      "sha256": "3ac468b60ccbd40f6ac2af6fa6d7443785a0dd03bf39c92a4a8a709534d26002"
+    },
+    {
+      "path": "diagrams/05-groups-vs-dependencies.svg",
+      "bytes": 17886,
+      "sha256": "b596f7c0116200174fa7ed8b4343ff0f455ed44ce691ba434995276e7fd8ad32"
+    },
+    {
       "path": "evidence-map.json",
-      "bytes": 21646,
-      "sha256": "1fa334542b1de06640ec6b749086cdbe997b0100c8103e857a3008b682c1e20d"
+      "bytes": 26027,
+      "sha256": "52d1884a5cb177d068f92f2d00e83d65505ce6e3ea9916612aba72774e25a5f0"
     },
     {
       "path": "external-sources.json",
-      "bytes": 1827,
-      "sha256": "fc5018385f313de32cb849c3c61b76e92136156a0fa41a1e8352b25efaff4189"
+      "bytes": 3169,
+      "sha256": "23419a612615d94110a83f5f59c8ec985d4ba9dbf91a36d30f2f3202e726a6c5"
     },
     {
       "path": "qa.json",
-      "bytes": 2078,
-      "sha256": "fd469b16a77abf65da8ceb7f5b5fde81650cddda6f0a0406b37cedaf8b1d1945"
+      "bytes": 3073,
+      "sha256": "d3dec4414d78b35e470bc46b1de47fa7c535b91743055dc00211e1bdddea229e"
     },
     {
       "path": "README.md",
-      "bytes": 22102,
-      "sha256": "fb1b5c0dfa787c59a8c4008443e4478aa578fd546ed272464ded350657afbf7c"
+      "bytes": 22671,
+      "sha256": "98dbfdad019e050afcb72974c414eb38a7d449d6938393098344e06eebf30e16"
     },
     {
       "path": "render-receipt.json",
-      "bytes": 6437,
-      "sha256": "5e1721316fb132486a946c42e76b785903d7597650fcc510cef5207556d41278"
+      "bytes": 7842,
+      "sha256": "520289b7be5b7b9f66003f0a3970c2c4137a574ca871d59e2c0f260d775ae358"
     },
     {
       "path": "supplement/objdump-verification.json",
@@ -154,19 +204,24 @@
       "sha256": "8533de4c2a90ce7f616769019571cb9a39e861699365f52052c996b1fa38ce4e"
     },
     {
+      "path": "tools/export_acs_detail.py",
+      "bytes": 5268,
+      "sha256": "90090cedc6453f6594f20ee2da5746d28d13f31683158d18b8f55305b686f097"
+    },
+    {
       "path": "tools/export_host_enable.py",
       "bytes": 4176,
       "sha256": "b4cef4c8d8826d9df472116f261a337d958ecd444e6cad621fc590d9e4ea5baa"
     },
     {
       "path": "tools/render.mjs",
-      "bytes": 4556,
-      "sha256": "72a45b3a9f063422c8337c98fcc452b4c60f04b2f8d39569ada58a6b10ab7eca"
+      "bytes": 4585,
+      "sha256": "5a51cb7f6a8f0c3be4b6279c3d04ca07327e5db71eca9ac515e5abd3c86c9e7f"
     },
     {
       "path": "tools/verify.py",
-      "bytes": 4708,
-      "sha256": "8228efc3a6105f515d5df1c6c958d14c1e6be6c3ab8a9919b3795c4d8783aae4"
+      "bytes": 4922,
+      "sha256": "e3773ddcfe03eb6d15e2b29fe231cd248c7e216af7c02fb3f63fc36d9b40122f"
     }
   ]
 }

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "selections": [
+    {
+      "id": "Q01",
+      "image": "kernel242",
+      "symbol": "PCIQuirks_GetAcsCtrlOffset",
+      "functionLabel": "PCIQuirks_GetAcsCtrlOffset",
+      "title": "按设备型号返回 ACS Control 偏移"
+    }
+  ]
+}

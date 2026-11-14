@@ -1,0 +1,37 @@
+%% Conceptual responsibility comparison; Linux source v6.6, VMware build 24280767.
+%% Not a same-topology Linux runtime observation or a complete VMware internal object model.
+%% evidence: D01 D02 O06 O07 R04 R08 I04 I05 M07
+flowchart LR
+    subgraph L["Linux · 通用 PCI / VFIO 路径"]
+      direction TB
+      L1["DMA alias + ACS + 拓扑"]
+      LG["iommu_group<br/>明确的 DMA 所有权单元"]
+      LO["一组不能交给不相容的 DMA owner<br/>多个 group 可由同一 owner 接管"]
+      LD["地址转换域 / IOAS<br/>group 不等于 domain 或 VM"]
+      LR["复位另查 dev_set / slot / bus 范围<br/>可能覆盖多个 IOMMU groups"]
+      L1 --> LG
+      LG --> LO
+      LO --> LD
+      LG -.另一个问题.-> LR
+    end
+    subgraph V["VMware · 本次已核对的分层机制"]
+      direction TB
+      VA["ACS 资格单独检查<br/>可能在资格阶段被拒绝 · M07"]
+      V1["DMA alias + 复位 + 功能依赖<br/>计算依赖代表 dep(d) · D01"]
+      VD["依赖代表是设备 / 桥的地址<br/>不是已证实的 Linux group 对等对象"]
+      VC["配置联动范围<br/>反查共同代表成员 · O06 / O07"]
+      VO["开机互斥范围<br/>共同代表 + 活动 owner · R08"]
+      VM["DMA 切域范围<br/>别名子树内合格节点 · I04 / I05"]
+      V1 --> VD
+      VD --> VC
+      VD --> VO
+      VA ~~~ VD
+      VO -.通过仍有后续条件.-> VM
+    end
+    L ~~~ V
+    classDef blue fill:#eef5fc,stroke:#35608b,color:#16324f,stroke-width:1.5px
+    classDef green fill:#e9f6f0,stroke:#297354,color:#174b37
+    classDef note fill:#f6f7f9,stroke:#a4aebb,color:#475467
+    class LG,VD blue
+    class LO,VC,VO green
+    class LD,LR,VA,VM note

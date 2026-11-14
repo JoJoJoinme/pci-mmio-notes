@@ -7,11 +7,13 @@
       "diagrams/01-capable.png",
       "diagrams/02-power-on.png",
       "diagrams/03-dependency.png",
-      "diagrams/04-host-api-enable.png"
+      "diagrams/04-host-api-enable.png",
+      "diagrams/05-groups-vs-dependencies.png"
     ],
     "result": "No observed clipped labels, missing glyphs, or text overlap",
     "iteration": "Replaced oversized diamonds and staggered combined panels with compact gates and side-by-side power-on panels",
-    "apiDiagramReview": "Rendered 04-host-api-enable.png inspected; labels legible, no observed clipping or overlap"
+    "apiDiagramReview": "Rendered 04-host-api-enable.png inspected; labels legible, no observed clipping or overlap",
+    "groupDiagramReview": "Side-by-side rendered responsibility comparison inspected; no observed clipped glyphs or overlap"
   },
   "semanticReview": [
     "Four-gate capable predicate is separate from current VM ownership",
@@ -29,11 +31,24 @@
     "Linux comparison pinned to upstream v6.6 and separately identifies repository ACS override patch",
     "API dispatch, per-dependent validation coverage and runtime rebind are explicitly unresolved",
     "Configured owner writes distinguished from active state and VM ownership",
-    "Existing API receipts re-read for both enable and disable results"
+    "Existing API receipts re-read for both enable and disable results",
+    "Linux iommu_group is not equated with VMware dependentDevice or address domain",
+    "Generic Linux v6.6 grouping is distinguished from VFIO hot-reset dev_set constraints",
+    "Same-topology Linux outcomes are conditional source-based deductions, not invented runtime observations",
+    "VMware configuration, host-owner precheck, VMM-owner scan and alias-domain switching ranges are separated",
+    "M07 endpoint/root/downstream type paths and conditional ACS masks are preserved",
+    "Intel ACS Control offset quirk is a register-layout adjustment, not unconditional admission",
+    "Software bypass and cached verdict are not claimed to create hardware isolation"
   ],
   "hostApiSupplement": {
     "windows": 6,
     "instructions": 91,
     "independentProof": "supplement/objdump-verification.json"
+  },
+  "acsQuirkSupplement": {
+    "windows": 1,
+    "instructions": 23,
+    "bytes": 83,
+    "proof": "acs-supplement/objdump-verification.json"
   }
 }

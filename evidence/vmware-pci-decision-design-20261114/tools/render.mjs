@@ -32,7 +32,7 @@ try {
   await page.route(/^https?:/, route => route.abort());
   const errors = [];
   page.on('pageerror', err => errors.push(String(err)));
-  for (const [i, stem] of ['01-capable', '02-power-on', '03-dependency', '04-host-api-enable'].entries()) {
+  for (const [i, stem] of ['01-capable', '02-power-on', '03-dependency', '04-host-api-enable', '05-groups-vs-dependencies'].entries()) {
     const source = await fs.readFile(path.join(root, 'diagrams', `${stem}.mmd`), 'utf8');
     await page.setContent('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><style>body{margin:0;background:white;font-family:"Microsoft YaHei",sans-serif}</style><body></body></html>');
     await page.addScriptTag({ path: flags['--mermaid'] });

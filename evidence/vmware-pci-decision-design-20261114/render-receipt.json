@@ -125,7 +125,7 @@
       "height": 1010,
       "sourceSha256": "74f173be2303208d7602f9ad6ff69bd2b81118c06f7f645ae9eb88079475e9ed",
       "svgSha256": "899f3b7c9b6c263e51be91cfdafba30009c1d28a2dd451e321400d78c43f95bc",
-      "pngSha256": "f7c83d31bef9dcb78380dde2735eb79ed883dd8ae5a395752c92653657fc1e94",
+      "pngSha256": "cf5f28dcf91c7b07a3e752855753350878efb1732fd96e555e4e237735b030ea",
       "labels": [
         "",
         "实现边界",
@@ -154,6 +154,39 @@
         "H6 · applyNow / 自动决策 / 重启运行生效链：API 契约与回读验证",
         "H7 · 回读全部关联成员enabled 已配置；active 当前生效",
         "反向匹配见 bus / slot / functionsegment 处理范围仍需核验"
+      ]
+    },
+    {
+      "stem": "05-groups-vs-dependencies",
+      "width": 1442,
+      "height": 473,
+      "sourceSha256": "81f7814605c2fb64638e4fd7a3c6d71d63d1edeb5e63acf1cc7b0d9de8b00048",
+      "svgSha256": "b596f7c0116200174fa7ed8b4343ff0f455ed44ce691ba434995276e7fd8ad32",
+      "pngSha256": "3ac468b60ccbd40f6ac2af6fa6d7443785a0dd03bf39c92a4a8a709534d26002",
+      "labels": [
+        "",
+        "VMware · 本次已核对的分层机制",
+        "",
+        "",
+        "",
+        "",
+        "通过仍有后续条件",
+        "ACS 资格单独检查可能在资格阶段被拒绝 · M07",
+        "DMA alias + 复位 + 功能依赖计算依赖代表 dep(d) · D01",
+        "依赖代表是设备 / 桥的地址不是已证实的 Linux group 对等对象",
+        "配置联动范围反查共同代表成员 · O06 / O07",
+        "开机互斥范围共同代表 + 活动 owner · R08",
+        "DMA 切域范围别名子树内合格节点 · I04 / I05",
+        "Linux · 通用 PCI / VFIO 路径",
+        "",
+        "",
+        "",
+        "另一个问题",
+        "DMA alias + ACS + 拓扑",
+        "iommu_group明确的 DMA 所有权单元",
+        "一组不能交给不相容的 DMA owner多个 group 可由同一 owner 接管",
+        "地址转换域 / IOASgroup 不等于 domain 或 VM",
+        "复位另查 dev_set / slot / bus 范围可能覆盖多个 IOMMU groups"
       ]
     }
   ],

@@ -41,6 +41,37 @@
       "id": "LINUX4",
       "url": "https://www.kernel.org/doc/html/v6.18/admin-guide/kernel-parameters.html",
       "usedFor": "Distinguish config_acs/disable_acs_redir from out-of-tree pcie_acs_override"
+    },
+    {
+      "id": "LINUX5",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/include/uapi/linux/pci_regs.h",
+      "ref": "v6.6",
+      "gitBlobSha1": "e5f558d9649396faed564c9156ab3d03b9aaa7ab",
+      "usedFor": "PCIe port type values and ACS register bit definitions"
+    },
+    {
+      "id": "LINUX6",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/vfio/pci/vfio_pci_core.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "1929103ee59a3da894ae9d9a8ec040b26dd1a677",
+      "usedFor": "VFIO reset dev_set can span IOMMU groups; hot-reset ownership checks"
+    },
+    {
+      "id": "LINUX7",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/search.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "b4c138a6ec025db184f12b1c5ff91a204a13361e",
+      "usedFor": "PCIe-to-PCI bridge downstream-bus devfn zero DMA alias"
+    },
+    {
+      "id": "ACS_KB1",
+      "url": "https://knowledge.broadcom.com/external/article?articleNumber=391460",
+      "usedFor": "ESXi 8.0.3 ACS sanity-check issue and distinction between bypassing check and disabling hardware ACS"
+    },
+    {
+      "id": "ACS_KB2",
+      "url": "https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html",
+      "usedFor": "Public disableACSCheck, enableACSCheckForRP, enableACSDTP2P names"
     }
   ]
 }

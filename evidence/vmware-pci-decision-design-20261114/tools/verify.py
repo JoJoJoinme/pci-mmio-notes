@@ -41,22 +41,27 @@ def main():
         assert sha(pinned) == entry["sha256"], entry["path"]
     snippets = read_json(REPO / evidence["snippetIndex"])
     known = {entry["id"]: entry for entry in snippets["snippets"]}
-    supplement = read_json(ROOT / evidence["localSupplement"])
     sys.path.insert(0, str(ROOT.parent / 'vmware-pci-assembly-dossier-20261114/tools'))
     from evidence_format import code, markdown
-    supplement_proof = read_json(ROOT / 'supplement/objdump-verification.json')
-    assert supplement_proof['status'] == 'PASS'
-    assert supplement_proof['sourceSnippetsSha256'] == sha((ROOT / evidence['localSupplement']).read_bytes())
-    assert supplement_proof['windows'] == len(supplement['snippets'])
-    assert supplement_proof['instructionsCompared'] == sum(s['instructionCount'] for s in supplement['snippets'])
-    displayed = (ROOT / 'supplement/README.md').read_text(encoding='utf-8')
-    for selected in supplement['snippets']:
-        assert selected['id'] not in known
-        known[selected['id']] = selected
-        raw = bytes.fromhex(''.join(i['bytes'] for i in selected['instructions']))
-        assert sha(raw) == selected['windowSha256']
-        assert (ROOT / 'supplement/snippets' / (selected['id'] + '.asm')).read_text(encoding='utf-8').endswith(code(selected))
-        assert markdown(selected, supplement['images']) in displayed
+    supplement_count = 0
+    for relative in [evidence['localSupplement']] + evidence.get('additionalSupplements', []):
+        supplement_path = ROOT / relative
+        supplement = read_json(supplement_path)
+        folder = supplement_path.parent
+        supplement_proof = read_json(folder / 'objdump-verification.json')
+        assert supplement_proof['status'] == 'PASS'
+        assert supplement_proof['sourceSnippetsSha256'] == sha(supplement_path.read_bytes())
+        assert supplement_proof['windows'] == len(supplement['snippets'])
+        assert supplement_proof['instructionsCompared'] == sum(s['instructionCount'] for s in supplement['snippets'])
+        displayed = (folder / 'README.md').read_text(encoding='utf-8')
+        for selected in supplement['snippets']:
+            assert selected['id'] not in known
+            known[selected['id']] = selected
+            raw = bytes.fromhex(''.join(i['bytes'] for i in selected['instructions']))
+            assert sha(raw) == selected['windowSha256']
+            assert (folder / 'snippets' / (selected['id'] + '.asm')).read_text(encoding='utf-8').endswith(code(selected))
+            assert markdown(selected, supplement['images']) in displayed
+            supplement_count += 1
     for entry in evidence["nodes"]:
         assert entry["node"] in (ROOT / entry["diagram"]).read_text(encoding="utf-8")
         for selected in entry["snippets"]:
@@ -92,7 +97,7 @@ def main():
     print(json.dumps({"result": "PASS", "scope": "Document and evidence consistency only",
                       "manifestFiles": len(listed), "pinnedSources": len(evidence["sources"]),
                       "mappedNodes": len(evidence["nodes"]), "renderedDiagrams": len(renders["diagrams"]),
-                      "supplementWindows": len(supplement['snippets']), "localLinks": link_count}, ensure_ascii=False))
+                      "supplementWindows": supplement_count, "localLinks": link_count}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

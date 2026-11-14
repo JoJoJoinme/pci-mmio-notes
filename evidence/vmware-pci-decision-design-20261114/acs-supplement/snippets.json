@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "images": {
+    "kernel242": {
+      "build": "24280767",
+      "component": "decompressed k.b00",
+      "sha256": "5b8bef496e20e3d4194af7439f2f0a7273b77c15ab15ba1b117ddbcef9d9f775"
+    }
+  },
+  "snippets": [
+    {
+      "id": "Q01",
+      "title": "按设备型号返回 ACS Control 偏移",
+      "image": "kernel242",
+      "symbol": "PCIQuirks_GetAcsCtrlOffset",
+      "functionLabel": "PCIQuirks_GetAcsCtrlOffset",
+      "functionAddress": "0x4200000fd6fc",
+      "functionBytes": 83,
+      "functionSha256": "19655097f5505efc1b70b312cc3c4b7e1b700b97c7e0517469b1604322993fae",
+      "addressKind": "ELF linked virtual address",
+      "section": ".text",
+      "startAddress": "0x4200000fd6fc",
+      "endAddressExclusive": "0x4200000fd74f",
+      "startFileOffset": "0x3bc6fc",
+      "windowBytes": 83,
+      "windowSha256": "19655097f5505efc1b70b312cc3c4b7e1b700b97c7e0517469b1604322993fae",
+      "instructionCount": 23,
+      "instructions": [
+        {
+          "address": "0x4200000fd6fc",
+          "functionOffset": "0x0",
+          "fileOffset": "0x3bc6fc",
+          "bytes": "66817f0c8680",
+          "mnemonic": "cmp",
+          "operands": "word ptr [rdi + 0xc], 0x8086",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd702",
+          "functionOffset": "0x6",
+          "fileOffset": "0x3bc702",
+          "bytes": "b806000000",
+          "mnemonic": "mov",
+          "operands": "eax, 6",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd707",
+          "functionOffset": "0xb",
+          "fileOffset": "0x3bc707",
+          "bytes": "7401",
+          "mnemonic": "je",
+          "operands": "0x4200000fd70a",
+          "references": [],
+          "branch": {
+            "target": "0x4200000fd70a",
+            "insideWindow": true,
+            "insideFunction": true,
+            "fallthrough": "0x4200000fd709"
+          }
+        },
+        {
+          "address": "0x4200000fd709",
+          "functionOffset": "0xd",
+          "fileOffset": "0x3bc709",
+          "bytes": "c3",
+          "mnemonic": "ret",
+          "operands": "",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd70a",
+          "functionOffset": "0xe",
+          "fileOffset": "0x3bc70a",
+          "bytes": "0fb7570e",
+          "mnemonic": "movzx",
+          "operands": "edx, word ptr [rdi + 0xe]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd70e",
+          "functionOffset": "0x12",
+          "fileOffset": "0x3bc70e",
+          "bytes": "8d82f05e0000",
+          "mnemonic": "lea",
+          "operands": "eax, [rdx + 0x5ef0]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd714",
+          "functionOffset": "0x18",
+          "fileOffset": "0x3bc714",
+          "bytes": "6683f80f",
+          "mnemonic": "cmp",
+          "operands": "ax, 0xf",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd718",
+          "functionOffset": "0x1c",
+          "fileOffset": "0x3bc718",
+          "bytes": "762f",
+          "mnemonic": "jbe",
+          "operands": "0x4200000fd749",
+          "references": [],
+          "branch": {
+            "target": "0x4200000fd749",
+            "insideWindow": true,
+            "insideFunction": true,
+            "fallthrough": "0x4200000fd71a"
+          }
+        },
+        {
+          "address": "0x4200000fd71a",
+          "functionOffset": "0x1e",
+          "fileOffset": "0x3bc71a",
+          "bytes": "8d82f0620000",
+          "mnemonic": "lea",
+          "operands": "eax, [rdx + 0x62f0]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd720",
+          "functionOffset": "0x24",
+          "fileOffset": "0x3bc720",
+          "bytes": "6683f80b",
+          "mnemonic": "cmp",
+          "operands": "ax, 0xb",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd724",
+          "functionOffset": "0x28",
+          "fileOffset": "0x3bc724",
+          "bytes": "7623",
+          "mnemonic": "jbe",
+          "operands": "0x4200000fd749",
+          "references": [],
+          "branch": {
+            "target": "0x4200000fd749",
+            "insideWindow": true,
+            "insideFunction": true,
+            "fallthrough": "0x4200000fd726"
+          }
+        },
+        {
+          "address": "0x4200000fd726",
+          "functionOffset": "0x2a",
+          "fileOffset": "0x3bc726",
+          "bytes": "8d8a705d0000",
+          "mnemonic": "lea",
+          "operands": "ecx, [rdx + 0x5d70]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd72c",
+          "functionOffset": "0x30",
+          "fileOffset": "0x3bc72c",
+          "bytes": "b808000000",
+          "mnemonic": "mov",
+          "operands": "eax, 8",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd731",
+          "functionOffset": "0x35",
+          "fileOffset": "0x3bc731",
+          "bytes": "6683f90f",
+          "mnemonic": "cmp",
+          "operands": "cx, 0xf",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd735",
+          "functionOffset": "0x39",
+          "fileOffset": "0x3bc735",
+          "bytes": "76d2",
+          "mnemonic": "jbe",
+          "operands": "0x4200000fd709",
+          "references": [],
+          "branch": {
+            "target": "0x4200000fd709",
+            "insideWindow": true,
+            "insideFunction": true,
+            "fallthrough": "0x4200000fd737"
+          }
+        },
+        {
+          "address": "0x4200000fd737",
+          "functionOffset": "0x3b",
+          "fileOffset": "0x3bc737",
+          "bytes": "6681c25062",
+          "mnemonic": "add",
+          "operands": "dx, 0x6250",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd73c",
+          "functionOffset": "0x40",
+          "fileOffset": "0x3bc73c",
+          "bytes": "6683fa10",
+          "mnemonic": "cmp",
+          "operands": "dx, 0x10",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd740",
+          "functionOffset": "0x44",
+          "fileOffset": "0x3bc740",
+          "bytes": "19c0",
+          "mnemonic": "sbb",
+          "operands": "eax, eax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd742",
+          "functionOffset": "0x46",
+          "fileOffset": "0x3bc742",
+          "bytes": "83e002",
+          "mnemonic": "and",
+          "operands": "eax, 2",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd745",
+          "functionOffset": "0x49",
+          "fileOffset": "0x3bc745",
+          "bytes": "83c006",
+          "mnemonic": "add",
+          "operands": "eax, 6",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd748",
+          "functionOffset": "0x4c",
+          "fileOffset": "0x3bc748",
+          "bytes": "c3",
+          "mnemonic": "ret",
+          "operands": "",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd749",
+          "functionOffset": "0x4d",
+          "fileOffset": "0x3bc749",
+          "bytes": "b808000000",
+          "mnemonic": "mov",
+          "operands": "eax, 8",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4200000fd74e",
+          "functionOffset": "0x52",
+          "fileOffset": "0x3bc74e",
+          "bytes": "c3",
+          "mnemonic": "ret",
+          "operands": "",
+          "references": [],
+          "branch": null
+        }
+      ]
+    }
+  ],
+  "tools": {
+    "capstone": "5.0.7",
+    "pyelftools": "0.33"
+  },
+  "newRuntimeExperiment": false
+}
