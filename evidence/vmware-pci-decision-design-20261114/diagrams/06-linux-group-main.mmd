@@ -1,0 +1,39 @@
+%% Linux v6.6 pci_device_group normal PCI path; source-based reconstruction.
+%% linux-evidence: L01 L02 L03 L04 L08 L09 L11
+flowchart TB
+    START["原设备 D 进入 pci_device_group<br/>初始化同 bus 搜索位图 seen · L02"]
+    A["A · 枚举 DMA alias<br/>回调查询沿途对象已有的 group · L03 / L04"]
+    AQ["找到已有 G？"]
+    AP["没有：P = 最后一次回调的对象<br/>P 可能已是桥，原设备仍是 D"]
+    B["B · 向上考察 bus 与整条 ACS 路径<br/>必要时把 P 提到上游桥并查旧组 · 见图②"]
+    BQ["找到已有 G？"]
+    C["C · 对最终 P 查同 bus alias 关系<br/>get_pci_alias_group(P, seen) · L08"]
+    CQ["找到已有 G？"]
+    D["D · 查未隔离的同 slot 多功能成员<br/>get_pci_function_alias_group(P, seen) · L09"]
+    DQ["找到已有 G？"]
+    NEW["都没有：iommu_group_alloc()<br/>新建 G，或返回分配错误"]
+    R1["返回旧 G<br/>交外层登记 D"]
+    R2["返回旧 G<br/>交外层登记 D"]
+    R3["返回旧 G<br/>交外层登记 D"]
+    R4["返回旧 G<br/>交外层登记 D"]
+    OUT["外层将结果关联到原设备 D<br/>随后登记成员；不代表 VM 已获得使用权 · L01 / L11"]
+    ERR["返回分配错误<br/>不把错误指针登记为 group"]
+    START --> A --> AQ
+    AQ -->|是| R1
+    AQ -->|否| AP --> B --> BQ
+    BQ -->|是| R2
+    BQ -->|否：保留最终 P| C --> CQ
+    CQ -->|是| R3
+    CQ -->|否：seen 不清空| D --> DQ
+    DQ -->|是| R4
+    DQ -->|否| NEW
+    NEW -->|成功得到 G| OUT
+    NEW -->|分配失败| ERR
+    classDef blue fill:#eef5fc,stroke:#35608b,color:#16324f,stroke-width:1.5px
+    classDef green fill:#e9f6f0,stroke:#297354,color:#174b37
+    classDef note fill:#f6f7f9,stroke:#a4aebb,color:#475467
+    classDef bad fill:#fff0ee,stroke:#b74e42,color:#7c3027
+    class A,B,C,D,AQ,BQ,CQ,DQ blue
+    class R1,R2,R3,R4,NEW green
+    class AP,OUT note
+    class ERR bad

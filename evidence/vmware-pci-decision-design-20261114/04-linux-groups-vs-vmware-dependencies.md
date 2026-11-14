@@ -6,6 +6,8 @@
 
 范围：VMware 固定为 ESXi `24280767` 的已核对路径；Linux 固定为上游 `v6.6` 的通用 PCI 分组、VFIO 路径。其他 IOMMU 后端可能有额外规则；我们的 ACS override 补丁单独讨论。
 
+需要看每个循环、提前返回和递归调用时，读 **[Linux 分组详细流程图及与 VMware 的逐项对照](05-linux-iommu-group-flow.md)**。本章先解释对象含义，下一章展开算法。
+
 ![Linux DMA 分组与 VMware 多种依赖范围](diagrams/05-groups-vs-dependencies.png)
 
 图中的虚线表示职责之间的关联，不表示它们是同一个对象或直接函数调用。

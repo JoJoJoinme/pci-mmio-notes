@@ -1,0 +1,50 @@
+%% Linux v6.6; helpers share a 256-bit devfn visited bitmap.
+%% Recursive calls are named nodes instead of cross-panel edges.
+%% linux-evidence: L08 L09 L10 L06
+flowchart LR
+    subgraph CC["C helper · 同 bus alias 查找 · L08"]
+      direction TB
+      C0["P.devfn 已访问？<br/>test_and_set_bit 同时记录本次访问"]
+      C1["P 自己已有 group？"]
+      C2["遍历同 bus 的其他 T<br/>任一方向 alias 命中即关联 · L10"]
+      C3["先递归调用 C(T, seen)"]
+      C4["返回了旧 G？"]
+      C5["没有：再调用 D(T, seen)"]
+      C6["返回了旧 G？"]
+      CN["继续下一 T<br/>全部遍历完则返回 NULL"]
+      CNULL["返回 NULL<br/>未找到旧组，不是隔离证明"]
+      CG["返回已有 G"]
+      C0 -->|已访问| CNULL
+      C0 -->|未访问| C1
+      C1 -->|有| CG
+      C1 -->|无| C2 --> C3 --> C4
+      C4 -->|有| CG
+      C4 -->|无| C5 --> C6
+      C6 -->|有| CG
+      C6 -->|无| CN
+      CN --> C2
+      C2 -->|没有候选| CNULL
+    end
+    subgraph DD["D helper · 同 slot 多功能查找 · L09"]
+      direction TB
+      D0["P 是多功能，且其 ACS 未通过？"]
+      D1["遍历其他 T<br/>同 bus、同 slot、T 的 ACS 也未通过"]
+      D2["调用 C(T, seen)<br/>查 T 自身与它的 alias 链"]
+      D3["返回了旧 G？"]
+      DN["继续下一 T<br/>全部遍历完则返回 NULL"]
+      DNULL["返回 NULL<br/>本次没找到旧组"]
+      DG["返回已有 G"]
+      D0 -->|否| DNULL
+      D0 -->|是| D1 --> D2 --> D3
+      D3 -->|有| DG
+      D3 -->|无| DN
+      DN --> D1
+      D1 -->|没有候选| DNULL
+    end
+    CC ~~~ DD
+    classDef blue fill:#eef5fc,stroke:#35608b,color:#16324f,stroke-width:1.5px
+    classDef green fill:#e9f6f0,stroke:#297354,color:#174b37
+    classDef note fill:#f6f7f9,stroke:#a4aebb,color:#475467
+    class C0,C1,C4,C6,D0,D3 blue
+    class CG,DG green
+    class CNULL,DNULL,CN,DN note

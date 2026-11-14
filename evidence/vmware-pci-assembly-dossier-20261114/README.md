@@ -1,6 +1,6 @@
 # VMware PCI 直通汇编证据文档集
 
-想先理解设计，再核对指令，可先读[资格、主机 API 与开机依赖检查设计视图](../vmware-pci-decision-design-20261114/README.md)：五张图串起判断链路，并区分 Linux DMA group、复位范围和 VMware 的依赖代表与操作范围。
+想先理解设计，再核对指令，可先读[资格、主机 API 与开机依赖检查设计视图](../vmware-pci-decision-design-20261114/README.md)：图解判断链路，并附 Linux 分组的实际顺序、上游循环和横向递归，供逐项比较。
 
 这里直接展示原始指令、机器字节与逐段解释。先读你关心的实现：
 

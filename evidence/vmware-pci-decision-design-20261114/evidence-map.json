@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "Reconstructed design, based on existing binary evidence; no new runtime claims",
-  "sourceRevision": "0774e76d39fc15ffc34bae5e13bc16b838766cbd",
+  "sourceRevision": "b189a08db1925475fd4aa0893078e4033dd67951",
   "primaryBuild": "24280767",
   "snippetIndex": "evidence/vmware-pci-assembly-dossier-20261114/evidence/snippets.json",
   "sources": [
@@ -770,5 +770,6 @@
         "LINUX6"
       ]
     }
-  ]
+  ],
+  "linuxFlowEvidence": "linux-flow-evidence.json"
 }

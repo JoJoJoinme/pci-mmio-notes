@@ -1,0 +1,55 @@
+%% Linux v6.6; two separate expansions of stages A and B in the main diagram.
+%% linux-evidence: L02 L03 L04 L05 L06 L07
+flowchart TB
+    subgraph AA["A · DMA alias 枚举 · L04"]
+      direction TB
+      A0["先取 pci_real_dma_dev(D)"]
+      A1["回调实际设备自身身份<br/>再回调 dma_alias_mask 中的额外身份"]
+      A2["向父 bus 遍历<br/>跳过无 bus.self 的虚拟层"]
+      A3["遇到 BRIDGE_XLATE_ROOT？"]
+      AT["当前桥的类型？"]
+      A4["按桥类型发出回调<br/>PCIe→PCI：下游 bus 的 devfn=0<br/>PCI→PCIe：桥自身身份"]
+      A5["普通 PCIe root / up / down port<br/>不产生额外 alias 回调，继续向上"]
+      AN["换到父 bus，继续遍历"]
+      AEND["到根或转换边界：结束枚举<br/>没找到 G 时保留最后回调对象 P"]
+      CB["每次回调均执行 · L03<br/>保存对象 P；读 P 已有 G<br/>有 G 则立即停止全部枚举"]
+      A0 --> A1 --> A2 --> A3
+      A3 -->|是| AEND
+      A3 -->|否| AT
+      AT -->|转换桥 / 普通 PCI 桥| A4 --> AN
+      AT -->|root / up / down| A5 --> AN
+      AT -->|其他未发回调类型| AN
+      AN --> A2
+      A2 -->|已到根| AEND
+      A1 -.- CB
+      A4 -.- CB
+    end
+    subgraph BB["B · 上游查找循环 · L02"]
+      direction TB
+      B0["从 A 阶段留下的 P.bus 开始"]
+      B1["当前 bus 已是 root bus？"]
+      B2["有 bus.self 上游桥？"]
+      B3["从该桥到根的 ACS 路径全通过？<br/>L05 逐级调用 L06 / L07"]
+      B4["未通过：P = bus.self<br/>然后读取这座桥已有的 group"]
+      B5["有旧 G？"]
+      BN["换到父 bus，继续循环"]
+      BR["返回 G，主流程结束"]
+      BE["结束 B 阶段，保留当前 P<br/>转主流程 C / D"]
+      B0 --> B1
+      B1 -->|是| BE
+      B1 -->|否| B2
+      B2 -->|无| BN
+      B2 -->|有| B3
+      B3 -->|是：不再提升 P| BE
+      B3 -->|否| B4 --> B5
+      B5 -->|是| BR
+      B5 -->|否| BN
+      BN --> B1
+    end
+    AA ~~~ BB
+    classDef blue fill:#eef5fc,stroke:#35608b,color:#16324f,stroke-width:1.5px
+    classDef green fill:#e9f6f0,stroke:#297354,color:#174b37
+    classDef note fill:#f6f7f9,stroke:#a4aebb,color:#475467
+    class A3,AT,B1,B2,B3,B5 blue
+    class AEND,BE,BR green
+    class CB,BN note

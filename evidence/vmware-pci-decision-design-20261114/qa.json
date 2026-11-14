@@ -8,12 +8,16 @@
       "diagrams/02-power-on.png",
       "diagrams/03-dependency.png",
       "diagrams/04-host-api-enable.png",
-      "diagrams/05-groups-vs-dependencies.png"
+      "diagrams/05-groups-vs-dependencies.png",
+      "diagrams/06-linux-group-main.png",
+      "diagrams/07-linux-alias-and-upstream.png",
+      "diagrams/08-linux-peer-recursion.png"
     ],
     "result": "No observed clipped labels, missing glyphs, or text overlap",
     "iteration": "Replaced oversized diamonds and staggered combined panels with compact gates and side-by-side power-on panels",
     "apiDiagramReview": "Rendered 04-host-api-enable.png inspected; labels legible, no observed clipping or overlap",
-    "groupDiagramReview": "Side-by-side rendered responsibility comparison inspected; no observed clipped glyphs or overlap"
+    "groupDiagramReview": "Side-by-side rendered responsibility comparison inspected; no observed clipped glyphs or overlap",
+    "linuxFlowReview": "Rendered main, upstream and recursive diagrams visually inspected; upstream panels stacked for readable width"
   },
   "semanticReview": [
     "Four-gate capable predicate is separate from current VM ownership",
@@ -38,7 +42,16 @@
     "VMware configuration, host-owner precheck, VMM-owner scan and alias-domain switching ranges are separated",
     "M07 endpoint/root/downstream type paths and conditional ACS masks are preserved",
     "Intel ACS Control offset quirk is a register-layout adjustment, not unconditional admission",
-    "Software bypass and cached verdict are not claimed to create hardware isolation"
+    "Software bypass and cached verdict are not claimed to create hardware isolation",
+    "Common probe associates the result with the original device, not the moved search cursor",
+    "Intel and AMD PCI wrappers both select pci_device_group in the pinned v6.6 sources",
+    "Alias callback checks the PCI object group and does not use numeric alias for a group-table lookup",
+    "Upstream path check happens before moving the cursor to the bridge and covers the whole path to root",
+    "Peer alias predicate uses OR across directions, not a requirement for mutual alias entries",
+    "NULL helper result means no existing group found, not an isolation certificate",
+    "Both recursive helpers share one same-bus devfn bitmap; allocation errors do not register a group",
+    "ACS override influence is localized to path and multifunction ACS verdicts, not explicit DMA alias enumeration",
+    "Walkthroughs are source-based examples with stated starting state; no invented sysfs observation"
   ],
   "hostApiSupplement": {
     "windows": 6,
@@ -50,5 +63,13 @@
     "instructions": 23,
     "bytes": 83,
     "proof": "acs-supplement/objdump-verification.json"
+  },
+  "newLinuxRuntimeTests": false,
+  "linuxSourceFlow": {
+    "files": 5,
+    "fragments": 14,
+    "newDiagrams": 3,
+    "receipt": "linux-flow-verification.json",
+    "method": "Fetched fixed v6.6 sources; independently recomputed Git blob SHA-1, SHA-256 and selected line hashes"
   }
 }

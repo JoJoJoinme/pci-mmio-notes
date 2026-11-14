@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "sourceFilesChecked": 5,
+  "sourceMapSha256": "6d0014d505fd3207623fc521081c0a73aa0f9ade11035eb2028be9f2c93c8b90",
+  "fragments": 14,
+  "diagrams": 3,
+  "scope": "Source and diagram provenance; not execution of the grouping algorithm"
+}

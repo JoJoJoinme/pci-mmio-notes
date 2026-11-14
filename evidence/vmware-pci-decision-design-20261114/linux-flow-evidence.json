@@ -1,0 +1,551 @@
+{
+  "schemaVersion": 1,
+  "checkedDate": "2026-11-14",
+  "version": "v6.6",
+  "scope": "Static source-to-flow mapping; no new runtime grouping observation",
+  "files": [
+    {
+      "id": "core",
+      "path": "drivers/iommu/iommu.c",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "c146378c7d032c3805f46e6db24a6a9e47e4a264",
+      "gitBlobSha1Verified": true,
+      "sha256": "c4be67e5b1ad0f84bbc3fbd90b2765327985aad516aa9263c93a775bd1dfee62",
+      "bytes": 93086,
+      "lineCount": 3541
+    },
+    {
+      "id": "pci_search",
+      "path": "drivers/pci/search.c",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/search.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "b4c138a6ec025db184f12b1c5ff91a204a13361e",
+      "gitBlobSha1Verified": true,
+      "sha256": "cac11fb6e87beec703581287e7ab4c55d17c22a3c69501eeb48257490b4c237e",
+      "bytes": 12437,
+      "lineCount": 392
+    },
+    {
+      "id": "pci_core",
+      "path": "drivers/pci/pci.c",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/pci.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "59c01d68c6d5ed16ed07622694f321ca8092e40f",
+      "gitBlobSha1Verified": true,
+      "sha256": "51b0d8a780011a00a9fba0b86ef43c6d2818a425b3f39529cc581e7c21801c12",
+      "bytes": 188803,
+      "lineCount": 7051
+    },
+    {
+      "id": "intel",
+      "path": "drivers/iommu/intel/iommu.c",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/intel/iommu.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "3685ba90ec88e81baac849f1693f507e005f4a21",
+      "gitBlobSha1Verified": true,
+      "sha256": "9d4a7d55835f683a1913e8cb2e032bb0de71202a236f68b98204f21405c8c7a9",
+      "bytes": 133863,
+      "lineCount": 5110
+    },
+    {
+      "id": "amd",
+      "path": "drivers/iommu/amd/iommu.c",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/amd/iommu.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "95bd7c25ba6f366b5db2582e8cb5318491cbb523",
+      "gitBlobSha1Verified": true,
+      "sha256": "c8d1db3a9afca2a9161f7afd9cf93ce6722345205672d255228d9658ec7acb78",
+      "bytes": 94728,
+      "lineCount": 3783
+    }
+  ],
+  "fragments": [
+    {
+      "id": "L01",
+      "file": "core",
+      "function": "iommu_init_device",
+      "startLine": 388,
+      "endLine": 437,
+      "sha256": "e292f806ef9984ca353d408bdd58d24777a468dcf56d0b8027a10e71365e1fcd",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c#L388-L437"
+    },
+    {
+      "id": "L02",
+      "file": "core",
+      "function": "pci_device_group",
+      "startLine": 1643,
+      "endLine": 1704,
+      "sha256": "d383c881dcc650681ed1f89ca5f74f1474dc529c70478c924d1a8e65ed4d95e4",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c#L1643-L1704"
+    },
+    {
+      "id": "L03",
+      "file": "core",
+      "function": "get_pci_alias_or_group",
+      "startLine": 1619,
+      "endLine": 1627,
+      "sha256": "040a36b51e0f9cda8e834a069e9818c78dfae41f5aac72e3d6ee725b22a02e67",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c#L1619-L1627"
+    },
+    {
+      "id": "L04",
+      "file": "pci_search",
+      "function": "pci_for_each_dma_alias",
+      "startLine": 28,
+      "endLine": 114,
+      "sha256": "92726bdf54981180e52861bb8c8497b91e313d006a991ed84b747fc1bc0f835a",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/search.c#L28-L114"
+    },
+    {
+      "id": "L05",
+      "file": "pci_core",
+      "function": "pci_acs_path_enabled",
+      "startLine": 3666,
+      "endLine": 3684,
+      "sha256": "244f4f97396f40f7a4adec4104b69e0112828447379c4c5d96c628cd6d4d44b1",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/pci.c#L3666-L3684"
+    },
+    {
+      "id": "L06",
+      "file": "pci_core",
+      "function": "pci_acs_enabled",
+      "startLine": 3593,
+      "endLine": 3655,
+      "sha256": "cd44c3a9e036015018577476bd9f627c963d72508d06905a7161667e5185d02a",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/pci.c#L3593-L3655"
+    },
+    {
+      "id": "L07",
+      "file": "pci_core",
+      "function": "pci_acs_flags_enabled",
+      "startLine": 3556,
+      "endLine": 3575,
+      "sha256": "e031954643280e5a0398570e35faf17758604f1811205b4720e961d008fd041b",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/pci.c#L3556-L3575"
+    },
+    {
+      "id": "L08",
+      "file": "core",
+      "function": "get_pci_alias_group",
+      "startLine": 1574,
+      "endLine": 1608,
+      "sha256": "02e9354088f34b6f46bf7a16b14ca33d730ea9865957a99f7ec97e25c13b9b5d",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c#L1574-L1608"
+    },
+    {
+      "id": "L09",
+      "file": "core",
+      "function": "get_pci_function_alias_group",
+      "startLine": 1540,
+      "endLine": 1563,
+      "sha256": "74ba2935ef583888a0982a8c7b928cc491af7e8153396f3eb1bf47243d08b7ff",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c#L1540-L1563"
+    },
+    {
+      "id": "L10",
+      "file": "pci_core",
+      "function": "pci_devs_are_dma_aliases",
+      "startLine": 6557,
+      "endLine": 6565,
+      "sha256": "e4f3ecae6e386cf99f430c23d8de3eea3f77310a62afbeed08d121e7474cd51c",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/pci.c#L6557-L6565"
+    },
+    {
+      "id": "L11",
+      "file": "core",
+      "function": "__iommu_probe_device",
+      "startLine": 482,
+      "endLine": 532,
+      "sha256": "2c73543eb167777912508ea5f4cfab4733f1cd82354bd32585d5736325378ca5",
+      "completeFunction": false,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c#L482-L532"
+    },
+    {
+      "id": "L12",
+      "file": "core",
+      "function": "generic_device_group",
+      "startLine": 1633,
+      "endLine": 1636,
+      "sha256": "1d58e6e7d3c45894145bba9c7deb5f7884e7f85b373ee18a8e533c133dbfe125",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c#L1633-L1636"
+    },
+    {
+      "id": "L13",
+      "file": "intel",
+      "function": "intel_iommu_device_group",
+      "startLine": 4491,
+      "endLine": 4496,
+      "sha256": "4ebdf77a258e041cefd9605cf9b9e0607e6432d1abd4c8ae2bb7f1ec261f3960",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/intel/iommu.c#L4491-L4496"
+    },
+    {
+      "id": "L14",
+      "file": "amd",
+      "function": "amd_iommu_device_group",
+      "startLine": 1959,
+      "endLine": 1965,
+      "sha256": "31c6486471109ad9d367449590d8616fc008c2af45a308a418bfee4e24bfa56e",
+      "completeFunction": true,
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/amd/iommu.c#L1959-L1965"
+    }
+  ],
+  "diagrams": [
+    {
+      "path": "diagrams/06-linux-group-main.mmd",
+      "nodes": [
+        {
+          "node": "START",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "A",
+          "sources": [
+            "L03",
+            "L04"
+          ]
+        },
+        {
+          "node": "AQ",
+          "sources": [
+            "L02",
+            "L03"
+          ]
+        },
+        {
+          "node": "AP",
+          "sources": [
+            "L02",
+            "L03"
+          ]
+        },
+        {
+          "node": "B",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "BQ",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "C",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "CQ",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "D",
+          "sources": [
+            "L09"
+          ]
+        },
+        {
+          "node": "DQ",
+          "sources": [
+            "L09"
+          ]
+        },
+        {
+          "node": "NEW",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "ERR",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "OUT",
+          "sources": [
+            "L01",
+            "L11"
+          ]
+        },
+        {
+          "node": "R1",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "R2",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "R3",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "R4",
+          "sources": [
+            "L02"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "diagrams/07-linux-alias-and-upstream.mmd",
+      "nodes": [
+        {
+          "node": "A0",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "A1",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "A2",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "A3",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "AT",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "A4",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "A5",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "AN",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "AEND",
+          "sources": [
+            "L04"
+          ]
+        },
+        {
+          "node": "CB",
+          "sources": [
+            "L03"
+          ]
+        },
+        {
+          "node": "B0",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "B1",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "B2",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "B3",
+          "sources": [
+            "L05",
+            "L06",
+            "L07"
+          ]
+        },
+        {
+          "node": "B4",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "B5",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "BN",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "BR",
+          "sources": [
+            "L02"
+          ]
+        },
+        {
+          "node": "BE",
+          "sources": [
+            "L02"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "diagrams/08-linux-peer-recursion.mmd",
+      "nodes": [
+        {
+          "node": "C0",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "C1",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "C2",
+          "sources": [
+            "L08",
+            "L10"
+          ]
+        },
+        {
+          "node": "C3",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "C4",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "C5",
+          "sources": [
+            "L08",
+            "L09"
+          ]
+        },
+        {
+          "node": "C6",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "CN",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "CNULL",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "CG",
+          "sources": [
+            "L08"
+          ]
+        },
+        {
+          "node": "D0",
+          "sources": [
+            "L09",
+            "L06"
+          ]
+        },
+        {
+          "node": "D1",
+          "sources": [
+            "L09",
+            "L06"
+          ]
+        },
+        {
+          "node": "D2",
+          "sources": [
+            "L08",
+            "L09"
+          ]
+        },
+        {
+          "node": "D3",
+          "sources": [
+            "L09"
+          ]
+        },
+        {
+          "node": "DN",
+          "sources": [
+            "L09"
+          ]
+        },
+        {
+          "node": "DNULL",
+          "sources": [
+            "L09"
+          ]
+        },
+        {
+          "node": "DG",
+          "sources": [
+            "L09"
+          ]
+        }
+      ]
+    }
+  ]
+}

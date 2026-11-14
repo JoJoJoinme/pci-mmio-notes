@@ -72,6 +72,20 @@
       "id": "ACS_KB2",
       "url": "https://knowledge.broadcom.com/external/article/424082/esxi-advanced-system-settings-mapping-to.html",
       "usedFor": "Public disableACSCheck, enableACSCheckForRP, enableACSDTP2P names"
+    },
+    {
+      "id": "LINUX8",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/intel/iommu.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "3685ba90ec88e81baac849f1693f507e005f4a21",
+      "usedFor": "Intel PCI device_group wrapper selects pci_device_group"
+    },
+    {
+      "id": "LINUX9",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/amd/iommu.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "95bd7c25ba6f366b5db2582e8cb5318491cbb523",
+      "usedFor": "AMD PCI device_group wrapper selects pci_device_group"
     }
   ]
 }

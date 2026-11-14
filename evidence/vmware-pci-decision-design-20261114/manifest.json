@@ -25,8 +25,13 @@
     },
     {
       "path": "04-linux-groups-vs-vmware-dependencies.md",
-      "bytes": 11394,
-      "sha256": "2171335a4da8e15670d8c83446cbd5e856d402aad2a4bcd58c88d3399afb6121"
+      "bytes": 11606,
+      "sha256": "72d1fecb3274faa126a21d3613c2cf5dc45148991215cd67811fdc9c49730f9d"
+    },
+    {
+      "path": "05-linux-iommu-group-flow.md",
+      "bytes": 16415,
+      "sha256": "40176992995b24b24580720cfddbfe065d07cab278fb7df716dc0286bb655b6d"
     },
     {
       "path": "acs-supplement/objdump-verification.json",
@@ -120,8 +125,8 @@
     },
     {
       "path": "diagrams/05-groups-vs-dependencies.png",
-      "bytes": 187506,
-      "sha256": "3ac468b60ccbd40f6ac2af6fa6d7443785a0dd03bf39c92a4a8a709534d26002"
+      "bytes": 187507,
+      "sha256": "30348a1d94bbecc31578ea90502e94730f89eaa1aee6239ddfc504af9609a1cf"
     },
     {
       "path": "diagrams/05-groups-vs-dependencies.svg",
@@ -129,29 +134,84 @@
       "sha256": "b596f7c0116200174fa7ed8b4343ff0f455ed44ce691ba434995276e7fd8ad32"
     },
     {
+      "path": "diagrams/06-linux-group-main.mmd",
+      "bytes": 1934,
+      "sha256": "b1255b3e35c77d169016e014b1741577c514b458b2650e66735693194a11e996"
+    },
+    {
+      "path": "diagrams/06-linux-group-main.png",
+      "bytes": 242979,
+      "sha256": "e1a3ea488e26f4b94adb50fe10db7d0d0f3c025e77ea80dbbeaa3966908e67c8"
+    },
+    {
+      "path": "diagrams/06-linux-group-main.svg",
+      "bytes": 23664,
+      "sha256": "29de9a2a59a5dcf900aba9fa0dd4d65bcec0c54a13eefc92b358a18ca1bf127c"
+    },
+    {
+      "path": "diagrams/07-linux-alias-and-upstream.mmd",
+      "bytes": 2279,
+      "sha256": "cb92e5dba45230a40ea1c8d848ad95cc77f096831ebe9e5df6b96c9bc285687d"
+    },
+    {
+      "path": "diagrams/07-linux-alias-and-upstream.png",
+      "bytes": 328871,
+      "sha256": "8358e5d6e1a69da5638c9396f0d20f739200e02faf82239ef6ca84e35a8c0956"
+    },
+    {
+      "path": "diagrams/07-linux-alias-and-upstream.svg",
+      "bytes": 29808,
+      "sha256": "e713006c027258b421576303ff4d23cacf82f8ced5df1fd33713df38b3b65336"
+    },
+    {
+      "path": "diagrams/08-linux-peer-recursion.mmd",
+      "bytes": 1916,
+      "sha256": "e8c05eccfadc4a89b50385c7114a5cbadec6d11e73b049483c1fc25ea3245165"
+    },
+    {
+      "path": "diagrams/08-linux-peer-recursion.png",
+      "bytes": 212201,
+      "sha256": "06df46741d31e1dbdd7acaddbe0951ed3826647a26da6474373f10f1002041b1"
+    },
+    {
+      "path": "diagrams/08-linux-peer-recursion.svg",
+      "bytes": 26715,
+      "sha256": "b8527816e0cceb477114df8620969f0dbdc5b053c381aa70337cad881786b449"
+    },
+    {
       "path": "evidence-map.json",
-      "bytes": 26027,
-      "sha256": "52d1884a5cb177d068f92f2d00e83d65505ce6e3ea9916612aba72774e25a5f0"
+      "bytes": 26078,
+      "sha256": "ee3b320cd22fe77b78f40615c5fa5c1f9abdd144098b6042c5783c987a8bad88"
     },
     {
       "path": "external-sources.json",
-      "bytes": 3169,
-      "sha256": "23419a612615d94110a83f5f59c8ec985d4ba9dbf91a36d30f2f3202e726a6c5"
+      "bytes": 3733,
+      "sha256": "5a5b974fc15e6db1ceb2f0263e6e438bc8398430282334e11dc6a605c56df4a9"
+    },
+    {
+      "path": "linux-flow-evidence.json",
+      "bytes": 12902,
+      "sha256": "6d0014d505fd3207623fc521081c0a73aa0f9ade11035eb2028be9f2c93c8b90"
+    },
+    {
+      "path": "linux-flow-verification.json",
+      "bytes": 260,
+      "sha256": "d257aafbc292f89c528f21fbdc680e0b2e317d444d96212fa18d4883b9e210d9"
     },
     {
       "path": "qa.json",
-      "bytes": 3073,
-      "sha256": "d3dec4414d78b35e470bc46b1de47fa7c535b91743055dc00211e1bdddea229e"
+      "bytes": 4543,
+      "sha256": "d3953d912b4d0941e81741215027e03e6978e0c4c0c95187839fd5db19efc814"
     },
     {
       "path": "README.md",
-      "bytes": 22671,
-      "sha256": "98dbfdad019e050afcb72974c414eb38a7d449d6938393098344e06eebf30e16"
+      "bytes": 23189,
+      "sha256": "6a527ae86ca74d640d2a19c284e863eab3cbb4e0efa0da547d8379750f9fdac3"
     },
     {
       "path": "render-receipt.json",
-      "bytes": 7842,
-      "sha256": "520289b7be5b7b9f66003f0a3970c2c4137a574ca871d59e2c0f260d775ae358"
+      "bytes": 13228,
+      "sha256": "e9cd9a7f2d59e4ee6c6856c1e929349d369519312bb30e36ade015031407eb3f"
     },
     {
       "path": "supplement/objdump-verification.json",
@@ -215,13 +275,18 @@
     },
     {
       "path": "tools/render.mjs",
-      "bytes": 4585,
-      "sha256": "5a51cb7f6a8f0c3be4b6279c3d04ca07327e5db71eca9ac515e5abd3c86c9e7f"
+      "bytes": 4666,
+      "sha256": "9c47534148649876d522b98a46ee48310f1e834b72c0782595e410f830234761"
     },
     {
       "path": "tools/verify.py",
-      "bytes": 4922,
-      "sha256": "e3773ddcfe03eb6d15e2b29fe231cd248c7e216af7c02fb3f63fc36d9b40122f"
+      "bytes": 5681,
+      "sha256": "d1bdf75cbf1fc7170fc136e2f7fc208365af3bc3de4519848baa0f267cf99f2b"
+    },
+    {
+      "path": "tools/verify_linux_flow.py",
+      "bytes": 2826,
+      "sha256": "dc0b385b4189c6bf03b958cefaf82888127dccd30e70b612f5ef7f1c0f83956d"
     }
   ]
 }

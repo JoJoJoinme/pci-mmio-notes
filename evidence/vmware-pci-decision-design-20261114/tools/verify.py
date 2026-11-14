@@ -70,6 +70,13 @@ def main():
             assert selected["startAddress"] == original["startAddress"]
 
     renders = read_json(ROOT / "render-receipt.json")
+    from verify_linux_flow import verify as verify_linux_flow
+    linux_check = verify_linux_flow()
+    linux_map = read_json(ROOT / 'linux-flow-evidence.json')
+    linux_ids = {f['id'] for f in linux_map['fragments']}
+    linux_proof = read_json(ROOT / 'linux-flow-verification.json')
+    assert linux_proof['status'] == 'PASS' and linux_proof['sourceFilesChecked'] == len(linux_map['files'])
+    assert linux_proof['sourceMapSha256'] == linux_check['sourceMapSha256']
     assert not renders["pageErrors"]
     for diagram in renders["diagrams"]:
         stem = diagram["stem"]
@@ -78,8 +85,11 @@ def main():
         tree = ET.parse(ROOT / "diagrams" / f"{stem}.svg")
         assert all(not node.tag.endswith("foreignObject") for node in tree.iter())
         source = (ROOT / "diagrams" / f"{stem}.mmd").read_text(encoding="utf-8")
-        ids = re.search(r"^%% evidence: (.+)$", source, re.M).group(1).split()
-        assert all(key in known for key in ids)
+        vmware_refs = re.search(r"^%% evidence: (.+)$", source, re.M)
+        linux_refs = re.search(r"^%% linux-evidence: (.+)$", source, re.M)
+        assert vmware_refs or linux_refs
+        if vmware_refs: assert all(key in known for key in vmware_refs[1].split())
+        if linux_refs: assert all(key in linux_ids for key in linux_refs[1].split())
 
     link_count = 0
     for doc in ROOT.rglob("*.md"):
@@ -97,7 +107,8 @@ def main():
     print(json.dumps({"result": "PASS", "scope": "Document and evidence consistency only",
                       "manifestFiles": len(listed), "pinnedSources": len(evidence["sources"]),
                       "mappedNodes": len(evidence["nodes"]), "renderedDiagrams": len(renders["diagrams"]),
-                      "supplementWindows": supplement_count, "localLinks": link_count}, ensure_ascii=False))
+                      "supplementWindows": supplement_count, "linuxSourceFragments": len(linux_ids),
+                      "localLinks": link_count}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
