@@ -1,0 +1,472 @@
+{
+  "schemaVersion": 1,
+  "images": {
+    "vmkctl242": {
+      "build": "24280767",
+      "component": "libvmkctl.so",
+      "sha256": "3432f1036270968cb0a01970a493da2d27033070ebb6dce2546d910c78b135da"
+    },
+    "kernel242": {
+      "build": "24280767",
+      "component": "decompressed k.b00",
+      "sha256": "5b8bef496e20e3d4194af7439f2f0a7273b77c15ab15ba1b117ddbcef9d9f775"
+    },
+    "pcip242": {
+      "build": "24280767",
+      "component": "PCIPassthru ELF in sb.v00",
+      "sha256": "ca5e97d71c9360804c2b3d480e4272c52d0225efbe45fe0b359c739da41077ca"
+    },
+    "pcip255": {
+      "build": "25595708",
+      "component": "PCIPassthru ELF in sb.v00",
+      "sha256": "f5911caac9fa163786ce59a78bfc20284696d205b4a76c8180a141fd0214e089"
+    },
+    "pcip254": {
+      "build": "25433460",
+      "component": "PCIPassthru ELF in sb.v00",
+      "sha256": "47d5ac91f8c8e2ddc0b68ef2a8c145aa427ad6a99f0c863ed380091cc2fcc8ca"
+    }
+  },
+  "selections": [
+    {
+      "id": "A01",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl17IsPassthruCapableEv",
+      "functionLabel": "PciDeviceImpl::IsPassthruCapable",
+      "title": "完整 capable 谓词"
+    },
+    {
+      "id": "A02",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl11SetFromSBDFEthhh",
+      "functionLabel": "PciDeviceImpl::SetFromSBDF",
+      "title": "禁用字段的写入来源",
+      "startAddress": "0x4c6d9f",
+      "endAddress": "0x4c6dc9"
+    },
+    {
+      "id": "A03",
+      "image": "vmkctl242",
+      "functionLabel": "匿名无效 SBDF 辅助函数",
+      "title": "全一 SBDF 哨兵的判定",
+      "functionAddress": "0x4c1990",
+      "functionBytes": 23
+    },
+    {
+      "id": "A04",
+      "image": "kernel242",
+      "symbol": "Hardware_PCIIsInIommuScope",
+      "functionLabel": "Hardware_PCIIsInIommuScope",
+      "title": "IOMMU 覆盖条件"
+    },
+    {
+      "id": "A05",
+      "image": "kernel242",
+      "symbol": "Hardware_PCIPassthruDependentGet",
+      "functionLabel": "Hardware_PCIPassthruDependentGet",
+      "title": "内核状态转为四字段 SBDF"
+    },
+    {
+      "id": "D01",
+      "image": "kernel242",
+      "symbol": "VMKPCIPassthru_GetDeviceDependencies",
+      "functionLabel": "VMKPCIPassthru_GetDeviceDependencies",
+      "title": "完整依赖代表计算"
+    },
+    {
+      "id": "D02",
+      "image": "kernel242",
+      "symbol": "IOMMU_GetReqIdDependencies",
+      "functionLabel": "IOMMU_GetReqIdDependencies",
+      "title": "请求者依赖代表"
+    },
+    {
+      "id": "D03",
+      "image": "kernel242",
+      "symbol": "PCI_GetTopmostAliasingBridge",
+      "functionLabel": "PCI_GetTopmostAliasingBridge",
+      "title": "沿父链选最上层别名桥"
+    },
+    {
+      "id": "D04",
+      "image": "kernel242",
+      "symbol": "PCIBridge_IsAliasing",
+      "functionLabel": "PCIBridge_IsAliasing",
+      "title": "别名桥内部类型集合"
+    },
+    {
+      "id": "D05",
+      "image": "kernel242",
+      "symbol": "PCI_HasFuncIndependentReset",
+      "functionLabel": "PCI_HasFuncIndependentReset",
+      "title": "独立复位方法的位运算"
+    },
+    {
+      "id": "D06",
+      "image": "kernel242",
+      "symbol": "PCI_IsPCIeEndpointDevice",
+      "functionLabel": "PCI_IsPCIeEndpointDevice",
+      "title": "PCIe endpoint 类型判定"
+    },
+    {
+      "id": "O01",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+      "title": "禁用状态的拒绝条件",
+      "startAddress": "0x4cbace",
+      "instructionCount": 9
+    },
+    {
+      "id": "O02",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+      "title": "启动设备检查",
+      "startAddress": "0x4cbbb8",
+      "instructionCount": 13
+    },
+    {
+      "id": "O03",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+      "title": "资格再次检查",
+      "startAddress": "0x4cbc6d",
+      "instructionCount": 8
+    },
+    {
+      "id": "O04",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+      "title": "系统保留设备检查",
+      "startAddress": "0x4cbd59",
+      "instructionCount": 8
+    },
+    {
+      "id": "O05",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv",
+      "functionLabel": "PciDeviceImpl::GetDependantDevice",
+      "title": "管理库取得依赖代表对象"
+    },
+    {
+      "id": "O06",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetDependentChildDevicesEv",
+      "functionLabel": "PciDeviceImpl::GetDependentChildDevices",
+      "title": "反向查找相关设备的比较字段",
+      "startAddress": "0x4cb510",
+      "endAddress": "0x4cb581"
+    },
+    {
+      "id": "O07",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24SetConfiguredDeviceOwnerEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+      "functionLabel": "PciDeviceImpl::SetConfiguredDeviceOwner",
+      "title": "配置依赖成员的主循环",
+      "startAddress": "0x4c7b72",
+      "endAddress": "0x4c7c71"
+    },
+    {
+      "id": "O08",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24SetConfiguredDeviceOwnerEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+      "functionLabel": "PciDeviceImpl::SetConfiguredDeviceOwner",
+      "title": "异常补偿目标与循环",
+      "startAddress": "0x4c7cd5",
+      "endAddress": "0x4c7d18"
+    },
+    {
+      "id": "O09",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl27SetConfiguredDevOwnerNoDepsEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+      "functionLabel": "PciDeviceImpl::SetConfiguredDevOwnerNoDeps",
+      "title": "具体 ConfigStore owner 写入",
+      "startAddress": "0x4c6399",
+      "endAddress": "0x4c63f7"
+    },
+    {
+      "id": "O10",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImplC1Ethhh",
+      "functionLabel": "PciDeviceImpl::constructor",
+      "title": "主 vtable 地址点的构造",
+      "startAddress": "0x4c6fa2",
+      "endAddress": "0x4c6fee"
+    },
+    {
+      "id": "O11",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl14GetOwnerStringEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+      "functionLabel": "PciDeviceImpl::GetOwnerString",
+      "title": "管理库 owner 枚举解释"
+    },
+    {
+      "id": "O12",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToVmkernelEv",
+      "functionLabel": "PciDeviceImpl::SwitchOwnerToVmkernel",
+      "title": "禁用直通进入共同配置路径"
+    },
+    {
+      "id": "O13",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToVmkernelEv",
+      "functionLabel": "PciDeviceImpl::ValidateOwnerToVmkernel",
+      "title": "禁用前的 VM 使用检查",
+      "startAddress": "0x4c35d8",
+      "instructionCount": 19
+    },
+    {
+      "id": "O14",
+      "image": "vmkctl242",
+      "symbol": "_ZNK6VmkCtl8Hardware13PciDeviceImpl6GetSegEv",
+      "functionLabel": "PciDeviceImpl::GetSeg",
+      "title": "GetSeg getter 的真实字段读取"
+    },
+    {
+      "id": "O15",
+      "image": "vmkctl242",
+      "symbol": "_ZNK6VmkCtl8Hardware13PciDeviceImpl6GetBusEv",
+      "functionLabel": "PciDeviceImpl::GetBus",
+      "title": "GetBus getter 的真实字段读取"
+    },
+    {
+      "id": "O16",
+      "image": "vmkctl242",
+      "symbol": "_ZNK6VmkCtl8Hardware13PciDeviceImpl7GetSlotEv",
+      "functionLabel": "PciDeviceImpl::GetSlot",
+      "title": "GetSlot getter 的真实字段读取"
+    },
+    {
+      "id": "O17",
+      "image": "vmkctl242",
+      "symbol": "_ZNK6VmkCtl8Hardware13PciDeviceImpl11GetFunctionEv",
+      "functionLabel": "PciDeviceImpl::GetFunction",
+      "title": "GetFunction getter 的真实字段读取"
+    },
+    {
+      "id": "R01",
+      "image": "pcip242",
+      "symbol": "PCIPassthruRegisterDevice",
+      "functionLabel": "PCIPassthruRegisterDevice",
+      "title": "VM 内存前提与普通登记入口",
+      "startAddress": "0x9a50",
+      "endAddress": "0x9abb"
+    },
+    {
+      "id": "R02",
+      "image": "pcip242",
+      "symbol": "PCIPassthruRegisterDevice",
+      "functionLabel": "PCIPassthruRegisterDevice",
+      "title": "内存前提失败的返回",
+      "startAddress": "0x9b18",
+      "endAddress": "0x9b3c"
+    },
+    {
+      "id": "R03",
+      "image": "pcip242",
+      "symbol": "PCIPassthruRegisterDeviceInt",
+      "functionLabel": "PCIPassthruRegisterDeviceInt",
+      "title": "IOMMU 与模式回调前置检查",
+      "startAddress": "0x4b6c",
+      "endAddress": "0x4c52"
+    },
+    {
+      "id": "R04",
+      "image": "pcip242",
+      "symbol": "PCIPassthruFPTAllowPassthru",
+      "functionLabel": "PCIPassthruFPTAllowPassthru",
+      "title": "依赖桥展开与宿主 owner 检查",
+      "startAddress": "0x255e",
+      "endAddress": "0x263e"
+    },
+    {
+      "id": "R05",
+      "image": "pcip242",
+      "symbol": "PCIPassthruFPTAllowPassthru",
+      "functionLabel": "PCIPassthruFPTAllowPassthru",
+      "title": "无外部代表时检查自身 owner",
+      "startAddress": "0x26ad",
+      "endAddress": "0x26c4"
+    },
+    {
+      "id": "R06",
+      "image": "pcip242",
+      "symbol": "PCIPassthruFPTAllowPassthru",
+      "functionLabel": "PCIPassthruFPTAllowPassthru",
+      "title": "宿主身份与非零 VID DID 条件",
+      "startAddress": "0x263e",
+      "endAddress": "0x269b"
+    },
+    {
+      "id": "R07",
+      "image": "pcip242",
+      "symbol": "PCIPassthruRegisterDeviceInt",
+      "functionLabel": "PCIPassthruRegisterDeviceInt",
+      "title": "按 SBDF 取记录和当前 owner 标识",
+      "startAddress": "0x4c7d",
+      "endAddress": "0x4cda"
+    },
+    {
+      "id": "R08",
+      "image": "pcip242",
+      "symbol": "PCIPassthruRegisterDeviceInt",
+      "functionLabel": "PCIPassthruRegisterDeviceInt",
+      "title": "共同代表与同一 VM 的完整比较循环",
+      "startAddress": "0x4de9",
+      "endAddress": "0x4ea2"
+    },
+    {
+      "id": "R09",
+      "image": "pcip242",
+      "symbol": "PCIPassthruRegisterDeviceInt",
+      "functionLabel": "PCIPassthruRegisterDeviceInt",
+      "title": "RMRR 重叠拒绝分支",
+      "startAddress": "0x5364",
+      "endAddress": "0x53bf"
+    },
+    {
+      "id": "I01",
+      "image": "pcip242",
+      "symbol": "PCIPassthruRegisterDeviceInt",
+      "functionLabel": "PCIPassthruRegisterDeviceInt",
+      "title": "已有域拒绝条件及清理跳转",
+      "startAddress": "0x53bf",
+      "endAddress": "0x543c"
+    },
+    {
+      "id": "I02",
+      "image": "kernel242",
+      "symbol": "IOMMU_GetAddressDomain",
+      "functionLabel": "IOMMU_GetAddressDomain",
+      "title": "域查询返回值的实际含义"
+    },
+    {
+      "id": "I03",
+      "image": "kernel242",
+      "symbol": "IOMMU_GetDeviceDomain",
+      "functionLabel": "IOMMU_GetDeviceDomain",
+      "title": "域指针读取字段"
+    },
+    {
+      "id": "I04",
+      "image": "kernel242",
+      "symbol": "IOMMU_SwitchAddressDomain",
+      "functionLabel": "IOMMU_SwitchAddressDomain",
+      "title": "校验旧域并遍历别名子树"
+    },
+    {
+      "id": "I05",
+      "image": "kernel242",
+      "symbol": "IOMMUSwitchDeviceIterator",
+      "functionLabel": "IOMMUSwitchDeviceIterator",
+      "title": "成员域写入 同域引用与错误处理"
+    },
+    {
+      "id": "I06",
+      "image": "pcip242",
+      "symbol": "PCIPassthruEnablePCIDevice",
+      "functionLabel": "PCIPassthruEnablePCIDevice",
+      "title": "普通 PCI 激活入口的登记及状态条件",
+      "startAddress": "0x7c40",
+      "endAddress": "0x7cfc"
+    },
+    {
+      "id": "I07",
+      "image": "pcip242",
+      "symbol": "PCIPassthruEnablePCIDevice",
+      "functionLabel": "PCIPassthruEnablePCIDevice",
+      "title": "普通 PCI 激活的切域调用和 VMkernel 域回退",
+      "startAddress": "0x7eb0",
+      "endAddress": "0x7ee3"
+    },
+    {
+      "id": "I08",
+      "image": "kernel242",
+      "symbol": "IOMMUHandleBridgePCIEToPCI.isra.0",
+      "functionLabel": "IOMMUHandleBridgePCIEToPCI.isra.0",
+      "title": "PCIe 到 PCI 桥的专门映射处理"
+    },
+    {
+      "id": "I09",
+      "image": "kernel242",
+      "symbol": "PCI_CanDeviceBeAssignedToIOMMUDomain",
+      "functionLabel": "PCI_CanDeviceBeAssignedToIOMMUDomain",
+      "title": "子树回调前的节点资格过滤"
+    },
+    {
+      "id": "M01",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl15LoadPassthruMapEv",
+      "functionLabel": "PciDeviceImpl::LoadPassthruMap",
+      "title": "map 中复位选择器及 shareable 值",
+      "startAddress": "0x4c909d",
+      "endAddress": "0x4c91db"
+    },
+    {
+      "id": "M02",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23RestoreFptShareableAttrEv",
+      "functionLabel": "PciDeviceImpl::RestoreFptShareableAttr",
+      "title": "共享属性写入 VSI"
+    },
+    {
+      "id": "M03",
+      "image": "kernel242",
+      "symbol": "Hardware_PCIPassthruShareableSet",
+      "functionLabel": "Hardware_PCIPassthruShareableSet",
+      "title": "shareable 输入取反后设置依赖"
+    },
+    {
+      "id": "M04",
+      "image": "kernel242",
+      "symbol": "PCI_SetMultiFuncDependency",
+      "functionLabel": "PCI_SetMultiFuncDependency",
+      "title": "设置依赖所需 Header 和端口类型"
+    },
+    {
+      "id": "M05",
+      "image": "kernel242",
+      "symbol": "PCI_HasD3D0Reset",
+      "functionLabel": "PCI_HasD3D0Reset",
+      "title": "D3D0 需要显式选择器"
+    },
+    {
+      "id": "M06",
+      "image": "kernel242",
+      "symbol": "PCI_FindResetMethod",
+      "functionLabel": "PCI_FindResetMethod",
+      "title": "复位方法选择的完整函数"
+    },
+    {
+      "id": "M07",
+      "image": "kernel242",
+      "symbol": "PCIE_EnforceACS",
+      "functionLabel": "PCIE_EnforceACS",
+      "title": "ACS 类型 检查 缓存与软件策略"
+    },
+    {
+      "id": "V01",
+      "image": "pcip255",
+      "symbol": "PCIPassthruRegisterDeviceInt",
+      "functionLabel": "PCIPassthruRegisterDeviceInt",
+      "title": "U3k 25595708 的已有域分支",
+      "startAddress": "0x5307",
+      "instructionCount": 23
+    },
+    {
+      "id": "V02",
+      "image": "pcip254",
+      "symbol": "PCIPassthruRegisterDeviceInt",
+      "functionLabel": "PCIPassthruRegisterDeviceInt",
+      "title": "9.1 25433460 的已有域分支",
+      "startAddress": "0x4418",
+      "endAddress": "0x4472"
+    }
+  ],
+  "scope": "Selected instruction windows; no target binary or full-library disassembly distribution",
+  "addressConvention": "End addresses are exclusive; branch targets outside a window remain explicit"
+}

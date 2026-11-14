@@ -1,0 +1,691 @@
+{
+  "schemaVersion": 1,
+  "selfExcluded": true,
+  "hashAlgorithm": "SHA-256",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 98,
+      "sha256": "b063fbe61fc3e1480815c7037ffc6c5fab7bda30f618f80b6c70655a023a4158",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "00-reading-guide.md",
+      "bytes": 4612,
+      "sha256": "3ab380f9e4c66890363854bccd651373ba902c7dc8b0af79a8081b6c9c1d4936",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "01-capable.md",
+      "bytes": 17074,
+      "sha256": "9d7beb3a4814762589f998f64ca8aa9394b3906995f83caa103b6268496254cf",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "02-dependency-construction.md",
+      "bytes": 27306,
+      "sha256": "5a18b55112dcc7e29aa6e04360cd7c48a1be42f53145fd3ba8c1fc5a1970f8fd",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "03-owner-transitions.md",
+      "bytes": 48655,
+      "sha256": "507f98e49f7f2c375999ad4c87604ed428bccdca5a4fd3ade3ad275b5cf9d36c",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "04-vm-admission.md",
+      "bytes": 38727,
+      "sha256": "f2688c8a0ddb33e40b45afeefd42be0d2a8d9b09b464019c5d0953abdc4c5865",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "05-domain-lifecycle.md",
+      "bytes": 55593,
+      "sha256": "d972bdae6258f2af13621421020c80a03f49155f070f1a171620ab0ac3cabd05",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "06-reset-map-acs.md",
+      "bytes": 52263,
+      "sha256": "a136a0f9b4a174348d1b5db0c967a910de6988613cb3c67045bae194d42c5ab1",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "07-runtime-and-versions.md",
+      "bytes": 12858,
+      "sha256": "21eb09c6386d476dde3b8023c74e02d6873042686ff901f0bf4c40df6e047a2b",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "08-reproduce-and-unknowns.md",
+      "bytes": 5184,
+      "sha256": "02c90c4b6b581cdb8990011346f315c77cc65c97b53e3819d19fcf7c120b9d40",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "evidence/document-map.json",
+      "bytes": 1218,
+      "sha256": "f01fcb249e985ddc032d5c738353208064150a4804a70cbad3de43d2eb03fd22",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "evidence/objdump-verification.json",
+      "bytes": 9967,
+      "sha256": "e77e491c7d8e9f8ba961bd39620588d964e4ccd1c41885e666b17ac3f7fc7cfb",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "evidence/runtime-crosswalk.json",
+      "bytes": 7351,
+      "sha256": "58455aa828caafc077c08065096b1230036b642846917ab07242b2885a45df02",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "evidence/snippets.json",
+      "bytes": 662133,
+      "sha256": "e62fdfe76f8291bac27c4ef1e255dbe0f905a84d87af14caabd6bd61c919d8b5",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "FUNCTIONS.md",
+      "bytes": 4723,
+      "sha256": "85f603b02dca441cbac9e4db8ccb35c6f381b9abb5b577ecdb840d4f73a98df1",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 8118,
+      "sha256": "4a6bc04c3c8b7769a8f15b33a3e32af9fdf4056ab7cd3a85c0e5e3d34710566a",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "selection-plan.json",
+      "bytes": 15251,
+      "sha256": "c1791d712fec4ae68917de9f0ed8327aec5109d18e394c06935d268815a4653c",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/A01.asm",
+      "bytes": 5130,
+      "sha256": "55eee2a21b2752778824b30b13fa9272820b73e694dae7a598575eaebed25ff3",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/A02.asm",
+      "bytes": 1392,
+      "sha256": "1bdcfafc268617ee6305bad70810a59b91237c2b4ffcc8a52b6ede80961610ec",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/A03.asm",
+      "bytes": 1131,
+      "sha256": "d3d1397d49907f89f04c4ed282cf6ba57e4a8a51857688d20de4de735b5ccf92",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/A04.asm",
+      "bytes": 3504,
+      "sha256": "ad02861be9090f7163fb46de3cd4905dcc7bde381864539c2b685e3a3ef554c1",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/A05.asm",
+      "bytes": 4581,
+      "sha256": "fa2ec805c875080bacb726c8079a35531d79e83d1bcd7b27cbe90c159497206f",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/D01.asm",
+      "bytes": 6693,
+      "sha256": "5d60a0f500af81f0be52febaff952a9bf3b4841ae3b0560f66408b88fb41a39c",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/D02.asm",
+      "bytes": 2713,
+      "sha256": "266bca4850509c47c00b568276e97b332889ecdd58c6ea746b9263322513985d",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/D03.asm",
+      "bytes": 3048,
+      "sha256": "3635d42d187bb79a95633fe7adaf7b197d71a5a4056dfdd9b774c0e521e4dbd0",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/D04.asm",
+      "bytes": 1155,
+      "sha256": "307a5e3dad15392ed024462020d5e90d49378483c7e6064ee4bc24f7508ab4b9",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/D05.asm",
+      "bytes": 1104,
+      "sha256": "c6475889773c3aa44b5ac09b49beb03d11d8c096226f55e606652942da8e791a",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/D06.asm",
+      "bytes": 1400,
+      "sha256": "3eb1e75a512b38de3c4ea07b73c4cd5e4c2e487b62cf092449fa3c36af6c4465",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I01.asm",
+      "bytes": 3347,
+      "sha256": "39a5ffe5f1b590a81d425a2e2b79886f442185e75a8b4cedff82c91acb216fe7",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I02.asm",
+      "bytes": 2212,
+      "sha256": "995a53b8597d51dbd7e24a6b7abae2e5aa55615c06f322579f3008f66f51f134",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I03.asm",
+      "bytes": 4551,
+      "sha256": "554e2c7f689845955c7064bf3529554994d50e99d2e93f95a75e1a870a14360f",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I04.asm",
+      "bytes": 7617,
+      "sha256": "e3c4e53a692d51dba259582599e0f61225b399313ca1bb56e789fa874037e03c",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I05.asm",
+      "bytes": 11741,
+      "sha256": "6d2a0ef68c3b8e08bbcd7a64243066aa17f99d898de4a7a0f4be61e1545aeadb",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I06.asm",
+      "bytes": 4804,
+      "sha256": "3d73c4bfabebfeffc61e9fdaff4a1a0250abcf03ea11326414b1d15b8a0548ca",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I07.asm",
+      "bytes": 1904,
+      "sha256": "f145278374654b2b3670ae83df8c0804d564ada2d3f5ed54ec6ba870c21c22fc",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I08.asm",
+      "bytes": 8489,
+      "sha256": "7ccbc2b8974ffeeb6b513ef56647496e2ace5b0ba7e253fe9b59c65140b21c3f",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/I09.asm",
+      "bytes": 2830,
+      "sha256": "c3fd3a084280c094393dea16e23e7619f8e487fdd475cdc7c9f39933337fb43a",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/M01.asm",
+      "bytes": 8523,
+      "sha256": "61c76ebac6942a94d4676cc282d49c7508fef355082b6fa4f43cb30af01ebf7b",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/M02.asm",
+      "bytes": 4098,
+      "sha256": "358935e0e38042fda2f65cbe8693240043cf8251b9a4d2c53c01295f63427f38",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/M03.asm",
+      "bytes": 2896,
+      "sha256": "4d18aa2c65b0c94e25548711c8887bda1b13cf0800e4728ec1983a29515725c0",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/M04.asm",
+      "bytes": 2701,
+      "sha256": "97b0a54d3c4a85b2a507497ebc0a29072277ddb22e8c2973c83dceff6730d4f0",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/M05.asm",
+      "bytes": 3059,
+      "sha256": "0af33cd92e6acd5dedc951d0a9418660dc252497346c249dc251de521b30d254",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/M06.asm",
+      "bytes": 9491,
+      "sha256": "a1bb34b5cb5c416c3ea5bf0a4332165071a98a1975accd039081e94ec5cf12c6",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/M07.asm",
+      "bytes": 15380,
+      "sha256": "826b3dd1445227a19e060f321c663be3e6867f30bf96ae22afe5f7e0868eca78",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O01.asm",
+      "bytes": 1352,
+      "sha256": "04beca3df9d52816c650722dbfafcf983f330c4612aefc6e6d224b646f1047e6",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O02.asm",
+      "bytes": 1765,
+      "sha256": "5f0d0e3ad8af2c290eb5e88235b2dbd440e82d6fb9eb8b26a672db636b324740",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O03.asm",
+      "bytes": 1225,
+      "sha256": "8cd2526bc8ea78dbee5726470eed5f4e34079e37dc2b3a3369fea983536e4c3d",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O04.asm",
+      "bytes": 1257,
+      "sha256": "b20e6cf9209cc8189f16bf391dfb3e864c45cd84012d08e5960ad9bd5babb720",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O05.asm",
+      "bytes": 3453,
+      "sha256": "78392c449763637d8286b10d50a7c40ebee2c6080705f8d715c59abf9546e761",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O06.asm",
+      "bytes": 3871,
+      "sha256": "fc46537cc130f14947578eda24a6b1b0fc9177ea667a4997f75728cd8f5bfd90",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O07.asm",
+      "bytes": 7161,
+      "sha256": "1a86a649d4dfdcac77184ca4c1de157aff036420296d94e8eb86b8473390f246",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O08.asm",
+      "bytes": 2219,
+      "sha256": "84526f89c9ae37dd884301a819f606373cbd6a74dd2e4b58b6a0f4363eb1d2c6",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O09.asm",
+      "bytes": 2762,
+      "sha256": "a7423cbe570b996403a6762429b63977cdf8b5c5ec4160af973b9ad09ea76061",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O10.asm",
+      "bytes": 2041,
+      "sha256": "8dded906355aae34829da2d9d9a4e5951b7880bbc5f076c8c88055d15e14aa4e",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O11.asm",
+      "bytes": 2331,
+      "sha256": "bfefcb182c5933ba22d88616300d2e716627732cfc92b41cf7ca894913feec4d",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O12.asm",
+      "bytes": 3715,
+      "sha256": "a5e0f3d3d6992275dbf2a73fa15b8df89be1e7518e44ad4283f8495af5417b63",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O13.asm",
+      "bytes": 2292,
+      "sha256": "4bcedbbfc8bf0555ffb759a84cbb9abb226e3b7c78333b2495fa3cec29ea5735",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O14.asm",
+      "bytes": 521,
+      "sha256": "265b04aaecfa994a250106e6614415e0c977f3ff97f773a666b42ff0e5622c9d",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O15.asm",
+      "bytes": 519,
+      "sha256": "6aedc47a79e97fe85cde7cb5dfd05d4164640e570a09d715b0716f6c0b9ea493",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O16.asm",
+      "bytes": 521,
+      "sha256": "a1592de873f024cf1148e82ae8c60809c5264a2397565d98a7fd4cc234342ef7",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/O17.asm",
+      "bytes": 529,
+      "sha256": "a5b2e499d23cdfd18bc8f1a3db8258479faeb56f484c9eeed74f6b5f2abefef6",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R01.asm",
+      "bytes": 3329,
+      "sha256": "ba1f522a0957078ba294e56fbb85496246b91e7413a28233c7df56651ad458b9",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R02.asm",
+      "bytes": 1440,
+      "sha256": "d9b31896e9243e9f48958630c0d370b15032a9ff5ba7903a025fb9bab7a03bea",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R03.asm",
+      "bytes": 5878,
+      "sha256": "04210831aea3921bbca2d9a773fe9b9b02260544da5f3666a4293ea5d7c587f8",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R04.asm",
+      "bytes": 5989,
+      "sha256": "ec074d46d3ff44cf4b4a702d1f2d87b88e8562655d4ca9da56c81c1fba591bc7",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R05.asm",
+      "bytes": 875,
+      "sha256": "8dcc25c31523cc56c266a7f73e1fc363284239a1730c6072a385bed8588d9f98",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R06.asm",
+      "bytes": 2748,
+      "sha256": "8e2baa8d3c82cc43ca0c38a2e884e8611485ed7feaec133b4906b0ff589c770b",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R07.asm",
+      "bytes": 2431,
+      "sha256": "576145e48ad9ad7a4955ba18f165fead520641aabd3f1e9e58e10ac951594bcd",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R08.asm",
+      "bytes": 5225,
+      "sha256": "c91320ad17a57c60c86f1c78062c434a3de6edf5d918dc97c32ec3dd40e3174a",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/R09.asm",
+      "bytes": 2739,
+      "sha256": "80f0f41d7624e1dba5fcb1033a4d7a0fe0e3cdd2e19007f2096774f7d452bd75",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/V01.asm",
+      "bytes": 2812,
+      "sha256": "ecd0e5f19978ab9276d7131584860ef35277575abe9b940b4a769b94426d77c9",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "snippets/V02.asm",
+      "bytes": 2562,
+      "sha256": "e388b47706acb278322b788e36ce8ab0fdea26395c6af11e2db54eff5f21a3cc",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "tools/evidence_format.py",
+      "bytes": 2631,
+      "sha256": "2dcce85d18c05b8c9a1fdc4479c46e0192a2851469e1cbc9d680d43cef2d9cc4",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "tools/export_snippets.py",
+      "bytes": 13070,
+      "sha256": "57503934513a26e38e7214062ce567aa359de15d3023d5405b48455a15fb3b95",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "tools/verify_dossier.py",
+      "bytes": 5835,
+      "sha256": "aba0329c7a3fe5d49ba38451783a41a5164d4e14517a146f64e0f531de649a79",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    },
+    {
+      "path": "tools/verify_objdump.py",
+      "bytes": 3639,
+      "sha256": "82094dca4c5a79c3066cf30757e504951bdbfbf609dbd3929674d58687492ce8",
+      "provenance": {
+        "kind": "Selected instruction evidence or authored interpretation",
+        "fullTargetBinaryIncluded": false
+      }
+    }
+  ]
+}

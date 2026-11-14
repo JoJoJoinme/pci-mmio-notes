@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "baselineRepoCommit": "fb37c47482dc3c15e615575560caee903e60e774",
+  "newRuntimeExperiment": false,
+  "cases": [
+    {
+      "case": "legacy-A",
+      "build": "24280767",
+      "source": {
+        "repoPath": "evidence/vmware-legacy-bridge-cause-20261112/raw/native-mf-power-a.json",
+        "sha256": "c6a5b842d3b9fc45bae0a1deaf33d0ae54b7124b2823bafd5b15a0e3b01a07ce",
+        "bytes": 1852
+      },
+      "taskState": "success",
+      "vmPowerState": "poweredOn",
+      "configuredDeviceCount": 1
+    },
+    {
+      "case": "legacy-B",
+      "build": "24280767",
+      "source": {
+        "repoPath": "evidence/vmware-legacy-bridge-cause-20261112/raw/native-mf-power-b.json",
+        "sha256": "8d03dea57f844606fc701ed5d9cfc5ceca4871ff175cce84e117fc22968bf914",
+        "bytes": 1850
+      },
+      "taskState": "success",
+      "vmPowerState": "poweredOn",
+      "configuredDeviceCount": 1
+    },
+    {
+      "case": "legacy-AB",
+      "build": "24280767",
+      "source": {
+        "repoPath": "evidence/vmware-legacy-bridge-cause-20261112/raw/native-mf-power-both.json",
+        "sha256": "a2ea3b5ed1fb1499b488577a0bc8687498444d1f55c4c3334843bc56fc3ed824",
+        "bytes": 4171
+      },
+      "taskState": "error",
+      "vmPowerState": "poweredOff",
+      "configuredDeviceCount": 2
+    },
+    {
+      "case": "legacy-BA",
+      "build": "24280767",
+      "source": {
+        "repoPath": "evidence/vmware-legacy-bridge-cause-20261112/raw/native-mf-power-reverse.json",
+        "sha256": "d6e1f7fec5ac6270f3b29d1be4c95a9841eb637c729efe7e1bcf3d67762315ab",
+        "bytes": 4195
+      },
+      "taskState": "error",
+      "vmPowerState": "poweredOff",
+      "configuredDeviceCount": 2
+    },
+    {
+      "case": "pcie-AB",
+      "build": "24280767",
+      "source": {
+        "repoPath": "evidence/vmware-legacy-bridge-cause-20261112/raw/root-control/root-control-power-both.json",
+        "sha256": "e5ac4077218bfa5b393e9fffd098081846b6b69b2a940871c7735bc85d15d7ab",
+        "bytes": 2694
+      },
+      "taskState": "success",
+      "vmPowerState": "poweredOn",
+      "configuredDeviceCount": 2
+    },
+    {
+      "case": "pcie-BA",
+      "build": "24280767",
+      "source": {
+        "repoPath": "evidence/vmware-legacy-bridge-cause-20261112/raw/root-control/root-control-power-reverse.json",
+        "sha256": "a226f9340551d321f180b461516971d903982930a9735f56fdc2718ded48eef9",
+        "bytes": 2718
+      },
+      "taskState": "success",
+      "vmPowerState": "poweredOn",
+      "configuredDeviceCount": 2
+    },
+    {
+      "case": "u3k-AB",
+      "build": "25595708",
+      "source": {
+        "repoPath": "evidence/vmware-passthrough-version-review-20261113/raw/u3k/u3k-default-power-both.json",
+        "sha256": "933212440ee1d7c1a703b5c79558ea5a566d712909f6e6ee6ba89a0147ef1889",
+        "bytes": 4186
+      },
+      "taskState": "error",
+      "vmPowerState": "poweredOff",
+      "configuredDeviceCount": 2
+    },
+    {
+      "case": "9.1-AB",
+      "build": "25433460",
+      "source": {
+        "repoPath": "evidence/vmware-passthrough-version-review-20261113/raw/esx91/esx91-default-power-both.json",
+        "sha256": "a0902bbac879e6d325b9eae452772a562ecf1e81169c51610dc873eba8e69367",
+        "bytes": 4852
+      },
+      "taskState": "error",
+      "vmPowerState": "poweredOff",
+      "configuredDeviceCount": 2
+    },
+    {
+      "case": "9.1-native-pci-AB",
+      "build": "25433460",
+      "source": {
+        "repoPath": "evidence/vmware-passthrough-version-review-20261113/raw/esx91-native/esx91-nativepci-power-both.json",
+        "sha256": "8aca364c67d76d95c7c91ec8c77961e97e402151815213c7ae46be98080a5649",
+        "bytes": 4884
+      },
+      "taskState": "error",
+      "vmPowerState": "poweredOff",
+      "configuredDeviceCount": 2
+    }
+  ],
+  "mappingSample": {
+    "source": {
+      "repoPath": "evidence/vmware-legacy-bridge-cause-20261112/raw/native-mf-context-both.json",
+      "sha256": "8bee7fb21f9b27a6ab6d60889f48b029cf9c9be438c36829e8a90eae39ddc659",
+      "bytes": 7575
+    },
+    "polls": 130,
+    "samplingErrors": [],
+    "changes": [
+      {
+        "changeIndex": 0,
+        "contexts": {
+          "01:00.0": {
+            "present": true,
+            "domainId": 1,
+            "pageTable": "0x10b25b000"
+          },
+          "02:00.0": {
+            "present": true,
+            "domainId": 1,
+            "pageTable": "0x10b25b000"
+          },
+          "02:01.0": {
+            "present": true,
+            "domainId": 1,
+            "pageTable": "0x10b25b000"
+          },
+          "02:01.1": {
+            "present": true,
+            "domainId": 1,
+            "pageTable": "0x10b25b000"
+          }
+        }
+      },
+      {
+        "changeIndex": 1,
+        "contexts": {
+          "01:00.0": {
+            "present": true,
+            "domainId": 2,
+            "pageTable": "0x168ddb000"
+          },
+          "02:00.0": {
+            "present": true,
+            "domainId": 2,
+            "pageTable": "0x168ddb000"
+          },
+          "02:01.0": {
+            "present": true,
+            "domainId": 2,
+            "pageTable": "0x168ddb000"
+          },
+          "02:01.1": {
+            "present": true,
+            "domainId": 2,
+            "pageTable": "0x168ddb000"
+          }
+        }
+      },
+      {
+        "changeIndex": 2,
+        "contexts": {
+          "01:00.0": {
+            "present": true,
+            "domainId": 1,
+            "pageTable": "0x10b25b000"
+          },
+          "02:00.0": {
+            "present": true,
+            "domainId": 1,
+            "pageTable": "0x10b25b000"
+          },
+          "02:01.0": {
+            "present": true,
+            "domainId": 1,
+            "pageTable": "0x10b25b000"
+          },
+          "02:01.1": {
+            "present": true,
+            "domainId": 1,
+            "pageTable": "0x10b25b000"
+          }
+        }
+      }
+    ],
+    "limits": "Hardware context-table samples, not direct PCI-object +0x378 memory reads; individual table reads are not an atomic snapshot"
+  },
+  "warningSamples": [
+    {
+      "label": "u3k",
+      "build": "25595708",
+      "source": {
+        "repoPath": "evidence/vmware-passthrough-version-review-20261113/logs/u3k-both-vmkernel.txt",
+        "sha256": "c737e97988998570031fc766a7beb036d30af387fe91237ba78f93bc4a4c71be",
+        "bytes": 5027
+      },
+      "selectedLine": {
+        "sourceLine": 11,
+        "text": "2266: 2026-11-12T16:42:03.266Z Wa(180) vmkwarning: cpu0:133494)WARNING: PCIPassthru: 5304: Expected no IOMMU domain for 0000:02:01.1, got Success"
+      }
+    },
+    {
+      "label": "9.1",
+      "build": "25433460",
+      "source": {
+        "repoPath": "evidence/vmware-passthrough-version-review-20261113/logs/esx91-both-vmkernel.txt",
+        "sha256": "e1f794583e5337261e4d4d24c07861138faa9ecd7c41b478e4dead21dd9691e4",
+        "bytes": 676
+      },
+      "selectedLine": {
+        "sourceLine": 9,
+        "text": "2497: 2026-11-12T17:00:46.199Z -WARNING vmkwarning - [esx@4413] cpu2:133717) PCIPassthru: 5808: Expected no IOMMU domain for 0000:02:01.1, got Success"
+      }
+    }
+  ],
+  "limits": [
+    "Results are exact-build synthetic nested tests",
+    "The November VM power-on cases do not establish guest workload I/O",
+    "No firmware or driver qualification on physical adapters is implied"
+  ]
+}

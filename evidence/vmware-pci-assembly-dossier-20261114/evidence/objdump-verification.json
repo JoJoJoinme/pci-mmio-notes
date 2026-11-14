@@ -1,0 +1,344 @@
+{
+  "status": "PASS",
+  "decoder": "GNU objdump (GNU Binutils for Ubuntu) 2.38",
+  "sourceSnippetsSha256": "e62fdfe76f8291bac27c4ef1e255dbe0f905a84d87af14caabd6bd61c919d8b5",
+  "windows": 55,
+  "instructionsCompared": 1778,
+  "directBranchTargetsCompared": 232,
+  "dynamicRelocationsCompared": 16,
+  "scope": "Independent instruction boundaries, raw bytes, direct branch destinations and selected dynamic relocation targets; semantic interpretation remains separately documented",
+  "mnemonicSpellingDifferences": [],
+  "results": [
+    {
+      "id": "A01",
+      "instructions": 46,
+      "windowSha256": "9a4ff2c07205b2267b41f3510776b3f1d58d790b3d31ba51d8078a8be91e24dc",
+      "status": "PASS"
+    },
+    {
+      "id": "A02",
+      "instructions": 10,
+      "windowSha256": "0439b0da11f8d629e84200b69b93bdb39d7720780846dfa2da5427e672d6ff2e",
+      "status": "PASS"
+    },
+    {
+      "id": "A03",
+      "instructions": 9,
+      "windowSha256": "e1968ecb7ea9647b5ccb90af72d9d4b69ffc6dbcddda850741cbd68466a54aad",
+      "status": "PASS"
+    },
+    {
+      "id": "A04",
+      "instructions": 33,
+      "windowSha256": "6f0650815d0a677739d65cb08b29784ae2c4309bf24b779e7a3d2c8138bdeee5",
+      "status": "PASS"
+    },
+    {
+      "id": "A05",
+      "instructions": 44,
+      "windowSha256": "21ba16e89ca8f023dc9618728d2a3eb9722244aa22e91fc9cfa326d3dcacb993",
+      "status": "PASS"
+    },
+    {
+      "id": "D01",
+      "instructions": 65,
+      "windowSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793",
+      "status": "PASS"
+    },
+    {
+      "id": "D02",
+      "instructions": 25,
+      "windowSha256": "2e28f2e0d92d2df6b6a7c219114e5509911fc5c68f93e1ec00c8fa603f19f2f9",
+      "status": "PASS"
+    },
+    {
+      "id": "D03",
+      "instructions": 29,
+      "windowSha256": "5ef21b016dad0b7725351101217e83a4e01577ec15bea4befe16eb6a012b282c",
+      "status": "PASS"
+    },
+    {
+      "id": "D04",
+      "instructions": 9,
+      "windowSha256": "c06b4c59bf0f97cb0ceb33933e9945ec251e1a6ce87b02d5e94e75d3a0cd521e",
+      "status": "PASS"
+    },
+    {
+      "id": "D05",
+      "instructions": 8,
+      "windowSha256": "73748866fe9ab41eba417a51bb260aa1ff6903ab825973242c74a9ed25e46fb6",
+      "status": "PASS"
+    },
+    {
+      "id": "D06",
+      "instructions": 11,
+      "windowSha256": "2e262c4111ac433f54191c16c79242c59dfdafd9cd2786220c1c3eb1388b8b47",
+      "status": "PASS"
+    },
+    {
+      "id": "O01",
+      "instructions": 9,
+      "windowSha256": "845c8f84dacca29c6c35382646e050ed7a39b302676d94b5ac827ba132b427e9",
+      "status": "PASS"
+    },
+    {
+      "id": "O02",
+      "instructions": 13,
+      "windowSha256": "3de81051074d58da24434a70b23da009d7cbec2384ba0a238229510d191c4449",
+      "status": "PASS"
+    },
+    {
+      "id": "O03",
+      "instructions": 8,
+      "windowSha256": "f4315b08398cb72b684174df59407ddcb2813cce199a3644c3c104028718e7d9",
+      "status": "PASS"
+    },
+    {
+      "id": "O04",
+      "instructions": 8,
+      "windowSha256": "2a00d284b2ad1189e3120f382808623ec6c1337279d059c45adb87767d53725a",
+      "status": "PASS"
+    },
+    {
+      "id": "O05",
+      "instructions": 31,
+      "windowSha256": "6d5f39abb8acfa24a7220577b9932354e1f33f4b006b85aa063cf41813ed9085",
+      "status": "PASS"
+    },
+    {
+      "id": "O06",
+      "instructions": 33,
+      "windowSha256": "566628e9ea27d3d465155d2d6683262bcc732522802f672ef5b6ccc6bd441b20",
+      "status": "PASS"
+    },
+    {
+      "id": "O07",
+      "instructions": 64,
+      "windowSha256": "a1c5a143953e1bf6233068c07625cb7a7fa739147f9225fd8c97a6eaf3a35ebc",
+      "status": "PASS"
+    },
+    {
+      "id": "O08",
+      "instructions": 19,
+      "windowSha256": "4599497935f4705fb89dcf845423d735694ee6783d24f68c3ecaa66578c7960b",
+      "status": "PASS"
+    },
+    {
+      "id": "O09",
+      "instructions": 23,
+      "windowSha256": "85d920c914b7c16f4c65f29f0916cb8eb045b8c60b1813b64bd5a9734db39a26",
+      "status": "PASS"
+    },
+    {
+      "id": "O10",
+      "instructions": 15,
+      "windowSha256": "0edc5dcab9cd86f4791d5058da6582d71f4e3e72aed0683aaa04d323f2469ece",
+      "status": "PASS"
+    },
+    {
+      "id": "O11",
+      "instructions": 21,
+      "windowSha256": "7da85a3a97c2e0234ed53d24391de2ee1fd643712ec466765f34e319f85165b3",
+      "status": "PASS"
+    },
+    {
+      "id": "O12",
+      "instructions": 32,
+      "windowSha256": "5452a9960bcf9e019aa517b247cd1262dd202fa0a91343f2cc8848f74435aab4",
+      "status": "PASS"
+    },
+    {
+      "id": "O13",
+      "instructions": 19,
+      "windowSha256": "c5abdc34b546800476254f2d7cc1588fcc78655ad6e3a1a08763ee684fadb714",
+      "status": "PASS"
+    },
+    {
+      "id": "O14",
+      "instructions": 2,
+      "windowSha256": "604f885ca70d689e943955b19c3dece54072c92e86c652f4fd211a19f35f4635",
+      "status": "PASS"
+    },
+    {
+      "id": "O15",
+      "instructions": 2,
+      "windowSha256": "182a6a1ac93040326f6a36f186c870419276eaad6f015acc3ffc6b5674c6dc5c",
+      "status": "PASS"
+    },
+    {
+      "id": "O16",
+      "instructions": 2,
+      "windowSha256": "b821cd1de40a9d7c0f75cdc363fb3dfcd4bbe4f19aa6bfba4b7691082c1fbd9d",
+      "status": "PASS"
+    },
+    {
+      "id": "O17",
+      "instructions": 2,
+      "windowSha256": "d4a9292b526610de6cbd2eed6fa20f79e351c5b26f7053fbbee322483b67810f",
+      "status": "PASS"
+    },
+    {
+      "id": "R01",
+      "instructions": 30,
+      "windowSha256": "cd09024d0f467a61cea26f0a174572a379643f3e600e7182c64589dcf444b301",
+      "status": "PASS"
+    },
+    {
+      "id": "R02",
+      "instructions": 11,
+      "windowSha256": "938449fb9f384ee915bc9ebbb36259051bf077084b5f6b9387ed3bb579bee4a2",
+      "status": "PASS"
+    },
+    {
+      "id": "R03",
+      "instructions": 55,
+      "windowSha256": "c1fe02ace603ab267926f4b270d34b68134302b5f7344a506abe4a6839ef199a",
+      "status": "PASS"
+    },
+    {
+      "id": "R04",
+      "instructions": 54,
+      "windowSha256": "b638c2c92527727806b7b91e255176c18f49c8b20f56722bd933388e2926e6d3",
+      "status": "PASS"
+    },
+    {
+      "id": "R05",
+      "instructions": 5,
+      "windowSha256": "609e753bf9c9188ab8177f0748182c3121f30faa5d3eaa98ff2773fe9ba09472",
+      "status": "PASS"
+    },
+    {
+      "id": "R06",
+      "instructions": 24,
+      "windowSha256": "70b8ba448bd4ff18c7de689bd38a6dd5cb45c6ee6f57fad5c80255db1f77af52",
+      "status": "PASS"
+    },
+    {
+      "id": "R07",
+      "instructions": 19,
+      "windowSha256": "ffd7f5fcfe27a241e1d00c1f74683cfe7e8eb145347ef847d0ca11896a639ef1",
+      "status": "PASS"
+    },
+    {
+      "id": "R08",
+      "instructions": 47,
+      "windowSha256": "6ef505dcdd0f50a900a72f6bf23d47e4a2bb66912d52061befcc07ab7bedbfe1",
+      "status": "PASS"
+    },
+    {
+      "id": "R09",
+      "instructions": 22,
+      "windowSha256": "3204f0068497bd758842d2ba0335097f2ac44ba21e82a94a062bce33d2694619",
+      "status": "PASS"
+    },
+    {
+      "id": "I01",
+      "instructions": 28,
+      "windowSha256": "baed6153f7e9d414c9a3c2e85b56628a2623afb215bfbe7387eb3a7cee6eb7c7",
+      "status": "PASS"
+    },
+    {
+      "id": "I02",
+      "instructions": 19,
+      "windowSha256": "50d1111b38235829b3d3b1e7a02a90ad1d89332d8146adb4b9d65dd049d4b6c5",
+      "status": "PASS"
+    },
+    {
+      "id": "I03",
+      "instructions": 43,
+      "windowSha256": "c39141157f3c22bf0276e61b111f5f134c025c3652053efa9c57825a4df15473",
+      "status": "PASS"
+    },
+    {
+      "id": "I04",
+      "instructions": 71,
+      "windowSha256": "b96db720277a1c191972265faa857737c31718e0b7e98cc8169efd545b23b05e",
+      "status": "PASS"
+    },
+    {
+      "id": "I05",
+      "instructions": 114,
+      "windowSha256": "b69b9cd144ec112d2c8868e3ec0c799149475c04614e2e9919723cef39c9018e",
+      "status": "PASS"
+    },
+    {
+      "id": "I06",
+      "instructions": 44,
+      "windowSha256": "5939fdda343a8989e5abf6cde877e82fc51213297a67e46c2573cf000c6ffd5e",
+      "status": "PASS"
+    },
+    {
+      "id": "I07",
+      "instructions": 15,
+      "windowSha256": "1690a5c819df29595c07315de5cd74dd47580cc669de20807bd4c452fc8ca1c7",
+      "status": "PASS"
+    },
+    {
+      "id": "I08",
+      "instructions": 82,
+      "windowSha256": "433f6fc5bddb9c22f1e9eef857329b263bbd998a87a43c5d1c6ef66869440efe",
+      "status": "PASS"
+    },
+    {
+      "id": "I09",
+      "instructions": 25,
+      "windowSha256": "b73d8db19c5db9a399d30336bf7f3dd41a242550120c86f868d4cd769dd4d4ff",
+      "status": "PASS"
+    },
+    {
+      "id": "M01",
+      "instructions": 74,
+      "windowSha256": "e93a2326fca61f03a3a6112f2e60bb3da869d0c24a050b23cb2ff473ff614e08",
+      "status": "PASS"
+    },
+    {
+      "id": "M02",
+      "instructions": 37,
+      "windowSha256": "881ed8775642b633af92afa708e36b3b1e9af828dfcba5507afb9e7112c4349f",
+      "status": "PASS"
+    },
+    {
+      "id": "M03",
+      "instructions": 26,
+      "windowSha256": "ea6d741c92876fbbd3bfc589214a2a32841e603ae04191dc789728d03ccb4f8c",
+      "status": "PASS"
+    },
+    {
+      "id": "M04",
+      "instructions": 25,
+      "windowSha256": "9fc524b812bf19ae1af25efa3611047a1979ca75604d67e98f0b466774b8309c",
+      "status": "PASS"
+    },
+    {
+      "id": "M05",
+      "instructions": 28,
+      "windowSha256": "a289ea18f3d3731722b3935fa4e0891bf5ecf4128704069190a40071f1cdd46b",
+      "status": "PASS"
+    },
+    {
+      "id": "M06",
+      "instructions": 93,
+      "windowSha256": "7742f18c071240660379f560bcd30b9027df6c4b35fd3a7de879320a85a9e2f6",
+      "status": "PASS"
+    },
+    {
+      "id": "M07",
+      "instructions": 151,
+      "windowSha256": "51096facac62cfa185314701008cf3345e0fc7aefacfdb8e685d8e454ccee113",
+      "status": "PASS"
+    },
+    {
+      "id": "V01",
+      "instructions": 23,
+      "windowSha256": "d5319d216ca07c6e18b210430b0be14f0fc6600f1699889e061b0c9939164e8d",
+      "status": "PASS"
+    },
+    {
+      "id": "V02",
+      "instructions": 21,
+      "windowSha256": "630ca9e9e00dad36adf3cf96409b40556dafd619a17f64b73b9588b8378b92ce",
+      "status": "PASS"
+    }
+  ],
+  "newRuntimeExperiment": false
+}
