@@ -1,0 +1,978 @@
+{
+  "build": "ESXi 8.0 U3b / 24280767",
+  "scope": "Normal physical PCI FPT path and selected management functions; not all APIs, registration modes or builds",
+  "images": {
+    "kernel": {
+      "file": "decompressed k.b00",
+      "sha256": "5b8bef496e20e3d4194af7439f2f0a7273b77c15ab15ba1b117ddbcef9d9f775"
+    },
+    "pcip": {
+      "file": "PCIPassthru ELF from sb.v00",
+      "sha256": "ca5e97d71c9360804c2b3d480e4272c52d0225efbe45fe0b359c739da41077ca"
+    },
+    "vmkctl": {
+      "file": "lib64/libvmkctl.so from sb.v00",
+      "sha256": "3432f1036270968cb0a01970a493da2d27033070ebb6dce2546d910c78b135da"
+    }
+  },
+  "functions": [
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl17IsPassthruCapableEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl17IsPassthruCapableEv",
+      "address": "0x4c2438",
+      "bytes": 174,
+      "codeSha256": "9a4ff2c07205b2267b41f3510776b3f1d58d790b3d31ba51d8078a8be91e24dc"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl11SetFromSBDFEthhh",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl11SetFromSBDFEthhh",
+      "address": "0x4c6bca",
+      "bytes": 611,
+      "codeSha256": "ad7529165814474eead1d895b826bf5417d243621278037789cd92d8e99e4fe2"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv",
+      "address": "0x4c7142",
+      "bytes": 109,
+      "codeSha256": "6d5f39abb8acfa24a7220577b9932354e1f33f4b006b85aa063cf41813ed9085"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl24GetDependentChildDevicesEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetDependentChildDevicesEv",
+      "address": "0x4cb4c0",
+      "bytes": 282,
+      "codeSha256": "724afde59116ea5cc5cc22c8d859daf651f4f97b7c12a51a610a408121735c6a"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv",
+      "address": "0x4cbaac",
+      "bytes": 1233,
+      "codeSha256": "cce202091460177a7d0609d4d1f4197a8b957a547a962e495b3c20e7bc307c90"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToVmkernelEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToVmkernelEv",
+      "address": "0x4c35d8",
+      "bytes": 249,
+      "codeSha256": "1736ed62aea5ee2ba76d49b500103be3dadd8fe8e5ed2c5f85a1fca049195ab8"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv",
+      "address": "0x4cc032",
+      "bytes": 1706,
+      "codeSha256": "f0f0e4792de4b0be87917f63e7df6fd351c3c6b61cdcbc35d6633b2f59cd5178"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToVmkernelEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToVmkernelEv",
+      "address": "0x4c7f20",
+      "bytes": 115,
+      "codeSha256": "5452a9960bcf9e019aa517b247cd1262dd202fa0a91343f2cc8848f74435aab4"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl24SetConfiguredDeviceOwnerEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24SetConfiguredDeviceOwnerEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+      "address": "0x4c78a0",
+      "bytes": 1664,
+      "codeSha256": "ec569e86a609f08080767e929a05a36c1bc95e5dade16c420c6419cf5bce1772"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl27SetConfiguredDevOwnerNoDepsEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl27SetConfiguredDevOwnerNoDepsEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+      "address": "0x4c62c6",
+      "bytes": 397,
+      "codeSha256": "e3f8c487d5fb8b71b04bf643722ce63455aa43d31294cd1dcbdf51890c7cb42c"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl15LoadPassthruMapEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl15LoadPassthruMapEv",
+      "address": "0x4c8e7a",
+      "bytes": 1010,
+      "codeSha256": "5e3e58f487c8595d66ce8106df6f429e3eefa18da8c58e1d8154ef918470e14d"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl23RestoreFptShareableAttrEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23RestoreFptShareableAttrEv",
+      "address": "0x4c9714",
+      "bytes": 134,
+      "codeSha256": "881ed8775642b633af92afa708e36b3b1e9af828dfcba5507afb9e7112c4349f"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImpl16RestoreResetAttrEv",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl16RestoreResetAttrEv",
+      "address": "0x4c9480",
+      "bytes": 130,
+      "codeSha256": "a13c64470b1eaf5c8c9564ac1509771e81a80cbc9d7b2fd270e907c7fa8f5f9c"
+    },
+    {
+      "id": "vmkctl.function._ZN6VmkCtl8Hardware13PciDeviceImplC1Ethhh",
+      "image": "vmkctl",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImplC1Ethhh",
+      "address": "0x4c6f46",
+      "bytes": 283,
+      "codeSha256": "5df121005855de33d37ca5dc9ea21b34efcd702e629d40dfe8576fde07333f45"
+    },
+    {
+      "id": "kernel.function.Hardware_PCIIsInIommuScope",
+      "image": "kernel",
+      "symbol": "Hardware_PCIIsInIommuScope",
+      "address": "0x4200000734b4",
+      "bytes": 90,
+      "codeSha256": "6f0650815d0a677739d65cb08b29784ae2c4309bf24b779e7a3d2c8138bdeee5"
+    },
+    {
+      "id": "kernel.function.Hardware_PCIMeetsPassthruAcsReq",
+      "image": "kernel",
+      "symbol": "Hardware_PCIMeetsPassthruAcsReq",
+      "address": "0x420000073594",
+      "bytes": 53,
+      "codeSha256": "cc193526bd6e2eded6fcefe5837a554112dde7d33d294059c290336c07c6afd4"
+    },
+    {
+      "id": "kernel.function.Hardware_PCIPassthruDependentGet",
+      "image": "kernel",
+      "symbol": "Hardware_PCIPassthruDependentGet",
+      "address": "0x420000072288",
+      "bytes": 131,
+      "codeSha256": "21ba16e89ca8f023dc9618728d2a3eb9722244aa22e91fc9cfa326d3dcacb993"
+    },
+    {
+      "id": "kernel.function.VMKPCIPassthru_GetDeviceDependencies",
+      "image": "kernel",
+      "symbol": "VMKPCIPassthru_GetDeviceDependencies",
+      "address": "0x4200001a0e38",
+      "bytes": 197,
+      "codeSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793"
+    },
+    {
+      "id": "kernel.function.IOMMU_GetReqIdDependencies",
+      "image": "kernel",
+      "symbol": "IOMMU_GetReqIdDependencies",
+      "address": "0x420000164608",
+      "bytes": 69,
+      "codeSha256": "2e28f2e0d92d2df6b6a7c219114e5509911fc5c68f93e1ec00c8fa603f19f2f9"
+    },
+    {
+      "id": "kernel.function.PCI_GetTopmostAliasingBridge",
+      "image": "kernel",
+      "symbol": "PCI_GetTopmostAliasingBridge",
+      "address": "0x4200000ebc00",
+      "bytes": 80,
+      "codeSha256": "5ef21b016dad0b7725351101217e83a4e01577ec15bea4befe16eb6a012b282c"
+    },
+    {
+      "id": "kernel.function.PCIBridge_IsAliasing",
+      "image": "kernel",
+      "symbol": "PCIBridge_IsAliasing",
+      "address": "0x4200000e5138",
+      "bytes": 27,
+      "codeSha256": "c06b4c59bf0f97cb0ceb33933e9945ec251e1a6ce87b02d5e94e75d3a0cd521e"
+    },
+    {
+      "id": "kernel.function.PCI_FindResetMethod",
+      "image": "kernel",
+      "symbol": "PCI_FindResetMethod",
+      "address": "0x4200000fc450",
+      "bytes": 358,
+      "codeSha256": "7742f18c071240660379f560bcd30b9027df6c4b35fd3a7de879320a85a9e2f6"
+    },
+    {
+      "id": "kernel.function.PCI_HasFuncIndependentReset",
+      "image": "kernel",
+      "symbol": "PCI_HasFuncIndependentReset",
+      "address": "0x4200000fc5f0",
+      "bytes": 26,
+      "codeSha256": "73748866fe9ab41eba417a51bb260aa1ff6903ab825973242c74a9ed25e46fb6"
+    },
+    {
+      "id": "kernel.function.PCI_HasD3D0Reset",
+      "image": "kernel",
+      "symbol": "PCI_HasD3D0Reset",
+      "address": "0x4200000fc074",
+      "bytes": 99,
+      "codeSha256": "a289ea18f3d3731722b3935fa4e0891bf5ecf4128704069190a40071f1cdd46b"
+    },
+    {
+      "id": "kernel.function.PCI_HasFLR",
+      "image": "kernel",
+      "symbol": "PCI_HasFLR",
+      "address": "0x4200000fbf4c",
+      "bytes": 293,
+      "codeSha256": "c8691dcf102809f875951a48b1cdebd9e677ccab812c45de6020eb4609380469"
+    },
+    {
+      "id": "kernel.function.Hardware_PCIPassthruShareableSet",
+      "image": "kernel",
+      "symbol": "Hardware_PCIPassthruShareableSet",
+      "address": "0x42000007263c",
+      "bytes": 78,
+      "codeSha256": "ea6d741c92876fbbd3bfc589214a2a32841e603ae04191dc789728d03ccb4f8c"
+    },
+    {
+      "id": "kernel.function.PCI_SetMultiFuncDependency",
+      "image": "kernel",
+      "symbol": "PCI_SetMultiFuncDependency",
+      "address": "0x4200000eb734",
+      "bytes": 70,
+      "codeSha256": "9fc524b812bf19ae1af25efa3611047a1979ca75604d67e98f0b466774b8309c"
+    },
+    {
+      "id": "kernel.function.PCIE_EnforceACS",
+      "image": "kernel",
+      "symbol": "PCIE_EnforceACS",
+      "address": "0x4200000f52d4",
+      "bytes": 591,
+      "codeSha256": "51096facac62cfa185314701008cf3345e0fc7aefacfdb8e685d8e454ccee113"
+    },
+    {
+      "id": "pcip.function.PCIPassthruRegisterDevice",
+      "image": "pcip",
+      "symbol": "PCIPassthruRegisterDevice",
+      "address": "0x9a50",
+      "bytes": 299,
+      "codeSha256": "fa2f77631f4be20ce9646758a18dc42cdc3285b5914d52dc30d44376efdc8848"
+    },
+    {
+      "id": "pcip.function.PCIPassthruRegisterDeviceInt",
+      "image": "pcip",
+      "symbol": "PCIPassthruRegisterDeviceInt",
+      "address": "0x4b6c",
+      "bytes": 3720,
+      "codeSha256": "912c5141d31e9e06f9a5d757c2e6ead6d5de1bf8f2a392ab54b23971634e19a0"
+    },
+    {
+      "id": "pcip.function.PCIPassthruFPTAllowPassthru",
+      "image": "pcip",
+      "symbol": "PCIPassthruFPTAllowPassthru",
+      "address": "0x2548",
+      "bytes": 604,
+      "codeSha256": "b3844de0092f258735fc6e0cd709106f915f4448f32ddcc61a4f2a30d5a14eae"
+    },
+    {
+      "id": "pcip.function.PCIPassthruEnablePCIDevice",
+      "image": "pcip",
+      "symbol": "PCIPassthruEnablePCIDevice",
+      "address": "0x7c40",
+      "bytes": 731,
+      "codeSha256": "c84ceb6111298016ad65f0bcb9d2b2cbbc7b73ae8c8a2f33d6af65294e9aa681"
+    },
+    {
+      "id": "pcip.function.PCIPassthruSetAddressDomain",
+      "image": "pcip",
+      "symbol": "PCIPassthruSetAddressDomain",
+      "address": "0x7f1c",
+      "bytes": 968,
+      "codeSha256": "3f83143b1942c97fa90520b230f8dc5f789d0bb8e25f58267cfdb788ac1cec89"
+    },
+    {
+      "id": "pcip.function.PCIPassthruResetDevice",
+      "image": "pcip",
+      "symbol": "PCIPassthruResetDevice",
+      "address": "0x73b4",
+      "bytes": 907,
+      "codeSha256": "0220494a8f5c8ad0412dd516c73aa621b42ebd1efd1763f620d2e6ada068d0ab"
+    },
+    {
+      "id": "pcip.function.PCIPassthruReleaseDevice",
+      "image": "pcip",
+      "symbol": "PCIPassthruReleaseDevice",
+      "address": "0x8448",
+      "bytes": 1736,
+      "codeSha256": "d4201fe21cc526d682711f04bdcc740af10f94221ba6b43f97f1ea5ad2770ab6"
+    }
+  ],
+  "assertions": [
+    {
+      "id": "capable.scopeNode",
+      "image": "vmkctl",
+      "kind": "got_load",
+      "address": "0x4c2457",
+      "target": "VSI_NODE_hardware_pci_seg_bus_slot_func_inIommuScope"
+    },
+    {
+      "id": "capable.acsNode",
+      "image": "vmkctl",
+      "kind": "got_load",
+      "address": "0x4c2478",
+      "target": "VSI_NODE_hardware_pci_seg_bus_slot_func_meetsPassthruAcsReq"
+    },
+    {
+      "id": "capable.dependencyNode",
+      "image": "vmkctl",
+      "kind": "got_load",
+      "address": "0x4c249e",
+      "target": "VSI_NODE_hardware_pci_seg_bus_slot_func_passthruDependent"
+    },
+    {
+      "id": "dependency.sameVsiNode",
+      "image": "vmkctl",
+      "kind": "got_load",
+      "address": "0x4c7154",
+      "target": "VSI_NODE_hardware_pci_seg_bus_slot_func_passthruDependent"
+    },
+    {
+      "id": "map.shareableVsiNode",
+      "image": "vmkctl",
+      "kind": "got_load",
+      "address": "0x4c975c",
+      "target": "VSI_NODE_hardware_pci_seg_bus_slot_func_fptShareable"
+    },
+    {
+      "id": "map.resetVsiNode",
+      "image": "vmkctl",
+      "kind": "got_load",
+      "address": "0x4c94c4",
+      "target": "VSI_NODE_hardware_pci_seg_bus_slot_func_resetMethod"
+    },
+    {
+      "id": "vtable.constructorReference",
+      "image": "vmkctl",
+      "kind": "got_load",
+      "address": "0x4c6fa2",
+      "target": "_ZTVN6VmkCtl8Hardware13PciDeviceImplE"
+    },
+    {
+      "id": "capable.disableOptionReader",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4c6db7",
+      "target": "_ZN6VmkCtl6System10KernelOpts19GetRuntimeValueBoolERKSs"
+    },
+    {
+      "id": "enable.bootDeviceCheck",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4cbbb8",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl12IsBootDeviceEv"
+    },
+    {
+      "id": "enable.capabilityCheck",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4cbc6d",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl17IsPassthruCapableEv"
+    },
+    {
+      "id": "enable.reservedCheck",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4cbd59",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl21IsEsxioReservedDeviceEPm"
+    },
+    {
+      "id": "enable.dependencyCheck",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4cbe43",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv"
+    },
+    {
+      "id": "disable.inUseCheck",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4c35e9",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl19IsInPassthruUseByVMEv"
+    },
+    {
+      "id": "host.dependencyLookup",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4c7a8c",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv"
+    },
+    {
+      "id": "host.configStoreWrite",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4c63e2",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl12SetValueToCSISsEEvRKSsRKT_"
+    },
+    {
+      "id": "map.restoreShareable",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4c9724",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl25GetConfiguredFptShareableEv"
+    },
+    {
+      "id": "map.restoreReset",
+      "image": "vmkctl",
+      "kind": "plt_call",
+      "address": "0x4c9490",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetConfiguredResetMethodEv"
+    },
+    {
+      "id": "scope.iommuEnabled",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200000734dd",
+      "target": "IOMMU_IsIommuEnabled"
+    },
+    {
+      "id": "scope.deviceSupported",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x420000073500",
+      "target": "IOMMU_IsDeviceSupported"
+    },
+    {
+      "id": "acs.kernelVerdict",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200000735b7",
+      "target": "PCIE_EnforceACS"
+    },
+    {
+      "id": "dependency.vsiProvider",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200000722bb",
+      "target": "VMKPCIPassthru_GetDeviceDependencies"
+    },
+    {
+      "id": "dependency.requesterBranch",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200001a0e66",
+      "target": "IOMMU_GetReqIdDependencies"
+    },
+    {
+      "id": "dependency.independentReset",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200001a0e87",
+      "target": "PCI_HasFuncIndependentReset"
+    },
+    {
+      "id": "dependency.endpointType",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200001a0edc",
+      "target": "PCI_IsPCIeEndpointDevice"
+    },
+    {
+      "id": "alias.topmostBridge",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x420000164626",
+      "target": "PCI_GetTopmostAliasingBridge"
+    },
+    {
+      "id": "alias.bridgeClass",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200000ebc18",
+      "target": "PCIBridge_IsAliasing"
+    },
+    {
+      "id": "shareable.setter",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x42000007267f",
+      "target": "PCI_SetMultiFuncDependency"
+    },
+    {
+      "id": "reset.findMethod",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200000fc5f4",
+      "target": "PCI_FindResetMethod"
+    },
+    {
+      "id": "reset.flr",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200000fc4a4",
+      "target": "PCI_HasFLR"
+    },
+    {
+      "id": "reset.d3d0",
+      "image": "kernel",
+      "kind": "direct_call",
+      "address": "0x4200000fc4b9",
+      "target": "PCI_HasD3D0Reset"
+    },
+    {
+      "id": "register.memoryPrecondition",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x9a6c",
+      "target": "MemSched_GetVmMemInfo"
+    },
+    {
+      "id": "register.iommuEnabled",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x4bab",
+      "target": "IOMMU_IsIommuEnabled"
+    },
+    {
+      "id": "register.deviceSupported",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x4bcf",
+      "target": "IOMMU_IsDeviceSupported"
+    },
+    {
+      "id": "fpt.dependencyAnchor",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x2577",
+      "target": "VMKPCIPassthru_GetDeviceDependencies"
+    },
+    {
+      "id": "fpt.bridgeEnumeration",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x25d4",
+      "target": "PCI_GetDevicesUnderBridge"
+    },
+    {
+      "id": "fpt.hostOwner",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x2607",
+      "target": "PCI_GetDeviceOwnership"
+    },
+    {
+      "id": "fpt.hostIdentity",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x2639",
+      "target": "HostID_GetString"
+    },
+    {
+      "id": "register.globalTableLock",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x4c4d",
+      "target": "SPLockWork"
+    },
+    {
+      "id": "register.bySbdf",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x4ca7",
+      "target": "PCISbdfMap_Find"
+    },
+    {
+      "id": "register.targetAnchor",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x4df6",
+      "target": "VMKPCIPassthru_GetDeviceDependencies"
+    },
+    {
+      "id": "register.otherAnchor",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x4e41",
+      "target": "VMKPCIPassthru_GetDeviceDependencies"
+    },
+    {
+      "id": "register.siblingRecord",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x4e62",
+      "target": "PCISbdfMap_Find"
+    },
+    {
+      "id": "register.rmrr",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x536a",
+      "target": "IOMMU_IsDeviceRMRROverlap"
+    },
+    {
+      "id": "register.domain",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x53da",
+      "target": "IOMMU_GetAddressDomain"
+    },
+    {
+      "id": "activation.domainSwitch",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x7e2f",
+      "target": "IOMMU_SwitchAddressDomain"
+    },
+    {
+      "id": "release.domainRef",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x8602",
+      "target": "IOMMU_ReleaseDomainRef"
+    },
+    {
+      "id": "reset.runtimeReset",
+      "image": "pcip",
+      "kind": "relocated_call",
+      "address": "0x76fb",
+      "target": "PCI_ResetDevice"
+    },
+    {
+      "id": "capable.disabledFlag",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c2438",
+      "hex": "807f77000f85a1000000",
+      "meaning": "Disabled feature short-circuits capability",
+      "decoded": "cmp byte ptr [rdi + 0x77], 0; jne 0x4c24e3"
+    },
+    {
+      "id": "capable.disabledFlagOrigin",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c6dbc",
+      "hex": "4188442477",
+      "meaning": "Runtime disablePciPassthrough result stored at +0x77",
+      "decoded": "mov byte ptr [r12 + 0x77], al"
+    },
+    {
+      "id": "capable.scopeFalse",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c246e",
+      "hex": "807dde007504",
+      "meaning": "False scope result reaches false return",
+      "decoded": "cmp byte ptr [rbp - 0x22], 0; jne 0x4c2478"
+    },
+    {
+      "id": "capable.acsFalse",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c2498",
+      "hex": "807ddf0074d6",
+      "meaning": "False ACS verdict reaches false return",
+      "decoded": "cmp byte ptr [rbp - 0x21], 0; je 0x4c2474"
+    },
+    {
+      "id": "capable.dependencyInvalidInversion",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c24d7",
+      "hex": "84c00f94c0",
+      "meaning": "Negate invalid SBDF predicate",
+      "decoded": "test al, al; sete al"
+    },
+    {
+      "id": "vtable.addressPoint",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c6fa9",
+      "hex": "488d5048",
+      "meaning": "Primary object vtable address point is symbol +0x48",
+      "decoded": "lea rdx, [rax + 0x48]"
+    },
+    {
+      "id": "host.reverseDependencyVirtualCall",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c7bca",
+      "hex": "ff9060010000",
+      "meaning": "GetDependentChildDevices through resolved vtable slot",
+      "decoded": "call qword ptr [rax + 0x160]"
+    },
+    {
+      "id": "host.perMemberConfigWrite",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c7c1d",
+      "hex": "ff9048010000",
+      "meaning": "SetConfiguredDevOwnerNoDeps through resolved vtable slot",
+      "decoded": "call qword ptr [rax + 0x148]"
+    },
+    {
+      "id": "host.rollbackLoopWrite",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c7d0c",
+      "hex": "ff9048010000",
+      "meaning": "Exception path iterates per-device compensating configuration writes",
+      "decoded": "call qword ptr [rax + 0x148]"
+    },
+    {
+      "id": "host.rollbackOwnerSelection",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c7cea",
+      "hex": "4183fe02488b5db8410f95c6450fb6f641ffc6",
+      "meaning": "Target owner 2 is compensated with 1; other target with 2",
+      "decoded": "cmp r14d, 2; mov rbx, qword ptr [rbp - 0x48]; setne r14b; movzx r14d, r14b; inc r14d"
+    },
+    {
+      "id": "map.flrValue",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c90d3",
+      "hex": "c70001000000",
+      "meaning": "flr maps to reset selector 1",
+      "decoded": "mov dword ptr [rax], 1"
+    },
+    {
+      "id": "map.d3d0Value",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c9112",
+      "hex": "c70002000000",
+      "meaning": "d3d0 maps to reset selector 2",
+      "decoded": "mov dword ptr [rax], 2"
+    },
+    {
+      "id": "map.linkValue",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c914e",
+      "hex": "c70003000000",
+      "meaning": "link maps to reset selector 3",
+      "decoded": "mov dword ptr [rax], 3"
+    },
+    {
+      "id": "map.bridgeValue",
+      "image": "vmkctl",
+      "kind": "bytes",
+      "address": "0x4c918a",
+      "hex": "c70004000000",
+      "meaning": "bridge maps to reset selector 4",
+      "decoded": "mov dword ptr [rax], 4"
+    },
+    {
+      "id": "dependency.structureFlagGate",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200001a0e4b",
+      "hex": "f6470402740e",
+      "meaning": "Kernel structure flag mask 0x2 is rejected before dependency construction",
+      "decoded": "test byte ptr [rdi + 4], 2; je 0x4200001a0e5f"
+    },
+    {
+      "id": "dependency.multiFunctionField",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200001a0e6b",
+      "hex": "80bbf8010000004889d87547",
+      "meaning": "Multi-function dependency flag participates in anchor construction",
+      "decoded": "cmp byte ptr [rbx + 0x1f8], 0; mov rax, rbx; jne 0x4200001a0ebe"
+    },
+    {
+      "id": "dependency.headerFlag",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200001a0ee1",
+      "hex": "807b18007804",
+      "meaning": "Header multi-function sign bit selects parent-bound reset scope",
+      "decoded": "cmp byte ptr [rbx + 0x18], 0; js 0x4200001a0eeb"
+    },
+    {
+      "id": "dependency.busCandidateComparison",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200001a0e99",
+      "hex": "0fb6f70fb6d439f2720589f24489e00fb6f539d6",
+      "meaning": "Compare candidate bus components",
+      "decoded": "movzx esi, bh; movzx edx, ah; cmp edx, esi; jb 0x4200001a0ea8; mov edx, esi; mov eax, r12d; movzx esi, ch; cmp esi, edx"
+    },
+    {
+      "id": "dependency.invalidVsiSentinel",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200000722c4",
+      "hex": "48c703ffffffff4489e048c74308ffffffff",
+      "meaning": "Provider writes an all-ones dependency sentinel on dependency lookup failure",
+      "decoded": "mov qword ptr [rbx], 0xffffffffffffffff; mov eax, r12d; mov qword ptr [rbx + 8], 0xffffffffffffffff"
+    },
+    {
+      "id": "shareable.inverseInput",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x420000072679",
+      "hex": "85c0400f94c6",
+      "meaning": "shareable=0 maps to dependency=true",
+      "decoded": "test eax, eax; sete sil"
+    },
+    {
+      "id": "shareable.headerPrerequisite",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200000eb734",
+      "hex": "807f1800793a",
+      "meaning": "Setting multi-function dependency requires this Function header bit",
+      "decoded": "cmp byte ptr [rdi + 0x18], 0; jns 0x4200000eb774"
+    },
+    {
+      "id": "shareable.portTypePrerequisite",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200000eb753",
+      "hex": "837c240c01770e",
+      "meaning": "Only PCIe endpoint type values 0 or 1 reach the field write",
+      "decoded": "cmp dword ptr [rsp + 0xc], 1; ja 0x4200000eb768"
+    },
+    {
+      "id": "shareable.dependencyFieldWrite",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200000eb75a",
+      "hex": "4088abf8010000",
+      "meaning": "Set the same +0x1f8 field consumed by dependency lookup",
+      "decoded": "mov byte ptr [rbx + 0x1f8], bpl"
+    },
+    {
+      "id": "reset.d3d0RequiresExplicitSelector",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200000fc090",
+      "hex": "837c2408027406",
+      "meaning": "D3D0 path requires configured method 2 before PM capability is checked",
+      "decoded": "cmp dword ptr [rsp + 8], 2; je 0x4200000fc09d"
+    },
+    {
+      "id": "reset.independencePredicate",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200000fc5f9",
+      "hex": "83e0fb83e80183f8010f96c0",
+      "meaning": "Independent methods are 1,2,5,6 under this bit test",
+      "decoded": "and eax, 0xfffffffb; sub eax, 1; cmp eax, 1; setbe al"
+    },
+    {
+      "id": "acs.verdictCached",
+      "image": "kernel",
+      "kind": "bytes",
+      "address": "0x4200000f5480",
+      "hex": "41888424fb01000041c68424fa01000001",
+      "meaning": "Store ACS verdict and its valid flag",
+      "decoded": "mov byte ptr [r12 + 0x1fb], al; mov byte ptr [r12 + 0x1fa], 1"
+    },
+    {
+      "id": "fpt.requiredHostOwner",
+      "image": "pcip",
+      "kind": "bytes",
+      "address": "0x260c",
+      "hex": "83f8010f8579010000",
+      "meaning": "Each considered endpoint must have runtime host owner enum 1",
+      "decoded": "cmp eax, 1; jne 0x278e"
+    },
+    {
+      "id": "register.sameAnchor",
+      "image": "pcip",
+      "kind": "bytes",
+      "address": "0x4e4e",
+      "hex": "3944246475d5",
+      "meaning": "Only records with equal packed dependency SBDF proceed to owner comparison",
+      "decoded": "cmp dword ptr [rsp + 0x64], eax; jne 0x4e29"
+    },
+    {
+      "id": "register.sameVmOwner",
+      "image": "pcip",
+      "kind": "bytes",
+      "address": "0x4e80",
+      "hex": "443b6a7074a3",
+      "meaning": "Equal VMM owner world continues the scan",
+      "decoded": "cmp r13d, dword ptr [rdx + 0x70]; je 0x4e29"
+    },
+    {
+      "id": "register.differentVmFailure",
+      "image": "pcip",
+      "kind": "bytes",
+      "address": "0x4e8b",
+      "hex": "41bd0400ad0b",
+      "meaning": "Different VMM owner selects failure status 0x0bad0004",
+      "decoded": "mov r13d, 0xbad0004"
+    },
+    {
+      "id": "register.noGuestDomainRequired",
+      "image": "pcip",
+      "kind": "bytes",
+      "address": "0x53e4",
+      "hex": "3d0300ad0b",
+      "meaning": "Ordinary fresh registration expects 0x0bad0003",
+      "decoded": "cmp eax, 0xbad0003"
+    },
+    {
+      "id": "register.domainMismatchFailure",
+      "image": "pcip",
+      "kind": "bytes",
+      "address": "0x5425",
+      "hex": "41bd0500ad0b",
+      "meaning": "Existing-domain mismatch selects failure status 0x0bad0005",
+      "decoded": "mov r13d, 0xbad0005"
+    },
+    {
+      "id": "register.requiredMemoryFlags",
+      "image": "pcip",
+      "kind": "bytes",
+      "address": "0x9a71",
+      "hex": "807802000f849d000000",
+      "meaning": "First pinned/preallocated-memory prerequisite",
+      "decoded": "cmp byte ptr [rax + 2], 0; je 0x9b18"
+    },
+    {
+      "id": "register.requiredMemoryFlagsSecond",
+      "image": "pcip",
+      "kind": "bytes",
+      "address": "0x9a89",
+      "hex": "8038000f8486000000",
+      "meaning": "Second pinned/preallocated-memory prerequisite",
+      "decoded": "cmp byte ptr [rax], 0; je 0x9b18"
+    },
+    {
+      "id": "vtable.slot.0xe0",
+      "image": "vmkctl",
+      "kind": "vtable_pointer",
+      "address": "0x9fc5e8",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl13GetSBDFStringEv"
+    },
+    {
+      "id": "vtable.slot.0x138",
+      "image": "vmkctl",
+      "kind": "vtable_pointer",
+      "address": "0x9fc640",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetConfiguredDeviceOwnerEv"
+    },
+    {
+      "id": "vtable.slot.0x148",
+      "image": "vmkctl",
+      "kind": "vtable_pointer",
+      "address": "0x9fc650",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl27SetConfiguredDevOwnerNoDepsEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE"
+    },
+    {
+      "id": "vtable.slot.0x158",
+      "image": "vmkctl",
+      "kind": "vtable_pointer",
+      "address": "0x9fc660",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv"
+    },
+    {
+      "id": "vtable.slot.0x160",
+      "image": "vmkctl",
+      "kind": "vtable_pointer",
+      "address": "0x9fc668",
+      "target": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetDependentChildDevicesEv"
+    }
+  ],
+  "unknowns": [
+    "hostd and vCenter complete call graphs not reconstructed",
+    "Unnamed global reset-policy branch is retained without assigning an unverified option name",
+    "No new fault-injection or physical I/O test",
+    "No claim that sibling compensation is an atomic transaction"
+  ]
+}

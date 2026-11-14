@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "selfExcluded": true,
+  "hashAlgorithm": "SHA-256",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 80,
+      "sha256": "9a4df49b928aa02632ef71671b1674b19f423fca6292181d3c3bf214fc4b68cd",
+      "provenance": {
+        "transformation": "authored analysis, selected static facts or read-only verification; no target executable content"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 16683,
+      "sha256": "aa3b61718321433eff8c075f4cbec31aed32f374300e226cc660e83cd13d4e69",
+      "provenance": {
+        "transformation": "authored analysis, selected static facts or read-only verification; no target executable content"
+      }
+    },
+    {
+      "path": "source-provenance.json",
+      "bytes": 686,
+      "sha256": "0b8f5e27237823beea2e2b14eccc12540e6531ce0571a3b649eaa81c6fdea557",
+      "provenance": {
+        "transformation": "authored analysis, selected static facts or read-only verification; no target executable content"
+      }
+    },
+    {
+      "path": "static-facts.json",
+      "bytes": 31609,
+      "sha256": "95503be96b26cee749186151794c5f20aa5b0f3318e30439e1f77443e163f514",
+      "provenance": {
+        "transformation": "authored analysis, selected static facts or read-only verification; no target executable content"
+      }
+    },
+    {
+      "path": "verification.json",
+      "bytes": 5215,
+      "sha256": "82686a3e1234f05d72d524877cef68379e0206d99abcec9d30b747e69625f16a",
+      "provenance": {
+        "transformation": "authored analysis, selected static facts or read-only verification; no target executable content"
+      }
+    },
+    {
+      "path": "verify_static.py",
+      "bytes": 6153,
+      "sha256": "cd92b6783f080512f28ecb49e50e71a86a8945ab0f2c4e7f49ea508262d95663",
+      "provenance": {
+        "transformation": "authored analysis, selected static facts or read-only verification; no target executable content"
+      }
+    }
+  ]
+}

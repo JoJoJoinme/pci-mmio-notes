@@ -1,0 +1,22 @@
+{
+  "build": "24280767",
+  "archive": "sb.v00",
+  "archiveSha256": "82b2355cb13776603759153de6d4f30e2dc14ea917f73f68856ca1d41c6b45e6",
+  "decodedSha256": "f295064fb7c026fa77f582eed39cb9056913a30a3a30c7f3792fd458a1f1b840",
+  "files": [
+    {
+      "member": "lib64/libvmkctl.so",
+      "headerOffset": 271360,
+      "payloadOffset": 77025280,
+      "bytes": 10936224,
+      "sha256": "3432f1036270968cb0a01970a493da2d27033070ebb6dce2546d910c78b135da"
+    },
+    {
+      "member": "lib64/libvmkctlcore.so",
+      "headerOffset": 271872,
+      "payloadOffset": 87961600,
+      "bytes": 526520,
+      "sha256": "0e023942b0f2b13bece0a819e91e22a09d81114bb1d7f0bf01e130ac270cf5b3"
+    }
+  ]
+}

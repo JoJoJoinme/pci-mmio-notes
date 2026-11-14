@@ -4,6 +4,8 @@
 目标：VMware ESXi 8.0.3 build 24280767
 范围：公开 vSphere API、`esxcli`、PCI config、VMX/host 日志与 QEMU trace；不推导 VMware 私有代码。
 
+2026-11-14 补充：[同 build 的管理库与内核汇编核对](evidence/vmware-pci-admission-assembly-20261114/README.md)已进一步区分各层。下文判别式仍是历史外部观察模型，不能当作 `IsPassthruCapable()` 的内部等价代码；启动设备与系统保留用途等检查存在于后续 owner 验证/切换路径。该函数自身的已核对条件是全局禁用位、IOMMU 覆盖、ACS 策略与有效依赖结果。
+
 ## 1. 结论
 
 本地原 15 项 IOMMU/reset/ACS/topology 矩阵，加上 1 项公开 ACS bypass 组合、6 项
