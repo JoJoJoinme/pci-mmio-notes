@@ -1,5 +1,6 @@
 # 实验研究证据
 
+- [PCI 直通资格与开机依赖检查设计视图](vmware-pci-decision-design-20261114/README.md)：将汇编证据转换成三张可编辑架构/流程图，聚焦 `passthruCapable`、宿主 owner、活动 VM owner 和已有域检查，附传统桥同 VM 失败的逐步解释。
 - [PCI 直通汇编证据文档集](vmware-pci-assembly-dossier-20261114/README.md)：正文直接展示 55 个代码切片、1778 条指令，以及 PLT/GOT、vtable、字段读写和分支解释；按资格、依赖、主机切换、VM 登记、域状态及 map/ACS 分篇审阅。
 - [VMware PCI 直通原理与竞品分析](vmware-directpath-principles-20261114/README.md)：17 页技术决策报告，串联资格、依赖、主机切换、动态选卡、VM 启动和恢复；附 30 条结论与 29 项来源，单列 Enhanced DirectPath 的官方条件化能力及我方实现边界。
 - [ESXi PCI 资格、依赖与开机检查的汇编核对](vmware-pci-admission-assembly-20261114/README.md)：同 build 管理库与内核的分层条件、共同依赖代表、主机配置联动、开机 owner 比较及已有域拒绝；含 121 项只读静态核对，区别于新运行验收。

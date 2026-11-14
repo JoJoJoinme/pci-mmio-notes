@@ -1,0 +1,443 @@
+{
+  "schemaVersion": 1,
+  "scope": "Reconstructed design, based on existing binary evidence; no new runtime claims",
+  "sourceRevision": "7e651e4973cfcfbe7fb40b2cfb1ed9cf2fcb5889",
+  "primaryBuild": "24280767",
+  "snippetIndex": "evidence/vmware-pci-assembly-dossier-20261114/evidence/snippets.json",
+  "sources": [
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/evidence/snippets.json",
+      "sha256": "e62fdfe76f8291bac27c4ef1e255dbe0f905a84d87af14caabd6bd61c919d8b5"
+    },
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/evidence/runtime-crosswalk.json",
+      "sha256": "58455aa828caafc077c08065096b1230036b642846917ab07242b2885a45df02"
+    },
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/01-capable.md",
+      "sha256": "9d7beb3a4814762589f998f64ca8aa9394b3906995f83caa103b6268496254cf"
+    },
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/02-dependency-construction.md",
+      "sha256": "5a18b55112dcc7e29aa6e04360cd7c48a1be42f53145fd3ba8c1fc5a1970f8fd"
+    },
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/03-owner-transitions.md",
+      "sha256": "507f98e49f7f2c375999ad4c87604ed428bccdca5a4fd3ade3ad275b5cf9d36c"
+    },
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/04-vm-admission.md",
+      "sha256": "f2688c8a0ddb33e40b45afeefd42be0d2a8d9b09b464019c5d0953abdc4c5865"
+    },
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/05-domain-lifecycle.md",
+      "sha256": "d972bdae6258f2af13621421020c80a03f49155f070f1a171620ab0ac3cabd05"
+    },
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/06-reset-map-acs.md",
+      "sha256": "a136a0f9b4a174348d1b5db0c967a910de6988613cb3c67045bae194d42c5ab1"
+    },
+    {
+      "path": "evidence/vmware-pci-assembly-dossier-20261114/07-runtime-and-versions.md",
+      "sha256": "21eb09c6386d476dde3b8023c74e02d6873042686ff901f0bf4c40df6e047a2b"
+    },
+    {
+      "path": "evidence/vmware-passthrough-version-review-20261113/README.md",
+      "sha256": "a206fad96aab4c2396bdde55c632c12ffd240786042321c4d0a12209f085a3cc"
+    }
+  ],
+  "nodes": [
+    {
+      "diagram": "diagrams/01-capable.mmd",
+      "node": "C1",
+      "snippets": [
+        {
+          "id": "A01",
+          "functionLabel": "PciDeviceImpl::IsPassthruCapable",
+          "startAddress": "0x4c2438",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "9a4ff2c07205b2267b41f3510776b3f1d58d790b3d31ba51d8078a8be91e24dc"
+        },
+        {
+          "id": "A02",
+          "functionLabel": "PciDeviceImpl::SetFromSBDF",
+          "startAddress": "0x4c6d9f",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "0439b0da11f8d629e84200b69b93bdb39d7720780846dfa2da5427e672d6ff2e"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/01-capable.mmd",
+      "node": "C2",
+      "snippets": [
+        {
+          "id": "A01",
+          "functionLabel": "PciDeviceImpl::IsPassthruCapable",
+          "startAddress": "0x4c2438",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "9a4ff2c07205b2267b41f3510776b3f1d58d790b3d31ba51d8078a8be91e24dc"
+        },
+        {
+          "id": "A04",
+          "functionLabel": "Hardware_PCIIsInIommuScope",
+          "startAddress": "0x4200000734b4",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "6f0650815d0a677739d65cb08b29784ae2c4309bf24b779e7a3d2c8138bdeee5"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/01-capable.mmd",
+      "node": "C3",
+      "snippets": [
+        {
+          "id": "A01",
+          "functionLabel": "PciDeviceImpl::IsPassthruCapable",
+          "startAddress": "0x4c2438",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "9a4ff2c07205b2267b41f3510776b3f1d58d790b3d31ba51d8078a8be91e24dc"
+        },
+        {
+          "id": "M07",
+          "functionLabel": "PCIE_EnforceACS",
+          "startAddress": "0x4200000f52d4",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "51096facac62cfa185314701008cf3345e0fc7aefacfdb8e685d8e454ccee113"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/01-capable.mmd",
+      "node": "C4",
+      "snippets": [
+        {
+          "id": "A01",
+          "functionLabel": "PciDeviceImpl::IsPassthruCapable",
+          "startAddress": "0x4c2438",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "9a4ff2c07205b2267b41f3510776b3f1d58d790b3d31ba51d8078a8be91e24dc"
+        },
+        {
+          "id": "A03",
+          "functionLabel": "匿名无效 SBDF 辅助函数",
+          "startAddress": "0x4c1990",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "e1968ecb7ea9647b5ccb90af72d9d4b69ffc6dbcddda850741cbd68466a54aad"
+        },
+        {
+          "id": "A05",
+          "functionLabel": "Hardware_PCIPassthruDependentGet",
+          "startAddress": "0x420000072288",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "21ba16e89ca8f023dc9618728d2a3eb9722244aa22e91fc9cfa326d3dcacb993"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "P1",
+      "snippets": [
+        {
+          "id": "R01",
+          "functionLabel": "PCIPassthruRegisterDevice",
+          "startAddress": "0x9a50",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "cd09024d0f467a61cea26f0a174572a379643f3e600e7182c64589dcf444b301"
+        },
+        {
+          "id": "R02",
+          "functionLabel": "PCIPassthruRegisterDevice",
+          "startAddress": "0x9b18",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "938449fb9f384ee915bc9ebbb36259051bf077084b5f6b9387ed3bb579bee4a2"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "P2",
+      "snippets": [
+        {
+          "id": "R03",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x4b6c",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "c1fe02ace603ab267926f4b270d34b68134302b5f7344a506abe4a6839ef199a"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "P3",
+      "snippets": [
+        {
+          "id": "R04",
+          "functionLabel": "PCIPassthruFPTAllowPassthru",
+          "startAddress": "0x255e",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "b638c2c92527727806b7b91e255176c18f49c8b20f56722bd933388e2926e6d3"
+        },
+        {
+          "id": "R05",
+          "functionLabel": "PCIPassthruFPTAllowPassthru",
+          "startAddress": "0x26ad",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "609e753bf9c9188ab8177f0748182c3121f30faa5d3eaa98ff2773fe9ba09472"
+        },
+        {
+          "id": "R06",
+          "functionLabel": "PCIPassthruFPTAllowPassthru",
+          "startAddress": "0x263e",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "70b8ba448bd4ff18c7de689bd38a6dd5cb45c6ee6f57fad5c80255db1f77af52"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "P4",
+      "snippets": [
+        {
+          "id": "R07",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x4c7d",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "ffd7f5fcfe27a241e1d00c1f74683cfe7e8eb145347ef847d0ca11896a639ef1"
+        },
+        {
+          "id": "R09",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x5364",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "3204f0068497bd758842d2ba0335097f2ac44ba21e82a94a062bce33d2694619"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "P5",
+      "snippets": [
+        {
+          "id": "R08",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x4de9",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "6ef505dcdd0f50a900a72f6bf23d47e4a2bb66912d52061befcc07ab7bedbfe1"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "P6",
+      "snippets": [
+        {
+          "id": "I01",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x53bf",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "baed6153f7e9d414c9a3c2e85b56628a2623afb215bfbe7387eb3a7cee6eb7c7"
+        },
+        {
+          "id": "I02",
+          "functionLabel": "IOMMU_GetAddressDomain",
+          "startAddress": "0x42000016544c",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "50d1111b38235829b3d3b1e7a02a90ad1d89332d8146adb4b9d65dd049d4b6c5"
+        },
+        {
+          "id": "I03",
+          "functionLabel": "IOMMU_GetDeviceDomain",
+          "startAddress": "0x4200001653bc",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "c39141157f3c22bf0276e61b111f5f134c025c3652053efa9c57825a4df15473"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "P7",
+      "snippets": [
+        {
+          "id": "I06",
+          "functionLabel": "PCIPassthruEnablePCIDevice",
+          "startAddress": "0x7c40",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "5939fdda343a8989e5abf6cde877e82fc51213297a67e46c2573cf000c6ffd5e"
+        },
+        {
+          "id": "I07",
+          "functionLabel": "PCIPassthruEnablePCIDevice",
+          "startAddress": "0x7eb0",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "1690a5c819df29595c07315de5cd74dd47580cc669de20807bd4c452fc8ca1c7"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "L0",
+      "snippets": [
+        {
+          "id": "R08",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x4de9",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "6ef505dcdd0f50a900a72f6bf23d47e4a2bb66912d52061befcc07ab7bedbfe1"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "L2",
+      "snippets": [
+        {
+          "id": "R08",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x4de9",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "6ef505dcdd0f50a900a72f6bf23d47e4a2bb66912d52061befcc07ab7bedbfe1"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "L3",
+      "snippets": [
+        {
+          "id": "R08",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x4de9",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "6ef505dcdd0f50a900a72f6bf23d47e4a2bb66912d52061befcc07ab7bedbfe1"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/02-power-on.mmd",
+      "node": "L4",
+      "snippets": [
+        {
+          "id": "R08",
+          "functionLabel": "PCIPassthruRegisterDeviceInt",
+          "startAddress": "0x4de9",
+          "addressKind": "section-relative .text offset",
+          "windowSha256": "6ef505dcdd0f50a900a72f6bf23d47e4a2bb66912d52061befcc07ab7bedbfe1"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/03-dependency.mmd",
+      "node": "PRE",
+      "snippets": [
+        {
+          "id": "D01",
+          "functionLabel": "VMKPCIPassthru_GetDeviceDependencies",
+          "startAddress": "0x4200001a0e38",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/03-dependency.mmd",
+      "node": "R",
+      "snippets": [
+        {
+          "id": "D02",
+          "functionLabel": "IOMMU_GetReqIdDependencies",
+          "startAddress": "0x420000164608",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "2e28f2e0d92d2df6b6a7c219114e5509911fc5c68f93e1ec00c8fa603f19f2f9"
+        },
+        {
+          "id": "D03",
+          "functionLabel": "PCI_GetTopmostAliasingBridge",
+          "startAddress": "0x4200000ebc00",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "5ef21b016dad0b7725351101217e83a4e01577ec15bea4befe16eb6a012b282c"
+        },
+        {
+          "id": "D04",
+          "functionLabel": "PCIBridge_IsAliasing",
+          "startAddress": "0x4200000e5138",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "c06b4c59bf0f97cb0ceb33933e9945ec251e1a6ce87b02d5e94e75d3a0cd521e"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/03-dependency.mmd",
+      "node": "F",
+      "snippets": [
+        {
+          "id": "D01",
+          "functionLabel": "VMKPCIPassthru_GetDeviceDependencies",
+          "startAddress": "0x4200001a0e38",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/03-dependency.mmd",
+      "node": "T",
+      "snippets": [
+        {
+          "id": "D01",
+          "functionLabel": "VMKPCIPassthru_GetDeviceDependencies",
+          "startAddress": "0x4200001a0e38",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793"
+        },
+        {
+          "id": "D05",
+          "functionLabel": "PCI_HasFuncIndependentReset",
+          "startAddress": "0x4200000fc5f0",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "73748866fe9ab41eba417a51bb260aa1ff6903ab825973242c74a9ed25e46fb6"
+        },
+        {
+          "id": "D06",
+          "functionLabel": "PCI_IsPCIeEndpointDevice",
+          "startAddress": "0x4200000eb43c",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "2e262c4111ac433f54191c16c79242c59dfdafd9cd2786220c1c3eb1388b8b47"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/03-dependency.mmd",
+      "node": "MERGE",
+      "snippets": [
+        {
+          "id": "D01",
+          "functionLabel": "VMKPCIPassthru_GetDeviceDependencies",
+          "startAddress": "0x4200001a0e38",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/03-dependency.mmd",
+      "node": "RESULT",
+      "snippets": [
+        {
+          "id": "D01",
+          "functionLabel": "VMKPCIPassthru_GetDeviceDependencies",
+          "startAddress": "0x4200001a0e38",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "916b3c8853f3bd971b838933dca8c443c664b6b5946fd67d9ee736ac2f5af793"
+        },
+        {
+          "id": "A05",
+          "functionLabel": "Hardware_PCIPassthruDependentGet",
+          "startAddress": "0x420000072288",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "21ba16e89ca8f023dc9618728d2a3eb9722244aa22e91fc9cfa326d3dcacb993"
+        }
+      ]
+    }
+  ]
+}

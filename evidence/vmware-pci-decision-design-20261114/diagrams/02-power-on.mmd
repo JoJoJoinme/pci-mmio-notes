@@ -1,0 +1,53 @@
+%% VMware build 24280767; selected ordinary FPT fresh-registration path.
+%% Two independent panels: left pipeline and right P5 expansion.
+%% evidence: R01 R02 R03 R04 R05 R06 R07 R08 R09 I01 I02 I03 I06 I07
+flowchart LR
+    subgraph MAIN["普通 FPT 新登记主线 · 特殊复用 / 迁移旁路未展开"]
+      direction TB
+      P1["P1 · VM 内存前提<br/>RegisterDevice · R01 / R02"]
+      P2["P2 · 模式、IOMMU、设备支持<br/>RegisterDeviceInt · R03"]
+      P3["P3 · 宿主已将相关设备交给直通<br/>身份匹配 · FPTAllowPassthru · R04–R06"]
+      P4["P4 · 目标记录 / 状态分支<br/>含按标志触发的 RMRR 检查 · R07 / R09"]
+      P5["P5 · 依赖范围是否存在<br/>另一活动 owner？ · R08"]
+      P6["P6 · 查询是否返回 0x0bad0003？<br/>无非 VMkernel 域 · I01 / I02"]
+      P7["P7 · 继续登记及后续初始化<br/>通过本段 ≠ VM 已启动"]
+      F1["拒绝 · 0x0bad0004<br/>依赖成员的活动 owner 冲突"]
+      F2["拒绝 · 失败清理<br/>查到已有非 VMkernel 域也会失败"]
+      P1 -->|通过| P2
+      P2 -->|通过| P3
+      P3 -->|通过| P4
+      P4 -->|进入所示新登记路径| P5
+      P5 -->|没有| P6
+      P5 -->|存在| F1
+      P6 -->|是| P7
+      P6 -->|否：含查询成功返回 0| F2
+    end
+    subgraph LOOP["P5 展开 · 代表相等以后，才比较活动 owner"]
+      direction TB
+      L0["dep(target) 等于自身？"]
+      L1["枚举其他 PCI 对象"]
+      L2["依赖查询成功且<br/>代表等于 target 的代表？"]
+      L3["有记录、有活动登记<br/>且例外标志为 0？"]
+      L4["活动 owner 等于<br/>当前 owner_world？"]
+      NEXT["继续下一对象<br/>枚举结束则通过本段扫描"]
+      PASS["跳过本段扫描<br/>不代表真实硬件绝无依赖"]
+      FAIL["发现另一 owner<br/>拒绝本次登记"]
+      L0 -->|是| PASS
+      L0 -->|否| L1
+      L1 --> L2
+      L2 -->|否| NEXT
+      L2 -->|是| L3
+      L3 -->|否| NEXT
+      L3 -->|是| L4
+      L4 -->|相同| NEXT
+      L4 -->|不同| FAIL
+    end
+    MAIN ~~~ LOOP
+    classDef gate fill:#eef5fc,stroke:#35608b,color:#16324f,stroke-width:1.5px
+    classDef good fill:#e9f6f0,stroke:#297354,color:#174b37
+    classDef bad fill:#fff0ee,stroke:#b74e42,color:#7c3027
+    classDef note fill:#f6f7f9,stroke:#a4aebb,color:#475467
+    class P5,P6,L0,L2,L3,L4 gate
+    class P7,NEXT good
+    class F1,F2,FAIL bad
+    class PASS note

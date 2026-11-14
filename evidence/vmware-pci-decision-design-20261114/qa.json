@@ -1,0 +1,26 @@
+{
+  "scope": "Document conversion and visual inspection only",
+  "newVmwareRuntimeTests": false,
+  "visualReview": {
+    "method": "Rendered PNGs inspected at readable resolution using view_image",
+    "files": [
+      "diagrams/01-capable.png",
+      "diagrams/02-power-on.png",
+      "diagrams/03-dependency.png"
+    ],
+    "result": "No observed clipped labels, missing glyphs, or text overlap",
+    "iteration": "Replaced oversized diamonds and staggered combined panels with compact gates and side-by-side power-on panels"
+  },
+  "semanticReview": [
+    "Four-gate capable predicate is separate from current VM ownership",
+    "Saved disable flag is not presented as a fresh global read",
+    "ACS policy acceptance is not claimed as proof of physical isolation",
+    "Conditional RMRR check is placed before the selected owner scan",
+    "Owner scan preserves self-representative bypass and per-record skips",
+    "Same owner is not equated with full power-on success or complete VM configuration",
+    "Existing-domain guard retains selected-path and status-code boundaries",
+    "Registration and activation are separate entry points",
+    "Unknown configOption business name remains G",
+    "Prior runtime and version evidence is not described as newly executed"
+  ]
+}

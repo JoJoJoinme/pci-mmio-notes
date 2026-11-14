@@ -1,0 +1,36 @@
+%% VMware build 24280767; conceptual data-flow, not parallel execution.
+%% evidence: D01 D02 D03 D04 D05 D06 A05
+flowchart TB
+    INPUT["输入：有效内核 PCI 设备对象 d<br/>GetDeviceDependencies · D01"]
+    PRE["入口结构标志校验<br/>掩码 2 命中则拒绝"]
+    R["D1 · Requester 身份候选<br/>D02–D04"]
+    F["D2 · 功能依赖候选<br/>D01"]
+    T["D3 · 复位依赖候选<br/>D01 / D05 / D06"]
+    RR["沿父链取最上层 aliasing bridge<br/>没有则用自身"]
+    FF["显式多功能依赖字段为真：取父设备<br/>否则：自身"]
+    TT["G ≠ 1 且不能独立复位<br/>且为多功能或不是 PCIe endpoint：取父设备<br/>否则：自身"]
+    MERGE["按候选的 bus 字段选择代表 · D01<br/>相等时 functional 优先于 requester<br/>reset 小于等于当前 bus 时选 reset"]
+    RESULT["输出一个 packed SBDF 代表 dep(d)<br/>不是完整成员数组，也不是 DMA RID"]
+    CAP["资格判断<br/>代表是否有效？"]
+    OWNER["开机 owner 扫描<br/>其他设备的代表是否与它相同？"]
+    NOTE["G 的业务选项名尚未确定<br/>需要父设备但不存在：报错"]
+    INPUT --> PRE
+    PRE -->|通过| R
+    PRE -->|通过| F
+    PRE -->|通过| T
+    R --> RR
+    F --> FF
+    T --> TT
+    RR --> MERGE
+    FF --> MERGE
+    TT --> MERGE
+    TT -.- NOTE
+    MERGE --> RESULT
+    RESULT --> CAP
+    RESULT --> OWNER
+    classDef source fill:#eef5fc,stroke:#35608b,color:#16324f,stroke-width:1.5px
+    classDef good fill:#e9f6f0,stroke:#297354,color:#174b37
+    classDef note fill:#f6f7f9,stroke:#a4aebb,color:#475467,stroke-dasharray:4 3
+    class R,F,T,MERGE source
+    class RESULT,CAP,OWNER good
+    class NOTE note
