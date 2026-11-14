@@ -1,0 +1,461 @@
+{
+  "reviewedOn": "2026-11-14",
+  "claims": [
+    {
+      "id": "C01",
+      "title": "资格 生效 分配与功能可用分层",
+      "evidenceKinds": [
+        "官方说明",
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "D02",
+        "R01",
+        "R07",
+        "R11"
+      ],
+      "scope": "普通 DirectPath 与所列实验",
+      "limitation": "不是统一状态机源码",
+      "productImplication": "产品分别呈现支持 资格 运行占用和健康"
+    },
+    {
+      "id": "C02",
+      "title": "核心 capable 谓词有四项条件",
+      "evidenceKinds": [
+        "汇编核对",
+        "运行实测"
+      ],
+      "sources": [
+        "B01",
+        "R05"
+      ],
+      "scope": "24280767 libvmkctl 普通返回路径",
+      "limitation": "hostd 完整包装与异常路径未穷尽",
+      "productImplication": "不把全部用途和 VM 约束塞入一个 capable"
+    },
+    {
+      "id": "C03",
+      "title": "IOMMU 启用与设备覆盖独立核验",
+      "evidenceKinds": [
+        "汇编核对",
+        "运行实测"
+      ],
+      "sources": [
+        "B01",
+        "R05"
+      ],
+      "scope": "24280767",
+      "limitation": "不以 BIOS 菜单或虚拟化 CPU 特性替代",
+      "productImplication": "逐设备证明 DMA backend"
+    },
+    {
+      "id": "C04",
+      "title": "ACS 结果包含软件策略",
+      "evidenceKinds": [
+        "汇编核对",
+        "运行实测"
+      ],
+      "sources": [
+        "B01",
+        "R05"
+      ],
+      "scope": "24280767 ACS 路径及 A/B",
+      "limitation": "不是硬件隔离认证",
+      "productImplication": "保留 native/effective 来源"
+    },
+    {
+      "id": "C05",
+      "title": "依赖代表综合多类约束及 map 属性",
+      "evidenceKinds": [
+        "汇编核对",
+        "官方说明"
+      ],
+      "sources": [
+        "B01",
+        "D01"
+      ],
+      "scope": "24280767 普通依赖计算",
+      "limitation": "未命名全局策略分支仍有范围限制",
+      "productImplication": "分别存储身份 复位 功能和操作影响集合"
+    },
+    {
+      "id": "C06",
+      "title": "共同代表产生对称 owner 限制",
+      "evidenceKinds": [
+        "汇编核对",
+        "运行实测"
+      ],
+      "sources": [
+        "B01",
+        "R02"
+      ],
+      "scope": "普通 FPT 登记路径",
+      "limitation": "不是所有依赖模式的一张通用图",
+      "productImplication": "同 owner 复用与跨 owner 排斥分别验收"
+    },
+    {
+      "id": "C07",
+      "title": "传统桥在同 VM 存在初始化状态冲突",
+      "evidenceKinds": [
+        "汇编核对",
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "R03",
+        "R04",
+        "B01"
+      ],
+      "scope": "所列合成桥 build 与模型",
+      "limitation": "非厂商确认缺陷编号 无物理全称结论",
+      "productImplication": "保留共享身份正负对照 不把换拓扑当原路径修复"
+    },
+    {
+      "id": "C08",
+      "title": "主机配置与运行生效可以分离",
+      "evidenceKinds": [
+        "官方说明",
+        "运行实测"
+      ],
+      "sources": [
+        "D02",
+        "D03",
+        "R06"
+      ],
+      "scope": "24280767 激活与重启实验",
+      "limitation": "重启不是所有 Busy 的修复",
+      "productImplication": "分别管理 desired/current 状态"
+    },
+    {
+      "id": "C09",
+      "title": "用途检查和依赖展开可产生请求不对称",
+      "evidenceKinds": [
+        "运行实测",
+        "汇编核对",
+        "分析判断"
+      ],
+      "sources": [
+        "R06",
+        "B01"
+      ],
+      "scope": "指定 vSwitch/shared bridge 案例",
+      "limitation": "hostd 全部调用顺序未还原",
+      "productImplication": "先展开全组 再预检全部用途"
+    },
+    {
+      "id": "C10",
+      "title": "逐项配置及补偿不证明原子性",
+      "evidenceKinds": [
+        "汇编核对"
+      ],
+      "sources": [
+        "B01"
+      ],
+      "scope": "24280767 配置 owner 路径",
+      "limitation": "无中途故障注入和并发线性化证明",
+      "productImplication": "明确中间态 补偿和失败保留占用"
+    },
+    {
+      "id": "C11",
+      "title": "静态直通保存具体设备引用",
+      "evidenceKinds": [
+        "官方说明",
+        "运行实测"
+      ],
+      "sources": [
+        "D07",
+        "R08"
+      ],
+      "scope": "普通静态 backing",
+      "limitation": "不证明同 BDF 更换设备的全部检测机制",
+      "productImplication": "持久配置与设备身份验证需协同"
+    },
+    {
+      "id": "C12",
+      "title": "动态直通开机解析实际设备",
+      "evidenceKinds": [
+        "官方说明",
+        "运行实测"
+      ],
+      "sources": [
+        "D04",
+        "D05",
+        "R07",
+        "R08"
+      ],
+      "scope": "API 7.0 起相关字段及基线实验",
+      "limitation": "不等于运行中热换卡",
+      "productImplication": "持久保存条件 运行保存实际绑定"
+    },
+    {
+      "id": "C13",
+      "title": "候选发布不等于当前可分配",
+      "evidenceKinds": [
+        "官方说明",
+        "运行实测"
+      ],
+      "sources": [
+        "D06",
+        "R11"
+      ],
+      "scope": "24280767 故障释放实验",
+      "limitation": "不声称存在公开 quarantine 状态",
+      "productImplication": "健康与占用校验不能只用 candidate 列表"
+    },
+    {
+      "id": "C14",
+      "title": "多个请求需要同时有足够独立资源",
+      "evidenceKinds": [
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "R08",
+        "R07"
+      ],
+      "scope": "候选耗尽与共享依赖负例",
+      "limitation": "未证明全局最优 solver",
+      "productImplication": "按组合和完整依赖进行准入"
+    },
+    {
+      "id": "C15",
+      "title": "实际候选影响 MMIO 规划",
+      "evidenceKinds": [
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "R07"
+      ],
+      "scope": "1/2 GiB 异构 BAR 单变量控制",
+      "limitation": "不是完整固件 allocator 反编译",
+      "productImplication": "选择与资源规划联合考虑"
+    },
+    {
+      "id": "C16",
+      "title": "启动需要设备 DMA 所需内存前提",
+      "evidenceKinds": [
+        "官方说明",
+        "汇编核对"
+      ],
+      "sources": [
+        "D08",
+        "B01"
+      ],
+      "scope": "官方内存预留要求与 24280767 标志检查",
+      "limitation": "未穷尽 UI 到内存标志的全部生成逻辑",
+      "productImplication": "内存预留和 MMIO 预算分开解释"
+    },
+    {
+      "id": "C17",
+      "title": "BAR 放置还涉及对齐 类型和窗口",
+      "evidenceKinds": [
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "R10",
+        "D09"
+      ],
+      "scope": "8/32/64 GiB 及 aggregate 样本",
+      "limitation": "不是任意拓扑的最大值或普遍默认公式",
+      "productImplication": "实现实际布局与清晰不足原因"
+    },
+    {
+      "id": "C18",
+      "title": "RMRR 与 VM 布局存在独立相容性条件",
+      "evidenceKinds": [
+        "运行实测",
+        "汇编核对"
+      ],
+      "sources": [
+        "R10",
+        "B01"
+      ],
+      "scope": "指定 DMAR 与内存重叠样本",
+      "limitation": "失败可能在 host boot 或 VM 开机等不同阶段",
+      "productImplication": "记录范围和拒绝阶段"
+    },
+    {
+      "id": "C19",
+      "title": "poweredOn 不等于设备业务功能可用",
+      "evidenceKinds": [
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "R10",
+        "R02",
+        "R04"
+      ],
+      "scope": "已有 guest I/O 与空 EFI 用例对照",
+      "limitation": "没有通用物理性能结论",
+      "productImplication": "驱动 IRQ DMA 业务分别记录"
+    },
+    {
+      "id": "C20",
+      "title": "撤离 guest 映射不等于所有 DMA 停止",
+      "evidenceKinds": [
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "R09"
+      ],
+      "scope": "VT-d/EDU 释放采样",
+      "limitation": "非物理设备敏感状态清除验证",
+      "productImplication": "释放需访问终止 映射与复位共同验收"
+    },
+    {
+      "id": "C21",
+      "title": "异常成员可阻止健康同组成员再分配",
+      "evidenceKinds": [
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "R11"
+      ],
+      "scope": "受控配置读取全一注入",
+      "limitation": "不是物理 typed reset-error 或内部状态枚举证明",
+      "productImplication": "恢复验证需覆盖整个实际影响组"
+    },
+    {
+      "id": "C22",
+      "title": "普通直通 live 迁移与冷态重选不同",
+      "evidenceKinds": [
+        "运行实测"
+      ],
+      "sources": [
+        "R08"
+      ],
+      "scope": "24280767 与 vCenter 24674346",
+      "limitation": "不覆盖 Enhanced 或厂商设备迁移路线",
+      "productImplication": "明确操作矩阵"
+    },
+    {
+      "id": "C23",
+      "title": "Dynamic 对接初始放置和 HA 属官方能力",
+      "evidenceKinds": [
+        "官方说明",
+        "分析判断"
+      ],
+      "sources": [
+        "D11",
+        "R08"
+      ],
+      "scope": "公开路线说明及本地冷迁移控制",
+      "limitation": "本项目未完成 HA 自动故障切换全链路",
+      "productImplication": "HA 与 live migration 分开评估"
+    },
+    {
+      "id": "C24",
+      "title": "Enhanced DirectPath 按设备扩展生命周期",
+      "evidenceKinds": [
+        "官方说明"
+      ],
+      "sources": [
+        "D10"
+      ],
+      "scope": "官方 2026 文章的设备条件化说明",
+      "limitation": "未实测 不复制所有设备功能格为当前支持目录",
+      "productImplication": "竞品比较必须匹配路线与设备"
+    },
+    {
+      "id": "C25",
+      "title": "前端提示 保存与执行结果必须分阶段",
+      "evidenceKinds": [
+        "运行实测",
+        "分析判断"
+      ],
+      "sources": [
+        "R01",
+        "R02",
+        "B01"
+      ],
+      "scope": "指定 Host Client/vCenter 记录",
+      "limitation": "没有证明所有版本交互相同",
+      "productImplication": "已知条件提前解释 执行前重新仲裁"
+    },
+    {
+      "id": "C26",
+      "title": "ACS override 后操作组不是物理安全证明",
+      "evidenceKinds": [
+        "我方设计",
+        "官方说明"
+      ],
+      "sources": [
+        "P01",
+        "P02",
+        "D12"
+      ],
+      "scope": "项目长期 override 部署前提",
+      "limitation": "参考估算和已构建补丁不等于完整生产事实接口",
+      "productImplication": "安全租约使用可信原生边界"
+    },
+    {
+      "id": "C27",
+      "title": "DPDK 并不普遍依赖 ACS override",
+      "evidenceKinds": [
+        "官方说明",
+        "旧回执复核",
+        "分析判断"
+      ],
+      "sources": [
+        "D13",
+        "D14",
+        "P03"
+      ],
+      "scope": "不同 PMD 与历史 X722/ConnectX 场景",
+      "limitation": "没有 override-off 对照 不确认原始部署必要性",
+      "productImplication": "按驱动路径和端口分工验证能否取消默认开启"
+    },
+    {
+      "id": "C28",
+      "title": "参考实现不等于目标产品已交付能力",
+      "evidenceKinds": [
+        "我方设计",
+        "分析判断"
+      ],
+      "sources": [
+        "P01",
+        "P02"
+      ],
+      "scope": "公开仓库当前参考设计和组件记录",
+      "limitation": "未审计私有生产实现或实际交付版本",
+      "productImplication": "改进方向须以目标产品与物理验收兑现"
+    },
+    {
+      "id": "C29",
+      "title": "较新版本只复核了特定失败路径",
+      "evidenceKinds": [
+        "运行实测",
+        "汇编核对"
+      ],
+      "sources": [
+        "R04"
+      ],
+      "scope": "25595708 与 25433460 的传统桥控制",
+      "limitation": "25782009 无介质 其他路径不外推",
+      "productImplication": "版本结论逐条绑定 build 与场景"
+    },
+    {
+      "id": "C30",
+      "title": "商业支持与物理资格仍需明确组合",
+      "evidenceKinds": [
+        "官方说明",
+        "分析判断"
+      ],
+      "sources": [
+        "D01",
+        "R05",
+        "R10",
+        "P01"
+      ],
+      "scope": "支持契约与实验边界",
+      "limitation": "没有性能优势或任意硬件支持证明",
+      "productImplication": "以完整硬件软件操作组合定义对外承诺"
+    }
+  ]
+}

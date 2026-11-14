@@ -1,0 +1,114 @@
+{
+  "status": "PASS",
+  "pdf": "VMware_PCI_DirectPath_Principles_20261114.pdf",
+  "pages": 17,
+  "pdfSha256": "b6f18d46de5347561d9b9efccdcc96bb73e6d8b2437ef6947c7ff90edef5d543",
+  "reportSha256": "c9bc73fbe755a2e26a57bfcb88546ba0c4e6ccc83efab55f406d3427b01ff2f6",
+  "structuralChecks": {
+    "outlineEntries": 15,
+    "externalSourceLinks": 29,
+    "internalLinks": 160,
+    "allTextWithinPage": true,
+    "replacementCharacters": 0
+  },
+  "visualReview": {
+    "reviewedPages": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ],
+    "method": "Bundled pdftoppm 120 DPI; all final page PNGs inspected, source-link detail zoomed",
+    "observedClippingOrOverlap": false,
+    "renderDigests": [
+      {
+        "page": 1,
+        "pngSha256": "7e76ccdf0290147959b123c4a5d54186c6fe15b5f289841e4357604038fcc891"
+      },
+      {
+        "page": 2,
+        "pngSha256": "0bf45ff4a838e62aaaa33ed0f1a54630754fe1a400a63e328277b543a72e2a5a"
+      },
+      {
+        "page": 3,
+        "pngSha256": "f607fd82c7c026f20c2dad9b5544bb072483b0a64a3c91b3d1c997e1fb402cf6"
+      },
+      {
+        "page": 4,
+        "pngSha256": "1e55a9a3a1d20098ab193df8bdf70656e22105c92e6ad7765b27a510bf06f0a3"
+      },
+      {
+        "page": 5,
+        "pngSha256": "cc115e989d56b68c604560c3cbc4b8b2541e090a0b1fba0122729a62576ed643"
+      },
+      {
+        "page": 6,
+        "pngSha256": "9b1a8da277c50f2b07220c36eed3ead86d47c3919cfbeb38476877280bd120d0"
+      },
+      {
+        "page": 7,
+        "pngSha256": "d98b25ed7f40dea1fe4da4278a0f6d2c2cd77310dd6a8e20f2b72881835eea48"
+      },
+      {
+        "page": 8,
+        "pngSha256": "e942b3fedb31b054aaaecba1f50786ba2b5b3e7b8a568bf971cb82a13b111872"
+      },
+      {
+        "page": 9,
+        "pngSha256": "7453df2696411761a98720ba8b7c90ee1212937d04d3aa4a791d3a02a8e2c350"
+      },
+      {
+        "page": 10,
+        "pngSha256": "bddf0696d2934757f3e4e6a2b87a2100bf98a9819cd4257ab9c3fc20cb2f05bb"
+      },
+      {
+        "page": 11,
+        "pngSha256": "da6ed104c00fcc6c6948fb586cb06a14a62e9238a73709a6ed3f12bde754b219"
+      },
+      {
+        "page": 12,
+        "pngSha256": "50e29f418f1139d6c16821cb0752441e3d0db267b80656390ce3b1b9b70538d0"
+      },
+      {
+        "page": 13,
+        "pngSha256": "be9f50c604a411f69261d32ff0b9758d77652cbca62d44d75e670b7cfb0266f3"
+      },
+      {
+        "page": 14,
+        "pngSha256": "354cde20aa3ef068e362936d9b9f58c3201a46a4f8f323bc5cbccade1def6e31"
+      },
+      {
+        "page": 15,
+        "pngSha256": "8ec2c4e92a28264c62edb2cbbca8f18a25f1e708f8cf16d17be69d3323c76d9d"
+      },
+      {
+        "page": 16,
+        "pngSha256": "670f48ef569a5492e27584e250ad6f0c4e194de92f71d64d565da1a443950ad1"
+      },
+      {
+        "page": 17,
+        "pngSha256": "2e8aa8a7dd209682c5497c4e3b8c8a74256123132183bc2f405cb770ea935e70"
+      }
+    ]
+  },
+  "contentReview": {
+    "claims": 30,
+    "sources": 29,
+    "evidenceTypesSeparated": true,
+    "enhancedDirectPathVendorOnly": true,
+    "newRuntimeExperiments": 0
+  }
+}

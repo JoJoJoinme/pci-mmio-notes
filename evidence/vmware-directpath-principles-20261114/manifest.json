@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "hashAlgorithm": "SHA-256",
+  "selfExcluded": true,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 93,
+      "sha256": "cec29b464375d4fba389692631740de0ea08ed29cd921c844d01fbb8ce040e4d",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "claims.json",
+      "bytes": 12809,
+      "sha256": "880f207e1308d29b8e100067ed1ed2185d2f9e4035c33f0db2182cb3fcfc6c44",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "observations/host-dpdk-context.json",
+      "bytes": 832,
+      "sha256": "ad2ff66361c93bcd34866c63ef97e88fb71097d0498872d2d7de73271b0f1f70",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "observations/release-fault-review.json",
+      "bytes": 3104,
+      "sha256": "9b835b0e0309490b92a59f220197f3de7f9b0e78668278474999f85cbfb37228",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "qa.json",
+      "bytes": 3110,
+      "sha256": "629278de007b507265ab0a7f351fac575dd51755ebdc26b539b87dea47521740",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 1875,
+      "sha256": "3c7c66411676f7056599e0fbd5bbe6e7bd9c2a3fc9291346347ff70a68c2485a",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "REPORT.md",
+      "bytes": 41759,
+      "sha256": "c9bc73fbe755a2e26a57bfcb88546ba0c4e6ccc83efab55f406d3427b01ff2f6",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "sources.json",
+      "bytes": 12834,
+      "sha256": "30f5aee4fbf90c705d31f24bb4df67bb00834049645c0dccb0fe42cffdb7331f",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "verify_report.py",
+      "bytes": 4360,
+      "sha256": "b1c862a743ff8d4ce211dce31ea9839083b3d52a9a9052c05122e10c7233563a",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    },
+    {
+      "path": "VMware_PCI_DirectPath_Principles_20261114.pdf",
+      "bytes": 569225,
+      "sha256": "b6f18d46de5347561d9b9efccdcc96bb73e6d8b2437ef6947c7ff90edef5d543",
+      "provenance": {
+        "transformation": "Authored report or selected evidence metadata; full source limitations retained"
+      }
+    }
+  ]
+}

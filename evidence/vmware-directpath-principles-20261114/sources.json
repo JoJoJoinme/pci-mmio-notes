@@ -1,0 +1,268 @@
+{
+  "reviewedOn": "2026-11-14",
+  "baselineRepoCommit": "0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96",
+  "sources": [
+    {
+      "id": "D01",
+      "kind": "官方说明",
+      "title": "VMDirectPath 平台与设备要求",
+      "url": "https://knowledge.broadcom.com/external/article/312208",
+      "reviewedOn": "2026-11-14",
+      "scope": "支持契约；不能替代 exact-build 运行与物理资格验证"
+    },
+    {
+      "id": "D02",
+      "kind": "官方说明",
+      "title": "HostPciPassthruInfo",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruInfo.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "字段含义；9.1 新字段不倒推到 8.0 基线"
+    },
+    {
+      "id": "D03",
+      "kind": "官方说明",
+      "title": "HostPciPassthruSystem",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruSystem.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "主机配置接口；不证明事务原子性"
+    },
+    {
+      "id": "D04",
+      "kind": "官方说明",
+      "title": "DynamicBackingInfo",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DynamicBackingInfo.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "选择条件与运行 assignedId 契约"
+    },
+    {
+      "id": "D05",
+      "kind": "官方说明",
+      "title": "AllowedDevice",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.AllowedDevice.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "设备匹配字段；不披露选择顺序"
+    },
+    {
+      "id": "D06",
+      "kind": "官方说明",
+      "title": "HostAssignableHardwareManager",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.AssignableHardwareManager.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "候选与 binding 接口；不是可用性或全局 solver 证明"
+    },
+    {
+      "id": "D07",
+      "kind": "官方说明",
+      "title": "静态 DeviceBackingInfo",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "BDF 与宿主身份相关字段"
+    },
+    {
+      "id": "D08",
+      "kind": "官方说明",
+      "title": "配置 DirectPath 设备",
+      "url": "https://knowledge.broadcom.com/external/article/309986",
+      "reviewedOn": "2026-11-14",
+      "scope": "配置步骤和内存预留；具体 UI/build 需实测"
+    },
+    {
+      "id": "D09",
+      "kind": "官方说明",
+      "title": "MMIO 不足导致开机失败",
+      "url": "https://knowledge.broadcom.com/external/article/323402",
+      "reviewedOn": "2026-11-14",
+      "scope": "操作指导；不是完整地址分配算法"
+    },
+    {
+      "id": "D10",
+      "kind": "官方说明",
+      "title": "Enhanced DirectPath 官方介绍",
+      "url": "https://blogs.vmware.com/cloud-foundation/2026/04/20/why-enhanced-directpath-wins-for-high-performance-apps/",
+      "reviewedOn": "2026-11-14",
+      "scope": "2026-04-20 文章，文内注明 2026-06-29 更新；功能按设备有条件提供，本项目未实测"
+    },
+    {
+      "id": "D11",
+      "kind": "官方说明",
+      "title": "NVIDIA Dynamic DirectPath 与初始放置",
+      "url": "https://networking-docs.nvidia.com/sol/howto-configure-nvidia-network-device-in-directpath-io-and-dynamic-directpath-io-passthrough-modes-on-vmware-esxi-7-0",
+      "reviewedOn": "2026-11-14",
+      "scope": "vSphere 7 路线说明；不证明本项目完成 HA 自动恢复验收"
+    },
+    {
+      "id": "D12",
+      "kind": "官方说明",
+      "title": "Linux VFIO 文档",
+      "url": "https://docs.kernel.org/driver-api/vfio.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "原生分组与所有权概念；ACS override 后还需独立安全事实"
+    },
+    {
+      "id": "D13",
+      "kind": "官方说明",
+      "title": "DPDK mlx5 驱动说明",
+      "url": "https://doc.dpdk.org/guides/platform/mlx5.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "宿主 mlx5 PMD 路径；不等于 VM PCI 直通路径"
+    },
+    {
+      "id": "D14",
+      "kind": "官方说明",
+      "title": "DPDK 20.11 Linux 驱动说明",
+      "url": "https://doc.dpdk.org/guides-20.11/linux_gsg/linux_drivers.html",
+      "reviewedOn": "2026-11-14",
+      "scope": "固定旧版的 VFIO 分组与驱动接管要求"
+    },
+    {
+      "id": "B01",
+      "kind": "项目证据",
+      "title": "直通资格与依赖的 121 项汇编核对",
+      "repoPath": "evidence/vmware-pci-admission-assembly-20261114/README.md",
+      "sha256": "aa3b61718321433eff8c075f4cbec31aed32f374300e226cc660e83cd13d4e69",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/vmware-pci-admission-assembly-20261114/README.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "ESXi 24280767；35 个函数，限定普通 FPT 与选定管理路径"
+    },
+    {
+      "id": "R01",
+      "kind": "项目证据",
+      "title": "主机与 VM 配置 UI 实测",
+      "repoPath": "evidence/vmware-dependency-ui-20261111/README.md",
+      "sha256": "3a2bec0b99ea69ea2148fb29da30898f469590434ecaf500e3fe938f92cb8776",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/vmware-dependency-ui-20261111/README.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "旧版 Host Client/vCenter API/UI 与传统桥场景"
+    },
+    {
+      "id": "R02",
+      "kind": "项目证据",
+      "title": "PCIe 多功能成功对照",
+      "repoPath": "evidence/vmware-pci-multifunction-fix-20261111/README.md",
+      "sha256": "678f1153124f670321070fce821c8df5ac50f686bcfec63db79c06a691d191c5",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/vmware-pci-multifunction-fix-20261111/README.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "同 VM 成功、跨 VM 后启动者失败；空 EFI 启动验证"
+    },
+    {
+      "id": "R03",
+      "kind": "项目证据",
+      "title": "传统桥根因与映射对照",
+      "repoPath": "evidence/vmware-legacy-bridge-cause-20261112/ROOT-CAUSE-STATUS.md",
+      "sha256": "fa562ff636f980034f9de33c5f56a72cdc65de1850fe19b477d5765e2fdf824e",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/vmware-legacy-bridge-cause-20261112/ROOT-CAUSE-STATUS.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "同一 VM 的域初始化冲突；未完成保留共享身份后的修复"
+    },
+    {
+      "id": "R04",
+      "kind": "项目证据",
+      "title": "较新 build 复核",
+      "repoPath": "evidence/vmware-passthrough-version-review-20261113/README.md",
+      "sha256": "a206fad96aab4c2396bdde55c632c12ffd240786042321c4d0a12209f085a3cc",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/vmware-passthrough-version-review-20261113/README.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "25595708 与 25433460 复现；25782009 未取得介质"
+    },
+    {
+      "id": "R05",
+      "kind": "项目证据",
+      "title": "资格外部观察矩阵",
+      "repoPath": "vmware-esxi8-passthru-capable-observed-model.md",
+      "sha256": "e19cc6f36e648810841c092e4bef96e3d01ecd02eb3dc532e39eca9345882e66",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/vmware-esxi8-passthru-capable-observed-model.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "23 项历史资格样本；外部模型不能作为内部等价代码"
+    },
+    {
+      "id": "R06",
+      "kind": "项目证据",
+      "title": "主机激活与 Busy 实测",
+      "repoPath": "evidence/esxi8-passthru-activation-20260718.md",
+      "sha256": "61f3dec52df9b6852b603cc0d9d0f123a53654e57eb06216d714e6cb353e184f",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/esxi8-passthru-activation-20260718.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "24280767 嵌套环境；原文原子性表述仅限该次拒绝未改状态，不推广"
+    },
+    {
+      "id": "R07",
+      "kind": "项目证据",
+      "title": "动态异构 BAR 控制",
+      "repoPath": "evidence/esxi8-dynamic-envelope-20260711-summary.json",
+      "sha256": "c2b299371c1ad932425f503a1d2e543cf2af78fd3af65585ba9e1687c40a20ed",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/esxi8-dynamic-envelope-20260711-summary.json",
+      "reviewedOn": "2026-11-14",
+      "scope": "1/2 GiB 选择与 MMIO 变化；有共享依赖负例"
+    },
+    {
+      "id": "R08",
+      "kind": "项目证据",
+      "title": "候选耗尽与迁移控制",
+      "repoPath": "evidence/esxi8-vmotion-20260711-summary.json",
+      "sha256": "00e4006789549a6e2860107ec1a01c56adfd0811da4ea5038db3d7b6f658cfba",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/esxi8-vmotion-20260711-summary.json",
+      "reviewedOn": "2026-11-14",
+      "scope": "普通/静态/动态 live vMotion 对照及 Dynamic 冷迁移"
+    },
+    {
+      "id": "R09",
+      "kind": "项目证据",
+      "title": "DMA 释放采样",
+      "repoPath": "evidence/esxi8-edu-dma-teardown-20260714-summary.json",
+      "sha256": "f5ed02b5e2f414c4f789ba56d94f1fc38c5da04621396675f08720d9186f2196",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/evidence/esxi8-edu-dma-teardown-20260714-summary.json",
+      "reviewedOn": "2026-11-14",
+      "scope": "虚拟 VT-d/EDU；旧 guest 映射撤离不等于全部 DMA 停止"
+    },
+    {
+      "id": "R10",
+      "kind": "项目证据",
+      "title": "MMIO 与运行生命周期实验汇总",
+      "repoPath": "vmware-esxi8-directpath-local-results.md",
+      "sha256": "198c0ccacb30d9224e00b484687196f443b7820633bfb29d66fa6b621d513123",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/vmware-esxi8-directpath-local-results.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "历史多场景汇总；不得把某个 I/O 正例传播到全部新实验"
+    },
+    {
+      "id": "R11",
+      "kind": "旧回执复核",
+      "title": "释放故障影响健康同组成员",
+      "repoPath": "evidence/vmware-directpath-principles-20261114/observations/release-fault-review.json",
+      "sha256": "9b835b0e0309490b92a59f220197f3de7f9b0e78668278474999f85cbfb37228",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/main/evidence/vmware-directpath-principles-20261114/observations/release-fault-review.json",
+      "reviewedOn": "2026-11-14",
+      "scope": "复核 2026-08-02 原始回执；只读重新整理，没有新故障注入"
+    },
+    {
+      "id": "P01",
+      "kind": "我方设计",
+      "title": "Qman 实现蓝图",
+      "repoPath": "qman-directpath-implementation-blueprint.md",
+      "sha256": "0072efdffabf98a8356870e6b963c280966a132520b8e4c8beb129c102562164",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/qman-directpath-implementation-blueprint.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "公开参考设计与组件状态；不是私有目标产品能力证明"
+    },
+    {
+      "id": "P02",
+      "kind": "我方设计",
+      "title": "QEMU 与 Qman 静态动态直通设计",
+      "repoPath": "qemu-static-dynamic-directpath-design.md",
+      "sha256": "177dfe0baad0a3539f1a20744347b7d9e152abd32a0a3aa6da364044604975ee",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/0d2a328fd4ada8ae5f5f20b890929d0b4d36cc96/qemu-static-dynamic-directpath-design.md",
+      "reviewedOn": "2026-11-14",
+      "scope": "含 ACS override 双边界与实现缺口；不是生产已验收"
+    },
+    {
+      "id": "P03",
+      "kind": "旧回执复核",
+      "title": "历史宿主 DPDK 接管上下文",
+      "repoPath": "evidence/vmware-directpath-principles-20261114/observations/host-dpdk-context.json",
+      "sha256": "ad2ff66361c93bcd34866c63ef97e88fb71097d0498872d2d7de73271b0f1f70",
+      "url": "https://github.com/JoJoJoinme/pci-mmio-notes/blob/main/evidence/vmware-directpath-principles-20261114/observations/host-dpdk-context.json",
+      "reviewedOn": "2026-11-14",
+      "scope": "X722 分工和 mlx5 场景；没有证明关闭 override 必然失败"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "reviewedOn": "2026-11-14",
+  "newRuntimeExperiment": false,
+  "sourceRun": "20260802-vmw-dependency-release-fault-001-v4",
+  "sourceFileSha256": "9d9c6eb8b6a9a0ba4d489d4635c28e2f1633df2cbfb28671e211415f2ac584c8",
+  "transformation": "Whitelisted historical facts; omit host identities, credential references and full logs",
+  "environment": {
+    "esxi": "VMware ESXi 8.0.3 build-24280767",
+    "vcenter": "VMware vCenter Server 8.0.3 build-24674346"
+  },
+  "injectionBoundary": {
+    "actor": "outer-lab-qom",
+    "mechanism": "after VMware PowerOff enters queued/running state, change only the EDU endpoint to return all ones for PCI configuration reads",
+    "doesNotProve": "a physical device emitted a reset failure or VMware received a typed hardware-reset error"
+  },
+  "outcomes": {
+    "releaseTaskSucceeded": true,
+    "siblingsResponsiveAfterRelease": true,
+    "dependencyBridgeBusPreservedAfterRelease": true,
+    "healthySiblingPowerOnSucceeded": false,
+    "faultedEduRetryPowerOnSucceeded": false,
+    "freshEduRecoveredWithoutHostOrQemuRestart": true
+  },
+  "afterRelease": {
+    "allCapable": true,
+    "allEnabled": true,
+    "allActive": true,
+    "dependentDevices": [
+      "0000:01:00.0"
+    ],
+    "dynamicCandidateCounts": {
+      "edu": 1,
+      "e1000e": 1,
+      "all": 2
+    }
+  },
+  "guestRecovery": {
+    "completeMarker": true,
+    "failureMarker": false,
+    "probePassCount": 1,
+    "msiPassCount": 1,
+    "dmaPassCount": 1
+  },
+  "semantics": {
+    "explicitVendorQuarantineStateObserved": false,
+    "physicalHardwareResetFailureProven": false,
+    "poweredOffDoesNotProveDmaQuiescence": true
+  },
+  "logExcerpts": [
+    {
+      "sourceFile": "dependency-fault-release-vmkernel.log",
+      "sourceSha256": "c25048c96e406cdf12d17d1f1b0af9719f9e116f99aaaf06ad83f729498b0197",
+      "selectedLines": [
+        {
+          "sourceLine": 3,
+          "text": "2026-08-02T04:12:19.680Z Wa(180) vmkwarning: cpu3:133894)WARNING: PCI: 745: Dev 0000:02:02.0 is unresponsive after reset"
+        },
+        {
+          "sourceLine": 4,
+          "text": "2026-08-02T04:12:19.680Z In(182) vmkernel: cpu3:133894)PCIPassthru: 1752: Disable Domain for device 0000:02:02.0"
+        },
+        {
+          "sourceLine": 5,
+          "text": "2026-08-02T04:12:19.684Z In(182) vmkernel: cpu3:133894)PCIPassthru: 1039: pcipdevInfo: 0x431343601770 (0000:02:02.0), state 0, destroyed"
+        }
+      ]
+    },
+    {
+      "sourceFile": "healthy-sibling-vmware.log",
+      "sourceSha256": "92b317b7b5335dbc2bae352660b2558a8bb15d9b421ccad60623d82d8f227c68",
+      "selectedLines": [
+        {
+          "sourceLine": 527,
+          "text": "2026-08-02T04:14:33.564Z In(05) vmx - AH Failed to find a suitable device for pciPassthru0"
+        },
+        {
+          "sourceLine": 528,
+          "text": "2026-08-02T04:14:33.565Z In(05) vmx - Module 'DevicePowerOn' power on failed."
+        },
+        {
+          "sourceLine": 548,
+          "text": "2026-08-02T04:14:33.768Z In(05)+ vmx - Power on failure messages: Module 'DevicePowerOn' power on failed."
+        }
+      ]
+    }
+  ]
+}

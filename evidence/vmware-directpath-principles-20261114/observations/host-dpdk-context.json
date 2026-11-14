@@ -1,0 +1,24 @@
+{
+  "sourceDate": "2026-06",
+  "reviewedOn": "2026-11-14",
+  "sourceFileSha256": "4a1d8273d4cefb2ff6286bc5c6b66115885ae17adb97fdffb8019b54638c8eb5",
+  "newRuntimeExperiment": false,
+  "selectedHistoricalFacts": {
+    "adapter": "Intel X722",
+    "nativeFunctions": [
+      "0000:1a:00.0",
+      "0000:1a:00.1"
+    ],
+    "vfioFunctions": [
+      "0000:1a:00.2",
+      "0000:1a:00.3"
+    ],
+    "otherHostMlx5Observed": true
+  },
+  "limitations": [
+    "No override-off counterpart is established by these retained observations",
+    "mlx5 driver binding alone does not prove a particular DPDK process owns the device",
+    "These are historical host observations, not current production state"
+  ],
+  "transformation": "Keep only device/driver context needed for the discussion; omit host names, IPs, process IDs and credentials"
+}
