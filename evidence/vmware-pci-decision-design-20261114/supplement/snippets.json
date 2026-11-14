@@ -1,0 +1,1851 @@
+{
+  "schemaVersion": 1,
+  "tools": {
+    "capstone": "5.0.7",
+    "pyelftools": "0.33"
+  },
+  "images": {
+    "vmkctl242": {
+      "build": "24280767",
+      "component": "libvmkctl.so",
+      "sha256": "3432f1036270968cb0a01970a493da2d27033070ebb6dce2546d910c78b135da"
+    }
+  },
+  "snippets": [
+    {
+      "id": "E01",
+      "title": "依赖对象必须非空",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+      "functionAddress": "0x4cbaac",
+      "functionBytes": 1233,
+      "functionSha256": "cce202091460177a7d0609d4d1f4197a8b957a547a962e495b3c20e7bc307c90",
+      "addressKind": "ELF linked virtual address",
+      "section": ".text",
+      "startAddress": "0x4cbe39",
+      "endAddressExclusive": "0x4cbe53",
+      "startFileOffset": "0x4cbe39",
+      "windowBytes": 26,
+      "windowSha256": "4f54e8f4905b7b611fa0dc19de3c115559dfb3b3140fb53a0f5cfa63af76998b",
+      "instructionCount": 6,
+      "instructions": [
+        {
+          "address": "0x4cbe39",
+          "functionOffset": "0x38d",
+          "fileOffset": "0x4cbe39",
+          "bytes": "4c8d7598",
+          "mnemonic": "lea",
+          "operands": "r14, [rbp - 0x68]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cbe3d",
+          "functionOffset": "0x391",
+          "fileOffset": "0x4cbe3d",
+          "bytes": "4c89e6",
+          "mnemonic": "mov",
+          "operands": "rsi, r12",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cbe40",
+          "functionOffset": "0x394",
+          "fileOffset": "0x4cbe40",
+          "bytes": "4c89f7",
+          "mnemonic": "mov",
+          "operands": "rdi, r14",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cbe43",
+          "functionOffset": "0x397",
+          "fileOffset": "0x4cbe43",
+          "bytes": "e82822ebff",
+          "mnemonic": "call",
+          "operands": "0x37e070",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x37e070",
+              "gotAddress": "0xa59810",
+              "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv",
+              "symbolValue": "0x4c7142",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cbe48",
+          "functionOffset": "0x39c",
+          "fileOffset": "0x4cbe48",
+          "bytes": "48837d9800",
+          "mnemonic": "cmp",
+          "operands": "qword ptr [rbp - 0x68], 0",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cbe4d",
+          "functionOffset": "0x3a1",
+          "fileOffset": "0x4cbe4d",
+          "bytes": "0f85de000000",
+          "mnemonic": "jne",
+          "operands": "0x4cbf31",
+          "references": [],
+          "branch": {
+            "target": "0x4cbf31",
+            "insideWindow": false,
+            "insideFunction": true,
+            "fallthrough": "0x4cbe53"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E02",
+      "title": "无依赖对象的拒绝文字",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+      "functionAddress": "0x4cbaac",
+      "functionBytes": 1233,
+      "functionSha256": "cce202091460177a7d0609d4d1f4197a8b957a547a962e495b3c20e7bc307c90",
+      "addressKind": "ELF linked virtual address",
+      "section": ".text",
+      "startAddress": "0x4cbe53",
+      "endAddressExclusive": "0x4cbe63",
+      "startFileOffset": "0x4cbe53",
+      "windowBytes": 16,
+      "windowSha256": "797abeb924df7e6e585ac2dd5ec354efc157647055d2602f4637b55e4d557608",
+      "instructionCount": 3,
+      "instructions": [
+        {
+          "address": "0x4cbe53",
+          "functionOffset": "0x3a7",
+          "fileOffset": "0x4cbe53",
+          "bytes": "488d7dc0",
+          "mnemonic": "lea",
+          "operands": "rdi, [rbp - 0x40]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cbe57",
+          "functionOffset": "0x3ab",
+          "fileOffset": "0x4cbe57",
+          "bytes": "488d35a7a03700",
+          "mnemonic": "lea",
+          "operands": "rsi, [rip + 0x37a0a7]",
+          "references": [
+            {
+              "kind": "literal",
+              "address": "0x845f05",
+              "text": " is not passthrough capable because it is directly under the PCI host bridge.",
+              "bytesWithNul": "206973206e6f7420706173737468726f7567682063617061626c652062656361757365206974206973206469726563746c7920756e646572207468652050434920686f7374206272696467652e00",
+              "fileOffset": "0x845f05"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cbe5e",
+          "functionOffset": "0x3b2",
+          "fileOffset": "0x4cbe5e",
+          "bytes": "e80d63ecff",
+          "mnemonic": "call",
+          "operands": "0x392170",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x392170",
+              "gotAddress": "0xa63890",
+              "symbol": "_ZN7HostCtl4Misc6Detail6StrBufC1EPKc",
+              "symbolValue": "0x3ffc94",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        }
+      ]
+    },
+    {
+      "id": "E03",
+      "title": "切换入口的资格与现有配置检查",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::SwitchOwnerToPassthru",
+      "functionAddress": "0x4cc032",
+      "functionBytes": 1706,
+      "functionSha256": "f0f0e4792de4b0be87917f63e7df6fd351c3c6b61cdcbc35d6633b2f59cd5178",
+      "addressKind": "ELF linked virtual address",
+      "section": ".text",
+      "startAddress": "0x4cc032",
+      "endAddressExclusive": "0x4cc0bf",
+      "startFileOffset": "0x4cc032",
+      "windowBytes": 141,
+      "windowSha256": "6d09723270266cc2e055d87c797ee2d45084daff52cb22abd6ee84f883d569bc",
+      "instructionCount": 37,
+      "instructions": [
+        {
+          "address": "0x4cc032",
+          "functionOffset": "0x0",
+          "fileOffset": "0x4cc032",
+          "bytes": "55",
+          "mnemonic": "push",
+          "operands": "rbp",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc033",
+          "functionOffset": "0x1",
+          "fileOffset": "0x4cc033",
+          "bytes": "4889e5",
+          "mnemonic": "mov",
+          "operands": "rbp, rsp",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc036",
+          "functionOffset": "0x4",
+          "fileOffset": "0x4cc036",
+          "bytes": "4157",
+          "mnemonic": "push",
+          "operands": "r15",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc038",
+          "functionOffset": "0x6",
+          "fileOffset": "0x4cc038",
+          "bytes": "4156",
+          "mnemonic": "push",
+          "operands": "r14",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc03a",
+          "functionOffset": "0x8",
+          "fileOffset": "0x4cc03a",
+          "bytes": "4989fe",
+          "mnemonic": "mov",
+          "operands": "r14, rdi",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc03d",
+          "functionOffset": "0xb",
+          "fileOffset": "0x4cc03d",
+          "bytes": "4155",
+          "mnemonic": "push",
+          "operands": "r13",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc03f",
+          "functionOffset": "0xd",
+          "fileOffset": "0x4cc03f",
+          "bytes": "4154",
+          "mnemonic": "push",
+          "operands": "r12",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc041",
+          "functionOffset": "0xf",
+          "fileOffset": "0x4cc041",
+          "bytes": "53",
+          "mnemonic": "push",
+          "operands": "rbx",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc042",
+          "functionOffset": "0x10",
+          "fileOffset": "0x4cc042",
+          "bytes": "4881ec48010000",
+          "mnemonic": "sub",
+          "operands": "rsp, 0x148",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc049",
+          "functionOffset": "0x17",
+          "fileOffset": "0x4cc049",
+          "bytes": "e80208ebff",
+          "mnemonic": "call",
+          "operands": "0x37c850",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x37c850",
+              "gotAddress": "0xa58c00",
+              "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl17IsPassthruCapableEv",
+              "symbolValue": "0x4c2438",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc04e",
+          "functionOffset": "0x1c",
+          "fileOffset": "0x4cc04e",
+          "bytes": "84c0",
+          "mnemonic": "test",
+          "operands": "al, al",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc050",
+          "functionOffset": "0x1e",
+          "fileOffset": "0x4cc050",
+          "bytes": "751e",
+          "mnemonic": "jne",
+          "operands": "0x4cc070",
+          "references": [],
+          "branch": {
+            "target": "0x4cc070",
+            "insideWindow": true,
+            "insideFunction": true,
+            "fallthrough": "0x4cc052"
+          }
+        },
+        {
+          "address": "0x4cc052",
+          "functionOffset": "0x20",
+          "fileOffset": "0x4cc052",
+          "bytes": "bf20000000",
+          "mnemonic": "mov",
+          "operands": "edi, 0x20",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc057",
+          "functionOffset": "0x25",
+          "fileOffset": "0x4cc057",
+          "bytes": "e8340aecff",
+          "mnemonic": "call",
+          "operands": "0x38ca90",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x38ca90",
+              "gotAddress": "0xa60d20",
+              "symbol": "__cxa_allocate_exception",
+              "symbolValue": "0x0",
+              "symbolSection": "SHN_UNDEF",
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc05c",
+          "functionOffset": "0x2a",
+          "fileOffset": "0x4cc05c",
+          "bytes": "488d35019f3700",
+          "mnemonic": "lea",
+          "operands": "rsi, [rip + 0x379f01]",
+          "references": [
+            {
+              "kind": "literal",
+              "address": "0x845f64",
+              "text": "Device is not capable of passthru. Refer to KB 2142307 for the list of requirements",
+              "bytesWithNul": "446576696365206973206e6f742063617061626c65206f662070617373746872752e20526566657220746f204b42203231343233303720666f7220746865206c697374206f6620726571756972656d656e747300",
+              "fileOffset": "0x845f64"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc063",
+          "functionOffset": "0x31",
+          "fileOffset": "0x4cc063",
+          "bytes": "4889c7",
+          "mnemonic": "mov",
+          "operands": "rdi, rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc066",
+          "functionOffset": "0x34",
+          "fileOffset": "0x4cc066",
+          "bytes": "4989c4",
+          "mnemonic": "mov",
+          "operands": "r12, rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc069",
+          "functionOffset": "0x37",
+          "fileOffset": "0x4cc069",
+          "bytes": "e8f219ebff",
+          "mnemonic": "call",
+          "operands": "0x37da60",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x37da60",
+              "gotAddress": "0xa59508",
+              "symbol": "_ZN7HostCtl3Lib16HostCtlExceptionC1EPKc",
+              "symbolValue": "0x403e3a",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc06e",
+          "functionOffset": "0x3c",
+          "fileOffset": "0x4cc06e",
+          "bytes": "eb29",
+          "mnemonic": "jmp",
+          "operands": "0x4cc099",
+          "references": [],
+          "branch": {
+            "target": "0x4cc099",
+            "insideWindow": true,
+            "insideFunction": true,
+            "fallthrough": null
+          }
+        },
+        {
+          "address": "0x4cc070",
+          "functionOffset": "0x3e",
+          "fileOffset": "0x4cc070",
+          "bytes": "4c89f7",
+          "mnemonic": "mov",
+          "operands": "rdi, r14",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc073",
+          "functionOffset": "0x41",
+          "fileOffset": "0x4cc073",
+          "bytes": "e818f3ebff",
+          "mnemonic": "call",
+          "operands": "0x38b390",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x38b390",
+              "gotAddress": "0xa601a0",
+              "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetConfiguredDeviceOwnerEv",
+              "symbolValue": "0x4c505a",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc078",
+          "functionOffset": "0x46",
+          "fileOffset": "0x4cc078",
+          "bytes": "83f802",
+          "mnemonic": "cmp",
+          "operands": "eax, 2",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc07b",
+          "functionOffset": "0x49",
+          "fileOffset": "0x4cc07b",
+          "bytes": "7532",
+          "mnemonic": "jne",
+          "operands": "0x4cc0af",
+          "references": [],
+          "branch": {
+            "target": "0x4cc0af",
+            "insideWindow": true,
+            "insideFunction": true,
+            "fallthrough": "0x4cc07d"
+          }
+        },
+        {
+          "address": "0x4cc07d",
+          "functionOffset": "0x4b",
+          "fileOffset": "0x4cc07d",
+          "bytes": "bf20000000",
+          "mnemonic": "mov",
+          "operands": "edi, 0x20",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc082",
+          "functionOffset": "0x50",
+          "fileOffset": "0x4cc082",
+          "bytes": "e8090aecff",
+          "mnemonic": "call",
+          "operands": "0x38ca90",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x38ca90",
+              "gotAddress": "0xa60d20",
+              "symbol": "__cxa_allocate_exception",
+              "symbolValue": "0x0",
+              "symbolSection": "SHN_UNDEF",
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc087",
+          "functionOffset": "0x55",
+          "fileOffset": "0x4cc087",
+          "bytes": "488d352a9f3700",
+          "mnemonic": "lea",
+          "operands": "rsi, [rip + 0x379f2a]",
+          "references": [
+            {
+              "kind": "literal",
+              "address": "0x845fb8",
+              "text": "Device owner is already configured to passthru.",
+              "bytesWithNul": "446576696365206f776e657220697320616c726561647920636f6e6669677572656420746f2070617373746872752e00",
+              "fileOffset": "0x845fb8"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc08e",
+          "functionOffset": "0x5c",
+          "fileOffset": "0x4cc08e",
+          "bytes": "4889c7",
+          "mnemonic": "mov",
+          "operands": "rdi, rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc091",
+          "functionOffset": "0x5f",
+          "fileOffset": "0x4cc091",
+          "bytes": "4989c4",
+          "mnemonic": "mov",
+          "operands": "r12, rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc094",
+          "functionOffset": "0x62",
+          "fileOffset": "0x4cc094",
+          "bytes": "e8c719ebff",
+          "mnemonic": "call",
+          "operands": "0x37da60",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x37da60",
+              "gotAddress": "0xa59508",
+              "symbol": "_ZN7HostCtl3Lib16HostCtlExceptionC1EPKc",
+              "symbolValue": "0x403e3a",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc099",
+          "functionOffset": "0x67",
+          "fileOffset": "0x4cc099",
+          "bytes": "488b1570915900",
+          "mnemonic": "mov",
+          "operands": "rdx, qword ptr [rip + 0x599170]",
+          "references": [
+            {
+              "kind": "got",
+              "address": "0xa65210",
+              "symbol": "_ZN7HostCtl3Lib16HostCtlExceptionD1Ev",
+              "symbolValue": "0x400230",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 6,
+              "relocationSection": ".rela.dyn"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc0a0",
+          "functionOffset": "0x6e",
+          "fileOffset": "0x4cc0a0",
+          "bytes": "488b35b9ab5900",
+          "mnemonic": "mov",
+          "operands": "rsi, qword ptr [rip + 0x59abb9]",
+          "references": [
+            {
+              "kind": "got",
+              "address": "0xa66c60",
+              "symbol": "_ZTIN7HostCtl3Lib16HostCtlExceptionE",
+              "symbolValue": "0x9ef310",
+              "symbolSection": 23,
+              "addend": 0,
+              "type": 6,
+              "relocationSection": ".rela.dyn"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc0a7",
+          "functionOffset": "0x75",
+          "fileOffset": "0x4cc0a7",
+          "bytes": "4c89e7",
+          "mnemonic": "mov",
+          "operands": "rdi, r12",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc0aa",
+          "functionOffset": "0x78",
+          "fileOffset": "0x4cc0aa",
+          "bytes": "e9a5000000",
+          "mnemonic": "jmp",
+          "operands": "0x4cc154",
+          "references": [],
+          "branch": {
+            "target": "0x4cc154",
+            "insideWindow": false,
+            "insideFunction": true,
+            "fallthrough": null
+          }
+        },
+        {
+          "address": "0x4cc0af",
+          "functionOffset": "0x7d",
+          "fileOffset": "0x4cc0af",
+          "bytes": "4c89f7",
+          "mnemonic": "mov",
+          "operands": "rdi, r14",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc0b2",
+          "functionOffset": "0x80",
+          "fileOffset": "0x4cc0b2",
+          "bytes": "e899c6ebff",
+          "mnemonic": "call",
+          "operands": "0x388750",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x388750",
+              "gotAddress": "0xa5eb80",
+              "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl12IsBootDeviceEv",
+              "symbolValue": "0x4cb80c",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc0b7",
+          "functionOffset": "0x85",
+          "fileOffset": "0x4cc0b7",
+          "bytes": "84c0",
+          "mnemonic": "test",
+          "operands": "al, al",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc0b9",
+          "functionOffset": "0x87",
+          "fileOffset": "0x4cc0b9",
+          "bytes": "0f849a000000",
+          "mnemonic": "je",
+          "operands": "0x4cc159",
+          "references": [],
+          "branch": {
+            "target": "0x4cc159",
+            "insideWindow": false,
+            "insideFunction": true,
+            "fallthrough": "0x4cc0bf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E04",
+      "title": "取得虚拟交换机信息",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::SwitchOwnerToPassthru",
+      "functionAddress": "0x4cc032",
+      "functionBytes": 1706,
+      "functionSha256": "f0f0e4792de4b0be87917f63e7df6fd351c3c6b61cdcbc35d6633b2f59cd5178",
+      "addressKind": "ELF linked virtual address",
+      "section": ".text",
+      "startAddress": "0x4cc16f",
+      "endAddressExclusive": "0x4cc1a2",
+      "startFileOffset": "0x4cc16f",
+      "windowBytes": 51,
+      "windowSha256": "a37535acc6911012042ae21145d0c53729376ce2f6e399ab6712ea8f00f2cd2a",
+      "instructionCount": 9,
+      "instructions": [
+        {
+          "address": "0x4cc16f",
+          "functionOffset": "0x13d",
+          "fileOffset": "0x4cc16f",
+          "bytes": "488d8528ffffff",
+          "mnemonic": "lea",
+          "operands": "rax, [rbp - 0xd8]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc176",
+          "functionOffset": "0x144",
+          "fileOffset": "0x4cc176",
+          "bytes": "4889c7",
+          "mnemonic": "mov",
+          "operands": "rdi, rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc179",
+          "functionOffset": "0x147",
+          "fileOffset": "0x4cc179",
+          "bytes": "488985d0feffff",
+          "mnemonic": "mov",
+          "operands": "qword ptr [rbp - 0x130], rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc180",
+          "functionOffset": "0x14e",
+          "fileOffset": "0x4cc180",
+          "bytes": "e86b46ebff",
+          "mnemonic": "call",
+          "operands": "0x3807f0",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x3807f0",
+              "gotAddress": "0xa5abd0",
+              "symbol": "_ZN6VmkCtl7Network15NetworkInfoImplC1Ev",
+              "symbolValue": "0x52f842",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc185",
+          "functionOffset": "0x153",
+          "fileOffset": "0x4cc185",
+          "bytes": "488d85e0feffff",
+          "mnemonic": "lea",
+          "operands": "rax, [rbp - 0x120]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc18c",
+          "functionOffset": "0x15a",
+          "fileOffset": "0x4cc18c",
+          "bytes": "488bb5d0feffff",
+          "mnemonic": "mov",
+          "operands": "rsi, qword ptr [rbp - 0x130]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc193",
+          "functionOffset": "0x161",
+          "fileOffset": "0x4cc193",
+          "bytes": "4889c7",
+          "mnemonic": "mov",
+          "operands": "rdi, rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc196",
+          "functionOffset": "0x164",
+          "fileOffset": "0x4cc196",
+          "bytes": "488985b8feffff",
+          "mnemonic": "mov",
+          "operands": "qword ptr [rbp - 0x148], rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc19d",
+          "functionOffset": "0x16b",
+          "fileOffset": "0x4cc19d",
+          "bytes": "e84e63ebff",
+          "mnemonic": "call",
+          "operands": "0x3824f0",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x3824f0",
+              "gotAddress": "0xa5ba50",
+              "symbol": "_ZN6VmkCtl7Network15NetworkInfoImpl20GetVirtualSwitchInfoEv",
+              "symbolValue": "0x52f99e",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        }
+      ]
+    },
+    {
+      "id": "E05",
+      "title": "目标网络设备查找与 owner 写入分叉",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::SwitchOwnerToPassthru",
+      "functionAddress": "0x4cc032",
+      "functionBytes": 1706,
+      "functionSha256": "f0f0e4792de4b0be87917f63e7df6fd351c3c6b61cdcbc35d6633b2f59cd5178",
+      "addressKind": "ELF linked virtual address",
+      "section": ".text",
+      "startAddress": "0x4cc451",
+      "endAddressExclusive": "0x4cc484",
+      "startFileOffset": "0x4cc451",
+      "windowBytes": 51,
+      "windowSha256": "12c2763afe68a18b60fab4606859a9173cf26a09329989f3f76f389973777d4a",
+      "instructionCount": 12,
+      "instructions": [
+        {
+          "address": "0x4cc451",
+          "functionOffset": "0x41f",
+          "fileOffset": "0x4cc451",
+          "bytes": "4c89f6",
+          "mnemonic": "mov",
+          "operands": "rsi, r14",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc454",
+          "functionOffset": "0x422",
+          "fileOffset": "0x4cc454",
+          "bytes": "4889df",
+          "mnemonic": "mov",
+          "operands": "rdi, rbx",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc457",
+          "functionOffset": "0x425",
+          "fileOffset": "0x4cc457",
+          "bytes": "e8c440ebff",
+          "mnemonic": "call",
+          "operands": "0x380520",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x380520",
+              "gotAddress": "0xa5aa68",
+              "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21GetVmKernelDeviceNameEv",
+              "symbolValue": "0x4c4868",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc45c",
+          "functionOffset": "0x42a",
+          "fileOffset": "0x4cc45c",
+          "bytes": "4c8dad48ffffff",
+          "mnemonic": "lea",
+          "operands": "r13, [rbp - 0xb8]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc463",
+          "functionOffset": "0x431",
+          "fileOffset": "0x4cc463",
+          "bytes": "4889de",
+          "mnemonic": "mov",
+          "operands": "rsi, rbx",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc466",
+          "functionOffset": "0x434",
+          "fileOffset": "0x4cc466",
+          "bytes": "4c89ef",
+          "mnemonic": "mov",
+          "operands": "rdi, r13",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc469",
+          "functionOffset": "0x437",
+          "fileOffset": "0x4cc469",
+          "bytes": "e8e26debff",
+          "mnemonic": "call",
+          "operands": "0x383250",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x383250",
+              "gotAddress": "0xa5c100",
+              "symbol": "_ZNKSt8_Rb_treeISsSt4pairIKSsSsESt10_Select1stIS2_ESt4lessISsESaIS2_EE4findERS1_",
+              "symbolValue": "0x4c58a8",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc46e",
+          "functionOffset": "0x43c",
+          "fileOffset": "0x4cc46e",
+          "bytes": "483985c0feffff",
+          "mnemonic": "cmp",
+          "operands": "qword ptr [rbp - 0x140], rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc475",
+          "functionOffset": "0x443",
+          "fileOffset": "0x4cc475",
+          "bytes": "7544",
+          "mnemonic": "jne",
+          "operands": "0x4cc4bb",
+          "references": [],
+          "branch": {
+            "target": "0x4cc4bb",
+            "insideWindow": false,
+            "insideFunction": true,
+            "fallthrough": "0x4cc477"
+          }
+        },
+        {
+          "address": "0x4cc477",
+          "functionOffset": "0x445",
+          "fileOffset": "0x4cc477",
+          "bytes": "be02000000",
+          "mnemonic": "mov",
+          "operands": "esi, 2",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc47c",
+          "functionOffset": "0x44a",
+          "fileOffset": "0x4cc47c",
+          "bytes": "4c89f7",
+          "mnemonic": "mov",
+          "operands": "rdi, r14",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc47f",
+          "functionOffset": "0x44d",
+          "fileOffset": "0x4cc47f",
+          "bytes": "e84c76eaff",
+          "mnemonic": "call",
+          "operands": "0x373ad0",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x373ad0",
+              "gotAddress": "0xa54540",
+              "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24SetConfiguredDeviceOwnerEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+              "symbolValue": "0x4c78a0",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        }
+      ]
+    },
+    {
+      "id": "E06",
+      "title": "vSwitch 和 uplink 占用拒绝文字",
+      "image": "vmkctl242",
+      "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv",
+      "functionLabel": "PciDeviceImpl::SwitchOwnerToPassthru",
+      "functionAddress": "0x4cc032",
+      "functionBytes": 1706,
+      "functionSha256": "f0f0e4792de4b0be87917f63e7df6fd351c3c6b61cdcbc35d6633b2f59cd5178",
+      "addressKind": "ELF linked virtual address",
+      "section": ".text",
+      "startAddress": "0x4cc4bb",
+      "endAddressExclusive": "0x4cc53d",
+      "startFileOffset": "0x4cc4bb",
+      "windowBytes": 130,
+      "windowSha256": "3aef6acea4303a40155f35fe4cef76f46cd18f0588e1157e092b438441e216f6",
+      "instructionCount": 24,
+      "instructions": [
+        {
+          "address": "0x4cc4bb",
+          "functionOffset": "0x489",
+          "fileOffset": "0x4cc4bb",
+          "bytes": "bf20000000",
+          "mnemonic": "mov",
+          "operands": "edi, 0x20",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4c0",
+          "functionOffset": "0x48e",
+          "fileOffset": "0x4cc4c0",
+          "bytes": "e8cb05ecff",
+          "mnemonic": "call",
+          "operands": "0x38ca90",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x38ca90",
+              "gotAddress": "0xa60d20",
+              "symbol": "__cxa_allocate_exception",
+              "symbolValue": "0x0",
+              "symbolSection": "SHN_UNDEF",
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4c5",
+          "functionOffset": "0x493",
+          "fileOffset": "0x4cc4c5",
+          "bytes": "488dbd78ffffff",
+          "mnemonic": "lea",
+          "operands": "rdi, [rbp - 0x88]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4cc",
+          "functionOffset": "0x49a",
+          "fileOffset": "0x4cc4cc",
+          "bytes": "488d35159b3700",
+          "mnemonic": "lea",
+          "operands": "rsi, [rip + 0x379b15]",
+          "references": [
+            {
+              "kind": "literal",
+              "address": "0x845fe8",
+              "text": " for uplink ",
+              "bytesWithNul": "20666f722075706c696e6b2000",
+              "fileOffset": "0x845fe8"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4d3",
+          "functionOffset": "0x4a1",
+          "fileOffset": "0x4cc4d3",
+          "bytes": "4989c4",
+          "mnemonic": "mov",
+          "operands": "r12, rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4d6",
+          "functionOffset": "0x4a4",
+          "fileOffset": "0x4cc4d6",
+          "bytes": "488b85e8feffff",
+          "mnemonic": "mov",
+          "operands": "rax, qword ptr [rbp - 0x118]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4dd",
+          "functionOffset": "0x4ab",
+          "fileOffset": "0x4cc4dd",
+          "bytes": "488985c0feffff",
+          "mnemonic": "mov",
+          "operands": "qword ptr [rbp - 0x140], rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4e4",
+          "functionOffset": "0x4b2",
+          "fileOffset": "0x4cc4e4",
+          "bytes": "488b40e8",
+          "mnemonic": "mov",
+          "operands": "rax, qword ptr [rax - 0x18]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4e8",
+          "functionOffset": "0x4b6",
+          "fileOffset": "0x4cc4e8",
+          "bytes": "488985c8feffff",
+          "mnemonic": "mov",
+          "operands": "qword ptr [rbp - 0x138], rax",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4ef",
+          "functionOffset": "0x4bd",
+          "fileOffset": "0x4cc4ef",
+          "bytes": "e87c5cecff",
+          "mnemonic": "call",
+          "operands": "0x392170",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x392170",
+              "gotAddress": "0xa63890",
+              "symbol": "_ZN7HostCtl4Misc6Detail6StrBufC1EPKc",
+              "symbolValue": "0x3ffc94",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4f4",
+          "functionOffset": "0x4c2",
+          "fileOffset": "0x4cc4f4",
+          "bytes": "4889de",
+          "mnemonic": "mov",
+          "operands": "rsi, rbx",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4f7",
+          "functionOffset": "0x4c5",
+          "fileOffset": "0x4cc4f7",
+          "bytes": "4c89ef",
+          "mnemonic": "mov",
+          "operands": "rdi, r13",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4fa",
+          "functionOffset": "0x4c8",
+          "fileOffset": "0x4cc4fa",
+          "bytes": "e81192eaff",
+          "mnemonic": "call",
+          "operands": "0x375710",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x375710",
+              "gotAddress": "0xa55360",
+              "symbol": "_ZNSt3mapISsSsSt4lessISsESaISt4pairIKSsSsEEEixERS3_",
+              "symbolValue": "0x49dfb6",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc4ff",
+          "functionOffset": "0x4cd",
+          "fileOffset": "0x4cc4ff",
+          "bytes": "488b08",
+          "mnemonic": "mov",
+          "operands": "rcx, qword ptr [rax]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc502",
+          "functionOffset": "0x4d0",
+          "fileOffset": "0x4cc502",
+          "bytes": "488bbdd8feffff",
+          "mnemonic": "mov",
+          "operands": "rdi, qword ptr [rbp - 0x128]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc509",
+          "functionOffset": "0x4d7",
+          "fileOffset": "0x4cc509",
+          "bytes": "488d35e59a3700",
+          "mnemonic": "lea",
+          "operands": "rsi, [rip + 0x379ae5]",
+          "references": [
+            {
+              "kind": "literal",
+              "address": "0x845ff5",
+              "text": " as it is used by vswitch ",
+              "bytesWithNul": "206173206974206973207573656420627920767377697463682000",
+              "fileOffset": "0x845ff5"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc510",
+          "functionOffset": "0x4de",
+          "fileOffset": "0x4cc510",
+          "bytes": "4c8dadf0feffff",
+          "mnemonic": "lea",
+          "operands": "r13, [rbp - 0x110]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc517",
+          "functionOffset": "0x4e5",
+          "fileOffset": "0x4cc517",
+          "bytes": "488b51e8",
+          "mnemonic": "mov",
+          "operands": "rdx, qword ptr [rcx - 0x18]",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc51b",
+          "functionOffset": "0x4e9",
+          "fileOffset": "0x4cc51b",
+          "bytes": "48898da0feffff",
+          "mnemonic": "mov",
+          "operands": "qword ptr [rbp - 0x160], rcx",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc522",
+          "functionOffset": "0x4f0",
+          "fileOffset": "0x4cc522",
+          "bytes": "488995a8feffff",
+          "mnemonic": "mov",
+          "operands": "qword ptr [rbp - 0x158], rdx",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc529",
+          "functionOffset": "0x4f7",
+          "fileOffset": "0x4cc529",
+          "bytes": "e8425cecff",
+          "mnemonic": "call",
+          "operands": "0x392170",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x392170",
+              "gotAddress": "0xa63890",
+              "symbol": "_ZN7HostCtl4Misc6Detail6StrBufC1EPKc",
+              "symbolValue": "0x3ffc94",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc52e",
+          "functionOffset": "0x4fc",
+          "fileOffset": "0x4cc52e",
+          "bytes": "488d35db9a3700",
+          "mnemonic": "lea",
+          "operands": "rsi, [rip + 0x379adb]",
+          "references": [
+            {
+              "kind": "literal",
+              "address": "0x846010",
+              "text": "Device ownership cannot be changed to passthru",
+              "bytesWithNul": "446576696365206f776e6572736869702063616e6e6f74206265206368616e67656420746f20706173737468727500",
+              "fileOffset": "0x846010"
+            }
+          ],
+          "branch": null
+        },
+        {
+          "address": "0x4cc535",
+          "functionOffset": "0x503",
+          "fileOffset": "0x4cc535",
+          "bytes": "4c89ff",
+          "mnemonic": "mov",
+          "operands": "rdi, r15",
+          "references": [],
+          "branch": null
+        },
+        {
+          "address": "0x4cc538",
+          "functionOffset": "0x506",
+          "fileOffset": "0x4cc538",
+          "bytes": "e8335cecff",
+          "mnemonic": "call",
+          "operands": "0x392170",
+          "references": [
+            {
+              "kind": "plt",
+              "address": "0x392170",
+              "gotAddress": "0xa63890",
+              "symbol": "_ZN7HostCtl4Misc6Detail6StrBufC1EPKc",
+              "symbolValue": "0x3ffc94",
+              "symbolSection": 12,
+              "addend": 0,
+              "type": 7,
+              "relocationSection": ".rela.plt"
+            }
+          ],
+          "branch": null
+        }
+      ]
+    }
+  ],
+  "vtable": {
+    "image": "vmkctl242",
+    "symbol": "_ZTVN6VmkCtl8Hardware13PciDeviceImplE",
+    "address": "0x9fc4c0",
+    "primaryAddressPointOffset": "0x48",
+    "slots": [
+      {
+        "vptrSlotOffset": "0x38",
+        "elfAddress": "0x9fc540",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb540",
+        "symbol": "_ZNK6VmkCtl8Hardware13PciDeviceImpl6GetSegEv",
+        "symbolValue": "0x4c1980",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      },
+      {
+        "vptrSlotOffset": "0x40",
+        "elfAddress": "0x9fc548",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb548",
+        "symbol": "_ZNK6VmkCtl8Hardware13PciDeviceImpl6GetBusEv",
+        "symbolValue": "0x4c1984",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      },
+      {
+        "vptrSlotOffset": "0x48",
+        "elfAddress": "0x9fc550",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb550",
+        "symbol": "_ZNK6VmkCtl8Hardware13PciDeviceImpl7GetSlotEv",
+        "symbolValue": "0x4c1988",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      },
+      {
+        "vptrSlotOffset": "0x50",
+        "elfAddress": "0x9fc558",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb558",
+        "symbol": "_ZNK6VmkCtl8Hardware13PciDeviceImpl11GetFunctionEv",
+        "symbolValue": "0x4c198c",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      },
+      {
+        "vptrSlotOffset": "0xe0",
+        "elfAddress": "0x9fc5e8",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb5e8",
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl13GetSBDFStringEv",
+        "symbolValue": "0x4c20ac",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      },
+      {
+        "vptrSlotOffset": "0x138",
+        "elfAddress": "0x9fc640",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb640",
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetConfiguredDeviceOwnerEv",
+        "symbolValue": "0x4c505a",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      },
+      {
+        "vptrSlotOffset": "0x148",
+        "elfAddress": "0x9fc650",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb650",
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl27SetConfiguredDevOwnerNoDepsEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+        "symbolValue": "0x4c62c6",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      },
+      {
+        "vptrSlotOffset": "0x158",
+        "elfAddress": "0x9fc660",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb660",
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv",
+        "symbolValue": "0x4c7142",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      },
+      {
+        "vptrSlotOffset": "0x160",
+        "elfAddress": "0x9fc668",
+        "rawPointerBytes": "0000000000000000",
+        "fileOffset": "0x9fb668",
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetDependentChildDevicesEv",
+        "symbolValue": "0x4cb4c0",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 1,
+        "relocationSection": ".rela.dyn"
+      }
+    ]
+  },
+  "linkageWitnesses": [
+    {
+      "instructionAddress": "0x4cbe43",
+      "kind": "plt",
+      "slotAddress": "0xa59810",
+      "rawSlotBytes": "76e0370000000000",
+      "slotFileOffset": "0xa58810",
+      "relocation": {
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl18GetDependantDeviceEv",
+        "symbolValue": "0x4c7142",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x37e070",
+      "pltStubBytes": "ff259ab76d00"
+    },
+    {
+      "instructionAddress": "0x4cbe5e",
+      "kind": "plt",
+      "slotAddress": "0xa63890",
+      "rawSlotBytes": "7621390000000000",
+      "slotFileOffset": "0xa62890",
+      "relocation": {
+        "symbol": "_ZN7HostCtl4Misc6Detail6StrBufC1EPKc",
+        "symbolValue": "0x3ffc94",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x392170",
+      "pltStubBytes": "ff251a176d00"
+    },
+    {
+      "instructionAddress": "0x4cc049",
+      "kind": "plt",
+      "slotAddress": "0xa58c00",
+      "rawSlotBytes": "56c8370000000000",
+      "slotFileOffset": "0xa57c00",
+      "relocation": {
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl17IsPassthruCapableEv",
+        "symbolValue": "0x4c2438",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x37c850",
+      "pltStubBytes": "ff25aac36d00"
+    },
+    {
+      "instructionAddress": "0x4cc057",
+      "kind": "plt",
+      "slotAddress": "0xa60d20",
+      "rawSlotBytes": "96ca380000000000",
+      "slotFileOffset": "0xa5fd20",
+      "relocation": {
+        "symbol": "__cxa_allocate_exception",
+        "symbolValue": "0x0",
+        "symbolSection": "SHN_UNDEF",
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x38ca90",
+      "pltStubBytes": "ff258a426d00"
+    },
+    {
+      "instructionAddress": "0x4cc069",
+      "kind": "plt",
+      "slotAddress": "0xa59508",
+      "rawSlotBytes": "66da370000000000",
+      "slotFileOffset": "0xa58508",
+      "relocation": {
+        "symbol": "_ZN7HostCtl3Lib16HostCtlExceptionC1EPKc",
+        "symbolValue": "0x403e3a",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x37da60",
+      "pltStubBytes": "ff25a2ba6d00"
+    },
+    {
+      "instructionAddress": "0x4cc073",
+      "kind": "plt",
+      "slotAddress": "0xa601a0",
+      "rawSlotBytes": "96b3380000000000",
+      "slotFileOffset": "0xa5f1a0",
+      "relocation": {
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24GetConfiguredDeviceOwnerEv",
+        "symbolValue": "0x4c505a",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x38b390",
+      "pltStubBytes": "ff250a4e6d00"
+    },
+    {
+      "instructionAddress": "0x4cc082",
+      "kind": "plt",
+      "slotAddress": "0xa60d20",
+      "rawSlotBytes": "96ca380000000000",
+      "slotFileOffset": "0xa5fd20",
+      "relocation": {
+        "symbol": "__cxa_allocate_exception",
+        "symbolValue": "0x0",
+        "symbolSection": "SHN_UNDEF",
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x38ca90",
+      "pltStubBytes": "ff258a426d00"
+    },
+    {
+      "instructionAddress": "0x4cc094",
+      "kind": "plt",
+      "slotAddress": "0xa59508",
+      "rawSlotBytes": "66da370000000000",
+      "slotFileOffset": "0xa58508",
+      "relocation": {
+        "symbol": "_ZN7HostCtl3Lib16HostCtlExceptionC1EPKc",
+        "symbolValue": "0x403e3a",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x37da60",
+      "pltStubBytes": "ff25a2ba6d00"
+    },
+    {
+      "instructionAddress": "0x4cc099",
+      "kind": "got",
+      "slotAddress": "0xa65210",
+      "rawSlotBytes": "0000000000000000",
+      "slotFileOffset": "0xa64210",
+      "relocation": {
+        "symbol": "_ZN7HostCtl3Lib16HostCtlExceptionD1Ev",
+        "symbolValue": "0x400230",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 6,
+        "relocationSection": ".rela.dyn"
+      }
+    },
+    {
+      "instructionAddress": "0x4cc0a0",
+      "kind": "got",
+      "slotAddress": "0xa66c60",
+      "rawSlotBytes": "0000000000000000",
+      "slotFileOffset": "0xa65c60",
+      "relocation": {
+        "symbol": "_ZTIN7HostCtl3Lib16HostCtlExceptionE",
+        "symbolValue": "0x9ef310",
+        "symbolSection": 23,
+        "addend": 0,
+        "type": 6,
+        "relocationSection": ".rela.dyn"
+      }
+    },
+    {
+      "instructionAddress": "0x4cc0b2",
+      "kind": "plt",
+      "slotAddress": "0xa5eb80",
+      "rawSlotBytes": "5687380000000000",
+      "slotFileOffset": "0xa5db80",
+      "relocation": {
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl12IsBootDeviceEv",
+        "symbolValue": "0x4cb80c",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x388750",
+      "pltStubBytes": "ff252a646d00"
+    },
+    {
+      "instructionAddress": "0x4cc180",
+      "kind": "plt",
+      "slotAddress": "0xa5abd0",
+      "rawSlotBytes": "f607380000000000",
+      "slotFileOffset": "0xa59bd0",
+      "relocation": {
+        "symbol": "_ZN6VmkCtl7Network15NetworkInfoImplC1Ev",
+        "symbolValue": "0x52f842",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x3807f0",
+      "pltStubBytes": "ff25daa36d00"
+    },
+    {
+      "instructionAddress": "0x4cc19d",
+      "kind": "plt",
+      "slotAddress": "0xa5ba50",
+      "rawSlotBytes": "f624380000000000",
+      "slotFileOffset": "0xa5aa50",
+      "relocation": {
+        "symbol": "_ZN6VmkCtl7Network15NetworkInfoImpl20GetVirtualSwitchInfoEv",
+        "symbolValue": "0x52f99e",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x3824f0",
+      "pltStubBytes": "ff255a956d00"
+    },
+    {
+      "instructionAddress": "0x4cc457",
+      "kind": "plt",
+      "slotAddress": "0xa5aa68",
+      "rawSlotBytes": "2605380000000000",
+      "slotFileOffset": "0xa59a68",
+      "relocation": {
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl21GetVmKernelDeviceNameEv",
+        "symbolValue": "0x4c4868",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x380520",
+      "pltStubBytes": "ff2542a56d00"
+    },
+    {
+      "instructionAddress": "0x4cc469",
+      "kind": "plt",
+      "slotAddress": "0xa5c100",
+      "rawSlotBytes": "5632380000000000",
+      "slotFileOffset": "0xa5b100",
+      "relocation": {
+        "symbol": "_ZNKSt8_Rb_treeISsSt4pairIKSsSsESt10_Select1stIS2_ESt4lessISsESaIS2_EE4findERS1_",
+        "symbolValue": "0x4c58a8",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x383250",
+      "pltStubBytes": "ff25aa8e6d00"
+    },
+    {
+      "instructionAddress": "0x4cc47f",
+      "kind": "plt",
+      "slotAddress": "0xa54540",
+      "rawSlotBytes": "d63a370000000000",
+      "slotFileOffset": "0xa53540",
+      "relocation": {
+        "symbol": "_ZN6VmkCtl8Hardware13PciDeviceImpl24SetConfiguredDeviceOwnerEN7HostCtl8Hardware9PciDevice14PciDeviceOwnerE",
+        "symbolValue": "0x4c78a0",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x373ad0",
+      "pltStubBytes": "ff256a0a6e00"
+    },
+    {
+      "instructionAddress": "0x4cc4c0",
+      "kind": "plt",
+      "slotAddress": "0xa60d20",
+      "rawSlotBytes": "96ca380000000000",
+      "slotFileOffset": "0xa5fd20",
+      "relocation": {
+        "symbol": "__cxa_allocate_exception",
+        "symbolValue": "0x0",
+        "symbolSection": "SHN_UNDEF",
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x38ca90",
+      "pltStubBytes": "ff258a426d00"
+    },
+    {
+      "instructionAddress": "0x4cc4ef",
+      "kind": "plt",
+      "slotAddress": "0xa63890",
+      "rawSlotBytes": "7621390000000000",
+      "slotFileOffset": "0xa62890",
+      "relocation": {
+        "symbol": "_ZN7HostCtl4Misc6Detail6StrBufC1EPKc",
+        "symbolValue": "0x3ffc94",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x392170",
+      "pltStubBytes": "ff251a176d00"
+    },
+    {
+      "instructionAddress": "0x4cc4fa",
+      "kind": "plt",
+      "slotAddress": "0xa55360",
+      "rawSlotBytes": "1657370000000000",
+      "slotFileOffset": "0xa54360",
+      "relocation": {
+        "symbol": "_ZNSt3mapISsSsSt4lessISsESaISt4pairIKSsSsEEEixERS3_",
+        "symbolValue": "0x49dfb6",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x375710",
+      "pltStubBytes": "ff254afc6d00"
+    },
+    {
+      "instructionAddress": "0x4cc529",
+      "kind": "plt",
+      "slotAddress": "0xa63890",
+      "rawSlotBytes": "7621390000000000",
+      "slotFileOffset": "0xa62890",
+      "relocation": {
+        "symbol": "_ZN7HostCtl4Misc6Detail6StrBufC1EPKc",
+        "symbolValue": "0x3ffc94",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x392170",
+      "pltStubBytes": "ff251a176d00"
+    },
+    {
+      "instructionAddress": "0x4cc538",
+      "kind": "plt",
+      "slotAddress": "0xa63890",
+      "rawSlotBytes": "7621390000000000",
+      "slotFileOffset": "0xa62890",
+      "relocation": {
+        "symbol": "_ZN7HostCtl4Misc6Detail6StrBufC1EPKc",
+        "symbolValue": "0x3ffc94",
+        "symbolSection": 12,
+        "addend": 0,
+        "type": 7,
+        "relocationSection": ".rela.plt"
+      },
+      "pltAddress": "0x392170",
+      "pltStubBytes": "ff251a176d00"
+    }
+  ],
+  "newRuntimeExperiment": false
+}

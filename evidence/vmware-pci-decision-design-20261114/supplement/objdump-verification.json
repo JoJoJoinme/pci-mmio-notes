@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "decoder": "GNU objdump (GNU Binutils for Ubuntu) 2.38",
+  "sourceSnippetsSha256": "8533de4c2a90ce7f616769019571cb9a39e861699365f52052c996b1fa38ce4e",
+  "windows": 6,
+  "instructionsCompared": 91,
+  "directBranchTargetsCompared": 7,
+  "dynamicRelocationsCompared": 24,
+  "scope": "Independent instruction boundaries, raw bytes, direct branch destinations and selected dynamic relocation targets; semantic interpretation remains separately documented",
+  "mnemonicSpellingDifferences": [],
+  "results": [
+    {
+      "id": "E01",
+      "instructions": 6,
+      "windowSha256": "4f54e8f4905b7b611fa0dc19de3c115559dfb3b3140fb53a0f5cfa63af76998b",
+      "status": "PASS"
+    },
+    {
+      "id": "E02",
+      "instructions": 3,
+      "windowSha256": "797abeb924df7e6e585ac2dd5ec354efc157647055d2602f4637b55e4d557608",
+      "status": "PASS"
+    },
+    {
+      "id": "E03",
+      "instructions": 37,
+      "windowSha256": "6d09723270266cc2e055d87c797ee2d45084daff52cb22abd6ee84f883d569bc",
+      "status": "PASS"
+    },
+    {
+      "id": "E04",
+      "instructions": 9,
+      "windowSha256": "a37535acc6911012042ae21145d0c53729376ce2f6e399ab6712ea8f00f2cd2a",
+      "status": "PASS"
+    },
+    {
+      "id": "E05",
+      "instructions": 12,
+      "windowSha256": "12c2763afe68a18b60fab4606859a9173cf26a09329989f3f76f389973777d4a",
+      "status": "PASS"
+    },
+    {
+      "id": "E06",
+      "instructions": 24,
+      "windowSha256": "3aef6acea4303a40155f35fe4cef76f46cd18f0588e1157e092b438441e216f6",
+      "status": "PASS"
+    }
+  ],
+  "newRuntimeExperiment": false
+}

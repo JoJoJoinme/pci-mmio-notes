@@ -2,13 +2,14 @@
 
 这份文档把已经核对的汇编转换成可评审的设计：**先判定设备具备直通资格；开机时再检查宿主是否释放设备、依赖成员由谁使用，以及地址域状态是否允许本次登记。** 三者分别有自己的条件，不能合并成一个“可用”布尔值。
 
-阅读顺序：先看下面两张主图；需要理解“为什么这两个设备会被归到一起”，再看第三张依赖计算图。图中 `A01`、`R08` 等编号可通过文末索引跳到原始汇编。
+阅读顺序：资格判断 → 主机 API 启用 → VM 开机检查；需要理解“为什么这两个设备会被归到一起”，再看依赖计算图。共四张图，图中 `A01`、`R08` 等编号可通过文末索引跳到原始汇编。
 
 | 你关心的问题 | 设计入口 | 可单独查看的图 |
 | --- | --- | --- |
 | `passthruCapable` 怎样算出来？ | [一、资格判断](#capable) | [SVG](diagrams/01-capable.svg) · [PNG](diagrams/01-capable.png) · [Mermaid 源文件](diagrams/01-capable.mmd) |
-| VM 开机时怎样检查依赖？ | [二、开机检查链路](#power-on) | [SVG](diagrams/02-power-on.svg) · [PNG](diagrams/02-power-on.png) · [Mermaid 源文件](diagrams/02-power-on.mmd) |
-| 两个 BDF 怎样被识别为有关联？ | [三、依赖代表计算](#dependency) | [SVG](diagrams/03-dependency.svg) · [PNG](diagrams/03-dependency.png) · [Mermaid 源文件](diagrams/03-dependency.mmd) |
+| API 只启用 A，如何检查并联动依赖？ | [二、主机 API](#host-api) | [SVG](diagrams/04-host-api-enable.svg) · [PNG](diagrams/04-host-api-enable.png) · [Mermaid 源文件](diagrams/04-host-api-enable.mmd) |
+| VM 开机时怎样检查依赖？ | [三、开机检查链路](#power-on) | [SVG](diagrams/02-power-on.svg) · [PNG](diagrams/02-power-on.png) · [Mermaid 源文件](diagrams/02-power-on.mmd) |
+| 两个 BDF 怎样被识别为有关联？ | [四、依赖代表计算](#dependency) | [SVG](diagrams/03-dependency.svg) · [PNG](diagrams/03-dependency.png) · [Mermaid 源文件](diagrams/03-dependency.mmd) |
 
 **证据范围：**这是依据 ESXi 8.0 U3b / build **24280767** 二进制重建的设计视图，不是 VMware 源码或官方架构图。资格函数有完整函数证据；开机图聚焦普通物理 PCI 的 FPT 新登记分支，保留已知条件分支，未展开所有特殊模式、迁移和复用路径。本次整理没有新增实机测试。完整指令、机器字节、重定位与既有运行记录在[汇编证据文档集](../vmware-pci-assembly-dossier-20261114/README.md)。
 
@@ -39,9 +40,9 @@
 
 | 关口 | 允许继续的精确条件 | 业务含义与边界 |
 | --- | --- | --- |
-| C1 禁用标志 | 对象保存的 `disablePciPassthrough` 值为 0 | 本对象未被全局禁用策略挡住。值由 `SetFromSBDF` 写入；不是每次调用都重读全局选项。 |
-| C2 IOMMU 范围 | `inIommuScope != 0` | 内核进一步检查 IOMMU 已开启，且设备受 IOMMU 实现支持。 |
-| C3 ACS 策略 | `meetsPassthruAcsReq != 0` | ESXi 的 ACS 检查策略接受它。实现含缓存、例外与禁用检查选项，所以不能只凭 true 宣称物理硬件具有完整 ACS 隔离。 |
+| C1 禁用标志 | 对象保存的 `disablePciPassthrough` 值为 0 | 主机级直通功能禁用开关没有关闭直通；这一步不按设备型号查黑名单。值由 `SetFromSBDF` 保存，不是每次调用都重读。[解释](01-qualification-explained.md#disable-switch) |
+| C2 IOMMU 范围 | `inIommuScope != 0` | IOMMU 已开启，且该设备被 IOMMU 实现判定为受支持；可以理解为它的 DMA 能否纳入 IOMMU 管理，不是网卡 HCL 查询。[解释](01-qualification-explained.md#iommu-scope) |
+| C3 ACS 策略 | `meetsPassthruAcsReq != 0` | PCIe 路径被 ESXi 的隔离策略接受；含类型、quirk、缓存与软件例外。Linux 则将 ACS 与 alias/拓扑用于 group 构造，不能直接等同。[Linux 对比](01-qualification-explained.md#acs-comparison) |
 | C4 依赖结果 | `passthruDependent` 不等于无效哨兵 | 读取 segment/bus/slot/function 四个 32 位字段；四项全为 `0xffffffff` 才是此处的无效值。代表等于自身仍然有效。 |
 
 说明性伪代码，保留正常返回路径的语义：
@@ -58,8 +59,24 @@ capable(d):
 
 **`true` 到底承诺什么？**只承诺这四项资格条件成立。这个函数没有当前 VM 参数，也没有比较 VM owner；因此它不能承诺“现在可以给这台 VM 开机”。启动盘/宿主关键用途的限制在主机 owner 切换流程另查，BAR/MMIO、VM 内存和运行占用也不能由这个布尔值包办。[A02–A05、M07 解释](../vmware-pci-assembly-dossier-20261114/01-capable.md) · [ACS 策略细节](../vmware-pci-assembly-dossier-20261114/06-reset-map-acs.md) · [宿主切换限制](../vmware-pci-assembly-dossier-20261114/03-owner-transitions.md)
 
+<a id="host-api"></a>
+## 二、主机 API 启用直通：检查、依赖展开和生效
+
+![API 启用直通的依赖联动](diagrams/04-host-api-enable.png)
+
+只请求 A 的 `UpdatePassthruConfig`，可能联动 B。管理库先求 A 的依赖代表 P；代表不是自身时，再枚举哪些设备的依赖代表匹配 P，对这些成员逐项写入 `OWNER_PASSTHRU` 配置。它没有把 A/B 自动加入某台 VM。
+
+这条链路要分别看四件事：
+
+1. **目标能否切换：**资格、启动/系统保留用途、网络占用等检查分布在不同管理入口中。
+2. **哪些成员联动：**依赖代表 → 反向成员枚举 → 逐项写 configured owner；反向匹配的 segment 处理范围仍需核验。
+3. **是否已经生效：**ConfigStore 写入与 runtime 生效是两个层次；`applyNow` 表达生效要求，必须回读 `passthruEnabled` 和 `passthruActive`。
+4. **中途失败怎么办：**代码有补偿路径，但尚未证明原子性；报错后也要回读整个成员范围。
+
+图中虚线标出尚未还原的 hostd 调用编排及 runtime rebind 链。不能由目标 A 的检查，直接宣称每个隐式联动成员都经过全部同样检查。上述范围与已有 API 前后回执见[主机 API 详细设计](02-host-api-enable.md)，新增六个窄汇编窗口见[补充证据](supplement/README.md)。
+
 <a id="power-on"></a>
-## 二、VM 开机：这次登记是否可以继续
+## 三、VM 开机：这次登记是否可以继续
 
 ![普通 FPT 开机登记检查链路](diagrams/02-power-on.png)
 
@@ -149,7 +166,7 @@ P6 调用 `IOMMU_GetAddressDomain(target)`。下面是接口语义与本调用�
 既有实机记录中，8.0 U3k / `25595708` 与 9.1.0.0100 / `25433460` 也复现传统桥下同 VM 双设备失败；核对的是相关已有域保护分支，不是全部路径逐版本相同。9.1.1.0100 未取得介质，状态未知。未验证软件补丁，也没有厂商设计说明证明这是刻意禁止该拓扑，商业材料应写成“已复现的初始化限制与机制”，不要替厂商猜动机。[版本证据](../vmware-passthrough-version-review-20261113/README.md)
 
 <a id="dependency"></a>
-## 三、两个设备怎样得到共同依赖代表
+## 四、两个设备怎样得到共同依赖代表
 
 ![依赖代表的三种输入与合并](diagrams/03-dependency.png)
 
@@ -170,7 +187,7 @@ P6 调用 `IOMMU_GetAddressDomain(target)`。下面是接口语义与本调用�
 `passthru.map` 可以影响显式功能依赖和复位方式选择，从而影响候选计算，但不能消除真实 DMA alias。旧实验将 `8086 10d3 default false` 持久化并验证字段生效后，传统桥的双设备失败仍存在。[map 的写入链](../vmware-pci-assembly-dossier-20261114/06-reset-map-acs.md) · [对照记录](../vmware-legacy-bridge-cause-20261112/README.md)
 
 <a id="our-design"></a>
-## 四、对我们产品设计的直接启示
+## 五、对我们产品设计的直接启示
 
 以下是基于机制的设计建议，不是宣称 VMware 已经采用的接口。
 
@@ -194,6 +211,7 @@ P6 调用 `IOMMU_GetAddressDomain(target)`。下面是接口语义与本调用�
 | --- | --- | --- |
 | A01–A03 | 四关短路、保存的禁用值、无效四字段哨兵 | [资格全文](../vmware-pci-assembly-dossier-20261114/01-capable.md) |
 | A04、A05、M07 | IOMMU 范围提供者、依赖输出转换、ACS 策略 | [依赖输出](../vmware-pci-assembly-dossier-20261114/02-dependency-construction.md) · [ACS 全文](../vmware-pci-assembly-dossier-20261114/06-reset-map-acs.md) |
+| O01–O11、E01–E06 | 主机切换验证、代表展开、配置写入、补偿及网络占用拒绝 | [API 详细设计](02-host-api-enable.md) · [补充指令](supplement/README.md) |
 | D01–D06 | 依赖构造、别名桥父链、独立复位与 endpoint 谓词 | [依赖构造全文](../vmware-pci-assembly-dossier-20261114/02-dependency-construction.md) |
 | R01–R07、R09 | 内存、模式、宿主 owner、身份、记录和条件 RMRR | [开机登记全文](../vmware-pci-assembly-dossier-20261114/04-vm-admission.md) |
 | R08 | 完整共同代表/活动 owner 循环，包括所有跳过项 | [单独汇编](../vmware-pci-assembly-dossier-20261114/snippets/R08.asm) |

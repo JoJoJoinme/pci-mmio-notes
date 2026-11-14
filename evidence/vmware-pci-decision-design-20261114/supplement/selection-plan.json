@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "selections": [
+    {"id":"E01","image":"vmkctl242","symbol":"_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv","functionLabel":"PciDeviceImpl::ValidateOwnerToPassthru","title":"依赖对象必须非空","startAddress":"0x4cbe39","endAddress":"0x4cbe53"},
+    {"id":"E02","image":"vmkctl242","symbol":"_ZN6VmkCtl8Hardware13PciDeviceImpl23ValidateOwnerToPassthruEv","functionLabel":"PciDeviceImpl::ValidateOwnerToPassthru","title":"无依赖对象的拒绝文字","startAddress":"0x4cbe53","endAddress":"0x4cbe63"},
+    {"id":"E03","image":"vmkctl242","symbol":"_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv","functionLabel":"PciDeviceImpl::SwitchOwnerToPassthru","title":"切换入口的资格与现有配置检查","startAddress":"0x4cc032","endAddress":"0x4cc0bf"},
+    {"id":"E04","image":"vmkctl242","symbol":"_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv","functionLabel":"PciDeviceImpl::SwitchOwnerToPassthru","title":"取得虚拟交换机信息","startAddress":"0x4cc16f","endAddress":"0x4cc1a2"},
+    {"id":"E05","image":"vmkctl242","symbol":"_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv","functionLabel":"PciDeviceImpl::SwitchOwnerToPassthru","title":"目标网络设备查找与 owner 写入分叉","startAddress":"0x4cc451","endAddress":"0x4cc484"},
+    {"id":"E06","image":"vmkctl242","symbol":"_ZN6VmkCtl8Hardware13PciDeviceImpl21SwitchOwnerToPassthruEv","functionLabel":"PciDeviceImpl::SwitchOwnerToPassthru","title":"vSwitch 和 uplink 占用拒绝文字","startAddress":"0x4cc4bb","endAddress":"0x4cc53d"}
+  ]
+}

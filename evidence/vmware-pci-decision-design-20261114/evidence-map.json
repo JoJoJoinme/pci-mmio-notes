@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "Reconstructed design, based on existing binary evidence; no new runtime claims",
-  "sourceRevision": "7e651e4973cfcfbe7fb40b2cfb1ed9cf2fcb5889",
+  "sourceRevision": "f60d6773612bb66f7cdc257c83919a0e5acc4dea",
   "primaryBuild": "24280767",
   "snippetIndex": "evidence/vmware-pci-assembly-dossier-20261114/evidence/snippets.json",
   "sources": [
@@ -44,6 +44,14 @@
     {
       "path": "evidence/vmware-passthrough-version-review-20261113/README.md",
       "sha256": "a206fad96aab4c2396bdde55c632c12ffd240786042321c4d0a12209f085a3cc"
+    },
+    {
+      "path": "kernel-patches/0001-PCI-expose-ACS-override-provenance.patch",
+      "sha256": "96827635cec02352597502c9f4ab0dfe89274e77718178d48c1a8833854e83f2"
+    },
+    {
+      "path": "evidence/vmware-pci-multifunction-fix-20261111/raw/native-mf-owner-results.json",
+      "sha256": "df5d7468f43f6bad457b1a99004e601fd75bab356b58e28abda5baa00c936517"
     }
   ],
   "nodes": [
@@ -437,6 +445,183 @@
           "addressKind": "ELF linked virtual address",
           "windowSha256": "21ba16e89ca8f023dc9618728d2a3eb9722244aa22e91fc9cfa326d3dcacb993"
         }
+      ]
+    },
+    {
+      "diagram": "diagrams/04-host-api-enable.mmd",
+      "node": "CHECK",
+      "snippets": [
+        {
+          "id": "O01",
+          "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+          "startAddress": "0x4cbace",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "845c8f84dacca29c6c35382646e050ed7a39b302676d94b5ac827ba132b427e9"
+        },
+        {
+          "id": "O02",
+          "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+          "startAddress": "0x4cbbb8",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "3de81051074d58da24434a70b23da009d7cbec2384ba0a238229510d191c4449"
+        },
+        {
+          "id": "O03",
+          "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+          "startAddress": "0x4cbc6d",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "f4315b08398cb72b684174df59407ddcb2813cce199a3644c3c104028718e7d9"
+        },
+        {
+          "id": "O04",
+          "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+          "startAddress": "0x4cbd59",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "2a00d284b2ad1189e3120f382808623ec6c1337279d059c45adb87767d53725a"
+        },
+        {
+          "id": "E01",
+          "functionLabel": "PciDeviceImpl::ValidateOwnerToPassthru",
+          "startAddress": "0x4cbe39",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "4f54e8f4905b7b611fa0dc19de3c115559dfb3b3140fb53a0f5cfa63af76998b"
+        },
+        {
+          "id": "E03",
+          "functionLabel": "PciDeviceImpl::SwitchOwnerToPassthru",
+          "startAddress": "0x4cc032",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "6d09723270266cc2e055d87c797ee2d45084daff52cb22abd6ee84f883d569bc"
+        },
+        {
+          "id": "E05",
+          "functionLabel": "PciDeviceImpl::SwitchOwnerToPassthru",
+          "startAddress": "0x4cc451",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "12c2763afe68a18b60fab4606859a9173cf26a09329989f3f76f389973777d4a"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/04-host-api-enable.mmd",
+      "node": "DEP",
+      "snippets": [
+        {
+          "id": "O05",
+          "functionLabel": "PciDeviceImpl::GetDependantDevice",
+          "startAddress": "0x4c7142",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "6d5f39abb8acfa24a7220577b9932354e1f33f4b006b85aa063cf41813ed9085"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/04-host-api-enable.mmd",
+      "node": "SAME",
+      "snippets": [
+        {
+          "id": "O07",
+          "functionLabel": "PciDeviceImpl::SetConfiguredDeviceOwner",
+          "startAddress": "0x4c7b72",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "a1c5a143953e1bf6233068c07625cb7a7fa739147f9225fd8c97a6eaf3a35ebc"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/04-host-api-enable.mmd",
+      "node": "GROUP",
+      "snippets": [
+        {
+          "id": "O06",
+          "functionLabel": "PciDeviceImpl::GetDependentChildDevices",
+          "startAddress": "0x4cb510",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "566628e9ea27d3d465155d2d6683262bcc732522802f672ef5b6ccc6bd441b20"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/04-host-api-enable.mmd",
+      "node": "WRITE",
+      "snippets": [
+        {
+          "id": "O07",
+          "functionLabel": "PciDeviceImpl::SetConfiguredDeviceOwner",
+          "startAddress": "0x4c7b72",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "a1c5a143953e1bf6233068c07625cb7a7fa739147f9225fd8c97a6eaf3a35ebc"
+        },
+        {
+          "id": "O09",
+          "functionLabel": "PciDeviceImpl::SetConfiguredDevOwnerNoDeps",
+          "startAddress": "0x4c6399",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "85d920c914b7c16f4c65f29f0916cb8eb045b8c60b1813b64bd5a9734db39a26"
+        },
+        {
+          "id": "O11",
+          "functionLabel": "PciDeviceImpl::GetOwnerString",
+          "startAddress": "0x4c3590",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "7da85a3a97c2e0234ed53d24391de2ee1fd643712ec466765f34e319f85165b3"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/04-host-api-enable.mmd",
+      "node": "STORE",
+      "snippets": [
+        {
+          "id": "O09",
+          "functionLabel": "PciDeviceImpl::SetConfiguredDevOwnerNoDeps",
+          "startAddress": "0x4c6399",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "85d920c914b7c16f4c65f29f0916cb8eb045b8c60b1813b64bd5a9734db39a26"
+        }
+      ]
+    },
+    {
+      "diagram": "diagrams/04-host-api-enable.mmd",
+      "node": "COMP",
+      "snippets": [
+        {
+          "id": "O08",
+          "functionLabel": "PciDeviceImpl::SetConfiguredDeviceOwner",
+          "startAddress": "0x4c7cd5",
+          "addressKind": "ELF linked virtual address",
+          "windowSha256": "4599497935f4705fb89dcf845423d735694ee6783d24f68c3ecaa66578c7960b"
+        }
+      ]
+    }
+  ],
+  "localSupplement": "supplement/snippets.json",
+  "apiContractNodes": [
+    {
+      "node": "API",
+      "sourceIds": [
+        "API1",
+        "API2"
+      ]
+    },
+    {
+      "node": "DISPATCH",
+      "sourceIds": [
+        "API1"
+      ],
+      "unresolved": "Full hostd dispatch order"
+    },
+    {
+      "node": "APPLY",
+      "sourceIds": [
+        "API2"
+      ],
+      "unresolved": "Full runtime driver rebind call chain"
+    },
+    {
+      "node": "READ",
+      "sourceIds": [
+        "API3"
       ]
     }
   ]

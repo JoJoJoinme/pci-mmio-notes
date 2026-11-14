@@ -2,6 +2,7 @@
 *.md text eol=lf
 *.mmd text eol=lf
 *.mjs text eol=lf
+*.asm text eol=lf
 *.py text eol=lf
 *.json text eol=lf
 *.svg text eol=lf

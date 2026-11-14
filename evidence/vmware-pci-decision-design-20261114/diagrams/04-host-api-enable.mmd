@@ -1,0 +1,38 @@
+%% API contract + selected vmkctl implementation + observed state; not a full hostd call graph.
+%% evidence: O01 O02 O03 O04 O05 O06 O07 O08 O09 O11 E01 E03 E05
+flowchart TB
+    API["H0 · 请求只启用 A<br/>UpdatePassthruConfig · enabled=true"]
+    DISPATCH["H1 · 权限与 hostd 编排<br/>管理入口的完整调用顺序尚未还原"]
+    CHECK["H2 · 管理库中的目标检查<br/>资格、启动/保留用途、网络使用等"]
+    DEP["H3 · 读取 A 的依赖代表 P<br/>GetDependantDevice · O05"]
+    SAME["H4 · P 就是 A？"]
+    ONE["只更新自身配置"]
+    GROUP["反向枚举 dep(X) 匹配 P 的成员<br/>GetDependentChildDevices · O06"]
+    WRITE["H5 · 逐成员写 configured owner<br/>SetConfiguredDevOwnerNoDeps · O07 / O09"]
+    STORE["ConfigStore：owner=passthru<br/>这是配置写入，不是 VM 获得设备"]
+    COMP["异常时尝试补偿已处理成员<br/>O08 · 未证明原子性"]
+    APPLY["H6 · applyNow / 自动决策 / 重启<br/>运行生效链：API 契约与回读验证"]
+    READ["H7 · 回读全部关联成员<br/>enabled 已配置；active 当前生效"]
+    NOTE["反向匹配见 bus / slot / function<br/>segment 处理范围仍需核验"]
+    API --> DISPATCH
+    DISPATCH -.实现边界.-> CHECK
+    CHECK -->|目标检查通过的配置路径| DEP
+    DEP --> SAME
+    SAME -->|是| ONE
+    SAME -->|否| GROUP
+    GROUP --> WRITE
+    GROUP -.- NOTE
+    ONE --> STORE
+    WRITE -->|正常推进| STORE
+    WRITE -->|异常路径| COMP
+    STORE -.生效策略.-> APPLY
+    APPLY --> READ
+    COMP -.同样需要回读.-> READ
+    classDef gate fill:#eef5fc,stroke:#35608b,color:#16324f,stroke-width:1.5px
+    classDef good fill:#e9f6f0,stroke:#297354,color:#174b37
+    classDef note fill:#f6f7f9,stroke:#a4aebb,color:#475467,stroke-dasharray:4 3
+    classDef warn fill:#fff0ee,stroke:#b74e42,color:#7c3027
+    class CHECK,DEP,SAME,WRITE gate
+    class STORE,READ good
+    class DISPATCH,NOTE,APPLY note
+    class COMP warn

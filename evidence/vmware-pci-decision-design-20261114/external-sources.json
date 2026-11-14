@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "checkedDate": "2026-11-14",
+  "sourceType": "Primary official documentation and upstream source; no new VMware runtime test",
+  "sources": [
+    {
+      "id": "API1",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruSystem.html",
+      "usedFor": "UpdatePassthruConfig contract, privilege, no per-device response"
+    },
+    {
+      "id": "API2",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruConfig.html",
+      "usedFor": "applyNow introduced in API 7.0; unset auto behavior"
+    },
+    {
+      "id": "API3",
+      "url": "https://developer.broadcom.com/xapis/vsphere-web-services-api/latest/vim.host.PciPassthruInfo.html",
+      "usedFor": "capable, enabled, active, dependentDevice definitions"
+    },
+    {
+      "id": "LINUX1",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/pci/pci.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "59c01d68c6d5ed16ed07622694f321ca8092e40f",
+      "usedFor": "pci_acs_flags_enabled, pci_acs_enabled, pci_acs_path_enabled"
+    },
+    {
+      "id": "LINUX2",
+      "url": "https://github.com/torvalds/linux/blob/v6.6/drivers/iommu/iommu.c",
+      "ref": "v6.6",
+      "gitBlobSha1": "c146378c7d032c3805f46e6db24a6a9e47e4a264",
+      "usedFor": "REQ_ACS_FLAGS and pci_device_group; DMA aliases and multifunction grouping"
+    },
+    {
+      "id": "LINUX3",
+      "url": "https://docs.kernel.org/6.6/driver-api/vfio.html",
+      "usedFor": "Group ownership; cdev/IOMMUFD retains group DMA owner semantics"
+    },
+    {
+      "id": "LINUX4",
+      "url": "https://www.kernel.org/doc/html/v6.18/admin-guide/kernel-parameters.html",
+      "usedFor": "Distinguish config_acs/disable_acs_redir from out-of-tree pcie_acs_override"
+    }
+  ]
+}

@@ -118,6 +118,43 @@
         "开机 owner 扫描其他设备的代表是否与它相同？",
         "G 的业务选项名尚未确定需要父设备但不存在：报错"
       ]
+    },
+    {
+      "stem": "04-host-api-enable",
+      "width": 983,
+      "height": 1010,
+      "sourceSha256": "74f173be2303208d7602f9ad6ff69bd2b81118c06f7f645ae9eb88079475e9ed",
+      "svgSha256": "899f3b7c9b6c263e51be91cfdafba30009c1d28a2dd451e321400d78c43f95bc",
+      "pngSha256": "f7c83d31bef9dcb78380dde2735eb79ed883dd8ae5a395752c92653657fc1e94",
+      "labels": [
+        "",
+        "实现边界",
+        "目标检查通过的配置路径",
+        "",
+        "是",
+        "否",
+        "",
+        "",
+        "",
+        "正常推进",
+        "异常路径",
+        "生效策略",
+        "",
+        "同样需要回读",
+        "H0 · 请求只启用 AUpdatePassthruConfig · enabled=true",
+        "H1 · 权限与 hostd 编排管理入口的完整调用顺序尚未还原",
+        "H2 · 管理库中的目标检查资格、启动/保留用途、网络使用等",
+        "H3 · 读取 A 的依赖代表 PGetDependantDevice · O05",
+        "H4 · P 就是 A？",
+        "只更新自身配置",
+        "反向枚举 dep(X) 匹配 P 的成员GetDependentChildDevices · O06",
+        "H5 · 逐成员写 configured ownerSetConfiguredDevOwnerNoDeps · O07 / O09",
+        "ConfigStore：owner=passthru这是配置写入，不是 VM 获得设备",
+        "异常时尝试补偿已处理成员O08 · 未证明原子性",
+        "H6 · applyNow / 自动决策 / 重启运行生效链：API 契约与回读验证",
+        "H7 · 回读全部关联成员enabled 已配置；active 当前生效",
+        "反向匹配见 bus / slot / functionsegment 处理范围仍需核验"
+      ]
     }
   ],
   "pageErrors": []

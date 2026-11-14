@@ -6,10 +6,12 @@
     "files": [
       "diagrams/01-capable.png",
       "diagrams/02-power-on.png",
-      "diagrams/03-dependency.png"
+      "diagrams/03-dependency.png",
+      "diagrams/04-host-api-enable.png"
     ],
     "result": "No observed clipped labels, missing glyphs, or text overlap",
-    "iteration": "Replaced oversized diamonds and staggered combined panels with compact gates and side-by-side power-on panels"
+    "iteration": "Replaced oversized diamonds and staggered combined panels with compact gates and side-by-side power-on panels",
+    "apiDiagramReview": "Rendered 04-host-api-enable.png inspected; labels legible, no observed clipping or overlap"
   },
   "semanticReview": [
     "Four-gate capable predicate is separate from current VM ownership",
@@ -21,6 +23,17 @@
     "Existing-domain guard retains selected-path and status-code boundaries",
     "Registration and activation are separate entry points",
     "Unknown configOption business name remains G",
-    "Prior runtime and version evidence is not described as newly executed"
-  ]
+    "Prior runtime and version evidence is not described as newly executed",
+    "Global disable flag distinguished from per-device blacklist",
+    "IOMMU enabled and per-device support distinguished from ACS path isolation",
+    "Linux comparison pinned to upstream v6.6 and separately identifies repository ACS override patch",
+    "API dispatch, per-dependent validation coverage and runtime rebind are explicitly unresolved",
+    "Configured owner writes distinguished from active state and VM ownership",
+    "Existing API receipts re-read for both enable and disable results"
+  ],
+  "hostApiSupplement": {
+    "windows": 6,
+    "instructions": 91,
+    "independentProof": "supplement/objdump-verification.json"
+  }
 }
